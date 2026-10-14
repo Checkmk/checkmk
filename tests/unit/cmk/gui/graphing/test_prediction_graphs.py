@@ -10,6 +10,7 @@ import pytest
 from cmk.graphing_engine import (
     ConsolidationFunction,
     Curve,
+    drawn_curves,
     Graph,
     HostName,
     MetricName,
@@ -19,7 +20,6 @@ from cmk.graphing_engine import (
     ServiceName,
     SiteID,
 )
-from cmk.gui.graphing._drawn_curves import drawn_curves
 from cmk.gui.graphing._graph_codec import community_graph_codec
 from cmk.gui.graphing._prediction_graphs import (
     build_prediction_graph,

@@ -6,9 +6,9 @@
 
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
-from typing import assert_never, Protocol
+from typing import Literal, Protocol
 
-from ._line_types import DrawnLineType, LineType
+type DrawnLineType = Literal["line", "area", "stack"]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -81,17 +81,3 @@ def drawn_curves_with_references[CurveT](
             stack.inverse,
         )
     yield from _drawn_lines(lines)
-
-
-def line_type_with_mirroring(line_type: DrawnLineType, mirrored: bool) -> LineType:
-    if not mirrored:
-        return line_type
-    match line_type:
-        case "line":
-            return "-line"
-        case "area":
-            return "-area"
-        case "stack":
-            return "-stack"
-        case other:
-            assert_never(other)

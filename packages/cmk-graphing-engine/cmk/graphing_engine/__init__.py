@@ -4,6 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._display import FALLBACK_UNIT, metric_display_attributes, parse_unit
+from ._drawn_curves import (
+    drawn_curves,
+    drawn_curves_with_references,
+    DrawnCurve,
+    DrawnLineType,
+)
 from ._fetch import (
     FetchDataProtocol,
     FetchMetricNamesProtocol,
@@ -182,6 +188,10 @@ __all__ = [
     "build_curve",
     "build_matched_graphs",
     "evaluate_graphs",
+    "drawn_curves",
+    "drawn_curves_with_references",
+    "DrawnCurve",
+    "DrawnLineType",
     "evaluate_perfometer",
     "metric_display_attributes",
     "parse_unit",

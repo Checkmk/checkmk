@@ -7,6 +7,8 @@ from typing import assert_never
 
 from cmk.graphing_engine import (
     ConsolidationFunction,
+    drawn_curves_with_references,
+    DrawnCurve,
     EvaluatedCurve,
     EvaluatedGraph,
     SeriesAttributes,
@@ -17,7 +19,6 @@ from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.i18n import _
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
-from .._drawn_curves import drawn_curves_with_references, DrawnCurve
 from .._source import FetchDiagnostics
 from .._unit_format import unit_to_unit_format
 from .._user_specific_unit import apply_temperature_unit

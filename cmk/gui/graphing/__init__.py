@@ -5,12 +5,6 @@
 from ._autocompleter import monitored_metrics_autocompleter
 from ._built_graphs import BuiltGraph, DiscoveredGraphs
 from ._decoding import context_from_json, ensure_type
-from ._drawn_curves import (
-    drawn_curves,
-    drawn_curves_with_references,
-    DrawnCurve,
-    line_type_with_mirroring,
-)
 from ._from_api import (
     GraphFromAPI,
     graphs_from_api,
@@ -91,7 +85,7 @@ from ._graph_templates import (
 )
 from ._graphs_order import sort_registered_graph_plugins
 from ._legacy_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
-from ._line_types import DrawnLineType, LineType
+from ._line_types import line_type_with_mirroring, LineType
 from ._metric_data import (
     evaluated_metrics,
     EvaluatedMetric,
@@ -219,11 +213,7 @@ __all__ = [
     "default_time_range_seconds",
     "discover_template_graphs",
     "DiscoveredGraphs",
-    "drawn_curves",
-    "drawn_curves_with_references",
     "drawn_segments",
-    "DrawnCurve",
-    "DrawnLineType",
     "DrawnSegment",
     "empty_graph_spec",
     "EngineDisplayOptions",

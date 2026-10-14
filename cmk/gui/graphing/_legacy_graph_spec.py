@@ -7,11 +7,16 @@
 from collections.abc import Mapping, Sequence
 from typing import Final, TypedDict
 
-from cmk.graphing_engine import EvaluatedCurve, EvaluatedGraph, SeriesAttributes
+from cmk.graphing_engine import (
+    drawn_curves,
+    DrawnCurve,
+    EvaluatedCurve,
+    EvaluatedGraph,
+    SeriesAttributes,
+)
 from cmk.graphing_engine import TimeRange as EngineTimeRange
 
-from ._drawn_curves import drawn_curves, DrawnCurve, line_type_with_mirroring
-from ._line_types import LineType
+from ._line_types import line_type_with_mirroring, LineType
 from ._metric_query import AttributeGroup
 
 _ATTRIBUTE_GROUPS: Final[tuple[AttributeGroup, ...]] = ("resource", "scope", "data_point")

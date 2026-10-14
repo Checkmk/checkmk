@@ -16,6 +16,7 @@ py_library(
         "cmk/graphing_engine/__init__.py",
         "cmk/graphing_engine/_api_plugins.py",
         "cmk/graphing_engine/_display.py",
+        "cmk/graphing_engine/_drawn_curves.py",
         "cmk/graphing_engine/_fetch.py",
         "cmk/graphing_engine/_fetched.py",
         "cmk/graphing_engine/_graph.py",

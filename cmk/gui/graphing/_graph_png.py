@@ -22,6 +22,7 @@ from matplotlib.text import Text
 from matplotlib.transforms import Bbox, blended_transform_factory, ScaledTranslation
 
 from cmk.graphing_engine import (
+    drawn_curves,
     EvaluatedCurve,
     EvaluatedGraph,
     EvaluatedRegion,
@@ -38,7 +39,6 @@ from cmk.graphing_engine import (
 )
 from cmk.web.utils.unit_formatter import Label, notation_formatter, NotationFormatter
 
-from ._drawn_curves import drawn_curves
 from ._graph_png_size import ex_to_inches, legend_height_ex, PngOptions
 from ._time_axis import compute_time_axis
 

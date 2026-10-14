@@ -10,6 +10,9 @@ from cmk.graphing_engine import (
     Curve,
     CurveAttributes,
     DecimalNotation,
+    drawn_curves,
+    drawn_curves_with_references,
+    DrawnCurve,
     Graph,
     HostName,
     Line,
@@ -18,12 +21,6 @@ from cmk.graphing_engine import (
     ServiceName,
     Stack,
     Unit,
-)
-from cmk.gui.graphing import (
-    drawn_curves,
-    drawn_curves_with_references,
-    DrawnCurve,
-    line_type_with_mirroring,
 )
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
@@ -134,21 +131,4 @@ def test_a_listed_baseline_is_hidden_and_opens_its_stack() -> None:
         ("baseline", "area", False, "stack-0", True),
         ("drawn", "stack", False, "stack-0", False),
         ("piled", "stack", False, "stack-0", False),
-    ]
-
-
-def test_a_mirrored_line_type_carries_the_minus() -> None:
-    assert [
-        line_type_with_mirroring(line_type, False) for line_type in ("line", "area", "stack")
-    ] == [
-        "line",
-        "area",
-        "stack",
-    ]
-    assert [
-        line_type_with_mirroring(line_type, True) for line_type in ("line", "area", "stack")
-    ] == [
-        "-line",
-        "-area",
-        "-stack",
     ]

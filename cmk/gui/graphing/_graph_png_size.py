@@ -8,9 +8,7 @@ Kept apart from the rendering, so that layout planning does not need matplotlib 
 
 from dataclasses import dataclass
 
-from cmk.graphing_engine import EvaluatedGraph
-
-from ._drawn_curves import drawn_curves
+from cmk.graphing_engine import drawn_curves, EvaluatedGraph
 
 MM_PER_INCH = 25.4
 

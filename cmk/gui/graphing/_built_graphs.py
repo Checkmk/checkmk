@@ -7,9 +7,8 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from cmk.graphing_engine import FixedRange, Graph, NonConvertibleUnit, Unit
+from cmk.graphing_engine import drawn_curves, FixedRange, Graph, NonConvertibleUnit, Unit
 
-from ._drawn_curves import drawn_curves
 from ._graph_specification import GraphSpecification
 
 

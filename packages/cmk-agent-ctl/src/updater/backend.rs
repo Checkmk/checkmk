@@ -10,6 +10,7 @@
 use super::connection;
 use super::verification;
 use crate::agent_receiver_api;
+use crate::certs;
 use crate::config::{
     tmp_path_for_atomical_save, JSONLoader, JSONLoaderMissingSafe, Registry, TOMLLoader,
     UpdaterRegistration,
@@ -330,6 +331,24 @@ fn package_extension(platform: &str) -> AnyhowResult<&'static str> {
     }
 }
 
+/// The certificates of `blocks`, in the form [`UpdatePackage::verify`] takes
+/// them. They borrow `blocks`, which is why the two steps are separate.
+///
+/// A block that is no certificate is dropped with a warning, for the reason
+/// given at [`Updater::signature_key_blocks`].
+fn local_certificates(blocks: &[x509_parser::pem::Pem]) -> Vec<X509Certificate<'_>> {
+    blocks
+        .iter()
+        .filter_map(|block| match block.parse_x509() {
+            Ok(certificate) => Some(certificate),
+            Err(error) => {
+                log::warn!("Ignoring a configured signature key that is no certificate: {error}");
+                None
+            }
+        })
+        .collect()
+}
+
 /// What the site answered a check with. Nothing was changed to learn it.
 #[derive(Debug, PartialEq, Eq)]
 pub enum CheckOutcome {
@@ -350,6 +369,41 @@ pub enum CheckOutcome {
     },
 }
 
+/// What a fetch did. Nothing is installed here: the package is spooled for the
+/// privileged installer, which is the step after this one.
+#[derive(Debug, PartialEq, Eq)]
+pub enum FetchOutcome {
+    /// No site was asked: the updater is not operational or no registered
+    /// connection can reach one. The reason is logged.
+    NotPossible,
+
+    /// The site has no agent package for this host.
+    NoPackage,
+
+    /// The site offers the package this host already runs.
+    UpToDate(AgentHash),
+
+    /// The package is waiting for the installer.
+    Spooled { hash: AgentHash, path: PathBuf },
+}
+
+/// What the site offers, as [`Updater::offered_update`] decided it.
+///
+/// Carries the package itself in the one case a fetch goes on, and which of the
+/// two ways it ends without one this is - [`FetchOutcome`] names those for the
+/// caller, this one keeps the package out of the public surface.
+#[derive(Debug, PartialEq, Eq)]
+enum OfferedUpdate<'a> {
+    /// The site has no agent package for this host.
+    NoPackage,
+
+    /// The site offers the package this host already runs.
+    UpToDate(AgentHash),
+
+    /// The site offers a package other than the installed one: fetch it.
+    Due(&'a agent_receiver_api::TargetAgent),
+}
+
 /// The three updater artifacts of this host, loaded together.
 ///
 /// Fields are private: what is missing or broken is only observable through
@@ -362,6 +416,9 @@ pub struct Updater {
 
     /// Where the state was read from, and where it is written back.
     state_path: PathBuf,
+
+    /// Where a verified package is spooled for the privileged installer.
+    package_dir: PathBuf,
 }
 
 impl Updater {
@@ -404,6 +461,7 @@ impl Updater {
             agent_info,
             load_error,
             state_path: paths.updater_state_path.clone(),
+            package_dir: paths.updater_package_dir.clone(),
         }
     }
 
@@ -615,6 +673,53 @@ impl Updater {
         })
     }
 
+    /// Fetch the package the site offers and spool it for the installer.
+    ///
+    /// The three steps of an update the controller can do today: ask the site,
+    /// download what it offers, and write it out once its signature has been
+    /// checked. Installing the spooled package is not part of it.
+    ///
+    /// The package is the only thing written: the updater state is left alone,
+    /// because a fetch made by hand must not shift the schedule of the
+    /// automatic cycle, the same way [`Updater::check`] does not.
+    ///
+    /// # Errors
+    ///
+    /// If the site cannot be reached, does not deliver the package it offered,
+    /// delivers one that fails verification, or if the package cannot be
+    /// spooled.
+    pub fn fetch_update(
+        &self,
+        registry: &Registry,
+        api: &impl agent_receiver_api::AgentUpdate,
+    ) -> AnyhowResult<FetchOutcome> {
+        let Some(selected) = self.find_update_connection(registry) else {
+            return Ok(FetchOutcome::NotPossible);
+        };
+        let status = self.request_update_status(api, &selected)?;
+        let offered = match self.offered_update(&status)? {
+            OfferedUpdate::NoPackage => return Ok(FetchOutcome::NoPackage),
+            OfferedUpdate::UpToDate(installed) => return Ok(FetchOutcome::UpToDate(installed)),
+            OfferedUpdate::Due(offered) => offered,
+        };
+        // The PEM blocks are kept alive here: the parsed certificates borrow
+        // the DER they decode to.
+        let blocks = self.signature_key_blocks();
+        let local_certificates = local_certificates(&blocks);
+        let package = self.download_package(api, &selected, offered)?;
+        let verified = package.verify(&offered.signatures, &local_certificates)?;
+        let path = verified.save(&self.package_dir)?;
+        log::info!(
+            "Spooled the agent package {} at {:?}, waiting for the installer",
+            verified.hash,
+            path
+        );
+        Ok(FetchOutcome::Spooled {
+            hash: verified.hash,
+            path,
+        })
+    }
+
     /// The connection to run an update over, if the updater may run at all.
     ///
     /// The updater reuses the controller's registration. It picks one of the
@@ -683,38 +788,60 @@ impl Updater {
         ))
     }
 
-    /// Fetch the package `status` offers, unless it is the installed one.
+    /// The package `status` offers, unless there is nothing to fetch.
     ///
-    /// The package is not verified here: it is held in memory until its
-    /// signature has been checked, and only then written anywhere.
+    /// The one place that decides whether an update is due, so that the
+    /// decision and the transfer cannot disagree about which package is meant.
     ///
     /// # Returns
     ///
-    /// `None` when the site offers no package, or offers the installed one -
-    /// the two ways a check ends without an update.
+    /// The package to fetch, or which of the two ways a fetch ends without one
+    /// this is: the site offers no package, or offers the installed one. The
+    /// reason is logged as well.
+    ///
+    /// # Errors
+    ///
+    /// If nothing is known about the installed agent.
+    fn offered_update<'a>(
+        &self,
+        status: &'a agent_receiver_api::UpdateStatusResponse,
+    ) -> AnyhowResult<OfferedUpdate<'a>> {
+        let installed = &self
+            .agent_info
+            .as_ref()
+            .context("Cannot decide on an agent update without the info of the installed agent")?
+            .hash;
+        let Some(offered) = status.target_agent.as_ref() else {
+            log::info!("No agent package available for this host");
+            return Ok(OfferedUpdate::NoPackage);
+        };
+        if offered.aghash == *installed {
+            log::info!("The installed agent {installed} is the one the site offers");
+            return Ok(OfferedUpdate::UpToDate(offered.aghash.clone()));
+        }
+        Ok(OfferedUpdate::Due(offered))
+    }
+
+    /// Download the package `offered`, which is not the installed one.
+    ///
+    /// The package is not verified here: it is held in memory until its
+    /// signature has been checked, and only then written anywhere.
     ///
     /// # Errors
     ///
     /// If nothing is known about the installed agent, if the site address
     /// cannot be assembled, or if the site does not deliver the package.
-    pub fn download_update(
+    fn download_package(
         &self,
         api: &impl agent_receiver_api::AgentUpdate,
         selected: &connection::UpdateConnection<'_>,
-        status: &agent_receiver_api::UpdateStatusResponse,
-    ) -> AnyhowResult<Option<UpdatePackage>> {
+        offered: &agent_receiver_api::TargetAgent,
+    ) -> AnyhowResult<UpdatePackage> {
         let agent_info = self
             .agent_info
             .as_ref()
             .context("Cannot download an agent update without the info of the installed agent")?;
-        let Some(target) = status.target_agent.as_ref().map(|offered| &offered.aghash) else {
-            log::info!("No agent package available for this host");
-            return Ok(None);
-        };
-        if *target == agent_info.hash {
-            log::info!("The installed agent {target} is the one the site offers");
-            return Ok(None);
-        }
+        let target = &offered.aghash;
         let url = site_spec::make_site_url(selected.site_id, &selected.connection.receiver_port)?;
         let bytes = api
             .download_agent(
@@ -735,11 +862,11 @@ impl Updater {
             selected.site_id,
             agent_info.hash
         );
-        Ok(Some(UpdatePackage {
+        Ok(UpdatePackage {
             hash: target.clone(),
             platform: agent_info.platform.clone(),
             bytes,
-        }))
+        })
     }
 
     /// The last error in the form the site gets it.
@@ -758,6 +885,28 @@ impl Updater {
         self.config
             .as_ref()
             .map_or(&[], |config| &config.signature_keys)
+    }
+
+    /// The configured signature keys as PEM blocks.
+    ///
+    /// Separate from [`local_certificates`] because a parsed certificate
+    /// borrows the DER of its block: the blocks have to outlive it.
+    ///
+    /// A key that is no PEM block is dropped with a warning. One unusable
+    /// entry of the baked configuration must not disable the others.
+    fn signature_key_blocks(&self) -> Vec<x509_parser::pem::Pem> {
+        self.signature_keys()
+            .iter()
+            .filter_map(|key| match certs::parse_pem(key) {
+                Ok(block) => Some(block),
+                Err(error) => {
+                    log::warn!(
+                        "Ignoring a configured signature key that is no PEM block: {error:#}"
+                    );
+                    None
+                }
+            })
+            .collect()
     }
 
     pub fn platform(&self) -> Option<&str> {
@@ -804,9 +953,11 @@ mod tests {
     use crate::config::test_helpers::TestRegistry;
     use crate::config::{ConnectionMode, TrustedConnection};
     use crate::environment::SetupMode;
+    use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
     use std::cell::RefCell;
     use std::path::PathBuf;
     use std::str::FromStr;
+    use std::sync::LazyLock;
 
     use crate::agent_receiver_api::{TargetAgent, UpdateStatusResponse};
 
@@ -816,7 +967,12 @@ mod tests {
     const SOURCE_SITE: &str = "server/site";
     const OTHER_SITE: &str = "other-server/site";
     const STATE_FILE: &str = "state.json";
+    const PACKAGE_DIR: &str = "update";
     const PACKAGE: &[u8] = b"an agent package";
+
+    /// Length of a signature under the 2048 bit key of [`SITE_SIGNATURE`].
+    /// A signature of any other length is rejected before it is verified.
+    const RSA_SIGNATURE_LEN: usize = 256;
 
     const UPDATER_CONFIG_TOML: &str = "\
 activated = false
@@ -1414,14 +1570,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
     #[test]
     fn test_summary_without_config_and_agent_info() {
-        let summary = Updater {
-            config: None,
-            state: UpdateState::default(),
-            agent_info: None,
-            load_error: None,
-            state_path: PathBuf::from(STATE_FILE),
-        }
-        .summary();
+        let summary = updater(None, None).summary();
 
         assert!(summary.starts_with("operational: false, config 'not configured'"));
         assert!(summary.contains("agent hash 'unknown'"));
@@ -1517,6 +1666,14 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         })
     }
 
+    /// A configuration that accepts what the site signed in [`SITE_SIGNATURE`].
+    fn config_trusting_the_signer() -> Option<UpdaterConfig> {
+        Some(UpdaterConfig {
+            signature_keys: vec![SITE_SIGNATURE.certificate.clone()],
+            ..some_config().unwrap()
+        })
+    }
+
     fn some_agent_info() -> Option<AgentInfo> {
         Some(AgentInfo {
             hash: INSTALLED_HASH.parse().unwrap(),
@@ -1532,6 +1689,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             agent_info,
             load_error: None,
             state_path: PathBuf::from(STATE_FILE),
+            package_dir: PathBuf::from(PACKAGE_DIR),
         }
     }
 
@@ -1541,6 +1699,15 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             state,
             state_path: dir.path().join(STATE_FILE),
             ..updater(some_config(), some_agent_info())
+        }
+    }
+
+    /// An updater that spools the package it fetches into `dir`, and trusts
+    /// the certificate the test site signs with.
+    fn updater_spooling_into(dir: &tempfile::TempDir) -> Updater {
+        Updater {
+            package_dir: dir.path().join(PACKAGE_DIR),
+            ..updater(config_trusting_the_signer(), some_agent_info())
         }
     }
 
@@ -1650,8 +1817,26 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
     impl TestApi {
         fn new(target: Option<&str>) -> Self {
+            Self::answering(offered(target))
+        }
+
+        /// A site that offers `target` with the certificate this host trusts,
+        /// but a signature that does not match the package.
+        fn badly_signed(target: &str) -> Self {
+            Self::answering(UpdateStatusResponse {
+                target_agent: Some(TargetAgent {
+                    aghash: target.parse().unwrap(),
+                    signatures: vec![agent_receiver_api::AgentSignature {
+                        signature: BASE64.encode([0_u8; RSA_SIGNATURE_LEN]),
+                        ..SITE_SIGNATURE.clone()
+                    }],
+                }),
+            })
+        }
+
+        fn answering(response: agent_receiver_api::UpdateStatusResponse) -> Self {
             Self {
-                response: offered(target),
+                response,
                 request: RefCell::new(None),
                 download: RefCell::new(None),
             }
@@ -1727,15 +1912,49 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         }
     }
 
-    /// The status of a site that has `target` for this host.
+    /// The status of a site that has `target` for this host, signed with the
+    /// certificate [`config_trusting_the_signer`] configures.
     fn offered(target: Option<&str>) -> UpdateStatusResponse {
         UpdateStatusResponse {
             target_agent: target.map(|hash| TargetAgent {
                 aghash: hash.parse().unwrap(),
-                signatures: vec![],
+                signatures: vec![SITE_SIGNATURE.clone()],
             }),
         }
     }
+
+    /// The signature of [`PACKAGE`] as the site delivers it with the status.
+    ///
+    /// Made once: generating the RSA key dominates the runtime of these tests.
+    /// Which signatures verification accepts is covered in [`super::verification`];
+    /// here one that passes is all that is needed.
+    static SITE_SIGNATURE: LazyLock<agent_receiver_api::AgentSignature> = LazyLock::new(|| {
+        use rsa::pkcs1v15::SigningKey;
+        use rsa::pkcs8::EncodePrivateKey;
+        use rsa::signature::{SignatureEncoding, Signer};
+        use sha2::Sha256;
+
+        let key = rsa::RsaPrivateKey::new(&mut rand::thread_rng(), 2048).unwrap();
+        let key_pair = rcgen::KeyPair::from_pkcs8_der_and_sign_algo(
+            &rustls::pki_types::PrivatePkcs8KeyDer::from(key.to_pkcs8_der().unwrap().as_bytes()),
+            &rcgen::PKCS_RSA_SHA256,
+        )
+        .unwrap();
+        let mut params = rcgen::CertificateParams::default();
+        params
+            .distinguished_name
+            .push(rcgen::DnType::CommonName, "agent package signer");
+        let certificate = params.self_signed(&key_pair).unwrap();
+        agent_receiver_api::AgentSignature {
+            certificate: pem_rfc7468::encode_string(
+                "CERTIFICATE",
+                pem_rfc7468::LineEnding::LF,
+                certificate.der(),
+            )
+            .unwrap(),
+            signature: BASE64.encode(SigningKey::<Sha256>::new(key).sign(PACKAGE).to_bytes()),
+        }
+    });
 
     /// An updater whose last update attempt ended in `last_error`.
     fn updater_after(last_error: Option<&str>) -> Updater {
@@ -1967,15 +2186,60 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         );
     }
 
+    /// The package [`offered`] carries, for the functions that take it alone.
+    fn target_agent(status: &UpdateStatusResponse) -> &TargetAgent {
+        status.target_agent.as_ref().unwrap()
+    }
+
     #[test]
-    fn test_download_update_fetches_a_package_that_is_not_installed() {
+    fn test_offered_update_is_a_package_that_is_not_installed() {
+        let status = offered(Some(TARGET_HASH));
+
+        let offered = updater_after(None).offered_update(&status).unwrap();
+
+        assert_eq!(offered, OfferedUpdate::Due(target_agent(&status)));
+    }
+
+    #[test]
+    fn test_offered_update_when_the_offered_package_is_the_installed_one() {
+        let status = offered(Some(INSTALLED_HASH));
+
+        assert_eq!(
+            updater_after(None).offered_update(&status).unwrap(),
+            OfferedUpdate::UpToDate(INSTALLED_HASH.parse().unwrap())
+        );
+    }
+
+    #[test]
+    fn test_offered_update_without_an_offered_package() {
+        let status = offered(None);
+
+        assert_eq!(
+            updater_after(None).offered_update(&status).unwrap(),
+            OfferedUpdate::NoPackage
+        );
+    }
+
+    #[test]
+    fn test_offered_update_without_agent_info() {
+        let status = offered(Some(TARGET_HASH));
+
+        let error = updater(some_config(), None)
+            .offered_update(&status)
+            .unwrap_err();
+
+        assert!(error.to_string().contains("info of the installed agent"));
+    }
+
+    #[test]
+    fn test_download_package_fetches_the_offered_package() {
         let registry = registry_with_one_connection();
         let selected = connection::select(&registry.registry).unwrap();
         let api = TestApi::new(None);
+        let status = offered(Some(TARGET_HASH));
 
         let package = updater_after(None)
-            .download_update(&api, &selected, &offered(Some(TARGET_HASH)))
-            .unwrap()
+            .download_package(&api, &selected, target_agent(&status))
             .unwrap();
 
         assert_eq!(package.hash.as_str(), TARGET_HASH);
@@ -1989,55 +2253,127 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     }
 
     #[test]
-    fn test_download_update_when_the_offered_package_is_the_installed_one() {
+    fn test_download_package_without_agent_info() {
         let registry = registry_with_one_connection();
         let selected = connection::select(&registry.registry).unwrap();
-        let api = TestApi::new(None);
-
-        assert!(updater_after(None)
-            .download_update(&api, &selected, &offered(Some(INSTALLED_HASH)))
-            .unwrap()
-            .is_none());
-        assert!(api.download().is_none());
-    }
-
-    #[test]
-    fn test_download_update_without_an_offered_package() {
-        let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
-        let api = TestApi::new(None);
-
-        assert!(updater_after(None)
-            .download_update(&api, &selected, &offered(None))
-            .unwrap()
-            .is_none());
-        assert!(api.download().is_none());
-    }
-
-    #[test]
-    fn test_download_update_without_agent_info() {
-        let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let status = offered(Some(TARGET_HASH));
 
         let error = updater(some_config(), None)
-            .download_update(&TestApi::new(None), &selected, &offered(Some(TARGET_HASH)))
+            .download_package(&TestApi::new(None), &selected, target_agent(&status))
             .unwrap_err();
 
         assert!(error.to_string().contains("info of the installed agent"));
     }
 
     #[test]
-    fn test_download_update_names_the_package_and_the_site_that_failed() {
+    fn test_download_package_names_the_package_and_the_site_that_failed() {
         let registry = registry_with_one_connection();
         let selected = connection::select(&registry.registry).unwrap();
+        let status = offered(Some(TARGET_HASH));
 
         let error = updater_after(None)
-            .download_update(&UnreachableApi, &selected, &offered(Some(TARGET_HASH)))
+            .download_package(&UnreachableApi, &selected, target_agent(&status))
             .unwrap_err();
 
         assert_eq!(
             error.to_string(),
             "Agent update download of fedcba9876543210 from server/site failed"
+        );
+    }
+
+    #[test]
+    fn test_fetch_update_spools_the_package_the_site_offers() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = updater_spooling_into(&dir);
+
+        let outcome = updater
+            .fetch_update(&registry.registry, &TestApi::new(Some(TARGET_HASH)))
+            .unwrap();
+
+        let FetchOutcome::Spooled { hash, path } = outcome else {
+            panic!("expected a spooled package, got {outcome:?}");
+        };
+        assert_eq!(hash.as_str(), TARGET_HASH);
+        assert_eq!(
+            path,
+            dir.path().join(PACKAGE_DIR).join("fedcba9876543210.deb")
+        );
+        assert_eq!(fs::read(&path).unwrap(), PACKAGE);
+    }
+
+    #[test]
+    fn test_fetch_update_when_the_site_offers_the_installed_package() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = updater_spooling_into(&dir);
+
+        let outcome = updater
+            .fetch_update(&registry.registry, &TestApi::new(Some(INSTALLED_HASH)))
+            .unwrap();
+
+        assert_eq!(
+            outcome,
+            FetchOutcome::UpToDate(INSTALLED_HASH.parse().unwrap())
+        );
+        assert!(!dir.path().join(PACKAGE_DIR).exists());
+    }
+
+    #[test]
+    fn test_fetch_update_without_a_package() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = updater_spooling_into(&dir);
+
+        let outcome = updater
+            .fetch_update(&registry.registry, &TestApi::new(None))
+            .unwrap();
+
+        assert_eq!(outcome, FetchOutcome::NoPackage);
+        assert!(!dir.path().join(PACKAGE_DIR).exists());
+    }
+
+    #[test]
+    fn test_fetch_update_when_not_operational() {
+        let registry = registry_with_one_connection();
+
+        let outcome = updater(some_config(), None)
+            .fetch_update(&registry.registry, &TestApi::new(Some(TARGET_HASH)))
+            .unwrap();
+
+        assert_eq!(outcome, FetchOutcome::NotPossible);
+    }
+
+    /// Nothing is spooled that the signature does not vouch for, and the
+    /// package the site did deliver leaves no file behind.
+    #[test]
+    fn test_fetch_update_rejects_a_package_the_signature_does_not_match() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = updater_spooling_into(&dir);
+        let api = TestApi::badly_signed(TARGET_HASH);
+
+        let error = updater.fetch_update(&registry.registry, &api).unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "Could not verify the signature of this package"
+        );
+        assert!(api.download().is_some());
+        assert!(!dir.path().join(PACKAGE_DIR).exists());
+    }
+
+    #[test]
+    fn test_fetch_update_names_the_site_that_did_not_answer() {
+        let registry = registry_with_one_connection();
+
+        let error = updater(some_config(), some_agent_info())
+            .fetch_update(&registry.registry, &UnreachableApi)
+            .unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "Agent update status request to server/site failed"
         );
     }
 

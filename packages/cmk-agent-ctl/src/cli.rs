@@ -90,6 +90,9 @@ pub enum Mode {
     RenewCertificate(RenewCertificateOpts),
 
     /// Update the agent of this host from the Checkmk site it is registered with
+    ///
+    /// The package the site offers is downloaded, verified and left in the spool
+    /// directory for the installer. Installing it is not implemented yet.
     Update(UpdateOpts),
 }
 

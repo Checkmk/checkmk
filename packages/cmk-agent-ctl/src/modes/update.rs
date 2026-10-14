@@ -7,28 +7,36 @@
 
 use crate::agent_receiver_api;
 use crate::configuration::config::{ClientConfig, Registry};
-use crate::updater::{CheckOutcome, Updater};
-use anyhow::{bail, Result as AnyhowResult};
+use crate::updater::{CheckOutcome, FetchOutcome, Updater};
+use anyhow::Result as AnyhowResult;
 
-/// Report which agent package the site has for this host.
+/// Fetch the agent package the site has for this host, or only report it.
+///
+/// Without `check_only` the package is downloaded and, once its signature has
+/// been checked, spooled for the installer. Installing it is not implemented
+/// yet, so the run ends with the package waiting on disk.
 ///
 /// # Errors
 ///
-/// If anything but a check is asked for - installing an agent from the
-/// controller is not implemented yet - or if the site cannot be asked.
+/// If the site cannot be asked, does not deliver the package it offered, or if
+/// the package fails verification or cannot be spooled.
 pub fn update(
     updater: &Updater,
     registry: &Registry,
     client_config: &ClientConfig,
     check_only: bool,
 ) -> AnyhowResult<()> {
-    if !check_only {
-        bail!("Installing an agent update is not implemented yet, use --check-only");
-    }
     let api = agent_receiver_api::Api {
         use_proxy: client_config.use_proxy,
     };
-    println!("{}", report(updater.check(registry, &api)?));
+    println!(
+        "{}",
+        if check_only {
+            report(updater.check(registry, &api)?)
+        } else {
+            report_fetch(updater.fetch_update(registry, &api)?)
+        }
+    );
     Ok(())
 }
 
@@ -47,6 +55,28 @@ fn report(outcome: CheckOutcome) -> String {
         CheckOutcome::UpdateAvailable { target, installed } => {
             format!("Agent update available: {target} (installed: {installed})")
         }
+    }
+}
+
+/// The outcome of a fetch in the one line the mode prints.
+///
+/// The package stops at the spool directory: whoever installs it is a
+/// privileged process, and that step does not exist yet. Naming the file is
+/// therefore the whole result, not a detail.
+///
+/// The two outcomes that end without a package read as they do in [`report`]:
+/// the same situation must not be worded by whether `--check-only` was passed.
+fn report_fetch(outcome: FetchOutcome) -> String {
+    match outcome {
+        FetchOutcome::NotPossible => {
+            String::from("No agent update is possible for this host, run with -v for the reason")
+        }
+        FetchOutcome::NoPackage => String::from("No agent package available for this host"),
+        FetchOutcome::UpToDate(hash) => format!("Agent is up to date: {hash}"),
+        FetchOutcome::Spooled { hash, path } => format!(
+            "Verified agent package {hash} is ready at {}; installing it is not implemented yet",
+            path.display()
+        ),
     }
 }
 
@@ -89,6 +119,42 @@ mod tests {
         assert_eq!(
             report(CheckOutcome::NotPossible),
             "No agent update check is possible for this host, run with -v for the reason"
+        );
+    }
+
+    #[test]
+    fn test_report_a_spooled_package() {
+        assert_eq!(
+            report_fetch(FetchOutcome::Spooled {
+                hash: TARGET_HASH.parse().unwrap(),
+                path: std::path::PathBuf::from("/spool/fedcba9876543210.deb"),
+            }),
+            "Verified agent package fedcba9876543210 is ready at \
+             /spool/fedcba9876543210.deb; installing it is not implemented yet"
+        );
+    }
+
+    #[test]
+    fn test_report_a_fetch_from_a_site_without_a_package() {
+        assert_eq!(
+            report_fetch(FetchOutcome::NoPackage),
+            "No agent package available for this host"
+        );
+    }
+
+    #[test]
+    fn test_report_a_fetch_of_an_agent_that_is_up_to_date() {
+        assert_eq!(
+            report_fetch(FetchOutcome::UpToDate(INSTALLED_HASH.parse().unwrap())),
+            "Agent is up to date: 0123456789abcdef"
+        );
+    }
+
+    #[test]
+    fn test_report_a_fetch_that_could_not_be_made() {
+        assert_eq!(
+            report_fetch(FetchOutcome::NotPossible),
+            "No agent update is possible for this host, run with -v for the reason"
         );
     }
 }

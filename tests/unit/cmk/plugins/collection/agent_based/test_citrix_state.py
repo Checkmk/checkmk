@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import pytest
-
 from cmk.agent_based.v2 import Attributes, Result, State
 from cmk.plugins.citrix.lib_state import parse_citrix_state
 from cmk.plugins.collection.agent_based.citrix_state import (
@@ -88,21 +86,11 @@ STRING_TABLE_WITHOUT_HOSTING_SERVER = [
 ]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="Crash report bb3122a8-c305-11f1-873e-5cba2c0b1c44: KeyError 'hosting_server'",
-)
 def test_discover_citrix_state_hosting_server_without_hosting_server() -> None:
     section = parse_citrix_state(STRING_TABLE_WITHOUT_HOSTING_SERVER)
     assert not list(check_plugin_citrix_state_hosting_server.discovery_function(section))
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=KeyError,
-    reason="Crash report bb3122a8-c305-11f1-873e-5cba2c0b1c44: KeyError 'hosting_server'",
-)
 def test_check_citrix_state_hosting_server_without_hosting_server() -> None:
     # Services discovered before the fix must not crash: an empty result lets
     # the framework report the item as not found.

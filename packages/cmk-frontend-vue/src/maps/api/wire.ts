@@ -298,6 +298,7 @@ export function mapListObjectToRead(obj: MapListObjectWire): MapRead {
     object_count: s.object_count,
     icon_size: s.icon_size ?? null,
     rotation_interval: s.rotation_interval ?? 0,
+    rotation_pools: s.rotation_pools ?? [],
     sort_order: s.sort_order ?? 0,
     version: s.version ?? 0,
     hide_in_monitor_menu: ext.visibility.hide_in_monitor_menu,

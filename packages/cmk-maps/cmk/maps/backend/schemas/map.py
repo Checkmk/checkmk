@@ -6,7 +6,14 @@
 
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    BeforeValidator,
+    Field,
+    field_validator,
+    model_validator,
+)
 
 from cmk.maps.backend.schemas.presentation import PresentationView
 from cmk.maps.shared.filters import normalize_object_filter
@@ -28,13 +35,16 @@ from cmk.maps.shared.map_payload import (
 from cmk.maps.shared.validators import (
     coerce_asset_ref,
     coerce_url_target,
+    MAX_ROTATION_POOLS,
     validate_color,
+    validate_rotation_pool,
     validate_user_url,
 )
 
 # Uploaded icon / background references are bare filenames the SPA expands into an
 # asset URL; drop anything that could climb out of the asset directory.
 _AssetRef = Annotated[str | None, BeforeValidator(coerce_asset_ref)]
+_RotationPool = Annotated[str, AfterValidator(validate_rotation_pool)]
 
 
 class AggregationInfo(BaseModel):
@@ -333,6 +343,7 @@ class MapConfig(BaseModel):
     connection_id: str = "live_1"
     icon_size: int | None = None
     rotation_interval: int = 0
+    rotation_pools: list[_RotationPool] = Field(default_factory=list, max_length=MAX_ROTATION_POOLS)
     sort_order: int = 0
     click_action: ClickAction = "link"
     hover_template: str | None = None
@@ -391,6 +402,7 @@ class MapUpdate(BaseModel):
     hover_template: str | None = None
     context_template: str | None = None
     rotation_interval: int | None = None
+    rotation_pools: list[_RotationPool] | None = Field(default=None, max_length=MAX_ROTATION_POOLS)
     render_mode: RenderMode | None = None
     default_z: int | None = None
     canvas_width: int | None = None
@@ -415,6 +427,7 @@ class MapRead(BaseModel):
     view: MapView
     object_count: int
     rotation_interval: int
+    rotation_pools: list[str] = Field(default_factory=list)
     version: int = 0
     sort_order: int = 0
     click_action: ClickAction = "link"

@@ -281,6 +281,7 @@ export class MapService {
         cfg.objects.length +
         (cfg.view.type === 'presentation' ? (cfg.view.elements?.length ?? 0) : 0),
       rotation_interval: cfg.rotation_interval,
+      rotation_pools: cfg.rotation_pools ?? [],
       sort_order: cfg.sort_order,
       click_action: cfg.click_action,
       hide_in_monitor_menu: false,
@@ -322,6 +323,7 @@ export class MapService {
       row.connection_id = merged.connection_id
       row.icon_size = merged.icon_size ?? null
       row.rotation_interval = merged.rotation_interval
+      row.rotation_pools = merged.rotation_pools ?? []
       row.click_action = merged.click_action
       row.render_mode = merged.render_mode
       row.background_image = merged.background_image ?? null

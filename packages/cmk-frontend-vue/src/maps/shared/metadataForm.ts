@@ -5,12 +5,12 @@
  */
 import type { MapConfig, RenderMode } from '@/maps/types/api'
 
-/** The rotation interval in minutes, out of its cascading-choice shape. */
-function rotationIntervalOf(value: unknown): number {
+/** The rotation interval in seconds, out of its cascading-choice shape. */
+function intervalFromChoice(value: unknown): number {
   if (Array.isArray(value) && value.length === 2) {
-    const [choice, minutes] = value
-    if (choice === 'every' && typeof minutes === 'number') {
-      return minutes
+    const [choice, seconds] = value
+    if (choice === 'every' && typeof seconds === 'number') {
+      return seconds
     }
   }
   return 0
@@ -29,7 +29,8 @@ const METADATA_READERS: Record<string, (value: unknown) => Partial<MapConfig>> =
   alias: (value) => ({ alias: value as string }),
   connection_id: (value) => ({ connection_id: value as string }),
   icon_size: (value) => ({ icon_size: (value as number | null | undefined) ?? null }),
-  rotation_interval: (value) => ({ rotation_interval: rotationIntervalOf(value) }),
+  rotation_interval: (value) => ({ rotation_interval: intervalFromChoice(value) }),
+  rotation_pools: (value) => ({ rotation_pools: (value as string[] | undefined) ?? [] }),
   click_action: (value) => ({ click_action: value === false ? 'none' : 'link' }),
   render_mode: (value) => ({ render_mode: (value as RenderMode | undefined) ?? 'default' }),
   default_z: (value) => ({ default_z: (value as number | undefined) ?? 1 }),

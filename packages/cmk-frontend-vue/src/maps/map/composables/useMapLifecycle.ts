@@ -18,12 +18,13 @@ import { onUnmounted, watch, watchEffect } from 'vue'
 
 import { isAutoObjectId } from '@/maps/api/wire'
 import { useMaps, useStates, useToast } from '@/maps/services/context'
+import type { MapConfig } from '@/maps/types/api'
 
 export function useMapLifecycle(source: {
   mapName: () => string
   /** Clear what belongs to the map being left — selection, edit state, drafts. */
   onMapChanged: () => void
-  rotation: { stop: () => void; schedule: (seconds: number) => void }
+  rotation: { stop: () => void; schedule: (map: MapConfig | null) => void }
 }): void {
   const { _t } = usei18n()
   const toast = useToast()
@@ -60,7 +61,7 @@ export function useMapLifecycle(source: {
       if (superseded) {
         return
       }
-      source.rotation.schedule(maps.currentMap.value?.rotation_interval ?? 0)
+      source.rotation.schedule(maps.currentMap.value)
       let registered = true
       try {
         await states.connectToMap(name, maps.currentMapSig.value ?? undefined)

@@ -261,6 +261,7 @@ export function metadataFormData(map: MapRead): Record<string, unknown> {
     alias: map.alias,
     connection_id: map.connection_id,
     rotation_interval: rotation > 0 ? ['every', rotation] : ['off', null],
+    rotation_pools: map.rotation_pools,
     click_action: map.click_action !== 'none',
     render_mode: map.render_mode ?? 'default',
     default_z: map.default_z ?? 1

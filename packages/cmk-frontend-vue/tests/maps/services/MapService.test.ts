@@ -44,6 +44,7 @@ const sampleMaps: MapRead[] = [
     object_count: 0,
     icon_size: 30,
     rotation_interval: 0,
+    rotation_pools: [],
     sort_order: 0,
     version: 0,
     hide_in_monitor_menu: false,

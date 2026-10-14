@@ -178,6 +178,7 @@ export interface MapRead {
   view: MapView
   object_count: number
   rotation_interval: number
+  rotation_pools: string[]
   version?: number
   sort_order: number
   click_action: ClickAction

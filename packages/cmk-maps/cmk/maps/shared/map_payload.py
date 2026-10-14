@@ -266,6 +266,7 @@ class MapPayload(TypedDict):
     connection_id: str
     icon_size: int | None
     rotation_interval: int
+    rotation_pools: NotRequired[list[str]]
     sort_order: int
     click_action: ClickAction
     render_mode: RenderMode

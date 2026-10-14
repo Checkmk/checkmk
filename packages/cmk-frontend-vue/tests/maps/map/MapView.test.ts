@@ -12,7 +12,7 @@ import type { SignedMap } from '@/maps/api/mapConfig'
 import MapViewComponent from '@/maps/map/MapView.vue'
 import type { MapConfig, MapRead, MapView } from '@/maps/types/api'
 
-import { aListedMap, aMap, newMapView } from '../support/fixtures'
+import { aListedMap, aMap, anObject, newMapView } from '../support/fixtures'
 import { fakeMapsServices, provideServices } from '../support/services'
 
 // connectToMap opens an EventSource; jsdom has none. A minimal stand-in keeps the
@@ -74,10 +74,10 @@ function opensMap(view: MapView, extra: Partial<MapConfig> = {}): void {
   vi.mocked(services.apis.mapConfig.get).mockResolvedValue(signedMap(view, extra))
 }
 
-function renderMap() {
+function renderMap(extraStubs: Record<string, unknown> = {}) {
   const { global: provided } = provideServices(services)
   return render(MapViewComponent, {
-    global: { ...provided, stubs }
+    global: { ...provided, stubs: { ...stubs, ...extraStubs } }
   })
 }
 
@@ -304,6 +304,38 @@ describe('MapView – what the settings slide-in is handed', () => {
       owner: 'cmkadmin',
       public: true,
       can_delete: true
+    })
+  })
+})
+
+describe('MapView – following a map object', () => {
+  const clickingRenderer = defineComponent({
+    emits: ['object-click'],
+    setup(_props, { emit }) {
+      const floor = anObject({ id: 'm1', type: 'map', map_name: 'floor-2' })
+      return () => h('button', { onClick: () => emit('object-click', floor) }, 'Floor 2')
+    }
+  })
+
+  beforeEach(() => {
+    services = fakeMapsServices()
+    vi.stubGlobal('EventSource', FakeEventSource)
+  })
+
+  // A wall display keeps showing maps the way it was set up.
+  it('opens the map in kiosk mode and the rotation pool this one was opened in', async () => {
+    services.nav.replace({ view: 'map', name: 'map1', kiosk: true, rotation: 'noc' })
+    opensMap(newMapView('radar'))
+    const navigate = vi.spyOn(services.nav, 'navigate').mockImplementation(() => {})
+    renderMap({ 'radar-map-view': clickingRenderer })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Floor 2' }))
+
+    expect(navigate).toHaveBeenCalledWith({
+      view: 'map',
+      name: 'floor-2',
+      kiosk: true,
+      rotation: 'noc'
     })
   })
 })

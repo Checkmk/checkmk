@@ -66,6 +66,7 @@ class MapRead(TypedDict):
     view: Mapping[str, object]
     object_count: int
     rotation_interval: int
+    rotation_pools: list[str]
     version: int
     sort_order: int
     click_action: str

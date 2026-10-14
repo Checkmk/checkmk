@@ -596,7 +596,12 @@ function onObjectClick(obj: MapElement, event?: MouseEvent) {
   }
   const bound = asBoundObject(obj)
   if (bound.type === 'map' && bound.map_name) {
-    nav.navigate({ view: 'map', name: bound.map_name })
+    nav.navigate({
+      view: 'map',
+      name: bound.map_name,
+      kiosk: nav.state.kiosk,
+      rotation: nav.state.rotation
+    })
     return
   }
   if (event && (event.ctrlKey || event.metaKey)) {
@@ -726,7 +731,7 @@ async function onSettingsUpdated() {
   // again. ``initialLoad`` shows the view's spinner instead of any map in the gap.
   stopRotation()
   const map = mapsStore.currentMap.value
-  scheduleRotation(map?.rotation_interval ?? 0)
+  scheduleRotation(map)
   if (!map) {
     return
   }
@@ -781,7 +786,7 @@ function closeBulkAckModal(sent: boolean): void {
       :connected="statesStore.connected.value"
       :can-edit="canEdit"
       :editing="editor.editMode.value"
-      :rotation-seconds="mapConfig && mapConfig.rotation_interval > 0 ? rotationCountdown : 0"
+      :rotation-seconds="rotationCountdown"
       :rotation-paused="rotationPaused"
       :dimmed="!!drawerObject"
       @toggle-rotation="toggleRotationPause"

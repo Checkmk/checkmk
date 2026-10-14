@@ -25,6 +25,7 @@ _STORED_METADATA = {
     "default_z": 1,
     "render_mode": "nagvis_classic",
     "rotation_interval": ("off", None),
+    "rotation_pools": [],
     "click_action": True,
 }
 
@@ -66,3 +67,17 @@ def test_a_choice_the_form_does_not_offer_is_reported_as_a_validation_message(
 
     assert parsed is None
     assert [list(message.location) for message in messages] == [["render_mode"]]
+
+
+@pytest.mark.usefixtures("request_context", "no_connections")
+def test_a_rotation_pool_listed_twice_is_reported_as_a_validation_message(
+    with_admin_login: UserId,  # noqa: ARG001
+) -> None:
+    _schema, for_form = render_form_schema(
+        "map_metadata", {**_STORED_METADATA, "rotation_pools": ["noc", "noc"]}
+    )
+
+    parsed, messages = parse_form_values("map_metadata", for_form)
+
+    assert parsed is None
+    assert [list(message.location) for message in messages] == [["rotation_pools"]]

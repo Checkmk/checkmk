@@ -49,7 +49,9 @@ from cmk.maps.shared.map_payload import (
 from cmk.maps.shared.validators import (
     coerce_asset_ref,
     coerce_url_target,
+    MAX_ROTATION_POOLS,
     validate_color,
+    validate_rotation_pool,
     validate_user_url,
 )
 
@@ -84,6 +86,8 @@ def _normalize_object_filter(value: str) -> str | None:
 # ``normalize_object_filter`` raises on non-``Filter:`` input, so a bad filter is a
 # 422 at the REST boundary instead of a silently-stored value that bricks the map.
 _ObjectFilter = Annotated[str, AfterValidator(_normalize_object_filter)]
+
+_RotationPool = Annotated[str, AfterValidator(validate_rotation_pool)]
 
 
 # --------------------------------------------------------------------------- #
@@ -893,6 +897,13 @@ class MapConfig:
         description="Default icon size in pixels (null = default).", example=32
     )
     rotation_interval: int = api_field(description="Auto-rotation interval (s).", example=0)
+    rotation_pools: (
+        Annotated[list[_RotationPool], Field(max_length=MAX_ROTATION_POOLS)] | ApiOmitted
+    ) = api_field(
+        description="Rotation pools the map takes part in.",
+        example=["noc"],
+        default_factory=ApiOmitted,
+    )
     sort_order: int = api_field(description="Sort order in listings.", example=0)
     click_action: ClickAction = api_field(
         description="Default object click action.", example="link"
@@ -985,6 +996,11 @@ class MapListEntry:
     )
     rotation_interval: int | ApiOmitted = api_field(
         description="Auto-rotation interval (s).", example=0, default_factory=ApiOmitted
+    )
+    rotation_pools: list[str] | ApiOmitted = api_field(
+        description="Rotation pools the map takes part in.",
+        example=["noc"],
+        default_factory=ApiOmitted,
     )
     sort_order: int | ApiOmitted = api_field(
         description="Sort order in listings.", example=0, default_factory=ApiOmitted

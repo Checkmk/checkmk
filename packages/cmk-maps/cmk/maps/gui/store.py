@@ -11,7 +11,6 @@ model and Activate Changes replication — like graph collections. The list/edit
 stays maps-own (the SPA); only the storage and permission plumbing is shared.
 """
 
-import re
 from pathlib import Path
 
 import cmk.utils.paths
@@ -25,13 +24,6 @@ from cmk.gui.type_defs import VisualPublic
 from cmk.gui.utils.roles import UserPermissions
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.type_defs import map_config_from_spec, MapName, MapRead, MapSpec
-from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
-
-_MAP_NAME_RE = re.compile(MAP_NAME_PATTERN)
-
-
-def is_valid_map_name(name: str) -> bool:
-    return len(name) <= MAP_NAME_MAX_LENGTH and bool(_MAP_NAME_RE.fullmatch(name))
 
 
 @request_memoize()
@@ -182,6 +174,10 @@ def _opt_int(value: object) -> int | None:
     return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
+def rotation_pools_of(value: object) -> list[str]:
+    return [pool for pool in value if isinstance(pool, str)] if isinstance(value, list) else []
+
+
 def _int(value: object, default: int) -> int:
     return value if isinstance(value, int) and not isinstance(value, bool) else default
 
@@ -210,6 +206,7 @@ def map_to_read(page: MapPage, can_edit: bool, can_delete: bool) -> MapRead:
         view=view,
         object_count=cfg.object_count,
         rotation_interval=_int(payload.get("rotation_interval"), 0),
+        rotation_pools=rotation_pools_of(payload.get("rotation_pools")),
         version=_int(payload.get("version"), 0),
         sort_order=_int(payload.get("sort_order"), 0),
         click_action=str(payload.get("click_action") or "link"),

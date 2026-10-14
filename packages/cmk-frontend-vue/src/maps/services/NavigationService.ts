@@ -14,7 +14,7 @@ export type AdminTab = 'icons'
 
 export type NavTarget =
   | { view: 'home' }
-  | { view: 'map'; name: string; kiosk?: boolean; preview?: boolean }
+  | { view: 'map'; name: string; kiosk?: boolean; preview?: boolean; rotation?: string | null }
   | { view: 'admin'; tab: AdminTab }
 
 export interface NavState {
@@ -22,6 +22,8 @@ export interface NavState {
   name: string | null
   tab: AdminTab | null
   kiosk: boolean
+  /** The rotation pool a map was opened in, which it rotates on within. */
+  rotation: string | null
   preview: boolean
 }
 
@@ -38,12 +40,12 @@ function parse(search: string): NavState {
   const kiosk = params.get('kiosk') === '1'
   const preview = params.get('preview') === '1'
   if (isAdminTab(mode)) {
-    return { view: 'admin', name: null, tab: mode, kiosk: false, preview: false }
+    return { view: 'admin', name: null, tab: mode, kiosk: false, preview: false, rotation: null }
   }
   if (name) {
-    return { view: 'map', name, tab: null, kiosk, preview }
+    return { view: 'map', name, tab: null, kiosk, preview, rotation: params.get('rotation') }
   }
-  return { view: 'home', name: null, tab: null, kiosk: false, preview: false }
+  return { view: 'home', name: null, tab: null, kiosk: false, preview: false, rotation: null }
 }
 
 function buildUrl(target: NavTarget): string {
@@ -56,6 +58,9 @@ function buildUrl(target: NavTarget): string {
     }
     if (target.preview) {
       params.set('preview', '1')
+    }
+    if (target.rotation) {
+      params.set('rotation', target.rotation)
     }
   } else if (target.view === 'admin') {
     params.set('mode', target.tab)

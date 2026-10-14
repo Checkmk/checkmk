@@ -44,11 +44,21 @@ const flags = computed<Flag[]>(() => {
       color: 'others'
     })
   }
-  if (props.map.rotation_interval > 0) {
+  const interval = props.map.rotation_interval
+  const pools = props.map.rotation_pools.join(', ')
+  if (interval > 0 || pools) {
     present.push({
       id: 'rotation',
-      label: untranslated(`↻ ${props.map.rotation_interval}s`),
-      title: _t('Rotates every %{n} seconds', { n: props.map.rotation_interval }),
+      label: untranslated(interval > 0 ? `↻ ${interval}s` : `↻ ${pools}`),
+      title:
+        interval > 0 && pools
+          ? _t('Rotates every %{n} seconds, part of the rotation pools %{pools}', {
+              n: interval,
+              pools
+            })
+          : interval > 0
+            ? _t('Rotates every %{n} seconds', { n: interval })
+            : _t('Part of the rotation pools %{pools}', { pools }),
       color: 'warning'
     })
   }

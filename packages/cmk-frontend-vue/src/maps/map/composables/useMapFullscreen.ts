@@ -19,7 +19,12 @@ export function useMapFullscreen(mapName: Ref<string>, isKiosk: Ref<boolean>) {
   const nav = useNavigation()
 
   function openKioskInNewTab(): void {
-    const url = nav.href({ view: 'map', name: mapName.value, kiosk: true })
+    const url = nav.href({
+      view: 'map',
+      name: mapName.value,
+      kiosk: true,
+      rotation: nav.state.rotation
+    })
     const a = document.createElement('a')
     a.href = url
     a.target = '_blank'
@@ -30,7 +35,7 @@ export function useMapFullscreen(mapName: Ref<string>, isKiosk: Ref<boolean>) {
   }
 
   function exitFullscreen(): void {
-    nav.navigate({ view: 'map', name: mapName.value })
+    nav.navigate({ view: 'map', name: mapName.value, rotation: nav.state.rotation })
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {})
     }
@@ -38,7 +43,7 @@ export function useMapFullscreen(mapName: Ref<string>, isKiosk: Ref<boolean>) {
 
   function onFullscreenChange(): void {
     if (!document.fullscreenElement && isKiosk.value) {
-      nav.navigate({ view: 'map', name: mapName.value })
+      nav.navigate({ view: 'map', name: mapName.value, rotation: nav.state.rotation })
     }
   }
 

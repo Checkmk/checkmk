@@ -36,6 +36,7 @@ from cmk.maps.shared.validators import (
     coerce_asset_ref,
     coerce_url_target,
     coerce_user_url,
+    is_valid_map_name,
     validate_user_url,
 )
 
@@ -520,3 +521,18 @@ def test_connection_rejects_dangerous_socket_path(path: str) -> None:
     # The same reject branches must fire through the schema's field validator.
     with pytest.raises(ValidationError):
         ConnectionConfig(id="b1", socket_path=path)
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("ok_name-1", True),
+        ("", False),
+        ("../escape", False),
+        ("with space", False),
+        ("a" * 100, True),
+        ("a" * 101, False),
+    ],
+)
+def test_is_valid_map_name(name: str, expected: bool) -> None:
+    assert is_valid_map_name(name) is expected

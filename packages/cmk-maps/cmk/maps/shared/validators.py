@@ -5,6 +5,9 @@
 """Shared validators for user-supplied URL/color fields on maps/presentations."""
 
 import re
+from typing import Final
+
+from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
 
 # Hex (#rgb/#rgba/#rrggbb/#rrggbbaa), a plain CSS named color, or "transparent".
 # Strict on purpose — keeps `<script>`, `javascript:`, `expression(...)` and other
@@ -127,6 +130,24 @@ def coerce_url_target(value: object) -> object:
     if isinstance(value, str) and value in _ALLOWED_URL_TARGETS:
         return value
     return "_blank"
+
+
+# A map name is a URL component and a per-map permission ident (``map.<name>``);
+# a rotation pool is named in a URL (``maps.py?rotation=<pool>``) just the same.
+_MAP_NAME_RE = re.compile(MAP_NAME_PATTERN)
+
+
+def is_valid_map_name(name: str) -> bool:
+    return len(name) <= MAP_NAME_MAX_LENGTH and bool(_MAP_NAME_RE.fullmatch(name))
+
+
+MAX_ROTATION_POOLS: Final = 50
+
+
+def validate_rotation_pool(value: str) -> str:
+    if not is_valid_map_name(value):
+        raise ValueError(f"invalid rotation pool name: {value!r}")
+    return value
 
 
 def validate_color(value: str | None) -> str | None:

@@ -12,10 +12,13 @@ filter) plus background image stay in the existing custom Vue surface
 because they need live previews / pickers FormSpec doesn't ship.
 """
 
+from collections import Counter
 from collections.abc import Sequence
 
 from cmk.maps.gui.form_specs import MapsDictGroup
-from cmk.rulesets.v1 import Help, Label, Title
+from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
+from cmk.maps.shared.validators import MAX_ROTATION_POOLS
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     CascadingSingleChoice,
@@ -27,11 +30,17 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     InputHint,
     Integer,
+    List,
     SingleChoice,
     SingleChoiceElement,
     String,
 )
-from cmk.rulesets.v1.form_specs.validators import NumberInRange
+from cmk.rulesets.v1.form_specs.validators import (
+    LengthInRange,
+    MatchRegex,
+    NumberInRange,
+    ValidationError,
+)
 
 _IDENTIFICATION = MapsDictGroup(
     title=Title("Identification"),
@@ -52,6 +61,11 @@ _TEMPLATES = MapsDictGroup(
         "Placeholders: {{name}}, {{state}}, {{output}}, {{host}}, {{service}}."
     ),
 )
+
+
+def _check_for_duplicate_pools(pools: Sequence[str]) -> None:
+    if any(count > 1 for count in Counter(pools).values()):
+        raise ValidationError(Message("Each rotation pool can be listed only once."))
 
 
 def _connection_form(
@@ -171,8 +185,8 @@ def map_metadata_spec(
                         "Show the next map in the rotation after the chosen "
                         "interval. Pick Off to keep this map open until the "
                         "operator switches manually. Rotation order follows "
-                        "the maps list; only maps with auto-rotate enabled "
-                        "participate."
+                        "the maps list; outside a rotation pool, only maps "
+                        "with auto-rotate enabled participate."
                     ),
                     prefill=DefaultValue("off"),
                     elements=[
@@ -192,6 +206,37 @@ def map_metadata_spec(
                             ),
                         ),
                     ],
+                ),
+            ),
+            "rotation_pools": DictElement(
+                required=True,
+                group=_BEHAVIOR,
+                parameter_form=List(
+                    title=Title("Rotation pools"),
+                    help_text=Help(
+                        "The rotation pools this map takes part in, as in NagVis. "
+                        "A map opened with the URL parameter rotation set to a pool name "
+                        "rotates through the maps of that pool only, each shown for its own "
+                        "auto-rotate interval, or 60 seconds without one."
+                    ),
+                    element_template=String(
+                        title=Title("Pool"),
+                        custom_validate=(
+                            LengthInRange(max_value=MAP_NAME_MAX_LENGTH),
+                            MatchRegex(
+                                regex=MAP_NAME_PATTERN,
+                                error_msg=Message(
+                                    "Use letters, digits, underscores and hyphens only."
+                                ),
+                            ),
+                        ),
+                    ),
+                    add_element_label=Label("Add pool"),
+                    editable_order=False,
+                    custom_validate=(
+                        LengthInRange(max_value=MAX_ROTATION_POOLS),
+                        _check_for_duplicate_pools,
+                    ),
                 ),
             ),
             "click_action": DictElement(
@@ -255,6 +300,7 @@ METADATA_FIELDS = (
     "default_z",
     "render_mode",
     "rotation_interval",
+    "rotation_pools",
     "click_action",
     "hover_template",
     "context_template",

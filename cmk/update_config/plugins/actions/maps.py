@@ -49,9 +49,10 @@ from cmk.maps.gui.legacy_maps import (
     used_connections,
 )
 from cmk.maps.gui.pagetype import MapPage
-from cmk.maps.gui.store import is_valid_map_name, user_maps_path
+from cmk.maps.gui.store import user_maps_path
 from cmk.maps.gui.type_defs import map_config_from_spec
 from cmk.maps.rest_api.utils import map_from_spec, spec_from_map
+from cmk.maps.shared.validators import is_valid_map_name
 from cmk.update_config.internal import ExpiryVersion, UpdateAction
 from cmk.update_config.registry import update_action_registry
 from cmk.utils import paths

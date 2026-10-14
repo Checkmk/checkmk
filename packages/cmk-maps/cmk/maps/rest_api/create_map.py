@@ -22,7 +22,7 @@ from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.utils import ProblemException, RestAPIRequestGeneralException
 from cmk.maps.gui._pages import _authorized_public
-from cmk.maps.gui.store import create_map, get_own_map, is_valid_map_name
+from cmk.maps.gui.store import create_map, get_own_map
 from cmk.maps.rest_api.endpoint_family import MAPS_FAMILY
 from cmk.maps.rest_api.models.request_models import MapRequest
 from cmk.maps.rest_api.models.response_models import MapObject
@@ -34,6 +34,7 @@ from cmk.maps.rest_api.utils import (
     spec_from_map,
     validate_visibility,
 )
+from cmk.maps.shared.validators import is_valid_map_name
 
 
 def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapObject]:  # noqa: ARG001

@@ -41,6 +41,11 @@ describe('NavigationService — reading the page URL', () => {
     expect(open('?name=prod&preview=1').state).toMatchObject({ kiosk: false, preview: true })
   })
 
+  it('reads the rotation pool a map was opened in', () => {
+    expect(open('?name=prod&rotation=noc').state).toMatchObject({ rotation: 'noc' })
+    expect(open('?name=prod').state).toMatchObject({ rotation: null })
+  })
+
   it('opens the image library for a known admin tab', () => {
     expect(open('?mode=icons').state).toMatchObject({ view: 'admin', tab: 'icons' })
   })
@@ -85,6 +90,13 @@ describe('NavigationService — moving around', () => {
     expect(window.location.search).toBe('')
     expect(window.history.length).toBe(before)
     expect(service.state.view).toBe('home')
+  })
+
+  it('keeps the rotation pool in the link to the next map', () => {
+    const service = open('')
+    expect(service.href({ view: 'map', name: 'prod', rotation: 'noc' })).toBe(
+      '/site/check_mk/maps.py?name=prod&rotation=noc'
+    )
   })
 
   it('builds the link a map card points at', () => {

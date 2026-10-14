@@ -23,7 +23,7 @@ from cmk.gui.openapi.utils import RestAPIRequestGeneralException
 from cmk.gui.type_defs import VisualPublic
 from cmk.maps.gui._tickets import sign_map_config
 from cmk.maps.gui.pagetype import MapPage
-from cmk.maps.gui.store import get_permitted_map
+from cmk.maps.gui.store import get_permitted_map, rotation_pools_of
 from cmk.maps.gui.type_defs import MapName
 from cmk.maps.rest_api.models.map import (
     MapConfig,
@@ -442,6 +442,7 @@ def serialize_map_list_entry(page: MapPage, *, can_edit: bool, can_delete: bool)
         background_color=_opt_str(payload.get("background_color")),
         icon_size=_opt_int(payload.get("icon_size")),
         rotation_interval=_int(payload.get("rotation_interval"), 0),
+        rotation_pools=rotation_pools_of(payload.get("rotation_pools")),
         sort_order=_int(payload.get("sort_order"), 0),
         version=_int(payload.get("version"), 0),
         render_mode=_render_mode(payload.get("render_mode")),

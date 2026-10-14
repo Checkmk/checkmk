@@ -34,7 +34,8 @@ from cmk.maps.gui._image_security import (
     is_valid_image_name,
     safe_image_stem,
 )
-from cmk.maps.gui.store import get_permitted_map, get_permitted_maps, is_valid_map_name
+from cmk.maps.gui.store import get_permitted_map, get_permitted_maps
+from cmk.maps.shared.validators import is_valid_map_name
 
 MAX_ICON_BYTES = 2 * 1024 * 1024
 MAX_BACKGROUND_BYTES = 10 * 1024 * 1024

@@ -37,13 +37,22 @@ def check_hr_cpu(params: Mapping[str, Any], section: StringTable) -> CheckResult
     num_cpus = 0
     util = 0.0
     cores = []
-    for line in section:
-        core_util = int(line[0])
-        cores.append(("core%d" % num_cpus, core_util))
+    for index, line in enumerate(section):
+        try:
+            core_util = int(line[0])
+        except ValueError:
+            yield Result(
+                state=State.UNKNOWN,
+                summary=f"Cannot parse processor load of core {index}: got {line[0]!r} (expected integer)",
+            )
+            continue
+        cores.append(("core%d" % index, core_util))
         util += core_util
         num_cpus += 1
-    if num_cpus == 0:
+    if not section:
         yield Result(state=State.UNKNOWN, summary="No data found in SNMP output")
+        return
+    if num_cpus == 0:
         return
     util = float(util) / num_cpus
     yield from check_cpu_util(

@@ -73,11 +73,6 @@ def test_check_hr_cpu(
     assert result == expected_output
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report 8d2b7dc0-c334-11f1-8cff-005056bf0653: ValueError in check_hr_cpu",
-)
 @pytest.mark.parametrize(
     ("parsed", "expected_output"),
     [

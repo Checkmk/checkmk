@@ -674,6 +674,6 @@ def _sort_docker_nodes_(
 SorterHostDockerNode = Sorter(
     ident="host_docker_node",
     title=_l("Node name"),
-    columns=["host_labels", "host_label_sources"],
+    columns=["host_name", "host_labels", "host_label_sources"],
     sort_function=_sort_docker_nodes_,
 )

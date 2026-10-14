@@ -160,7 +160,7 @@ function setSelectedOption(value: string) {
   height: var(--dimension-10);
   border-radius: var(--toggle-button-group-radius);
   border-color: var(--border-color-default);
-  background-color: var(--background-selected);
+  background-color: var(--background-subtle);
   color: var(--font-color);
   font-weight: var(--font-weight-bold);
 }

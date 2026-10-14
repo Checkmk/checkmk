@@ -55,7 +55,6 @@ def site_ca_fixture(site: Site, tmp_path_factory: pytest.TempPathFactory) -> Pat
     return path
 
 
-@pytest.mark.skip_if_faked_artifacts
 def test_uuid_check_client_certificate(agent_receiver_url: str) -> None:
     # try to access the status endpoint by explicitly writing a fake UUID into the HTTP header
     uuid_ = uuid.uuid4()
@@ -113,7 +112,6 @@ def paired_keypair_fixture(
     )
 
 
-@pytest.mark.skip_if_faked_artifacts
 def test_failing_pairing_no_uuid(agent_receiver_url: str, site: Site) -> None:
     uuid_ = "not a uuid"
     _key, csr = generate_csr_pair(uuid_)
@@ -127,7 +125,6 @@ def test_failing_pairing_no_uuid(agent_receiver_url: str, site: Site) -> None:
     assert agent_receiver_response.status_code == HTTPStatus.BAD_REQUEST
 
 
-@pytest.mark.skip_if_faked_artifacts
 def test_registration_status_not_registered(
     agent_receiver_url: str, paired_keypair: KeyPairInfo
 ) -> None:
@@ -139,7 +136,6 @@ def test_registration_status_not_registered(
     assert response.json()["detail"] == "Host is not registered"
 
 
-@pytest.mark.skip_if_faked_artifacts
 def test_register_existing_non_existing(
     agent_receiver_url: str,
     site: Site,
@@ -173,7 +169,6 @@ def test_register_existing_non_existing(
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
-@pytest.mark.skip_if_faked_artifacts
 def test_register_with_hostname_non_existing(
     agent_receiver_url: str,
     site: Site,
@@ -209,7 +204,6 @@ SUPPORTED_VERSIONS = (ssl.TLSVersion.TLSv1_2, ssl.TLSVersion.TLSv1_3)
 
 
 @pytest.mark.parametrize("tls_version", UNSUPPORTED_VERSIONS, ids=lambda v: v.name)
-@pytest.mark.skip_if_faked_artifacts
 def test_unsupported_tls_versions(
     site: Site, agent_receiver_port: int, site_ca: Path, tls_version: ssl.TLSVersion
 ) -> None:
@@ -225,7 +219,6 @@ def test_unsupported_tls_versions(
 
 
 @pytest.mark.parametrize("tls_version", SUPPORTED_VERSIONS, ids=lambda v: v.name)
-@pytest.mark.skip_if_faked_artifacts
 def test_supported_tls_versions(
     site: Site, agent_receiver_port: int, site_ca: Path, tls_version: ssl.TLSVersion
 ) -> None:
@@ -238,7 +231,6 @@ def test_supported_tls_versions(
     )
 
 
-@pytest.mark.skip_if_faked_artifacts
 @pytest.mark.usefixtures("site", "agent_receiver_port", "site_ca")
 def test_all_TLS_versions_tested() -> None:
     """Ensure the above tests cover all TLS versions."""

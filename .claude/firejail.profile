@@ -17,8 +17,11 @@ caps.drop all
 nonewprivs
 noroot
 
-# Enable seccomp syscall filtering with default blocklist
-seccomp
+# Enable seccomp syscall filtering with default blocklist. chroot stays allowed
+# for Chrome's namespace sandbox: without CAP_SYS_CHROOT it only works inside an
+# unprivileged user namespace, where it can only narrow the caller's own view
+# (see firejail's chromium-common-hardened.inc.profile).
+seccomp !chroot
 
 # Disable potentially dangerous features
 nodvd
@@ -155,10 +158,6 @@ include ${HOME}/.config/firejail/claude.local
 
 # Preserve essential environment variables
 # (firejail preserves most by default, but we're explicit)
-
-# Chrome cannot use its own sandbox under caps.drop all + seccomp;
-# firejail is the outer sandbox. Read by @playwright/mcp.
-env PLAYWRIGHT_MCP_SANDBOX=false
 
 # ============================================================================
 # D-BUS

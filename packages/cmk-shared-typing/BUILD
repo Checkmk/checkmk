@@ -252,6 +252,9 @@ json2python(
         "--frozen-dataclasses",
         "--keyword-only",
         "--use-union-operator",
+        # Append an underscore to enum members clashing with a str method, e.g.
+        # "count_". Despite its name, this is needed for StrEnum, too.
+        "--use-subclass-enum",
         # Fields with a default never become None. Despite its help text, this
         # works for JSON Schema, too.
         "--strict-nullable",
@@ -278,6 +281,9 @@ json2python(
         "--frozen-dataclasses",
         "--keyword-only",
         "--use-union-operator",
+        # Append an underscore to enum members clashing with a str method, e.g.
+        # "count_". Despite its name, this is needed for StrEnum, too.
+        "--use-subclass-enum",
         # Fields with a default never become None. Despite its help text, this
         # works for JSON Schema, too.
         "--strict-nullable",

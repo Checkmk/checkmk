@@ -421,7 +421,6 @@
       "required": ["name", "required", "parameter_form", "default_value", "render_only", "group"]
     },
     "dictionary": {
-      "id": "dictionary",
       "properties": {
         "type": {
           "const": "dictionary",
@@ -461,7 +460,6 @@
       "required": ["type"]
     },
     "two_column_dictionary": {
-      "id": "two_column_dictionary",
       "type": "object",
       "allOf": [
         {
@@ -566,7 +564,6 @@
       "required": ["name", "title"]
     },
     "dual_list_choice": {
-      "id": "dual_list_choice",
       "type": "object",
       "properties": {
         "type": {
@@ -898,7 +895,6 @@
       "required": ["type"]
     },
     "comment_text_area": {
-      "id": "comment_text_area",
       "type": "object",
       "allOf": [
         {
@@ -950,7 +946,6 @@
       ]
     },
     "ca_certificate": {
-      "id": "ca_certificate",
       "type": "object",
       "allOf": [
         {
@@ -978,7 +973,6 @@
       ]
     },
     "oauth2_connection_setup": {
-      "id": "oauth2_connection_setup",
       "type": "object",
       "allOf": [
         {
@@ -1025,7 +1019,6 @@
       "required": ["authority_url", "display_name"]
     },
     "telemetry_metrics_group_by_key": {
-      "id": "telemetry_metrics_group_by_key",
       "type": "object",
       "properties": {
         "kind": {
@@ -1039,7 +1032,6 @@
       "required": ["kind", "key"]
     },
     "telemetry_metrics_custom_query": {
-      "id": "telemetry_metrics_custom_query",
       "type": "object",
       "allOf": [
         {
@@ -1121,7 +1113,7 @@
       ]
     },
     "dcd_telemetry_metrics_filter": {
-      "id": "dcd_telemetry_metrics_filter",
+      "type": "object",
       "allOf": [
         {
           "$ref": "#/$defs/form_spec"
@@ -1142,7 +1134,6 @@
       ]
     },
     "metric": {
-      "id": "metric",
       "type": "object",
       "allOf": [
         {

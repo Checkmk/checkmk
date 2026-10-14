@@ -40,7 +40,6 @@ from cmk.shared_typing.main_menu import (
     NavItemShortcut,
     NavItemTopic,
     NavItemTopicEntry,
-    NavItemType,
     NavItemVueApp,
     NavLinkItem,
     NavToggleItem,
@@ -180,7 +179,6 @@ def test_a_configurable_item_is_resolved_to_its_instance(
     """A configurable menu decides per user whether it is a link or a menu with topics."""
     configurable = ConfigurableMainMenuItem(
         id=NavItemIdEnum.help,
-        type=NavItemType.configurable,
         title=_l("Help"),
         sort_index=1,
         shortcut=NavItemShortcut(key="h"),

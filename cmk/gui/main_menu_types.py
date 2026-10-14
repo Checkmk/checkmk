@@ -11,7 +11,7 @@ from cmk.gui.http import Request
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.main_menu import (
-    NavBaseItem,
+    NavCommonItem,
     NavItem,
     NavItemTopic,
     NavItemVueApp,
@@ -47,7 +47,7 @@ class MainMenuToggleItem(MainMenuItemBase, NavToggleItem):
 
 
 @dataclass(frozen=True, kw_only=True)
-class ConfigurableMainMenuItem(MainMenuItemBase, NavBaseItem):
+class ConfigurableMainMenuItem(MainMenuItemBase, NavCommonItem):
     hide: Callable[[], bool] | None = None
     get_item_instance: Callable[
         [ConfigurableMainMenuItem, LoggedInUser], MainMenuLinkItem | MainMenuItem

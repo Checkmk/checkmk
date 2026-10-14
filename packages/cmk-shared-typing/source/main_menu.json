@@ -30,11 +30,10 @@
         "anyOf": [{ "$ref": "#/$defs/nav_item" }, { "$ref": "#/$defs/nav_link_item" }]
       }
     },
-    "nav_base_item": {
+    "nav_common_item": {
       "type": "object",
       "properties": {
         "id": { "$ref": "#/$defs/nav_item_id_enum" },
-        "type": { "$ref": "#/$defs/nav_item_type" },
         "title": { "type": "string" },
         "sort_index": { "type": "number" },
         "shortcut": { "$ref": "#/$defs/nav_item_shortcut" },
@@ -44,10 +43,10 @@
           "$ref": "#/$defs/nav_item_badge"
         }
       },
-      "required": ["id", "title", "sort_index", "shortcut", "type"]
+      "required": ["id", "title", "sort_index", "shortcut"]
     },
     "nav_item": {
-      "allOf": [{ "$ref": "#/$defs/nav_base_item" }],
+      "allOf": [{ "$ref": "#/$defs/nav_common_item" }],
       "type": "object",
       "properties": {
         "type": { "type": "string", "const": "item" },
@@ -60,23 +59,26 @@
         "header": { "$ref": "#/$defs/nav_item_header" },
         "show_more": { "$ref": "#/$defs/nav_item_show_more" },
         "popup_small": { "type": "boolean" }
-      }
+      },
+      "required": ["type"]
     },
     "nav_link_item": {
-      "allOf": [{ "$ref": "#/$defs/nav_base_item" }],
+      "allOf": [{ "$ref": "#/$defs/nav_common_item" }],
       "type": "object",
       "properties": {
         "type": { "type": "string", "const": "link" },
         "url": { "type": "string" },
         "target": { "type": "string" }
-      }
+      },
+      "required": ["type"]
     },
     "nav_toggle_item": {
-      "allOf": [{ "$ref": "#/$defs/nav_base_item" }],
+      "allOf": [{ "$ref": "#/$defs/nav_common_item" }],
       "type": "object",
       "properties": {
         "type": { "type": "string", "const": "toggle" }
-      }
+      },
+      "required": ["type"]
     },
     "nav_item_topic": {
       "type": "object",
@@ -223,9 +225,6 @@
     },
     "topic_item_mode": {
       "enum": ["item", "multilevel", "indented"]
-    },
-    "nav_item_type": {
-      "enum": ["item", "link", "configurable", "toggle"]
     }
   }
 }

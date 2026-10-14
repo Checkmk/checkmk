@@ -79,19 +79,50 @@ def test_postprocess_enums(code: str, expected: str) -> None:
 def test_postprocess_strips_optional_from_required_member() -> None:
     code = dedent("""
         class Dictionary:
-            elements: Optional[Sequence[DictionaryElement]] = field(default_factory=lambda: [])
+            elements: Sequence[DictionaryElement] | None = field(default_factory=list)
     """).lstrip()
     expected = dedent("""
         class Dictionary:
-            elements: Sequence[DictionaryElement] = field(default_factory=lambda: [])
+            elements: Sequence[DictionaryElement] = field(default_factory=list)
     """).lstrip()
     assert postprocess(code) == expected
+
+
+def test_postprocess_strips_only_none_from_union_of_required_member() -> None:
+    code = dedent("""
+        class Dictionary:
+            elements: Sequence[DictionaryElement] | Sequence[str] | None = field(default_factory=list)
+    """).lstrip()
+    expected = dedent("""
+        class Dictionary:
+            elements: Sequence[DictionaryElement] | Sequence[str] = field(default_factory=list)
+    """).lstrip()
+    assert postprocess(code) == expected
+
+
+@pytest.mark.parametrize(
+    "annotation",
+    [
+        pytest.param("Sequence[DictionaryElement]", id="not-optional"),
+        pytest.param("Sequence[DictionaryElement] | Sequence[str]", id="union-without-none"),
+        pytest.param("Optional[Sequence[DictionaryElement]]", id="optional-subscript"),
+        pytest.param("None | Sequence[DictionaryElement]", id="none-first"),
+    ],
+)
+def test_postprocess_rejects_required_member_not_annotated_as_optional(annotation: str) -> None:
+    code = dedent(f"""
+        class Dictionary:
+            elements: {annotation} = field(default_factory=list)
+    """).lstrip()
+
+    with pytest.raises(ValueError, match=r"Dictionary\.elements"):
+        postprocess(code)
 
 
 def test_postprocess_keeps_optional_of_other_member() -> None:
     code = dedent("""
         class Dictionary:
-            title: Optional[str] = None
+            title: str | None = None
     """).lstrip()
     assert postprocess(code) == code
 
@@ -99,7 +130,7 @@ def test_postprocess_keeps_optional_of_other_member() -> None:
 def test_postprocess_keeps_optional_of_same_member_in_other_class() -> None:
     code = dedent("""
         class List:
-            elements: Optional[list[Element]] = None
+            elements: list[Element] | None = None
     """).lstrip()
     assert postprocess(code) == code
 
@@ -110,6 +141,6 @@ def test_postprocess_keeps_optional_of_member_after_its_class() -> None:
             title: str
 
 
-        elements: Optional[list[Element]] = None
+        elements: list[Element] | None = None
     """).lstrip()
     assert postprocess(code) == code

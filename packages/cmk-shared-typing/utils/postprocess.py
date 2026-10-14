@@ -10,12 +10,8 @@ from black import FileMode, format_str
 
 # Codegen ignores the required flag if default is set
 STRIP_OPTIONAL = [
-    ("FormSpec", "validators"),
     ("Dictionary", "elements"),
-    ("Dictionary", "layout"),
     ("SingleChoice", "elements"),
-    ("MultipleChoice", "elements"),
-    ("MultipleChoice", "show_toggle_all"),
     ("CascadingSingleChoice", "elements"),
     ("CascadingSingleChoice", "layout"),
     ("Tuple", "layout"),
@@ -100,12 +96,15 @@ class OptionalRemover(cst.CSTTransformer):
             if self.current_class == class_name and m.matches(
                 updated_node.target, m.Name(member_name)
             ):
-                subscript = updated_node.annotation.annotation
-                assert isinstance(subscript, cst.Subscript)
-                if m.matches(subscript.value, m.Name("Optional")):
-                    index = subscript.slice[0].slice
-                    assert isinstance(index, cst.Index)
-                    return updated_node.with_changes(annotation=cst.Annotation(index.value))
+                annotation = updated_node.annotation.annotation
+                if not isinstance(annotation, cst.BinaryOperation) or not m.matches(
+                    annotation, m.BinaryOperation(operator=m.BitOr(), right=m.Name("None"))
+                ):
+                    raise ValueError(
+                        f"expected {class_name}.{member_name} to be annotated as 'X | None', "
+                        f"got {cst.Module([]).code_for_node(annotation)!r}"
+                    )
+                return updated_node.with_changes(annotation=cst.Annotation(annotation.left))
         return updated_node
 
 

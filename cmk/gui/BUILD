@@ -92,7 +92,6 @@ py_library(
         "//cmk/utils:paths",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-crash:crash",
-        "//packages/cmk-plugin-apis:graphing",
         "//packages/cmk-plugin-apis:inventory_ui",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web",

@@ -7,25 +7,14 @@ from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
 from cmk.graphing import v1 as graphing_api
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
-from cmk.graphing_engine import DecimalNotation, StrictPrecision, Unit
 from cmk.gui.graphing import (
     get_graph_plugin_from_id,
-    get_metric_spec,
     graphs_from_api,
-    metrics_from_api,
 )
 from cmk.gui.graphing._plugin_loading import _add_graphing_plugins
 
 
-def test_add_graphing_plugins_registers_every_supported_plugin_kind() -> None:
-    """Test the graphing plug-in loader/registrar with a synthetic
-    `DiscoveredPlugins` collection.
-
-    Covering one entry of every kind the registrar knows about (`Metric`, `Graph`). The test
-    confirms that the loader-side bridge from the public `cmk.graphing.v1` API into the internal
-    `metrics_from_api` / `graphs_from_api` registries works end-to-end and preserves the relevant
-    attributes (title, unit, color, lines).
-    """
+def test_add_graphing_plugins_registers_the_graphs_among_the_plugins() -> None:
     test_metric_1 = metrics_api.Metric(
         name="syntest_count_first",
         title=graphing_api.Title("Synthetic test count (first)"),
@@ -66,20 +55,6 @@ def test_add_graphing_plugins_registers_every_supported_plugin_kind() -> None:
             errors_by_module={},
         )
     )
-
-    registered_metric_1 = get_metric_spec("syntest_count_first", metrics_from_api)
-    assert registered_metric_1.name == "syntest_count_first"
-    assert registered_metric_1.title == "Synthetic test count (first)"
-    assert registered_metric_1.unit == Unit(
-        notation=DecimalNotation(symbol=""),
-        precision=StrictPrecision(digits=2),
-    )
-    # Color goes through a palette mapping; just check it's a non-empty string.
-    assert registered_metric_1.color
-
-    registered_metric_2 = get_metric_spec("syntest_count_second", metrics_from_api)
-    assert registered_metric_2.name == "syntest_count_second"
-    assert registered_metric_2.title == "Synthetic test count (second)"
 
     assert get_graph_plugin_from_id(graphs_from_api, "syntest_counts") == graphs_api.Graph(
         name="syntest_counts",

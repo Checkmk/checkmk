@@ -29,9 +29,7 @@ from cmk.graphing.v1 import Title
 from cmk.graphing.v1 import translations as translations_api
 from cmk.gui.graphing import (
     GraphFromAPI,
-    parse_metric_from_api,
     PerfometerFromAPI,
-    RegisteredMetric,
 )
 from cmk.gui.theme import make_theme
 from cmk.gui.utils.temperature_unit import TemperatureUnit
@@ -68,10 +66,6 @@ _METRIC_PLUGINS: Mapping[str, metrics_api.Metric] = {
     "if_in_bps": _metric("if_in_bps", Title("Input bandwidth"), _PERCENT),
     "if_out_bps": _metric("if_out_bps", Title("Output bandwidth"), _PERCENT),
     "load1": _metric("load1", Title("CPU load average of last minute"), _COUNT),
-}
-
-_REGISTERED_METRICS: Mapping[str, RegisteredMetric] = {
-    name: parse_metric_from_api(plugin) for name, plugin in _METRIC_PLUGINS.items()
 }
 
 _REGISTERED_PERFOMETERS: Mapping[str, PerfometerFromAPI] = {
@@ -146,7 +140,6 @@ def _info(
     return metric_info(
         perf_data,
         check_command,
-        registered_metrics=_REGISTERED_METRICS,
         registered_metric_plugins=_METRIC_PLUGINS,
         registered_translations=registered_translations,
         registered_perfometers=_REGISTERED_PERFOMETERS,
@@ -160,7 +153,6 @@ def _info_with_graphs(perf_data: str) -> MetricInfo:
     return metric_info(
         perf_data,
         "check_mk-mem_linux",
-        registered_metrics=_REGISTERED_METRICS,
         registered_metric_plugins=_METRIC_PLUGINS,
         registered_translations=(),
         registered_perfometers=_REGISTERED_PERFOMETERS,

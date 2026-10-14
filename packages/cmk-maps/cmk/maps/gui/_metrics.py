@@ -45,6 +45,7 @@ from cmk.graphing_engine import (
     Graph,
     MetricName,
     MetricProtocol,
+    parse_unit,
     RRDMetric,
     Service,
     SiteID,
@@ -66,7 +67,6 @@ from cmk.gui.graphing import (
     parse_performance_data,
     perfometer_label,
     PerfometerFromAPI,
-    RegisteredMetric,
     sort_registered_graph_plugins,
     translated_names_and_scales,
     unit_to_unit_format,
@@ -292,7 +292,7 @@ def _perfometer_payload(
 def _metrics_payload(
     names_and_scales: Mapping[MetricName, tuple[MetricName, float]],
     metrics: Mapping[MetricName, EvaluatedMetric],
-    registered_metrics: Mapping[str, RegisteredMetric],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
 ) -> dict[str, MetricDisplay]:
     """Display semantics per RAW perfdata label (what the SPA parses and stores).
 
@@ -310,7 +310,7 @@ def _metrics_payload(
         evaluated = metrics.get(canonical)
         if registered is None or evaluated is None:
             continue
-        unit_format = unit_to_unit_format(registered.unit)
+        unit_format = unit_to_unit_format(parse_unit(registered.unit))
         out[raw_name] = MetricDisplay(
             name=canonical,
             title=evaluated.title,
@@ -464,7 +464,6 @@ def metric_info(
     perf_data_str: str,
     check_command: str,
     *,
-    registered_metrics: Mapping[str, RegisteredMetric],
     registered_metric_plugins: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
     registered_perfometers: Mapping[str, PerfometerFromAPI],
@@ -475,10 +474,6 @@ def metric_info(
     object_context: tuple[SiteId, HostName, ServiceName] | None = None,
 ) -> MetricInfo:
     """Resolve raw perfdata display semantics through Checkmk's graphing pipeline.
-
-    Two views of the metric registry are needed: ``registered_metrics`` carries
-    the parsed display semantics this module reports, ``registered_metric_plugins``
-    the plug-in objects the evaluation engine builds its quantities from.
 
     Graph groups are computed only when ``registered_graphs`` and
     ``object_context`` are given — walking every registered graph plugin is
@@ -519,7 +514,7 @@ def metric_info(
             temperature_unit,
             theme,
         ),
-        metrics=_metrics_payload(names_and_scales, metrics, registered_metrics),
+        metrics=_metrics_payload(names_and_scales, metrics, registered_metric_plugins),
         graphs=(
             None
             if registered_graphs is None or object_context is None

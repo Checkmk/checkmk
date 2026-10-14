@@ -17,26 +17,24 @@ from typing import Literal, override
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.discover_plugins import discover_families, PluginGroup
-from cmk.graphing_engine import MetricName
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing_engine import metric_display_attributes, MetricName
 from cmk.gui import sites
 from cmk.gui.color import render_color_icon
 from cmk.gui.config import Config
 from cmk.gui.graphing import (
     evaluated_metrics,
     EvaluatedMetric,
-    get_metric_spec,
     get_temperature_unit,
-    metrics_from_api,
     registered_metric_ids_and_titles,
     registered_metrics,
     registered_translations,
-    RegisteredMetric,
 )
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import HTMLGenerator
 from cmk.gui.http import Request
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _, _l, translate_to_current_language
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter_options import (
     paint_age,
@@ -4902,15 +4900,17 @@ def _title_specific_metric(cell: Cell, _context: PainterContext) -> str:
     if not (parameters := cell.painter_parameters()):
         # Used in Edit-View
         return str(_SPECIFIC_METRIC_DEFAULT_TITLE)
-    return _title_with_parameters(parameters, metrics_from_api)
+    return _title_with_parameters(parameters, registered_metrics())
 
 
 def _title_with_parameters(
     parameters: PainterParameters,
-    registered_metrics: Mapping[str, RegisteredMetric],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
 ) -> str:
     try:
-        return get_metric_spec(parameters["metric"], registered_metrics).title
+        return metric_display_attributes(
+            parameters["metric"], translate_to_current_language, registered_metrics
+        ).title
     except KeyError:
         return _("Metric not found")
 
@@ -4920,7 +4920,7 @@ def metric_choices() -> list[tuple[str, str]]:
     return sorted(
         (
             (metric_id, metric_title)
-            for metric_id, metric_title in registered_metric_ids_and_titles(metrics_from_api)
+            for metric_id, metric_title in registered_metric_ids_and_titles(registered_metrics())
         ),
         key=lambda x: x[1],
     )

@@ -18,6 +18,7 @@ from cmk.graphing_engine import (
     FALLBACK_UNIT,
     IECNotation,
     metric_display_attributes,
+    parse_unit,
     SINotation,
     StandardScientificNotation,
     StrictPrecision,
@@ -59,11 +60,11 @@ from cmk.web.utils.choices import Choice
 from cmk.web.utils.unit_formatter import NotationFormatter, TimeFormatter
 
 from ._decoding import ensure_type
-from ._from_api import metrics_from_api, RegisteredMetric
 from ._graph_display_config import GraphDisplayConfigHTML
 from ._metric_data import translate_metric_names
-from ._metric_spec import get_metric_spec, registered_metric_ids_and_titles
+from ._metric_spec import registered_metric_ids_and_titles
 from ._performance_data import parse_performance_data
+from ._plugins import registered_metrics
 from ._user_specific_unit import get_temperature_unit, user_specific_unit
 
 type LivestatusQueryFunc = Callable[
@@ -351,7 +352,7 @@ class ValuesWithUnits(CascadingDropdown):
                     ),
                 )
                 for choice in _sorted_unit_choices(
-                    metrics_from_api,
+                    registered_metrics(),
                     temperature_unit=temperature_unit,
                 )
             ],
@@ -386,13 +387,13 @@ class _UnitChoice:
 
 
 def _sorted_unit_choices(
-    registered_metrics: Mapping[str, RegisteredMetric],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
     *,
     temperature_unit: TemperatureUnit,
 ) -> list[_UnitChoice]:
     return sorted(
         {
-            _unit_choice_from_unit(metric.unit, temperature_unit=temperature_unit)
+            _unit_choice_from_unit(parse_unit(metric.unit), temperature_unit=temperature_unit)
             for metric in registered_metrics.values()
         }
         | {_unit_choice_from_unit(FALLBACK_UNIT, temperature_unit=temperature_unit)},
@@ -469,9 +470,10 @@ class PageVsAutocomplete(AjaxPage):
     def page(self, ctx: PageContext) -> PageResult:
         temperature_unit = get_temperature_unit(user, ctx.config.default_temperature_unit)
         if metric_name := ctx.request.get_request().get("metric"):
-            metric_spec = get_metric_spec(metric_name, metrics_from_api)
             unit_choice_for_metric = _unit_choice_from_unit(
-                metric_spec.unit,
+                metric_display_attributes(
+                    metric_name, translate_to_current_language, registered_metrics()
+                ).unit,
                 temperature_unit=temperature_unit,
             )
         else:
@@ -482,7 +484,7 @@ class PageVsAutocomplete(AjaxPage):
 
         for idx, choice in enumerate(
             _sorted_unit_choices(
-                metrics_from_api,
+                registered_metrics(),
                 temperature_unit=temperature_unit,
             )
         ):
@@ -497,7 +499,7 @@ class PageVsAutocomplete(AjaxPage):
         )
         for idx, choice in enumerate(
             _sorted_unit_choices(
-                metrics_from_api,
+                registered_metrics(),
                 temperature_unit=temperature_unit,
             )
         ):
@@ -554,7 +556,7 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
                 (
                     (metric_id, metric_title)
                     for metric_id, metric_title in registered_metric_ids_and_titles(
-                        metrics_from_api
+                        registered_metrics()
                     )
                     if metric_id == value
                 ),

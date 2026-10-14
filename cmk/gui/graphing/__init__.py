@@ -8,11 +8,8 @@ from ._decoding import context_from_json, ensure_type
 from ._from_api import (
     GraphFromAPI,
     graphs_from_api,
-    metrics_from_api,
-    parse_metric_from_api,
     PerfometerFromAPI,
     perfometers_from_api,
-    RegisteredMetric,
 )
 from ._frontend import (
     DEFAULT_INTERACTION,
@@ -125,7 +122,7 @@ from ._metric_query import (
     SumLastRaw,
     SumRate,
 )
-from ._metric_spec import get_metric_spec, registered_metric_ids_and_titles
+from ._metric_spec import registered_metric_ids_and_titles
 from ._metric_visitor import MetricVisitor
 from ._perfometers import (
     drawn_segments,
@@ -225,7 +222,6 @@ __all__ = [
     "GaugeMin",
     "get_graph_plugin_choices",
     "get_graph_plugin_from_id",
-    "get_metric_spec",
     "get_temperature_unit",
     "global_time_picker_props",
     "global_time_picker_refresh",
@@ -277,7 +273,6 @@ __all__ = [
     "TelemetryMetricsBackend",
     "MetricName",
     "monitored_metrics_autocompleter",
-    "metrics_from_api",
     "metrics_of_query",
     "MetricVisitor",
     "migrate_graph_render_options_title_format",
@@ -287,7 +282,6 @@ __all__ = [
     "PageVsAutocomplete",
     "parse_check_command",
     "parse_graph_specification",
-    "parse_metric_from_api",
     "parse_performance_data",
     "perfometer_label",
     "perfometer_sort_value",
@@ -309,7 +303,6 @@ __all__ = [
     "registered_metric_ids_and_titles",
     "registered_metrics",
     "registered_translations",
-    "RegisteredMetric",
     "render_engine_graph_group",
     "render_global_time_picker",
     "resolve_default_time_range_seconds",

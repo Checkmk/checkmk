@@ -5,27 +5,18 @@
 
 
 from cmk.graphing.v1 import graphs as graphs_v1
-from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers as perfometers_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
 from cmk.gui.log import logger
 
-from ._from_api import (
-    graphs_from_api,
-    metrics_from_api,
-    parse_metric_from_api,
-    perfometers_from_api,
-)
+from ._from_api import graphs_from_api, perfometers_from_api
 from ._plugins import graphing_plugins, GraphingPlugins
 
 
 def _add_graphing_plugins(plugins: GraphingPlugins) -> None:
     for plugin in plugins.plugins.values():
-        if isinstance(plugin, metrics_v1.Metric):
-            metrics_from_api.register(parse_metric_from_api(plugin))
-
-        elif isinstance(
+        if isinstance(
             plugin,
             perfometers_v1.Perfometer
             | perfometers_v1.Bidirectional

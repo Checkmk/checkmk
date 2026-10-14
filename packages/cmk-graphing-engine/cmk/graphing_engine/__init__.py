@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._display import FALLBACK_UNIT, metric_display_attributes, parse_unit
+from ._display import FALLBACK_UNIT, metric_display_attributes, parse_color, parse_unit
 from ._drawn_curves import (
     drawn_curves,
     drawn_curves_with_references,
@@ -194,6 +194,7 @@ __all__ = [
     "DrawnLineType",
     "evaluate_perfometer",
     "metric_display_attributes",
+    "parse_color",
     "parse_unit",
     "rrd_metric_name",
     "timestamps",

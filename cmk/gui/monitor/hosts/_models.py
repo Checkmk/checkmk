@@ -12,7 +12,6 @@ logic.
 """
 
 import dataclasses
-import datetime as dt
 import enum
 from collections.abc import Mapping
 from typing import assert_never, NewType, override, Self
@@ -249,15 +248,6 @@ class HostTarget:
 
     site_id: str
     host_name: str
-
-
-@dataclasses.dataclass(frozen=True)
-class RescheduleTarget:
-    """A single host check to be forcibly rescheduled at a specific time."""
-
-    site_id: str
-    host_name: str
-    check_time: dt.datetime
 
 
 class EventClass(enum.IntEnum):

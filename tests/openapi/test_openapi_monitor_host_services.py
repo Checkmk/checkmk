@@ -2206,6 +2206,14 @@ class TestMonitorHostServicesReschedule:
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
+        mock_livestatus.add_table(
+            "services", [{"host_name": _HOSTNAME, "description": _SERVICE_DESCRIPTION, "state": 0}]
+        )
+        mock_livestatus.expect_query(
+            f"GET services\nColumns: host_name description state\n"
+            f"Filter: host_name = {_HOSTNAME}\nFilter: description = {_SERVICE_DESCRIPTION}\nAnd: 2",
+            sites=[_SITE_ID],
+        )
         mock_livestatus.expect_query(
             f"COMMAND [...] SCHEDULE_FORCED_SVC_CHECK;{_HOSTNAME};{_SERVICE_DESCRIPTION};...",
             match_type="ellipsis",
@@ -2229,6 +2237,19 @@ class TestMonitorHostServicesReschedule:
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
+        mock_livestatus.add_table(
+            "services",
+            [
+                {"host_name": _HOSTNAME, "description": _SERVICE_DESCRIPTION, "state": 0},
+                {"host_name": _HOSTNAME, "description": "Memory", "state": 0},
+            ],
+        )
+        mock_livestatus.expect_query(
+            f"GET services\nColumns: host_name description state\n"
+            f"Filter: host_name = {_HOSTNAME}\nFilter: description = {_SERVICE_DESCRIPTION}\nAnd: 2\n"
+            f"Filter: host_name = {_HOSTNAME}\nFilter: description = Memory\nAnd: 2\nOr: 2",
+            sites=[_SITE_ID],
+        )
         mock_livestatus.expect_query(
             f"COMMAND [...] SCHEDULE_FORCED_SVC_CHECK;{_HOSTNAME};{_SERVICE_DESCRIPTION};...",
             match_type="ellipsis",
@@ -2329,6 +2350,20 @@ class TestMonitorHostServicesReschedule:
     ) -> None:
         # The mock keeps one expectation queue per site, so a command sent to the wrong site
         # finds nothing waiting for it there and fails the test.
+        mock_livestatus.add_table(
+            "services", [{"host_name": _HOSTNAME, "description": _SERVICE_DESCRIPTION, "state": 0}]
+        )
+        mock_livestatus.add_table(
+            "services",
+            [{"host_name": "gestern", "description": "Memory", "state": 0}],
+            site=_OTHER_SITE_ID,
+        )
+        mock_livestatus.expect_query(
+            f"GET services\nColumns: host_name description state\n"
+            f"Filter: host_name = {_HOSTNAME}\nFilter: description = {_SERVICE_DESCRIPTION}\nAnd: 2\n"
+            "Filter: host_name = gestern\nFilter: description = Memory\nAnd: 2\nOr: 2",
+            sites=[_SITE_ID, _OTHER_SITE_ID],
+        )
         mock_livestatus.expect_query(
             f"COMMAND [...] SCHEDULE_FORCED_SVC_CHECK;{_HOSTNAME};{_SERVICE_DESCRIPTION};...",
             match_type="ellipsis",

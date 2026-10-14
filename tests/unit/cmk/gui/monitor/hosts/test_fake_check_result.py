@@ -26,8 +26,9 @@ class _FakeHostCheckResultFaker:
     def __init__(self) -> None:
         self.calls: list[tuple[list[HostTarget], int, str]] = []
 
-    def fake_check_result(self, targets: Sequence[HostTarget], *, state: int, output: str) -> None:
+    def fake_check_result(self, targets: Sequence[HostTarget], *, state: int, output: str) -> int:
         self.calls.append((list(targets), state, output))
+        return len(targets)
 
 
 def test_submits_the_state_with_the_default_output_for_all_hosts() -> None:
@@ -68,6 +69,9 @@ def test_sends_the_command_to_the_site_of_the_host(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
+    mock_livestatus.expect_query(
+        "GET hosts\nColumns: name\nFilter: name = heute", sites=["NO_SITE"]
+    )
     mock_livestatus.expect_query(
         "COMMAND [...] PROCESS_HOST_CHECK_RESULT;heute;1;Testing|rta=0.5ms", match_type="ellipsis"
     )

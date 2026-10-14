@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
+from http import HTTPStatus
 from typing import Annotated
 
 from annotated_types import Ge
@@ -20,11 +21,13 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.utils import ProblemException
 from cmk.web.utils import permission_verification as permissions
 
 from .._commands import ServiceRescheduler
+from .._exceptions import ServiceNotFoundError
 from .._impl import LiveStatusServiceActions
-from .._models import RescheduleTarget, UnixTimestamp
+from .._models import ServiceTarget, UnixTimestamp
 from ._family import MONITOR_SERVICES_FAMILY
 
 
@@ -78,10 +81,8 @@ def reschedule_checks(
     api_context.user.need_permission("general.act")
     api_context.user.need_permission("action.reschedule")
 
-    service_actions = LiveStatusServiceActions(connection=sites.live())
-
     return _handle_reschedule_checks(
-        service_actions,
+        LiveStatusServiceActions(connection=sites.live()),
         services=body.services,
         spread_minutes=body.spread_minutes,
         wait_timeout=api_context.config.reschedule_timeout,
@@ -102,18 +103,24 @@ def _handle_reschedule_checks(
         )
 
     targets = [
-        RescheduleTarget(
-            site_id=service.site_id,
-            host_name=service.host_name,
-            description=service.name,
-            check_time=datetime.fromtimestamp(now + spread_minutes * 60.0 * index / len(services)),
+        ServiceTarget(
+            site_id=service.site_id, host_name=service.host_name, description=service.name
         )
-        for index, service in enumerate(services)
+        for service in services
     ]
-    service_actions.reschedule(targets)
+    try:
+        rescheduled = service_actions.reschedule(
+            targets, start=datetime.fromtimestamp(now), spread=timedelta(minutes=spread_minutes)
+        )
+    except ServiceNotFoundError:
+        raise ProblemException(
+            status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            title="None of the services was found",
+            detail="None of the services is monitored on the site given for it.",
+        ) from None
 
     return RescheduleServicesResponse(
-        rescheduled=len(targets), scheduled_at=int(now), wait_timeout=wait_timeout
+        rescheduled=rescheduled, scheduled_at=int(now), wait_timeout=wait_timeout
     )
 
 

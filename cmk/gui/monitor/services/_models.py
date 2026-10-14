@@ -12,7 +12,6 @@ logic.
 """
 
 import dataclasses
-import datetime as dt
 import enum
 import re
 from collections.abc import Mapping
@@ -261,16 +260,6 @@ class ServiceTarget:
     site_id: str
     host_name: str
     description: str
-
-
-@dataclasses.dataclass(frozen=True)
-class RescheduleTarget:
-    """A single service check to be forcibly rescheduled at a specific time."""
-
-    site_id: str
-    host_name: str
-    description: str
-    check_time: dt.datetime
 
 
 # NOTE: this is intended to indicate that a stringified filter has been properly parsed into a

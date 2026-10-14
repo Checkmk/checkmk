@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 
 from cmk.ccc.user import UserId
 from cmk.gui import sites
@@ -16,9 +17,11 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.utils import ProblemException
 from cmk.web.utils import permission_verification as permissions
 
 from .._commands import HostEventArchiver
+from .._exceptions import HostNotFoundError
 from .._impl import LiveStatusHostActions
 from .._models import HostTarget
 from ._family import MONITOR_HOSTS_FAMILY
@@ -59,9 +62,17 @@ def _handle_archive_events(
 ) -> ArchiveEventsResponse:
     # The selected services of one host name it once.
     targets = list(dict.fromkeys(HostTarget(host.site_id, host.name) for host in body.hosts))
+    count = 0
     if targets:
-        archiver.archive_events(targets, author=author)
-    return ArchiveEventsResponse(archived=len(targets))
+        try:
+            count = archiver.archive_events(targets, author=author)
+        except HostNotFoundError:
+            raise ProblemException(
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+                title="None of the hosts was found",
+                detail="None of the hosts is monitored on the site given for it.",
+            ) from None
+    return ArchiveEventsResponse(archived=count)
 
 
 ENDPOINT_ARCHIVE_EVENTS = VersionedEndpoint(

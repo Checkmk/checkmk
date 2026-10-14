@@ -55,11 +55,13 @@ class _FakeServiceAttributeModifier:
 
     def toggle_attribute(
         self, targets: Sequence[ServiceTarget], attribute: ModifiableAttribute, *, enabled: bool
-    ) -> None:
+    ) -> int:
         self.calls.append(("toggle", list(targets), attribute, enabled))
+        return len(targets)
 
-    def reset_modified_attributes(self, targets: Sequence[ServiceTarget]) -> None:
+    def reset_modified_attributes(self, targets: Sequence[ServiceTarget]) -> int:
         self.calls.append(("reset", list(targets)))
+        return len(targets)
 
 
 def test_toggles_the_attribute_of_all_services_at_once() -> None:
@@ -102,6 +104,14 @@ def test_sends_the_toggle_to_the_site_of_the_service(
     enabled: bool,
     command: str,
 ) -> None:
+    mock_livestatus.add_table(
+        "services", [{"host_name": "heute", "description": "CPU load", "state": 0}]
+    )
+    mock_livestatus.expect_query(
+        "GET services\nColumns: host_name description state\n"
+        "Filter: host_name = heute\nFilter: description = CPU load\nAnd: 2",
+        sites=["NO_SITE"],
+    )
     mock_livestatus.expect_query(f"COMMAND [...] {command};heute;CPU load", match_type="ellipsis")
 
     with mock_livestatus:
@@ -126,6 +136,14 @@ def test_sends_the_reset_to_the_site_of_the_service(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
+    mock_livestatus.add_table(
+        "services", [{"host_name": "heute", "description": "CPU load", "state": 0}]
+    )
+    mock_livestatus.expect_query(
+        "GET services\nColumns: host_name description state\n"
+        "Filter: host_name = heute\nFilter: description = CPU load\nAnd: 2",
+        sites=["NO_SITE"],
+    )
     mock_livestatus.expect_query(
         "COMMAND [...] CHANGE_SVC_MODATTR;heute;CPU load;0", match_type="ellipsis"
     )

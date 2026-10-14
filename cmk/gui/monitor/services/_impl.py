@@ -58,7 +58,6 @@ from ._exceptions import ServiceNotFoundError
 from ._models import (
     CheckType,
     HostState,
-    RescheduleTarget,
     Service,
     ServiceFilter,
     ServiceLabelValue,
@@ -488,17 +487,21 @@ class LiveStatusServiceActions:
     def __init__(self, *, connection: MultiSiteConnection) -> None:
         self._connection = connection
 
-    def reschedule(self, targets: Sequence[RescheduleTarget]) -> None:
+    def reschedule(
+        self, targets: Sequence[ServiceTarget], *, start: dt.datetime, spread: dt.timedelta
+    ) -> int:
+        visible = list(self._found(targets))
         client = LivestatusClient(self._connection)
-        for target in targets:
+        for index, target in enumerate(visible):
             client.command(
                 ScheduleForcedServiceCheck(
                     host_name=HostName(target.host_name),
                     description=target.description,
-                    check_time=target.check_time,
+                    check_time=start + spread * index / len(visible),
                 ),
                 SiteId(target.site_id),
             )
+        return len(visible)
 
     def send_custom_notification(
         self,
@@ -508,49 +511,57 @@ class LiveStatusServiceActions:
         comment: str,
         forced: bool,
         broadcast: bool,
-    ) -> None:
+    ) -> int:
         client = LivestatusClient(self._connection)
         option = NotificationOption(
             NotificationOption.FORCED.value * forced
             + NotificationOption.BROADCAST.value * broadcast
         )
-        for target in targets:
+        visible = self._found(targets)
+        for target in visible:
             client.command(
                 SendCustomServiceNotification(
                     HostName(target.host_name), option, author, comment, target.description
                 ),
                 SiteId(target.site_id),
             )
+        return len(visible)
 
     def fake_check_result(
         self, targets: Sequence[ServiceTarget], *, state: int, output: str
-    ) -> None:
+    ) -> int:
         client = LivestatusClient(self._connection)
-        for target in targets:
+        visible = self._found(targets)
+        for target in visible:
             client.command(
                 ProcessServiceCheckResult(
                     HostName(target.host_name), state, output, target.description
                 ),
                 SiteId(target.site_id),
             )
+        return len(visible)
 
     def toggle_attribute(
         self, targets: Sequence[ServiceTarget], attribute: ModifiableAttribute, *, enabled: bool
-    ) -> None:
+    ) -> int:
         command = _SERVICE_ATTRIBUTE_COMMANDS[attribute][enabled]
         client = LivestatusClient(self._connection)
-        for target in targets:
+        visible = self._found(targets)
+        for target in visible:
             client.command(
                 command(HostName(target.host_name), target.description), SiteId(target.site_id)
             )
+        return len(visible)
 
-    def reset_modified_attributes(self, targets: Sequence[ServiceTarget]) -> None:
+    def reset_modified_attributes(self, targets: Sequence[ServiceTarget]) -> int:
         client = LivestatusClient(self._connection)
-        for target in targets:
+        visible = self._found(targets)
+        for target in visible:
             client.command(
                 ChangeServiceModifiedAttributes(HostName(target.host_name), 0, target.description),
                 SiteId(target.site_id),
             )
+        return len(visible)
 
     def acknowledge(
         self,

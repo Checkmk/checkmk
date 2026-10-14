@@ -82,7 +82,6 @@ from ._models import (
     MAX_RESOLVED_RELATIONS,
     RelatedHost,
     RelatedHostHealth,
-    RescheduleTarget,
     ServiceCounts,
     UnixTimestamp,
 )
@@ -549,16 +548,20 @@ class LiveStatusHostActions:
     def __init__(self, *, connection: MultiSiteConnection) -> None:
         self._connection = connection
 
-    def reschedule(self, targets: Sequence[RescheduleTarget]) -> None:
+    def reschedule(
+        self, targets: Sequence[HostTarget], *, start: dt.datetime, spread: dt.timedelta
+    ) -> int:
+        visible = self._found(targets)
         client = LivestatusClient(self._connection)
-        for target in targets:
+        for index, target in enumerate(visible):
             client.command(
                 ScheduleForcedHostCheck(
                     host_name=HostName(target.host_name),
-                    check_time=target.check_time,
+                    check_time=start + spread * index / len(visible),
                 ),
                 SiteId(target.site_id),
             )
+        return len(visible)
 
     def send_custom_notification(
         self,
@@ -568,47 +571,57 @@ class LiveStatusHostActions:
         comment: str,
         forced: bool,
         broadcast: bool,
-    ) -> None:
+    ) -> int:
         client = LivestatusClient(self._connection)
         option = NotificationOption(
             NotificationOption.FORCED.value * forced
             + NotificationOption.BROADCAST.value * broadcast
         )
-        for target in targets:
+        visible = self._found(targets)
+        for target in visible:
             client.command(
                 SendCustomHostNotification(HostName(target.host_name), option, author, comment),
                 SiteId(target.site_id),
             )
+        return len(visible)
 
-    def fake_check_result(self, targets: Sequence[HostTarget], *, state: int, output: str) -> None:
+    def fake_check_result(self, targets: Sequence[HostTarget], *, state: int, output: str) -> int:
         client = LivestatusClient(self._connection)
-        for target in targets:
+        visible = self._found(targets)
+        for target in visible:
             client.command(
                 ProcessHostCheckResult(HostName(target.host_name), state, output),
                 SiteId(target.site_id),
             )
+        return len(visible)
 
     def toggle_attribute(
         self, targets: Sequence[HostTarget], attribute: ModifiableAttribute, *, enabled: bool
-    ) -> None:
+    ) -> int:
         command = _HOST_ATTRIBUTE_COMMANDS[attribute][enabled]
         client = LivestatusClient(self._connection)
-        for target in targets:
+        visible = self._found(targets)
+        for target in visible:
             client.command(command(HostName(target.host_name)), SiteId(target.site_id))
+        return len(visible)
 
-    def reset_modified_attributes(self, targets: Sequence[HostTarget]) -> None:
+    def reset_modified_attributes(self, targets: Sequence[HostTarget]) -> int:
         client = LivestatusClient(self._connection)
-        for target in targets:
+        visible = self._found(targets)
+        for target in visible:
             client.command(
                 ChangeHostModifiedAttributes(HostName(target.host_name), 0), SiteId(target.site_id)
             )
+        return len(visible)
 
-    def archive_events(self, targets: Sequence[HostTarget], *, author: UserId) -> None:
+    def archive_events(self, targets: Sequence[HostTarget], *, author: UserId) -> int:
         client = LivestatusClient(self._connection)
-        for target in targets:
+        visible = self._found(targets)
+        for target in visible:
             client.command(
                 ECDeleteEventsOfHost(HostName(target.host_name), author), SiteId(target.site_id)
             )
+        return len(visible)
 
     def acknowledge(
         self,

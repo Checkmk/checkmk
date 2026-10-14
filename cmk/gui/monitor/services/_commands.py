@@ -15,12 +15,17 @@ from cmk.ccc.user import UserId
 from cmk.gui.livestatus_utils.commands.downtimes import RecurMode
 from cmk.gui.monitor.command import ModifiableAttribute
 
-from ._models import RescheduleTarget, ServiceTarget
+from ._models import ServiceTarget
 
 
 class ServiceRescheduler(Protocol):
-    def reschedule(self, targets: Sequence[RescheduleTarget]) -> None:
-        """Force an immediate active check for each target on its site."""
+    def reschedule(
+        self, targets: Sequence[ServiceTarget], *, start: dt.datetime, spread: dt.timedelta
+    ) -> int:
+        """Force an active check for each visible target on its site, returning how many.
+
+        The checks are spread evenly from start over the given span.
+        """
         ...
 
 
@@ -33,28 +38,28 @@ class ServiceNotifier(Protocol):
         comment: str,
         forced: bool,
         broadcast: bool,
-    ) -> None:
-        """Let the core send a custom notification for each target on its site."""
+    ) -> int:
+        """Send a custom notification for each visible target on its site, returning how many."""
         ...
 
 
 class ServiceCheckResultFaker(Protocol):
     def fake_check_result(
         self, targets: Sequence[ServiceTarget], *, state: int, output: str
-    ) -> None:
-        """Submit a check result for each target on its site, as if its check had run."""
+    ) -> int:
+        """Submit a check result for each visible target on its site, returning how many."""
         ...
 
 
 class ServiceAttributeModifier(Protocol):
     def toggle_attribute(
         self, targets: Sequence[ServiceTarget], attribute: ModifiableAttribute, *, enabled: bool
-    ) -> None:
-        """Enable or disable the attribute for each target on its site."""
+    ) -> int:
+        """Enable or disable the attribute for each visible target, returning how many."""
         ...
 
-    def reset_modified_attributes(self, targets: Sequence[ServiceTarget]) -> None:
-        """Undo what such toggles changed for each target, back to its configuration."""
+    def reset_modified_attributes(self, targets: Sequence[ServiceTarget]) -> int:
+        """Undo what such toggles changed for each visible target, returning how many."""
         ...
 
 

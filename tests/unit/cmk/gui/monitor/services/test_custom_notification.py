@@ -34,13 +34,14 @@ class _FakeServiceNotifier:
         comment: str,
         forced: bool,
         broadcast: bool,
-    ) -> None:
+    ) -> int:
         self.calls.append(
             (
                 list(targets),
                 {"author": author, "comment": comment, "forced": forced, "broadcast": broadcast},
             )
         )
+        return len(targets)
 
 
 def test_sends_the_notification_for_every_service() -> None:
@@ -73,6 +74,14 @@ def test_sends_the_command_to_the_site_of_the_service(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
+    mock_livestatus.add_table(
+        "services", [{"host_name": "heute", "description": "CPU load", "state": 0}]
+    )
+    mock_livestatus.expect_query(
+        "GET services\nColumns: host_name description state\n"
+        "Filter: host_name = heute\nFilter: description = CPU load\nAnd: 2",
+        sites=["NO_SITE"],
+    )
     mock_livestatus.expect_query(
         "COMMAND [...] SEND_CUSTOM_SVC_NOTIFICATION;heute;CPU load;0;...;Testing",
         match_type="ellipsis",
@@ -92,6 +101,33 @@ def test_sends_the_command_to_the_site_of_the_service(
 
     assert resp.status_code == HTTPStatus.OK, resp.text
     assert resp.json == {"notified": 1}
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_refuses_services_not_visible_to_the_user(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.expect_query(
+        "GET services\nColumns: host_name description state\n"
+        "Filter: host_name = heute\nFilter: description = Secret\nAnd: 2",
+        sites=["NO_SITE"],
+    )
+
+    with mock_livestatus:
+        resp = aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/internal/monitor/services/actions/custom_notification",
+            params=json.dumps(
+                {
+                    "services": [{"site_id": "NO_SITE", "host_name": "heute", "name": "Secret"}],
+                    "comment": "Testing",
+                }
+            ),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=HTTPStatus.UNPROCESSABLE_ENTITY,
+        )
+
+    assert resp.json["title"] == "None of the services was found"
 
 
 @pytest.mark.usefixtures("with_admin_login")

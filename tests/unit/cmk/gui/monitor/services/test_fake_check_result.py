@@ -28,8 +28,9 @@ class _FakeServiceCheckResultFaker:
 
     def fake_check_result(
         self, targets: Sequence[ServiceTarget], *, state: int, output: str
-    ) -> None:
+    ) -> int:
         self.calls.append((list(targets), state, output))
+        return len(targets)
 
 
 def test_submits_the_state_with_the_default_output_for_every_service() -> None:
@@ -62,6 +63,14 @@ def test_sends_the_command_to_the_site_of_the_service(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
+    mock_livestatus.add_table(
+        "services", [{"host_name": "heute", "description": "CPU load", "state": 0}]
+    )
+    mock_livestatus.expect_query(
+        "GET services\nColumns: host_name description state\n"
+        "Filter: host_name = heute\nFilter: description = CPU load\nAnd: 2",
+        sites=["NO_SITE"],
+    )
     mock_livestatus.expect_query(
         "COMMAND [...] PROCESS_SERVICE_CHECK_RESULT;heute;CPU load;3;Testing",
         match_type="ellipsis",

@@ -51,11 +51,13 @@ class _FakeHostAttributeModifier:
 
     def toggle_attribute(
         self, targets: Sequence[HostTarget], attribute: ModifiableAttribute, *, enabled: bool
-    ) -> None:
+    ) -> int:
         self.calls.append(("toggle", list(targets), attribute, enabled))
+        return len(targets)
 
-    def reset_modified_attributes(self, targets: Sequence[HostTarget]) -> None:
+    def reset_modified_attributes(self, targets: Sequence[HostTarget]) -> int:
         self.calls.append(("reset", list(targets)))
+        return len(targets)
 
 
 def test_toggles_the_attribute_of_all_hosts_at_once() -> None:
@@ -121,6 +123,9 @@ def test_sends_the_toggle_to_the_site_of_the_host(
     enabled: bool,
     command: str,
 ) -> None:
+    mock_livestatus.expect_query(
+        "GET hosts\nColumns: name\nFilter: name = heute", sites=["NO_SITE"]
+    )
     mock_livestatus.expect_query(f"COMMAND [...] {command};heute", match_type="ellipsis")
 
     with mock_livestatus:
@@ -145,6 +150,9 @@ def test_sends_the_reset_to_the_site_of_the_host(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
+    mock_livestatus.expect_query(
+        "GET hosts\nColumns: name\nFilter: name = heute", sites=["NO_SITE"]
+    )
     mock_livestatus.expect_query("COMMAND [...] CHANGE_HOST_MODATTR;heute;0", match_type="ellipsis")
 
     with mock_livestatus:

@@ -26,8 +26,9 @@ class _FakeHostEventArchiver:
     def __init__(self) -> None:
         self.calls: list[tuple[list[HostTarget], UserId]] = []
 
-    def archive_events(self, targets: Sequence[HostTarget], *, author: UserId) -> None:
+    def archive_events(self, targets: Sequence[HostTarget], *, author: UserId) -> int:
         self.calls.append((list(targets), author))
+        return len(targets)
 
 
 def test_archives_the_events_of_each_host_once() -> None:
@@ -63,6 +64,9 @@ def test_sends_the_archiving_to_the_site_of_the_host(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
+    mock_livestatus.expect_query(
+        "GET hosts\nColumns: name\nFilter: name = heute", sites=["NO_SITE"]
+    )
     mock_livestatus.expect_query(
         "COMMAND [...] EC_DELETE_EVENTS_OF_HOST;heute;...", match_type="ellipsis"
     )

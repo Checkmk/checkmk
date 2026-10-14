@@ -1510,6 +1510,9 @@ class TestMonitorHostsReschedule:
     ) -> None:
         mock_livestatus.add_table("hosts", _HOSTS)
         mock_livestatus.expect_query(
+            "GET hosts\nColumns: name\nFilter: name = heute", sites=[_SITE_ID]
+        )
+        mock_livestatus.expect_query(
             "COMMAND [...] SCHEDULE_FORCED_HOST_CHECK;heute;...", match_type="ellipsis"
         )
 
@@ -1524,6 +1527,10 @@ class TestMonitorHostsReschedule:
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
         mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(
+            "GET hosts\nColumns: name\nFilter: name = heute\nFilter: name = gestern\nOr: 2",
+            sites=[_SITE_ID],
+        )
         mock_livestatus.expect_query(
             "COMMAND [...] SCHEDULE_FORCED_HOST_CHECK;heute;...", match_type="ellipsis"
         )
@@ -1550,6 +1557,11 @@ class TestMonitorHostsReschedule:
     ) -> None:
         # The mock keeps one expectation queue per site, so a command sent to the wrong site
         # finds nothing waiting for it there and fails the test.
+        mock_livestatus.add_table("hosts", [{"name": "gestern"}], site="remote")
+        mock_livestatus.expect_query(
+            "GET hosts\nColumns: name\nFilter: name = heute\nFilter: name = gestern\nOr: 2",
+            sites=[_SITE_ID, "remote"],
+        )
         mock_livestatus.expect_query(
             "COMMAND [...] SCHEDULE_FORCED_HOST_CHECK;heute;...",
             match_type="ellipsis",

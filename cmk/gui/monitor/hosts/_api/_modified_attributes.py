@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 
 from cmk.gui import sites
 from cmk.gui.monitor.command import ATTRIBUTE_PERMISSIONS, ModifiableAttribute
@@ -16,9 +17,11 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.utils import ProblemException
 from cmk.web.utils import permission_verification as permissions
 
 from .._commands import HostAttributeModifier
+from .._exceptions import HostNotFoundError
 from .._impl import LiveStatusHostActions
 from .._models import HostTarget
 from ._family import MONITOR_HOSTS_FAMILY
@@ -67,9 +70,17 @@ def _handle_toggle_attribute(
     modifier: HostAttributeModifier, body: ToggleAttributeRequestBody
 ) -> ModifiedAttributesResponse:
     targets = _targets(body.hosts)
+    count = 0
     if targets:
-        modifier.toggle_attribute(targets, body.attribute, enabled=body.enabled)
-    return ModifiedAttributesResponse(modified=len(targets))
+        try:
+            count = modifier.toggle_attribute(targets, body.attribute, enabled=body.enabled)
+        except HostNotFoundError:
+            raise ProblemException(
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+                title="None of the hosts was found",
+                detail="None of the hosts is monitored on the site given for it.",
+            ) from None
+    return ModifiedAttributesResponse(modified=count)
 
 
 def reset_modified_attributes(
@@ -86,9 +97,17 @@ def _handle_reset_modified_attributes(
     modifier: HostAttributeModifier, body: ResetModifiedAttributesRequestBody
 ) -> ModifiedAttributesResponse:
     targets = _targets(body.hosts)
+    count = 0
     if targets:
-        modifier.reset_modified_attributes(targets)
-    return ModifiedAttributesResponse(modified=len(targets))
+        try:
+            count = modifier.reset_modified_attributes(targets)
+        except HostNotFoundError:
+            raise ProblemException(
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+                title="None of the hosts was found",
+                detail="None of the hosts is monitored on the site given for it.",
+            ) from None
+    return ModifiedAttributesResponse(modified=count)
 
 
 def _targets(hosts: list[ModifiedAttributeHostRef]) -> list[HostTarget]:

@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Literal
 
 from cmk.ccc.user import UserId
@@ -19,9 +20,11 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.utils import ProblemException
 from cmk.web.utils import permission_verification as permissions
 
 from .._commands import HostCheckResultFaker
+from .._exceptions import HostNotFoundError
 from .._impl import LiveStatusHostActions
 from .._models import HostTarget
 from ._family import MONITOR_HOSTS_FAMILY
@@ -74,18 +77,26 @@ def _handle_fake_check_result(
     faker: HostCheckResultFaker, body: FakeCheckResultRequestBody, *, author: UserId
 ) -> FakeCheckResultResponse:
     targets = [HostTarget(site_id=host.site_id, host_name=host.name) for host in body.hosts]
+    count = 0
     if targets:
-        faker.fake_check_result(
-            targets,
-            state=body.state,
-            output=fake_check_output(
-                output=body.plugin_output,
-                metrics=body.metrics,
-                state_title=(_("Up"), _("Down"))[body.state],
-                author=author,
-            ),
-        )
-    return FakeCheckResultResponse(faked=len(targets))
+        try:
+            count = faker.fake_check_result(
+                targets,
+                state=body.state,
+                output=fake_check_output(
+                    output=body.plugin_output,
+                    metrics=body.metrics,
+                    state_title=(_("Up"), _("Down"))[body.state],
+                    author=author,
+                ),
+            )
+        except HostNotFoundError:
+            raise ProblemException(
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+                title="None of the hosts was found",
+                detail="None of the hosts is monitored on the site given for it.",
+            ) from None
+    return FakeCheckResultResponse(faked=count)
 
 
 ENDPOINT_FAKE_CHECK_RESULT = VersionedEndpoint(

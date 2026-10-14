@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from annotated_types import MinLen
@@ -19,9 +20,11 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.utils import ProblemException
 from cmk.web.utils import permission_verification as permissions
 
 from .._commands import ServiceNotifier
+from .._exceptions import ServiceNotFoundError
 from .._impl import LiveStatusServiceActions
 from .._models import ServiceTarget
 from ._family import MONITOR_SERVICES_FAMILY
@@ -88,15 +91,23 @@ def _handle_custom_notification(
         )
         for service in body.services
     ]
+    count = 0
     if targets:
-        notifier.send_custom_notification(
-            targets,
-            author=author,
-            comment=body.comment,
-            forced=body.forced,
-            broadcast=body.broadcast,
-        )
-    return CustomNotificationServicesResponse(notified=len(targets))
+        try:
+            count = notifier.send_custom_notification(
+                targets,
+                author=author,
+                comment=body.comment,
+                forced=body.forced,
+                broadcast=body.broadcast,
+            )
+        except ServiceNotFoundError:
+            raise ProblemException(
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+                title="None of the services was found",
+                detail="None of the services is monitored on the site given for it.",
+            ) from None
+    return CustomNotificationServicesResponse(notified=count)
 
 
 ENDPOINT_SEND_CUSTOM_NOTIFICATION = VersionedEndpoint(

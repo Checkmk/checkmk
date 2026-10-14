@@ -34,13 +34,14 @@ class _FakeHostNotifier:
         comment: str,
         forced: bool,
         broadcast: bool,
-    ) -> None:
+    ) -> int:
         self.calls.append(
             (
                 list(targets),
                 {"author": author, "comment": comment, "forced": forced, "broadcast": broadcast},
             )
         )
+        return len(targets)
 
 
 def test_sends_one_notification_with_the_options_for_all_hosts() -> None:
@@ -85,6 +86,9 @@ def test_sends_the_command_to_the_site_of_the_host(
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     mock_livestatus.expect_query(
+        "GET hosts\nColumns: name\nFilter: name = heute", sites=["NO_SITE"]
+    )
+    mock_livestatus.expect_query(
         "COMMAND [...] SEND_CUSTOM_HOST_NOTIFICATION;heute;3;...;Testing", match_type="ellipsis"
     )
 
@@ -104,6 +108,28 @@ def test_sends_the_command_to_the_site_of_the_host(
 
     assert resp.status_code == HTTPStatus.OK, resp.text
     assert resp.json == {"notified": 1}
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_refuses_hosts_not_visible_to_the_user(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.expect_query(
+        "GET hosts\nColumns: name\nFilter: name = host-secret", sites=["NO_SITE"]
+    )
+
+    with mock_livestatus:
+        resp = aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/internal/monitor/hosts/actions/custom_notification",
+            params=json.dumps(
+                {"hosts": [{"site_id": "NO_SITE", "name": "host-secret"}], "comment": "Testing"}
+            ),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=HTTPStatus.UNPROCESSABLE_ENTITY,
+        )
+
+    assert resp.json["title"] == "None of the hosts was found"
 
 
 @pytest.mark.usefixtures("with_admin_login")

@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Literal
 
 from cmk.ccc.user import UserId
@@ -19,9 +20,11 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.utils import ProblemException
 from cmk.web.utils import permission_verification as permissions
 
 from .._commands import ServiceCheckResultFaker
+from .._exceptions import ServiceNotFoundError
 from .._impl import LiveStatusServiceActions
 from .._models import ServiceTarget
 from ._family import MONITOR_SERVICES_FAMILY
@@ -82,18 +85,26 @@ def _handle_fake_check_result(
         )
         for service in body.services
     ]
+    count = 0
     if targets:
-        faker.fake_check_result(
-            targets,
-            state=body.state,
-            output=fake_check_output(
-                output=body.plugin_output,
-                metrics=body.metrics,
-                state_title=(_("OK"), _("Warning"), _("Critical"), _("Unknown"))[body.state],
-                author=author,
-            ),
-        )
-    return FakeCheckResultServicesResponse(faked=len(targets))
+        try:
+            count = faker.fake_check_result(
+                targets,
+                state=body.state,
+                output=fake_check_output(
+                    output=body.plugin_output,
+                    metrics=body.metrics,
+                    state_title=(_("OK"), _("Warning"), _("Critical"), _("Unknown"))[body.state],
+                    author=author,
+                ),
+            )
+        except ServiceNotFoundError:
+            raise ProblemException(
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+                title="None of the services was found",
+                detail="None of the services is monitored on the site given for it.",
+            ) from None
+    return FakeCheckResultServicesResponse(faked=count)
 
 
 ENDPOINT_FAKE_CHECK_RESULT = VersionedEndpoint(

@@ -12,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
-def _parameter_valuespec_eaton_enviroment() -> Dictionary:
+def _parameter_valuespec_eaton_environment() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -51,10 +51,10 @@ def _parameter_valuespec_eaton_enviroment() -> Dictionary:
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        check_group_name="eaton_enviroment",
+        check_group_name="eaton_environment",
         group=RulespecGroupCheckParametersEnvironment,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_eaton_enviroment,
+        parameter_valuespec=_parameter_valuespec_eaton_environment,
         title=lambda: _("Temperature and Humidity for Eaton UPS"),
     )
 )

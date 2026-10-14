@@ -149,6 +149,52 @@ def test_legacy_wmic_process_parameters_survive_the_pre_action(mocker: MockerFix
     _execute_pre_update_rulesets(mocker)
 
 
+def test_rules_referring_to_a_replaced_snmp_section_pass_the_pre_action(
+    mocker: MockerFixture,
+) -> None:
+    """The rulesets action renames the section after this pre-action"""
+    with gui_context():
+        root_folder = folder_tree().root_folder()
+    ruleset_name = "snmpv3_contexts"
+    ruleset: Ruleset = Ruleset(ruleset_name, None)
+    ruleset.append_rule(
+        root_folder,
+        Rule(
+            id_="1",
+            folder=root_folder,
+            ruleset=ruleset,
+            conditions=RuleConditions(
+                host_folder=root_folder.path(),
+                host_tags=None,
+                host_label_groups=None,
+                host_name=None,
+                service_description=None,
+                service_label_groups=None,
+            ),
+            options=RuleOptions(
+                disabled=None,
+                description="",
+                comment="",
+                docu_url="",
+            ),
+            value=("ups_eaton_enviroment", [""], "stop_on_timeout"),
+        ),
+    )
+    mocker.patch(
+        "cmk.update_config.plugins.pre_actions.rulesets.AllRulesets.load_all_rulesets",
+        return_value=AllRulesets({ruleset_name: ruleset}, root_folder.tree),
+    )
+    # the section choices come from an automation call
+    mocker.patch(
+        "cmk.gui.wato._check_mk_configuration.get_section_information_cached",
+        return_value={
+            "ups_eaton_environment": {"name": "ups_eaton_environment", "type": "snmp"},
+        },
+    )
+
+    _execute_pre_update_rulesets(mocker)
+
+
 def _execute_pre_update_rulesets(mocker: MockerFixture) -> None:
     PreUpdateRulesets(
         name="rulesets",

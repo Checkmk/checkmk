@@ -3247,11 +3247,11 @@ checkgroup_parameters['drbd'] = [
 
 checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 
-checkgroup_parameters.setdefault('eaton_enviroment', [])
+checkgroup_parameters.setdefault('eaton_environment', [])
 
-checkgroup_parameters['eaton_enviroment'] = [
+checkgroup_parameters['eaton_environment'] = [
 {'id': '304076ff-d4dc-456f-8af1-d3afaddeb0e0', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
-] + checkgroup_parameters['eaton_enviroment']
+] + checkgroup_parameters['eaton_environment']
 
 
 checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
@@ -10722,11 +10722,11 @@ static_checks['drbd'] = [
 
 static_checks = locals().setdefault('static_checks', {})
 
-static_checks.setdefault('eaton_enviroment', [])
+static_checks.setdefault('eaton_environment', [])
 
-static_checks['eaton_enviroment'] = [
-{'id': '4d219d25-0f78-4778-aae0-77916029d26e', 'value': ('ups_eaton_enviroment', None, {}), 'condition': {}, 'options': {'disabled': False}},
-] + static_checks['eaton_enviroment']
+static_checks['eaton_environment'] = [
+{'id': '4d219d25-0f78-4778-aae0-77916029d26e', 'value': ('ups_eaton_environment', None, {}), 'condition': {}, 'options': {'disabled': False}},
+] + static_checks['eaton_environment']
 
 
 static_checks = locals().setdefault('static_checks', {})

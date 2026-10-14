@@ -3094,6 +3094,9 @@ def use_new_descriptions_for_form_spec(context: GlobalSettingsContext) -> fs.Dic
             "statgrab_mem": use_new_service_name(Title("Statgrab memory usage")),
             "tplink_mem": use_new_service_name(Title("TP Link: Used memory via SNMP")),
             "ups_bat_temp": use_new_service_name(Title("Generic UPS Device: Temperature sensor")),
+            "ups_eaton_environment": use_new_service_name(
+                Title("Eaton UPS: Temperature and humidity sensors")
+            ),
             "vms_diskstat_df": use_new_service_name(Title("Disk space on OpenVMS")),
             "wmic_process": use_new_service_name(
                 Title("Resource consumption of Windows processes")

@@ -48,10 +48,16 @@ REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
         "checkgroup_parameters:data_backend_telemetry_metrics_omd"
     ),
     "static_checks:metric_backend_omd": "static_checks:data_backend_telemetry_metrics_omd",
+    # 3.0: fix the misspelled Eaton UPS environment rule set
+    "checkgroup_parameters:eaton_enviroment": "checkgroup_parameters:eaton_environment",
+    "static_checks:eaton_enviroment": "static_checks:eaton_environment",
 }
 
 # Please keep this functionality even if we currently don't have any replaced SNMP sections!
-REPLACED_SNMP_SECTIONS: Mapping[SectionName, SectionName] = {}
+REPLACED_SNMP_SECTIONS: Mapping[SectionName, SectionName] = {
+    # 3.0: fix the misspelled Eaton UPS environment section
+    SectionName("ups_eaton_enviroment"): SectionName("ups_eaton_environment"),
+}
 
 RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {}
 

@@ -2164,7 +2164,7 @@ FROZEN_SERVICE_NAMES: Final[Mapping[str, str]] = {
     "ups_cps_battery_temp": "Temperature %s",
     "ups_cps_inphase": "UPS Input Phase %s",
     "ups_cps_outphase": "UPS Output Phase %s",
-    "ups_eaton_enviroment": "Enviroment",
+    "ups_eaton_environment": "Environment",
     "ups_in_freq": "IN frequency phase %s",
     "ups_in_voltage": "IN voltage phase %s",
     "ups_modulys_alarms": "UPS Alarms",

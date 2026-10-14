@@ -12,6 +12,8 @@ _REPLACED_CHECK_PLUGINS: dict[CheckPluginName, CheckPluginName] = {
     # 3.0: metric backend -> data backend / telemetry metrics
     CheckPluginName("custom_query_metric_backend"): CheckPluginName("telemetry_custom_service"),
     CheckPluginName("metric_backend_omd"): CheckPluginName("data_backend_telemetry_metrics_omd"),
+    # 3.0: fix the misspelled Eaton UPS environment plug-in
+    CheckPluginName("ups_eaton_enviroment"): CheckPluginName("ups_eaton_environment"),
 }
 
 ALL_REPLACED_CHECK_PLUGINS: Mapping[CheckPluginName, CheckPluginName] = {

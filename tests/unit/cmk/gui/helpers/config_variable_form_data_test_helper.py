@@ -1493,6 +1493,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
         "statgrab_mem": False,
         "tplink_mem": False,
         "ups_bat_temp": False,
+        "ups_eaton_environment": False,
         "vms_diskstat_df": False,
         "wmic_process": False,
         "zfsget": False,

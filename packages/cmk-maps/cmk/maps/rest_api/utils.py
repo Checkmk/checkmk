@@ -145,6 +145,7 @@ _OBJECT_GROUPS: dict[str, dict[str, str]] = {
         "width": "line_width",
         "perfdata_label": "line_perfdata_label",
         "weather_color": "line_weather_color",
+        "object_type": "line_object_type",
         "metric_in": "weathermap_metric",
         "metric_out": "weathermap_metric_out",
         "color": "line_color",
@@ -383,7 +384,7 @@ def resolve_map_link_titles(
         return {}
     linked: set[str] = set()
     for obj in objects:
-        if not isinstance(obj, dict) or obj.get("type") != "map":
+        if not isinstance(obj, dict) or "map" not in (obj.get("type"), obj.get("line_object_type")):
             continue
         name = obj.get("map_name")
         if isinstance(name, str) and name:

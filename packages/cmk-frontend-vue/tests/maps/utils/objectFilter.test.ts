@@ -83,6 +83,11 @@ describe('objectMatchesFilter', () => {
       expect(objectMatchesFilter(hg, 'sg:linux')).toBe(false)
     })
 
+    it('hg: matches a line that shows a host group', () => {
+      const line = obj({ type: 'line', line_object_type: 'hostgroup', group_name: 'linux-servers' })
+      expect(objectMatchesFilter(line, 'hg:linux')).toBe(true)
+    })
+
     it('AND-combines multiple terms', () => {
       expect(objectMatchesFilter(svc, 'h:web s:http')).toBe(true)
       expect(objectMatchesFilter(svc, 'h:web s:ping')).toBe(false)

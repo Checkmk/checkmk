@@ -5,6 +5,7 @@
  */
 import type { MapElement } from '@/maps/types/api'
 
+import { asBoundObject } from './naming'
 import { SAFE_URL_SCHEMES, hasSafeUrlAuthority } from './sanitize'
 
 // Strip the trailing "/check_mk" segment (and trailing slash) from a stored
@@ -75,17 +76,18 @@ export function buildCheckmkViewUrl(
 }
 
 export function buildCheckmkUrl(
-  obj: MapElement,
+  object: MapElement,
   checkmkUrl: string | null,
   siteOverride?: string | null
 ): string | null {
+  const obj = asBoundObject(object)
   // Don't fall back to the URL's path segment for the site — on a central
   // that would pin the link to the central site id even for remote hosts.
   const opts = { site: siteOverride ?? null, chrome: true }
-  if ((obj.type === 'host' || obj.type === 'line') && obj.host_name && !obj.service_description) {
+  if (obj.type === 'host' && obj.host_name) {
     return buildCheckmkViewUrl(checkmkUrl, 'hoststatus', { host: obj.host_name }, opts)
   }
-  if ((obj.type === 'service' || obj.type === 'line') && obj.host_name && obj.service_description) {
+  if (obj.type === 'service' && obj.host_name && obj.service_description) {
     return buildCheckmkViewUrl(
       checkmkUrl,
       'service',

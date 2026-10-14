@@ -38,7 +38,7 @@ from cmk.maps.shared.map_payload import (
     MapLabel,
     MapObject,
     MapPayload,
-    ObjectType,
+    MonitoredObjectType,
     WorldmapView,
 )
 from cmk.maps.shared.validators import coerce_color, coerce_user_url
@@ -66,8 +66,8 @@ _LINE_STYLES: dict[int, LineStyle] = {
 }
 _DEFAULT_LINE_STYLE: LineStyle = _LINE_STYLES[11]
 
-# 13/14/15 only appear on stateful lines (service block with view_type=line) and
-# are the only ones that carry perfdata labels — always with the weather gradient.
+# 13/14/15 are the only ones that carry perfdata labels, always with the weather
+# gradient. The perfdata is a service's, so only a line showing one keeps them.
 _LINE_PERFDATA_LABELS: dict[int, LinePerfdataLabel] = {
     13: "percent",
     14: "both",
@@ -452,7 +452,7 @@ def _label(p: dict[str, str], *, show_default: bool = True) -> MapLabel:
 
 
 # Only ``aggr`` is renamed; every other block type carries over verbatim.
-_MONITOR_OBJECT_TYPES: dict[str, ObjectType] = {
+_MONITOR_OBJECT_TYPES: dict[str, MonitoredObjectType] = {
     "host": "host",
     "service": "service",
     "hostgroup": "hostgroup",
@@ -601,8 +601,16 @@ def _line_obj_common(p: dict[str, str], raw_id: str) -> _ImportObject:
     return _ImportObject(payload, _pending(refs))
 
 
-def _apply_weathermap_defaults(obj: MapObject) -> None:
-    """Give weathermap lines NagVis' implicit in/out metric defaults.
+_LINE_PERFDATA_KEYS: tuple[
+    Literal[
+        "line_perfdata_label", "line_weather_color", "weathermap_metric", "weathermap_metric_out"
+    ],
+    ...,
+] = ("line_perfdata_label", "line_weather_color", "weathermap_metric", "weathermap_metric_out")
+
+
+def _apply_line_perfdata(obj: MapObject) -> None:
+    """Keep a line's perfdata where it shows a service, with NagVis' in/out defaults.
 
     NagVis needs no metric configuration: line_label_in/line_label_out default
     to "in"/"out" and are matched against the bound service's perfdata. Maps
@@ -610,40 +618,45 @@ def _apply_weathermap_defaults(obj: MapObject) -> None:
     imported weathermap lines have the gradient enabled but no metric to read
     and stay uncolored.
     """
+    if not (obj.get("host_name") and obj.get("service_description")):
+        # NagVis reports the perfdata of such a line as missing.
+        for key in _LINE_PERFDATA_KEYS:
+            obj.pop(key, None)
+        return
     if not obj.get("line_weather_color"):
         return
     obj.setdefault("weathermap_metric", "in")
     obj.setdefault("weathermap_metric_out", "out")
 
 
-def _handle_view_type_line(p: dict[str, str], raw_id: str) -> _ImportObject:
-    """Service/host block with view_type=line — render as a line.
+def _handle_view_type_line(block_type: str, p: dict[str, str], raw_id: str) -> _ImportObject:
+    """Monitored object with view_type=line — a line in the object's state.
 
     Legacy format encodes a line this way; recognising it explicitly avoids
     the icon path treating the comma-separated x/y as broken coords.
     """
     obj = _line_obj_common(p, raw_id)
     _apply_links(obj.payload, p)
-    if "host_name" in p:
-        obj.payload["host_name"] = p["host_name"]
-    if "service_description" in p:
-        obj.payload["service_description"] = p["service_description"]
+    _apply_type_specific(obj.payload, block_type, p)
+    # A host or service line is implied by the fields it binds.
+    if block_type not in ("host", "service"):
+        obj.payload["line_object_type"] = _MONITOR_OBJECT_TYPES[block_type]
     # Legacy: line_label_in/out name the inbound/outbound perfdata fields so
     # the bandwidth labels can render flanking the midpoint.
     if "line_label_in" in p:
         obj.payload["weathermap_metric"] = p["line_label_in"]
     if "line_label_out" in p:
         obj.payload["weathermap_metric_out"] = p["line_label_out"]
-    _apply_weathermap_defaults(obj.payload)
+    _apply_line_perfdata(obj.payload)
     return obj
 
 
 def _handle_line_block(p: dict[str, str], raw_id: str) -> _ImportObject:
     obj = _line_obj_common(p, raw_id)
     _apply_links(obj.payload, p)
-    # Stateful line variants (13/14/15) — bind to host/service so live
+    # Stateful line variants (13/14/15) — bind to the service so live
     # bandwidth and weather-color have data to read from.
-    if obj.payload.get("line_perfdata_label", "none") != "none":
+    if obj.payload.get("line_perfdata_label", "none") != "none" and p.get("service_description"):
         if "host_name" in p:
             obj.payload["host_name"] = p["host_name"]
         if "service_description" in p:
@@ -652,10 +665,10 @@ def _handle_line_block(p: dict[str, str], raw_id: str) -> _ImportObject:
             obj.payload["weathermap_metric"] = p["weathermap_metric"]
         if "weathermap_metric_out" in p:
             obj.payload["weathermap_metric_out"] = p["weathermap_metric_out"]
-    else:
+    _apply_line_perfdata(obj.payload)
+    if not obj.payload.get("host_name"):
         # A line without state has nothing else to colour it.
         obj.payload["line_color"] = _color(p.get("line_color"), "#ffffff")
-    _apply_weathermap_defaults(obj.payload)
     return obj
 
 
@@ -881,8 +894,8 @@ def _apply_links(payload: MapObject, p: dict[str, str]) -> None:
 
 
 def _handle_object_block(block_type: str, p: dict[str, str], raw_id: str) -> _ImportObject | None:
-    if p.get("view_type") == "line":
-        return _handle_view_type_line(p, raw_id)
+    if p.get("view_type") == "line" and block_type in _MONITOR_OBJECT_TYPES:
+        return _handle_view_type_line(block_type, p, raw_id)
     if block_type == "line":
         return _handle_line_block(p, raw_id)
     if block_type == "shape":

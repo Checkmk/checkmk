@@ -5,6 +5,7 @@
  */
 import type { MapElement } from '@/maps/types/api'
 
+import { getEffectiveObjectType } from './naming'
 import { STATEFUL_OBJECT_TYPES, isProblemState } from './problemState'
 
 /**
@@ -88,9 +89,9 @@ function mapElementFieldValue(obj: MapElement, field: FilterField): string[] {
     case 'service':
       return [obj.service_description ?? '']
     case 'hostgroup':
-      return obj.type === 'hostgroup' ? [obj.group_name ?? ''] : []
+      return getEffectiveObjectType(obj) === 'hostgroup' ? [obj.group_name ?? ''] : []
     case 'servicegroup':
-      return obj.type === 'servicegroup' ? [obj.group_name ?? ''] : []
+      return getEffectiveObjectType(obj) === 'servicegroup' ? [obj.group_name ?? ''] : []
     case 'id':
       return [obj.id]
     case 'any':

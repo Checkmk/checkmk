@@ -3,7 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { LinePerfdataLabel, MapElement, MapViewType } from '@/maps/types/api'
+import type {
+  LinePerfdataLabel,
+  MapElement,
+  MapViewType,
+  MonitoredObjectType,
+  ObjectType
+} from '@/maps/types/api'
 
 /**
  * How a label is aligned. The wire model also knows 'justify', which the card
@@ -40,6 +46,8 @@ export interface ObjectForm {
   line_width: number | undefined
   line_perfdata_label: LinePerfdataLabel
   line_weather_color: boolean
+  /** What a line shows the state of; meaningless for anything else. */
+  line_object_type: MonitoredObjectType
   label: {
     show: boolean
     text: string
@@ -99,6 +107,11 @@ const DEFAULT_GRAPH_TIME_WINDOW = 60
 /** How far a new line reaches when the object carries no end point yet. */
 const LINE_DEFAULT_LENGTH = 150
 
+/** What the object stands for: a line, the object type it shows the state of. */
+export function boundTypeOf(form: ObjectForm, object: MapElement): ObjectType {
+  return object.type === 'line' ? form.line_object_type : object.type
+}
+
 /** The object as the form sees it. */
 export function formFromObject(object: MapElement, defaults: ObjectFormDefaults): ObjectForm {
   return {
@@ -117,6 +130,7 @@ export function formFromObject(object: MapElement, defaults: ObjectFormDefaults)
     line_width: object.line_width ?? undefined,
     line_perfdata_label: object.line_perfdata_label ?? 'none',
     line_weather_color: object.line_weather_color ?? false,
+    line_object_type: object.line_object_type ?? (object.service_description ? 'service' : 'host'),
     label: {
       show: object.label?.show ?? false,
       text: object.label?.text ?? '',
@@ -238,43 +252,66 @@ export function updatesFromForm(
     z: form.z
   }
 
-  if (type === 'host' || type === 'service') {
+  // A line is bound like the object it shows; switching what that is drops the
+  // binding it had before. A host stays implied by its name, so a line left
+  // without one stays a plain line; a service is stored, so one still without
+  // its description reopens as the service it was meant to be.
+  const bound = boundTypeOf(form, object)
+  if (type === 'line') {
+    Object.assign(updates, {
+      line_object_type: bound === 'host' ? null : bound,
+      host_name: null,
+      service_description: null,
+      group_name: null,
+      map_name: null,
+      aggregation_id: null,
+      object_types: null,
+      object_filter: null,
+      only_hard_states: false,
+      recognize_services: false
+    })
+  }
+
+  if (bound === 'host' || bound === 'service') {
     updates.host_name = form.host_name || null
   }
-  if (['host', 'service', 'hostgroup', 'servicegroup'].includes(type)) {
+  if (['host', 'service', 'hostgroup', 'servicegroup'].includes(bound)) {
     updates.only_hard_states = form.only_hard_states
   }
-  if (type === 'host' || type === 'hostgroup') {
+  if (bound === 'host' || bound === 'hostgroup') {
     updates.recognize_services = form.recognize_services
   }
-  if (type === 'service') {
+  if (bound === 'service') {
     updates.service_description = form.service_description || null
   }
   if (type === 'graph') {
     updates.host_name = form.host_name || null
     updates.service_description = form.service_description || null
   }
-  if (type === 'hostgroup' || type === 'servicegroup') {
+  if (bound === 'hostgroup' || bound === 'servicegroup') {
     updates.group_name = form.group_name || null
   }
-  if (type === 'map') {
+  if (bound === 'map') {
     updates.map_name = form.map_name || null
   }
-  if (type === 'aggregation') {
+  if (bound === 'aggregation') {
     updates.aggregation_id = form.aggregation_id || null
+  }
+  if (type === 'aggregation') {
     updates.expand_depth = form.expand_depth ?? 0
   }
-  if (type === 'dyngroup') {
+  if (bound === 'dyngroup') {
     updates.object_types = form.object_types
     updates.object_filter = form.object_filter || null
   }
 
   if (type === 'line') {
-    updates.host_name = form.host_name || null
-    updates.service_description = form.service_description || null
-    // The metric is what perfdata labels and weather colouring look up, so it
-    // is stored exactly while one of them is on.
-    if (form.line_perfdata_label !== 'none' || form.line_weather_color) {
+    // Perfdata labels and weather colouring read a metric, which only a service
+    // has; it is stored exactly while one of them is on.
+    if (bound !== 'service') {
+      updates.line_perfdata_label = 'none'
+      updates.line_weather_color = false
+    } else if (form.line_perfdata_label !== 'none' || form.line_weather_color) {
       updates.weathermap_metric = form.weathermap_metric || null
       // The outbound metric is the second direction of the first one; on its
       // own it would colour the inbound half from an arbitrary metric.
@@ -302,5 +339,10 @@ export function updatesFromForm(
  * colouring has nothing to colour a line by without one.
  */
 export function weatherColorNeedsMetric(form: ObjectForm, object: MapElement): boolean {
-  return object.type === 'line' && form.line_weather_color && !form.weathermap_metric.trim()
+  return (
+    object.type === 'line' &&
+    form.line_object_type === 'service' &&
+    form.line_weather_color &&
+    !form.weathermap_metric.trim()
+  )
 }

@@ -42,7 +42,7 @@ from cmk.maps.backend.schemas.state import (
     ServicesSummary,
 )
 from cmk.maps.backend.schemas.topology import ServiceNode, TopologyNode
-from cmk.maps.backend.services import state_service
+from cmk.maps.backend.services import map_service, state_service
 from cmk.maps.backend.services.state_service import (
     get_connection,
     get_map_states,
@@ -192,8 +192,6 @@ def test_map_link_aggregates_nested_map_states(
     mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A Map-A → Map-B → host(DOWN) chain must surface DOWN on the top link."""
-    from cmk.maps.backend.services import map_service
-
     monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
 
     inner = _map([_obj("h_inner", "host", host_name="srv-crit")], name="inner")
@@ -215,8 +213,6 @@ def test_map_link_handles_cycle_without_recursion(
     mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A self-referential map cycle must not stack-overflow; result is PENDING."""
-    from cmk.maps.backend.services import map_service
-
     monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
 
     a = _map([_obj("a_to_b", "map", map_name="b")], name="a")
@@ -672,6 +668,87 @@ def test_hostgroup_counts_its_services_only_where_asked(
     mock_connection.get_hostgroup_states.assert_awaited_once_with(
         "web", only_hard=True, with_services=recognize_services
     )
+
+
+def test_line_shows_the_state_of_its_host_group(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_hostgroup_states = AsyncMock(
+        return_value=ObjectState(
+            object_id="x",
+            type="hostgroup",
+            state="UP",
+            services_summary=ServicesSummary(ok=3, critical=1),
+        )
+    )
+    map_cfg = _map(
+        [
+            _obj(
+                "l1",
+                "line",
+                line_object_type="hostgroup",
+                group_name="web",
+                recognize_services=True,
+            )
+        ]
+    )
+
+    result = asyncio.run(get_map_states(map_cfg))
+
+    assert (result.states[0].object_id, result.states[0].state) == ("l1", "CRITICAL")
+
+
+def test_line_shows_the_worst_state_of_its_map(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    inner = _map([_obj("h_inner", "host", host_name="srv-down")], name="inner")
+    monkeypatch.setattr(map_service, "get_map", lambda _owner, name="": {"inner": inner}.get(name))
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"srv-down": ObjectState(object_id="h_inner", type="host", state="DOWN")}
+    )
+    outer = _map([_obj("l1", "line", line_object_type="map", map_name="inner")], name="outer")
+
+    result = asyncio.run(get_map_states(outer))
+
+    assert {s.object_id: s.state for s in result.states}["l1"] == "DOWN"
+
+
+@pytest.mark.parametrize(
+    "binding, expected",
+    [
+        pytest.param({"host_name": "web01"}, "DOWN", id="host"),
+        pytest.param({"host_name": "web01", "service_description": "CPU"}, "WARNING", id="service"),
+    ],
+)
+def test_line_without_object_type_shows_its_host_or_service(
+    mock_connection: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+    binding: dict[str, str],
+    expected: str,
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"web01": ObjectState(object_id="x", type="host", state="DOWN")}
+    )
+    mock_connection.get_services_states = AsyncMock(
+        return_value={("web01", "CPU"): ObjectState(object_id="x", type="service", state="WARNING")}
+    )
+
+    result = asyncio.run(get_map_states(_map([_obj("l1", "line", **binding)])))
+
+    assert result.states[0].state == expected
+
+
+def test_line_bound_to_nothing_stays_a_line(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+
+    result = asyncio.run(get_map_states(_map([_obj("l1", "line", x2=10, y2=10)])))
+
+    assert (result.states[0].type, result.states[0].state) == ("line", "PENDING")
 
 
 def _timed(object_id: str, state: str, *, last: float, nxt: float, attempt: int = 1) -> ObjectState:

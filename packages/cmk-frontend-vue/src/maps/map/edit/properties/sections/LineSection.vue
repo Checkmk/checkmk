@@ -16,12 +16,10 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { ObjectMetrics } from '@/maps/map/edit/composables/useObjectMetrics'
-import { rebindHost } from '@/maps/map/edit/hostBinding'
 import PropertyRow from '@/maps/map/edit/properties/PropertyRow.vue'
 import PropertySection from '@/maps/map/edit/properties/PropertySection.vue'
 import type { ObjectForm } from '@/maps/map/edit/properties/objectForm'
 import MapsColorInput from '@/maps/shared/components/MapsColorInput.vue'
-import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
 import type { LinePerfdataLabel, MapElement, MapViewType } from '@/maps/types/api'
 import { linePerfdataLabelOptions, lineStyleOptions } from '@/maps/utils/dropdownOptions'
@@ -47,36 +45,19 @@ const perfdataLabelOptions = computed(() => ({
   suggestions: linePerfdataLabelOptions(_t)
 }))
 
+/** Only a service has the metrics the labels and the weather colouring read. */
+const showsService = computed(() => form.value.line_object_type === 'service')
 const isAttached = computed(() => !!(props.object.start_ref || props.object.end_ref))
 /** Both the labels and the weather colouring read the line's metric. */
 const readsPerfdata = computed(
-  () => form.value.line_perfdata_label !== 'none' || form.value.line_weather_color
+  () =>
+    showsService.value &&
+    (form.value.line_perfdata_label !== 'none' || form.value.line_weather_color)
 )
 const hasOwnCoordinates = computed(() => props.mapType !== 'worldmap')
 </script>
 
 <template>
-  <PropertySection :title="_t('Monitoring object')">
-    <PropertyRow :label="_t('Host name')">
-      <MapsObjectField
-        :model-value="form.host_name"
-        kind="host"
-        :label="_t('Host name')"
-        :placeholder="_t('hostname')"
-        @update:model-value="rebindHost(form, $event)"
-      />
-    </PropertyRow>
-    <PropertyRow :label="_t('Service')">
-      <MapsObjectField
-        v-model="form.service_description"
-        kind="service"
-        :host-name="form.host_name"
-        :label="_t('Service')"
-        :placeholder="_t('service description (optional)')"
-      />
-    </PropertyRow>
-  </PropertySection>
-
   <PropertySection v-if="isAttached" :title="_t('Connection')">
     <p class="maps-line-section__note">
       {{ _t('This line is attached to an object and follows it.') }}
@@ -100,7 +81,7 @@ const hasOwnCoordinates = computed(() => props.mapType !== 'worldmap')
         @update:model-value="form.line_style = $event || null"
       />
     </PropertyRow>
-    <PropertyRow :label="_t('Perfdata label')">
+    <PropertyRow v-if="showsService" :label="_t('Perfdata label')">
       <CmkDropdown
         floating
         :model-value="form.line_perfdata_label"
@@ -111,6 +92,7 @@ const hasOwnCoordinates = computed(() => props.mapType !== 'worldmap')
       />
     </PropertyRow>
     <CmkCheckbox
+      v-if="showsService"
       v-model="form.line_weather_color"
       :label="_t('Color by utilization (weathermap)')"
     />
@@ -144,7 +126,7 @@ const hasOwnCoordinates = computed(() => props.mapType !== 'worldmap')
       Weather colouring drives the stroke and skips the border, so the two
       colour fields would have no effect while it is on.
     -->
-    <template v-if="!form.line_weather_color">
+    <template v-if="!showsService || !form.line_weather_color">
       <PropertyRow v-slot="{ id, label }" labels-control :label="_t('Line color')">
         <MapsColorInput
           v-model="form.line_color"

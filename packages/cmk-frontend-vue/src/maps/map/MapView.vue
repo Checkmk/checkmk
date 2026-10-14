@@ -74,6 +74,7 @@ import { resolveCheckmkUrl } from '@/maps/utils/deploymentBase'
 import { objectDeleteTitle, objectDisplayName } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkUrl, openUrl } from '@/maps/utils/mapNavigation'
 import { monitoringObjectId, newMapElement } from '@/maps/utils/model'
+import { asBoundObject } from '@/maps/utils/naming'
 
 // Lazy, one chunk per map type: leaflet rides with the geo map and d3 with the
 // flow map, so opening a static map downloads neither. The type imports beside
@@ -489,22 +490,6 @@ const detailDrawerState = computed(() => {
 const detailActions = useObjectActions(() => checkmkUrl.value)
 const drawerCommands = detailActions.drawerHandlers(() => detailDrawerObject.value)
 
-function openDetail(obj: MapElement) {
-  // A line is a visual relation between two endpoints, but in monitoring
-  // terms it represents either the host or the host's service (whichever
-  // is configured). Drawer logic keys off `type` to fetch state and
-  // render the right tabs, so expose the line as its underlying
-  // host/service for the drawer's purposes.
-  if (obj.type === 'line' && obj.host_name) {
-    detailDrawerObject.value = {
-      ...obj,
-      type: obj.service_description ? 'service' : 'host'
-    }
-  } else {
-    detailDrawerObject.value = obj
-  }
-}
-
 // All host MapElements on this map, keyed by hostname so the Drawer's
 // topology section can decide whether a parent/child entry can highlight on
 // the map (vs. just linking to Checkmk).
@@ -609,8 +594,9 @@ function onObjectClick(obj: MapElement, event?: MouseEvent) {
     openUrl(obj.url, obj.url_target || '_blank')
     return
   }
-  if (obj.type === 'map' && obj.map_name) {
-    nav.navigate({ view: 'map', name: obj.map_name })
+  const bound = asBoundObject(obj)
+  if (bound.type === 'map' && bound.map_name) {
+    nav.navigate({ view: 'map', name: bound.map_name })
     return
   }
   if (event && (event.ctrlKey || event.metaKey)) {
@@ -622,17 +608,17 @@ function onObjectClick(obj: MapElement, event?: MouseEvent) {
   }
   // Decorative objects without a monitored target have nothing to show in
   // the drawer. Click is a no-op rather than an empty drawer.
-  if (!objectHasMonitoringTarget(obj)) {
+  if (!objectHasMonitoringTarget(bound)) {
     return
   }
-  openDetail(obj)
+  // The drawer keys off `type` to fetch state and render the right tabs.
+  detailDrawerObject.value = bound
 }
 
 function objectHasMonitoringTarget(obj: MapElement): boolean {
   switch (obj.type) {
     case 'host':
     case 'service':
-    case 'line':
       return Boolean(obj.host_name)
     case 'hostgroup':
     case 'servicegroup':

@@ -155,6 +155,7 @@ function objectToWire(obj: MapElement): MapElementWire {
         width: obj.line_width,
         perfdata_label: obj.line_perfdata_label,
         weather_color: obj.line_weather_color,
+        object_type: obj.line_object_type,
         metric_in: obj.weathermap_metric,
         metric_out: obj.weathermap_metric_out,
         color: obj.line_color,

@@ -21,6 +21,7 @@ from cmk.maps.shared.map_payload import (
     ClickAction,
     LinePerfdataLabel,
     LineStyle,
+    MonitoredObjectType,
     ObjectType,
     RenderMode,
 )
@@ -242,6 +243,9 @@ class MapElement(BaseModel):
     line_perfdata_label: LinePerfdataLabel = "none"
     # Color the line by inbound/outbound utilization gradient instead of state color.
     line_weather_color: bool = False
+    # What the line shows the state of. ``None`` → a service when one is bound,
+    # else the host.
+    line_object_type: MonitoredObjectType | None = None
     # Inbound metric (rendered left of the midpoint).
     weathermap_metric: str | None = None
     # Outbound metric (rendered right of the midpoint).
@@ -449,6 +453,7 @@ class MapElementUpdate(BaseModel):
     line_width: int | None = Field(default=None, ge=1, le=20)
     line_perfdata_label: LinePerfdataLabel | None = None
     line_weather_color: bool | None = None
+    line_object_type: MonitoredObjectType | None = None
     weathermap_metric: str | None = None
     weathermap_metric_out: str | None = None
     cmk_label_name: str | None = None

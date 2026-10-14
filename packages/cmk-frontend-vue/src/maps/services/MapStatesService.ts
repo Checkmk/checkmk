@@ -32,6 +32,7 @@ import type {
   TopologyTiming
 } from '@/maps/types/api'
 import { resolveStreamUrl } from '@/maps/utils/deploymentBase'
+import { getEffectiveObjectType } from '@/maps/utils/naming'
 import { parsePerfData } from '@/maps/utils/perf'
 
 type MapEvent = FastApiEvent<paths, '/api/v1/sse/maps/{name}'>
@@ -854,9 +855,9 @@ export class MapStatesService {
   }
 
   /**
-   * Resolves the map's BI aggregation objects GUI-side and merges them into the
-   * same state map, keyed by object id. This owns those entries — the daemon does
-   * not stream them.
+   * Resolves the map's BI aggregation objects (and lines showing one) GUI-side
+   * and merges them into the same state map, keyed by object id. This owns those
+   * entries — the daemon does not stream them.
    */
   private async refreshAggregations(): Promise<void> {
     if (this.aggInFlight) {
@@ -865,7 +866,7 @@ export class MapStatesService {
     const map = this.maps.currentMap.value
     const aggObjects = (map?.objects ?? []).filter(
       (o): o is MapElement & { aggregation_id: string } =>
-        o.type === 'aggregation' &&
+        getEffectiveObjectType(o) === 'aggregation' &&
         typeof o.aggregation_id === 'string' &&
         o.aggregation_id.length > 0
     )

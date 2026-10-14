@@ -372,6 +372,55 @@ def test_cfg_to_map_line_with_state_is_colored_by_it() -> None:
     assert "line_color" not in _first_obj(cfg_to_map(content, "test"))
 
 
+@pytest.mark.parametrize(
+    "block, binding",
+    [
+        pytest.param(
+            "hostgroup {\n    hostgroup_name = web\n",
+            {"line_object_type": "hostgroup", "group_name": "web", "recognize_services": True},
+            id="hostgroup",
+        ),
+        pytest.param(
+            "servicegroup {\n    servicegroup_name = db\n",
+            {"line_object_type": "servicegroup", "group_name": "db"},
+            id="servicegroup",
+        ),
+        pytest.param(
+            "map {\n    map_name = site-b\n",
+            {"line_object_type": "map", "map_name": "site-b"},
+            id="map",
+        ),
+        pytest.param(
+            "aggr {\n    name = Hosts\n",
+            {"line_object_type": "aggregation", "aggregation_id": "Hosts"},
+            id="aggregation",
+        ),
+    ],
+)
+def test_cfg_to_map_line_keeps_the_object_it_shows(block: str, binding: dict[str, object]) -> None:
+    content = f"define {block}    view_type = line\n    x = 0,10\n    y = 0,10\n}}\n"
+    obj: dict[str, object] = dict(_first_obj(cfg_to_map(content, "test")))
+    assert obj["type"] == "line"
+    assert {key: obj.get(key) for key in binding} == binding
+
+
+@pytest.mark.parametrize(
+    "block",
+    [
+        "host {\n    host_name = h\n",
+        "hostgroup {\n    hostgroup_name = web\n",
+        "line {\n    host_name = h\n",
+        "line {\n    service_description = CPU\n",
+    ],
+)
+def test_cfg_to_map_line_without_service_carries_no_perfdata(block: str) -> None:
+    content = (
+        f"define {block}    view_type = line\n    line_type = 14\n    x = 0,10\n    y = 0,10\n}}\n"
+    )
+    obj = _first_obj(cfg_to_map(content, "test"))
+    assert not {"line_perfdata_label", "line_weather_color", "weathermap_metric"} & obj.keys()
+
+
 def test_cfg_to_map_line_color_border_invalid_falls_back() -> None:
     content = "define line {\n    x = 0,10\n    y = 0,10\n    line_color_border = expression(alert(1))\n}\n"
     assert _first_obj(cfg_to_map(content, "test"))["line_color_border"] == "#000000"
@@ -404,7 +453,7 @@ def test_cfg_to_map_line_type_inherited_from_template() -> None:
     content = (
         "define template {\n    name = wm\n    line_type = 13\n}\n"
         "define line {\n    object_id = l1\n    x = 10,20\n    y = 30,40\n"
-        "    template = wm\n}\n"
+        "    host_name = h\n    service_description = s\n    template = wm\n}\n"
     )
     obj = _first_obj(cfg_to_map(content, "test"))
     assert obj["line_style"] == "arrow_inward"
@@ -428,7 +477,8 @@ def test_cfg_to_map_element_line_type_overrides_template() -> None:
 def test_cfg_to_map_line_type_inherited_from_global() -> None:
     content = (
         "define global {\n    line_type = 13\n}\n"
-        "define line {\n    object_id = l1\n    x = 10,20\n    y = 30,40\n}\n"
+        "define line {\n    object_id = l1\n    x = 10,20\n    y = 30,40\n"
+        "    host_name = h\n    service_description = s\n}\n"
     )
     obj = _first_obj(cfg_to_map(content, "test"))
     assert obj["line_style"] == "arrow_inward"
@@ -439,14 +489,12 @@ def test_cfg_to_map_global_backend_not_inherited_by_objects() -> None:
     # backend_id stays map-level: a global backend must not become a
     # per-object connection_id override.
     content = (
-        "define global {\n    backend_id = primary\n    line_type = 13\n}\n"
+        "define global {\n    backend_id = primary\n}\n"
         "define line {\n    object_id = l1\n    x = 10,20\n    y = 30,40\n}\n"
     )
     parsed_map = cfg_to_map(content, "test")
     assert parsed_map["connection_id"] == "primary"
-    obj = _first_obj(parsed_map)
-    assert "connection_id" not in obj
-    assert obj["line_weather_color"] is True
+    assert "connection_id" not in _first_obj(parsed_map)
 
 
 def test_cfg_to_map_weathermap_metric_defaults_to_in_out() -> None:

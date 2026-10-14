@@ -40,6 +40,7 @@ from cmk.maps.shared.map_payload import (
     ClickAction,
     LinePerfdataLabel,
     LineStyle,
+    MonitoredObjectType,
     ObjectType,
     PresentationObjectType,
     PresentationTheme,
@@ -665,6 +666,13 @@ class MapObjectLine:
     )
     weather_color: bool | ApiOmitted = api_field(
         description="Color the line by utilization.", example=True, default_factory=ApiOmitted
+    )
+    object_type: MonitoredObjectType | None | ApiOmitted = api_field(
+        description=(
+            "What the line shows the state of. Absent: the bound service, else the bound host."
+        ),
+        example="hostgroup",
+        default_factory=ApiOmitted,
     )
     metric_in: str | None | ApiOmitted = api_field(
         description="Inbound weathermap metric.",

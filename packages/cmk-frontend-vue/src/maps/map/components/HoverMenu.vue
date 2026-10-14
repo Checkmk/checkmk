@@ -19,6 +19,7 @@ import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
 import { buildHostStateViewUrl, buildServiceStateViewUrl } from '@/maps/utils/mapNavigation'
 import {
   VISUAL_ONLY_TYPES,
+  asBoundObject,
   getEffectiveObjectType,
   getMapElementIdentifier
 } from '@/maps/utils/naming'
@@ -66,13 +67,14 @@ function onCardLeave() {
 const { _t } = usei18n()
 const { objects } = useMapsApis()
 
+const target = computed(() => asBoundObject(props.object))
+
 // ``pending`` hides the raw perf_data fallback while the CMK perfometer is
 // still loading, so the tooltip does not flicker between two bar styles.
 const isServiceLinked = computed(
   () =>
-    props.object.type === 'service' ||
-    ((props.object.type === 'line' || props.object.type === 'graph') &&
-      !!props.object.service_description)
+    target.value.type === 'service' ||
+    (target.value.type === 'graph' && !!props.object.service_description)
 )
 const { info: cmkMetricInfo, pending: cmkPerfometerPending } = useMetricInfo({
   connectionId: () => props.connectionId,
@@ -115,7 +117,7 @@ const positionStyle = usePointerOverlayStyle(
 
 onMounted(() => {
   if (
-    props.object.type === 'dyngroup' &&
+    target.value.type === 'dyngroup' &&
     !props.object.bundle_hosts?.length &&
     props.object.object_filter &&
     props.connectionId &&
@@ -142,13 +144,9 @@ const displayName = computed(() => getMapElementIdentifier(props.object) ?? '')
 
 const hoverTypeLabel = computed(() => objectTypeLabel(getEffectiveObjectType(props.object), _t))
 
-const hasMonitoring = computed(() => {
-  // A line linked to a host/service is not purely decorative — show its state.
-  if (props.object.type === 'line') {
-    return !!(props.object.host_name || props.object.service_description)
-  }
-  return !(VISUAL_ONLY_TYPES as readonly string[]).includes(props.object.type)
-})
+const hasMonitoring = computed(
+  () => !(VISUAL_ONLY_TYPES as readonly string[]).includes(target.value.type)
+)
 
 const isNoPermission = computed(() => props.state?.state === 'NO_PERMISSION')
 const isNotFound = computed(() => props.state?.state === 'NOT_FOUND')
@@ -273,7 +271,7 @@ interface PillRow {
 }
 
 const dyngroupHostSet = computed<string[] | null>(() =>
-  props.object.type === 'dyngroup'
+  target.value.type === 'dyngroup'
     ? props.object.bundle_hosts?.length
       ? props.object.bundle_hosts
       : dyngroupMemberHosts.value
@@ -288,21 +286,21 @@ function buildPills(summary: ServicesSummary, kind: 'hosts' | 'services'): Hover
       return null
     }
     if (kind === 'hosts') {
-      return props.object.type === 'dyngroup' && hosts?.length
+      return target.value.type === 'dyngroup' && hosts?.length
         ? buildHostStateViewUrl(props.checkmkUrl, hosts, state)
         : null
     }
-    if (props.object.type === 'host') {
+    if (target.value.type === 'host') {
       return buildServiceStateViewUrl(props.checkmkUrl, { host: props.object.host_name }, state)
     }
-    if (props.object.type === 'hostgroup') {
+    if (target.value.type === 'hostgroup') {
       return buildServiceStateViewUrl(
         props.checkmkUrl,
         { hostgroup: props.object.group_name },
         state
       )
     }
-    if (props.object.type === 'dyngroup' && hosts?.length) {
+    if (target.value.type === 'dyngroup' && hosts?.length) {
       return buildServiceStateViewUrl(props.checkmkUrl, { hosts }, state)
     }
     return null
@@ -333,7 +331,7 @@ function buildPills(summary: ServicesSummary, kind: 'hosts' | 'services'): Hover
 }
 
 const pillRows = computed<PillRow[]>(() => {
-  if (!['host', 'hostgroup', 'servicegroup', 'dyngroup'].includes(props.object.type)) {
+  if (!['host', 'hostgroup', 'servicegroup', 'dyngroup'].includes(target.value.type)) {
     return []
   }
   const rows: PillRow[] = []
@@ -355,12 +353,7 @@ const pillRows = computed<PillRow[]>(() => {
 })
 
 const perfMetrics = computed((): PerfMetric[] => {
-  // Same reasoning as `isServiceLinked` above — only service-linked objects have perf data.
-  const showPerf =
-    props.object.type === 'service' ||
-    ((props.object.type === 'line' || props.object.type === 'graph') &&
-      !!props.object.service_description)
-  if (!showPerf) {
+  if (!isServiceLinked.value) {
     return []
   }
   return parsePerfData(props.state?.perf_data ?? '').slice(0, 4)

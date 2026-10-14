@@ -55,6 +55,12 @@ LineStyle = Literal[
 
 LinePerfdataLabel = Literal["none", "percent", "bandwidth", "both"]
 
+# The objects with a monitoring state. A line can show any of them, since NagVis
+# draws each of them as a line on request.
+MonitoredObjectType = Literal[
+    "host", "service", "hostgroup", "servicegroup", "dyngroup", "map", "aggregation"
+]
+
 DisplayMode = Literal["icon", "text", "gadget"]
 
 GadgetType = Literal["gauge", "bar", "trafficlight", "value"]
@@ -238,6 +244,7 @@ class MapObject(TypedDict):
     line_color_border: NotRequired[str]
     line_perfdata_label: NotRequired[LinePerfdataLabel]
     line_weather_color: NotRequired[bool]
+    line_object_type: NotRequired[MonitoredObjectType | None]
     weathermap_metric: NotRequired[str]
     weathermap_metric_out: NotRequired[str]
     textbox_background: NotRequired[str]

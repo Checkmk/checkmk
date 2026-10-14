@@ -99,8 +99,29 @@ describe('ObjectPropertiesModal – conditional fields by object type', () => {
     expect(screen.queryByText('View type')).not.toBeInTheDocument()
   })
 
+  it('asks a line for the object it shows the state of', () => {
+    renderModal(obj({ type: 'line', line_object_type: 'hostgroup', group_name: 'web' }))
+
+    expect(screen.getByText('Shows the state of')).toBeInTheDocument()
+    expect(screen.getByText('Group name')).toBeInTheDocument()
+  })
+
+  it('offers no perfdata on a line that shows no service', () => {
+    renderModal(obj({ type: 'line', line_object_type: 'hostgroup', group_name: 'web' }))
+
+    expect(screen.queryByText('Perfdata label')).not.toBeInTheDocument()
+  })
+
   it('renders line-specific styling and drops the generic position/appearance sections', () => {
-    renderModal(obj({ type: 'line', x2: 200, y2: 60 }))
+    renderModal(
+      obj({
+        type: 'line',
+        host_name: 'sw01',
+        service_description: 'Interface 1',
+        x2: 200,
+        y2: 60
+      })
+    )
 
     // Twice: the header's type badge and the section title.
     expect(screen.getAllByText('Line')).toHaveLength(2)
@@ -205,7 +226,15 @@ describe('ObjectPropertiesModal – save payload', () => {
   it('blocks the save and shows an error when weather coloring has no metric', async () => {
     const user = userEvent.setup()
     const { emitted } = renderModal(
-      obj({ type: 'line', line_weather_color: true, weathermap_metric: '', x2: 200, y2: 60 })
+      obj({
+        type: 'line',
+        host_name: 'sw01',
+        service_description: 'Interface 1',
+        line_weather_color: true,
+        weathermap_metric: '',
+        x2: 200,
+        y2: 60
+      })
     )
 
     await user.click(screen.getByRole('button', { name: 'Save' }))

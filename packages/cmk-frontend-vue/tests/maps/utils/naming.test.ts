@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 
 import { newMapElement } from '@/maps/utils/model'
 import {
+  asBoundObject,
   mapElementCaption,
   mapIdFromName,
   sanitizeMapName,
@@ -139,5 +140,31 @@ describe('mapIdFromName', () => {
 
   it('does not end on a hyphen where it is cut', () => {
     expect(mapIdFromName('ab cd', 3)).toBe('ab')
+  })
+})
+
+describe('asBoundObject', () => {
+  it('reads a line as the object whose state it shows', () => {
+    const line = newMapElement({
+      id: 'l',
+      type: 'line',
+      line_object_type: 'hostgroup',
+      group_name: 'web'
+    })
+    expect(asBoundObject(line)).toMatchObject({ type: 'hostgroup', group_name: 'web' })
+  })
+
+  it('reads a line bound to no type by its host and service', () => {
+    const line = newMapElement({
+      id: 'l',
+      type: 'line',
+      host_name: 'web01',
+      service_description: 'CPU'
+    })
+    expect(asBoundObject(line).type).toBe('service')
+  })
+
+  it('leaves a line bound to nothing a line', () => {
+    expect(asBoundObject(newMapElement({ id: 'l', type: 'line' })).type).toBe('line')
   })
 })

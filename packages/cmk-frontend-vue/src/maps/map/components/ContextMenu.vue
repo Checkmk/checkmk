@@ -12,7 +12,7 @@ import MapsMenuItem from '@/maps/shared/components/MapsMenuItem.vue'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkViewUrl } from '@/maps/utils/mapNavigation'
-import { getEffectiveObjectType, getMapElementName } from '@/maps/utils/naming'
+import { asBoundObject, getEffectiveObjectType, getMapElementName } from '@/maps/utils/naming'
 import { sanitizeTemplateHtml } from '@/maps/utils/sanitize'
 import { interpolateTemplate } from '@/maps/utils/template'
 
@@ -97,11 +97,13 @@ const serviceUrl = computed(() => {
   )
 })
 
+const target = computed(() => asBoundObject(props.object))
+
 const groupUrl = computed(() => {
   if (!props.object.group_name) {
     return null
   }
-  const view = props.object.type === 'hostgroup' ? 'hostgroup' : 'servicegroup'
+  const view = target.value.type === 'hostgroup' ? 'hostgroup' : 'servicegroup'
   return buildCheckmkViewUrl(
     props.checkmkUrl,
     view,
@@ -111,7 +113,7 @@ const groupUrl = computed(() => {
 })
 
 const aggregationUrl = computed(() => {
-  if (props.object.type !== 'aggregation' || !props.object.aggregation_id) {
+  if (target.value.type !== 'aggregation' || !props.object.aggregation_id) {
     return null
   }
   return buildCheckmkViewUrl(
@@ -123,14 +125,14 @@ const aggregationUrl = computed(() => {
 })
 
 const aggregationOverviewUrl = computed(() => {
-  if (props.object.type !== 'aggregation') {
+  if (target.value.type !== 'aggregation') {
     return null
   }
   return buildCheckmkViewUrl(props.checkmkUrl, 'aggr_all', {}, { site: site.value })
 })
 
 const hostServicesUrl = computed(() => {
-  if (props.object.type !== 'host' || !props.object.host_name) {
+  if (target.value.type !== 'host' || !props.object.host_name) {
     return null
   }
   if (!isProblematic.value) {

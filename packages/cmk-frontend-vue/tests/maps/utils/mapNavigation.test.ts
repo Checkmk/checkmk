@@ -6,12 +6,14 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import {
+  buildCheckmkUrl,
   buildFolderStateViewUrl,
   buildServiceStateViewUrl,
   hostStateOn,
   openUrl,
   svcStateOn
 } from '@/maps/utils/mapNavigation'
+import { newMapElement } from '@/maps/utils/model'
 
 describe('svcStateOn / hostStateOn', () => {
   it('maps monitoring states to Checkmk filter checkboxes', () => {
@@ -23,6 +25,21 @@ describe('svcStateOn / hostStateOn', () => {
     expect(hostStateOn('UP')).toBe('hst0')
     expect(hostStateOn('DOWN')).toBe('hst1')
     expect(hostStateOn('UNREACHABLE')).toBe('hst2')
+  })
+})
+
+describe('buildCheckmkUrl', () => {
+  it('links a line to the object it shows', () => {
+    const line = newMapElement({
+      id: 'l',
+      type: 'line',
+      line_object_type: 'hostgroup',
+      group_name: 'web'
+    })
+    const url = buildCheckmkUrl(line, 'http://h/SITE/check_mk/')
+    const inner = new URL(url!, 'http://h').searchParams.get('start_url') ?? ''
+    expect(inner).toContain('view_name=hostgroup')
+    expect(inner).toContain('hostgroup=web')
   })
 })
 

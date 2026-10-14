@@ -47,6 +47,8 @@ export type LineStyle = NonNullable<Daemon['MapElement']['line_style']>
 
 export type LinePerfdataLabel = Daemon['MapElement']['line_perfdata_label']
 
+export type MonitoredObjectType = NonNullable<Daemon['MapElement']['line_object_type']>
+
 export type ServiceLayout = NonNullable<Daemon['FlowView']['service_layout']>
 
 // The views a map can carry. The daemon holds the map in the shape the SPA edits

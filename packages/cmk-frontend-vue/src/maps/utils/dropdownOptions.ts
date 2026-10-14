@@ -7,7 +7,7 @@ import type usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-import type { MapElement, ObjectType } from '@/maps/types/api'
+import type { MapElement, MonitoredObjectType, ObjectType } from '@/maps/types/api'
 import {
   getEffectiveObjectType,
   getMapElementIdentifier,
@@ -155,6 +155,20 @@ export function dyngroupTypeOptions(_t: TranslateFn) {
     { name: 'host', title: _t('Hosts') },
     { name: 'service', title: _t('Services') }
   ]
+}
+
+/** What a line can show the state of. */
+export function lineObjectTypeOptions(_t: TranslateFn) {
+  const types: MonitoredObjectType[] = [
+    'host',
+    'service',
+    'hostgroup',
+    'servicegroup',
+    'dyngroup',
+    'map',
+    'aggregation'
+  ]
+  return types.map((type) => ({ name: type, title: objectTypeLabel(type, _t) }))
 }
 
 export function linePerfdataLabelOptions(_t: TranslateFn) {

@@ -5,7 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <!--
 What the object stands for: the connection it reads from, and the monitoring
-object it is bound to — which differs per object type.
+object it is bound to — which differs per object type. A line picks the type
+of object it shows the state of.
 -->
 <script setup lang="ts">
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
@@ -19,13 +20,13 @@ import type { ObjectSuggestions } from '@/maps/map/edit/composables/useObjectSug
 import { rebindHost } from '@/maps/map/edit/hostBinding'
 import PropertyRow from '@/maps/map/edit/properties/PropertyRow.vue'
 import PropertySection from '@/maps/map/edit/properties/PropertySection.vue'
-import type { ObjectForm } from '@/maps/map/edit/properties/objectForm'
+import { type ObjectForm, boundTypeOf } from '@/maps/map/edit/properties/objectForm'
 import MapsColorInput from '@/maps/shared/components/MapsColorInput.vue'
 import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
 import MapsTextArea from '@/maps/shared/components/MapsTextArea.vue'
-import type { MapElement } from '@/maps/types/api'
-import { dyngroupTypeOptions } from '@/maps/utils/dropdownOptions'
+import type { MapElement, MonitoredObjectType } from '@/maps/types/api'
+import { dyngroupTypeOptions, lineObjectTypeOptions } from '@/maps/utils/dropdownOptions'
 
 const props = defineProps<{
   object: MapElement
@@ -43,9 +44,15 @@ const dyngroupTypeSuggestions = computed(() => ({
   suggestions: dyngroupTypeOptions(_t)
 }))
 
-const type = computed(() => props.object.type)
+const lineObjectTypeSuggestions = computed(() => ({
+  type: 'fixed' as const,
+  suggestions: lineObjectTypeOptions(_t)
+}))
+
+const isLine = computed(() => props.object.type === 'line')
+const type = computed(() => boundTypeOf(form.value, props.object))
 /** Only an expanded aggregation draws the lines down to its subtree. */
-const showsSubtreeLines = computed(() => form.value.expand_depth > 0)
+const showsSubtreeLines = computed(() => !isLine.value && form.value.expand_depth > 0)
 </script>
 
 <template>
@@ -58,6 +65,17 @@ const showsSubtreeLines = computed(() => form.value.expand_depth > 0)
         :label="_t('Connection')"
         width="fill"
         @update:model-value="form.connection_id = $event ?? ''"
+      />
+    </PropertyRow>
+
+    <PropertyRow v-if="isLine" :label="_t('Shows the state of')">
+      <CmkDropdown
+        floating
+        :model-value="form.line_object_type"
+        :options="lineObjectTypeSuggestions"
+        :label="_t('Shows the state of')"
+        width="fill"
+        @update:model-value="form.line_object_type = ($event ?? 'host') as MonitoredObjectType"
       />
     </PropertyRow>
 
@@ -165,7 +183,7 @@ const showsSubtreeLines = computed(() => form.value.expand_depth > 0)
           "
         />
       </PropertyRow>
-      <PropertyRow v-slot="{ id }" labels-control :label="_t('Expand depth')">
+      <PropertyRow v-if="!isLine" v-slot="{ id }" labels-control :label="_t('Expand depth')">
         <CmkInput
           :id="id"
           v-model="form.expand_depth"

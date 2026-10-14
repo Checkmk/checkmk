@@ -31,6 +31,7 @@ import {
 } from '@/maps/map/edit/properties/graphSource'
 import {
   type ObjectForm,
+  boundTypeOf,
   formFromObject,
   updatesFromForm,
   weatherColorNeedsMetric
@@ -93,12 +94,14 @@ function setGraphSource(source: GraphSource): void {
   applyGraphSource(form.value, source)
 }
 
+const boundType = computed(() => boundTypeOf(form.value, props.object))
+
 // The per-object connection override wins over the map's own.
 const connectionId = computed(() => form.value.connection_id || props.connectionId)
 
 const suggestions = useObjectSuggestions({
   connectionId: () => connectionId.value,
-  objectType: () => props.object.type,
+  objectType: () => boundType.value,
   mapName: () => form.value.map_name
 })
 
@@ -130,7 +133,7 @@ const displayName = computed(() => getMapElementName(props.object) ?? '')
 /** The object's own page in Checkmk, offered as the link field's default. */
 const autoUrl = computed((): string | null => {
   const options = { site: props.state?.site_id ?? null }
-  const { type } = props.object
+  const type = boundType.value
   if (type === 'host' && form.value.host_name) {
     return buildCheckmkViewUrl(
       props.checkmkUrl,
@@ -168,9 +171,7 @@ const autoUrl = computed((): string | null => {
 
 const objectType = computed(() => props.object.type)
 const isLine = computed(() => objectType.value === 'line')
-const showsIdentity = computed(
-  () => !['textbox', 'line', 'graph', 'image'].includes(objectType.value)
-)
+const showsIdentity = computed(() => !['textbox', 'graph', 'image'].includes(objectType.value))
 const showsAppearance = computed(() => !['line', 'textbox', 'graph'].includes(objectType.value))
 // Every object that stands for more than itself can hide members -- including
 // the BI aggregation, which is also the only one whose leaves the section can

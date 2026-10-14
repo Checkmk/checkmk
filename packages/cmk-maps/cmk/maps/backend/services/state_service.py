@@ -70,9 +70,8 @@ def sort_folder_services(services: list[FolderHostService]) -> None:
     services.sort(key=lambda s: (-severity_rank(s.state), natural_key(s.name)))
 
 
-_MONITORING_TYPES: frozenset[str] = frozenset(
-    {"host", "service", "hostgroup", "servicegroup", "line", "graph"}
-)
+# Graphs and lines report the state of the object they show, under its type.
+_MONITORING_TYPES: frozenset[str] = frozenset({"host", "service", "hostgroup", "servicegroup"})
 # Types that contribute to the worst-state roll-up of a map-link object.
 # Includes map and aggregation so nested maps transitively show up in the
 # parent map's status pill.
@@ -355,7 +354,6 @@ class _MapElementBins:
     hosts_hard: list[MapElement] = field(default_factory=list)
     svcs_soft: list[MapElement] = field(default_factory=list)
     svcs_hard: list[MapElement] = field(default_factory=list)
-    lines: list[MapElement] = field(default_factory=list)
     map_objects: list[MapElement] = field(default_factory=list)
     others: list[MapElement] = field(default_factory=list)
 
@@ -364,21 +362,15 @@ def _bin_map_elements(objects: list[MapElement]) -> _MapElementBins:
     """Split map objects into per-query-kind bins (hosts vs services vs …).
 
     Hosts and services are further split by ``only_hard_states`` so each batch
-    query carries a uniform ``only_hard`` flag. ``graph`` objects piggyback on
-    the host/service batches depending on whether they target a service.
+    query carries a uniform ``only_hard`` flag. Graphs and lines join the bin of
+    the object whose state they show.
     """
     bins = _MapElementBins()
-    for obj in objects:
+    for obj in map(_as_state_source, objects):
         if obj.type == "host" and obj.host_name:
             (bins.hosts_hard if obj.only_hard_states else bins.hosts_soft).append(obj)
         elif obj.type == "service" and obj.host_name and obj.service_description:
             (bins.svcs_hard if obj.only_hard_states else bins.svcs_soft).append(obj)
-        elif obj.type == "graph" and obj.host_name and obj.service_description:
-            bins.svcs_soft.append(obj)
-        elif obj.type == "graph" and obj.host_name:
-            bins.hosts_soft.append(obj)
-        elif obj.type == "line":
-            bins.lines.append(obj)
         elif obj.type == "map" and obj.map_name:
             bins.map_objects.append(obj)
         elif obj.type == "aggregation":
@@ -386,6 +378,17 @@ def _bin_map_elements(objects: list[MapElement]) -> _MapElementBins:
         else:
             bins.others.append(obj)
     return bins
+
+
+def _as_state_source(obj: MapElement) -> MapElement:
+    """A graph or line as the object whose state it shows."""
+    if obj.type not in ("graph", "line"):
+        return obj
+    bound = obj.line_object_type if obj.type == "line" else None
+    if bound is None and not obj.host_name:
+        return obj  # decoration, nothing to show the state of
+    derived = "service" if obj.service_description else "host"
+    return obj.model_copy(update={"type": bound or derived})
 
 
 async def _resolve_host_states(
@@ -511,8 +514,8 @@ async def _resolve_individual_states(
     objects: list[MapElement],
     results: dict[str, ObjectState],
 ) -> None:
-    """Resolve objects that have no batch query (lines and everything else)
-    one-by-one, in parallel, into *results*."""
+    """Resolve objects that have no batch query one-by-one, in parallel, into
+    *results*."""
     individual = [_get_object_state(connection, obj) for obj in objects]
     for state in await asyncio.gather(*individual):
         results[state.object_id] = state
@@ -551,7 +554,7 @@ async def _resolve_map_link_states(
         included_objs = [
             o
             for o in ref_cfg.objects
-            if o.type != "map" or (o.map_name and o.map_name not in child_visited)
+            if _as_state_source(o).type != "map" or (o.map_name and o.map_name not in child_visited)
         ]
         try:
             map_states[map_name] = await _states_for_objects(
@@ -614,7 +617,7 @@ async def _get_map_states_batched(
 
     await _resolve_host_states(connection, bins.hosts_soft, bins.hosts_hard, auth_user, results)
     await _resolve_service_states(connection, bins.svcs_soft, bins.svcs_hard, auth_user, results)
-    await _resolve_individual_states(connection, bins.lines + bins.others, results)
+    await _resolve_individual_states(connection, bins.others, results)
     await _resolve_map_link_states(
         bins.map_objects,
         auth_user=auth_user,
@@ -659,14 +662,6 @@ async def _get_object_state(connection: ConnectionBase, obj: MapElement) -> Obje
             )
             if obj.bundle_kind is not None and (obj.object_types or "host") == "host":
                 state.state = _combined_state_from_summary(state.state, state.services_summary)
-        elif obj.type == "line" and obj.host_name and obj.service_description:
-            state = await connection.get_service_state(obj.host_name, obj.service_description)
-        elif obj.type == "line" and obj.host_name:
-            state = await connection.get_host_state(obj.host_name)
-        elif obj.type == "graph" and obj.host_name and obj.service_description:
-            state = await connection.get_service_state(obj.host_name, obj.service_description)
-        elif obj.type == "graph" and obj.host_name:
-            state = await connection.get_host_state(obj.host_name)
         else:
             state = ObjectState(object_id=obj.id, type=obj.type, state="PENDING")
         state.object_id = obj.id

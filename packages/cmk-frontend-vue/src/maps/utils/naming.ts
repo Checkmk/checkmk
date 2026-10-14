@@ -9,14 +9,17 @@ import type { MapElement, ObjectType } from '@/maps/types/api'
 export const VISUAL_ONLY_TYPES: readonly ObjectType[] = ['image', 'textbox', 'line']
 
 /**
- * The type an object counts as where it is named. Graph and line objects go by
- * what they monitor ('service' or 'host') when bound to one, not by their Maps
- * object type.
+ * The type an object counts as where it is named. A line goes by the object
+ * whose state it shows, a graph by the service or host it is bound to, not by
+ * their Maps object type.
  *
  * Still a wire name — pass it through ``objectTypeLabel`` for anything a person
  * reads.
  */
 export function getEffectiveObjectType(object: MapElement): ObjectType {
+  if (object.type === 'line' && object.line_object_type) {
+    return object.line_object_type
+  }
   if (object.type === 'graph' || object.type === 'line') {
     if (object.service_description) {
       return 'service'
@@ -26,6 +29,15 @@ export function getEffectiveObjectType(object: MapElement): ObjectType {
     }
   }
   return object.type
+}
+
+/**
+ * A line as the object whose state it shows, so that code keyed on the type
+ * treats it like that object. Anything else is returned as it is.
+ */
+export function asBoundObject(object: MapElement): MapElement {
+  const type = object.type === 'line' ? getEffectiveObjectType(object) : object.type
+  return type === object.type ? object : { ...object, type }
 }
 
 /** Return the display name for a map object (label > host/service > host/group/map/aggregation). */

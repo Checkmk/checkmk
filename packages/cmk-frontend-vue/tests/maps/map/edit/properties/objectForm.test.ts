@@ -18,6 +18,10 @@ function obj(extra: Partial<MapElement> & { type: ObjectType }): MapElement {
   return anObject({ id: 'o', x: 40, y: 60, url_target: '_blank', ...extra })
 }
 
+function serviceLine(): MapElement {
+  return obj({ type: 'line', host_name: 'sw01', service_description: 'Interface 1' })
+}
+
 function formOf(object: MapElement) {
   return formFromObject(object, { z: 7 })
 }
@@ -121,8 +125,45 @@ describe('updatesFromForm', () => {
     expect(updatesFromForm(formOf(object), object, 'worldmap')).not.toHaveProperty('x2')
   })
 
-  it('stores a line metric only while something reads it', () => {
+  it('keeps a line bound to no host a plain line', () => {
     const object = obj({ type: 'line' })
+
+    expect(updatesFromForm(formOf(object), object, 'static').line_object_type).toBeNull()
+  })
+
+  it('keeps a line a service line while its service is still missing', () => {
+    const object = obj({ type: 'line', host_name: 'web01' })
+    const form = formOf(object)
+    form.line_object_type = 'service'
+
+    const updates = updatesFromForm(form, object, 'static')
+
+    expect(updates.line_object_type).toBe('service')
+    expect(formOf(obj({ type: 'line', host_name: 'web01', ...updates })).line_object_type).toBe(
+      'service'
+    )
+  })
+
+  it('binds a line like the object it shows, dropping the binding it had', () => {
+    const object = obj({ type: 'line', host_name: 'web01', service_description: 'CPU load' })
+    const form = formOf(object)
+    expect(form.line_object_type).toBe('service')
+
+    form.line_object_type = 'hostgroup'
+    form.group_name = 'web'
+    form.recognize_services = true
+
+    expect(updatesFromForm(form, object, 'static')).toMatchObject({
+      line_object_type: 'hostgroup',
+      group_name: 'web',
+      recognize_services: true,
+      host_name: null,
+      service_description: null
+    })
+  })
+
+  it('stores a line metric only while something reads it', () => {
+    const object = serviceLine()
     const form = formOf(object)
     form.weathermap_metric = 'if_in_bps'
 
@@ -133,7 +174,7 @@ describe('updatesFromForm', () => {
   })
 
   it('never stores an outbound metric on its own', () => {
-    const object = obj({ type: 'line' })
+    const object = serviceLine()
     const form = formOf(object)
     form.line_perfdata_label = 'bandwidth'
     form.weathermap_metric_out = 'if_out_bps'
@@ -142,6 +183,18 @@ describe('updatesFromForm', () => {
 
     form.weathermap_metric = 'if_in_bps'
     expect(updatesFromForm(form, object, 'static').weathermap_metric_out).toBe('if_out_bps')
+  })
+
+  it('drops perfdata from a line that shows no service', () => {
+    const object = serviceLine()
+    const form = formOf(object)
+    form.line_weather_color = true
+    form.line_object_type = 'hostgroup'
+
+    expect(updatesFromForm(form, object, 'static')).toMatchObject({
+      line_perfdata_label: 'none',
+      line_weather_color: false
+    })
   })
 
   it('carries a gadget metric only while the object renders as a gadget', () => {
@@ -160,13 +213,22 @@ describe('updatesFromForm', () => {
 
 describe('weatherColorNeedsMetric', () => {
   it('holds a line back that is coloured by a metric it does not name', () => {
-    const object = obj({ type: 'line' })
+    const object = serviceLine()
     const form = formOf(object)
     form.line_weather_color = true
 
     expect(weatherColorNeedsMetric(form, object)).toBe(true)
 
     form.weathermap_metric = 'if_in_bps'
+    expect(weatherColorNeedsMetric(form, object)).toBe(false)
+  })
+
+  it('does not apply to a line that shows no service', () => {
+    const object = serviceLine()
+    const form = formOf(object)
+    form.line_weather_color = true
+    form.line_object_type = 'hostgroup'
+
     expect(weatherColorNeedsMetric(form, object)).toBe(false)
   })
 

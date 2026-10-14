@@ -21,6 +21,7 @@ import type {
   ServiceLayout
 } from '@/maps/types/api'
 import { hasAutoSource, newMapView } from '@/maps/utils/model'
+import { getEffectiveObjectType } from '@/maps/utils/naming'
 
 /** Edits are optimistic and coalesced; this is how long a burst is collected. */
 const SAVE_DEBOUNCE_MS = 400
@@ -132,7 +133,7 @@ export class MapService {
       // link is rendered gets the caption right in the first paint, and gets it
       // right everywhere at once (caption, hover, context menu, aria label).
       cfg.objects = cfg.objects.map((object) =>
-        object.type === 'map' && object.map_name
+        getEffectiveObjectType(object) === 'map' && object.map_name
           ? { ...object, map_title: signed.map_link_titles[object.map_name] ?? null }
           : object
       )

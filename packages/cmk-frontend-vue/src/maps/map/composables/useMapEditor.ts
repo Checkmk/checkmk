@@ -13,6 +13,7 @@ import { isDraftPlaceable } from '@/maps/map/edit/draftFacts'
 import { useMaps, useSettings } from '@/maps/services/context'
 import type { MapElement, ObjectType } from '@/maps/types/api'
 import { newMapElement } from '@/maps/utils/model'
+import { getEffectiveObjectType } from '@/maps/utils/naming'
 
 export interface NewObjectDraft {
   type: ObjectType | ''
@@ -517,7 +518,7 @@ export function useMapEditor() {
     const obj = mapsStore.currentMap.value?.objects.find((o) => o.id === id)
     if (obj) {
       Object.assign(obj, updates)
-      if (obj.type === 'map') {
+      if (getEffectiveObjectType(obj) === 'map') {
         obj.map_title = linkedMapTitle(obj.map_name)
       }
     }

@@ -13,7 +13,14 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui.background_job.job import BackgroundJobDefines, BackgroundProcessInterface
+from cmk.ccc.user import UserId
+from cmk.gui.background_job.job import (
+    BackgroundJob,
+    BackgroundJobDefines,
+    BackgroundProcessInterface,
+    JobStatusSpec,
+    JobStatusStore,
+)
 from cmk.gui.config import Config
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.host_relation_detection import LinkOutcome
@@ -29,6 +36,7 @@ from cmk.gui.watolib.host_relation_scan import (
     FoundReason,
     FoundRelation,
     groups_page,
+    load_scan,
     RelationDetectionBackgroundJob,
     relations_page,
     RowFilter,
@@ -349,6 +357,26 @@ def test_a_run_counts_per_finding_and_lists_what_it_could_not_store() -> None:
 
 def test_a_relation_is_keyed_the_way_the_page_takes_it_out() -> None:
     assert _relation("srv-01-ilo", "srv-01").key == "srv-01-ilo|management|srv-01"
+
+
+def test_a_scan_still_running_has_no_result_yet(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, with_user_login: UserId
+) -> None:
+    monkeypatch.setattr(BackgroundJobDefines, "base_dir", str(tmp_path))
+    job = BackgroundJob("relation_scan-running")
+    Path(job.get_work_dir()).mkdir()
+    JobStatusStore(job.get_work_dir()).write(
+        JobStatusSpec(
+            state="running",
+            started=0.0,
+            pid=None,
+            loginfo={"JobProgressUpdate": [], "JobResult": [], "JobException": []},
+            is_active=True,
+            user=str(with_user_login),
+        )
+    )
+
+    assert load_scan("relation_scan-running") is None
 
 
 def test_a_run_on_a_scan_that_is_gone_says_so(tmp_path: Path) -> None:

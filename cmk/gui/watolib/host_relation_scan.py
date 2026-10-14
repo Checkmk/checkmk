@@ -566,12 +566,6 @@ def failed(result: RunResult) -> list[FoundRelation]:
 _RESULT_FILE: Final = "result.json"
 
 
-#: The results read last, by file and modification time. A page of a scan is asked for again
-#: and again while the user looks through it, and reading fifty thousand rows is the slow part.
-_READ: dict[tuple[Path, int], BaseModel] = {}
-_READ_LIMIT: Final = 2
-
-
 class _JsonStore[T: BaseModel]:
     def __init__(self, path: Path, model: type[T]) -> None:
         self._store = store.ObjectStore(path, serializer=store.TextSerializer())
@@ -581,20 +575,8 @@ class _JsonStore[T: BaseModel]:
         self._store.write_obj(result.model_dump_json())
 
     def read(self) -> T | None:
-        try:
-            key = (self._store.path, self._store.path.stat().st_mtime_ns)
-        except FileNotFoundError:
-            return None
-        if isinstance(cached := _READ.get(key), self._model):
-            return cached
         raw = self._store.read_obj(default="")
-        if not raw:
-            return None
-        result = self._model.model_validate_json(raw)
-        while len(_READ) >= _READ_LIMIT:
-            del _READ[next(iter(_READ))]
-        _READ[key] = result
-        return result
+        return self._model.model_validate_json(raw) if raw else None
 
 
 def _result_store[T: BaseModel](job: BackgroundJob, model: type[T]) -> _JsonStore[T]:

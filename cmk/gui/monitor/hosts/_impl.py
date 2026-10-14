@@ -11,7 +11,7 @@ when instantiated.
 """
 
 import datetime as dt
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from pathlib import PurePosixPath
 
 from cmk.ccc.hostaddress import HostName
@@ -33,7 +33,7 @@ from ._models import (
     HostOverview,
     HostSort,
     HostState,
-    RescheduleTarget,
+    HostTarget,
     ServiceCounts,
 )
 from ._sorting import host_sorter
@@ -194,16 +194,44 @@ class LiveStatusHostActions:
     def __init__(self, *, connection: MultiSiteConnection) -> None:
         self._connection = connection
 
-    def reschedule(self, targets: Sequence[RescheduleTarget]) -> None:
+    def reschedule(
+        self, targets: Sequence[HostTarget], *, start: dt.datetime, spread: dt.timedelta
+    ) -> int:
+        visible = self._found(targets)
         client = LivestatusClient(self._connection)
-        for target in targets:
+        for index, target in enumerate(visible):
             client.command(
                 ScheduleForcedHostCheck(
                     host_name=HostName(target.host_name),
-                    check_time=target.check_time,
+                    check_time=start + spread * index / len(visible),
                 ),
                 SiteId(target.site_id),
             )
+        return len(visible)
+
+    def _found(self, targets: Sequence[HostTarget]) -> list[HostTarget]:
+        if not (visible := self._visible(targets)):
+            raise HostNotFoundError("None of the hosts was found.")
+        return visible
+
+    def _visible(self, targets: Sequence[HostTarget]) -> list[HostTarget]:
+        """The targets the user may see, the only ones a command may reach."""
+        if not targets:
+            return []
+        wanted = set(targets)
+        names = dict.fromkeys(target.host_name for target in targets)
+        rows = Query([Hosts.name], Or(*(Hosts.name == name for name in names))).fetchall(
+            self._connection, include_site_ids=True, only_sites=_sites_of(targets)
+        )
+        return [
+            target
+            for row in rows
+            if (target := HostTarget(site_id=row.site, host_name=row.name)) in wanted
+        ]
+
+
+def _sites_of(targets: Iterable[HostTarget]) -> list[SiteId]:
+    return sorted({SiteId(target.site_id) for target in targets})
 
 
 def _wato_folder_from_filename(filename: str) -> str | None:

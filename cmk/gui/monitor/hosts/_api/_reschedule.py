@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
+from http import HTTPStatus
 from typing import Annotated
 
 from annotated_types import Ge
@@ -20,11 +21,13 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
     EndpointPermissions,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.utils import permission_verification as permissions
 
 from .._commands import HostRescheduler
+from .._exceptions import HostNotFoundError
 from .._impl import LiveStatusHostActions
-from .._models import RescheduleTarget
+from .._models import HostTarget
 from ._family import MONITOR_HOSTS_FAMILY
 
 
@@ -61,10 +64,10 @@ def reschedule_checks(body: RescheduleRequestBody) -> RescheduleResponse:
     user.need_permission("general.act")
     user.need_permission("action.reschedule")
 
-    host_actions = LiveStatusHostActions(connection=sites.live())
-
     return _handle_reschedule_checks(
-        host_actions, hosts=body.hosts, spread_minutes=body.spread_minutes
+        LiveStatusHostActions(connection=sites.live()),
+        hosts=body.hosts,
+        spread_minutes=body.spread_minutes,
     )
 
 
@@ -78,17 +81,19 @@ def _handle_reschedule_checks(
         return RescheduleResponse(rescheduled=0)
 
     now = time.time()
-    targets = [
-        RescheduleTarget(
-            site_id=host.site_id,
-            host_name=host.name,
-            check_time=datetime.fromtimestamp(now + spread_minutes * 60.0 * index / len(hosts)),
+    targets = [HostTarget(site_id=host.site_id, host_name=host.name) for host in hosts]
+    try:
+        rescheduled = host_actions.reschedule(
+            targets, start=datetime.fromtimestamp(now), spread=timedelta(minutes=spread_minutes)
         )
-        for index, host in enumerate(hosts)
-    ]
-    host_actions.reschedule(targets)
+    except HostNotFoundError:
+        raise ProblemException(
+            status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            title="None of the hosts was found",
+            detail="None of the hosts is monitored on the site given for it.",
+        ) from None
 
-    return RescheduleResponse(rescheduled=len(targets))
+    return RescheduleResponse(rescheduled=rescheduled)
 
 
 ENDPOINT_RESCHEDULE_CHECKS = VersionedEndpoint(

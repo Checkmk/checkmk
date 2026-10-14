@@ -135,12 +135,11 @@ class HostSort:
 
 
 @dataclasses.dataclass(frozen=True)
-class RescheduleTarget:
-    """A single host check to be forcibly rescheduled at a specific time."""
+class HostTarget:
+    """A host a command is sent for, on its site."""
 
     site_id: str
     host_name: str
-    check_time: dt.datetime
 
 
 # NOTE: this is intended to indicate that a stringified filter has been properly parsed into a

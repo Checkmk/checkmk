@@ -7,13 +7,19 @@
 Each command should have a skinny interface for easy testing. One interface for each command group.
 """
 
+import datetime as dt
 from collections.abc import Sequence
 from typing import Protocol
 
-from ._models import RescheduleTarget
+from ._models import HostTarget
 
 
 class HostRescheduler(Protocol):
-    def reschedule(self, targets: Sequence[RescheduleTarget]) -> None:
-        """Force an immediate active check for each target on its site."""
+    def reschedule(
+        self, targets: Sequence[HostTarget], *, start: dt.datetime, spread: dt.timedelta
+    ) -> int:
+        """Force an active check for each visible target on its site, returning how many.
+
+        The checks are spread evenly from start over the given span.
+        """
         ...

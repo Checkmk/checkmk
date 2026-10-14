@@ -72,8 +72,22 @@ class PageRescheduleCheck(AjaxPage):
                 logger.error(err)
                 raise MKGeneralException("The check to reschedule was not found.")
 
+    @staticmethod
+    def _ensure_visible(site: SiteId, what: str, host: str, service: str) -> None:
+        """Raise unless the user may see the target, since Livestatus commands carry no user."""
+        service_filter = (
+            "Filter: service_description = %s\n" % livestatus.lqencode(service) if service else ""
+        )
+        with sites.only_sites(site):
+            rows = sites.live().query(
+                "GET %ss\nColumns: host_name\nFilter: host_name = %s\n%s"
+                % (what, livestatus.lqencode(host), service_filter)
+            )
+        if not rows:
+            raise MKGeneralException("The check to reschedule was not found.")
+
     def _do_reschedule(self, api_request: dict[str, Any], reschedule_timeout: float) -> PageResult:
-        if not user.may("action.reschedule"):
+        if not user.may("general.act") or not user.may("action.reschedule"):
             raise MKGeneralException("You are not allowed to reschedule checks.")
 
         check_csrf_token()
@@ -104,6 +118,8 @@ class PageRescheduleCheck(AjaxPage):
             spec = host
             wait_spec = spec
             add_filter = ""
+
+        self._ensure_visible(site, what, host, service)
 
         if service in ("Check_MK Discovery", "Check_MK Inventory"):
             # During discovery, the allowed cache age is (by default) 120 seconds, such that the

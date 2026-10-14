@@ -71,7 +71,7 @@ def test_burn_writes_the_release_version_into_a_werk_without_one(tmp_path: Path)
     main(["burn", str(repo_root)])
 
     burned = (repo_root / ".werks/1.md").read_text(encoding="utf-8")
-    assert parse_werk(burned, "1.md").metadata["version"] == "2.5.0p2"
+    assert parse_werk(burned, "1.md", v1_defaults={}).metadata["version"] == "2.5.0p2"
 
 
 def test_burn_reports_how_many_werks_it_burned(

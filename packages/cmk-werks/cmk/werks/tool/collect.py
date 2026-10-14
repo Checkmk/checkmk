@@ -14,7 +14,7 @@ from typing import NamedTuple
 from git.objects.commit import Commit
 from git.repo import Repo
 
-from cmk.werks.tool import load_werk, parse_werk
+from cmk.werks.tool import parse_werk
 
 from .constants import NON_WERK_FILES_IN_WERK_FOLDER
 from .flavor import Flavor
@@ -123,7 +123,9 @@ def main(flavor: Flavor, repo_path: Path, branches: Mapping[str, str]) -> None:
             werk_string = c.adapt_werk_string(werk_string, werk_id)
 
             try:
-                parsed = parse_werk(werk_string, werk_file.file_name)
+                parsed = parse_werk(
+                    werk_string, werk_file.file_name, v1_defaults=flavor.v1_defaults
+                )
             except Exception as e:
                 raise RuntimeError(
                     f"could not parse werk {werk_file.file_name} from "
@@ -138,7 +140,7 @@ def main(flavor: Flavor, repo_path: Path, branches: Mapping[str, str]) -> None:
         try:
             # and here we simply access variables of the latest werk iteration above.
             assert werk_string is not None
-            werk = load_werk(
+            werk = flavor.load_werk(
                 file_content=werk_string, file_name=werk_file.file_name
             )  # this could be optimized, as we now parse the werk twice.
         except Exception as e:

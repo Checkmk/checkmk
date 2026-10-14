@@ -18,7 +18,7 @@ import pytest
 import cmk.ccc.version as cmk_version
 import cmk.werks.site
 import cmk.werks.tool.utils
-from cmk.werks.tool.models import WerkV3
+from cmk.werks.flavor.cmk.models import WerkV3
 from tests.code_quality.bazel_utils import bazel_repo_root
 
 

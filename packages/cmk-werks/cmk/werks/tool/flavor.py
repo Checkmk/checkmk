@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Protocol
 
@@ -27,11 +28,35 @@ def read_repo_file(repo: RepoFiles, path: str) -> bytes | None:
     return blob.data_stream.stream.read() if isinstance(blob, Blob) else None
 
 
+class WerkLike(Protocol):
+    @property
+    def id(self) -> int: ...
+
+    @property
+    def component(self) -> str: ...
+
+    @property
+    def version(self) -> str | None: ...
+
+    @property
+    def title(self) -> str: ...
+
+    @property
+    def description(self) -> str: ...
+
+    def to_json_dict(self) -> dict[str, object]: ...
+
+
 class Flavor(Protocol):
     """The repository specific parts of handling werks"""
 
     @property
     def name(self) -> str: ...
+
+    @property
+    def v1_defaults(self) -> Mapping[str, str]:
+        """Values of fields a legacy v1 werk may omit"""
+        ...
 
     @property
     def version_regex(self) -> str:
@@ -42,6 +67,8 @@ class Flavor(Protocol):
     def branch_regex(self) -> str:
         """Branches collected for the website"""
         ...
+
+    def load_werk(self, *, file_content: str, file_name: str) -> WerkLike: ...
 
     def read_current_version(self, repo: RepoFiles) -> str | None:
         """The version a werk without a version will be released with"""

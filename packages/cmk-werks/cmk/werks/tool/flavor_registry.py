@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import get_args, Literal
 
-from cmk.werks.flavor.cmk import CmkFlavor
+from cmk.werks.flavor.cmk import CmkFlavor, load_werk, V1_DEFAULTS
+from cmk.werks.flavor.cmk.models import WerkV3
 from cmk.werks.flavor.cmk.version import read_current_version as read_cmk_version
 from cmk.werks.flavor.cmk.version import version_from_defines_make, VERSION_REGEX
 
@@ -22,6 +23,13 @@ class _LegacyFlavor:
     branch_regex: str
     read_current_version: Callable[[RepoFiles], str | None]
     version_regex: str = VERSION_REGEX
+
+    @property
+    def v1_defaults(self) -> Mapping[str, str]:
+        return V1_DEFAULTS
+
+    def load_werk(self, *, file_content: str, file_name: str) -> WerkV3:
+        return load_werk(file_content=file_content, file_name=file_name)
 
     def cleanup_branch_name(self, branch_name: str) -> str:
         return branch_name

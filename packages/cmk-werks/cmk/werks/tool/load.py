@@ -7,11 +7,10 @@ import html
 from collections.abc import Mapping
 
 import lxml.html
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from .error import WerkError
 from .markup import markdown_to_html
-from .models import WerkV2, WerkV3
 from .parse import WerkV2ParseResult, WerkV3ParseResult
 
 VALID_TAGS = {
@@ -49,24 +48,16 @@ def _werk_data(parsed: WerkV2ParseResult | WerkV3ParseResult) -> Mapping[str, ob
     return {**parsed.metadata, "description": description}
 
 
-def _validated[WerkModel: (WerkV2, WerkV3)](
-    model: type[WerkModel], data: Mapping[str, object]
+def load_werk_model[WerkModel: BaseModel](
+    model: type[WerkModel], parsed: WerkV2ParseResult | WerkV3ParseResult
 ) -> WerkModel:
+    data = _werk_data(parsed)
     try:
-        result = model.model_validate(data)
-        result.title = _format_title(result.title)
+        if isinstance(title := data.get("title"), str):
+            data = {**data, "title": _format_title(title)}
+        return model.model_validate(data)
     except (ValidationError, WerkError) as e:
         raise WerkError(f"Error validating werk:\n{data}\nerror:\n{e}") from e
-
-    return result
-
-
-def load_werk_v3(parsed: WerkV3ParseResult) -> WerkV3:
-    return _validated(WerkV3, _werk_data(parsed))
-
-
-def load_werk_v2(parsed: WerkV2ParseResult) -> WerkV2:
-    return _validated(WerkV2, _werk_data(parsed))
 
 
 def _format_title(string: str) -> str:

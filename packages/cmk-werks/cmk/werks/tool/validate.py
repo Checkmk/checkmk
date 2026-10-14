@@ -12,7 +12,6 @@ from pathlib import Path
 
 from cmk.werks.flavor.cmk import CmkFlavor
 
-from . import load_werk
 from .config import load_config
 from .constants import NON_WERK_FILES_IN_WERK_FOLDER
 
@@ -36,7 +35,7 @@ def main(
             continue
         werk_content = werk_path.read_text(encoding="utf-8")
         try:
-            werk = load_werk(file_content=werk_content, file_name=werk_path.name)
+            werk = flavor.load_werk(file_content=werk_content, file_name=werk_path.name)
 
             if werk.component not in choices_component:
                 raise ValueError(

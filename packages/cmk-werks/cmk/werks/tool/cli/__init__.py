@@ -24,13 +24,12 @@ from typing import Literal, NamedTuple
 from rich.console import Console
 
 from cmk.werks.flavor.cmk import CmkFlavor
+from cmk.werks.flavor.cmk.models import EditionV2, EditionV3
 
-from .. import load_werk as cmk_werks_load_werk
 from .. import parse_werk
 from ..config import Config, load_config
 from ..flavor import Flavor
 from ..format import format_as_markdown_werk
-from ..models import EditionV2, EditionV3
 from ..parse import WerkMetadata, WerkV2ParseResult, WerkV3ParseResult
 from .id_log import get_werk_id_logger
 from .id_pool import (
@@ -371,7 +370,9 @@ def werk_exists(werkid: WerkId) -> bool:
 
 def load_werk(ctx: Context, werk_path: Path) -> Werk:
     parsed = parse_werk(
-        file_content=werk_path.read_text(encoding="utf-8"), file_name=werk_path.name
+        file_content=werk_path.read_text(encoding="utf-8"),
+        file_name=werk_path.name,
+        v1_defaults=ctx.flavor.v1_defaults,
     )
 
     if "version" not in parsed.metadata:
@@ -978,7 +979,7 @@ def _edit_until_loadable(ctx: Context, editor: str, werk_path: Path) -> Werk:
 
         try:
             werk = load_werk(ctx, werk_path)
-            cmk_werks_load_werk(file_content=werk.path.read_text(), file_name=werk.path.name)
+            ctx.flavor.load_werk(file_content=werk.path.read_text(), file_name=werk.path.name)
             return werk
         except Exception:
             sys.stdout.write(initial_werk_text + "\n\n")
@@ -1118,18 +1119,18 @@ def werk_cherry_pick(
             subprocess.run(["git", "status"], check=True)
 
 
-def main_preview(_ctx: Context, args: argparse.Namespace) -> None:
+def main_preview(ctx: Context, args: argparse.Namespace) -> None:
     werk_path = werk_path_by_id(WerkId(args.id))
-    werk = cmk_werks_load_werk(
+    werk = ctx.flavor.load_werk(
         file_content=Path(werk_path).read_text(encoding="utf-8"),
         file_name=werk_path.name,
     )
 
     def meta_data() -> Iterator[str]:
-        for item in werk.__class__.model_fields:
+        for item, value in werk.to_json_dict().items():
             if item in {"title", "description"}:
                 continue
-            yield f"<dt>{item}<dt><dd>{getattr(werk, item)}</dd>"
+            yield f"<dt>{item}<dt><dd>{value}</dd>"
 
     definition_list = "\n".join(meta_data())
     sys.stdout.write(

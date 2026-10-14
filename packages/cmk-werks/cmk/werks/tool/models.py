@@ -6,39 +6,9 @@
 
 import datetime
 from enum import Enum
-from typing import Annotated, Literal, Self
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, TypeAdapter
-
-from .markup import markdown_to_html, nowiki_to_markdown
-
-
-class EditionV2(Enum):
-    # would love to use cmk.ccc.version.Edition
-    # but pydantic does not understand it.
-    CRE = "cre"
-    CEE = "cee"
-    CCE = "cce"
-    CME = "cme"
-    CSE = "cse"
-
-
-class EditionV3(Enum):
-    COMMUNITY = "community"
-    PRO = "pro"
-    ULTIMATE = "ultimate"
-    ULTIMATEMT = "ultimatemt"
-    CLOUD = "cloud"
-
-    @classmethod
-    def from_v2(cls, edition: EditionV2) -> Self:
-        return {
-            EditionV2.CRE: EditionV3.COMMUNITY,
-            EditionV2.CEE: EditionV3.PRO,
-            EditionV2.CCE: EditionV3.ULTIMATE,
-            EditionV2.CME: EditionV3.ULTIMATEMT,
-            EditionV2.CSE: EditionV3.CLOUD,
-        }[edition]
 
 
 class Level(Enum):
@@ -58,7 +28,7 @@ def _parse_level(v: object) -> Level:
         raise ValueError(f"Expected level to be in (1, 2, 3). Got {v} instead") from e
 
 
-_ParsedLevel = Annotated[Level, BeforeValidator(_parse_level)]
+ParsedLevel = Annotated[Level, BeforeValidator(_parse_level)]
 
 
 class Compatibility(Enum):
@@ -66,13 +36,7 @@ class Compatibility(Enum):
     NOT_COMPATIBLE = "no"
 
 
-class Class(Enum):
-    FEATURE = "feature"
-    FIX = "fix"
-    SECURITY = "security"
-
-
-class WerkV3Base(BaseModel):
+class WebsiteWerkV3Base(BaseModel):
     # ATTENTION! If you change this model, you have to inform
     # the website team first! They rely on those fields.
 
@@ -80,20 +44,17 @@ class WerkV3Base(BaseModel):
 
     werk_version: Literal["3"] = Field(default="3", alias="__version__")
     id: int
-    class_: Class = Field(alias="class")
+    class_: str = Field(alias="class")
     component: str
-    level: _ParsedLevel
+    level: ParsedLevel
     date: datetime.datetime
     compatible: Compatibility
-    edition: EditionV3
+    edition: str
     description: str
     title: str
 
-    def to_json_dict(self) -> dict[str, object]:
-        return self.model_dump(by_alias=True, mode="json")
 
-
-class WerkV2Base(BaseModel):
+class WebsiteWerkV2Base(BaseModel):
     # ATTENTION! If you change this model, you have to inform
     # the website team first! They rely on those fields.
 
@@ -101,102 +62,17 @@ class WerkV2Base(BaseModel):
 
     werk_version: Literal["2"] = Field(default="2", alias="__version__")
     id: int
-    class_: Class = Field(alias="class")
+    class_: str = Field(alias="class")
     component: str
-    level: _ParsedLevel
+    level: ParsedLevel
     date: datetime.datetime
     compatible: Compatibility
-    edition: EditionV2
+    edition: str
     description: str
     title: str
 
-    def to_json_dict(self) -> dict[str, object]:
-        return self.model_dump(by_alias=True, mode="json")
 
-
-class WerkV3(WerkV3Base):
-    model_config = ConfigDict(extra="forbid", validate_by_name=True)
-
-    version: str | None = None
-
-    @classmethod
-    def from_json(cls, data: dict[str, object]) -> WerkV3:
-        return cls.model_validate(data)
-
-
-class WerkV2(WerkV2Base):
-    model_config = ConfigDict(extra="forbid", validate_by_name=True)
-
-    version: str
-
-    @classmethod
-    def from_json(cls, data: dict[str, object]) -> WerkV2:
-        return cls.model_validate(data)
-
-    def to_werk(self) -> WerkV3:
-        return WerkV3(
-            compatible=self.compatible,
-            version=self.version,
-            title=self.title,
-            id=self.id,
-            date=self.date,
-            description=self.description,
-            level=self.level,
-            class_=self.class_,
-            component=self.component,
-            edition=EditionV3.from_v2(self.edition),
-        )
-
-
-class WerkV1(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    # ATTENTION! If you change this model, you have to inform
-    # the website team first! They rely on those fields.
-
-    # ATTENTION! you can not change this model, its only for parsing
-    # existing precompiled werks from checkmk 2.2.
-
-    class_: str = Field(alias="class")
-    component: str
-    date: int
-    level: int
-    title: str
-    version: str
-    compatible: str
-    edition: str
-    knowledge: str | None = (
-        None  # this field is currently not used, but kept so parsing still works
-    )
-    # it will be removed after the transfer to markdown werks was completed.
-    state: str | None = None
-    id: int
-    targetversion: str | None = None
-    description: list[str]
-
-    def to_werk(self) -> WerkV3:
-        return WerkV3(
-            compatible=(
-                Compatibility.COMPATIBLE
-                if self.compatible == "compat"
-                else Compatibility.NOT_COMPATIBLE
-            ),
-            version=self.version,
-            title=self.title,
-            id=self.id,
-            date=datetime.datetime.fromtimestamp(self.date, tz=datetime.UTC),
-            description=markdown_to_html(nowiki_to_markdown(self.description)),
-            level=Level(self.level),
-            class_=Class(self.class_),
-            component=self.component,
-            edition=EditionV3.from_v2(EditionV2(self.edition)),
-        )
-
-    def to_json_dict(self) -> dict[str, object]:
-        return self.model_dump(by_alias=True)
-
-
-class WebsiteWerkV2(WerkV2Base):
+class WebsiteWerkV2(WebsiteWerkV2Base):
     # ATTENTION! If you change this model, you have to inform
     # the website team first! They rely on those fields.
     """
@@ -208,7 +84,7 @@ class WebsiteWerkV2(WerkV2Base):
     product: Literal["cmk", "cma", "checkmk_kube_agent", "cloudmk"]
 
 
-class WebsiteWerkV3(WerkV3Base):
+class WebsiteWerkV3(WebsiteWerkV3Base):
     # ATTENTION! If you change this model, you have to inform
     # the website team first! They rely on those fields.
     """

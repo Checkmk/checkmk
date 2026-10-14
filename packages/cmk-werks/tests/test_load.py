@@ -7,10 +7,11 @@ from collections.abc import Iterator, Mapping
 
 import pytest
 
-from cmk.werks.tool import load_werk, parse_werk
+from cmk.werks.flavor.cmk import load_werk
+from cmk.werks.flavor.cmk.models import WerkV2, WerkV3
+from cmk.werks.tool import parse_werk
 from cmk.werks.tool.error import WerkError
-from cmk.werks.tool.load import load_werk_v2, load_werk_v3
-from cmk.werks.tool.models import WerkV2, WerkV3
+from cmk.werks.tool.load import load_werk_model
 from cmk.werks.tool.parse import parse_werk_v2, parse_werk_v3, WerkV2ParseResult
 
 from ._werk_files import werk_text
@@ -101,11 +102,11 @@ def test_werk_loading_unknown_field() -> None:
 
 
 def _markdown_string_to_werk(md: str) -> WerkV2:
-    return load_werk_v2(parse_werk_v2(md, werk_id="1234"))
+    return load_werk_model(WerkV2, parse_werk_v2(md, werk_id="1234"))
 
 
 def _markdown_string_to_werk_v3(md: str) -> WerkV3:
-    return load_werk_v3(parse_werk_v3(md, werk_id="1234"))
+    return load_werk_model(WerkV3, parse_werk_v3(md, werk_id="1234"))
 
 
 def test_loading_md_werk_missing_header() -> None:
@@ -453,7 +454,7 @@ edition | community
         "version": "2.5.0b1",
         "description": "",
     }
-    assert load_werk_v3(parse_werk_v3(md, werk_id="1234")).to_json_dict() == expected
+    assert load_werk_model(WerkV3, parse_werk_v3(md, werk_id="1234")).to_json_dict() == expected
 
 
 def test_a_list_item_outside_of_a_list_is_rejected() -> None:
@@ -473,4 +474,4 @@ def test_a_title_spanning_two_lines_is_rejected() -> None:
 def test_a_markdown_file_with_a_v2_header_is_parsed_as_a_v2_werk() -> None:
     text = werk_text().replace("[//]: # (werk v3)", "[//]: # (werk v2)")
 
-    assert isinstance(parse_werk(text, "1234.md"), WerkV2ParseResult)
+    assert isinstance(parse_werk(text, "1234.md", v1_defaults={}), WerkV2ParseResult)

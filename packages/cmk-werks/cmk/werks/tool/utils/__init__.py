@@ -8,8 +8,8 @@ from pathlib import Path
 
 from pydantic import RootModel, TypeAdapter
 
-from cmk.werks.tool import load_werk
-from cmk.werks.tool.models import WerkV1, WerkV2, WerkV3
+from cmk.werks.flavor.cmk import load_werk
+from cmk.werks.flavor.cmk.models import WerkV1, WerkV2, WerkV3
 
 WerksOnDisk = RootModel[dict[int, WerkV2 | WerkV3]]
 

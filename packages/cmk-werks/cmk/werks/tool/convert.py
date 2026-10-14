@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 
 from .markup import nowiki_to_markdown
 from .parse import parse_werk_v1
@@ -38,9 +38,9 @@ def werkv1_metadata_to_markdown_werk_metadata(metadata: dict[str, str]) -> dict[
     return metadata
 
 
-def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> str:
+def werkv1_to_werkv2(werkv1_content: str, werk_id: int, v1_defaults: Mapping[str, str]) -> str:
     # try to keep errors in place, so the validation of werkv2 will show errors in werkv1
-    parsed = parse_werk_v1(werkv1_content, werk_id)
+    parsed = parse_werk_v1(werkv1_content, werk_id, v1_defaults)
     metadata = werkv1_metadata_to_markdown_werk_metadata(parsed.metadata)
     metadata.pop("id", None)  # is the filename
 

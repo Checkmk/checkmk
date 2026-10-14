@@ -9,8 +9,8 @@ import lxml.html
 import pytest
 
 from cmk.web.page_container import PageContainer, PageMenuLink
-from cmk.werks.tool import load_werk
-from cmk.werks.tool.models import WerkV3
+from cmk.werks.flavor.cmk import load_werk
+from cmk.werks.flavor.cmk.models import WerkV3
 from cmk.werks.web.werk_detail import render_werk_detail
 
 from ._werk_files import werk_text

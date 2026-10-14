@@ -25,7 +25,9 @@ def main(repo_root: Path) -> None:
         if werk_file.name in NON_WERK_FILES_IN_WERK_FOLDER:
             continue
         try:
-            parsed = parse_werk(werk_file.read_text(), werk_file.name)
+            parsed = parse_werk(
+                werk_file.read_text(), werk_file.name, v1_defaults=flavor.v1_defaults
+            )
         except Exception as e:
             raise RuntimeError(f"file {werk_file} can not be parsed as werk") from e
 

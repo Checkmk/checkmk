@@ -7,7 +7,9 @@ from collections.abc import Iterable, Sequence
 from functools import partial
 
 from cmk.ccc.version import parse_check_mk_version
-from cmk.werks.tool.models import Class, Compatibility, Level, WerkV3
+from cmk.werks.tool.models import Compatibility, Level
+
+from .models import Class, WerkV3
 
 _CLASS_SORTING_VALUE = {
     Class.FEATURE: 1,

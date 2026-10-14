@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from collections.abc import Mapping
 from typing import NamedTuple, TypedDict
 
 from . import constants
@@ -133,16 +134,11 @@ class WerkV1ParseResult(NamedTuple):
     description: list[str]
 
 
-def parse_werk_v1(content: str, werk_id: int) -> WerkV1ParseResult:
+def parse_werk_v1(content: str, werk_id: int, defaults: Mapping[str, str]) -> WerkV1ParseResult:
     """
     parse werk v1 but do not validate, or transform description
     """
-    werk: dict[str, str] = {
-        # older werks don't specify compatible or edition
-        "compatible": "compat",
-        "edition": "cre",
-        "id": str(werk_id),
-    }
+    werk: dict[str, str] = {**defaults, "id": str(werk_id)}
     description = []
     in_description = False
     for line in content.split("\n"):

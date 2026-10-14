@@ -7,13 +7,14 @@ import datetime
 import json
 from pathlib import Path
 
+from cmk.werks.flavor.cmk.models import Class, EditionV3, WerkV3
 from cmk.werks.site import find_werk, load
 from cmk.werks.site.acknowledgement import (
     load_acknowledgements,
     save_acknowledgements,
     write_unacknowledged_werks,
 )
-from cmk.werks.tool.models import Class, Compatibility, EditionV3, Level, WerkV3
+from cmk.werks.tool.models import Compatibility, Level
 from cmk.werks.tool.utils import write_precompiled_werks
 
 WERK_V1 = {

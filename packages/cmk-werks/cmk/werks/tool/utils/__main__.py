@@ -10,11 +10,11 @@ from pathlib import Path
 
 from cmk.ccc.version import Version
 from cmk.werks.flavor.cmk import CmkFlavor
+from cmk.werks.flavor.cmk.models import EditionV2, EditionV3, WerkV3
 from cmk.werks.flavor.cmk.translator import resolve_version
 from cmk.werks.tool.collect import main as collect
 from cmk.werks.tool.flavor import current_version
 from cmk.werks.tool.flavor_registry import FLAVOR_NAMES, get_flavor
-from cmk.werks.tool.models import EditionV2, EditionV3, WerkV3
 from cmk.werks.tool.utils import load_raw_files, write_precompiled_werks
 from cmk.werks.tool.utils.burn import main as burn
 

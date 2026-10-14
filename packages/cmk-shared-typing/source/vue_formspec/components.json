@@ -14,7 +14,7 @@
         "validators": {
           "type": "array",
           "items": {
-            "type": "object",
+            "title": "validator",
             "$ref": "validators.json#/$defs/validator"
           }
         }

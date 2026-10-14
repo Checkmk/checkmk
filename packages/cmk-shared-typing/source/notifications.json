@@ -4,11 +4,9 @@
   "title": "Notification Type Defs",
   "properties": {
     "notifications": {
-      "type": "object",
       "$ref": "#/$defs/notifications"
     },
     "notification_parameters_overview": {
-      "type": "object",
       "$ref": "#/$defs/notification_parameters_overview"
     }
   },
@@ -20,21 +18,17 @@
           "type": "string"
         },
         "fallback_warning": {
-          "type": "object",
           "$ref": "#/$defs/notification_fallback_warning"
         },
         "notification_stats": {
-          "type": "object",
           "$ref": "#/$defs/notification_stats"
         },
         "core_stats": {
-          "type": "object",
           "$ref": "#/$defs/notification_core_stats"
         },
         "rule_sections": {
           "type": "array",
           "items": {
-            "type": "object",
             "$ref": "#/$defs/rule_section"
           }
         },
@@ -56,7 +50,6 @@
         "parameters": {
           "type": "array",
           "items": {
-            "type": "object",
             "$ref": "#/$defs/rule_section"
           }
         },
@@ -73,7 +66,6 @@
       "type": "object",
       "properties": {
         "i18n": {
-          "type": "object",
           "$ref": "#/$defs/notification_fallback_warning_i18n"
         },
         "setup_link": {
@@ -119,7 +111,6 @@
           "type": "string"
         },
         "i18n": {
-          "type": "object",
           "$ref": "#/$defs/notification_stats_i18n"
         }
       },
@@ -164,7 +155,6 @@
           }
         },
         "i18n": {
-          "type": "object",
           "$ref": "#/$defs/notification_core_stats_i18n"
         }
       },
@@ -210,7 +200,6 @@
         "topics": {
           "type": "array",
           "items": {
-            "type": "object",
             "$ref": "#/$defs/rule_topic"
           }
         }
@@ -226,7 +215,6 @@
         "rules": {
           "type": "array",
           "items": {
-            "type": "object",
             "$ref": "#/$defs/rule"
           }
         }

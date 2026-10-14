@@ -25,7 +25,6 @@ py_library(
         "permissions.py",
         "role_types.py",
         "type_defs.py",
-        "unit_formatter.py",
         "user_connection_config_types.py",
         "validate.py",
         "validation_utils.py",

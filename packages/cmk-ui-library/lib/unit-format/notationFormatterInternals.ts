@@ -37,7 +37,7 @@ export function roundHalfToEven(value: number): number {
 
 // Symbols starting with '/' or '%' follow the value with no separator
 // (e.g. "2/s", "50%"); everything else is space-separated. Same join rule
-// as `_join_text_and_unit` in `cmk/gui/unit_formatter.py`, kept identical
+// as `_join_text_and_unit` in `packages/cmk-web/cmk/web/utils/unit_formatter.py`, kept identical
 // while the two implementations coexist.
 //
 // Note on call-site asymmetry: SI/IEC/Time call this as
@@ -55,7 +55,8 @@ export function joinValueAndUnit(value: string, unit: string): string {
 
 // THIN SPACE (U+2009) — used as the thousands separator in DecimalFormatter
 // to match the legacy Python output (`f"{value:,}".replace(",", "\N{THIN
-// SPACE}")` in `cmk/gui/unit_formatter.py:DecimalFormatter._stringify_formatted_value`).
+// SPACE}")` in `DecimalFormatter._stringify_formatted_value` of
+// `packages/cmk-web/cmk/web/utils/unit_formatter.py`).
 const THIN_SPACE = ' '
 
 // Mirrors Python's `f"{value:,}".replace(",", "\N{THIN SPACE}")` for the
@@ -177,7 +178,7 @@ export const ONE_HOUR = 3600
 export const ONE_MINUTE = 60
 
 // Atom tables for y-axis label spacing. Mirrors `_BASIC_DECIMAL_ATOMS` and
-// `_BASIC_TIME_ATOMS` in cmk/gui/unit_formatter.py.
+// `_BASIC_TIME_ATOMS` in packages/cmk-web/cmk/web/utils/unit_formatter.py.
 export const BASIC_DECIMAL_ATOMS: number[] = [1, 2, 5, 10, 20, 50]
 
 export function decimalAtoms(span: number): number[] {

@@ -4,7 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 // Notation formatters for the cmk-frontend-vue unit-format library. This is
-// the canonical implementation going forward; cmk/gui/unit_formatter.py and
+// the canonical implementation going forward;
+// packages/cmk-web/cmk/web/utils/unit_formatter.py and
 // the legacy port at packages/cmk-frontend/src/js/modules/number_format.ts
 // are on a deprecation path and will be removed as call sites migrate to the
 // Vue stack. Until then, output here must stay byte-identical with the
@@ -78,7 +79,7 @@ export type NegativeYRange = { kind: 'negative'; start: number; end: number }
 
 export type YRange = PositiveYRange | NegativeYRange
 
-// Mirrors `_stringify_small_decimal_number` in `cmk/gui/unit_formatter.py`.
+// Mirrors `_stringify_small_decimal_number` in `packages/cmk-web/cmk/web/utils/unit_formatter.py`.
 // Avoids JS's scientific notation for small decimals so that values like
 // 1e-7 render as "0.0000001" rather than "1e-7". Precondition: value > 0.
 //
@@ -124,7 +125,7 @@ export abstract class NotationFormatter {
 
   // Override point for formatters that need a custom number-to-string step
   // (e.g. DecimalFormatter inserts a THIN SPACE thousands separator). Mirrors
-  // `_stringify_formatted_value` in `cmk/gui/unit_formatter.py`.
+  // `_stringify_formatted_value` in `packages/cmk-web/cmk/web/utils/unit_formatter.py`.
   protected stringifyFormattedValue(value: number): string {
     return String(value)
   }

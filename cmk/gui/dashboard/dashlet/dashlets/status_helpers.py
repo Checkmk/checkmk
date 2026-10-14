@@ -14,8 +14,8 @@ from cmk.gui.graphing import EvaluatedMetric
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName, VisualContext
-from cmk.gui.unit_formatter import IECFormatter, NotationFormatter
 from cmk.livestatus_client import LivestatusResponse
+from cmk.web.utils.unit_formatter import IECFormatter, NotationFormatter
 from cmk.web.utils.urls import makeuri_contextless
 
 

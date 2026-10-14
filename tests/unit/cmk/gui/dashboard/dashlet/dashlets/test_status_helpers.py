@@ -10,12 +10,12 @@ import pytest
 from cmk.graphing_engine import MetricName, PerformanceData
 from cmk.gui.dashboard.dashlet.dashlets.status_helpers import purge_evaluated_metric_for_js
 from cmk.gui.graphing import EvaluatedMetric
-from cmk.gui.unit_formatter import (
+from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
+from cmk.web.utils.unit_formatter import (
     DecimalFormatter,
     IECFormatter,
     NotationFormatter,
 )
-from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
 
 
 def _metric(formatter: NotationFormatter, performance_data: PerformanceData) -> EvaluatedMetric:

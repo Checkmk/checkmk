@@ -28,10 +28,10 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.type_defs import ColumnName
-from cmk.gui.unit_formatter import NotationFormatter
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.livestatus_client.tables.services import Services
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat
+from cmk.web.utils.unit_formatter import NotationFormatter
 
 from ._performance_data import (
     parse_performance_data,

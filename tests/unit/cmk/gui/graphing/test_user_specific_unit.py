@@ -22,7 +22,10 @@ from cmk.gui.graphing._user_specific_unit import (
     formatter_from_unit,
     formatter_from_unit_format,
 )
-from cmk.gui.unit_formatter import (
+from cmk.gui.utils.temperature_unit import TemperatureUnit
+from cmk.shared_typing.cmk_time_series_graph import Precision as SharedPrecision
+from cmk.shared_typing.cmk_time_series_graph import UnitFormat
+from cmk.web.utils.unit_formatter import (
     DecimalFormatter,
     EngineeringScientificFormatter,
     IECFormatter,
@@ -31,9 +34,6 @@ from cmk.gui.unit_formatter import (
     StandardScientificFormatter,
     TimeFormatter,
 )
-from cmk.gui.utils.temperature_unit import TemperatureUnit
-from cmk.shared_typing.cmk_time_series_graph import Precision as SharedPrecision
-from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 
 
 @pytest.mark.parametrize(

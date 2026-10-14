@@ -34,7 +34,7 @@ from cmk.graphing_engine import (
     VerticalRangeKind,
 )
 from cmk.gui.i18n import _
-from cmk.gui.unit_formatter import Label, NotationFormatter
+from cmk.web.utils.unit_formatter import Label, NotationFormatter
 
 from ._drawn_curves import drawn_curves
 from ._graph_display_config import GraphDisplayConfigImage

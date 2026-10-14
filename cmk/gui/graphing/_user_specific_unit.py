@@ -21,7 +21,9 @@ from cmk.graphing_engine import (
     Unit,
 )
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.unit_formatter import (
+from cmk.gui.utils.temperature_unit import TemperatureUnit
+from cmk.shared_typing.cmk_time_series_graph import UnitFormat as SharedUnitFormat
+from cmk.web.utils.unit_formatter import (
     DecimalFormatter,
     EngineeringScientificFormatter,
     IECFormatter,
@@ -30,8 +32,6 @@ from cmk.gui.unit_formatter import (
     StandardScientificFormatter,
     TimeFormatter,
 )
-from cmk.gui.utils.temperature_unit import TemperatureUnit
-from cmk.shared_typing.cmk_time_series_graph import UnitFormat as SharedUnitFormat
 
 from ._unit_format import precision_kind
 

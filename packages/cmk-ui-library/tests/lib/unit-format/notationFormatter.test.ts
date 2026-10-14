@@ -43,7 +43,7 @@ describe('DecimalFormatter precision', () => {
     [strict(1), 0.6789, '0.7 unit'],
     // Large values exercise the THIN-SPACE thousands separator (mirrors the
     // Python `large-zeros-*` and `large-no-zeros-*` fixtures in
-    // `tests/unit/cmk/gui/test_unit_formatter.py`).
+    // `packages/cmk-web/tests/utils/test_unit_formatter.py`).
     [auto(0), 12345.006789, `12${TS}345.007 unit`],
     [strict(0), 12345.006789, `12${TS}345 unit`],
     [auto(1), 12345.006789, `12${TS}345.007 unit`],
@@ -218,7 +218,7 @@ describe('symbol with leading slash or percent', () => {
 
 describe('stringifySmallDecimalNumber', () => {
   // Mirrors test__stringify_small_decimal_number in
-  // tests/unit/cmk/gui/test_unit_formatter.py. JS's String() produces
+  // packages/cmk-web/tests/utils/test_unit_formatter.py. JS's String() produces
   // scientific notation only at a much smaller threshold than Python, so
   // none of the original Python fixtures actually exercise the e-notation
   // branch in JS — they all stringify to decimal natively. The cases below
@@ -239,7 +239,7 @@ describe('stringifySmallDecimalNumber', () => {
   })
 })
 
-// Mirrors test_render_y_labels in tests/unit/cmk/gui/test_unit_formatter.py.
+// Mirrors test_render_y_labels in packages/cmk-web/tests/utils/test_unit_formatter.py.
 // All fixtures call render_y_labels with target_number_of_labels=5.
 describe('renderYLabels', () => {
   type Case = {
@@ -560,7 +560,7 @@ describe('renderYLabels', () => {
 })
 
 // Mirrors test_decimal_render_y_labels_with_min_y in
-// tests/unit/cmk/gui/test_unit_formatter.py.
+// packages/cmk-web/tests/utils/test_unit_formatter.py.
 describe('DecimalFormatter renderYLabels with min y', () => {
   test.each<[string, PositiveYRange | NegativeYRange, Label[]]>([
     [
@@ -608,7 +608,7 @@ describe('DecimalFormatter renderYLabels with min y', () => {
 })
 
 // Mirrors test_render_y_labels_small_range_large_offset in
-// tests/unit/cmk/gui/test_unit_formatter.py.
+// packages/cmk-web/tests/utils/test_unit_formatter.py.
 describe('renderYLabels small range large offset', () => {
   test('TimeFormatter with use_max_digits_for_labels=true', () => {
     const formatter = new TimeFormatter('s', auto(2), true)

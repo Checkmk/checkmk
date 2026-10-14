@@ -39,15 +39,6 @@ from cmk.gui.inventory.filters import (
     FilterInvTextWithSortKey,
 )
 from cmk.gui.log import logger
-from cmk.gui.unit_formatter import (
-    DecimalFormatter,
-    EngineeringScientificFormatter,
-    IECFormatter,
-    PrecisionKind,
-    SIFormatter,
-    StandardScientificFormatter,
-    TimeFormatter,
-)
 from cmk.inventory.raw_paths import InventoryPath, parse_internal_raw_path, TreeSource
 from cmk.inventory.trees import SDKey, SDNodeName, SDPath, SDValue
 from cmk.inventory_ui.v1 import AgeNotation as AgeNotationFromAPI
@@ -77,6 +68,15 @@ from cmk.inventory_ui.v1 import Title as TitleFromAPI
 from cmk.inventory_ui.v1 import Unit as UnitFromAPI
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIconName
+from cmk.web.utils.unit_formatter import (
+    DecimalFormatter,
+    EngineeringScientificFormatter,
+    IECFormatter,
+    PrecisionKind,
+    SIFormatter,
+    StandardScientificFormatter,
+    TimeFormatter,
+)
 
 from ._paint_functions import inv_paint_generic
 from .registry import (

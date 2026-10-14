@@ -1,4 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 
 # Only for static analysis.
@@ -88,7 +89,9 @@ py_library(
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:graphing",
+        "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:server_side_programs",
         "//packages/cmk-plugin-apis:update_config",
         "//packages/cmk-schema-manager",
         "//packages/cmk-web/cmk/web/utils",
@@ -96,5 +99,6 @@ py_library(
         "//packages/cmk-werks:flavor_cmk",
         "//packages/cmk-werks:site",
         "//packages/cmk-wsgi",
+        requirement("cryptography"),
     ],
 )

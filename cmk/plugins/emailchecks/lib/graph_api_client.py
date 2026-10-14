@@ -7,7 +7,6 @@
 
 import time
 from collections.abc import Mapping
-from pathlib import Path
 from types import TracebackType
 from typing import Any, NamedTuple, Self
 
@@ -15,8 +14,8 @@ import msal
 import requests
 from requests import JSONDecodeError
 
-from cmk.password_store.v1 import PasswordStore, Secret
-from cmk.server_side_programs.v1 import Storage
+from cmk.password_store.v1 import Secret
+from cmk.server_side_programs.v1 import ObfuscatedStorage, Storage
 
 
 class AuthorityURLs(NamedTuple):
@@ -51,8 +50,7 @@ class GraphApiClient:
         client: str,
         secret: str,
         authority_urls: AuthorityURLs,
-        pw_store: PasswordStore,
-        pw_store_file: Path,
+        secrets: ObfuscatedStorage[Secret[str]],
         storage: Storage,
         initial_access_token: str,
         initial_refresh_token: str,
@@ -66,11 +64,8 @@ class GraphApiClient:
         self._client = client
         self._secret = secret
 
-        self._pw_store = pw_store
-        self._pw_store_file = pw_store_file
+        self._secrets = secrets
         self._storage = storage
-        # Needed to initialize the storage directory
-        self._storage.write("created", "true")
 
         self._headers: dict[str, str] = {}
         self._session: requests.Session | None = None
@@ -96,42 +91,21 @@ class GraphApiClient:
             self._session_closed = True
         self._session = None
 
-    def _get_stored_token(self, secret_id: str, default: Secret[str]) -> str:
-        try:
-            store_bytes = self._pw_store_file.read_bytes()
-        except FileNotFoundError:
-            return default.reveal()
-
-        store = self._pw_store.load_bytes(store_bytes)
-        try:
-            return store[secret_id].reveal()
-        except KeyError:
-            return default.reveal()
-
-    def _store_token(self, secret_id: str, value: Secret[str]) -> None:
-        try:
-            store_bytes = self._pw_store_file.read_bytes()
-            store = {**self._pw_store.load_bytes(store_bytes)}
-        except FileNotFoundError:
-            store = {}
-        store[secret_id] = value
-        self._pw_store_file.write_bytes(self._pw_store.dump_bytes(store))
-
     @property
     def refresh_token(self) -> str:
-        return self._get_stored_token("refresh_token", self._initial_refresh_token)
+        return self._secrets.read("refresh_token", self._initial_refresh_token).reveal()
 
     @refresh_token.setter
     def refresh_token(self, value: Secret[str]) -> None:
-        self._store_token("refresh_token", value)
+        self._secrets.write("refresh_token", value)
 
     @property
     def access_token(self) -> str:
-        return self._get_stored_token("access_token", self._initial_access_token)
+        return self._secrets.read("access_token", self._initial_access_token).reveal()
 
     @access_token.setter
     def access_token(self, value: Secret[str]) -> None:
-        self._store_token("access_token", value)
+        self._secrets.write("access_token", value)
 
     def request(
         self,
@@ -190,12 +164,16 @@ class GraphApiClient:
             f"{self._login_url}/{tenant}",
             proxies=self._proxies,
         )
-        if (access_token_expiry := self._storage.read("access_token_expiry", None)) and int(
-            access_token_expiry
-        ) > int(time.time()) + self.EXPIRY_OVERLAP:
+        if (
+            (access_token_expiry := self._storage.read("access_token_expiry", None))
+            and int(access_token_expiry) > int(time.time()) + self.EXPIRY_OVERLAP
+            # The stored token is lost if it cannot be deobfuscated. Don't fall back
+            # to the initial one then, it has most likely expired.
+            and (access_token := self._secrets.read("access_token", None)) is not None
+        ):
             self._headers.update(
                 {
-                    "Authorization": "Bearer %s" % self.access_token,
+                    "Authorization": "Bearer %s" % access_token.reveal(),
                     "Content-Type": "application/json",
                     "ClientType": "monitoring-custom-client-type",
                 }

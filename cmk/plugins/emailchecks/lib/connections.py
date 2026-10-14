@@ -26,11 +26,7 @@ from typing import assert_never, final, Literal, override, Self, TypedDict, Type
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cmk.password_store.v1 import (
-    PasswordStore,
-    PasswordStoreError,
-)
-from cmk.password_store.v1._impl import _read_store_secret  # FIXME
+from cmk.password_store.v1 import Obfuscator
 from cmk.plugins.emailchecks.lib.ac_args import (
     BasicAuth,
     HTTPProxyConfig,
@@ -39,9 +35,11 @@ from cmk.plugins.emailchecks.lib.ac_args import (
     OAuth2WithTokens,
     TRXConfig,
 )
-from cmk.plugins.emailchecks.lib.graph_api_client import AuthorityURLs, GraphApiClient
-from cmk.server_side_programs.v1 import Storage
-from cmk.server_side_programs.v1._storage import _storage_dir, _STORAGE_NAMESPACE  # FIXME
+from cmk.plugins.emailchecks.lib.graph_api_client import (
+    AuthorityURLs,
+    GraphApiClient,
+)
+from cmk.server_side_programs.v1 import ObfuscatedStorage, Storage
 
 # Isort messes with the type annotation and creates a unused-ignore for the
 # OAUTH2 and OAuth2Credentials imports.
@@ -319,20 +317,16 @@ class GraphApi(_Connection):
         self._connect()
 
     def _build_api_client(self) -> GraphApiClient:
-        if (store_secret := _read_store_secret()) is None:
-            raise PasswordStoreError("Password store key file not found.")
-        ident = "graph_api_emailchecks"
-        storage = Storage(program_ident=ident, host=self.storage_id)
+        storage = Storage(program_ident="graph_api_emailchecks", host=self.storage_id)
+        secrets = ObfuscatedStorage(
+            program_ident="graph_api_emailchecks", host=self.storage_id, obfuscator=Obfuscator()
+        )
         return GraphApiClient(
             tenant=self.auth.tenant_id,
             client=self.auth.client_id,
             secret=self.auth.client_secret,
             authority_urls=self.authority_urls,
-            pw_store=PasswordStore(store_secret),
-            pw_store_file=_storage_dir(
-                host=self.storage_id, ident=ident, namespace=_STORAGE_NAMESPACE
-            )
-            / "stored_tokens",
+            secrets=secrets,
             storage=storage,
             initial_access_token=self.auth.initial_access_token,
             initial_refresh_token=self.auth.initial_refresh_token,

@@ -2,8 +2,12 @@ load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
-# The shared runner behind rust_wine_test() (xcomp/rust_wine_test.bzl).
-exports_files(["xcomp/rust-test-wine.sh"])
+exports_files([
+    # The shared runner behind rust_wine_test() (xcomp/rust_wine_test.bzl).
+    "xcomp/rust-test-wine.sh",
+    # Sourced by the scripts of package_msi.bzl rules.
+    "xcomp/package_msi.sh",
+])
 
 js_library(
     name = "vitest_runner",
@@ -92,5 +96,6 @@ sh_library(
     name = "shell_scripts",
     srcs = [
         "sign_package.sh",
+        "xcomp/package_msi.sh",
     ],
 )

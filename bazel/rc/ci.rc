@@ -28,6 +28,11 @@ common:ci --experimental_cpu_load_scheduling
 # upload artifacts only from CI, CMK-18656
 common:ci --remote_upload_local_results=true
 
+# Don't create runfiles symlink trees for every built target, only on demand for tests and
+# "bazel run". With cached test results these trees are pure overhead: ~45s per CV unit test run.
+# Executing bazel-bin/<binary> directly after "bazel build" needs "bazel run" instead.
+common:ci --nobuild_runfile_links
+
 common:ci --@cmk//distro=UNSET
 
 # Ship optimized, stripped binaries from CI.

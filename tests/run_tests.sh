@@ -760,14 +760,12 @@ qa-metrics-change-quality-dryrun() {
 
 qa-metrics-change-quality() {
     mapfile -t args < <(_qa_metrics_args)
-    bazel build //tests/qa_metrics/change_quality:push
-    "$REPO_PATH/bazel-bin/tests/qa_metrics/change_quality/push" "${args[@]}"
+    bazel run //tests/qa_metrics/change_quality:push -- "${args[@]}"
 }
 
 qa-metrics-change-quality-full() {
     mapfile -t args < <(_qa_metrics_args)
-    bazel build //tests/qa_metrics/change_quality:push
-    "$REPO_PATH/bazel-bin/tests/qa_metrics/change_quality/push" "${args[@]}" --full
+    bazel run //tests/qa_metrics/change_quality:push -- "${args[@]}" --full
 }
 
 # ---------------------------------------------------------------------------

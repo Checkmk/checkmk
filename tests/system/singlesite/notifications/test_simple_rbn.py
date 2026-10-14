@@ -16,33 +16,37 @@ from tests.testlib.system.site import Site
 from tests.testlib.system.watch_log import WatchLog
 
 
-@pytest.fixture(name="fake_notification_rule")
-def fake_notification_rule(site: Site) -> Iterator[None]:
-    site.write_file(
-        "etc/check_mk/conf.d/wato/notifications.mk",
-        """# Written by Checkmk store\n\nnotification_rules += [{'rule_id': 'f03dd14d-63cd-4dac-8339-9b002753aa9e', 'allow_disable': True, 'contact_all': False, 'contact_all_with_email': False, 'contact_object': True, 'description': 'Notify all contacts of a host/service via HTML email', 'disabled': False, 'notify_plugin': ('mail', '1c131382-2cc5-4979-9026-71a935444d1f')}]""",
-    )
+@contextlib.contextmanager
+def _replaced_file(site: Site, rel_path: str, content: str) -> Iterator[None]:
+    previous = site.read_file(rel_path) if site.file_exists(rel_path) else None
+    site.write_file(rel_path, content)
     try:
         yield
     finally:
-        site.write_file(
-            "etc/check_mk/conf.d/wato/notifications.mk",
-            """# Written by Checkmk store\n\nnotification_rules += [{'description': 'Notify all contacts of a host/service via HTML email', 'comment': '', 'docu_url': '', 'disabled': False, 'allow_disable': True, 'contact_object': True, 'contact_all': False, 'contact_all_with_email': False, 'rule_id': '50cf4824-12ad-41e2-a6f5-efdd21c55ae7', 'notify_plugin': ('mail', {})}]""",
-        )
+        if previous is None:
+            site.delete_file(rel_path)
+        else:
+            site.write_file(rel_path, previous)
+
+
+@pytest.fixture(name="fake_notification_rule")
+def fake_notification_rule(site: Site) -> Iterator[None]:
+    with _replaced_file(
+        site,
+        "etc/check_mk/conf.d/wato/notifications.mk",
+        """# Written by Checkmk store\n\nnotification_rules += [{'rule_id': 'f03dd14d-63cd-4dac-8339-9b002753aa9e', 'allow_disable': True, 'contact_all': False, 'contact_all_with_email': False, 'contact_object': True, 'description': 'Notify all contacts of a host/service via HTML email', 'disabled': False, 'notify_plugin': ('mail', '1c131382-2cc5-4979-9026-71a935444d1f')}]""",
+    ):
+        yield
 
 
 @pytest.fixture(name="fake_notification_parameter")
 def fake_notification_parameter(site: Site) -> Iterator[None]:
-    site.write_file(
+    with _replaced_file(
+        site,
         "etc/check_mk/conf.d/wato/notification_parameter.mk",
         """# Written by Checkmk store\n\nnotification_parameter.update({'mail': {'1c131382-2cc5-4979-9026-71a935444d1f': {'general': {'description': 'Migrated from notification rule #0', 'comment': 'Auto migrated on update', 'docu_url': ''}, 'parameter_properties': {}}}})""",
-    )
-    try:
+    ):
         yield
-    finally:
-        # TODO remove this if default rule is removed
-        # Back to sample config
-        site.delete_file("etc/check_mk/conf.d/wato/notification_parameter.mk")
 
 
 @pytest.fixture(name="test_user")

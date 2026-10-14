@@ -4,23 +4,33 @@ catalog: os/storage
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the status of the Continuous Data Protection (CDP) jobs
- run by Veeam. If the job is not disabled, the check also monitors the time
- since last execution.
+ This check monitors the state of the Continuous Data Protection (CDP)
+ policies of Veeam Backup & Replication, the result of their last run and
+ the time of their next run. If the policy is not disabled, the check also
+ monitors the time since the last CDP sync. This is the time of the oldest
+ of the latest restore points of all replicas of the policy, since the
+ replica lagging behind the most determines the achieved RPO.
 
  In order to carry out the check, the Veeam agent plugin
  needs to be installed on the backup server. See special instructions in the
  comment section of the two Veeam agent plug-in scripts on how to install
  the scripts.
 
- - This service is {OK} if the result of the job is {Running} or {Disabled}.
+ - The policy state is {OK} if it is {InitialSync}, {Running} or {Disabled},
+   {CRIT} if it is {Failed} or {Stopped} and {UNKNOWN} otherwise.
 
- - It goes {CRIT} if the result of the backup is {Failed} or {Stopped}.
+ - The result of the last run is {OK} if it is {Success}, {WARN} if it is
+   {Warning}, {CRIT} if it is {Failed} and {UNKNOWN} for any other value.
+   For disabled policies, it is only shown in the details and always {OK}.
 
- - It goes {UNKNOWN} in all other cases.
+ - The time since the last CDP sync goes {WARN} if it lies in the future.
 
- You can also configure upper thresholds for the age of the last CDP run.
+ You can also configure upper thresholds for the time since the last CDP sync.
  The defaults are {WARN}: 1 day 6 hours and {CRIT}: 2 days.
+
+ Older versions of the agent plugin do not send the result of the last run
+ and the time of the last CDP sync. In this case, only the policy state and
+ the time of the next run are shown.
 
 discovery:
  One service is created for each CDP job created by the Veeam tool, including

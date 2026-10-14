@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from enum import Enum
 from typing import NamedTuple, TypedDict
 
@@ -24,6 +24,7 @@ from cmk.agent_based.v2 import (
 
 
 class CDPState(Enum):
+    INITIAL_SYNC = "InitialSync"
     RUNNING = "Running"
     FAILED = "Failed"
     STOPPED = "Stopped"
@@ -33,17 +34,26 @@ class CDPState(Enum):
 
 class CDPJob(NamedTuple):
     name: str
-    time_diff: float | None
+    next_run: float | None
     state: CDPState
     raw_state: str
+    last_sync: float | None
+    last_result: str | None
 
 
 STATE_MAPPING: Mapping[CDPState, State] = {
+    CDPState.INITIAL_SYNC: State.OK,
     CDPState.RUNNING: State.OK,
     CDPState.FAILED: State.CRIT,
     CDPState.STOPPED: State.CRIT,
     CDPState.DISABLED: State.OK,
     CDPState.UNKNOWN: State.UNKNOWN,
+}
+
+LAST_RESULT_MAPPING: Mapping[str, State] = {
+    "Success": State.OK,
+    "Warning": State.WARN,
+    "Failed": State.CRIT,
 }
 
 Section = Mapping[str, CDPJob]
@@ -60,11 +70,11 @@ class DiscoveryParams(TypedDict):
 DEFAULT_DISCOVERY_PARAMETERS = DiscoveryParams(discover_disabled=True)
 
 
-def _parse_time_diff(last_sync: str) -> float | None:
+def _parse_timestamp(raw: str) -> float | None:
     # Some agent outputs may provide lines like:
     # ['"JOB-NAME"', '1695809510,31277', 'Running']
     try:
-        return time.time() - float(last_sync.replace(",", "."))
+        return float(raw.replace(",", "."))
     except ValueError:
         return None
 
@@ -78,15 +88,24 @@ def _parse_state(raw_state: str) -> CDPState:
         return CDPState.UNKNOWN
 
 
+def _parse_line(line: Sequence[str]) -> CDPJob:
+    # Older agent plugins only send name, next run and state
+    name, next_run, state, last_sync, last_result = (
+        line if len(line) == 5 else (*line, "null", "null")
+    )
+    return CDPJob(
+        name,
+        _parse_timestamp(next_run),
+        _parse_state(state),
+        state,
+        _parse_timestamp(last_sync),
+        None if last_result == "null" else last_result,
+    )
+
+
 def parse_veeam_cdp_jobs(string_table: StringTable) -> Section:
     return {
-        name: CDPJob(
-            name,
-            None if last_sync == "null" else _parse_time_diff(last_sync),
-            _parse_state(state),
-            state,
-        )
-        for name, last_sync, state in (line for line in string_table if len(line) == 3)
+        job.name: job for job in (_parse_line(line) for line in string_table if len(line) in (3, 5))
     }
 
 
@@ -103,6 +122,12 @@ def discovery_veeam_cdp_jobs(params: DiscoveryParams, section: Section) -> Disco
 
 
 def check_veeam_cdp_jobs(item: str, params: CheckParams, section: Section) -> CheckResult:
+    yield from check_veeam_cdp_jobs_at(item, params, section, time.time())
+
+
+def check_veeam_cdp_jobs_at(
+    item: str, params: CheckParams, section: Section, now: float
+) -> CheckResult:
     if not (cdp := section.get(item)):
         return
 
@@ -111,22 +136,37 @@ def check_veeam_cdp_jobs(item: str, params: CheckParams, section: Section) -> Ch
         summary=f"State: {cdp.raw_state}",
     )
 
-    if cdp.time_diff is None:
+    if cdp.last_result is not None and cdp.last_result != "None":
+        if cdp.state is CDPState.DISABLED:
+            yield Result(state=State.OK, notice=f"Last result: {cdp.last_result}")
+        else:
+            yield Result(
+                state=LAST_RESULT_MAPPING.get(cdp.last_result, State.UNKNOWN),
+                summary=f"Last result: {cdp.last_result}",
+            )
+
+    if cdp.next_run is not None:
+        yield Result(state=State.OK, summary=f"Next run: {render.datetime(cdp.next_run)}")
+
+    if cdp.last_sync is None or cdp.state is CDPState.DISABLED:
         return
 
-    if cdp.time_diff < 0:
-        warning_message = (
-            "The timestamp of the file is in the future. Please investigate your host times"
+    if (age := now - cdp.last_sync) < 0:
+        yield Result(
+            state=State.WARN,
+            summary=(
+                "The last CDP sync is in the future. "
+                "Please check the clocks of the Veeam server and the Checkmk server."
+            ),
         )
-        yield Result(state=State.WARN, summary=warning_message)
         return
 
     yield from check_levels(
-        value=cdp.time_diff,
+        value=age,
         levels_upper=params["age"],
         metric_name=None,
         render_func=render.timespan,
-        label="Time since last CDP Run",
+        label="Time since last CDP sync",
     )
 
 

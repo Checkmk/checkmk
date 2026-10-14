@@ -103,7 +103,7 @@ try {
 
 
     try {
-        $cdpjobs = Get-VBRCDPPolicy | Select-Object Name, NextRun, PolicyState
+        $cdpjobs = Get-VBRCDPPolicy | Select-Object Id, Name, NextRun, PolicyState, LastResult
     }
     catch {
         Write-Host "CDP jobs not supported"
@@ -111,6 +111,13 @@ try {
     }
 
     if ( $cdpjobs ) {
+        try {
+            $cdpReplicas = @(Get-VBRCDPReplica -ErrorAction Stop)
+        }
+        catch {
+            $cdpReplicas = @()
+        }
+
         $myCdpJobsText = "<<<veeam_cdp_jobs:sep(124)>>>`n"
 
         foreach ($mycdpjobs in $cdpjobs) {
@@ -118,7 +125,7 @@ try {
 
             $MyCdpJobsNextRun = $mycdpjobs.NextRun
             if ($MyCdpJobsNextRun -ne $null) {
-                $MyCdpJobsNextRun = Get-Date -Date $MyCdpJobsNextRun -UFormat %s
+                $MyCdpJobsNextRun = ([DateTimeOffset]$MyCdpJobsNextRun).ToUnixTimeSeconds()
             }
             else {
                 $MyCdpJobsNextRun = "null"
@@ -126,7 +133,21 @@ try {
 
             $MyCdpJobsPolicyState = $mycdpjobs.PolicyState
 
-            $myCdpJobsText = "$myCdpJobsText" + "$MyCdpJobsName" + "|" + "$MyCdpJobsNextRun" + "|" + "$MyCdpJobsPolicyState" + "`n"
+            # The replica lagging behind the most determines how current the policy is
+            $MyCdpJobsLastSync = ($cdpReplicas | Where-Object { $_.JobId -eq $mycdpjobs.Id -and $_.LastPointCreationTime -ne $null } | ForEach-Object { $_.LastPointCreationTime } | Sort-Object | Select-Object -First 1)
+            if ($MyCdpJobsLastSync -ne $null) {
+                $MyCdpJobsLastSync = ([DateTimeOffset]$MyCdpJobsLastSync).ToUnixTimeSeconds()
+            }
+            else {
+                $MyCdpJobsLastSync = "null"
+            }
+
+            $MyCdpJobsLastResult = $mycdpjobs.LastResult
+            if ($MyCdpJobsLastResult -eq $null) {
+                $MyCdpJobsLastResult = "null"
+            }
+
+            $myCdpJobsText = "$myCdpJobsText" + "$MyCdpJobsName" + "|" + "$MyCdpJobsNextRun" + "|" + "$MyCdpJobsPolicyState" + "|" + "$MyCdpJobsLastSync" + "|" + "$MyCdpJobsLastResult" + "`n"
         }
 
         Write-Host $myCdpJobsText

@@ -2,8 +2,8 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:xcomp/cc.bzl", "cc_binary")
+load("//bazel/rules:xcomp/package_msi.bzl", "package_msi")
 load("//bazel/toolchains/cc/clang/xwin:rc.bzl", "windows_rc")
-load(":msi.bzl", "wnx_msi")
 
 package(features = ["treat_warnings_as_errors"])
 
@@ -327,7 +327,7 @@ filegroup(
     srcs = glob(["install/resources/**"]),
 )
 
-wnx_msi(
+package_msi(
     name = "check_mk_agent_msi",
     srcs = [
         ":msi_resources",
@@ -336,8 +336,12 @@ wnx_msi(
         "//agents/windows/plugins:msi_cmk_plugin_files",
     ],
     out = "check_mk_agent.msi",
-    agent_ctl_exe = "//packages/cmk-agent-ctl:cmk-agent-ctl-windows",
-    service_exe = ":check_mk_service-windows",
+    script = "install/build_msi.sh",
+    # Where Product.wxs expects them.
+    stage_files = {
+        "//packages/cmk-agent-ctl:cmk-agent-ctl-windows": "artefacts/cmk-agent-ctl.exe",
+        ":check_mk_service-windows": "agents/wnx/build/check_mk_service/x64/Release/check_mk_service.exe",
+    },
     tags = ["manual"],
     version_file = ":cmk_version",
 )

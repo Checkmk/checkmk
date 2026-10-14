@@ -1,8 +1,12 @@
 load("@aspect_rules_py//py:defs.bzl", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
-# The shared runner behind rust_wine_test() (xcomp/rust_wine_test.bzl).
-exports_files(["xcomp/rust-test-wine.sh"])
+exports_files([
+    # The shared runner behind rust_wine_test() (xcomp/rust_wine_test.bzl).
+    "xcomp/rust-test-wine.sh",
+    # Sourced by the scripts of package_msi.bzl rules.
+    "xcomp/package_msi.sh",
+])
 
 py_binary(
     name = "set_runpath_tree",
@@ -32,4 +36,10 @@ py_test(
         ":deb_installed_size",
         requirement("pytest"),
     ],
+)
+
+# Lets shellcheck see these scripts. Nothing depends on this target.
+sh_library(
+    name = "shell_scripts",
+    srcs = ["xcomp/package_msi.sh"],
 )

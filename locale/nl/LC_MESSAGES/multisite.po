@@ -8540,6 +8540,10 @@ msgstr "Autostart"
 msgid "Auto-start services"
 msgstr "Autostart diensten"
 
+#, fuzzy
+msgid "Autocheck files"
+msgstr "Aantal bestanden"
+
 msgid "Autodetect instances, expect HTTPs on the following ports:"
 msgstr "Autodetect instances, verwacht HTTP's op de volgende poorten:"
 
@@ -71455,6 +71459,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"The autocheck files below $OMD_ROOT/var/check_mk/autochecks. These files "
+"contain the discovery information for each host and the parameters of each "
+"service."
+msgstr ""
+
+msgid ""
 "The availability is computed by processing entries from a data table of "
 "historic events and state phases. In order to avoid a hanging system in "
 "cases where your time range and filtering would accept a vast amount of data "
@@ -75103,12 +75113,6 @@ msgstr ""
 "is. Een waarde van 1.5 betekent dat het huidige check resultaat anderhalve "
 "check interval van een object is verzameld. Dit zou betekenen 90 seconden in "
 "het geval van een controle die elke 60 seconden wordt gecontroleerd."
-
-msgid ""
-"The start of a recurring downtime can only be set for days 1-28 of a month."
-msgstr ""
-"Het begin van een terugkerende downtime kan alleen worden ingesteld voor de "
-"dagen 1-28 van een maand."
 
 msgid ""
 "The state of the Proxmox VE HA Manager Watcher service will be set to this "
@@ -102890,6 +102894,13 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "The start of a recurring downtime can only be set for days 1-28 of a "
+#~ "month."
+#~ msgstr ""
+#~ "Het begin van een terugkerende downtime kan alleen worden ingesteld voor "
+#~ "de dagen 1-28 van een maand."
 
 #, fuzzy
 #~ msgid "AI Assistant"

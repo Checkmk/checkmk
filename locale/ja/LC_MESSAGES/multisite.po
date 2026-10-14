@@ -8009,6 +8009,10 @@ msgstr "自動起動"
 msgid "Auto-start services"
 msgstr "自動開始サービス"
 
+#, fuzzy
+msgid "Autocheck files"
+msgstr "ファイルの量"
+
 msgid "Autodetect instances, expect HTTPs on the following ports:"
 msgstr "インスタンスを自動検出します。次のポートでHTTPを予期します。"
 
@@ -67220,6 +67224,12 @@ msgstr ""
 "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport）"
 
 msgid ""
+"The autocheck files below $OMD_ROOT/var/check_mk/autochecks. These files "
+"contain the discovery information for each host and the parameters of each "
+"service."
+msgstr ""
+
+msgid ""
 "The availability is computed by processing entries from a data table of "
 "historic events and state phases. In order to avoid a hanging system in "
 "cases where your time range and filtering would accept a vast amount of data "
@@ -70864,10 +70874,6 @@ msgstr ""
 "れ、チェック結果は古いものです。1.5の値は、現在のチェック結果がオブジェクトの"
 "1.5チェック間隔で収集されたことを意味します。これは、60秒ごとにチェックされる"
 "チェックの場合は90秒を意味します。"
-
-msgid ""
-"The start of a recurring downtime can only be set for days 1-28 of a month."
-msgstr "定期的なダウンタイムの開始は、1ヶ月のうち1～28日目にのみ設定できます。"
 
 msgid ""
 "The state of the Proxmox VE HA Manager Watcher service will be set to this "
@@ -97761,6 +97767,12 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid ""
+#~ "The start of a recurring downtime can only be set for days 1-28 of a "
+#~ "month."
+#~ msgstr ""
+#~ "定期的なダウンタイムの開始は、1ヶ月のうち1～28日目にのみ設定できます。"
 
 #~ msgid "AI Assistant"
 #~ msgstr "AIアシスタント"

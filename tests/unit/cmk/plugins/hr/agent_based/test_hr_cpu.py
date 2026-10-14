@@ -71,3 +71,49 @@ def test_check_hr_cpu(
     with time_machine.travel("2026-01-01 00:00:00", tick=False):
         result = list(check_hr_cpu(params, parsed))
     assert result == expected_output
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=ValueError,
+    reason="Crash report 8d2b7dc0-c334-11f1-8cff-005056bf0653: ValueError in check_hr_cpu",
+)
+@pytest.mark.parametrize(
+    ("parsed", "expected_output"),
+    [
+        pytest.param(
+            [[""]],
+            [
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Cannot parse processor load of core 0: got '' (expected integer)",
+                ),
+            ],
+            id="only_core_empty",
+        ),
+        pytest.param(
+            [["20"], [""]],
+            [
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Cannot parse processor load of core 1: got '' (expected integer)",
+                ),
+                Result(state=State.OK, summary="Total CPU: 20.00%"),
+                Metric("util", 20.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
+            ],
+            id="one_of_two_cores_empty",
+        ),
+    ],
+)
+def test_check_hr_cpu_unparsable_processor_load(
+    parsed: StringTable,
+    expected_output: CheckResult,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The device reports an empty hrProcessorLoad value instead of an integer.
+    value_store: dict[str, object] = {}
+    monkeypatch.setattr(hr_cpu_plugin, "get_value_store", lambda: value_store)
+
+    with time_machine.travel("2026-01-01 00:00:00", tick=False):
+        result = list(check_hr_cpu({"util": (80.0, 90.0)}, parsed))
+    assert result == expected_output

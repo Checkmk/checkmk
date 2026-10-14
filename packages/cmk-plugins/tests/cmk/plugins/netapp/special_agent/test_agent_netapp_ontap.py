@@ -5,7 +5,9 @@
 
 import argparse
 import logging
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
+from http import HTTPStatus
+from typing import override
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -18,6 +20,7 @@ from cmk.plugins.netapp.special_agent.agent_netapp_ontap import (
     fetch_aggr,
     fetch_interfaces,
     fetch_nodes,
+    fetch_snapmirror_relationships,
     get_nodes,
     parse_arguments,
 )
@@ -45,6 +48,18 @@ class _ServerError(NetAppRestError):
     @property
     def status_code(self) -> int:
         return 503
+
+
+class _BadRequestError(NetAppRestError):
+    """NetAppRestError for a request that ONTAP rejects, for example an unknown field."""
+
+    def __init__(self) -> None:
+        Exception.__init__(self, "400 Bad Request")
+
+    @property
+    @override
+    def status_code(self) -> int:
+        return HTTPStatus.BAD_REQUEST
 
 
 def test_agent_exits_1_when_connection_returns_401(capsys: pytest.CaptureFixture[str]) -> None:
@@ -408,3 +423,60 @@ def test_fetch_nodes_reports_node_without_metric() -> None:
     assert nodes["node1"].processor_utilization == 1
     assert nodes["node2"].processor_utilization is None
     assert nodes["node2"].processor_utilization_timestamp is None
+
+
+class _FakeSnapMirrorCollection:
+    def __init__(self, error_with_health_fields: Exception | None = None) -> None:
+        self.error_with_health_fields = error_with_health_fields
+        self.requested_fields: list[str] = []
+
+    def __call__(self, fields: str) -> Iterator[Mapping[str, object]]:
+        self.requested_fields.append(fields)
+        if "healthy" in fields and self.error_with_health_fields is not None:
+            raise self.error_with_health_fields
+        yield {"destination": {"path": "svm:vol"}}
+
+
+def test_fetch_snapmirror_requests_health_fields() -> None:
+    collection = _FakeSnapMirrorCollection()
+
+    relationships = fetch_snapmirror_relationships(collection, logging.getLogger())
+
+    assert relationships == [{"destination": {"path": "svm:vol"}}]
+    assert len(collection.requested_fields) == 1
+    assert "healthy" in collection.requested_fields[0]
+    assert "unhealthy_reason" in collection.requested_fields[0]
+
+
+def test_fetch_snapmirror_retries_without_health_fields_on_bad_request() -> None:
+    collection = _FakeSnapMirrorCollection(error_with_health_fields=_BadRequestError())
+
+    relationships = fetch_snapmirror_relationships(collection, logging.getLogger())
+
+    assert relationships == [{"destination": {"path": "svm:vol"}}]
+    assert len(collection.requested_fields) == 2
+    assert "healthy" not in collection.requested_fields[1]
+
+
+@pytest.mark.parametrize(
+    "error",
+    [pytest.param(_AuthError(), id="unauthorized"), pytest.param(_ServerError(), id="server")],
+)
+def test_fetch_snapmirror_does_not_retry_other_errors(error: NetAppRestError) -> None:
+    collection = _FakeSnapMirrorCollection(error_with_health_fields=error)
+
+    with pytest.raises(type(error)):
+        fetch_snapmirror_relationships(collection, logging.getLogger())
+
+    assert len(collection.requested_fields) == 1
+
+
+def test_fetch_snapmirror_drops_partial_results_before_retry() -> None:
+    def collection(fields: str) -> Iterator[Mapping[str, object]]:
+        yield {"destination": {"path": "svm:vol"}}
+        if "healthy" in fields:
+            raise _BadRequestError
+
+    relationships = fetch_snapmirror_relationships(collection, logging.getLogger())
+
+    assert relationships == [{"destination": {"path": "svm:vol"}}]

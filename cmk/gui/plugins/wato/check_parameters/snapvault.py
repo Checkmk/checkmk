@@ -13,10 +13,57 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Age, Checkbox, Dictionary, ListOf, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Age,
+    Checkbox,
+    Dictionary,
+    ListOf,
+    MonitoringState,
+    TextInput,
+    Tuple,
+)
+
+DEFAULT_TRANSFER_STATE = {
+    "aborted": 2,
+    "failed": 2,
+    "hard_aborted": 2,
+    "queued": 0,
+    "success": 0,
+    "transferring": 0,
+}
+
+DEFAULT_UNHEALTHY_STATE = 2
 
 
-def _parameter_valuespec_snapvault():
+def _transfer_state_valuespec() -> Dictionary:
+    titles = {
+        "success": _("Success"),
+        "transferring": _("Transferring"),
+        "queued": _("Queued"),
+        "aborted": _("Aborted"),
+        "hard_aborted": _("Hard aborted"),
+        "failed": _("Failed"),
+    }
+    return Dictionary(
+        title=_("Monitoring state per transfer state"),
+        help=_(
+            "Map the transfer state reported by the SnapMirror relationship to a monitoring state."
+        ),
+        elements=[
+            (
+                transfer_state,
+                MonitoringState(
+                    title=title,
+                    default_value=DEFAULT_TRANSFER_STATE[transfer_state],
+                ),
+            )
+            for transfer_state, title in titles.items()
+        ],
+        optional_keys=False,
+    )
+
+
+def _parameter_valuespec_snapvault() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -53,6 +100,19 @@ def _parameter_valuespec_snapvault():
                     allow_empty=False,
                 ),
             ),
+            ("transfer_state", _transfer_state_valuespec()),
+            (
+                "unhealthy_state",
+                MonitoringState(
+                    title=_("State if the relationship is unhealthy"),
+                    help=_(
+                        "ONTAP marks a SnapMirror relationship as unhealthy, for example when "
+                        "an update failed. The reasons reported by ONTAP are shown in the "
+                        "service summary. Older ONTAP versions may not report the health."
+                    ),
+                    default_value=DEFAULT_UNHEALTHY_STATE,
+                ),
+            ),
         ],
     )
 
@@ -61,10 +121,10 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="snapvault",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextInput(title=_("Source Path"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Destination"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_snapvault,
-        title=lambda: _("NetApp Snapvaults / Snapmirror Lag Time"),
+        title=lambda: _("NetApp SnapVault / SnapMirror"),
     )
 )
 

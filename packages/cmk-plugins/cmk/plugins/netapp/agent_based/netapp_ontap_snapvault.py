@@ -19,6 +19,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.netapp import models
+from cmk.plugins.netapp.lib.snapvault import DEFAULT_TRANSFER_STATE, DEFAULT_UNHEALTHY_STATE
 
 # <<<netapp_ontap_snapvault:sep(0)>>>
 # {
@@ -70,9 +71,8 @@ def discover_netapp_ontap_snapvault(
     params: Mapping[str, Any],
     section: Section,
 ) -> DiscoveryResult:
-    for name, element in _prefilter_items(section, params["exclude_destination_vserver"]):
-        if element.lag_time:
-            yield Service(item=name)
+    for name, _ in _prefilter_items(section, params["exclude_destination_vserver"]):
+        yield Service(item=name)
 
 
 def check_netapp_ontap_snapvault(
@@ -94,10 +94,24 @@ def check_netapp_ontap_snapvault(
         yield Result(state=State.OK, summary="Policy not set")
 
     if snapvault.transfer_state:
-        yield Result(state=State.OK, summary=f"Transfer State: {snapvault.transfer_state}")
+        yield Result(
+            state=State(
+                params["transfer_state"].get(snapvault.transfer_state, State.UNKNOWN.value)
+            ),
+            summary=f"Transfer State: {snapvault.transfer_state}",
+        )
 
     if snapvault.state:
         yield Result(state=State.OK, summary=f"State: {snapvault.state}")
+
+    if snapvault.healthy is False:
+        reasons = ", ".join(snapvault.unhealthy_reason)
+        yield Result(
+            state=State(params["unhealthy_state"]),
+            summary=f"Unhealthy: {reasons}" if reasons else "Unhealthy",
+        )
+    elif snapvault.healthy:
+        yield Result(state=State.OK, notice="Healthy")
 
     if (lagtime := snapvault.lagtime()) is None:
         return
@@ -125,5 +139,8 @@ check_plugin_netapp_ontap_snapmirror = CheckPlugin(
     discovery_default_parameters={"exclude_destination_vserver": False},
     check_function=check_netapp_ontap_snapvault,
     check_ruleset_name="snapvault",
-    check_default_parameters={},
+    check_default_parameters={
+        "transfer_state": DEFAULT_TRANSFER_STATE,
+        "unhealthy_state": DEFAULT_UNHEALTHY_STATE,
+    },
 )

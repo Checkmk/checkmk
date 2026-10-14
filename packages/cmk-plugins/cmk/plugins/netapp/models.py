@@ -720,12 +720,12 @@ class SnapMirrorModel(BaseModel):
     policy_name: str | None = None
     policy_type: str | None = None
     state: str | None = None
-    transfer_state: (
-        Literal["aborted", "failed", "hard_aborted", "queued", "success", "transferring"] | None
-    ) = None
+    transfer_state: str | None = None
     source_svm_name: str | None = None
     lag_time: datetime.timedelta | None = None
     destination: str
+    healthy: bool | None = None
+    unhealthy_reason: Sequence[str] = ()
 
     def lagtime(self) -> float | None:
         """

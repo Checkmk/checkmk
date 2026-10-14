@@ -6,6 +6,7 @@
 import hashlib
 import os
 import secrets
+import tempfile
 from collections.abc import Mapping
 from pathlib import Path
 from typing import final, override
@@ -90,21 +91,37 @@ def get_store_secret() -> Secret[bytes]:
         PasswordStoreError: If the secret file cannot be determined.
 
     Returns:
-        The master secret as bytes or None if no such secret exists.
+        The master secret as bytes. It is created if it does not exist.
     """
     if secret := _read_store_secret():
         return secret
+    return _create_store_secret(_get_store_secret_path())
 
-    # We create it if it does not exist.
-    # Watch out, this is not race condition free!
-    # But this is created upon user interaction when the first password is stored,
-    # so this is acceptable.
 
-    secret = Secret(secrets.token_bytes(32))
-    key_file = _get_store_secret_path()
+def _create_store_secret(key_file: Path) -> Secret[bytes]:
+    """Create the secret file, unless someone else is faster.
+
+    The secret is written to a temporary file which is then hard linked to
+    the target. Linking is atomic and never overwrites an existing file, so
+    concurrent callers all end up with the same, completely written secret.
+    """
     key_file.parent.mkdir(parents=True, exist_ok=True)
-    key_file.write_bytes(secret.reveal())
-    return secret
+    fd, raw_tmp_file = tempfile.mkstemp(dir=key_file.parent, prefix=f".{key_file.name}.")
+    tmp_file = Path(raw_tmp_file)
+    try:
+        secret = Secret(secrets.token_bytes(32))
+        with os.fdopen(fd, "wb") as f:
+            f.write(secret.reveal())
+            f.flush()
+            os.fsync(f.fileno())
+        try:
+            key_file.hardlink_to(tmp_file)
+        except FileExistsError:
+            # someone else was faster. Use their secret.
+            return Secret(key_file.read_bytes())
+        return secret
+    finally:
+        tmp_file.unlink(missing_ok=True)
 
 
 @final

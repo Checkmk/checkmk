@@ -5,6 +5,8 @@
 
 
 import binascii
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -12,6 +14,7 @@ from cryptography.exceptions import InvalidTag
 
 from cmk.password_store.v1 import (
     dereference_secret,
+    get_store_secret,
     PasswordStore,
     PasswordStoreError,
     Secret,
@@ -31,6 +34,49 @@ def test_dereference_secret_missing_store_file(
 
     with pytest.raises(PasswordStoreError):
         dereference_secret(f"some_id:{missing_store}")
+
+
+def test_get_store_secret_creates_missing_secret(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    key_file = tmp_path / "etc" / "password_store.secret"
+    monkeypatch.setenv("PASSWORD_STORE_SECRET_FILE", str(key_file))
+
+    secret = get_store_secret()
+
+    assert key_file.read_bytes() == secret.reveal()
+    assert key_file.stat().st_mode & 0o777 == 0o600
+    assert list(key_file.parent.iterdir()) == [key_file]
+
+
+def test_get_store_secret_keeps_existing_secret(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    key_file = tmp_path / "password_store.secret"
+    key_file.write_bytes(b"a" * 32)
+    monkeypatch.setenv("PASSWORD_STORE_SECRET_FILE", str(key_file))
+
+    assert get_store_secret() == Secret(b"a" * 32)
+    assert key_file.read_bytes() == b"a" * 32
+
+
+def test_get_store_secret_concurrent_creation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    key_file = tmp_path / "password_store.secret"
+    monkeypatch.setenv("PASSWORD_STORE_SECRET_FILE", str(key_file))
+    n_workers = 16
+    barrier = threading.Barrier(n_workers)
+
+    def create() -> bytes:
+        barrier.wait()
+        return get_store_secret().reveal()
+
+    with ThreadPoolExecutor(n_workers) as executor:
+        results = set(executor.map(lambda _: create(), range(n_workers)))
+
+    assert results == {key_file.read_bytes()}
+    assert list(tmp_path.iterdir()) == [key_file]
 
 
 class TestPasswordStore:

@@ -25,7 +25,7 @@ from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError
 from cmk.gui.wsgi.app import gui_context
 from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.plugins.lib.rulesets import SKIP_PREACTION
+from cmk.update_config.plugins.lib.rulesets import rename_replaced_plugins, SKIP_PREACTION
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
     continue_per_users_choice,
@@ -182,6 +182,8 @@ def _validate_rule_values(
                 "Validating ruleset '%(ruleset_name)s' in folder '%(folder_name)s'",
                 {"ruleset_name": ruleset.name, "folder_name": folder.name()},
             )
+            # validate the value the update will produce, not one referring to replaced plug-ins
+            value = rename_replaced_plugins(ruleset.name, rule.value)
             with warnings.catch_warnings(action="error", category=RegexFutureWarning):
                 try:
                     try:
@@ -189,11 +191,11 @@ def _validate_rule_values(
                             ruleset.rulespec.form_spec,
                             VisitorOptions(migrate_values=True, mask_values=True),
                         )
-                        validation_errors = visitor.validate(RawDiskData(rule.value))
+                        validation_errors = visitor.validate(RawDiskData(value))
                         if validation_errors:
                             raise ValueError(f"Validation errors: {validation_errors}")
                     except FormSpecNotImplementedError:
-                        transformed_value = ruleset.rulespec.valuespec.transform_value(rule.value)
+                        transformed_value = ruleset.rulespec.valuespec.transform_value(value)
                         ruleset.rulespec.valuespec.validate_datatype(
                             transformed_value,
                             "",

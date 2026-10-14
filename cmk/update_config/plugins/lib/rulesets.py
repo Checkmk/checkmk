@@ -11,6 +11,7 @@ from logging import Logger
 from typing import Final
 
 from cmk.ccc import debug
+from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.pending_changes import PendingChanges
@@ -26,6 +27,7 @@ from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.matcher import RulesetName, TagCondition
 from cmk.ruleset_matcher.tags import TagGroupID
 from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.update_config.plugins.lib.replaced_check_plugins import ALL_REPLACED_CHECK_PLUGINS
 from cmk.utils.log import VERBOSE
 
 # 3.0: metric backend -> data backend / telemetry metrics
@@ -47,6 +49,9 @@ REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
     ),
     "static_checks:metric_backend_omd": "static_checks:data_backend_telemetry_metrics_omd",
 }
+
+# Please keep this functionality even if we currently don't have any replaced SNMP sections!
+REPLACED_SNMP_SECTIONS: Mapping[SectionName, SectionName] = {}
 
 RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {}
 
@@ -117,6 +122,7 @@ def load_and_transform(
         all_rulesets,
         {**REPLACED_RULESETS, **_discovery_parameter_renames()},
     )
+    transform_replaced_plugins(logger, all_rulesets)
     transform_wato_rulesets_params(
         logger,
         all_rulesets,
@@ -283,6 +289,77 @@ def _transform_replaced_unknown_rulesets(
     ) in deprecated_unknown_ruleset_names_per_folder.items():
         for deprecated_unknown_ruleset_name in deprecated_unknown_ruleset_names:
             all_rulesets.delete_unknown(folder_path, deprecated_unknown_ruleset_name)
+
+
+def transform_replaced_plugins(logger: Logger, all_rulesets: RulesetCollection) -> None:
+    """Rename replaced check plug-ins and SNMP sections where rule values reference them by name
+
+    The rules would otherwise refer to plug-ins and sections that no longer exist.
+    """
+    for ruleset_name, ruleset in all_rulesets.get_rulesets().items():
+        for _folder, _index, rule in ruleset.get_rules():
+            if (new_value := rename_replaced_plugins(ruleset_name, rule.value)) is rule.value:
+                continue
+            logger.log(
+                VERBOSE,
+                "Renaming replaced plug-ins in ruleset %(ruleset_name)s, rule %(rule_id)s",
+                {"ruleset_name": ruleset_name, "rule_id": rule.id},
+            )
+            rule.value = new_value
+
+
+def rename_replaced_plugins(
+    ruleset_name: RulesetName,
+    value: object,
+    replaced_check_plugins: Mapping[CheckPluginName, CheckPluginName] = ALL_REPLACED_CHECK_PLUGINS,
+    replaced_snmp_sections: Mapping[SectionName, SectionName] = REPLACED_SNMP_SECTIONS,
+) -> object:
+    """The rule value with the replaced check plug-ins and SNMP sections renamed
+
+    Returns the original value unless a name was renamed, values of unexpected shape included.
+    """
+    plugins = {str(old): str(new) for old, new in replaced_check_plugins.items()}
+    sections = {str(old): str(new) for old, new in replaced_snmp_sections.items()}
+    match ruleset_name, value:
+        case "ignored_checks", list() if (plugin_names := _renamed(value, plugins)) is not None:
+            return plugin_names
+        case "snmp_exclude_sections", dict():
+            return _rename_excluded_sections(value, sections)
+        case "snmp_check_interval", tuple((list() as section_names, interval)) if (
+            renamed_sections := _renamed(section_names, sections)
+        ) is not None:
+            return renamed_sections, interval
+        case "snmpv3_contexts", tuple((str() as section_name, contexts, timeout_policy)) if (
+            section_name in sections
+        ):
+            return sections[section_name], contexts, timeout_policy
+        case _, tuple((str() as plugin_name, item, params)) if (
+            ruleset_name.startswith(RuleGroup.StaticChecks("")) and plugin_name in plugins
+        ):
+            return plugins[plugin_name], item, params
+        case _:
+            return value
+
+
+def _rename_excluded_sections(
+    value: Mapping[object, object], sections: Mapping[str, str]
+) -> object:
+    renamed: dict[object, object] = {}
+    for key in ("sections_disabled", "sections_enabled"):
+        section_names = value.get(key)
+        if (
+            isinstance(section_names, list)
+            and (renamed_sections := _renamed(section_names, sections)) is not None
+        ):
+            renamed[key] = renamed_sections
+    return {**value, **renamed} if renamed else value
+
+
+def _renamed(names: Sequence[object], renames: Mapping[str, str]) -> list[object] | None:
+    """The names with the replaced ones renamed, or None if there are none"""
+    if not any(isinstance(name, str) and name in renames for name in names):
+        return None
+    return [renames.get(name, name) if isinstance(name, str) else name for name in names]
 
 
 def transform_wato_rulesets_params(

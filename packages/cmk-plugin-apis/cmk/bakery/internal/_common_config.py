@@ -73,12 +73,10 @@ def get_agent_controller_arch(agconf: AgentConfig) -> AgentControllerTargetArch:
 
 def is_agent_controller_deployed(agconf: AgentConfig) -> bool:
     """Whether the Linux package ships the agent controller and its systemd units"""
-    agent_ctl_enabled, _runtime_opts = agconf.get("agent_controller", {}).get(
-        "agent_ctl_enabled", (True, {})
+    choice, _runtime_opts = agconf.get("agent_controller", {}).get(
+        "agent_ctl_enabled", ("enabled", {})
     )
-    return bool(
-        agconf["super_server"]["deployment_mode"] in ("auto", "systemd") and agent_ctl_enabled
-    )
+    return agconf["super_server"]["deployment_mode"] in ("auto", "systemd") and choice == "enabled"
 
 
 class AgentPathsConfig(BaseModel, frozen=True):

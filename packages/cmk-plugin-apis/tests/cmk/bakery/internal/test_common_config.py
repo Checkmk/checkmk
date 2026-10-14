@@ -35,7 +35,7 @@ def test_agent_controller_is_not_deployed_when_disabled() -> None:
     assert not is_agent_controller_deployed(
         {
             "super_server": {"deployment_mode": "auto"},
-            "agent_controller": {"agent_ctl_enabled": (False, None)},
+            "agent_controller": {"agent_ctl_enabled": ("disabled", None)},
         }
     )
 

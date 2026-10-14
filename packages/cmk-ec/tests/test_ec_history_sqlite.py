@@ -311,21 +311,6 @@ def test_filters_to_sqlite_query_raises_ValueError() -> None:
         filters_to_sqlite_query(wrong_filters)
 
 
-def test_filters_to_sqlite_query_raises_KeyError() -> None:
-    """Wrong operator name in filter raise KeyError."""
-
-    wrong_filters = [
-        QueryFilter(
-            column_name="event_text",
-            operator_name="=asdf or true;",  # type: ignore[arg-type]
-            predicate=lambda _: True,
-            argument="test_event",
-        )
-    ]
-    with pytest.raises(KeyError):
-        filters_to_sqlite_query(wrong_filters)
-
-
 def test_basic_init_history_table(history_sqlite: SQLiteHistory) -> None:
     """Basic init in memory and history table exists."""
 

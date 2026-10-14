@@ -138,18 +138,7 @@ def filters_to_mongo_query(
     """Construct the mongodb filtering specification."""
     mongo_query = {}
     for f in filters:
-        mongo_filter: str | dict[str, str] = {
-            "=": f.argument,
-            ">": {"$gt": f.argument},
-            "<": {"$lt": f.argument},
-            ">=": {"$gte": f.argument},
-            "<=": {"$lte": f.argument},
-            "~": {"$regex": f.argument, "$options": ""},
-            "=~": {"$regex": f.argument, "$options": "mi"},
-            "~~": {"$regex": f.argument, "$options": "i"},
-            "in": {"$in": f.argument},
-        }[f.operator_name]
-
+        mongo_filter = query_filter_to_mongo_filter(f)
         if f.column_name[:6] == "event_":
             mongo_query["event." + f.column_name[6:]] = mongo_filter
         elif f.column_name[:8] == "history_":
@@ -160,6 +149,29 @@ def filters_to_mongo_query(
         else:
             raise Exception(f"Filter {f.column_name} not implemented for MongoDB")
     return mongo_query
+
+
+def query_filter_to_mongo_filter(f: QueryFilter) -> str | dict[str, str]:
+    match f.operator_name:
+        case "=":
+            argument: str = f.argument
+            return argument
+        case ">":
+            return {"$gt": f.argument}
+        case "<":
+            return {"$lt": f.argument}
+        case ">=":
+            return {"$gte": f.argument}
+        case "<=":
+            return {"$lte": f.argument}
+        case "~":
+            return {"$regex": f.argument, "$options": ""}
+        case "=~":
+            return {"$regex": f.argument, "$options": "mi"}
+        case "~~":
+            return {"$regex": f.argument, "$options": "i"}
+        case "in":
+            return {"$in": f.argument}
 
 
 try:

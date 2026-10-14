@@ -206,15 +206,17 @@ def _grep_pipeline(filters: Iterable[QueryFilter]) -> list[str]:
 
 
 def _grep_command(operator_name: OperatorName, argument: str) -> str | None:
-    if operator_name == "=":
-        return f"grep -F {_grep_pattern(argument)}"
-    if operator_name == "=~":
-        return f"grep -F -i {_grep_pattern(argument)}"
-    if operator_name == "~":
-        return f"grep -E {_grep_pattern(argument)}"
-    if operator_name == "~~":
-        return f"grep -E -i {_grep_pattern(argument)}"
-    return None
+    match operator_name:
+        case "=":
+            return f"grep -F {_grep_pattern(argument)}"
+        case "=~":
+            return f"grep -F -i {_grep_pattern(argument)}"
+        case "~":
+            return f"grep -E {_grep_pattern(argument)}"
+        case "~~":
+            return f"grep -E -i {_grep_pattern(argument)}"
+        case ">" | "<" | ">=" | "<=" | "in":
+            return None
 
 
 def _grep_pattern(argument: str) -> str:
@@ -233,13 +235,15 @@ def _greatest_lower_bound_for_filters(
 
 
 def _greatest_lower_bound_for_filter(operator: OperatorName, value: float) -> float | None:
-    if operator == "=":
-        return value
-    if operator == ">=":
-        return value
-    if operator == ">":
-        return value + 1
-    return None
+    match operator:
+        case "=":
+            return value
+        case ">=":
+            return value
+        case ">":
+            return value + 1
+        case "<" | "<=" | "~" | "=~" | "~~" | "in":
+            return None
 
 
 def _least_upper_bound_for_filters(filters: Iterable[tuple[OperatorName, float]]) -> float | None:
@@ -252,13 +256,15 @@ def _least_upper_bound_for_filters(filters: Iterable[tuple[OperatorName, float]]
 
 
 def _least_upper_bound_for_filter(operator: OperatorName, value: float) -> float | None:
-    if operator == "=":
-        return value
-    if operator == "<=":
-        return value
-    if operator == "<":
-        return value - 1
-    return None
+    match operator:
+        case "=":
+            return value
+        case "<=":
+            return value
+        case "<":
+            return value - 1
+        case ">" | ">=" | "~" | "=~" | "~~" | "in":
+            return None
 
 
 def _intersects(

@@ -119,25 +119,34 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[o
             query_arguments.append(f.argument)
 
         query_columns.add(adjusted_column_name)
-        sqlite_filter: str = {
-            "=": f"{adjusted_column_name} {f.operator_name} ?",
-            ">": f"{adjusted_column_name} {f.operator_name} ?",
-            "<": f"{adjusted_column_name} {f.operator_name} ?",
-            ">=": f"{adjusted_column_name} {f.operator_name} ?",
-            "<=": f"{adjusted_column_name} {f.operator_name} ?",
-            "~": f"{adjusted_column_name} REGEXP ?",
-            "=~": f"{adjusted_column_name} = ? COLLATE NOCASE",
-            "~~": f"regexp_nocase(?, {adjusted_column_name})",
-            "in": f"{adjusted_column_name} in ({','.join(['?'] * len(f.argument))})"
-            if f.operator_name == "in"
-            else "",
-        }[f.operator_name]
-        query_conditions.append(sqlite_filter)
+        query_conditions.append(query_filter_to_sqlite_filter(f, adjusted_column_name))
 
     return (
         f"SELECT * FROM history {'WHERE' if query_arguments else ''} {' AND '.join(query_conditions)};",  # nosec B608 # BNS:6b6392
         query_arguments,
     )
+
+
+def query_filter_to_sqlite_filter(f: QueryFilter, adjusted_column_name: str) -> str:
+    match f.operator_name:
+        case "=":
+            return f"{adjusted_column_name} {f.operator_name} ?"
+        case ">":
+            return f"{adjusted_column_name} {f.operator_name} ?"
+        case "<":
+            return f"{adjusted_column_name} {f.operator_name} ?"
+        case ">=":
+            return f"{adjusted_column_name} {f.operator_name} ?"
+        case "<=":
+            return f"{adjusted_column_name} {f.operator_name} ?"
+        case "~":
+            return f"{adjusted_column_name} REGEXP ?"
+        case "=~":
+            return f"{adjusted_column_name} = ? COLLATE NOCASE"
+        case "~~":
+            return f"regexp_nocase(?, {adjusted_column_name})"
+        case "in":
+            return f"{adjusted_column_name} in ({','.join(['?'] * len(f.argument))})"
 
 
 @dataclass

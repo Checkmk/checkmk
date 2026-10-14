@@ -51,7 +51,7 @@ def test_request_to_the_helper_outlasts_the_timeout_of_the_automation(
     session = _FakeSession()
     _install_session(monkeypatch, session)
 
-    HelperExecutor().execute(AutomationID("restart"), [], "", timeout=100)
+    HelperExecutor().execute(AutomationID("restart"), [], "", timeout=100, for_cmk_version="2.4.0")
 
     assert session.timeouts == [160]
 
@@ -62,7 +62,7 @@ def test_request_to_the_helper_is_unbounded_without_an_automation_timeout(
     session = _FakeSession()
     _install_session(monkeypatch, session)
 
-    HelperExecutor().execute(AutomationID("restart"), [], "", timeout=None)
+    HelperExecutor().execute(AutomationID("restart"), [], "", timeout=None, for_cmk_version="2.4.0")
 
     assert session.timeouts == [None]
 
@@ -73,4 +73,6 @@ def test_helper_that_does_not_answer_in_time_is_reported_unavailable(
     _install_session(monkeypatch, _FakeSession(exception=requests.ReadTimeout()))
 
     with pytest.raises(AutomationHelperUnavailable, match="did not answer within 160 seconds"):
-        HelperExecutor().execute(AutomationID("restart"), [], "", timeout=100)
+        HelperExecutor().execute(
+            AutomationID("restart"), [], "", timeout=100, for_cmk_version="2.4.0"
+        )

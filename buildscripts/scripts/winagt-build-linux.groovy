@@ -155,35 +155,20 @@ void main() {
 void sign_windows_binaries(String branch_name, String cmk_version, String binary_directory) {
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
 
-    withCredentials([
-        string(credentialsId: "azure_artifact_signing_client_secret", variable: "AZURE_ARTIFACT_SIGNING_CLIENT_SECRET"),
-        string(credentialsId: "azure_artifact_signing_correlation_suffix", variable: "AZURE_ARTIFACT_SIGNING_CORRELATION_SUFFIX"),
-    ]) {
-        // Assembled inside the binding block: the suffix is only available there.
-        def correlation_id = windows.azure_signing_correlation_id(branch_name);
-        withEnv([
-            "AZURE_ARTIFACT_SIGNING_ENDPOINT=${env.AZURE_ARTIFACT_SIGNING_ENDPOINT}",
-            "AZURE_ARTIFACT_SIGNING_ACCOUNT=${env.AZURE_ARTIFACT_SIGNING_ACCOUNT}",
-            "AZURE_ARTIFACT_SIGNING_PROFILE=${env.AZURE_ARTIFACT_SIGNING_PROFILE}",
-            "AZURE_ARTIFACT_SIGNING_TENANT_ID=${env.AZURE_ARTIFACT_SIGNING_TENANT_ID}",
-            "AZURE_ARTIFACT_SIGNING_CLIENT_ID=${env.AZURE_ARTIFACT_SIGNING_CLIENT_ID}",
-            "AZURE_ARTIFACT_SIGNING_CORRELATION_ID=${correlation_id}",
-        ]) {
-            // The package build and the bakery also need each MSI unsigned
-            // (check_mk_agent_unsigned.msi, see cmk/utils/msi_engine.py), so
-            // keep a copy and sign everything else.
-            sh(
-                """
-                set -euo pipefail
-                for msi in ${binary_directory}/*.msi; do
-                    cp -f "\$msi" "\${msi%.msi}_unsigned.msi"
-                done
-                bazel run --cmk_version=${cmk_version} //agents/wnx/scripts:sign_azure -- \\
-                    \$(find ${binary_directory} -maxdepth 1 -type f ! -name '*_unsigned.msi' | sort)
-                """
-            );
-        }
-    }
+    // The package build and the bakery also need each MSI unsigned
+    // (check_mk_agent_unsigned.msi, see cmk/utils/msi_engine.py), so
+    // keep a copy and sign everything else.
+    def files = sh(
+        script: """
+            set -euo pipefail
+            for msi in ${binary_directory}/*.msi; do
+                cp -f "\$msi" "\${msi%.msi}_unsigned.msi"
+            done
+            find ${binary_directory} -maxdepth 1 -type f ! -name '*_unsigned.msi' | sort
+            """,
+        returnStdout: true,
+    ).trim().split("\n") as List;
+    windows.sign_with_azure(branch_name, "--cmk_version=${cmk_version}", files);
 }
 
 /// Merges the bazel test.xml files into results/ and makes them digestible for

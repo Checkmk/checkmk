@@ -88,6 +88,8 @@ void provide_agent_binaries(Map args) {
     def test_binaries_only = args.test_binaries_only == null ? false : true;
     def fake_artifacts = args.fake_artifacts == null ? false : args.fake_artifacts.asBoolean();
     def need_windows_python_cab = args.need_windows_python_cab == null ? false : args.need_windows_python_cab.asBoolean();
+    // The editions shipping the relay MSI (see relay_install_pkg gating in omd/BUILD).
+    def skip_relay_msi = !(args.edition in ["cloud", "ultimate", "ultimatemt"]);
 
     // This _should_ go to an externally maintained file (single point of truth), see
     // https://jira.lan.tribe29.com/browse/CMK-13857
@@ -210,8 +212,7 @@ void provide_agent_binaries(Map args) {
             // winagt-build (checkmk/<branch>/winagt-build) - NOT under builders/.
             relative_job_name: "${branch_base_folder(false)}/relay-msi",
             dependency_paths_hash: all_dependency_paths_hashes["relay-msi"],
-            skip: test_binaries_only || fake_artifacts ||
-                !(args.edition in ["cloud", "ultimate", "ultimatemt"]),
+            skip: test_binaries_only || fake_artifacts || skip_relay_msi,
             retry: 3,
             additional_build_params: AZURE_SIGN_METHOD,
             // Forward the edition so the relay-msi job's edition guard can validate
@@ -224,6 +225,22 @@ void provide_agent_binaries(Map args) {
                     CheckmkRelayInstaller.msi \
                     ${checkout_dir}/non-free/packages/cmk-relay-engine/
                 """.stripIndent(),
+        ],
+        "relay-msi-linux": [
+            // Builds the relay MSI on Linux with Bazel. Nothing consumes its
+            // output yet (it is unsigned), it runs alongside relay-msi only so
+            // that a change breaking the Linux build fails here. Keyed on the git
+            // ref like winagt-build-linux: its Bazel inputs include the shared
+            // WiX/wine toolchain. Never downloaded: its MSI carries the same file
+            // name as relay-msi's.
+            relative_job_name: "${branch_base_folder(false)}/relay-msi-linux",
+            skip: test_binaries_only || fake_artifacts || skip_relay_msi,
+            retry: 1,
+            additional_build_params: [],
+            // Like relay-msi: for the edition guard, kept out of the cache
+            // identity as the MSI is the same across the gated editions.
+            additional_build_params_no_check: [EDITION: args.edition],
+            fetch_artifacts: false,
         ],
         "winagt-build-modules-linux": [
             // The deb/rpm/cma package build no longer needs this: it builds

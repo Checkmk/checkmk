@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 from cmk.werks.flavor.cmk.models import Class, EditionV3, WerkV3
+from cmk.werks.flavor.cmk.precompile import write_precompiled_werks
 from cmk.werks.site import find_werk, load
 from cmk.werks.site.acknowledgement import (
     load_acknowledgements,
@@ -15,7 +16,6 @@ from cmk.werks.site.acknowledgement import (
     write_unacknowledged_werks,
 )
 from cmk.werks.tool.models import Compatibility, Level
-from cmk.werks.tool.utils import write_precompiled_werks
 
 WERK_V1 = {
     "15374": {

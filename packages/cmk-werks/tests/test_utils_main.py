@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from cmk.werks.flavor.cmk.precompile import load_precompiled_werks_file
 from cmk.werks.tool import parse_werk
-from cmk.werks.tool.utils import load_precompiled_werks_file
 from cmk.werks.tool.utils.__main__ import main
 
 from ._werk_files import werk_text

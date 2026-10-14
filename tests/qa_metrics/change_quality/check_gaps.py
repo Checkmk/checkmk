@@ -38,7 +38,7 @@ from typing import Final
 import psycopg
 
 from cmk.werks.flavor.cmk.models import Class
-from cmk.werks.tool.utils import load_raw_files
+from cmk.werks.flavor.cmk.precompile import load_raw_files
 from tests.qa_metrics.change_quality import walk
 from tests.qa_metrics.change_quality.repo import read_branch_version
 from tests.qa_metrics.change_quality.rows import CHANGE_TESTED

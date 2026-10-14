@@ -10,8 +10,8 @@ import pytest
 
 from cmk.utils.werks.__main__ import main as cmk_utils_werks_main
 from cmk.werks.flavor.cmk import CmkFlavor
+from cmk.werks.flavor.cmk.precompile import load_precompiled_werks_file
 from cmk.werks.tool.flavor import current_version as read_current_version
-from cmk.werks.tool.utils import load_precompiled_werks_file
 from cmk.werks.tool.utils.__main__ import main as cmk_werks_main
 from cmk.werks.tool.validate import main as validate_main
 from tests.code_quality.bazel_utils import bazel_repo_root

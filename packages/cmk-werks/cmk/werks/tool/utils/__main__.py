@@ -8,14 +8,9 @@ import argparse
 from collections.abc import Sequence
 from pathlib import Path
 
-from cmk.ccc.version import Version
-from cmk.werks.flavor.cmk import CmkFlavor
-from cmk.werks.flavor.cmk.models import EditionV2, EditionV3, WerkV3
-from cmk.werks.flavor.cmk.translator import resolve_version
+from cmk.werks.flavor.cmk.precompile import EDITION_FILTERS, precompile
 from cmk.werks.tool.collect import main as collect
-from cmk.werks.tool.flavor import current_version
 from cmk.werks.tool.flavor_registry import FLAVOR_NAMES, get_flavor
-from cmk.werks.tool.utils import load_raw_files, write_precompiled_werks
 from cmk.werks.tool.utils.burn import main as burn
 
 
@@ -28,39 +23,8 @@ def path_dir(value: str) -> Path:
     return result
 
 
-def _get_filter(filter_by_edition: str | None) -> EditionV3 | None:
-    if filter_by_edition is None:
-        return None
-    if filter_by_edition in {edition.value for edition in EditionV2}:
-        return EditionV3.from_v2(EditionV2(filter_by_edition))
-    return EditionV3(filter_by_edition)
-
-
 def main_precompile(args: argparse.Namespace) -> None:
-    werks_list = load_raw_files(args.werk_dir)
-
-    version = current_version(CmkFlavor(), args.werk_dir.parent)
-
-    filter_by_edition = _get_filter(args.filter_by_edition)
-
-    base_version = Version.from_str(version).base
-
-    def _set_version(werk: WerkV3) -> WerkV3:
-        if werk.version is None:
-            return werk.model_copy(update={"version": version})
-        return werk
-
-    def _filter(werk: WerkV3) -> bool:
-        edition = werk.edition
-
-        # include only werks matching the edition filter (if any) and this major version
-        return (filter_by_edition is None or edition == filter_by_edition) and (
-            Version.from_str(resolve_version(version, werk.version)).base == base_version
-        )
-
-    werks = {werk.id: _set_version(werk) for werk in werks_list if _filter(werk)}
-
-    write_precompiled_werks(args.destination, werks)
+    precompile(args.werk_dir, args.destination, args.filter_by_edition)
 
 
 def main_collect(args: argparse.Namespace) -> None:
@@ -87,7 +51,7 @@ def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser_precompile.add_argument(
         "--filter-by-edition",
         default=None,
-        choices=[*(x.value for x in [*EditionV2, *EditionV3])],
+        choices=EDITION_FILTERS,
     )
     parser_precompile.set_defaults(func=main_precompile)
 

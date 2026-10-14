@@ -16,8 +16,8 @@ import git
 import pytest
 
 import cmk.ccc.version as cmk_version
+import cmk.werks.flavor.cmk.precompile
 import cmk.werks.site
-import cmk.werks.tool.utils
 from cmk.werks.flavor.cmk.models import WerkV3
 from tests.code_quality.bazel_utils import bazel_repo_root
 
@@ -119,7 +119,7 @@ def fixture_all_werks_raw() -> Sequence[WerkV3]:
     """
     provide the werks as parsed from the `.werks` directory
     """
-    return cmk.werks.tool.utils.load_raw_files(bazel_repo_root() / ".werks")
+    return cmk.werks.flavor.cmk.precompile.load_raw_files(bazel_repo_root() / ".werks")
 
 
 @pytest.fixture(scope="session", name="werks_loaded")
@@ -132,7 +132,7 @@ def fixture_werks_loader(
     tmp_path = tmp_path_factory.mktemp("werks")
     base_dir = tmp_path / "werks_base_dir_precompiled"
     base_dir.mkdir()
-    cmk.werks.tool.utils.write_precompiled_werks(
+    cmk.werks.flavor.cmk.precompile.write_precompiled_werks(
         base_dir / "werks", {w.id: w for w in all_werks_raw}
     )
 
@@ -172,24 +172,26 @@ def test_write_precompiled_werks(
 
     assert len(cre_werks) > 9847
     assert [w for w in cre_werks if 9000 <= w < 10000] == []
-    cmk.werks.tool.utils.write_precompiled_werks(werks_loader_empty.base_dir / "werks", cre_werks)
+    cmk.werks.flavor.cmk.precompile.write_precompiled_werks(
+        werks_loader_empty.base_dir / "werks", cre_werks
+    )
 
     assert len(cee_werks) > 1358
-    cmk.werks.tool.utils.write_precompiled_werks(
+    cmk.werks.flavor.cmk.precompile.write_precompiled_werks(
         werks_loader_empty.base_dir / "werks-enterprise", cee_werks
     )
 
     assert len(cme_werks) > 50
-    cmk.werks.tool.utils.write_precompiled_werks(
+    cmk.werks.flavor.cmk.precompile.write_precompiled_werks(
         werks_loader_empty.base_dir / "werks-managed", cme_werks
     )
 
     assert len(cce_werks) > 10
-    cmk.werks.tool.utils.write_precompiled_werks(
+    cmk.werks.flavor.cmk.precompile.write_precompiled_werks(
         werks_loader_empty.base_dir / "werks-cloud", cce_werks
     )
 
-    cmk.werks.tool.utils.write_precompiled_werks(
+    cmk.werks.flavor.cmk.precompile.write_precompiled_werks(
         werks_loader_empty.base_dir / "werks-saas", cse_werks
     )
 

@@ -32,6 +32,7 @@ py_library(
         "cmk/werks/flavor/cmk/__init__.py",
         "cmk/werks/flavor/cmk/collect.py",
         "cmk/werks/flavor/cmk/models.py",
+        "cmk/werks/flavor/cmk/precompile.py",
         "cmk/werks/flavor/cmk/translator.py",
         "cmk/werks/flavor/cmk/version.py",
         "cmk/werks/tool/__init__.py",

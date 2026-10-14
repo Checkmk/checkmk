@@ -7,7 +7,9 @@ import pytest
 
 from cmk.agent_based.v2 import Attributes
 from cmk.plugins.docker.agent_based.inventory_docker_container_node_name import (
+    agent_section_docker_container_node_name,
     inventorize_docker_container_node_name,
+    inventory_plugin_docker_container_node_name,
     parse_docker_container_node_name,
     Section,
 )
@@ -35,3 +37,9 @@ def test_inv_docker_container_node_name(section: Section) -> None:
 def test_inv_docker_container_node_name_legacy_agent_output() -> None:
     with pytest.raises(AgentOutputMalformatted):
         parse_docker_container_node_name([["node_name"]])
+
+
+def test_inv_docker_container_node_name_consumes_the_section_of_the_agent_plugin() -> None:
+    # mk_docker.py writes the piggyback section "docker_container_node_name".
+    assert agent_section_docker_container_node_name.name == "docker_container_node_name"
+    assert inventory_plugin_docker_container_node_name.name == "docker_container_node_name"

@@ -209,13 +209,13 @@ def _grep_command(operator_name: OperatorName, argument: str) -> str | None:
     match operator_name:
         case "=":
             return f"grep -F {_grep_pattern(argument)}"
-        case "=~":
-            return f"grep -F -i {_grep_pattern(argument)}"
         case "~":
             return f"grep -E {_grep_pattern(argument)}"
+        case "=~":
+            return f"grep -F -i {_grep_pattern(argument)}"
         case "~~":
             return f"grep -E -i {_grep_pattern(argument)}"
-        case ">" | "<" | ">=" | "<=" | "in":
+        case "<" | ">=" | ">" | "<=" | "in":
             return None
 
 
@@ -242,7 +242,7 @@ def _greatest_lower_bound_for_filter(operator: OperatorName, value: float) -> fl
             return value
         case ">":
             return value + 1
-        case "<" | "<=" | "~" | "=~" | "~~" | "in":
+        case "~" | "=~" | "~~" | "<" | "<=" | "in":
             return None
 
 
@@ -259,11 +259,11 @@ def _least_upper_bound_for_filter(operator: OperatorName, value: float) -> float
     match operator:
         case "=":
             return value
-        case "<=":
-            return value
         case "<":
             return value - 1
-        case ">" | ">=" | "~" | "=~" | "~~" | "in":
+        case "<=":
+            return value
+        case "~" | "=~" | "~~" | ">=" | ">" | "in":
             return None
 
 

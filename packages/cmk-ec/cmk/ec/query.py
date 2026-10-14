@@ -131,7 +131,7 @@ def filter_operator_in(a: str, b: Iterable[str]) -> bool:
     return a.lower() in {e.lower() for e in b}
 
 
-OperatorName = Literal["=", ">", "<", ">=", "<=", "~", "=~", "~~", "in"]
+OperatorName = Literal["=", "~", "=~", "~~", "<", ">=", ">", "<=", "in"]
 
 
 @dataclass(frozen=True)
@@ -147,13 +147,13 @@ class QueryFilter:
 # operator_for(). We're choosing evil no. 1... :-/
 _filter_operators: dict[str, tuple[OperatorName, Callable[[Any, Any], bool]]] = {
     "=": ("=", operator.eq),
-    ">": (">", operator.gt),
-    "<": ("<", operator.lt),
-    ">=": (">=", operator.ge),
-    "<=": ("<=", operator.le),
     "~": ("~", lambda a, b: bool(re.search(b, a))),
     "=~": ("=~", lambda a, b: a.lower() == b.lower()),
     "~~": ("~~", lambda a, b: bool(re.search(b.lower(), a.lower()))),
+    "<": ("<", operator.lt),
+    ">=": (">=", operator.ge),
+    ">": (">", operator.gt),
+    "<=": ("<=", operator.le),
     "in": ("in", filter_operator_in),
 }
 

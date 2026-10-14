@@ -81,7 +81,8 @@ def discovery(section: Section) -> DiscoveryResult:
 
 
 def check(item: str, section: Section) -> CheckResult:
-    raid = section[item]
+    if (raid := section.get(item)) is None:
+        return
     summary, state = _STATES[raid.status]
     yield Result(state=state, summary=f"Status: {summary}")
 

@@ -24,6 +24,7 @@ py_library(
         "//tests/testlib/system",
     ] + select({
         "//:gpl+nonfree_repo": [
+            "//cmk/gui/form_specs",
             "//non-free/tests/testlib/system/cloud",
         ],
         "//:gpl_repo": [],

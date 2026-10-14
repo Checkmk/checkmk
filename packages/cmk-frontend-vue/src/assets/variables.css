@@ -128,6 +128,8 @@
     --border-color-ai: var(--color-purple-80);
     --font-color-accent: var(--color-purple-60);
     --font-color-strong: var(--color-mid-grey-100);
+    --border-color-muted: var(--color-mid-grey-20);
+    --border-color-strong: var(--color-mid-grey-50);
 
     /* Form Labels Colors */
     --tag-color: var(--color-cyan-80);
@@ -256,6 +258,8 @@
     --border-color-ai: var(--color-purple-40);
     --font-color-accent: var(--color-purple-40);
     --font-color-strong: var(--color-mid-grey-0);
+    --border-color-muted: var(--color-mid-grey-80);
+    --border-color-strong: var(--color-mid-grey-70);
 
     /* Form Labels Colors */
     --tag-color: var(--color-cyan-80);

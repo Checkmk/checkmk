@@ -9,15 +9,14 @@ from pathlib import Path
 
 import pytest
 
+from tests.testlib.system.agent import install_agent_package
 from tests.testlib.system.host_under_test import HostUnderTest
-
-from .agent_package import install_agent_package
 
 pytestmark = pytest.mark.skip_if_faked_artifacts
 
 
 def test_installed_agent_reports_data(host: HostUnderTest, agent_package: Path) -> None:
-    install_agent_package(host, agent_package)
+    install_agent_package(agent_package, host)
 
     output = host.run(["check_mk_agent"], sudo=True).stdout
 

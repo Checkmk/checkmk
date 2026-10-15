@@ -17,10 +17,9 @@ from pathlib import Path
 import pytest
 
 from tests.testlib.common.utils2 import is_containerized
+from tests.testlib.system.agent import bake_agents, download_agent_package, get_package_type
 from tests.testlib.system.host_under_test import HostUnderTest, LocalHost
 from tests.testlib.system.site import get_site_factory, Site, tracing_config_from_env
-
-from .agent_package import download_agent_package, package_type
 
 _ALLOW_LOCAL_HOST = "CMK_ALLOW_AGENT_ON_LOCAL_HOST"
 
@@ -54,6 +53,8 @@ def _site(request: pytest.FixtureRequest) -> Iterator[Site]:
 def _agent_package(
     host: HostUnderTest, site: Site, tmp_path_factory: pytest.TempPathFactory
 ) -> Path:
+    if not site.edition.is_community_edition():
+        bake_agents(site)
     return download_agent_package(
-        site, package_type(host), tmp_path_factory.mktemp("agent_package")
+        site, get_package_type(host), tmp_path_factory.mktemp("agent_package")
     )

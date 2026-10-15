@@ -163,6 +163,25 @@ def test_check_veeam_backup_jobs_running_with_no_result_is_ok() -> None:
     assert results[0] == Result(state=State.OK, summary="Status: Running, Result: None")
 
 
+@pytest.mark.parametrize(
+    "previous_result, expected",
+    [
+        pytest.param("Success", State.OK, id="previous run succeeded"),
+        pytest.param("Failed", State.CRIT, id="previous run failed"),
+    ],
+)
+def test_running_job_keeps_the_result_of_its_previous_run(
+    previous_result: str, expected: State
+) -> None:
+    section = parse_veeam_backup_jobs(
+        [[_job("running", status="Running", lastResult=previous_result)]]
+    )
+    results = list(check_veeam_backup_jobs("running", section, now=NOW))
+    assert results[0] == Result(
+        state=expected, summary=f"Status: Running, Result: {previous_result}"
+    )
+
+
 def test_check_veeam_backup_jobs_last_run_in_the_future() -> None:
     section = parse_veeam_backup_jobs([[_job("job")]])
     now = datetime.fromisoformat(LAST_RUN).timestamp() - 60

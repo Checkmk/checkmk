@@ -80,28 +80,28 @@ def check_veeam_config_backup(
             state=State.CRIT,
             summary="No successful backup yet",
         )
+    elif (age := now - section.last_successful_time) < 0:
+        yield Result(state=State.OK, summary="Last successful backup: in the future")
     else:
         yield from check_levels(
-            now - section.last_successful_time,
+            age,
             levels_upper=params["age"],
             metric_name="veeam_config_backup_age",
-            render_func=lambda v: (
-                render.timespan(v) if v >= 0 else "last successful backup is in the future"
-            ),
-            label="Time since last successful backup",
+            render_func=render.timespan,
+            label="Last successful backup age",
         )
 
     yield Result(
         state=State.OK,
-        summary=f"Restore points kept: {section.restore_points_to_keep}",
+        notice=f"Restore points kept: {section.restore_points_to_keep}",
     )
     yield Result(
         state=State.OK,
-        summary=f"Encryption: {'enabled' if section.encryption_enabled else 'disabled'}",
+        notice=f"Encryption: {'enabled' if section.encryption_enabled else 'disabled'}",
     )
     yield Result(
         state=State.OK,
-        summary=f"Target repository ID: {section.backup_repository_id}",
+        notice=f"Target repository ID: {section.backup_repository_id}",
     )
 
 

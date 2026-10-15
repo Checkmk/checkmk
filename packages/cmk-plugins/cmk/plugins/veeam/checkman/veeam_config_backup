@@ -8,7 +8,8 @@ description:
  server, collected via the Veeam special agent. It reports whether
  configuration backup is enabled, the time since the last successful backup,
  the number of restore points kept, whether encryption is enabled, and the
- target repository.
+ target repository. The summary shows the time since the last successful
+ backup; the other values are shown in the details.
 
  This check is {WARN} by default if configuration backup is disabled; the
  state is configurable, since deliberately not using configuration backup is

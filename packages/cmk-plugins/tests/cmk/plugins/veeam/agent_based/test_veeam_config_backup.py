@@ -100,7 +100,16 @@ def test_check_veeam_config_backup_reports_age_metric() -> None:
     assert any(isinstance(r, Metric) and r.name == "veeam_config_backup_age" for r in results)
 
 
-def test_check_veeam_config_backup_future_timestamp_does_not_crash() -> None:
+def test_check_veeam_config_backup_summary() -> None:
+    assert (section := parse_veeam_config_backup(_config_backup())) is not None
+    now = datetime.fromisoformat("2019-01-21T20:05:00+00:00").timestamp()
+    results = list(check_veeam_config_backup(PARAMS, section, now=now))
+    assert [r.summary for r in results if isinstance(r, Result) and r.summary] == [
+        "Last successful backup age: 20 hours 5 minutes"
+    ]
+
+
+def test_check_veeam_config_backup_future_timestamp_has_no_age_metric() -> None:
     assert (
         section := parse_veeam_config_backup(
             _config_backup(
@@ -109,15 +118,13 @@ def test_check_veeam_config_backup_future_timestamp_does_not_crash() -> None:
         )
     ) is not None
     results = list(check_veeam_config_backup(PARAMS, section, now=NOW))
-    assert any(
-        isinstance(r, Result) and "last successful backup is in the future" in r.summary
-        for r in results
-    )
+    assert Result(state=State.OK, summary="Last successful backup: in the future") in results
+    assert not any(isinstance(r, Metric) and r.name == "veeam_config_backup_age" for r in results)
 
 
 def test_check_veeam_config_backup_details() -> None:
     assert (section := parse_veeam_config_backup(_config_backup())) is not None
     results = list(check_veeam_config_backup(PARAMS, section, now=NOW))
-    assert Result(state=State.OK, summary="Restore points kept: 7") in results
-    assert Result(state=State.OK, summary="Encryption: enabled") in results
-    assert Result(state=State.OK, summary="Target repository ID: repo-1") in results
+    assert Result(state=State.OK, notice="Restore points kept: 7") in results
+    assert Result(state=State.OK, notice="Encryption: enabled") in results
+    assert Result(state=State.OK, notice="Target repository ID: repo-1") in results

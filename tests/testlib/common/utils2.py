@@ -71,6 +71,15 @@ def is_containerized() -> bool:
     )
 
 
+def systemd_is_running() -> bool:
+    """The check sd_booted(3) performs, and the one omd/debian/postinst.in uses.
+
+    A systemctl binary proves nothing, because the test images ship one that is a symlink to
+    /bin/true.
+    """
+    return Path("/run/systemd/system").is_dir()
+
+
 def get_cmk_download_credentials() -> tuple[str, str]:
     jenkins_credentials_file_path = Path("/home") / "jenkins" / ".cmk-credentials"
     etc_credentials_file_path = Path("/etc") / ".cmk-credentials"

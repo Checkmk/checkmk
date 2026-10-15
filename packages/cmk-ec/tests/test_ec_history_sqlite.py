@@ -228,6 +228,23 @@ def test_history_query_with_empty_in_filter_returns_no_entries(
     assert rows == []
 
 
+def test_get_with_zero_limit_does_not_fetch_the_whole_history(
+    history_sqlite: SQLiteHistory,
+) -> None:
+    for text in ("one", "two", "three"):
+        history_sqlite.add(event=ec.Event(text=text), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    query = QueryGET(
+        lambda _name: StatusTableHistory(logger, history_sqlite),
+        ["GET history", "Limit: 0"],
+        logger,
+    )
+
+    rows = history_sqlite.get(query)
+
+    assert len(list(rows)) <= 1
+
+
 def test_filters_to_sqlite_query_with_simple_equality_filter_has_correct_query() -> None:
     filters = [
         QueryFilter(

@@ -9,6 +9,7 @@ import pytest
 
 from cmk.ccc.version import Edition
 from cmk.gui.config import active_config, Config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
 from cmk.gui.quick_setup._modes import (
@@ -59,6 +60,15 @@ _TEST_SPECIAL_AGENT = "special_agents:quick_setup_test"
 @pytest.fixture(name="special_agent_with_quick_setup")
 def fixture_special_agent_with_quick_setup() -> Iterator[str]:
     """A special agent ruleset with a configuration Quick Setup, as plug-ins provide them"""
+    yield from _special_agent_with_quick_setup(is_deprecated=False)
+
+
+@pytest.fixture(name="deprecated_special_agent_with_quick_setup")
+def fixture_deprecated_special_agent_with_quick_setup() -> Iterator[str]:
+    yield from _special_agent_with_quick_setup(is_deprecated=True)
+
+
+def _special_agent_with_quick_setup(*, is_deprecated: bool) -> Iterator[str]:
     with (
         reset_registries([rulespec_registry]),
         reset_registries([rulespec_group_registry]),
@@ -72,6 +82,7 @@ def fixture_special_agent_with_quick_setup() -> Iterator[str]:
                     title=Title("Quick setup test"),
                     topic=Topic.GENERAL,
                     parameter_form=lambda: Dictionary(elements={}),
+                    is_deprecated=is_deprecated,
                 ),
                 edition_only=Edition.COMMUNITY,
             ),
@@ -100,6 +111,38 @@ def test_special_agent_configuration_titles_follow_the_rulespec(
         "Quick setup test",
         "Add Quick setup test configuration",
     ]
+
+
+def _page_context() -> PageContext:
+    return PageContext(
+        config=active_config,
+        request=request,
+        transactions=transactions,
+        session=session,
+    )
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_add_configuration_is_blocked_for_deprecated_special_agent(
+    test_edition: Edition, deprecated_special_agent_with_quick_setup: str
+) -> None:
+    request.set_var("varname", deprecated_special_agent_with_quick_setup)
+
+    with pytest.raises(MKUserError, match="This Quick Setup is deprecated"):
+        ModeQuickSetupSpecialAgent(test_edition, _page_context())
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_add_configuration_menu_entry_is_disabled_for_deprecated_special_agent(
+    test_edition: Edition, deprecated_special_agent_with_quick_setup: str
+) -> None:
+    request.set_var("varname", deprecated_special_agent_with_quick_setup)
+    listing = ModeEditConfigurationBundles(test_edition, _page_context())
+
+    menu = listing.page_menu(active_config, listing.breadcrumb())
+
+    [entry] = [e for e in menu.shortcuts if e.title == "Add configuration"]
+    assert not entry.is_enabled
 
 
 @pytest.mark.usefixtures("with_admin_login")

@@ -110,6 +110,13 @@ def register(
     main_module_registry.register(MainModuleQuickSetupKubernetes)
 
 
+def _is_deprecated_special_agent(group_name: str) -> bool:
+    # A Quick Setup follows the deprecation of its special agent rule set: existing
+    # configurations stay editable, but the user cannot add new ones.
+    rulespec = rulespec_registry.get(group_name)
+    return rulespec is not None and rulespec.is_deprecated
+
+
 MainModuleTopicQuickSetup = MainModuleTopic(
     name="quick_setups",
     title=_l("Quick Setup"),
@@ -155,6 +162,11 @@ class ModeQuickSetupSpecialAgent(WatoMode):
             raise MKUserError(
                 None,
                 _("No configuration Quick Setup for %(name)s available") % {"name": self._name},
+            )
+        if _is_deprecated_special_agent(self._name):
+            raise MKUserError(
+                None,
+                _("This Quick Setup is deprecated. You cannot add new configurations."),
             )
         self._quick_setup_id = quick_setup.id
 
@@ -282,6 +294,11 @@ class ModeEditConfigurationBundles(WatoMode):
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
+                                    is_enabled=not _is_deprecated_special_agent(self._name),
+                                    disabled_tooltip=_(
+                                        "This Quick Setup is deprecated. You cannot add new "
+                                        "configurations."
+                                    ),
                                 )
                             ],
                         )
@@ -357,21 +374,24 @@ class ModeEditConfigurationBundles(WatoMode):
         if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
             subtype = re.sub(r"_v\d+$", "", self._name.split(":", maxsplit=1)[1])
 
-            html.div(
-                html.render_dynamic_icon(DynamicIconName(f"qs_{subtype}"))
-                + html.render_b(_("No %(title)s configuration yet") % {"title": self.title()})
-                + html.render_p(
+            header = html.render_dynamic_icon(DynamicIconName(f"qs_{subtype}")) + html.render_b(
+                _("No %(title)s configuration yet") % {"title": self.title()}
+            )
+            if _is_deprecated_special_agent(self._name):
+                body = html.render_p(
+                    _("This Quick Setup is deprecated. You cannot add new configurations.")
+                )
+            else:
+                body = html.render_p(
                     _(
                         'Click the "Add configuration" button to start setting up your first '
                         "configuration."
                     )
-                )
-                + html.render_a(
+                ) + html.render_a(
                     _("Add configuration"),
                     mode_url(ModeQuickSetupSpecialAgent.name(), varname=self._name),
-                ),
-                css=["no-config-bundles"],
-            )
+                )
+            html.div(header + body, css=["no-config-bundles"])
             return
 
         raise MKGeneralException("Not implemented")

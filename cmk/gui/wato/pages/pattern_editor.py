@@ -50,7 +50,6 @@ from cmk.gui.watolib.check_mk_automations import (
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
-    folder_preserving_link,
     make_folder_tree,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
@@ -243,13 +242,17 @@ class ModePatternEditor(WatoMode):
             self._tree, "logwatch_rules"
         ).get("logwatch_rules")
 
+        target_folder = folder_from_request(
+            self._tree, request.var("folder"), request.get_ascii_input("host")
+        )
+
         html.h3(_("Log file patterns"))
         if ruleset.is_empty():
             html.open_div(class_="info")
             html.write_text_permissive(
                 "There are no logfile patterns defined. You may create "
                 'logfile patterns using the <a href="%s">Rule Editor</a>.'
-                % folder_preserving_link(
+                % target_folder.url(
                     request,
                     [
                         ("mode", "edit_ruleset"),
@@ -262,9 +265,6 @@ class ModePatternEditor(WatoMode):
         # Loop all rules for this ruleset
         already_matched = False
         abs_rulenr = 0
-        target_folder = folder_from_request(
-            self._tree, request.var("folder"), request.get_ascii_input("host")
-        )
 
         rules = ruleset.get_rules()
         rule_match_results = (
@@ -380,7 +380,7 @@ class ModePatternEditor(WatoMode):
 
                     table.row(fixed=True, collect_headers=False)
                     table.cell(colspan=7)
-                    edit_url = folder_preserving_link(
+                    edit_url = target_folder.url(
                         request,
                         [
                             ("mode", "edit_rule"),

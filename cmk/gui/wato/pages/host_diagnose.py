@@ -44,8 +44,8 @@ from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import diag_host
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
+    Folder,
     folder_from_request,
-    folder_preserving_link,
     make_folder_tree,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -245,7 +245,7 @@ class ModeDiagHost(WatoMode):
         host_vars = vs_host.from_html_vars("vs_host")
         vs_host.validate_value(host_vars, "vs_host")
 
-        vs_rules = _vs_rules()
+        vs_rules = _vs_rules(self._host.folder())
         rule_vars = vs_rules.from_html_vars("vs_rules")
         vs_rules.validate_value(rule_vars, "vs_rules")
 
@@ -323,6 +323,7 @@ class ModeDiagHost(WatoMode):
             value = {}
             forms.section(legend=False)
             vs_rules = _vs_rules(
+                self._host.folder(),
                 agent_port=agent_port,
                 tcp_connect_timeout=tcp_connect_timeout,
                 snmp_timeout=snmp_timing.get("timeout"),
@@ -440,6 +441,7 @@ def _vs_host(hostname: HostName) -> Dictionary:
 
 
 def _vs_rules(
+    folder: Folder,
     agent_port: int | None = None,
     tcp_connect_timeout: float | None = None,
     snmp_timeout: int | None = None,
@@ -456,7 +458,7 @@ def _vs_rules(
                     default_value=agent_port if agent_port is not None else 6556,
                     title=_('Checkmk agent port (<a href="%(url)s">rules</a>)')
                     % {
-                        "url": folder_preserving_link(
+                        "url": folder.url(
                             request,
                             [
                                 ("mode", "edit_ruleset"),
@@ -480,7 +482,7 @@ def _vs_rules(
                     size=2,  # SNMP-Timeout
                     title=_('TCP connection timeout (<a href="%(url)s">Rules</a>)')
                     % {
-                        "url": folder_preserving_link(
+                        "url": folder.url(
                             request,
                             [
                                 ("mode", "edit_ruleset"),
@@ -500,7 +502,7 @@ def _vs_rules(
                 Integer(
                     title=_('SNMP-timeout (<a href="%(url)s">Rules</a>)')
                     % {
-                        "url": folder_preserving_link(
+                        "url": folder.url(
                             request,
                             [
                                 ("mode", "edit_ruleset"),
@@ -523,7 +525,7 @@ def _vs_rules(
                 Integer(
                     title=_('SNMP-retries (<a href="%(url)s">Rules</a>)')
                     % {
-                        "url": folder_preserving_link(
+                        "url": folder.url(
                             request,
                             [
                                 ("mode", "edit_ruleset"),
@@ -582,7 +584,7 @@ class PageAjaxDiagHost(AjaxPage):
         vs_host = _vs_host(hostname)
         host_vars = vs_host.from_html_vars("vs_host")
         vs_host.validate_value(host_vars, "vs_host")
-        vs_rules = _vs_rules()
+        vs_rules = _vs_rules(host.folder())
         rule_vars = vs_rules.from_html_vars("vs_rules")
         vs_rules.validate_value(rule_vars, "vs_rules")
 

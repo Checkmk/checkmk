@@ -14,7 +14,6 @@ from livestatus import SiteConfigurations
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.checkengine.discovery import CheckPreviewEntry
-from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.wato.pages.services import DiscoveryPageRenderer
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, Host
@@ -103,16 +102,15 @@ class TestDiscoveryPageRendererFolder:
         assert ("hostname", "sub_host") in url_vars
 
     @pytest.mark.usefixtures("request_context")
-    def test_link_builders_point_to_the_hosts_folder(self, sub_host: Host) -> None:  # noqa: ARG002
-        request.set_var("folder", "sub")
-        request.set_var("host", "sub_host")
-
-        rulesets_link = DiscoveryPageRenderer.rulesets_button_link("CPU load", "sub_host")
+    def test_link_builders_point_to_the_hosts_folder(self, sub_host: Host) -> None:
+        rulesets_link = DiscoveryPageRenderer.rulesets_button_link(
+            sub_host.folder(), "CPU load", "sub_host"
+        )
         assert "folder=sub" in rulesets_link
         assert "mode=object_parameters" in rulesets_link
 
         check_params_link = DiscoveryPageRenderer.check_parameters_button_link(
-            _changed_entry(), "sub_host"
+            sub_host.folder(), _changed_entry(), "sub_host"
         )
         assert check_params_link is not None
         assert "folder=sub" in check_params_link

@@ -213,6 +213,9 @@ def _check_backup_age(data: VeeamClient, params: CheckParameters) -> CheckResult
     if data.last_backup_age is SENTINEL_STOPTIME_RUNNING:
         # Backward compatible StopTime hack
         return
+    if data.last_backup_age is not None and data.last_backup_age < 0:
+        yield Result(state=State.UNKNOWN, summary="Last backup: end time is in the future")
+        return
     yield from check_backup_age(data.last_backup_age, params["age"])
 
 

@@ -352,11 +352,6 @@ def test_stop_time_fallback(stop_time: str, expected_results: list[Result]) -> N
     assert _stop_time_results(stop_time) == expected_results
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report 95a39968-b207-11f0-bd07-0050569e71f5: negative LastBackupAge (clock skew) makes render.timespan raise ValueError",
-)
 def test_negative_backup_age_from_clock_skew_is_unknown() -> None:
     assert _check_results(_job_section(LastBackupAge="-19")) == [
         Result(state=State.OK, summary=_SUCCESS_SUMMARY),

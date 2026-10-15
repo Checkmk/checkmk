@@ -128,6 +128,23 @@ function makeSiteUnreachableForVerification() {
  * page was left can only be read from this, not from the screen still showing.
  */
 const mockLocationAssign = vi.fn()
+const mockLocationReload = vi.fn()
+
+// Master resets mocks, stubbed globals, timers and the web storage between tests through its
+// vitest config and shared setup; the 2.5 config does not, so this file does it itself.
+beforeEach(() => {
+  vi.restoreAllMocks()
+  vi.clearAllMocks()
+  vi.unstubAllGlobals()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+  localStorage.clear()
+  sessionStorage.clear()
+})
+
+const PAGE_PATH = '/mysite/check_mk/trial_mode_selection.py'
 // The page's own address: fetch resolves the relative AJAX URLs against it.
 const pageHref = window.location.href
 
@@ -273,9 +290,15 @@ describe('TrialModeSelectionApp', () => {
     received.save = []
     received.verification = []
     mockLocationAssign.mockClear()
+    sessionStorage.clear()
     vi.stubGlobal('global_csrf_token', 'the-csrf-token')
     Object.defineProperty(window, 'location', {
-      value: { href: pageHref, assign: mockLocationAssign },
+      value: {
+        href: pageHref,
+        pathname: PAGE_PATH,
+        assign: mockLocationAssign,
+        reload: mockLocationReload
+      },
       writable: true
     })
   })
@@ -629,6 +652,85 @@ describe('TrialModeSelectionApp', () => {
       await startTrial()
 
       expect(screen.getByText('Verify your email address')).toBeInTheDocument()
+    })
+
+    describe('Retry', () => {
+      /*
+       * Clicks Retry on the blocked connection, which stores the flag for the reloaded
+       * page. The reload is mocked, so the dialog is unmounted by hand; the test's next
+       * render plays the reloaded page.
+       */
+      async function retry() {
+        const { unmount } = renderApp({ offline: true })
+        await startTrial()
+        await user.click(screen.getByRole('button', { name: 'Retry' }))
+        unmount()
+      }
+
+      it('reloads the page', async () => {
+        await retry()
+
+        expect(mockLocationReload).toHaveBeenCalledOnce()
+      })
+
+      it('reopens on the email step once the site can reach the domain', async () => {
+        await retry()
+
+        renderApp({ offline: false })
+
+        expect(screen.getByText('Verify your email address')).toBeInTheDocument()
+      })
+
+      it('reopens on the blocked connection while the site still cannot reach it', async () => {
+        await retry()
+
+        renderApp({ offline: true })
+
+        expect(
+          screen.getByRole('heading', { name: /This site can't reach analytics.checkmk.com/ })
+        ).toBeInTheDocument()
+      })
+
+      it('opens on the choice when the page is loaded once more', async () => {
+        await retry()
+        renderApp({ offline: false }).unmount()
+
+        renderApp({ offline: false })
+
+        expect(card('Start a trial')).toBeInTheDocument()
+      })
+
+      it('opens on the choice when the page is loaded long after', async () => {
+        await retry()
+        vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 2 * 60 * 1000)
+
+        renderApp({ offline: false })
+
+        expect(card('Start a trial')).toBeInTheDocument()
+      })
+
+      it('opens on the choice on another site of the same host', async () => {
+        await retry()
+        window.location.pathname = '/othersite/check_mk/trial_mode_selection.py'
+
+        renderApp({ offline: false })
+
+        expect(card('Start a trial')).toBeInTheDocument()
+      })
+
+      it('reloads onto the choice when the browser blocks the storage', async () => {
+        const blocked = () => {
+          throw new DOMException('The operation is insecure.', 'SecurityError')
+        }
+        vi.spyOn(Storage.prototype, 'setItem').mockImplementation(blocked)
+        vi.spyOn(Storage.prototype, 'getItem').mockImplementation(blocked)
+        await retry()
+
+        renderApp({ offline: false })
+
+        expect(mockLocationReload).toHaveBeenCalledOnce()
+        expect(card('Start a trial')).toBeInTheDocument()
+      })
     })
   })
 

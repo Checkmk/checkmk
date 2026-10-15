@@ -17,6 +17,8 @@ import { AjaxResponseError, cmkAjax } from '@/lib/ajax'
 import { untranslated } from '@/lib/i18n'
 import usei18n from '@/lib/i18n'
 
+import { consumeTrialRetryFlag, storeTrialRetryFlag } from './trialRetryFlag'
+
 // eslint-disable-next-line @typescript-eslint/naming-convention
 declare let global_csrf_token: string
 
@@ -46,7 +48,9 @@ export type TrialModeScreen =
  */
 export function useTrialModeSelection(props: TrialModeSelectionProps) {
   const { _t } = usei18n()
-  const screen = ref<TrialModeScreen>(props.initial_screen)
+  const screen = ref<TrialModeScreen>(
+    consumeTrialRetryFlag() ? trialStartScreen() : props.initial_screen
+  )
   /**
    * The address a code is sent to. Kept here rather than on the email screen now that
    * the code screen names it and the cooldown keys on it - screens are unmounted as
@@ -168,9 +172,18 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     screen.value = next
   }
 
+  function trialStartScreen(): TrialModeScreen {
+    return props.offline ? 'unreachable' : 'email'
+  }
+
   /** Starts the trial verification process if the site is online, or goes to the "offline" screen. */
   function startTrial(): void {
-    goTo(props.offline ? 'unreachable' : 'email')
+    goTo(trialStartScreen())
+  }
+
+  function retryTrial(): void {
+    storeTrialRetryFlag()
+    window.location.reload()
   }
 
   /**
@@ -285,6 +298,7 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     sendRequestInFlight,
     errorMessage,
     startTrial,
+    retryTrial,
     continueUnverified,
     sendCode,
     resendCode,

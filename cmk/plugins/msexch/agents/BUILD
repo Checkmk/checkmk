@@ -14,3 +14,12 @@ filegroup(
     ],
     tags = ["lint-with-psscriptanalyzer"],
 )
+
+filegroup(
+    name = "files",
+    srcs = glob(
+        ["*"],
+        exclude = ["BUILD"],
+    ),
+    visibility = ["//cmk/plugins:__pkg__"],
+)

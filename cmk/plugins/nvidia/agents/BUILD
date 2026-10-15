@@ -8,3 +8,12 @@ filegroup(
     srcs = ["nvidia_smi.ps1"],
     tags = ["lint-with-psscriptanalyzer"],
 )
+
+filegroup(
+    name = "files",
+    srcs = glob(
+        ["*"],
+        exclude = ["BUILD"],
+    ),
+    visibility = ["//cmk/plugins:__pkg__"],
+)

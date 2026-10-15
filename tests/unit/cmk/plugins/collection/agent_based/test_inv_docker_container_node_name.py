@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Attributes
+from cmk.agent_based.v2 import Attributes, StringTable
 from cmk.plugins.docker.agent_based.inventory_docker_container_node_name import (
     agent_section_docker_container_node_name,
     inventorize_docker_container_node_name,
@@ -13,15 +13,19 @@ from cmk.plugins.docker.agent_based.inventory_docker_container_node_name import 
     parse_docker_container_node_name,
     Section,
 )
-from cmk.plugins.docker.lib import AgentOutputMalformatted
+from cmk.plugins.docker.lib import AgentOutputMalformatted, MultipleNodesMarker
 
 AGENT_OUTPUT = """@docker_version_info\0{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}
 {"NodeName": "klappben"}"""
 
 
+def _string_table(agent_output: str) -> StringTable:
+    return [line.split("\0") for line in agent_output.split("\n")]
+
+
 @pytest.fixture(name="section", scope="module")
 def _get_section() -> Section:
-    return parse_docker_container_node_name([line.split("\0") for line in AGENT_OUTPUT.split("\n")])
+    return parse_docker_container_node_name(_string_table(AGENT_OUTPUT))
 
 
 def test_inv_docker_container_node_name(section: Section) -> None:
@@ -32,6 +36,12 @@ def test_inv_docker_container_node_name(section: Section) -> None:
             status_attributes={},
         )
     ]
+
+
+def test_inv_docker_container_node_name_multiple_nodes() -> None:
+    section = parse_docker_container_node_name(_string_table(AGENT_OUTPUT + "\n" + AGENT_OUTPUT))
+    assert isinstance(section, MultipleNodesMarker)
+    assert not list(inventorize_docker_container_node_name(section))
 
 
 def test_inv_docker_container_node_name_legacy_agent_output() -> None:

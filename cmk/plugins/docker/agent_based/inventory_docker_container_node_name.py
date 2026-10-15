@@ -14,11 +14,15 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.docker import lib as docker
 
-Section = Mapping[str, object]
+Section = Mapping[str, object] | docker.MultipleNodesMarker
 
 
 def parse_docker_container_node_name(string_table: StringTable) -> Section:
-    return docker.parse(string_table).data
+    return (
+        docker.MultipleNodesMarker()
+        if len(docker.cleanup_oci_error_message(string_table)) > 2
+        else docker.parse(string_table, strict=False).data
+    )
 
 
 agent_section_docker_container_node_name = AgentSection(
@@ -28,6 +32,9 @@ agent_section_docker_container_node_name = AgentSection(
 
 
 def inventorize_docker_container_node_name(section: Section) -> InventoryResult:
+    if isinstance(section, docker.MultipleNodesMarker):
+        return
+
     if (node := section.get("NodeName")) is not None:
         yield Attributes(
             path=["software", "applications", "docker", "container"],

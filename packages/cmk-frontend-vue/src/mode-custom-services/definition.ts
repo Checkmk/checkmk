@@ -23,6 +23,16 @@ export type CustomServiceUpdate = NonNullable<
 export type CustomServiceExtensions =
   paths[CustomServicePath]['get']['responses'][200]['content']['application/json']['extensions']
 
+const SERIES_ATTRIBUTES_MACRO = '$SERIES_ATTRIBUTES$'
+
+const SERIES_ATTRIBUTES_SUFFIX = ` ${SERIES_ATTRIBUTES_MACRO}`
+
+function serviceNameTemplate(model: ServiceModel): string {
+  return model.appendSeriesAttributes
+    ? `${model.serviceName.trim()}${SERIES_ATTRIBUTES_SUFFIX}`
+    : model.serviceName
+}
+
 export type AggregationProblem = 'thresholds_missing' | 'thresholds_out_of_order'
 
 export function aggregationProblem(
@@ -52,7 +62,7 @@ function customServiceBody(
     host_assignment: { mode: 'explicit_host', host_name: model.hostName },
     configuration: {
       metric_name: model.metricName,
-      service_name_template: model.serviceName,
+      service_name_template: serviceNameTemplate(model),
       ...(model.attributeFilter === undefined ? {} : { attribute_filter: model.attributeFilter }),
       consolidation: model.consolidation,
       ...(model.aggregator === undefined ? {} : { aggregator: model.aggregator })
@@ -80,6 +90,9 @@ export function serviceModelFrom(
   extensions: CustomServiceExtensions
 ): ServiceModel {
   const { host_assignment: assignment, configuration } = extensions
+  // Any other template is kept verbatim, so that saving it does not rename its services
+  const template = configuration.service_name_template
+  const appendSeriesAttributes = template.endsWith(SERIES_ATTRIBUTES_SUFFIX)
   return {
     configurationName,
     metricName: configuration.metric_name,
@@ -87,7 +100,10 @@ export function serviceModelFrom(
     attributeFilter: configuration.attribute_filter,
     consolidation: configuration.consolidation,
     aggregator: configuration.aggregator,
-    serviceName: configuration.service_name_template,
+    serviceName: appendSeriesAttributes
+      ? template.slice(0, -SERIES_ATTRIBUTES_SUFFIX.length)
+      : template,
+    appendSeriesAttributes,
     hostName: assignment.mode === 'explicit_host' ? assignment.host_name : null
   }
 }

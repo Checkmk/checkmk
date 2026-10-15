@@ -35,10 +35,25 @@ describe('buildCustomServiceDefinition', () => {
     })
   })
 
-  test('carries the service name as the service name template', () => {
+  test('appends the series attributes to the service name', () => {
     expect(buildCustomServiceDefinition(model()).configuration.service_name_template).toBe(
-      'HTTP duration'
+      'HTTP duration $SERIES_ATTRIBUTES$'
     )
+  })
+
+  test('appends the series attributes after the trimmed service name', () => {
+    expect(
+      buildCustomServiceDefinition(model({ serviceName: ' HTTP duration  ' })).configuration
+        .service_name_template
+    ).toBe('HTTP duration $SERIES_ATTRIBUTES$')
+  })
+
+  test('carries a service name not appending the series attributes as is', () => {
+    expect(
+      buildCustomServiceDefinition(
+        model({ serviceName: 'Pod CPU usage ', appendSeriesAttributes: false })
+      ).configuration.service_name_template
+    ).toBe('Pod CPU usage ')
   })
 
   test('carries the selected metric', () => {
@@ -261,6 +276,38 @@ describe('serviceModelFrom', () => {
     expect(
       serviceModelFrom(original.configurationName, buildCustomServiceUpdate(original))
     ).toEqual(original)
+  })
+
+  test('splits the appended series attributes off the service name', () => {
+    const restored = serviceModelFrom('http_duration_on_web01', {
+      host_assignment: { mode: 'explicit_host', host_name: 'web01' },
+      configuration: {
+        ...buildCustomServiceUpdate(model()).configuration,
+        service_name_template: 'HTTP duration $SERIES_ATTRIBUTES$'
+      }
+    })
+
+    expect(restored.serviceName).toBe('HTTP duration')
+    expect(restored.appendSeriesAttributes).toBe(true)
+  })
+
+  test.each([
+    ['without the macro', 'Pod CPU usage'],
+    ['with the macro elsewhere', '$SERIES_ATTRIBUTES$ CPU usage']
+  ])('writes back a stored template %s unchanged', (_case, template) => {
+    const extensions = {
+      host_assignment: { mode: 'explicit_host' as const, host_name: 'web01' },
+      configuration: {
+        ...buildCustomServiceUpdate(model()).configuration,
+        service_name_template: template
+      }
+    }
+    const restored = serviceModelFrom('pod_cpu_usage', extensions)
+
+    expect(
+      buildCustomServiceUpdate({ ...restored, metricName: 'otel.http.duration', hostName: 'web01' })
+        .configuration.service_name_template
+    ).toBe(template)
   })
 
   test('has no host to offer for a service assigned by host name template', () => {

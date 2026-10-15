@@ -77,7 +77,7 @@ describe('createCustomService', () => {
       host_assignment: { mode: 'explicit_host', host_name: 'web01' },
       configuration: {
         metric_name: 'otel.http.duration',
-        service_name_template: 'HTTP duration',
+        service_name_template: 'HTTP duration $SERIES_ATTRIBUTES$',
         consolidation: { type: 'gauge', function: 'gauge_last', lookback_seconds: 120 }
       }
     })
@@ -163,7 +163,7 @@ describe('updateCustomService', () => {
       host_assignment: { mode: 'explicit_host', host_name: 'web01' },
       configuration: {
         metric_name: 'otel.http.duration',
-        service_name_template: 'HTTP duration',
+        service_name_template: 'HTTP duration $SERIES_ATTRIBUTES$',
         consolidation: { type: 'gauge', function: 'gauge_last', lookback_seconds: 120 }
       }
     })

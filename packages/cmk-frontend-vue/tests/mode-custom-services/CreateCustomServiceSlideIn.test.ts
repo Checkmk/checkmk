@@ -168,7 +168,7 @@ test('saving persists the metric query from the graph and closes the dialog', as
     host_assignment: { mode: 'explicit_host', host_name: 'web01' },
     configuration: {
       metric_name: 'otel.http.duration',
-      service_name_template: 'HTTP duration',
+      service_name_template: 'HTTP duration $SERIES_ATTRIBUTES$',
       consolidation: { type: 'sum', function: 'sum_rate', lookback_seconds: 300 },
       aggregator
     }

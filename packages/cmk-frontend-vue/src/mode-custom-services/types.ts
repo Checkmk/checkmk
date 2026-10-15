@@ -17,6 +17,7 @@ export interface ServiceModel {
   consolidation: WireConsolidationFunction
   aggregator: Aggregator | undefined
   serviceName: string
+  appendSeriesAttributes: boolean
   hostName: string | null
 }
 
@@ -29,6 +30,7 @@ export function emptyService(): ServiceModel {
     consolidation: { type: 'gauge', function: 'gauge_last', lookback_seconds: 120 },
     aggregator: undefined,
     serviceName: '',
+    appendSeriesAttributes: true,
     hostName: null
   }
 }

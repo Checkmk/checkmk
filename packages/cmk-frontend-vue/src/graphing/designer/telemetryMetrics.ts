@@ -21,6 +21,7 @@ export function customServiceModelFor(
     consolidation: consolidationToWire(item.consolidation_function),
     aggregator: item.aggregator ?? undefined,
     serviceName: item.title.replaceAll(DEFAULT_TITLE_MACRO, defaultTitle),
+    appendSeriesAttributes: true,
     hostName: null
   }
 }

@@ -200,7 +200,7 @@ js_run_binary(
         ":node_modules/vue3-gettext",
         ":src_ts",
         ":src_vue",
-        "//packages/cmk-ui-library:pkg",
+        "//packages/cmk-ui-library",
     ] + BUNDLED_NONFREE,
     outs = ["locale/messages.pot"],
     tool = ":gettext-extract",
@@ -448,7 +448,7 @@ vitest_test(
 )
 
 # One target per tsconfig project: they have no cross-references, so a single
-# `--build` only ran them serially. Mirrors //bazel/rules:vue_package.bzl. Only
+# `--build` only ran them serially. Mirrors //packages/cmk-ui-library. Only
 # the tests project needs tests/ in its sandbox.
 vue_tsc_bin.vue_tsc_test(
     name = "type-check",

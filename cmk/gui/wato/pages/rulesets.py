@@ -211,7 +211,7 @@ from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import HTTPVariable, makeuri, makeuri_contextless
+from cmk.web.utils.urls import HTTPVariable, makeactionuri_contextless, makeuri, makeuri_contextless
 
 from ._rule_conditions import DictHostTagCondition
 
@@ -817,11 +817,12 @@ def _page_menu_entry_predefined_conditions() -> PageMenuEntry:
         title=_("Predefined conditions"),
         icon_name=StaticIcon(IconNames.predefined_conditions),
         item=make_simple_link(
-            folder_preserving_link(
+            makeuri_contextless(
                 request,
                 [
                     ("mode", "predefined_conditions"),
                 ],
+                filename="wato.py",
             )
         ),
     )
@@ -1759,12 +1760,13 @@ class ModeEditRuleset(WatoMode):
             )
             return
 
-        url = folder_preserving_link(
+        url = makeuri_contextless(
             request,
             [
                 ("mode", "edit_predefined_condition"),
                 ("ident", condition_id),
             ],
+            filename="wato.py",
         )
         html.write_text_permissive(
             _('Predefined condition: <a href="%(url)s">%(title)s</a>')
@@ -3816,13 +3818,15 @@ class ModeUnknownRulesets(WatoMode):
         html.icon_button(
             make_confirm_delete_link(
                 i18n=_,
-                url=make_action_link(
+                url=makeactionuri_contextless(
                     request,
+                    transactions.get(),
                     [
                         ("mode", "unknown_rulesets"),
                         ("_delete_cp_ruleset_name", unknown_ruleset_name),
                         ("_delete_cp_rule_id", rule.id),
                     ],
+                    filename="wato.py",
                 ),
                 title=_("Delete unknown rule"),
                 message=_("#%(rule_nr)s of unknown rule set %(unknown_ruleset_name)r")
@@ -3873,13 +3877,15 @@ class ModeUnknownRulesets(WatoMode):
         html.icon_button(
             make_confirm_delete_link(
                 i18n=_,
-                url=make_action_link(
+                url=makeactionuri_contextless(
                     request,
+                    transactions.get(),
                     [
                         ("mode", "unknown_rulesets"),
                         ("_delete_ruleset_name", unknown_ruleset_name),
                         ("_delete_rule_id", rulespec["id"]),
                     ],
+                    filename="wato.py",
                 ),
                 title=_("Delete unknown rule"),
                 message=_("#%(rule_nr)s of unknown rule set %(unknown_ruleset_name)r")

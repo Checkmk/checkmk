@@ -64,7 +64,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_preserving_link,
     FolderTree,
     Host,
-    make_action_link,
     make_folder_tree,
 )
 from cmk.gui.watolib.main_menu import MenuItem
@@ -99,7 +98,7 @@ from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import makeuri
+from cmk.web.utils.urls import makeactionuri_contextless, makeuri, makeuri_contextless
 
 from ._tile_menu import TileMenuRenderer
 
@@ -170,7 +169,9 @@ class ModeTags(ABCTagMode):
                                     title=_("Add tag group"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
-                                        folder_preserving_link(request, [("mode", "edit_tag")])
+                                        makeuri_contextless(
+                                            request, [("mode", "edit_tag")], filename="wato.py"
+                                        )
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -179,7 +180,9 @@ class ModeTags(ABCTagMode):
                                     title=_("Add aux tag"),
                                     icon_name=StaticIcon(IconNames.tag, emblem="add"),
                                     item=make_simple_link(
-                                        folder_preserving_link(request, [("mode", "edit_auxtag")])
+                                        makeuri_contextless(
+                                            request, [("mode", "edit_auxtag")], filename="wato.py"
+                                        )
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -196,7 +199,9 @@ class ModeTags(ABCTagMode):
                                         emblem="search",
                                     ),
                                     item=make_simple_link(
-                                        folder_preserving_link(request, [("mode", "tag_usage")])
+                                        makeuri_contextless(
+                                            request, [("mode", "tag_usage")], filename="wato.py"
+                                        )
                                     ),
                                 ),
                             ],
@@ -452,16 +457,26 @@ class ModeTags(ABCTagMode):
             html.i("(%s)" % _("built-in"))
             return
 
-        edit_url = folder_preserving_link(request, [("mode", "edit_tag"), ("edit", tag_group.id)])
+        edit_url = makeuri_contextless(
+            request, [("mode", "edit_tag"), ("edit", tag_group.id)], filename="wato.py"
+        )
         html.icon_button(edit_url, _("Edit this tag group"), StaticIcon(IconNames.edit))
 
         table.element_dragger_url(
-            "tr", base_url=make_action_link(request, [("mode", "tags"), ("_move", nr)])
+            "tr",
+            base_url=makeactionuri_contextless(
+                request, transactions.get(), [("mode", "tags"), ("_move", nr)], filename="wato.py"
+            ),
         )
 
         delete_url = make_confirm_delete_link(
             i18n=_,
-            url=make_action_link(request, [("mode", "tags"), ("_delete", tag_group.id)]),
+            url=makeactionuri_contextless(
+                request,
+                transactions.get(),
+                [("mode", "tags"), ("_delete", tag_group.id)],
+                filename="wato.py",
+            ),
             title=_("Delete tag group"),
             suffix=tag_group.title,
             message=_("ID: %(id)s") % {"id": tag_group.id},
@@ -507,10 +522,17 @@ class ModeTags(ABCTagMode):
             html.i("(%s)" % _("built-in"))
             return
 
-        edit_url = folder_preserving_link(request, [("mode", "edit_auxtag"), ("edit", aux_tag.id)])
+        edit_url = makeuri_contextless(
+            request, [("mode", "edit_auxtag"), ("edit", aux_tag.id)], filename="wato.py"
+        )
         delete_url = make_confirm_delete_link(
             i18n=_,
-            url=make_action_link(request, [("mode", "tags"), ("_del_aux", aux_tag.id)]),
+            url=makeactionuri_contextless(
+                request,
+                transactions.get(),
+                [("mode", "tags"), ("_del_aux", aux_tag.id)],
+                filename="wato.py",
+            ),
             title=_("Delete auxiliary tag"),
             suffix=aux_tag.title,
             message=_("ID: %(id)s") % {"id": aux_tag.id},
@@ -705,7 +727,9 @@ class ModeTagUsage(ABCTagMode):
             html.i("(%s)" % _("built-in"))
             return
 
-        edit_url = folder_preserving_link(request, [("mode", "edit_tag"), ("edit", tag_group.id)])
+        edit_url = makeuri_contextless(
+            request, [("mode", "edit_tag"), ("edit", tag_group.id)], filename="wato.py"
+        )
         html.icon_button(edit_url, _("Edit this tag group"), StaticIcon(IconNames.edit))
 
     def _show_aux_tag_list(
@@ -777,7 +801,9 @@ class ModeTagUsage(ABCTagMode):
             html.i("(%s)" % _("built-in"))
             return
 
-        edit_url = folder_preserving_link(request, [("mode", "edit_auxtag"), ("edit", aux_tag.id)])
+        edit_url = makeuri_contextless(
+            request, [("mode", "edit_auxtag"), ("edit", aux_tag.id)], filename="wato.py"
+        )
         html.icon_button(edit_url, _("Edit this auxiliary tag"), StaticIcon(IconNames.edit))
 
 
@@ -1256,8 +1282,8 @@ def _show_aux_tag_used_by_tags(tags: set[cmk.ruleset_matcher.tags.GroupedTag]) -
         if builtin_config.tag_group_exists(tag.group.id):
             html.write_text_permissive(_u(tag.choice_title))
         else:
-            edit_url = folder_preserving_link(
-                request, [("mode", "edit_tag"), ("edit", tag.group.id)]
+            edit_url = makeuri_contextless(
+                request, [("mode", "edit_tag"), ("edit", tag.group.id)], filename="wato.py"
             )
             html.a(_u(tag.choice_title), href=edit_url)
     html.close_li()

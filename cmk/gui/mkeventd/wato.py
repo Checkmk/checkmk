@@ -144,10 +144,7 @@ from cmk.gui.watolib.global_settings import (
     make_pending_changes,
 )
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
-from cmk.gui.watolib.hosts_and_folders import (
-    FolderTree,
-    make_action_link,
-)
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.notification_parameter import (
@@ -214,7 +211,11 @@ from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
+from cmk.web.utils.urls import (
+    makeactionuri_contextless,
+    makeuri_contextless,
+    makeuri_contextless_rulespec_group,
+)
 
 from ._rulespecs import RulespecLogwatchEC
 from .config_domain import ConfigDomainEventConsole
@@ -1835,9 +1836,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     item=make_simple_link(
                         make_confirm_delete_link(
                             i18n=_,
-                            url=make_action_link(
+                            url=makeactionuri_contextless(
                                 request,
+                                transactions.get(),
                                 [("mode", "mkeventd_rule_packs"), ("_reset_counters", "1")],
+                                filename="wato.py",
                             ),
                             title=_("Reset all rule hit counters to zero"),
                             message=_("This affects all rule packs."),
@@ -2007,8 +2010,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         if rep_mode in ["sync", "takeover"]:
             copy_url = make_confirm_delete_link(
                 i18n=_,
-                url=make_action_link(
-                    request, [("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")]
+                url=makeactionuri_contextless(
+                    request,
+                    transactions.get(),
+                    [("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")],
+                    filename="wato.py",
                 ),
                 title=_("Copy all event rules from the central site"),
                 message=_("This will replace your local configuration"),
@@ -2089,16 +2095,22 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 # clone_url  = makeuri_contextless(request, [("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
                 # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
 
-                drag_url = make_action_link(
-                    request, [("mode", "mkeventd_rule_packs"), ("_move", nr)]
+                drag_url = makeactionuri_contextless(
+                    request,
+                    transactions.get(),
+                    [("mode", "mkeventd_rule_packs"), ("_move", nr)],
+                    filename="wato.py",
                 )
                 table.element_dragger_url("tr", base_url=drag_url)
 
                 if type_ == ec.RulePackType.internal:
                     delete_url = make_confirm_delete_link(
                         i18n=_,
-                        url=make_action_link(
-                            request, [("mode", "mkeventd_rule_packs"), ("_delete", nr)]
+                        url=makeactionuri_contextless(
+                            request,
+                            transactions.get(),
+                            [("mode", "mkeventd_rule_packs"), ("_delete", nr)],
+                            filename="wato.py",
                         ),
                         title=_("Delete rule pack #%(nr)d") % {"nr": nr},
                         suffix=rule_pack["title"],
@@ -2125,8 +2137,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 if edition(cmk.utils.paths.omd_root) is not Edition.COMMUNITY:
                     # Icons for mkp export (Commercial editions only)
                     if type_ == ec.RulePackType.internal:
-                        export_url = make_action_link(
-                            request, [("mode", "mkeventd_rule_packs"), ("_export", nr)]
+                        export_url = makeactionuri_contextless(
+                            request,
+                            transactions.get(),
+                            [("mode", "mkeventd_rule_packs"), ("_export", nr)],
+                            filename="wato.py",
                         )
                         html.icon_button(
                             export_url,
@@ -2137,8 +2152,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                             ),
                         )
                     elif type_ == ec.RulePackType.exported:
-                        dissolve_url = make_action_link(
-                            request, [("mode", "mkeventd_rule_packs"), ("_dissolve", nr)]
+                        dissolve_url = makeactionuri_contextless(
+                            request,
+                            transactions.get(),
+                            [("mode", "mkeventd_rule_packs"), ("_dissolve", nr)],
+                            filename="wato.py",
                         )
                         html.icon_button(
                             dissolve_url,
@@ -2149,8 +2167,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                             ),
                         )
                     elif type_ == ec.RulePackType.modified_mkp:
-                        reset_url = make_action_link(
-                            request, [("mode", "mkeventd_rule_packs"), ("_reset", nr)]
+                        reset_url = makeactionuri_contextless(
+                            request,
+                            transactions.get(),
+                            [("mode", "mkeventd_rule_packs"), ("_reset", nr)],
+                            filename="wato.py",
                         )
                         html.icon_button(
                             reset_url,
@@ -2160,8 +2181,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                                 emblem="disable",
                             ),
                         )
-                        sync_url = make_action_link(
-                            request, [("mode", "mkeventd_rule_packs"), ("_synchronize", nr)]
+                        sync_url = makeactionuri_contextless(
+                            request,
+                            transactions.get(),
+                            [("mode", "mkeventd_rule_packs"), ("_synchronize", nr)],
+                            filename="wato.py",
                         )
                         html.icon_button(
                             sync_url,
@@ -2555,21 +2579,25 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 table.row(css=["matches_search"] if rule in found_rules else [])
                 delete_url = make_confirm_delete_link(
                     i18n=_,
-                    url=make_action_link(
+                    url=makeactionuri_contextless(
                         request,
+                        transactions.get(),
                         [
                             ("mode", "mkeventd_rules"),
                             ("rule_pack", self._rule_pack_id),
                             ("_delete", nr),
                         ],
+                        filename="wato.py",
                     ),
                     title=_("Delete rule #%(nr)d") % {"nr": nr},
                     message=_("ID: %(id_)s") % {"id_": rule["id"]},
                     suffix=rule.get("description", ""),
                 )
-                drag_url = make_action_link(
+                drag_url = makeactionuri_contextless(
                     request,
+                    transactions.get(),
                     [("mode", "mkeventd_rules"), ("rule_pack", self._rule_pack_id), ("_move", nr)],
+                    filename="wato.py",
                 )
                 edit_url = _rule_edit_url(self._rule_pack_id, nr)
                 clone_url = makeuri_contextless(
@@ -3477,8 +3505,11 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 if deletable:
                     delete_url = make_confirm_delete_link(
                         i18n=_,
-                        url=make_action_link(
-                            request, [("mode", "mkeventd_mibs"), ("_delete", filename)]
+                        url=makeactionuri_contextless(
+                            request,
+                            transactions.get(),
+                            [("mode", "mkeventd_mibs"), ("_delete", filename)],
+                            filename="wato.py",
                         ),
                         title=_("Delete MIB file"),
                         message=_("File name: %(filename)s") % {"filename": str(filename)},

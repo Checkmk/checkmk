@@ -23,12 +23,12 @@ from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Dictionary, DropdownChoice, FileUploadModel, IconSelector, ImageUpload
 from cmk.gui.wato import PERMISSION_SECTION_WATO
-from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
+from cmk.web.utils.urls import makeactionuri_contextless
 
 
 def validate_icon(value: FileUploadModel, varprefix: str) -> None:
@@ -156,7 +156,12 @@ class ModeIcons(WatoMode):
                 category = IconSelector.category_alias(category_name)
                 delete_url = make_confirm_delete_link(
                     i18n=_,
-                    url=make_action_link(request, [("mode", "icons"), ("_delete", icon_name)]),
+                    url=makeactionuri_contextless(
+                        request,
+                        transactions.get(),
+                        [("mode", "icons"), ("_delete", icon_name)],
+                        filename="wato.py",
+                    ),
                     title=_("Delete icon #%(nr)d") % {"nr": nr},
                     suffix=icon_name,
                     message=_("Category: %(category)s") % {"category": category},

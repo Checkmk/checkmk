@@ -69,7 +69,6 @@ from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCom
 from cmk.gui.watolib.backup_snapshots import get_last_wato_snapshot_file
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequests
 from cmk.gui.watolib.hosts_and_folders import (
-    folder_preserving_link,
     FolderTree,
     make_folder_tree,
 )
@@ -205,7 +204,9 @@ class ModeRevertChanges(WatoMode):
             yield PageMenuEntry(
                 title=_("Audit log"),
                 icon_name=StaticIcon(IconNames.auditlog),
-                item=make_simple_link(folder_preserving_link(request, [("mode", "auditlog")])),
+                item=make_simple_link(
+                    makeuri_contextless(request, [("mode", "auditlog")], filename="wato.py")
+                ),
             )
 
     def _may_discard_changes(
@@ -494,7 +495,9 @@ class ModeActivateChanges(WatoMode):
             yield PageMenuEntry(
                 title=_("Audit log"),
                 icon_name=StaticIcon(IconNames.auditlog),
-                item=make_simple_link(folder_preserving_link(request, [("mode", "auditlog")])),
+                item=make_simple_link(
+                    makeuri_contextless(request, [("mode", "auditlog")], filename="wato.py")
+                ),
             )
 
     def _page_menu_entries_all_sites(
@@ -802,8 +805,8 @@ class ModeActivateChanges(WatoMode):
                 table.cell(_("Actions"), css=["buttons"])
 
                 if user.may("wato.sites"):
-                    edit_url = folder_preserving_link(
-                        request, [("mode", "edit_site"), ("site", site_id)]
+                    edit_url = makeuri_contextless(
+                        request, [("mode", "edit_site"), ("site", site_id)], filename="wato.py"
                     )
                     html.icon_button(
                         edit_url, _("Edit the properties of this site"), StaticIcon(IconNames.edit)

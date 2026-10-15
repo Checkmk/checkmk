@@ -9,10 +9,8 @@ from urllib.parse import urljoin
 from uuid import UUID
 
 import pytest
-from pytest_mock import MockerFixture
 
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.exceptions import MKAuthException
 from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.paths import (
     data_source_push_agent_dir,
@@ -24,129 +22,7 @@ from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 _API_BASE = "/NO_SITE/check_mk/api/1.0/"
 _HOST_CONFIG_INTERNAL_BASE = urljoin(_API_BASE, "objects/host_config_internal/")
-_URL_LINK_UUID = urljoin(_HOST_CONFIG_INTERNAL_BASE, "example.com/actions/link_uuid/invoke")
 _URL_REGISTER = urljoin(_HOST_CONFIG_INTERNAL_BASE, "example.com/actions/register/invoke")
-
-
-@pytest.mark.usefixtures("with_host")
-def test_openapi_host_link_uuid_400(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    aut_user_auth_wsgi_app.call_method(
-        "put",
-        _URL_LINK_UUID,
-        params=json.dumps({"uuid": "abc-123"}),
-        status=HTTPStatus.BAD_REQUEST,
-        headers={"Accept": "application/json"},
-        content_type="application/json; charset=utf-8",
-    )
-
-
-@pytest.mark.usefixtures("with_host")
-def test_link_with_uuid_403(
-    mocker: MockerFixture,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
-    mocker.patch(
-        "cmk.gui.watolib.hosts_and_folders.PermissionChecker.need_permission",
-        side_effect=MKAuthException("hands off this host"),
-    )
-    assert (
-        aut_user_auth_wsgi_app.call_method(
-            "put",
-            _URL_LINK_UUID,
-            params=json.dumps({"uuid": "1409ac78-6548-4138-9285-12484409ddf2"}),
-            status=HTTPStatus.FORBIDDEN,
-            headers={"Accept": "application/json"},
-            content_type="application/json; charset=utf-8",
-        ).json_body["detail"]
-        == "You do not have write access to the host example.com"
-    )
-    mocker.stopall()
-
-
-@pytest.mark.usefixtures("with_host")
-def test_openapi_host_link_uuid_204(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    uuid = UUID("1409ac78-6548-4138-9285-12484409ddf2")
-    aut_user_auth_wsgi_app.call_method(
-        "put",
-        _URL_LINK_UUID,
-        params=json.dumps({"uuid": str(uuid)}),
-        status=HTTPStatus.NO_CONTENT,
-        headers={"Accept": "application/json"},
-        content_type="application/json; charset=utf-8",
-    )
-    assert (
-        UUIDLinkManager(
-            received_outputs_dir=received_outputs_dir,
-            data_source_dir=data_source_push_agent_dir,
-            r4r_discoverable_dir=r4r_discoverable_dir,
-            uuid_lookup_dir=uuid_lookup_dir,
-        ).uuid_store.get(HostName("example.com"))
-        == uuid
-    )
-
-
-@pytest.mark.usefixtures("with_host")
-def test_openapi_show_host_ok(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    assert aut_user_auth_wsgi_app.call_method(
-        "get",
-        urljoin(_HOST_CONFIG_INTERNAL_BASE, "heute"),
-        status=HTTPStatus.OK,
-        headers={"Accept": "application/json"},
-    ).json_body == {
-        "site": "NO_SITE",
-        "is_cluster": False,
-    }
-
-
-@pytest.mark.usefixtures("with_host")
-def test_openapi_show_host_cluster_ok(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        urljoin(_API_BASE, "domain-types/host_config/collections/clusters"),
-        params='{"host_name": "my-cluster", "folder": "/", "nodes": ["heute"]}',
-        status=HTTPStatus.OK,
-        headers={"Accept": "application/json"},
-        content_type='application/json; charset="utf-8"',
-    )
-    assert aut_user_auth_wsgi_app.call_method(
-        "get",
-        urljoin(_HOST_CONFIG_INTERNAL_BASE, "my-cluster"),
-        status=HTTPStatus.OK,
-        headers={"Accept": "application/json"},
-    ).json_body == {
-        "site": "NO_SITE",
-        "is_cluster": True,
-    }
-
-
-def test_openapi_show_host_missing(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    aut_user_auth_wsgi_app.call_method(
-        "get",
-        urljoin(_HOST_CONFIG_INTERNAL_BASE, "missing"),
-        headers={"Accept": "application/json"},
-        status=HTTPStatus.NOT_FOUND,
-    )
-
-
-@pytest.mark.usefixtures("with_host")
-def test_openapi_show_host_403(
-    mocker: MockerFixture,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
-    mocker.patch(
-        "cmk.gui.watolib.hosts_and_folders.PermissionChecker.need_permission",
-        side_effect=MKAuthException("hands off this host"),
-    )
-    assert (
-        aut_user_auth_wsgi_app.call_method(
-            "get",
-            urljoin(_HOST_CONFIG_INTERNAL_BASE, "heute"),
-            headers={"Accept": "application/json"},
-            status=HTTPStatus.FORBIDDEN,
-        ).json_body["detail"]
-        == "You do not have read access to the host heute"
-    )
-    mocker.stopall()
 
 
 @pytest.mark.usefixtures("with_host")

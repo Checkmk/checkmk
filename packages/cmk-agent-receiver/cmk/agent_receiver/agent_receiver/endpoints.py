@@ -39,11 +39,6 @@ from cmk.agent_receiver.agent_receiver.checkmk_rest_api import (
     controller_certificate_settings,
     deployment_download,
     deployment_status,
-    get_root_cert,
-    host_configuration,
-    HostConfiguration,
-    link_host_with_uuid,
-    post_csr,
     register,
     register_token,
 )
@@ -53,8 +48,6 @@ from cmk.agent_receiver.agent_receiver.models import (
     ConnectionMode,
     CsrField,
     DownloadRequest,
-    PairingBody,
-    PairingResponse,
     R4RStatus,
     RegisterExistingBody,
     RegisterExistingResponse,
@@ -66,7 +59,6 @@ from cmk.agent_receiver.agent_receiver.models import (
     RegistrationStatus,
     RegistrationStatusV2ResponseNotRegistered,
     RegistrationStatusV2ResponseRegistered,
-    RegistrationWithHNBody,
     RenewCertResponse,
     RequestForRegistration,
     UpdateStatusRequest,
@@ -76,7 +68,6 @@ from cmk.agent_receiver.agent_receiver.utils import (
     NotRegisteredException,
     R4R,
     RegisteredHost,
-    uuid_from_pem_csr,
 )
 from cmk.agent_receiver.lib.auth import internal_credentials
 from cmk.agent_receiver.lib.certs import (
@@ -217,82 +208,6 @@ async def register_existing_token(
         agent_cert=agent_cert,
         connection_mode=register_response.connection_mode,
     )
-
-
-@AGENT_RECEIVER_ROUTER.post("/pairing", response_model=PairingResponse)
-async def pairing(
-    *,
-    credentials: HTTPBasicCredentials = Depends(security),
-    pairing_body: PairingBody,
-) -> PairingResponse:
-    uuid = uuid_from_pem_csr(pairing_body.csr)
-
-    root_cert = get_root_cert(
-        f"uuid={uuid} Getting root cert failed",
-        credentials,
-    )
-    client_cert = post_csr(
-        f"uuid={uuid} CSR signing failed",
-        credentials,
-        pairing_body.csr,
-    )
-
-    logger.info(
-        "uuid=%(uuid)s Pairing succesful",
-        {"uuid": uuid},
-    )
-
-    return PairingResponse(
-        root_cert=root_cert,
-        client_cert=client_cert,
-    )
-
-
-def _validate_registration_request(host_config: HostConfiguration) -> None:
-    config = get_config()
-    site_name = config.site_name
-    if host_config.site != site_name:
-        raise HTTPException(
-            status_code=HTTP_403_FORBIDDEN,
-            detail=(
-                f"This host is monitored on the site {host_config.site}, "
-                f"but you tried to register it at the site {site_name}."
-            ),
-        )
-    if host_config.is_cluster:
-        raise HTTPException(
-            status_code=HTTP_403_FORBIDDEN,
-            detail="This host is a cluster host. Register its nodes instead.",
-        )
-
-
-@AGENT_RECEIVER_ROUTER.post(
-    "/register_with_hostname",
-    status_code=HTTP_204_NO_CONTENT,
-)
-async def register_with_hostname(
-    *,
-    credentials: HTTPBasicCredentials = Depends(security),
-    registration_body: RegistrationWithHNBody,
-) -> Response:
-    _validate_registration_request(
-        host_configuration(
-            f"uuid={registration_body.uuid} Getting host configuration failed",
-            credentials,
-            registration_body.host_name,
-        )
-    )
-    link_host_with_uuid(
-        f"uuid={registration_body.uuid} Linking host with UUID failed",
-        credentials,
-        registration_body.host_name,
-        registration_body.uuid,
-    )
-    logger.info(
-        "uuid=%(uuid)s registered host %(host_name)s",
-        {"uuid": registration_body.uuid, "host_name": registration_body.host_name},
-    )
-    return Response(status_code=HTTP_204_NO_CONTENT)
 
 
 @AGENT_RECEIVER_ROUTER.post(

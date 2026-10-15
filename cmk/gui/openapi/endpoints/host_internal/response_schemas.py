@@ -4,21 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk import fields
 from cmk.gui.agent_registration import CONNECTION_MODE_FIELD
 from cmk.gui.fields.utils import BaseSchema
 
 
 class HostConnectionMode(BaseSchema):
     connection_mode = CONNECTION_MODE_FIELD
-
-
-class HostConfigSchemaInternal(BaseSchema):
-    site = fields.String(
-        required=True,
-        description="The site the host is monitored on.",
-    )
-    is_cluster = fields.Boolean(
-        required=True,
-        description="Indicates if the host is a cluster host.",
-    )

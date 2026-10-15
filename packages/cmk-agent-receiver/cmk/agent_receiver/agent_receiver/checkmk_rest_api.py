@@ -62,22 +62,6 @@ def _credentials_to_rest_api_auth(credentials: HTTPBasicCredentials) -> str:
     return f"Bearer {credentials.username} {credentials.password}"
 
 
-def _forward_post(
-    endpoint: str,
-    credentials: HTTPBasicCredentials,
-    json_body: dict[str, object],
-) -> requests.Response:
-    return requests.post(
-        f"{_local_rest_api_url()}/{endpoint}",
-        headers={
-            "Authorization": _credentials_to_rest_api_auth(credentials),
-            "Accept": "application/json",
-        },
-        json=json_body,
-        timeout=30,
-    )
-
-
 def _forward_get(
     endpoint: str,
     credentials: HTTPBasicCredentials,
@@ -230,35 +214,6 @@ def register_token(
     return RegisterResponse.model_validate(response.json())
 
 
-@log_http_exception
-def get_root_cert(credentials: HTTPBasicCredentials) -> str:
-    response = _forward_get(
-        "root_cert",
-        credentials,
-    )
-    _verify_response(response, HTTPStatus.OK)
-    return str(response.json()["cert"])
-
-
-@log_http_exception
-def post_csr(
-    credentials: HTTPBasicCredentials,
-    csr: str,
-) -> str:
-    response = _forward_post(
-        "csr",
-        credentials,
-        {"csr": csr},
-    )
-    _verify_response(response, HTTPStatus.OK)
-    return str(response.json()["cert"])
-
-
-class HostConfiguration(BaseModel, frozen=True):
-    site: str
-    is_cluster: bool
-
-
 def _url_encode_hostname(host_name: str) -> str:
     """Escape special characters in the host name to make it URL safe
 
@@ -279,40 +234,6 @@ def _url_encode_hostname(host_name: str) -> str:
 
     """
     return quote(host_name, safe="")  # '/' is not "safe" here
-
-
-@log_http_exception
-def host_configuration(
-    credentials: HTTPBasicCredentials,
-    host_name: str,
-) -> HostConfiguration:
-    if (
-        response := _forward_get(
-            f"objects/host_config_internal/{_url_encode_hostname(host_name)}",
-            credentials,
-        )
-    ).status_code == HTTPStatus.NOT_FOUND:
-        # The REST API only says 'Not Found' in the response title here
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail=f"Host {host_name} does not exist.",
-        )
-    _verify_response(response, HTTPStatus.OK)
-    return HostConfiguration(**response.json())
-
-
-@log_http_exception
-def link_host_with_uuid(
-    credentials: HTTPBasicCredentials,
-    host_name: str,
-    uuid: UUID4,
-) -> None:
-    response = _forward_put(
-        f"objects/host_config_internal/{_url_encode_hostname(host_name)}/actions/link_uuid/invoke",
-        credentials,
-        {"uuid": str(uuid)},
-    )
-    _verify_response(response, HTTPStatus.NO_CONTENT)
 
 
 @log_http_exception
@@ -398,7 +319,7 @@ class _RestApiErrorDescr(BaseModel, frozen=True):
 def _parse_error_response_body(body: str) -> str:
     """
     The REST API often returns JSON error bodies such as
-    {"title": "You do not have the permission for agent pairing.", "status": 403}
+    {"title": "Insufficient permissions", "status": 403}
     from which we want to extract the title field.
 
     >>> _parse_error_response_body("123")

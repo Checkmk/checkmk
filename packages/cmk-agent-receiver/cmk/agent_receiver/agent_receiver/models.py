@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from http import HTTPStatus
-from typing import Literal, override, Self
+from typing import Literal, Self
 
 from fastapi import HTTPException
 from pydantic import BaseModel, field_validator, GetCoreSchemaHandler, UUID4
@@ -43,15 +43,6 @@ class CsrField:
 
 class CertificateRenewalBody(BaseModel, frozen=True):
     csr: CsrField
-
-
-class PairingBody(BaseModel, frozen=True):
-    csr: str
-
-
-class PairingResponse(BaseModel, frozen=True):
-    root_cert: str
-    client_cert: str
 
 
 class RenewCertResponse(BaseModel, frozen=True):
@@ -125,29 +116,13 @@ def _is_valid_hostname_or_ip(uri: str) -> bool:
     return _is_valid_host_name(uri) or _is_valid_ipv4_address(uri) or _is_valid_ipv6_address(uri)
 
 
-class RegistrationWithHNBody(BaseModel, frozen=True):
-    uuid: UUID4
-    host_name: str
-
-    @field_validator("host_name")
-    @classmethod
-    def valid_hostname(cls, v: str) -> str:
-        if not _is_valid_hostname_or_ip(v):
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST,
-                detail=f"Invalid host name: '{v}'",
-            )
-        return v
-
-
-class RegisterExistingBody(RegistrationWithHNBody, frozen=True):
+class RegisterExistingBody(BaseModel, frozen=True):
     uuid: UUID4
     csr: CsrField
     host_name: str
 
     @field_validator("host_name")
     @staticmethod
-    @override
     def valid_hostname(v: str) -> str:
         if not _is_valid_hostname_or_ip(v):
             raise HTTPException(

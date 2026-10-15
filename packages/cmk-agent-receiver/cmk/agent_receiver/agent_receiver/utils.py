@@ -16,7 +16,6 @@ from cmk.agent_receiver.agent_receiver.models import (
     RequestForRegistration,
 )
 from cmk.agent_receiver.lib.config import get_config
-from cmk.crypto.certificate import CertificateSigningRequest, CertificateSigningRequestPEM
 
 
 class NotRegisteredException(Exception): ...
@@ -66,10 +65,3 @@ class R4R:
             encoding="utf-8",
         )
         target_path.chmod(0o660)
-
-
-def uuid_from_pem_csr(pem_csr: str) -> str:
-    csr = CertificateSigningRequest.load_pem(CertificateSigningRequestPEM(pem_csr.encode()))
-    if csr.subject.common_name is None:
-        return "[CSR parsing failed]"
-    return csr.subject.common_name

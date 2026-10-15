@@ -22,7 +22,6 @@ from pytest_mock import MockerFixture
 from cmk.agent_receiver.agent_receiver import decompression
 from cmk.agent_receiver.agent_receiver.checkmk_rest_api import (
     CMKEdition,
-    HostConfiguration,
     RegisterResponse,
 )
 from cmk.agent_receiver.agent_receiver.models import (
@@ -134,163 +133,60 @@ def test_register_existing_hostname_invalid(
     assert response.json() == {"detail": "Invalid host name: 'my/../host'"}
 
 
-def test_register_register_with_hostname_host_missing(
+@pytest.mark.parametrize(
+    "host_name",
+    [
+        pytest.param("test.checkmk.com", id="FQDN"),
+        pytest.param("127.0.0.1", id="IPv4 loopback"),
+        pytest.param("93.184.216.34", id="IPv4"),
+        pytest.param("0:0:0:0:0:0:0:1", id="IPv6 uncompressed"),
+        pytest.param("2606:2800:220:1:248:1893:25c8:1946", id="IPv6"),
+        pytest.param("::", id="IPv6 unspecified"),
+        pytest.param("::1", id="IPv6 loopback"),
+    ],
+)
+def test_register_existing_accepts_host_name(
     mocker: MockerFixture,
     client: TestClient,
     uuid: UUID4,
+    serialized_csr: str,
+    host_name: str,
 ) -> None:
     mocker.patch(
-        "cmk.agent_receiver.agent_receiver.endpoints.host_configuration",
-        side_effect=HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail="N O T  F O U N D",
-        ),
+        "cmk.agent_receiver.agent_receiver.endpoints.register",
+        return_value=RegisterResponse(connection_mode=ConnectionMode.PULL),
     )
+
     response = client.post(
-        "/register_with_hostname",
+        "/register_existing",
         auth=("herbert", "joergl"),
-        json={
-            "uuid": str(uuid),
-            "host_name": "myhost",
-        },
+        json={"uuid": str(uuid), "host_name": host_name, "csr": serialized_csr},
     )
-    assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json() == {"detail": "N O T  F O U N D"}
 
-
-def test_register_register_with_hostname_wrong_site(
-    mocker: MockerFixture,
-    client: TestClient,
-    uuid: UUID4,
-) -> None:
-    mocker.patch(
-        "cmk.agent_receiver.agent_receiver.endpoints.host_configuration",
-        return_value=HostConfiguration(
-            site="some-site",
-            is_cluster=False,
-        ),
-    )
-    response = client.post(
-        "/register_with_hostname",
-        auth=("herbert", "joergl"),
-        json={
-            "uuid": str(uuid),
-            "host_name": "myhost",
-        },
-    )
-    assert response.status_code == HTTPStatus.FORBIDDEN
-    assert response.json() == {
-        "detail": (
-            "This host is monitored on the site some-site, "
-            "but you tried to register it at the site NO_SITE."
-        )
-    }
-
-
-def test_register_register_with_hostname_cluster_host(
-    mocker: MockerFixture,
-    client: TestClient,
-    uuid: UUID4,
-) -> None:
-    mocker.patch(
-        "cmk.agent_receiver.agent_receiver.endpoints.host_configuration",
-        return_value=HostConfiguration(
-            site="NO_SITE",
-            is_cluster=True,
-        ),
-    )
-    response = client.post(
-        "/register_with_hostname",
-        auth=("herbert", "joergl"),
-        json={
-            "uuid": str(uuid),
-            "host_name": "myhost",
-        },
-    )
-    assert response.status_code == HTTPStatus.FORBIDDEN
-    assert response.json() == {"detail": "This host is a cluster host. Register its nodes instead."}
-
-
-def test_register_register_with_hostname_unauthorized(
-    mocker: MockerFixture,
-    client: TestClient,
-    uuid: UUID4,
-) -> None:
-    mocker.patch(
-        "cmk.agent_receiver.agent_receiver.endpoints.host_configuration",
-        return_value=HostConfiguration(
-            site="NO_SITE",
-            is_cluster=False,
-        ),
-    )
-    mocker.patch(
-        "cmk.agent_receiver.agent_receiver.endpoints.link_host_with_uuid",
-        side_effect=HTTPException(
-            status_code=HTTPStatus.FORBIDDEN,
-            detail="You do not have the permission for agent pairing.",
-        ),
-    )
-    response = client.post(
-        "/register_with_hostname",
-        auth=("herbert", "joergl"),
-        json={
-            "uuid": str(uuid),
-            "host_name": "myhost",
-        },
-    )
-    assert response.status_code == HTTPStatus.FORBIDDEN
-    assert response.json() == {"detail": "You do not have the permission for agent pairing."}
+    assert response.status_code == HTTPStatus.OK
 
 
 @pytest.mark.parametrize(
-    "hostname,valid",
+    "host_name",
     [
-        ("myhost", True),
-        ("test.checkmk.com", True),
-        ("127.0.0.1", True),
-        ("93.184.216.34", True),
-        ("0:0:0:0:0:0:0:1", True),
-        ("2606:2800:220:1:248:1893:25c8:1946", True),
-        ("::", True),
-        ("::1", True),
-        ("", False),
-        ("...", False),
-        ("my/../host", False),  # this is a regression test for CMK-11202
+        pytest.param("", id="empty"),
+        pytest.param("...", id="dots only"),
     ],
 )
-def test_register_register_with_hostname_hostname_validity(
-    mocker: MockerFixture,
+def test_register_existing_rejects_host_name(
     client: TestClient,
     uuid: UUID4,
-    hostname: str,
-    valid: bool,
+    serialized_csr: str,
+    host_name: str,
 ) -> None:
-    mocker.patch(
-        "cmk.agent_receiver.agent_receiver.endpoints.host_configuration",
-        return_value=HostConfiguration(
-            site="NO_SITE",
-            is_cluster=False,
-        ),
-    )
-    mocker.patch(
-        "cmk.agent_receiver.agent_receiver.endpoints.link_host_with_uuid", return_value=None
-    )
-
     response = client.post(
-        "/register_with_hostname",
+        "/register_existing",
         auth=("herbert", "joergl"),
-        json={
-            "uuid": str(uuid),
-            "host_name": hostname,
-        },
+        json={"uuid": str(uuid), "host_name": host_name, "csr": serialized_csr},
     )
 
-    if valid:
-        assert response.status_code == HTTPStatus.NO_CONTENT
-        assert not response.text
-    else:
-        assert response.status_code == HTTPStatus.BAD_REQUEST
-        assert response.json() == {"detail": f"Invalid host name: '{hostname}'"}
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {"detail": f"Invalid host name: '{host_name}'"}
 
 
 def test_register_new_unauthenticated(

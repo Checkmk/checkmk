@@ -275,7 +275,6 @@ CmkEndpointName = Literal[
     "cmk/service.move-undecided",
     "cmk/service.move-ignored",
     "cmk/service.bulk-acknowledge",
-    "cmk/link_uuid",
     "cmk/get_graph",
     "cmk/get_custom_graph",
     "cmk/filter_graph",

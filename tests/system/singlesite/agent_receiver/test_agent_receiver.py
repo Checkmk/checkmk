@@ -112,19 +112,6 @@ def paired_keypair_fixture(
     )
 
 
-def test_failing_pairing_no_uuid(agent_receiver_url: str, site: Site) -> None:
-    uuid_ = "not a uuid"
-    _key, csr = generate_csr_pair(uuid_)
-
-    agent_receiver_response = requests.post(
-        f"{agent_receiver_url}/pairing",
-        auth=("cmkadmin", site.admin_password),
-        json={"csr": csr.dump_pem().str},
-        verify=False,
-    )
-    assert agent_receiver_response.status_code == HTTPStatus.BAD_REQUEST
-
-
 def test_registration_status_not_registered(
     agent_receiver_url: str, paired_keypair: KeyPairInfo
 ) -> None:
@@ -162,36 +149,6 @@ def test_register_existing_non_existing(
         json={
             "uuid": uuid_,
             "csr": csr.dump_pem().str,
-            "host_name": "../../../dirtraversal",
-        },
-        verify=False,
-    )
-    assert response.status_code == HTTPStatus.BAD_REQUEST
-
-
-def test_register_with_hostname_non_existing(
-    agent_receiver_url: str,
-    site: Site,
-) -> None:
-    uuid_ = str(uuid.uuid4())
-
-    response = requests.post(
-        f"{agent_receiver_url}/register_with_hostname",
-        auth=("cmkadmin", site.admin_password),
-        json={
-            "uuid": uuid_,
-            "host_name": "non-existing",
-        },
-        verify=False,
-    )
-    assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json()["detail"] == "Host non-existing does not exist."
-
-    response = requests.post(
-        f"{agent_receiver_url}/register_with_hostname",
-        auth=("cmkadmin", site.admin_password),
-        json={
-            "uuid": uuid_,
             "host_name": "../../../dirtraversal",
         },
         verify=False,

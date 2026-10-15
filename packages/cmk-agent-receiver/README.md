@@ -14,7 +14,7 @@ that mounts two independent FastAPI sub-applications:
 
 | Sub-app            | Mount path               | Purpose                                                                                                       |
 | ------------------ | ------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| **agent-receiver** | `/<site>/agent-receiver` | Agent registration & pairing, certificate signing / renewal, monitoring-data upload, agent updates            |
+| **agent-receiver** | `/<site>/agent-receiver` | Agent registration, certificate signing / renewal, monitoring-data upload, agent updates                      |
 | **relay**          | `/<site>/relays`         | Relay registration, mTLS certificate exchange, task management, config activation, monitoring-data forwarding |
 
 Shared functionality (configuration, authentication, certificates, logging,
@@ -32,7 +32,7 @@ Since Gunicorn is configured with one combined trust store (agent CA + relay CA 
 
 ## API
 
-The **agent-receiver** sub-app covers agent registration (including async approval workflows and legacy pairing), certificate renewal, monitoring-data upload, registration status queries, and agent updates.
+The **agent-receiver** sub-app covers agent registration (including async approval workflows), certificate renewal, monitoring-data upload, registration status queries, and agent updates.
 For agent updates it forwards the status query and the package download to the site, which offers them on commercial editions only; a site without them, such as a Community site, is reported as `501 Not Implemented`.
 All endpoints that operate on a specific agent UUID require mTLS — the client certificate CN is validated against the UUID in the URL path, and the certificate must have been issued by the agent CA.
 
@@ -71,7 +71,7 @@ uvicorn cmk.agent_receiver.main:main_app
 
 <!-- CONTEXT
 The main FastAPI app (main.py) mounts two distinct sub-apps:
-  - agent-receiver (/<site>/agent-receiver) — handles agent registration, pairing, certificate renewal, and monitoring-data ingestion from Checkmk agents.
+  - agent-receiver (/<site>/agent-receiver) — handles agent registration, certificate renewal, and monitoring-data ingestion from Checkmk agents.
   - relay (/<site>/relays) — manages relay registration, task distribution, configuration activation, and forwarding of monitoring data from relays.
 Both sub-apps share common library code under lib/.
 The relay lifespan (startup logic) is defined on the main app because FastAPI does not propagate lifespan events to mounted sub-apps.

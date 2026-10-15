@@ -189,9 +189,6 @@ class NotationFormatter(abc.ABC):
         ).render()
 
     @abc.abstractmethod
-    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]: ...
-
-    @abc.abstractmethod
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]: ...
 
     def _select_label_spacing(self, span: float, target_number_of_labels: float) -> float:
@@ -202,8 +199,8 @@ class NotationFormatter(abc.ABC):
             return [atom for atom in atoms if label_count(atom) >= _MIN_LABELS_PER_AXIS]
 
         notation_atoms = (
-            self._compute_small_y_label_atoms if span < 1 else self._compute_large_y_label_atoms
-        )(span)
+            _decimal_atoms(span) if span < 1 else self._compute_large_y_label_atoms(span)
+        )
         return min(
             atoms_filling_the_span(notation_atoms) or atoms_filling_the_span(_decimal_atoms(span)),
             key=lambda atom: abs(label_count(atom) - target_number_of_labels),
@@ -335,10 +332,6 @@ class DecimalFormatter(NotationFormatter):
         return FormattedPart(text=text, unit=symbol)
 
     @override
-    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        return _decimal_atoms(max_y)
-
-    @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         return _decimal_atoms(max_y)
 
@@ -406,10 +399,6 @@ class SIFormatter(NotationFormatter):
         return FormattedPart(text=text, unit=f"{prefix}{symbol}")
 
     @override
-    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        return _decimal_atoms(max_y)
-
-    @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         return _decimal_atoms(max_y)
 
@@ -460,10 +449,6 @@ class IECFormatter(NotationFormatter):
         return FormattedPart(text=text, unit=f"{prefix}{symbol}")
 
     @override
-    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        return _decimal_atoms(max_y)
-
-    @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         exponent = math.floor(math.log2(max_y))
         return [pow(2, e) for e in range(exponent + 1)]
@@ -498,10 +483,6 @@ class StandardScientificFormatter(NotationFormatter):
         return FormattedPart(text=f"{text}{prefix}", unit=symbol)
 
     @override
-    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        return _decimal_atoms(max_y)
-
-    @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         return _decimal_atoms(max_y)
 
@@ -533,10 +514,6 @@ class EngineeringScientificFormatter(NotationFormatter):
     @override
     def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> FormattedPart:
         return FormattedPart(text=f"{text}{prefix}", unit=symbol)
-
-    @override
-    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        return _decimal_atoms(max_y)
 
     @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
@@ -655,10 +632,6 @@ class TimeFormatter(NotationFormatter):
     @override
     def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> FormattedPart:
         return FormattedPart(text=text, unit=f"{prefix}{symbol}")
-
-    @override
-    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        return _decimal_atoms(max_y)
 
     @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:

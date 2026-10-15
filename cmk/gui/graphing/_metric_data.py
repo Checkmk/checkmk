@@ -38,10 +38,9 @@ from ._performance_data import (
     RawPerformanceData,
     RawPerformanceValue,
 )
-from ._unit_format import unit_to_unit_format
 from ._user_specific_unit import (
-    apply_temperature_unit,
-    user_specific_unit_from_unit_format,
+    user_specific_unit,
+    user_unit_format,
 )
 
 _PREDICT_PREFIXES = ("predict_lower_", "predict_")
@@ -443,12 +442,10 @@ def merge_rrd_columns(
     if not relevant:
         return TimeSeries(time_range=TimeRange(start=0, end=0, step=0), values=[])
 
-    unit = user_specific_unit_from_unit_format(
-        unit_to_unit_format(
-            metric_display_attributes(
-                target_metric, translate_to_current_language, registered_metrics
-            ).unit
-        ),
+    unit = user_specific_unit(
+        metric_display_attributes(
+            target_metric, translate_to_current_language, registered_metrics
+        ).unit,
         temperature_unit,
     )
     return converted_time_series(merge_series(relevant, relevant[0].time_range), unit.conversion)
@@ -516,9 +513,7 @@ def evaluated_metrics(
         attributes = metric_display_attributes(
             name, translate_to_current_language, registered_metrics
         )
-        unit_format, conversion = apply_temperature_unit(
-            unit_to_unit_format(attributes.unit), temperature_unit
-        )
+        unit_format, conversion = user_unit_format(attributes.unit, temperature_unit)
         evaluated[name] = EvaluatedMetric(
             name=name,
             title=attributes.title,

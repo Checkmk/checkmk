@@ -47,8 +47,7 @@ from ._graph_display_config import HTML_SIZE_PER_EX
 from ._graph_specification import GraphSpecification
 from ._graph_templates import build_template_graphs, TemplateGraphSpecification
 from ._source import RRDFetchMetricNames
-from ._unit_format import unit_to_unit_format
-from ._user_specific_unit import apply_temperature_unit
+from ._user_specific_unit import user_unit_format
 
 
 def stored_time_range_seconds(
@@ -155,9 +154,7 @@ def _shell_y_axis(built: BuiltGraph, temperature_unit: TemperatureUnit) -> YAxis
     unit_format: UnitFormat | None = None
     conversion: Callable[[float], float] = lambda value: value
     if unit is not None:
-        unit_format, conversion = apply_temperature_unit(
-            unit_to_unit_format(unit), temperature_unit
-        )
+        unit_format, conversion = user_unit_format(unit, temperature_unit)
     return YAxis(
         unit=unit_format,
         explicit_range=(

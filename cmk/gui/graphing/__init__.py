@@ -166,7 +166,6 @@ from ._unit_specification import unit_from_specification, unit_to_specification
 from ._user_specific_unit import (
     get_temperature_unit,
     user_specific_unit,
-    user_specific_unit_from_unit_format,
 )
 from ._valuespecs import (
     id_from_unit,
@@ -332,7 +331,6 @@ __all__ = [
     "unit_from_specification",
     "unit_to_specification",
     "user_specific_unit",
-    "user_specific_unit_from_unit_format",
     "ValuesWithUnits",
     "vs_graph_render_option_elements",
     "vs_graph_render_options",

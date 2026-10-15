@@ -20,8 +20,7 @@ from cmk.gui.i18n import _
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 from .._source import FetchDiagnostics
-from .._unit_format import unit_to_unit_format
-from .._user_specific_unit import apply_temperature_unit
+from .._user_specific_unit import user_unit_format
 from .models import (
     ApiAreaRender,
     ApiConsolidation,
@@ -62,7 +61,7 @@ def _api_unit_and_conversion(
     unit: Unit, temperature_unit: TemperatureUnit
 ) -> tuple[ApiUnitFormat, Callable[[float], float]]:
     """The unit to label the response with, and the converter its values must go through."""
-    unit_format, conversion = apply_temperature_unit(unit_to_unit_format(unit), temperature_unit)
+    unit_format, conversion = user_unit_format(unit, temperature_unit)
     return ApiUnitFormat.from_shared(unit_format), conversion
 
 

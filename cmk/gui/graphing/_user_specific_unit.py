@@ -5,14 +5,16 @@
 
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import assert_never
 
-from cmk.graphing_engine import NonConvertibleUnit, notation_name, precision_kind, Unit
+from cmk.graphing_engine import NonConvertibleUnit, Unit
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat as SharedUnitFormat
 from cmk.web.utils.unit_formatter import notation_formatter, NotationFormatter
+
+from ._unit_format import unit_to_unit_format
 
 
 @dataclass(frozen=True)
@@ -27,58 +29,38 @@ class _Conversion:
     converter: Callable[[float], float]
 
 
-def user_specific_unit(
-    unit: Unit | NonConvertibleUnit,
-    temperature_unit: TemperatureUnit,
-) -> UserSpecificUnit:
-    noop_conversion = _Conversion(
-        symbol=unit.notation.symbol,
-        converter=lambda v: v,
-    )
-    conversion = (
-        _temperature_conversion(unit.notation.symbol, temperature_unit, noop_conversion)
-        if isinstance(unit, Unit)
-        else noop_conversion
-    )
-    return UserSpecificUnit(
-        formatter=notation_formatter(
-            notation_name(unit.notation),
-            conversion.symbol,
-            precision_kind(unit.precision),
-            unit.precision.digits,
-        ),
-        conversion=conversion.converter,
-    )
-
-
-def apply_temperature_unit(
-    unit_format: SharedUnitFormat, temperature_unit: TemperatureUnit
+def user_unit_format(
+    unit: Unit | NonConvertibleUnit, temperature_unit: TemperatureUnit
 ) -> tuple[SharedUnitFormat, Callable[[float], float]]:
-    """Unit and converter as a pair, so no caller relabels values without converting them.
-
-    ``convertible=False`` tells the frontend the numbers are already converted."""
+    unit_format = unit_to_unit_format(unit)
     noop_conversion = _Conversion(symbol=unit_format.symbol, converter=lambda v: v)
     conversion = (
         _temperature_conversion(unit_format.symbol, temperature_unit, noop_conversion)
-        if unit_format.convertible is not False
+        if isinstance(unit, Unit)
         else noop_conversion
     )
     return (
-        replace(unit_format, symbol=conversion.symbol, convertible=False),
+        SharedUnitFormat(
+            notation=unit_format.notation,
+            symbol=conversion.symbol,
+            precision=unit_format.precision,
+            convertible=False,
+        ),
         conversion.converter,
     )
 
 
-def user_specific_unit_from_unit_format(
-    unit_format: SharedUnitFormat, temperature_unit: TemperatureUnit
+def user_specific_unit(
+    unit: Unit | NonConvertibleUnit,
+    temperature_unit: TemperatureUnit,
 ) -> UserSpecificUnit:
-    converted, conversion = apply_temperature_unit(unit_format, temperature_unit)
+    unit_format, conversion = user_unit_format(unit, temperature_unit)
     return UserSpecificUnit(
         formatter=notation_formatter(
-            converted.notation,
-            converted.symbol,
-            converted.precision.type,
-            converted.precision.digits,
+            unit_format.notation,
+            unit_format.symbol,
+            unit_format.precision.type,
+            unit_format.precision.digits,
         ),
         conversion=conversion,
     )

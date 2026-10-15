@@ -32,8 +32,7 @@ from cmk.gui.utils.temperature_unit import TemperatureUnit
 from ._from_api import PerfometerFromAPI
 from ._metric_data import translate_performance_data
 from ._performance_data import parse_performance_data
-from ._unit_format import unit_to_unit_format
-from ._user_specific_unit import user_specific_unit_from_unit_format
+from ._user_specific_unit import user_specific_unit
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -283,7 +282,7 @@ def drawn_segments(perfometer: EvaluatedPerfometerLayout) -> Sequence[Sequence[D
 
 
 def _render_value(value: float, unit: Unit, temperature_unit: TemperatureUnit) -> str:
-    specific = user_specific_unit_from_unit_format(unit_to_unit_format(unit), temperature_unit)
+    specific = user_specific_unit(unit, temperature_unit)
     return specific.formatter.render(specific.conversion(value))
 
 

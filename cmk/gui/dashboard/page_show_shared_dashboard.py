@@ -29,6 +29,7 @@ from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.request_cache import RequestCache
 
 from .api import convert_internal_relative_dashboard_to_api_model_dict, DashboardConstants
+from .api.model.widget_content.graph import EmbeddedCustomGraphContent
 from .dashlet.dashlets.status_helpers import make_mk_missing_data_error
 from .dashlet.registry import dashlet_registry
 from .exceptions import WidgetRenderError
@@ -175,6 +176,16 @@ def remove_sensitive_filter_information(board: DashboardConfig) -> None:
         widget["context"] = _remove_filter_values(widget.get("context", {}))
 
 
+def remove_embedded_graph_definitions(spec: dict[str, object]) -> None:
+    """Empties embedded custom graph definitions; the shared page renders from discovered shells."""
+    widgets = spec["widgets"]
+    assert isinstance(widgets, dict)
+    for widget in widgets.values():
+        content = widget["content"]
+        if content["type"] == EmbeddedCustomGraphContent.internal_type():
+            content["definition"] = {}
+
+
 def page_shared_dashboard(
     token_id: TokenId, token_issuer: UserId, token_details: DashboardToken, ctx: PageContext
 ) -> None:
@@ -199,6 +210,8 @@ def page_shared_dashboard(
         # this can end up loading views when computing the used infos,
         # so it needs the impersonation context
         internal_spec = convert_internal_relative_dashboard_to_api_model_dict(board)
+
+        remove_embedded_graph_definitions(internal_spec)
 
     title = visuals.visual_title("dashboard", board, board["context"], request_cache=request_cache)
     dashboard_properties = {

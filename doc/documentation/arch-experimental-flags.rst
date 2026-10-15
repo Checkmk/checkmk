@@ -41,10 +41,12 @@ Visibility
 ----------
 
 Flags are a developer tool, not a user-facing setting. The "Experimental flags"
-group in Global Settings appears only on sites installed with ``cmk-dev-install``
-(see the ``cmk-dev-site`` repository). On every other site the group is only
-registered but not shown, so users cannot change a flag from the GUI. Achieved with
-the environment variable CMK_DEV=TRUE, which defaults to false.
+group in Global Settings appears only on development sites, i.e. sites with the
+environment variable CMK_DEV=true (default: false). ``cmk-dev-install`` sets it (see
+the ``cmk-dev-site`` repository), and so does the SaaS entrypoint on sites of Checkmk
+employees. On the Cloud edition the flags are exempt from the SaaS allow list of
+global settings, so CMK_DEV alone decides there too. On every other site the group
+is only registered but not shown, so users cannot change a flag from the GUI.
 
 Changing a flag
 ---------------

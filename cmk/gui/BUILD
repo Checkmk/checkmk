@@ -156,6 +156,7 @@ py_library(
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
+        "//packages/cmk-flags",
         "//packages/cmk-inventory:cleanup",
         "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client",

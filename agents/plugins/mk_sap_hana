@@ -430,8 +430,19 @@ sap_hana_check_alerts() {
 
 sap_hana_instance_status() {
     local instance="$1"
-    result="$(/usr/sap/hostctrl/exe/sapcontrol -nr "${instance}" -function GetProcessList)"
-    echo "instanceStatus: $?"
+    local instance_user="$2"
+    local result
+    local rc
+
+    # Prefer sapcontrol from the instance user's PATH if available, otherwise fall back
+    if [ -n "$instance_user" ] && su - "${instance_user}" -c 'command -v sapcontrol >/dev/null 2>&1'; then
+        result="$(su - "${instance_user}" -c "sapcontrol -nr \"${instance}\" -function GetProcessList" 2>&1)"
+    else
+        result="$(/usr/sap/hostctrl/exe/sapcontrol -nr \"${instance}\" -function GetProcessList 2>&1)"
+    fi
+    rc=$?
+
+    echo "instanceStatus: $rc"
     sed -n '4,$p' <<<"${result}" | sed 's/, /;/g'
 }
 
@@ -787,7 +798,7 @@ query_instance() {
 
     echo "<<<sap_hana_instance_status:sep(59)>>>"
     echo "$instance_name"
-    sap_hana_instance_status "$instance"
+    sap_hana_instance_status "$instance" "$instance_user"
 
     echo "<<<sap_hana_replication_status>>>"
     echo "$instance_name"

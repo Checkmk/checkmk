@@ -545,6 +545,10 @@
             },
             "input_hint": {
               "type": ["string", "null"]
+            },
+            "has_default_value": {
+              "type": "boolean",
+              "default": false
             }
           },
           "required": ["type", "no_elements_text", "label", "input_hint", "frozen", "elements"]

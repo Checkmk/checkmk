@@ -60,3 +60,19 @@ def test_check_lvm_vgs(monkeypatch: pytest.MonkeyPatch) -> None:
     ]
 
     assert result == expected
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=ValueError,
+    reason="Crash report 40c86a5e-9e89-11f0-a01e-0050569ce904: ValueError",
+)
+def test_discover_lvm_vgs_ignores_foreign_line() -> None:
+    section = parse_lvm_vgs(
+        [
+            ['{"level":"info","msg":"runner started","time":"2025-10-01T07:41:17+02:00"}'],
+            ["vg1", "1", "6", "0", "wz--n-", "268431261696", "32195477504"],
+        ]
+    )
+
+    assert list(discover_lvm_vgs(section)) == [Service(item="vg1")]

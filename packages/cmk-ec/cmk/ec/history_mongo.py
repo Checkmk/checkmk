@@ -8,6 +8,7 @@
 import contextlib
 import datetime
 import os
+import re
 import time
 from collections.abc import Iterable, Mapping, Sequence
 from logging import Logger
@@ -134,7 +135,7 @@ class MongoDBHistory(History):
 
 def filters_to_mongo_query(
     filters: Iterable[QueryFilter],
-) -> dict[str, str | dict[str, str]]:
+) -> dict[str, str | dict[str, object]]:
     """Construct the mongodb filtering specification."""
     mongo_query = {}
     for f in filters:
@@ -151,7 +152,7 @@ def filters_to_mongo_query(
     return mongo_query
 
 
-def query_filter_to_mongo_filter(f: QueryFilter) -> str | dict[str, str]:
+def query_filter_to_mongo_filter(f: QueryFilter) -> str | dict[str, object]:
     match f.operator_name:
         case "=":
             argument: str = f.argument
@@ -159,7 +160,7 @@ def query_filter_to_mongo_filter(f: QueryFilter) -> str | dict[str, str]:
         case "~":
             return {"$regex": f.argument, "$options": ""}
         case "=~":
-            return {"$regex": f.argument, "$options": "mi"}
+            return {"$regex": _case_insensitive_equality(f.argument)}
         case "~~":
             return {"$regex": f.argument, "$options": "i"}
         case "<":
@@ -172,6 +173,11 @@ def query_filter_to_mongo_filter(f: QueryFilter) -> str | dict[str, str]:
             return {"$lte": f.argument}
         case "in":
             return {"$in": f.argument}
+
+
+def _case_insensitive_equality(argument: str) -> re.Pattern[str]:
+    # \z instead of $, which would match before a trailing newline, too
+    return re.compile(rf"\A{re.escape(argument)}\z", re.IGNORECASE)
 
 
 try:

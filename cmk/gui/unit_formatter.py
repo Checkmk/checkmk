@@ -59,7 +59,7 @@ def _find_prefix_power(use_prefix: str, prefixes: Sequence[tuple[int, int, str]]
 
 @dataclass(frozen=True)
 class Label:
-    position: int | float
+    position: float
     text: str
 
 

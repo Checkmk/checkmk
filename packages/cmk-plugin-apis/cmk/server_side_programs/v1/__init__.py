@@ -21,6 +21,7 @@ This is the first version of the server-side programs API.
 
 """
 
+from ._agent_messages import AgentMessages as AgentMessages
 from ._crash_reporting import report_agent_crashes as report_agent_crashes
 from ._crash_reporting import report_check_crashes as report_check_crashes
 from ._host_name_validation import (
@@ -31,6 +32,7 @@ from ._storage import Storage as Storage
 from ._vcrtrace import vcrtrace as vcrtrace
 
 __all__ = [
+    "AgentMessages",
     "HostnameValidationAdapter",
     "Storage",
     "configure_logging",

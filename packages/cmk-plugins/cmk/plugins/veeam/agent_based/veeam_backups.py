@@ -152,21 +152,24 @@ def check_veeam_backups(
         summary += f" ({task.result_message})"
     yield Result(state=state, summary=summary)
 
+    if task.state in _TERMINAL_STATES:
+        yield from _check_last_backup(task.end_time, params["age"], now)
+
     size_info = []
-    if task.total_size is not None:
-        yield Metric("backup_size", task.total_size)
-        size_info.append(f"total: {render.bytes(task.total_size)}")
     if task.read_size is not None:
         yield Metric("readsize", task.read_size)
         size_info.append(f"read: {render.bytes(task.read_size)}")
     if task.transferred_size is not None:
         yield Metric("transferredsize", task.transferred_size)
         size_info.append(f"transferred: {render.bytes(task.transferred_size)}")
-    if size_info:
-        yield Result(
-            state=State.OK,
-            summary=f"Size ({', '.join(size_info)})",
-        )
+    if task.total_size is not None:
+        yield Metric("backup_size", task.total_size)
+        size_summary = f"Size: {render.bytes(task.total_size)}"
+        if size_info:
+            size_summary += f" ({', '.join(size_info)})"
+        yield Result(state=State.OK, summary=size_summary)
+    elif size_info:
+        yield Result(state=State.OK, notice=f"Size ({', '.join(size_info)})")
 
     if task.processing_rate is not None:
         yield from check_levels(
@@ -174,6 +177,7 @@ def check_veeam_backups(
             metric_name="backup_avgspeed",
             render_func=render.iobandwidth,
             label="Average speed",
+            notice_only=True,
         )
     elif task.processing_rate_raw and task.processing_rate_raw.upper() != "N/A":
         yield Result(
@@ -181,29 +185,35 @@ def check_veeam_backups(
             notice=f"Average speed: unparsable value ({task.processing_rate_raw})",
         )
 
-    if task.state in _TERMINAL_STATES:
-        if task.duration is not None:
-            yield from check_levels(
-                task.duration,
-                metric_name="backup_duration",
-                render_func=render.timespan,
-                label="Duration",
-            )
+    if task.state in _TERMINAL_STATES and task.duration is not None:
+        yield from check_levels(
+            task.duration,
+            metric_name="backup_duration",
+            render_func=render.timespan,
+            label="Duration",
+            notice_only=True,
+        )
 
-        if task.end_time is None:
-            yield from check_backup_age(None, params["age"])
-        elif (end_time := parse_iso8601_epoch(task.end_time)) is None:
-            # TODO: confirm whether this branch is ever actually reachable once we can
-            # test against real API responses. If it is, move the parsing into the
-            # parse function instead of guessing here.
-            yield Result(
-                state=State.UNKNOWN,
-                summary=f"FAILED TO PARSE -> End time: ({task.end_time})",
-            )
-        elif (age := now - end_time) < 0:
-            yield Result(state=State.UNKNOWN, summary="Last backup: end time is in the future")
-        else:
-            yield from check_backup_age(age, params["age"])
+
+def _check_last_backup(
+    raw_end_time: str | None, levels_upper: LevelsT[float], now: float
+) -> CheckResult:
+    if raw_end_time is None:
+        yield from check_backup_age(None, levels_upper)
+    elif (end_time := parse_iso8601_epoch(raw_end_time)) is None:
+        # TODO: confirm whether this branch is ever actually reachable once we can
+        # test against real API responses. If it is, move the parsing into the
+        # parse function instead of guessing here.
+        yield Result(
+            state=State.UNKNOWN,
+            summary=f"FAILED TO PARSE -> End time: ({raw_end_time})",
+        )
+    elif (age := now - end_time) < 0:
+        yield Result(state=State.UNKNOWN, summary="Last backup: end time is in the future")
+    else:
+        yield from check_backup_age(
+            age, levels_upper, label="Last backup age", metric_name="backup_age"
+        )
 
 
 def check_veeam_backups_now(item: str, params: CheckParameters, section: Section) -> CheckResult:

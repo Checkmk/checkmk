@@ -84,9 +84,26 @@ def test_check_veeam_backups_success() -> None:
     assert Metric("transferredsize", 21474836480) in results
     assert Metric("backup_avgspeed", 41943040.0) in results
     assert Metric("backup_duration", 1130.0) in results
-    assert any(
-        r.summary.startswith("Time since last backup:") for r in results if isinstance(r, Result)
+    assert Metric("backup_age", 10.0, levels=(20.0, 40.0)) in results
+
+
+def test_check_veeam_backups_summary() -> None:
+    section = parse_veeam_backups(STRING_TABLE)
+    results = list(check_veeam_backups("Daily_VM_Backup", PARAMS, section, now=NOW))
+    assert [r.summary for r in results if isinstance(r, Result) and r.summary] == [
+        "Status: Success",
+        "Last backup age: 10 seconds",
+        "Size: 100 GiB (read: 50.0 GiB, transferred: 20.0 GiB)",
+    ]
+
+
+def test_check_veeam_backups_without_total_size_shows_partial_sizes_in_details() -> None:
+    section = parse_veeam_backups(
+        [[_task("partial", progress={"readSize": 1024, "transferredSize": 512})]]
     )
+    results = list(check_veeam_backups("partial", PARAMS, section, now=NOW))
+    assert Result(state=State.OK, notice="Size (read: 1.00 KiB, transferred: 512 B)") in results
+    assert not any(isinstance(r, Result) and "Size" in r.summary for r in results)
 
 
 def test_check_veeam_backups_warning() -> None:
@@ -120,14 +137,14 @@ def test_check_veeam_backups_running_raises_ignore_results() -> None:
     [
         pytest.param(
             10,
-            Result(state=State.OK, summary="Time since last backup: 10 seconds"),
+            Result(state=State.OK, summary="Last backup age: 10 seconds"),
             id="age within the levels",
         ),
         pytest.param(
             30,
             Result(
                 state=State.WARN,
-                summary="Time since last backup: 30 seconds (warn/crit at 20 seconds/40 seconds)",
+                summary="Last backup age: 30 seconds (warn/crit at 20 seconds/40 seconds)",
             ),
             id="age above the warn level",
         ),
@@ -135,7 +152,7 @@ def test_check_veeam_backups_running_raises_ignore_results() -> None:
             50,
             Result(
                 state=State.CRIT,
-                summary="Time since last backup: 50 seconds (warn/crit at 20 seconds/40 seconds)",
+                summary="Last backup age: 50 seconds (warn/crit at 20 seconds/40 seconds)",
             ),
             id="age above the crit level",
         ),
@@ -149,7 +166,11 @@ def test_last_backup_age_is_rated_against_the_levels(
 
     results = list(check_veeam_backups("job", PARAMS, section, now=now))
 
-    assert results == [Result(state=State.OK, summary="Status: Success"), expected_age_result]
+    assert results == [
+        Result(state=State.OK, summary="Status: Success"),
+        expected_age_result,
+        Metric("backup_age", float(seconds_after_end), levels=(20.0, 40.0)),
+    ]
 
 
 def test_finished_backup_without_end_time_is_crit() -> None:
@@ -190,8 +211,8 @@ def test_check_veeam_backups_running_suppresses_duration_and_age() -> None:
         ]
     )
     results = list(check_veeam_backups("in_progress", PARAMS, section, now=NOW))
-    assert not any("Duration" in r.summary for r in results if isinstance(r, Result))
-    assert not any("Time since last backup" in r.summary for r in results if isinstance(r, Result))
+    assert not any("Duration" in r.details for r in results if isinstance(r, Result))
+    assert not any("Last backup" in r.summary for r in results if isinstance(r, Result))
 
 
 def test_check_veeam_backups_formatted_processing_rate_becomes_metric() -> None:

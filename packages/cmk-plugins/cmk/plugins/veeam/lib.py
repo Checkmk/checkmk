@@ -35,7 +35,13 @@ def sanitize_name(name: str) -> str:
     return name.replace("'", "_").replace(" ", "_")
 
 
-def check_backup_age(last_backup_age: float | None, levels_upper: LevelsT[float]) -> CheckResult:
+def check_backup_age(
+    last_backup_age: float | None,
+    levels_upper: LevelsT[float],
+    *,
+    label: str = "Time since last backup",
+    metric_name: str | None = None,
+) -> CheckResult:
     """No age means no backup has ever completed, which is critical regardless of the levels."""
     if last_backup_age is None:
         yield Result(state=State.CRIT, summary="No complete backup")
@@ -43,6 +49,7 @@ def check_backup_age(last_backup_age: float | None, levels_upper: LevelsT[float]
     yield from check_levels(
         last_backup_age,
         levels_upper=levels_upper,
+        metric_name=metric_name,
         render_func=render.timespan,
-        label="Time since last backup",
+        label=label,
     )

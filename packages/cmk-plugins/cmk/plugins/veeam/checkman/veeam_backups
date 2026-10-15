@@ -17,6 +17,9 @@ description:
  the {VEEAM Client} service uses. The default levels are 30 hours and 2 days.
  A finished backup without an end time is {CRIT}.
 
+ The summary shows the result, the time since the last backup and the
+ backup size; the average speed and the duration are shown in the details.
+
  While a backup is running, its age and duration are not evaluated. Size,
  speed and duration metrics use the same metric names as the {VEEAM Client}
  service, so existing graphs and thresholds carry over.

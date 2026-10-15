@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from typing import override
 from uuid import UUID
 
+from pydantic import ValidationError
+
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -145,6 +147,22 @@ def verify_uuid_is_not_linked(uuid: UUID, *, host_name: HostName | None) -> None
             )
         )
         raise UUIDAlreadyLinkedError(f"The UUID {uuid} is already linked to a host.")
+
+
+def agent_updates_permitted(host_name: HostName, uuid: UUID) -> bool:
+    """Whether the registration that linked the UUID to the host permits agent updates"""
+    uuid_link_manager = _uuid_link_manager()
+    if uuid_link_manager.linked_host_name(uuid) != host_name:
+        return False
+    try:
+        registration = uuid_link_manager.registration(uuid)
+    except ValidationError as e:
+        logger.warning(
+            "The registration file of UUID %(uuid)s is unreadable: %(error)s",
+            {"uuid": uuid, "error": e},
+        )
+        return False
+    return registration is not None and registration.agent_updates_permitted is True
 
 
 def _uuid_link_manager() -> UUIDLinkManager:

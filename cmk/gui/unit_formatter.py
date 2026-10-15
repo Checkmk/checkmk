@@ -27,16 +27,16 @@ class _PreFormattedPart:
 
 
 @dataclass(frozen=True, kw_only=True)
-class FormattedPart:
+class _FormattedPart:
     text: str
     unit: str
 
 
-def _join_text_and_unit(formatted_part: FormattedPart) -> str:
+def _join_text_and_unit(formatted_part: _FormattedPart) -> str:
     """
-    >>> _join_text_and_unit(FormattedPart(text="1", unit="s"))
+    >>> _join_text_and_unit(_FormattedPart(text="1", unit="s"))
     '1 s'
-    >>> _join_text_and_unit(FormattedPart(text="1", unit="/s"))
+    >>> _join_text_and_unit(_FormattedPart(text="1", unit="/s"))
     '1/s'
     """
     return (
@@ -46,7 +46,7 @@ def _join_text_and_unit(formatted_part: FormattedPart) -> str:
     )
 
 
-def _joined(sign: Literal["", "-"], parts: Iterable[FormattedPart]) -> str:
+def _joined(sign: Literal["", "-"], parts: Iterable[_FormattedPart]) -> str:
     return f"{sign}{' '.join(_join_text_and_unit(part).strip() for part in parts)}"
 
 
@@ -147,7 +147,7 @@ class NotationFormatter(abc.ABC):
         return str(value)
 
     @abc.abstractmethod
-    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> FormattedPart: ...
+    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> _FormattedPart: ...
 
     def _postformat(
         self,
@@ -155,7 +155,7 @@ class NotationFormatter(abc.ABC):
         raw_value: int | float,
         resolution: float | None,
         use_max_digits_for_labels: bool,
-    ) -> Iterator[FormattedPart]:
+    ) -> Iterator[_FormattedPart]:
         """`raw_value` is the value the parts were preformatted from; `resolution` the gap in raw
         units two rendered values must stay apart by, or None for the unit's own precision."""
         for part in pre_formatted_parts:
@@ -316,8 +316,8 @@ class DecimalFormatter(NotationFormatter):
         return f"{value:,}".replace(",", "\N{THIN SPACE}")
 
     @override
-    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> FormattedPart:
-        return FormattedPart(text=text, unit=symbol)
+    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> _FormattedPart:
+        return _FormattedPart(text=text, unit=symbol)
 
     @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
@@ -378,8 +378,8 @@ class SIFormatter(NotationFormatter):
         return [_PreFormattedPart(value, "", self.symbol)]
 
     @override
-    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> FormattedPart:
-        return FormattedPart(text=text, unit=f"{prefix}{symbol}")
+    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> _FormattedPart:
+        return _FormattedPart(text=text, unit=f"{prefix}{symbol}")
 
     @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
@@ -423,8 +423,8 @@ class IECFormatter(NotationFormatter):
         return [_PreFormattedPart(value, "", self.symbol)]
 
     @override
-    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> FormattedPart:
-        return FormattedPart(text=text, unit=f"{prefix}{symbol}")
+    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> _FormattedPart:
+        return _FormattedPart(text=text, unit=f"{prefix}{symbol}")
 
     @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
@@ -452,8 +452,8 @@ class StandardScientificFormatter(NotationFormatter):
         return [_PreFormattedPart(value / pow(10, exponent), f"e+{exponent}", self.symbol)]
 
     @override
-    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> FormattedPart:
-        return FormattedPart(text=f"{text}{prefix}", unit=symbol)
+    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> _FormattedPart:
+        return _FormattedPart(text=f"{text}{prefix}", unit=symbol)
 
     @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
@@ -480,8 +480,8 @@ class EngineeringScientificFormatter(NotationFormatter):
         return [_PreFormattedPart(value / pow(10, exponent), f"e+{exponent}", self.symbol)]
 
     @override
-    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> FormattedPart:
-        return FormattedPart(text=f"{text}{prefix}", unit=symbol)
+    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> _FormattedPart:
+        return _FormattedPart(text=f"{text}{prefix}", unit=symbol)
 
     @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
@@ -593,8 +593,8 @@ class TimeFormatter(NotationFormatter):
         return pre_formatted_parts
 
     @override
-    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> FormattedPart:
-        return FormattedPart(text=text, unit=f"{prefix}{symbol}")
+    def _format_text_and_unit(self, *, text: str, prefix: str, symbol: str) -> _FormattedPart:
+        return _FormattedPart(text=text, unit=f"{prefix}{symbol}")
 
     @override
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:

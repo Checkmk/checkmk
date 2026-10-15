@@ -6,6 +6,8 @@
 from pydantic import BaseModel
 
 from cmk.ccc.version import Edition, edition
+from cmk.flags import ExperimentalFlagConfig
+from cmk.gui.experimental_flags.global_config import is_development_site
 from cmk.gui.log import logger
 from cmk.utils import paths
 from cmk.utils.paths import cse_config_dir
@@ -18,7 +20,13 @@ class GlobalSettings(BaseModel):
     is_activate: set[str]
 
     def is_activated(self, varname: str) -> bool:
-        return edition(paths.omd_root) is not Edition.CLOUD or varname in self.is_activate
+        # Experimental flags are not on the allow list: CMK_DEV alone decides about them.
+        # Checked here too, as the edit_configvar mode does not check in_global_settings().
+        return (
+            edition(paths.omd_root) is not Edition.CLOUD
+            or varname in self.is_activate
+            or (varname in ExperimentalFlagConfig.model_fields and is_development_site())
+        )
 
 
 class RuleSetGroup(BaseModel):

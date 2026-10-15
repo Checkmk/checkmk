@@ -62,6 +62,7 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-system-ai-features                 Run system tests for the mcp-server and the ai-control-plane (pro edition)
   test-system-oauth                       Run system tests for the oauth authorization server (pro edition)
   test-system-multisite                   Run multisite system tests
+  test-system-agent-updates               Run system tests for agent updates
   test-system-update-community            Run update tests for community edition
   test-system-update-pro                  Run update tests for pro edition
   test-system-update-ultimate             Run update tests for ultimate edition
@@ -395,6 +396,12 @@ test-system-multisite() {
         "$(realpath "$SCRIPT_DIR/system/multisite")"
 }
 
+test-system-agent-updates() {
+    _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
+        "$(realpath "$SCRIPT_DIR/system/agent_updates")" \
+        --session-timeout 3600
+}
+
 test-extension-compatibility() {
     _pytest -vv "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/extension_compatibility")"
@@ -514,6 +521,7 @@ test-system-otel-docker() { _system-tests-docker test-system-otel; }
 test-system-azure-docker() { _system-tests-docker test-system-azure; }
 test-system-ai-features-docker() { _system-tests-docker test-system-ai-features; }
 test-system-multisite-docker() { _system-tests-docker test-system-multisite; }
+test-system-agent-updates-docker() { _system-tests-docker test-system-agent-updates; }
 test-system-update-community-docker() { _system-tests-docker test-system-update-community; }
 test-system-update-pro-docker() { _system-tests-docker test-system-update-pro; }
 test-system-update-ultimate-docker() { _system-tests-docker test-system-update-ultimate; }

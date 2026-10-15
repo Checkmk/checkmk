@@ -195,6 +195,24 @@ def test_case_in_operator_with_some_matching_data_returns_matching_text(
         assert result.fetchall() == expected_results
 
 
+def test_filtered_history_query_with_limit_returns_only_that_many_newest_entries(
+    history_sqlite: SQLiteHistory,
+) -> None:
+    for text in ("one", "two", "three", "four"):
+        history_sqlite.add(event=ec.Event(text=text), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history_sqlite)
+    query = QueryGET(
+        lambda _name: table,
+        ["GET history", "Columns: event_text", "Filter: event_text in two three four", "Limit: 2"],
+        logger,
+    )
+
+    _header, *rows = table.query(query)
+
+    assert rows == [["four"], ["three"]]
+
+
 def test_filters_to_sqlite_query_with_simple_equality_filter_has_correct_query() -> None:
     filters = [
         QueryFilter(
@@ -206,7 +224,7 @@ def test_filters_to_sqlite_query_with_simple_equality_filter_has_correct_query()
     ]
 
     assert filters_to_sqlite_query(filters) == (
-        "SELECT * FROM history WHERE text = ?;",
+        "SELECT * FROM history WHERE text = ?",
         ["test_event"],
     )
 
@@ -222,7 +240,7 @@ def test_filters_to_sqlite_query_with_one_in_filter_has_one_placeholder_in_query
     ]
 
     assert filters_to_sqlite_query(filters) == (
-        "SELECT * FROM history WHERE text in (?);",
+        "SELECT * FROM history WHERE text in (?)",
         ["test_event"],
     )
 
@@ -240,7 +258,7 @@ def test_filters_to_sqlite_query_with_multiple_in_filters_has_multiple_matching_
     ]
 
     assert filters_to_sqlite_query(filters) == (
-        "SELECT * FROM history WHERE text in (?,?,?);",
+        "SELECT * FROM history WHERE text in (?,?,?)",
         ["test_event", "test_event", "test_event"],
     )
 
@@ -263,7 +281,7 @@ def test_filters_to_sqlite_query_with_less_than_and_greater_than_filters_have_co
         ),
     ]
     assert filters_to_sqlite_query(filters) == (
-        "SELECT * FROM history WHERE time < ? AND time > ?;",
+        "SELECT * FROM history WHERE time < ? AND time > ?",
         [123456789, 1234],
     )
 
@@ -287,13 +305,13 @@ def test_filters_to_sqlite_query_with_regex_and_case_insensitive_equality_filter
     ]
 
     assert filters_to_sqlite_query(filters) == (
-        "SELECT * FROM history WHERE regexp_nocase(?, who) AND owner = ? COLLATE NOCASE;",
+        "SELECT * FROM history WHERE regexp_nocase(?, who) AND owner = ? COLLATE NOCASE",
         ["admin", "user"],
     )
 
 
 def test_filters_to_sqlite_query_with_no_filters_gives_a_simple_select_statement() -> None:
-    assert filters_to_sqlite_query([]) == ("SELECT * FROM history  ;", [])
+    assert filters_to_sqlite_query([]) == ("SELECT * FROM history  ", [])
 
 
 def test_filters_to_sqlite_query_raises_ValueError() -> None:

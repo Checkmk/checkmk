@@ -121,7 +121,7 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[o
         query_conditions.append(query_filter_to_sqlite_filter(f, adjusted_column_name))
 
     return (
-        f"SELECT * FROM history {'WHERE' if query_arguments else ''} {' AND '.join(query_conditions)};",  # nosec B608 # BNS:6b6392
+        f"SELECT * FROM history {'WHERE' if query_arguments else ''} {' AND '.join(query_conditions)}",  # nosec B608 # BNS:6b6392
         query_arguments,
     )
 
@@ -314,9 +314,11 @@ class SQLiteHistory(History):
         Always return all columns, since they are filtered elsewhere.
         """
         sqlite_query, sqlite_arguments = filters_to_sqlite_query(query.filters)
+        # Newest entries first, just like the other history backends
+        sqlite_query += " ORDER BY line DESC"
         if query.limit:
             sqlite_query += " LIMIT ?"
-            sqlite_arguments += f" {query.limit + 1}"
+            sqlite_arguments.append(query.limit + 1)
         with self.conn as connection:
             cur = connection.cursor()
             cur.execute(sqlite_query, sqlite_arguments)

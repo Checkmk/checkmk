@@ -325,6 +325,7 @@ def perfometer_sort_value(perfometer: EvaluatedPerfometerLayout) -> float:
 
 
 _SUPERSEDED_TO_SUPERSEDER: Final[Mapping[str, str]] = {
+    "backup_size": "backup_age",
     "mem_used_perc": "mem_used_percent",
     "mem_used_with_dynamic_range": "mem_used_percent",
     "mem_used": "mem_used_percent",

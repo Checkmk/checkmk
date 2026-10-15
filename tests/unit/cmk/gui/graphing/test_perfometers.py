@@ -8,6 +8,9 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import perfometers as perfometers_v1
+from cmk.graphing.v1 import Title
 from cmk.graphing_engine import (
     AutoPrecision,
     CurveAttributes,
@@ -25,6 +28,7 @@ from cmk.graphing_engine import (
 from cmk.gui.graphing import (
     drawn_segments,
     DrawnSegment,
+    evaluated_perfometer,
     perfometer_label,
     perfometer_sort_value,
 )
@@ -301,3 +305,35 @@ def test_sort_value_of_a_stacked_is_the_upper_bar() -> None:
         )
         == 1.0
     )
+
+
+def _time_bar(name: str) -> perfometers_v1.Perfometer:
+    return perfometers_v1.Perfometer(
+        name=name,
+        focus_range=perfometers_v1.FocusRange(perfometers_v1.Closed(0), perfometers_v1.Open(100)),
+        segments=[name],
+    )
+
+
+def _time_metric(name: str) -> metrics_v1.Metric:
+    return metrics_v1.Metric(
+        name=name,
+        title=Title("Time"),
+        unit=metrics_v1.Unit(metrics_v1.TimeNotation()),
+        color=metrics_v1.Color.BLUE,
+    )
+
+
+def test_backup_age_draws_in_place_of_backup_size() -> None:
+    evaluated = evaluated_perfometer(
+        "backup_size=1000;;;; backup_age=10;;;;",
+        "check_mk-veeam_backups",
+        host_name="host",
+        service_name="Backup job",
+        registered_perfometers={name: _time_bar(name) for name in ("backup_size", "backup_age")},
+        registered_metrics={name: _time_metric(name) for name in ("backup_size", "backup_age")},
+        registered_translations=[],
+        debug=True,
+    )
+    assert evaluated is not None
+    assert evaluated.name == "backup_age"

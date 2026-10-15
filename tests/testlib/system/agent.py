@@ -30,9 +30,11 @@ from tests.testlib.common.utils2 import (
     execute,
     is_containerized,
     run,
+    systemd_is_running,
 )
 from tests.testlib.system.host_under_test import HostUnderTest, LocalHost
 from tests.testlib.system.site import Site
+from tests.testlib.system.systemd import systemd_managed_agent_controller
 
 logger = logging.getLogger(__name__)
 
@@ -163,12 +165,30 @@ def download_agent_package(
 
 
 @contextlib.contextmanager
-def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen[str] | None]:
-    """Manually take over systemds job if we are in a container (where we have no systemd)."""
-    if not is_containerized():
-        yield None
-        return
+def agent_controller_daemon(ctl_path: Path) -> Iterator[None]:
+    """Make sure the agent controller and the agent socket are up for the duration.
 
+    In a container with systemd both are units that the agent package enabled and started. In a
+    container without systemd, tests/scripts/agent_controller_daemon.py takes their place. Both
+    mechanisms delete all registrations of the controller, so outside a container nothing is
+    done.
+    """
+    if not is_containerized():
+        logger.warning(
+            "Not in a container: nothing manages the agent controller, and registrations made "
+            "by this test will not be cleaned up."
+        )
+        yield
+    elif systemd_is_running():
+        with systemd_managed_agent_controller(_LOCAL_HOST, ctl_path):
+            yield
+    else:
+        with _shimmed_agent_controller(ctl_path):
+            yield
+
+
+@contextlib.contextmanager
+def _shimmed_agent_controller(ctl_path: Path) -> Iterator[None]:
     logger.info("Running agent controller daemon...")
     with daemon(
         [
@@ -181,7 +201,7 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen[str] | 
         name_for_logging="agent controller",
         termination_mode=DaemonTerminationMode.GROUP,
         sudo=True,
-    ) as agent_ctl_daemon:
+    ):
         # wait for a dump being returned successfully, which may not work immediately
         # after starting the agent controller, so we retry for some time
         wait_until(
@@ -197,7 +217,7 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen[str] | 
             timeout=30,
             interval=0.1,
         )
-        yield agent_ctl_daemon
+        yield
 
 
 def register_controller(

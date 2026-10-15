@@ -12,7 +12,9 @@ from cmk.graphing_engine import (
     IECNotation,
     NonConvertibleUnit,
     Notation,
+    notation_name,
     Precision,
+    precision_kind,
     SINotation,
     StandardScientificNotation,
     StrictPrecision,
@@ -21,7 +23,6 @@ from cmk.graphing_engine import (
 )
 
 from ._decoding import ensure_type
-from ._unit_format import notation_name, precision_kind
 
 
 def unit_to_specification(unit: Unit | NonConvertibleUnit) -> Mapping[str, object]:

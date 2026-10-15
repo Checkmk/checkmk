@@ -15,6 +15,7 @@ from cmk.graphing_engine import (
     NonConvertibleUnit,
     Notation,
     Precision,
+    precision_kind,
     SINotation,
     StandardScientificNotation,
     TimeNotation,
@@ -32,8 +33,6 @@ from cmk.web.utils.unit_formatter import (
     StandardScientificFormatter,
     TimeFormatter,
 )
-
-from ._unit_format import precision_kind
 
 
 @dataclass(frozen=True)

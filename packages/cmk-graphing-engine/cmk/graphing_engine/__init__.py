@@ -95,7 +95,9 @@ from ._units import (
     IECNotation,
     NonConvertibleUnit,
     Notation,
+    notation_name,
     Precision,
+    precision_kind,
     SINotation,
     StandardScientificNotation,
     StrictPrecision,
@@ -183,4 +185,6 @@ __all__ = [
     "parse_unit",
     "rrd_metric_name",
     "timestamps",
+    "notation_name",
+    "precision_kind",
 ]

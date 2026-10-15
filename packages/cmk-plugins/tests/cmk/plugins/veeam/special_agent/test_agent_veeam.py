@@ -61,11 +61,14 @@ def _veeam_api(cert_server_name: str | None = None) -> VeeamApi:
 
 
 def _auth(
-    storage: Storage, cert_server_name: str | None = None, user: str = "monitoring"
+    storage: Storage,
+    cert_server_name: str | None = None,
+    user: str = "monitoring",
+    password: str = "top-secret",
 ) -> VeeamAuth:
     """The token handling as created by one run of the agent."""
     return VeeamAuth(
-        _veeam_api(cert_server_name), storage=storage, user=user, password=Secret("top-secret")
+        _veeam_api(cert_server_name), storage=storage, user=user, password=Secret(password)
     )
 
 
@@ -251,6 +254,31 @@ def test_failing_endpoint_does_stop_the_other_sections(
 
     captured = capsys.readouterr()
     assert "<<<veeam_jobs:sep(0)>>>" not in captured.out
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Any data endpoint error terminates the agent run, so the other sections are lost",
+)
+def test_failing_endpoint_does_not_stop_the_other_sections(
+    api: responses.RequestsMock, storage: Storage, capsys: pytest.CaptureFixture[str]
+) -> None:
+    api.get(
+        f"{URL}/api/v1/broken",
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        json={"errorCode": "UnknownError", "message": "boom"},
+    )
+    api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
+
+    write_sections(
+        _client(_auth(storage), storage),
+        [
+            ("veeam_broken", fetch_list("/api/v1/broken")),
+            ("veeam_jobs", fetch_list("/api/v1/jobs")),
+        ],
+    )
+
+    assert "<<<veeam_jobs:sep(0)>>>" in capsys.readouterr().out
 
 
 def test_broken_response_on_a_data_endpoint_does_stop_the_other_sections(
@@ -1911,6 +1939,28 @@ def test_fetch_backups_keeps_the_newest_task_per_object_and_job(
     assert '"id": "older"' not in output
 
 
+def test_fetch_backups_reports_a_machine_that_succeeded_on_retry_as_successful(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _mock_jobs(api, [_job()])
+    _mock_session_and_objects(api, "session-1", ["vm-1"])
+    _mock_tasks(
+        api,
+        "2026-09-29T00:00:00+00:00",
+        [
+            _task(creationTime="2026-09-29T01:00:00+00:00", result={"result": "Failed"}),
+            _task(creationTime="2026-09-29T02:00:00+00:00", result={"result": "Success"}),
+        ],
+    )
+
+    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+
+    _header, _section_header, *records, _footer = capsys.readouterr().out.splitlines()
+    assert [json.loads(record)["result"] for record in records] == [{"result": "Success"}]
+
+
 def test_wrong_credentials_are_reported(api: responses.RequestsMock, storage: Storage) -> None:
     api.post(
         TOKEN_URL,
@@ -1970,6 +2020,21 @@ def test_timeout_is_reported_as_unreachable(
         _auth(storage).authenticate()
 
 
+def test_next_run_uses_the_changed_password(api: responses.RequestsMock, storage: Storage) -> None:
+    api.post(
+        TOKEN_URL,
+        status=HTTPStatus.UNAUTHORIZED,
+        json={"errorCode": "AccessDenied", "message": "Authentication failed"},
+    )
+    with pytest.raises(TerminateAgent):
+        _auth(storage, password="old-secret").authenticate()
+    api.replace(responses.POST, TOKEN_URL, json=_token("first"))
+
+    _auth(storage, password="new-secret").authenticate()
+
+    assert [r["password"] for r in _token_requests(api)] == [["old-secret"], ["new-secret"]]
+
+
 def test_rejected_certificate_names_the_expected_host_name(
     api: responses.RequestsMock, storage: Storage
 ) -> None:
@@ -2011,6 +2076,33 @@ def test_unreachable_server_is_reported_with_a_non_zero_exit_code(
 
     assert exit_code == 1
     assert "is unreachable" in capsys.readouterr().err
+
+
+@pytest.mark.usefixtures("storage")
+def test_server_that_never_answers_is_reported_after_the_timeout(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with socket.socket() as silent_server:
+        silent_server.bind(("127.0.0.1", 0))
+        silent_server.listen()
+
+        exit_code = main(
+            [
+                "--user",
+                "monitoring",
+                "--password",
+                "top-secret",
+                "--disable-cert-verification",
+                "--timeout",
+                "1",
+                "--port",
+                str(silent_server.getsockname()[1]),
+                "127.0.0.1",
+            ]
+        )
+
+    assert exit_code == 1
+    assert "did not answer within 1 seconds" in capsys.readouterr().err
 
 
 _MINIMAL_ARGV = ["--user", "u", "--password", "p", "--disable-cert-verification"]

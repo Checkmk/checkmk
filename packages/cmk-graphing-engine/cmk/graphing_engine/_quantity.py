@@ -16,9 +16,7 @@ from ._timeseries import TimeRange, TimeSeries
 from ._units import CurveAttributes
 
 
-def _last_present[T](values: Iterable[T | None]) -> T | None:
-    # A fan-out leaf's series are all keyed by the same metric leaf, so a single-valued view of it
-    # has to pick one: the last that carries anything at all wins.
+def last_present[T](values: Iterable[T | None]) -> T | None:
     last: T | None = None
     for value in values:
         if value is not None:
@@ -46,10 +44,10 @@ class EvaluationContext:
         return self.fetched.get(metric, ())
 
     def data_of(self, metric: MetricProtocol) -> PerformanceData | None:
-        return _last_present(data.performance_data for data in self.fetched_of(metric))
+        return last_present(data.performance_data for data in self.fetched_of(metric))
 
     def time_series_of(self, metric: MetricProtocol) -> TimeSeries | None:
-        return _last_present(data.time_series for data in self.fetched_of(metric))
+        return last_present(data.time_series for data in self.fetched_of(metric))
 
 
 @dataclass(frozen=True, kw_only=True)

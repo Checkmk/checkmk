@@ -27,6 +27,7 @@ from cmk.graphing_engine import (
     EvaluatedRule,
     EvaluatedStack,
     EvaluatedVerticalRange,
+    last_present,
     TimeRange,
     TimeSeries,
     timestamps,
@@ -77,13 +78,6 @@ def _values(curve: EvaluatedCurve, *, sign: float = 1.0) -> npt.NDArray[np.float
     return _series_values(curve.time_series) * sign
 
 
-def _last_non_null(values: Sequence[float | None]) -> float | None:
-    for value in reversed(values):
-        if value is not None:
-            return value
-    return None
-
-
 class _CurveScalars:
     """Of the curve's own values: mirroring below zero only changes where a curve is drawn, so
     the legend reports the values unmirrored."""
@@ -98,7 +92,7 @@ class _CurveScalars:
         self.minimum: float | None = float(np.min(finite)) if finite.size else None
         self.maximum: float | None = float(np.max(finite)) if finite.size else None
         self.average: float | None = float(np.mean(finite)) if finite.size else None
-        self.last: float | None = _last_non_null(curve.time_series.values)
+        self.last: float | None = last_present(curve.time_series.values)
 
 
 def _graph_scalars(graph: EvaluatedGraph) -> list[_CurveScalars]:

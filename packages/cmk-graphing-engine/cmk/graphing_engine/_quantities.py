@@ -25,6 +25,7 @@ from ._operations import (
 from ._quantity import (
     EvaluatedQuantity,
     EvaluationContext,
+    last_present,
     QuantityProtocol,
 )
 from ._timeseries import ConsolidationFunction, constant_time_series, TimeSeries
@@ -234,9 +235,7 @@ class PredictionMetric:
             return []
         return [
             EvaluatedQuantity(
-                value=next(
-                    (value for value in reversed(time_series.values) if value is not None), None
-                ),
+                value=last_present(time_series.values),
                 time_series=time_series,
             )
         ]

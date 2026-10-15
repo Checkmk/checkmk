@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import graphs, metrics, Title
+from cmk.graphing.v1 import graphs, metrics, perfometers, Title
 
 UNIT_TIME = metrics.Unit(metrics.TimeNotation())
 
@@ -29,4 +29,10 @@ graph_veeam_license_expiry = graphs.Graph(
         "veeam_license_expiry",
         "veeam_license_support_expiry",
     ],
+)
+
+perfometer_veeam_license_expiry = perfometers.Perfometer(
+    name="veeam_license_expiry",
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(365 * 86400)),
+    segments=["veeam_license_expiry"],
 )

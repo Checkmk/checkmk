@@ -87,22 +87,39 @@ def test_monitoring_state(status: str, expected: State) -> None:
 def test_check_veeam_license_summary_and_details() -> None:
     section = parse_veeam_license(_license())
     results = list(check_veeam_license(PARAMS, section, now=NOW))
-    assert results[0] == Result(state=State.OK, summary="Enterprise Plus, Valid")
-    assert Result(state=State.OK, summary="Licensed to: ACME Corp") in results
-    assert Result(state=State.OK, summary="Type: Perpetual") in results
-    assert Result(state=State.OK, summary="Auto update: enabled") in results
+    assert results[0] == Result(state=State.OK, summary="Valid")
+    assert Result(state=State.OK, notice="Edition: Enterprise Plus") in results
+    assert Result(state=State.OK, notice="Licensed to: ACME Corp") in results
+    assert Result(state=State.OK, notice="Type: Perpetual") in results
+    assert Result(state=State.OK, notice="Auto update: enabled") in results
+
+
+def test_check_veeam_license_summary() -> None:
+    section = parse_veeam_license(
+        _license(
+            expirationDate="2027-05-24T03:00:00.000+00:00",
+            supportExpirationDate="2027-05-24T03:00:00.000+00:00",
+            instanceLicenseSummary={"licensedInstancesNumber": 100, "usedInstancesNumber": 42},
+        )
+    )
+    results = list(check_veeam_license(PARAMS, section, now=NOW))
+    assert [r.summary for r in results if isinstance(r, Result) and r.summary] == [
+        "Valid",
+        "License expiry: 245 days 3 hours",
+        "Instances used: 42.00%",
+    ]
 
 
 def test_check_veeam_license_omits_type_when_absent() -> None:
     section = parse_veeam_license(_license(type=None))
     results = list(check_veeam_license(PARAMS, section, now=NOW))
-    assert not any(isinstance(r, Result) and r.summary.startswith("Type:") for r in results)
+    assert not any(isinstance(r, Result) and r.details.startswith("Type:") for r in results)
 
 
 def test_check_veeam_license_invalid_is_crit() -> None:
     section = parse_veeam_license(_license(status="Invalid"))
     results = list(check_veeam_license(PARAMS, section, now=NOW))
-    assert results[0] == Result(state=State.CRIT, summary="Enterprise Plus, Invalid")
+    assert results[0] == Result(state=State.CRIT, summary="Invalid")
 
 
 def test_check_veeam_license_no_expiry_reports_nothing() -> None:

@@ -119,6 +119,7 @@ def _check_expiry(
     expiry: float | None,
     levels: LevelsT[float],
     now: float,
+    notice_only: bool = False,
 ) -> CheckResult:
     if expiry is None:
         return
@@ -131,6 +132,7 @@ def _check_expiry(
             render.timespan(v) if v >= 0 else f"expired {render.timespan(-v)} ago"
         ),
         label=label,
+        notice_only=notice_only,
     )
 
 
@@ -164,31 +166,12 @@ def _tb_to_bytes(value: float | None) -> float | None:
 
 
 def check_veeam_license(params: CheckParameters, section: Section, *, now: float) -> CheckResult:
-    yield Result(
-        state=monitoring_state(section.status),
-        summary=f"{section.edition}, {section.status}",
-    )
-
-    yield Result(state=State.OK, summary=f"Licensed to: {section.licensed_to}")
-    if section.type is not None:
-        yield Result(state=State.OK, summary=f"Type: {section.type}")
-    yield Result(
-        state=State.OK,
-        summary=f"Auto update: {'enabled' if section.auto_update_enabled else 'disabled'}",
-    )
-
+    yield Result(state=monitoring_state(section.status), summary=section.status)
     yield from _check_expiry(
         "License expiry",
         "veeam_license_expiry",
         section.expiration_date,
         params["license_expiry"],
-        now,
-    )
-    yield from _check_expiry(
-        "Support expiry",
-        "veeam_license_support_expiry",
-        section.support_expiration_date,
-        params["support_expiry"],
         now,
     )
 
@@ -228,6 +211,23 @@ def check_veeam_license(params: CheckParameters, section: Section, *, now: float
         "veeam_license_capacity",
         _tb_to_bytes(section.capacity_licensed_tb),
         _tb_to_bytes(section.capacity_used_tb),
+    )
+
+    yield from _check_expiry(
+        "Support expiry",
+        "veeam_license_support_expiry",
+        section.support_expiration_date,
+        params["support_expiry"],
+        now,
+        notice_only=True,
+    )
+    yield Result(state=State.OK, notice=f"Edition: {section.edition}")
+    yield Result(state=State.OK, notice=f"Licensed to: {section.licensed_to}")
+    if section.type is not None:
+        yield Result(state=State.OK, notice=f"Type: {section.type}")
+    yield Result(
+        state=State.OK,
+        notice=f"Auto update: {'enabled' if section.auto_update_enabled else 'disabled'}",
     )
 
 

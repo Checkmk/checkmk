@@ -18,6 +18,7 @@ from ._drawn_curves import (
 )
 from ._fetch import (
     FetchDataProtocol,
+    fetched_time_range,
     FetchMetricNamesProtocol,
 )
 from ._fetched import (
@@ -151,6 +152,7 @@ __all__ = [
     "EvaluationContext",
     "FanOutQuantity",
     "fetch_leaves",
+    "fetched_time_range",
     "last_present",
     "FetchDataProtocol",
     "FetchMetricNamesProtocol",

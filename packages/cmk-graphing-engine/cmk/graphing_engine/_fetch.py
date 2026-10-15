@@ -27,6 +27,20 @@ class FetchDataProtocol(Protocol):
     ) -> Mapping[MetricProtocol, Sequence[FetchedData]]: ...
 
 
+def fetched_time_range(
+    fetched: Mapping[MetricProtocol, Sequence[FetchedData]], *, fallback: TimeRange
+) -> TimeRange:
+    return next(
+        (
+            data.time_series.time_range
+            for series in fetched.values()
+            for data in series
+            if data.time_series is not None
+        ),
+        fallback,
+    )
+
+
 def fetch_evaluation_context(
     *,
     consolidation_function: ConsolidationFunction,
@@ -38,17 +52,6 @@ def fetch_evaluation_context(
     fetched = fetch_data(
         metrics, consolidation_function=consolidation_function, time_range=time_range
     )
-    # The evaluation grid is the one the fetched series actually sit on (the source aligns them to a
-    # single grid), not the requested one - the RRD backend may snap start/end/step. Constants and
-    # operations are built on this grid so they line up with the fetched data. Falls back to the
-    # requested range when nothing was fetched.
-    resolved_time_range = next(
-        (
-            data.time_series.time_range
-            for series in fetched.values()
-            for data in series
-            if data.time_series is not None
-        ),
-        time_range,
+    return EvaluationContext(
+        time_range=fetched_time_range(fetched, fallback=time_range), fetched=fetched
     )
-    return EvaluationContext(time_range=resolved_time_range, fetched=fetched)

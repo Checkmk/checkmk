@@ -7,7 +7,7 @@ import abc
 import math
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
-from typing import Final, Literal, override
+from typing import ClassVar, Final, Literal, override
 
 type PrecisionKind = Literal["auto", "strict"]
 
@@ -95,7 +95,8 @@ class NotationFormatter(abc.ABC):
     symbol: str
     precision_kind: PrecisionKind
     digits: int
-    use_max_digits_for_labels: bool = True
+
+    _caps_label_digits: ClassVar[bool] = True
 
     @abc.abstractmethod
     def ident(
@@ -265,7 +266,7 @@ class NotationFormatter(abc.ABC):
                     ),
                     position,
                     spacing,
-                    self.use_max_digits_for_labels,
+                    self._caps_label_digits,
                 )
             ),
         ).render()
@@ -289,9 +290,8 @@ def _stringify_small_decimal_number(value: float) -> str:
     return f"0.{'0' * decimals}{int_part}"
 
 
-@dataclass(frozen=True)
 class DecimalFormatter(NotationFormatter):
-    use_max_digits_for_labels: bool = False
+    _caps_label_digits: ClassVar[bool] = False
 
     @override
     def ident(self) -> Literal["Decimal"]:

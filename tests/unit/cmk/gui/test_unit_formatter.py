@@ -835,7 +835,6 @@ def test_render_y_labels_small_range_large_offset() -> None:
         symbol="s",
         precision_kind="auto",
         digits=2,
-        use_max_digits_for_labels=True,
     ).render_y_labels(
         1.0011975,
         1.2515224999999999,

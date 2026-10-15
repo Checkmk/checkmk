@@ -17,7 +17,6 @@ from ._fetched import ScalarKind
 from ._graph import Graph, Line, Rule, Stack
 from ._graph_from_api import (
     build_single_quantity,
-    drawn_quantity,
     parse_graph_from_api,
     QuantityBuilderProtocol,
 )
@@ -195,7 +194,9 @@ def build_matched_graphs(
                 Stack(
                     members=[
                         build_curve(
-                            drawn_quantity(name, resolved, quantity_builder),
+                            quantity_builder(
+                                [rrd_metric_of(service, name) for service in resolved]
+                            ),
                             localizer,
                             registered_metrics,
                         )

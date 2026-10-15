@@ -14,7 +14,6 @@ from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from ._api_plugins import ApiQuantity, is_scalar, metric_names_in_quantity
 from ._graph import Graph, Line, MinimalRange, Rule, Stack
 from ._naming import Service
-from ._quantities import rrd_metric_of
 from ._quantity import Bound, Curve, QuantityProtocol
 from ._quantity_from_api import build_curve, parse_quantity, QuantityContext
 
@@ -28,14 +27,6 @@ class QuantityBuilderProtocol(Protocol):
 def build_single_quantity(per_object: Sequence[QuantityProtocol]) -> QuantityProtocol:
     (quantity,) = per_object
     return quantity
-
-
-def drawn_quantity(
-    metric_name: str,
-    services: Sequence[Service],
-    quantity_builder: QuantityBuilderProtocol,
-) -> QuantityProtocol:
-    return quantity_builder([rrd_metric_of(service, metric_name) for service in services])
 
 
 @dataclass(frozen=True)

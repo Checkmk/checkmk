@@ -5474,12 +5474,6 @@ svglib==2.0.2 \
     --hash=sha256:0fd04f1eb593802060427d6a59ab5127d65db6b8f5750d572f7df25097e36503 \
     --hash=sha256:455e473dbe7066eea55c39de8194a6a3b646b6c37a255700257fd32115ddb218
     # via -r tests/dev-requirements.in
-telnetlib3==2.0.8 \
-    --hash=sha256:08a2a7a3a6790f89617442b7d491da8b531d87706fffd6a33eeff57ac440b752 \
-    --hash=sha256:9c5b762d359581af61b7872c5abd1aa82d8fd49044d12b4eb5a7c88660901dbd
-    # via
-    #   -c constraints.txt
-    #   -r tests/dev-requirements.in
 tenacity==9.1.4 \
     --hash=sha256:6095a360c919085f28c6527de529e76a06ad89b23659fa881ae0649b867a9d55 \
     --hash=sha256:adb31d4c263f2bd041081ab33b498309a57c77f9acf2db65aadf0898179cf93a

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
-from collections.abc import Callable, Container, Iterator, Mapping, Sequence
+from collections.abc import Callable, Container, Mapping, Sequence
 
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
@@ -23,7 +23,7 @@ from ._graph_from_api import (
 )
 from ._naming import MetricName, Service
 from ._quantities import rrd_metric_of, RRDMetric, ScalarOf
-from ._quantity import fetch_leaves, QuantityProtocol
+from ._quantity import fetch_leaves
 from ._quantity_from_api import build_curve
 
 _METRIC_PREFIX = "METRIC_"
@@ -69,14 +69,6 @@ def _matchable_parts(graph: _GraphPlugin) -> _MatchableParts:
             ]
 
 
-def _drawn_quantities(graph: Graph) -> Iterator[tuple[QuantityProtocol, bool]]:
-    for group in graph.stacks:
-        for member in group.members:
-            yield member.quantity, group.inverse
-    for line in graph.lines:
-        yield line.curve.quantity, line.inverse
-
-
 def _add_predictive_lines(
     graph: Graph,
     service: Service,
@@ -85,7 +77,7 @@ def _add_predictive_lines(
     registered_metrics: Mapping[str, metrics_v1.Metric],
 ) -> tuple[Graph, set[MetricName]]:
     inverse_by_metric: dict[MetricName, bool] = {}
-    for quantity, inverse in _drawn_quantities(graph):
+    for quantity, inverse in graph.drawn_quantities():
         for metric in fetch_leaves(quantity):
             if isinstance(metric, RRDMetric):
                 inverse_by_metric.setdefault(metric.metric_name, inverse)

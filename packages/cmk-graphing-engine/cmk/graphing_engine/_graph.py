@@ -74,7 +74,22 @@ class Graph:
             if bound is not None and not isinstance(bound, int | float):
                 yield bound
 
-    def _region_bounds(self) -> Iterator[Curve]:
+    def drawn_quantities(self) -> Iterator[tuple[QuantityProtocol, bool]]:
+        for group in self.stacks:
+            for member in group.members:
+                yield member.quantity, group.inverse
+        for line in self.lines:
+            yield line.curve.quantity, line.inverse
+
+    def curves(self) -> Iterator[Curve]:
+        for stack in self.stacks:
+            yield from stack.members
+            if stack.reference is not None:
+                yield stack.reference
+        for line in self.lines:
+            yield line.curve
+        for rule in self.rules:
+            yield rule.curve
         for region in self.regions:
             if region.lower is not None:
                 yield region.lower
@@ -82,18 +97,12 @@ class Graph:
                 yield region.upper
 
     def metrics(self) -> Sequence[MetricProtocol]:
-        drawn = list(
-            dict.fromkeys(
-                metric
-                for quantity in itertools.chain(
-                    (m.quantity for g in self.stacks for m in g.members),
-                    (g.reference.quantity for g in self.stacks if g.reference is not None),
-                    (line.curve.quantity for line in self.lines),
-                    (rule.curve.quantity for rule in self.rules),
-                    (bound.quantity for bound in self._region_bounds()),
-                    self._bound_quantities(),
-                )
-                for metric in fetch_leaves(quantity)
+        drawn = [
+            metric
+            for quantity in itertools.chain(
+                (curve.quantity for curve in self.curves()),
+                self._bound_quantities(),
             )
-        )
+            for metric in fetch_leaves(quantity)
+        ]
         return list(dict.fromkeys([*drawn, *title_metrics(self.title, drawn)]))

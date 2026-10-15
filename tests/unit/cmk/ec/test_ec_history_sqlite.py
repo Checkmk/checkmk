@@ -230,6 +230,21 @@ def test_filtered_history_query_with_limit_returns_only_that_many_newest_entries
     assert rows == [["four"], ["three"]]
 
 
+def test_history_query_with_empty_in_filter_returns_no_entries(
+    history_sqlite: SQLiteHistory,
+) -> None:
+    history_sqlite.add(event=ec.Event(text="one"), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history_sqlite)
+    query = QueryGET(
+        lambda _name: table, ["GET history", "Columns: event_text", "Filter: event_text in"], logger
+    )
+
+    _header, *rows = table.query(query)
+
+    assert rows == []
+
+
 def test_filters_to_sqlite_query_with_simple_equality_filter_has_correct_query() -> None:
     filters = [
         QueryFilter(

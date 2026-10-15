@@ -124,6 +124,31 @@ def test_inventory_veeam_client(
             ],
             id="section in progress LastBackupAge",
         ),
+        pytest.param(
+            "JOB_NAME",
+            [
+                ["Status", "Success"],
+                ["JobName", "JOB_NAME"],
+                ["TotalSizeByte", "100"],
+                ["StartTime", "01.02.2015 20:05:45"],
+                ["LastBackupAge", "-19"],
+                ["DurationDDHHMMSS", "00:01:00:00"],
+                ["AvgSpeedBps", "100"],
+                ["DisplayName", "name"],
+            ],
+            [
+                3,
+                "Status: Success, Size (total): 100 B, Last backup: end time is in the future, "
+                "Duration: 1 hour 0 minutes, Average Speed: 100 B/s",
+                [("totalsize", 100), ("duration", 3600), ("avgspeed", 100)],
+            ],
+            marks=pytest.mark.xfail(
+                strict=True,
+                raises=ValueError,
+                reason="Crash report 95a39968-b207-11f0-bd07-0050569e71f5: ValueError",
+            ),
+            id="negative LastBackupAge from clock skew",
+        ),
     ],
 )
 def test_check_veeam_client(

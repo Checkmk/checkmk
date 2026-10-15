@@ -72,6 +72,25 @@ def test_get_with_zero_limit_does_not_fetch_the_whole_history(
     assert len(list(rows)) <= 1
 
 
+@requires_mongodb
+def test_history_query_applies_all_filters_on_the_same_column(
+    history_mongo: MongoDBHistory,
+) -> None:
+    for event_id in (1, 2, 3):
+        history_mongo.add(event=ec.Event(id=event_id, text=f"event {event_id}"), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history_mongo)
+    query = QueryGET(
+        lambda _name: table,
+        ["GET history", "Columns: event_id", "Filter: event_id >= 2", "Filter: event_id <= 2"],
+        logger,
+    )
+
+    _header, *rows = table.query(query)
+
+    assert rows == [[2]]
+
+
 def test_filters_to_mongo_query() -> None:
     """Filters become proper mongo query"""
 
@@ -144,6 +163,22 @@ def test_filters_to_mongo_query() -> None:
         "_id": {"$in": "some text"},
     }
     assert filters_to_mongo_query(filters) == expected_output
+
+
+def test_all_filters_on_the_same_column_end_up_in_the_mongo_query() -> None:
+    filters = [
+        QueryFilter(
+            column_name="event_id", operator_name=">=", predicate=lambda _: True, argument=2
+        ),
+        QueryFilter(
+            column_name="event_id", operator_name="<=", predicate=lambda _: True, argument=4
+        ),
+    ]
+
+    assert filters_to_mongo_query(filters) == {
+        "event.id": {"$gte": 2},
+        "$and": [{"event.id": {"$lte": 4}}],
+    }
 
 
 def mongo_filter_for(operator_name: OperatorName, argument: str) -> object:

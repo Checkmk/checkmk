@@ -205,7 +205,8 @@ def _grep_pipeline(filters: Iterable[QueryFilter]) -> list[str]:
 
 def _grep_command(operator_name: OperatorName, argument: str) -> str | None:
     # Prefiltering must never drop a line the filter would keep. But grep sees
-    # the whole line, so regex anchors would refer to the line instead of the
+    # the whole line, so "grep -v" would drop lines where any other column
+    # matches, and regex anchors would refer to the line instead of the
     # column. Furthermore, grep doesn't understand all of Python's regex syntax,
     # so we only prefilter regexes which mean the same for both.
     match operator_name:
@@ -217,7 +218,7 @@ def _grep_command(operator_name: OperatorName, argument: str) -> str | None:
             return f"grep -F -i {_grep_pattern(argument)}"
         case "~~" if _is_grep_compatible(argument):
             return f"grep -E -i {_grep_pattern(argument)}"
-        case "~" | "~~" | "<" | ">=" | ">" | "<=" | "in":
+        case "!=" | "~" | "!~" | "!=~" | "~~" | "!~~" | "<" | ">=" | ">" | "<=" | "in":
             return None
 
 
@@ -252,7 +253,7 @@ def _greatest_lower_bound_for_filter(operator: OperatorName, value: float) -> fl
             return value
         case ">":
             return value + 1
-        case "~" | "=~" | "~~" | "<" | "<=" | "in":
+        case "!=" | "~" | "!~" | "=~" | "!=~" | "~~" | "!~~" | "<" | "<=" | "in":
             return None
 
 
@@ -273,7 +274,7 @@ def _least_upper_bound_for_filter(operator: OperatorName, value: float) -> float
             return value - 1
         case "<=":
             return value
-        case "~" | "=~" | "~~" | ">=" | ">" | "in":
+        case "!=" | "~" | "!~" | "=~" | "!=~" | "~~" | "!~~" | ">=" | ">" | "in":
             return None
 
 

@@ -48,7 +48,8 @@ def check_db2_connections(item: str, params: Mapping[str, Any], section: Section
         label="Connections",
     )
 
-    yield Result(state=State.OK, summary=f"Port: {data['port']}")
+    if "port" in data:
+        yield Result(state=State.OK, summary=f"Port: {data['port']}")
 
     if "latency" in data:
         latency = data["latency"]

@@ -14,7 +14,9 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    Result,
     Service,
+    State,
     StringTable,
 )
 
@@ -76,7 +78,13 @@ def check_winperf_msx_queues(
     params: Mapping[str, Any],
     section: ParsedSection,
 ) -> CheckResult:
-    length = section.get(params["offset"])
+    if (offset := params.get("offset")) is None:
+        yield Result(
+            state=State.UNKNOWN,
+            summary="Queue offset is not configured (set 'Offset' in the enforced service rule)",
+        )
+        return
+    length = section.get(offset)
     if length is not None:
         yield from check_levels_v1(
             length,

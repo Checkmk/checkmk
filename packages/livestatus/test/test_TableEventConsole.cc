@@ -295,7 +295,45 @@ INSTANTIATE_TEST_SUITE_P(TableEventConsoleTest, BitMaskFilterOnEventId,
                          ::testing::Values("~", "!~", "=~", "!=~", "~~",
                                            "!~~"));
 
-TEST_F(TableEventConsoleTest, DropsDisjunctions) {
+TEST_F(TableEventConsoleTest, ForwardsTheRangeOfADisjunctionOnEventId) {
+    EXPECT_EQ(filtersSentToEC({
+                  "Filter: event_id = 3",
+                  "Filter: event_id = 7",
+                  "Filter: event_id = 5",
+                  "Or: 3",
+              }),
+              (std::vector<std::string>{
+                  "Filter: event_id >= 3",
+                  "Filter: event_id <= 7",
+              }));
+}
+
+TEST_F(TableEventConsoleTest,
+       ForwardsADisjunctionOnASingleEventIdAsAnEquality) {
+    EXPECT_EQ(filtersSentToEC({
+                  "Filter: event_id = 5",
+                  "Filter: event_id >= 5",
+                  "Filter: event_id <= 5",
+                  "And: 2",
+                  "Or: 2",
+              }),
+              std::vector<std::string>{"Filter: event_id = 5"});
+}
+
+TEST_F(TableEventConsoleTest, ForwardsTheCommonValueOfADisjunctionOnStrings) {
+    EXPECT_EQ(filtersSentToEC({
+                  "Filter: event_host = a",
+                  "Filter: event_text ~ disk",
+                  "And: 2",
+                  "Filter: event_host = a",
+                  "Filter: event_state = 2",
+                  "And: 2",
+                  "Or: 2",
+              }),
+              std::vector<std::string>{"Filter: event_host = a"});
+}
+
+TEST_F(TableEventConsoleTest, DropsDisjunctionsWithoutCommonRestriction) {
     EXPECT_EQ(filtersSentToEC({
                   "Filter: event_id <= 5",
                   "Filter: event_id >= 5",
@@ -314,5 +352,6 @@ TEST_F(TableEventConsoleTest, ReportsAnECFailingBeforeItReplies) {
 TEST_F(TableEventConsoleTest, AnswersQueriesOnTablesWithoutGreppingColumns) {
     TableEventConsoleStatus table;
 
-    EXPECT_EQ(runQuery(table, {}).error, "");
+    // The empty disjunction is a conjunct which doesn't mention any column.
+    EXPECT_EQ(runQuery(table, {"Or: 0"}).error, "");
 }

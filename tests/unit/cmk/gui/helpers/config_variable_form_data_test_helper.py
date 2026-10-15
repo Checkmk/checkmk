@@ -304,11 +304,6 @@ W6UwWFko7ZZvNwLYAiEAyTjDYETA0XhtxzcXKyzGECbeZUHbZpYz2xJpZGuAzKw=
 """
 
 _STORED_API_KEY = ("cmk_postprocessed", "stored_password", ("my_key", ""))
-_VALID_PROVIDER_OPTIONS = {
-    "model": "claude-opus-5",
-    "credential": _STORED_API_KEY,
-    "prompt_cache": "five_minutes",
-}
 
 CHECKBOX_CASES: list[Case] = [
     CasePass("enabled", True),
@@ -712,17 +707,9 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
     },
     "ai_control_plane_provider": {
         "none": None,
-        "anthropic": {
-            "model": NoSaveableDefault(),
-            "credential": NoSaveableDefault(),
-            "prompt_cache": "five_minutes",
-        },
+        "anthropic": {"model": NoSaveableDefault(), "credential": NoSaveableDefault()},
         "anthropic.base_url": NoSaveableDefault(),
-        "openai": {
-            "model": NoSaveableDefault(),
-            "credential": NoSaveableDefault(),
-            "prompt_cache": "five_minutes",
-        },
+        "openai": {"model": NoSaveableDefault(), "credential": NoSaveableDefault()},
         "openai.base_url": NoSaveableDefault(),
     },
     "auth_by_http_header": {
@@ -1610,10 +1597,7 @@ CASES: Mapping[str, list[Case]] = {
         CasePass("none", ("none", None)),
         CasePass(
             "anthropic",
-            (
-                "anthropic",
-                {"model": "claude-opus-5", "credential": _STORED_API_KEY, "prompt_cache": "off"},
-            ),
+            ("anthropic", {"model": "claude-opus-5", "credential": _STORED_API_KEY}),
         ),
         CasePass(
             "openai-with-base-url",
@@ -1623,36 +1607,25 @@ CASES: Mapping[str, list[Case]] = {
                     "model": "gpt-5",
                     "base_url": "https://llm.corp.example/v1",
                     "credential": _STORED_API_KEY,
-                    "prompt_cache": "one_hour",
                 },
             ),
         ),
-        CaseFail(
-            "missing-credential",
-            ("anthropic", {k: v for k, v in _VALID_PROVIDER_OPTIONS.items() if k != "credential"}),
-        ),
-        CaseFail("empty-model", ("anthropic", {**_VALID_PROVIDER_OPTIONS, "model": ""})),
+        CaseFail("missing-credential", ("anthropic", {"model": "claude-opus-5"})),
+        CaseFail("empty-model", ("anthropic", {"model": "", "credential": _STORED_API_KEY})),
         CaseFail(
             "non-http-base-url",
-            ("openai", {**_VALID_PROVIDER_OPTIONS, "base_url": "ftp://x"}),
+            ("openai", {"model": "gpt-5", "base_url": "ftp://x", "credential": _STORED_API_KEY}),
         ),
         CaseFail(
             "explicit-password",
             (
                 "anthropic",
                 {
-                    **_VALID_PROVIDER_OPTIONS,
+                    "model": "claude-opus-5",
                     "credential": ("cmk_postprocessed", "explicit_password", ("id", "s3cret")),
                 },
             ),
             exception=MKGeneralException,
-        ),
-        CaseFail(
-            "missing-prompt-cache",
-            (
-                "anthropic",
-                {k: v for k, v in _VALID_PROVIDER_OPTIONS.items() if k != "prompt_cache"},
-            ),
         ),
     ],
     "alert_handler_event_types": [

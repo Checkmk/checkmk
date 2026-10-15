@@ -248,7 +248,7 @@ function showSuggestions(): void {
       return
     }
 
-    nextTick(async () => {
+    void nextTick(async () => {
       if (suggestionsRef.value) {
         if (!floating) {
           updateNonFloatingPlacement()

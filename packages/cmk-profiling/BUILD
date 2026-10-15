@@ -138,6 +138,7 @@ vue_library(
         ":node_modules/cmk-shared-typing-bzl",
         ":node_modules/cmk-ui-library",
         ":node_modules/vite",
+        "//:node_modules/vue",
     ],
 )
 
@@ -200,25 +201,10 @@ vue_tsc_bin.vue_tsc_test(
     data = [
         "tsconfig.test.json",
         "vite.config.ts",
-        ":cmk-profiling",
-        ":node_modules/@testing-library",
-        ":node_modules/@vitejs",
-        ":node_modules/msw",
-        "//:node_modules/@vue/compiler-dom",
-        "//:node_modules/@vue/server-renderer",
-        "//:node_modules/@vue/test-utils",
-        "//:node_modules/jsdom",
-        "//:node_modules/sass-embedded",
-        "//:node_modules/vitest",
-        "//:node_modules/vitest-fail-on-console",
-        "//:node_modules/vue",
-        "//:node_modules/vue-tsc",
         "//packages/cmk-frontend:theme_images",
         "//packages/cmk-profiling/tests/frontend",
-        "//packages/cmk-ui-library:vitest_msw",
-        "//packages/cmk-ui-library:vitest_shared_setup",
     ],
-    include_types = True,
+    include_transitive_types = True,
 )
 
 vitest_test(
@@ -226,22 +212,7 @@ vitest_test(
     data = [
         "tsconfig.test.json",
         "vite.config.ts",
-        ":cmk-profiling",
-        ":node_modules/@testing-library",
-        ":node_modules/@vitejs",
-        ":node_modules/msw",
-        "//:node_modules/@vue/compiler-dom",
-        "//:node_modules/@vue/server-renderer",
-        "//:node_modules/@vue/test-utils",
-        "//:node_modules/jsdom",
-        "//:node_modules/sass-embedded",
-        "//:node_modules/vitest",
-        "//:node_modules/vitest-fail-on-console",
-        "//:node_modules/vue",
-        "//:node_modules/vue-tsc",
         "//packages/cmk-frontend:theme_images",
         "//packages/cmk-profiling/tests/frontend",
-        "//packages/cmk-ui-library:vitest_msw",
-        "//packages/cmk-ui-library:vitest_shared_setup",
     ],
 )

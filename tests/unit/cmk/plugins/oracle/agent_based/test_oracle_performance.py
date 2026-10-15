@@ -455,11 +455,6 @@ def test_check_missing_goes_stale() -> None:
         list(opc.check_oracle_performance_dbtime("TWH", {}, parse_oracle_performance([])))
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=TypeError,
-    reason="Crash report aef7c99c-9327-11f0-b51f-a088c23ac8b1: TypeError",
-)
 def test_check_iostat_bytes_reports_non_integer_counter(monkeypatch: pytest.MonkeyPatch) -> None:
     store: dict[str, object] = {
         f"DB.iostat_file.oracle_ios_f_temp_file_{suffix}": (0.0, 0)
@@ -472,5 +467,6 @@ def test_check_iostat_bytes_reports_non_integer_counter(monkeypatch: pytest.Monk
     }
 
     assert Result(
-        state=State.UNKNOWN, summary="Temp File Large Write: counter value is not an integer"
+        state=State.UNKNOWN,
+        summary="Temp File Large Write: Oracle reported no integer value, counter skipped",
     ) in list(opc.check_oracle_performance_iostat_bytes("DB", {}, section))

@@ -57,6 +57,9 @@ importers:
       stylelint-config-standard:
         specifier: ^40.0.0
         version: 40.0.0(stylelint@17.8.0(typescript@6.0.3))
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
       typescript-eslint:
         specifier: 8.58.1
         version: 8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3)

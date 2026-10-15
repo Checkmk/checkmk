@@ -2,7 +2,6 @@ load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("@npm//:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:link_shared_typing.bzl", "link_shared_typing")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
@@ -132,6 +131,7 @@ vue_library(
         "tsconfig.json",
         "tsconfig.test.json",
     ],
+    tsconfig = "tsconfig.json",
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/@tanstack",
@@ -139,6 +139,15 @@ vue_library(
         ":node_modules/cmk-ui-library",
         ":node_modules/vite",
         "//:node_modules/vue",
+    ],
+)
+
+vue_library(
+    name = "tests",
+    tsconfig = "tsconfig.test.json",
+    deps = [
+        ":cmk-profiling",
+        "//packages/cmk-profiling/tests/frontend",
     ],
 )
 
@@ -167,44 +176,6 @@ filegroup(
         "//packages/cmk-profiling/tests/frontend:srcs",
     ],
     visibility = ["//visibility:public"],
-)
-
-vue_tsc_bin.vue_tsc_test(
-    name = "type-check",
-    args = [
-        "-p",
-        "tsconfig.json",
-    ],
-    chdir = package_name(),
-    data = [
-        ":cmk-profiling",
-        "//:node_modules/@vue/compiler-dom",
-        "//:node_modules/@vue/server-renderer",
-        "//:node_modules/@vue/test-utils",
-        "//:node_modules/jsdom",
-        "//:node_modules/sass-embedded",
-        "//:node_modules/vitest",
-        "//:node_modules/vitest-fail-on-console",
-        "//:node_modules/vue",
-        "//:node_modules/vue-tsc",
-    ],
-    include_types = True,
-)
-
-vue_tsc_bin.vue_tsc_test(
-    name = "type-check-tests",
-    args = [
-        "-p",
-        "tsconfig.test.json",
-    ],
-    chdir = package_name(),
-    data = [
-        "tsconfig.test.json",
-        "vite.config.ts",
-        "//packages/cmk-frontend:theme_images",
-        "//packages/cmk-profiling/tests/frontend",
-    ],
-    include_transitive_types = True,
 )
 
 vitest_test(

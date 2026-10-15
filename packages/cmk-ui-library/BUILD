@@ -1,6 +1,5 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("@npm//:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
 load("//bazel/rules:link_shared_typing.bzl", "link_shared_typing")
 load("//bazel/rules:vitest_test.bzl", "vitest_test")
 load("//bazel/rules:vue_library.bzl", "vue_library")
@@ -24,6 +23,7 @@ vue_library(
         "tsconfig.test.json",
         "tsconfig.vue-base.json",
     ],
+    tsconfig = "tsconfig.json",
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/@internationalized",
@@ -98,31 +98,10 @@ js_library(
     deps = ["//:node_modules/vitest"],
 )
 
-vue_tsc_bin.vue_tsc_test(
-    name = "type-check",
-    args = [
-        "-p",
-        "tsconfig.json",
-    ],
-    chdir = package_name(),
-    data = [
-        ":cmk-ui-library",
-        "//:node_modules/@vue/compiler-dom",
-        "//:node_modules/@vue/server-renderer",
-        "//:node_modules/@vue/test-utils",
-        "//:node_modules/jsdom",
-        "//:node_modules/sass-embedded",
-        "//:node_modules/vitest",
-        "//:node_modules/vitest-fail-on-console",
-        "//:node_modules/vue",
-        "//:node_modules/vue-tsc",
-    ],
-    include_types = True,
-)
-
-js_library(
-    name = "test_ts",
+vue_library(
+    name = "tests",
     srcs = glob(["tests/**/*.ts"]),
+    tsconfig = "tsconfig.test.json",
     deps = [
         ":cmk-ui-library",
         ":node_modules/@testing-library",
@@ -143,29 +122,12 @@ js_library(
     ],
 )
 
-vue_tsc_bin.vue_tsc_test(
-    name = "type-check-tests",
-    args = [
-        "-p",
-        "tsconfig.test.json",
-    ],
-    chdir = package_name(),
-    data = [
-        "tsconfig.test.json",
-        "vite.config.ts",
-        ":test_ts",
-        ":vitest_isolated",
-        "//packages/cmk-frontend:theme_images",
-    ],
-    include_transitive_types = True,
-)
-
 vitest_test(
     name = "unit-test",
     data = [
         "tsconfig.test.json",
         "vite.config.ts",
-        ":test_ts",
+        ":tests",
         ":vitest_isolated",
         "//packages/cmk-frontend:theme_images",
     ],

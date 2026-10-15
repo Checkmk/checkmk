@@ -15,7 +15,6 @@ load("//bazel/rules:link_shared_typing.bzl", "link_shared_typing")
 load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:vitest_test.bzl", "vitest_test")
-load("//bazel/rules:vue_library.bzl", "vue_library")
 
 exports_files([
     "package.json",
@@ -97,12 +96,20 @@ filegroup(
 
 NONFREE = ["src/**/nonfree/**"]
 
-vue_library(
-    name = "src_vue",
+css_library(
+    name = "src_vue_styles",
     srcs = glob(
         ["src/**/*.vue"],
         exclude = NONFREE,
-    ) + [":tsconfig"],
+    ),
+)
+
+js_library(
+    name = "src_vue",
+    srcs = [
+        ":src_vue_styles",
+        ":tsconfig",
+    ],
     deps = [
         ":src_ts",
         "//:node_modules/vue",
@@ -128,12 +135,20 @@ css_library(
     ),
 )
 
-vue_library(
-    name = "src_nonfree_vue",
+css_library(
+    name = "src_nonfree_vue_styles",
     srcs = glob(
         ["src/**/nonfree/**/*.vue"],
         allow_empty = True,
-    ) + [":tsconfig"],
+    ),
+)
+
+js_library(
+    name = "src_nonfree_vue",
+    srcs = [
+        ":src_nonfree_vue_styles",
+        ":tsconfig",
+    ],
     deps = [
         ":src_ts",
         "//:node_modules/vue",
@@ -182,9 +197,17 @@ copy_file(
     allow_symlink = False,
 )
 
-vue_library(
+css_library(
+    name = "demo_vue_styles",
+    srcs = glob(["ui-component-library/**/*.vue"]),
+)
+
+js_library(
     name = "demo_vue",
-    srcs = glob(["ui-component-library/**/*.vue"]) + [":tsconfig"],
+    srcs = [
+        ":demo_vue_styles",
+        ":tsconfig",
+    ],
     deps = [
         ":demo_ts",
         "//:node_modules/vue",
@@ -347,9 +370,17 @@ DEV_SERVER_SRCS = TYPE_CHECK_SRCS + ["//packages/cmk-frontend:dist"]
 
 SRCS = DEV_SERVER_SRCS + LOCALE_OUTS
 
-vue_library(
+css_library(
+    name = "test_vue_styles",
+    srcs = glob(["tests/**/*.vue"]),
+)
+
+js_library(
     name = "test_vue",
-    srcs = glob(["tests/**/*.vue"]) + [":tsconfig"],
+    srcs = [
+        ":test_vue_styles",
+        ":tsconfig",
+    ],
     deps = [
         ":src_ts",
         ":test_ts",

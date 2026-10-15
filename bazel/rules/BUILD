@@ -1,5 +1,6 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("@npm//:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("@rules_shell//shell:sh_library.bzl", "sh_library")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
@@ -102,6 +103,20 @@ sh_binary(
     use_bash_launcher = True,
 )
 
+js_library(
+    name = "vue_type_check_tsconfig_lib",
+    srcs = ["vue_type_check_tsconfig.mjs"],
+    deps = ["//:node_modules/typescript"],
+)
+
+js_binary(
+    name = "vue_type_check_tsconfig",
+    data = [":vue_type_check_tsconfig_lib"],
+    entry_point = ":vue_type_check_tsconfig_lib",
+)
+
+vue_tsc_bin.vue_tsc_binary(name = "vue_tsc")
+
 py_library(
     name = "runpath_patch",
     srcs = ["runpath_patch.py"],
@@ -152,6 +167,8 @@ sh_library(
     name = "shell_scripts",
     srcs = [
         "sign_package.sh",
+        "vue_tsc_report.sh",
+        "vue_tsc_run.sh",
         "xcomp/package_msi.sh",
     ],
 )

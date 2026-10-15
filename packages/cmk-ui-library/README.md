@@ -12,13 +12,13 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 ## Development
 
 ```sh
-# everything (type-check, type-check-tests, unit-test)
+# everything (cmk-ui-library_type_check_test, tests_type_check_test, unit-test)
 bazel test //packages/cmk-ui-library:all
 
 # individually
-bazel test //packages/cmk-ui-library:type-check        # vue-tsc over the sources
-bazel test //packages/cmk-ui-library:type-check-tests  # vue-tsc over tests/
-bazel test //packages/cmk-ui-library:unit-test         # vitest
+bazel build //packages/cmk-ui-library:cmk-ui-library_type_check  # vue-tsc over the sources
+bazel build //packages/cmk-ui-library:tests_type_check           # vue-tsc over tests/
+bazel test //packages/cmk-ui-library:unit-test                   # vitest
 
 # format and lint
 bazel run //:format packages/cmk-ui-library

@@ -169,7 +169,7 @@ class LoginPage(Page):
                 )
 
             try:
-                # astrein: disable=unvalidated-request-input
+                # astrein: disable=request-input
                 username = UserId(username_var.rstrip())
                 password = Password(password_var)
             except ValueError:

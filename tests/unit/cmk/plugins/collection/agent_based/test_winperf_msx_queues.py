@@ -132,3 +132,21 @@ def test_check(item: str, params: Mapping[str, object], result: CheckResult) -> 
         )
         == result
     )
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=KeyError,
+    reason="Crash report 5bfb157a-5284-11f0-9e38-005056a34f46: KeyError",
+)
+def test_check_enforced_service_without_offset() -> None:
+    assert list(
+        winperf_msx_queues.check_winperf_msx_queues(
+            "", {"levels": (500, 2000)}, EXCHANGE_2013_SERVER_SECTION
+        )
+    ) == [
+        Result(
+            state=State.UNKNOWN,
+            summary="Queue offset is not configured (set 'Offset' in the enforced service rule)",
+        )
+    ]

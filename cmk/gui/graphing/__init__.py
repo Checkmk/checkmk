@@ -87,7 +87,6 @@ from ._metric_data import (
     merge_rrd_columns,
     reverse_translated_names,
     rrd_column_names,
-    split_predict_prefix,
     translate_metric_names,
     translated_names_and_scales,
 )
@@ -315,7 +314,6 @@ __all__ = [
     "RRDFetchTimeSeries",
     "serialize_graphs",
     "sort_registered_graph_plugins",
-    "split_predict_prefix",
     "STATIC_INTERACTION",
     "stored_time_range_seconds",
     "SumDelta",

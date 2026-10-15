@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import enum
 from collections.abc import Callable, Mapping
 from typing import assert_never
 
@@ -98,16 +99,27 @@ FALLBACK_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 FALLBACK_ATTRIBUTES = CurveAttributes(title="", unit=FALLBACK_UNIT, color=FALLBACK_COLOR)
 
 
-PREDICT_PREFIX = "predict_"
-PREDICT_LOWER_PREFIX = "predict_lower_"
+class PredictPrefix(enum.StrEnum):
+    LOWER = "predict_lower_"
+    UPPER = "predict_"
+
+
+def split_predict_prefix(metric_name: str) -> tuple[str, str]:
+    for prefix in PredictPrefix:
+        if metric_name.startswith(prefix):
+            return prefix, metric_name[len(prefix) :]
+    return "", metric_name
 
 
 def _predicted_of(metric_name: str) -> tuple[str, str] | None:
-    if metric_name.startswith(PREDICT_LOWER_PREFIX):
-        return metric_name[len(PREDICT_LOWER_PREFIX) :], " (lower levels)"
-    if metric_name.startswith(PREDICT_PREFIX):
-        return metric_name[len(PREDICT_PREFIX) :], " (upper levels)"
-    return None
+    prefix, base = split_predict_prefix(metric_name)
+    match prefix:
+        case PredictPrefix.LOWER:
+            return base, " (lower levels)"
+        case PredictPrefix.UPPER:
+            return base, " (upper levels)"
+        case _:
+            return None
 
 
 def _declared_attributes(

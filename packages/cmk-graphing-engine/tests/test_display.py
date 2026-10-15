@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 
 from cmk.graphing.v1 import metrics, Title
-from cmk.graphing_engine import metric_display_attributes
+from cmk.graphing_engine import metric_display_attributes, split_predict_prefix
 from cmk.graphing_engine._display import FALLBACK_COLOR
 
 _REGISTERED: Mapping[str, metrics.Metric] = {
@@ -70,3 +70,19 @@ def test_a_declared_metric_named_like_a_prediction_keeps_its_own_declaration() -
         "s",
         "#15d1a0",
     )
+
+
+def test_a_metric_carries_no_predictive_prefix() -> None:
+    assert split_predict_prefix("util") == ("", "util")
+
+
+def test_an_upper_prediction_splits_off_its_prefix() -> None:
+    assert split_predict_prefix("predict_util") == ("predict_", "util")
+
+
+def test_a_lower_prediction_splits_off_the_longer_prefix() -> None:
+    assert split_predict_prefix("predict_lower_util") == ("predict_lower_", "util")
+
+
+def test_a_name_merely_starting_like_a_prediction_keeps_it_all() -> None:
+    assert split_predict_prefix("predictions_total") == ("", "predictions_total")

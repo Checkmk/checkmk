@@ -22,6 +22,7 @@ from cmk.graphing_engine import (
     metric_display_attributes,
     MetricName,
     PerformanceData,
+    split_predict_prefix,
     TimeRange,
     TimeSeries,
     timestamps,
@@ -42,8 +43,6 @@ from ._user_specific_unit import (
     user_specific_unit,
     user_unit_format,
 )
-
-_PREDICT_PREFIXES = ("predict_lower_", "predict_")
 
 type _TranslationSpec = (
     translations_v1.RenameTo | translations_v1.ScaleBy | translations_v1.RenameToAndScaleBy
@@ -116,13 +115,6 @@ def _name_and_scale(old_name: MetricName, spec: _TranslationSpec) -> tuple[Metri
             return MetricName(spec.metric_name), spec.factor
         case _:
             assert_never(spec)
-
-
-def split_predict_prefix(metric_name: str) -> tuple[str, str]:
-    for prefix in _PREDICT_PREFIXES:
-        if metric_name.startswith(prefix):
-            return prefix, metric_name[len(prefix) :]
-    return "", metric_name
 
 
 def _find_name_and_scale(

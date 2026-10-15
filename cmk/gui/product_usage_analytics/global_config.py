@@ -18,6 +18,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
     ConfigVariableGroup,
     ConfigVariableHint,
+    GlobalSettingsContext,
     SerializedSettings,
 )
 from cmk.rulesets.v1 import form_specs as fs
@@ -100,13 +101,13 @@ def _inspect_data_hint() -> ConfigVariableHint:
 
 
 def make_product_usage_analytics_config_variable(
-    hints: Callable[[], Sequence[ConfigVariableHint]] = tuple,
+    hints: Callable[[GlobalSettingsContext], Sequence[ConfigVariableHint]] = lambda _context: (),
 ) -> ConfigVariable:
     return ConfigVariable(
         group=ConfigVariableGroupProductUsageAnalytics,
         primary_domain=ConfigDomainProductUsageAnalytics,
         ident="product_usage_analytics",
-        hints=lambda: [_inspect_data_hint(), *hints()],
+        hints=lambda context: [_inspect_data_hint(), *hints(context)],
         form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
             title=Title("Product usage analytics"),
             elements={

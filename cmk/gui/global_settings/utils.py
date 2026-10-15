@@ -269,7 +269,7 @@ def _variables(
                     variant=GlobalSettingsHintVariant(hint.variant),
                     copyable=hint.copyable,
                 )
-                for hint in config_variable.hints()
+                for hint in config_variable.hints(context)
             ],
         )
 

@@ -2102,7 +2102,7 @@ ConfigVariableDefaultTemperatureUnit = ConfigVariable(
 ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainCACertificates,
-    hints=lambda: [
+    hints=lambda _context: [
         ConfigVariableHint(
             html.HTML.without_escaping(
                 _(

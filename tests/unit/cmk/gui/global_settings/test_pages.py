@@ -507,7 +507,9 @@ def test_the_domain_hint_precedes_the_hints_of_the_variable(load_config: Config)
         ConfigVariableGroup(title=_l("Test group"), sort_index=1),
         "test_var_a",
         primary_domain=_HintingDomain,
-        hints=lambda: [ConfigVariableHint(HTML.without_escaping("Take care"), variant="info")],
+        hints=lambda _context: [
+            ConfigVariableHint(HTML.without_escaping("Take care"), variant="info")
+        ],
     ):
         variable = shown_variables(global_settings(load_config, acting_user=LoggedInSuperUser()))[
             "test_var_a"
@@ -540,7 +542,7 @@ def test_a_copyable_hint_keeps_its_value_out_of_the_text(load_config: Config) ->
     with registered(
         ConfigVariableGroup(title=_l("Test group"), sort_index=1),
         "test_var_a",
-        hints=lambda: [
+        hints=lambda _context: [
             ConfigVariableHint(HTML.without_escaping("Reachable at "), copyable="http://host/mcp")
         ],
     ):

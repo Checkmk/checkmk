@@ -49,7 +49,7 @@ def registered[ModelT](
     *varnames: str,
     primary_domain: type[ABCConfigDomain] = ConfigDomainGUI,
     form_spec: Callable[[GlobalSettingsContext], FormSpec[ModelT]] | None = None,
-    hints: Callable[[], Sequence[ConfigVariableHint]] = tuple,
+    hints: Callable[[GlobalSettingsContext], Sequence[ConfigVariableHint]] = lambda _context: (),
 ) -> Iterator[None]:
     config_variable_group_registry.register(group)
     variables = [

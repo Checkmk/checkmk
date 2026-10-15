@@ -172,3 +172,27 @@ def test_check_veeam_scaleout_repositories_omits_tier_details_when_not_configure
 def test_check_veeam_scaleout_repositories_vanished_item_yields_nothing() -> None:
     section = parse_veeam_scaleout_repositories([[_scaleout_repo("sobr-1")]])
     assert list(check_veeam_scaleout_repositories("sobr-2", PARAMS, section)) == []
+
+
+def test_changed_extent_status_state_is_applied() -> None:
+    params: CheckParameters = {**PARAMS, "status_maintenance": 2}
+    section = parse_veeam_scaleout_repositories(
+        [
+            [
+                _scaleout_repo(
+                    performanceTier={"performanceExtents": [_extent(status=["Maintenance"])]}
+                )
+            ]
+        ]
+    )
+    results = list(check_veeam_scaleout_repositories("sobr-1", params, section))
+    assert results[0] == Result(state=State.CRIT, summary="1 extent, extent-1 (Maintenance)")
+
+
+def test_changed_no_performance_extents_state_is_applied() -> None:
+    params: CheckParameters = {**PARAMS, "no_extents_state": 0}
+    section = parse_veeam_scaleout_repositories(
+        [[_scaleout_repo(performanceTier={"performanceExtents": []})]]
+    )
+    results = list(check_veeam_scaleout_repositories("sobr-1", params, section))
+    assert results[0] == Result(state=State.OK, summary="No performance extents configured")

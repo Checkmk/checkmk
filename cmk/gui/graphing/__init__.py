@@ -50,18 +50,14 @@ from ._graph_dispatch import (
     serialize_graphs,
 )
 from ._graph_display_config import (
-    compute_image_graph_ranges,
-    graph_image_render_options,
     GraphDestinations,
+    GraphDisplayConfigBase,
     GraphDisplayConfigHTML,
-    GraphDisplayConfigImage,
     GraphRenderOptions,
     GraphTitleFormat,
     HTML_SIZE_PER_EX,
     resolve_size,
 )
-from ._graph_png import PngTexts, render_png
-from ._graph_png_size import compute_png_size_mm, mm_per_ex
 from ._graph_ranges import compute_graph_ranges_for_width, GraphRanges
 from ._graph_specification import (
     AnnotatedHostName,
@@ -87,6 +83,7 @@ from ._graphs_order import sort_registered_graph_plugins
 from ._legacy_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
 from ._line_types import line_type_with_mirroring, LineType
 from ._metric_data import (
+    converted_time_series,
     evaluated_metrics,
     EvaluatedMetric,
     merge_rrd_columns,
@@ -129,9 +126,6 @@ from ._metric_query import (
 )
 from ._metric_spec import get_metric_spec, registered_metric_ids_and_titles
 from ._metric_visitor import MetricVisitor
-from ._notification_graph_images import (
-    AjaxGraphImagesForNotifications,
-)
 from ._perfometers import (
     drawn_segments,
     DrawnSegment,
@@ -152,7 +146,6 @@ from ._plugins import (
     registered_metrics,
     registered_translations,
 )
-from ._png_rendering import png_options, png_texts
 from ._popup import PageHostServiceGraphPopup
 from ._prediction_graphs import prediction_graph_dispatcher
 from ._settings import ConfigVariableGraphTimeranges
@@ -193,7 +186,8 @@ from ._valuespecs import (
 )
 
 __all__ = [
-    "AjaxGraphImagesForNotifications",
+    "converted_time_series",
+    "GraphDisplayConfigBase",
     "AnnotatedHostName",
     "assemble_fetched_data",
     "AttributeGroup",
@@ -205,8 +199,6 @@ __all__ = [
     "COMMUNITY_QUANTITY_SPECS",
     "context_from_json",
     "compute_graph_ranges_for_width",
-    "compute_image_graph_ranges",
-    "compute_png_size_mm",
     "ConfigVariableGraphTimeranges",
     "ConsolidationFunction",
     "DEFAULT_INTERACTION",
@@ -241,7 +233,6 @@ __all__ = [
     "graph_choices",
     "graph_codec",
     "graph_dispatcher_registry",
-    "graph_image_render_options",
     "graph_specification_registry",
     "GraphChoices",
     "GraphCodec",
@@ -250,7 +241,6 @@ __all__ = [
     "GraphDispatcher",
     "GraphDispatcherRegistry",
     "GraphDisplayConfigHTML",
-    "GraphDisplayConfigImage",
     "GraphEnvironment",
     "GraphExportRequest",
     "GraphFromAPI",
@@ -296,7 +286,6 @@ __all__ = [
     "migrate_graph_render_options_title_format",
     "migrate_graph_render_options_title_format_from_disk",
     "MKGraphNotFound",
-    "mm_per_ex",
     "PageHostServiceGraphPopup",
     "PageVsAutocomplete",
     "parse_check_command",
@@ -325,13 +314,9 @@ __all__ = [
     "registered_translations",
     "RegisteredMetric",
     "render_engine_graph_group",
-    "png_texts",
-    "PngTexts",
     "render_global_time_picker",
     "resolve_default_time_range_seconds",
     "render_graph_error_html",
-    "png_options",
-    "render_png",
     "resolve_graph_id_from_index",
     "resolve_size",
     "reverse_translated_names",

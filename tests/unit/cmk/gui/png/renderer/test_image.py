@@ -29,8 +29,9 @@ from cmk.graphing_engine import (
 matplotlib.use("Agg")
 from matplotlib.figure import Figure
 
-from cmk.gui.graphing import compute_png_size_mm
-from cmk.gui.graphing._graph_png import (
+from cmk.gui.png import compute_png_size_mm
+from cmk.gui.png._size import MM_PER_INCH, PngOptions
+from cmk.gui.png.renderer._image import (
     _fit_time_axis,
     _graph_scalars,
     _graph_time_caption,
@@ -44,7 +45,6 @@ from cmk.gui.graphing._graph_png import (
     PngTexts,
     render_png,
 )
-from cmk.gui.graphing._graph_png_size import MM_PER_INCH, PngOptions
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.unit_formatter import DecimalFormatter
 
@@ -95,8 +95,6 @@ def _curve(title: str, values: list[float | None], *, color: str = "#000000") ->
 
 
 def test_second_area_stacks_onto_the_first_not_onto_zero() -> None:
-    """Regression test for the bug the matplotlib PNG rewrite introduced: a second stacked
-    curve must pile onto the first curve's top, not reset to a zero baseline."""
     first = _curve("first", [1.0, 2.0, 3.0])
     second = _curve("second", [10.0, 20.0, 30.0])
     stack = EvaluatedStack(members=[first, second], inverse=False)
@@ -126,8 +124,6 @@ def test_mirrored_stack_is_drawn_below_zero() -> None:
 
 
 def test_graph_scalars_use_the_curves_own_values_not_the_stacked_position() -> None:
-    """Legend min/max/avg/last must reflect each curve's own series, not its cumulative
-    position within the stack (matching the legacy artwork behaviour)."""
     first = _curve("first", [1.0, 2.0, 3.0])
     second = _curve("second", [10.0, 20.0, 30.0])
     graph = EvaluatedGraph(
@@ -156,8 +152,6 @@ def test_render_png_produces_bytes_for_an_empty_graph() -> None:
 
 
 def test_render_png_with_a_unit_renders_ticks_and_legend_via_the_formatter() -> None:
-    """End-to-end smoke test: a graph with a Y-axis unit must render without error through the
-    render_y_labels()/formatter.render() wiring, not just the plain-numeric fallback path."""
     curve = _curve("m", [1.0, 2.0, 3.0], color="#123456")
     graph = EvaluatedGraph(
         name="g",
@@ -175,8 +169,6 @@ def test_render_png_with_a_unit_renders_ticks_and_legend_via_the_formatter() -> 
 
 
 def test_graph_scalars_are_natural_values_even_when_mirrored() -> None:
-    """Legend min/max/avg/last must reflect the curve's true (positive) value, not the
-    display-mirroring sign - Min/Max must not swap or go negative for an inverse curve."""
     member = _curve("out", [10.0, 20.0, 30.0])
     graph = EvaluatedGraph(
         name="g",
@@ -195,8 +187,6 @@ def test_graph_scalars_are_natural_values_even_when_mirrored() -> None:
 
 
 def test_mirrored_y_labels_mirrors_positive_text_to_the_negative_side() -> None:
-    """A mirrored graph's negative half must show the same (positive-looking) label text as its
-    mirror image above zero - mirroring below zero is a display choice, not a sign change."""
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
     ax.set_ylim(-2000, 2000)
@@ -212,9 +202,6 @@ def test_mirrored_y_labels_mirrors_positive_text_to_the_negative_side() -> None:
 
 
 def test_far_away_rule_is_clipped_and_does_not_stretch_the_axis() -> None:
-    """A rule far outside the curve data's range must not be drawn on the plot, and the computed
-    ylim must stay anchored to the data - matching Vue's computeYDomain, which never factors rule
-    values into the axis range."""
     member = _curve("m", [1.0, 2.0, 3.0])
     far_away_rule = EvaluatedRule(
         id="crit",
@@ -242,10 +229,6 @@ def test_far_away_rule_is_clipped_and_does_not_stretch_the_axis() -> None:
 
 
 def test_vertical_range_bounds_use_the_stacked_top_not_each_members_own_max() -> None:
-    """A stack's drawn top is the cumulative sum other members pile onto, so the Y-axis bounds
-    must follow that stacked geometry - not each member's own unstacked min/max (_CurveScalars,
-    which is legend-only). Regression test for a bug where a stack of members maxing 10 and 20 drew up to
-    30 but the axis was clipped at 20, and the area's zero baseline was lost entirely."""
     first = _curve("first", [10.0, 10.0, 10.0])
     second = _curve("second", [20.0, 20.0, 20.0])
     graph = EvaluatedGraph(
@@ -309,11 +292,7 @@ def test_the_image_has_the_size_computed_for_it_with_a_legend() -> None:
 
 
 def test_plot_metrics_spans_the_full_time_range_despite_a_long_leading_gap() -> None:
-    """Regression test for CMK-38506: a graph whose real data only starts near the end of a
-    long requested range (e.g. a short-lived host inside a 400-day export) must still plot the
-    x-axis across the *entire* requested time_range, matching what _graph_time_caption's title
-    says and what Vue's on-screen renderer already shows - not zoom into the tail end where the
-    real data happens to live."""
+    """Regression test for CMK-38506."""
     time_range = TimeRange(start=0, end=720, step=60)
     curve = EvaluatedCurve(
         id="m",
@@ -338,10 +317,6 @@ def test_plot_metrics_spans_the_full_time_range_despite_a_long_leading_gap() -> 
 
 
 def test_plot_metrics_spans_the_full_time_range_for_an_entirely_empty_curve() -> None:
-    """A curve with no real values at all (e.g. a graph requested for a period entirely before
-    the host existed) must still get an x-axis spanning the full requested range (here
-    _TIME_RANGE, which _curve() attaches to every curve it builds), not an untouched/default
-    matplotlib axis."""
     curve = _curve("m", [None, None, None])
     graph = EvaluatedGraph(
         name="g",
@@ -372,8 +347,6 @@ def test_plot_metrics_spans_the_time_range_of_a_graph_without_curves() -> None:
 
 
 def test_time_axis_of_a_multi_day_graph_is_labelled_with_weekday_and_time() -> None:
-    """The PNG time axis follows the Vue graph's labelling, not a fixed "%H:%M": a two-day range
-    has to tell its days apart."""
     two_days = TimeRange(start=1668426600, end=1668426600 + 2 * 86400, step=3600)
     curve = EvaluatedCurve(
         id="m",

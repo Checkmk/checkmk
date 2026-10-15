@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from cmk.gui.graphing._time_axis import compute_time_axis, TimeAxisTick
+from cmk.gui.png.renderer._time_axis import compute_time_axis, TimeAxisTick
 
 BERLIN = ZoneInfo("Europe/Berlin")
 CHAR_WIDTH_PX = 6

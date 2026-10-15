@@ -2,9 +2,6 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Render Checkmk graphs as PNG images.
-This is needed for the graphs sent with mail notifications."""
-
 import datetime
 import io
 from collections.abc import Callable, Iterator, Sequence
@@ -37,13 +34,12 @@ from cmk.graphing_engine import (
     Unit,
     VerticalRangeKind,
 )
+from cmk.gui.graphing import converted_time_series, user_specific_unit
+from cmk.gui.png._size import ex_to_inches, legend_height_ex, PngOptions
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.unit_formatter import Label, NotationFormatter
 
-from ._graph_png_size import ex_to_inches, legend_height_ex, PngOptions
-from ._metric_data import converted_time_series
 from ._time_axis import compute_time_axis
-from ._user_specific_unit import user_specific_unit
 
 DPI = 96
 TITLE_COLOR = "#1E262E"
@@ -100,12 +96,8 @@ def _last_non_null(values: Sequence[float | None]) -> float | None:
 
 
 class _CurveScalars:
-    """Min/max/average/last of a curve's own (natural, unmirrored) values.
-
-    Deliberately ignores the stack/line's inverse sign: mirroring below zero is a display
-    choice, not a change to the metric's actual value, so the legend must report the same
-    numbers a non-mirrored curve would.
-    """
+    """Of the curve's own values: mirroring below zero only changes where a curve is drawn, so
+    the legend reports the values unmirrored."""
 
     __slots__ = ("title", "color", "minimum", "maximum", "average", "last")
 
@@ -127,9 +119,8 @@ def _graph_scalars(graph: EvaluatedGraph) -> list[_CurveScalars]:
 def _stack_extents(
     stack: EvaluatedStack, times: Sequence[int]
 ) -> list[tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.bool_]]]:
-    """Per-member (bottom, top, has_value) arrays: the running cumulative sum actually drawn for
-    each member - not the member's own unstacked value. Shared by _plot_stack and
-    _drawn_vertical_extent so the Y-axis bounds always match the drawn area exactly."""
+    """Each member's (bottom, top, has_value) at the running sum it is drawn at, so that the axis
+    bounds follow the drawn areas."""
     sign = _mirroring_sign(stack.inverse)
     bottom = (
         _values(stack.reference, sign=sign) if stack.reference is not None else np.zeros(len(times))
@@ -186,8 +177,6 @@ def _plot_regions(ax: Axes, graph: EvaluatedGraph) -> None:
 
 
 def _plot_metrics(ax: Axes, graph: EvaluatedGraph) -> None:
-    """Plot every stack (cumulatively, on top of its optional hidden reference) and line of the
-    graph, mirroring inverse ones below zero."""
     times = timestamps(graph.time_range)
 
     for stack in graph.stacks:
@@ -208,15 +197,8 @@ def _plot_metrics(ax: Axes, graph: EvaluatedGraph) -> None:
 
 
 def _drawn_vertical_extent(graph: EvaluatedGraph) -> tuple[float | None, float | None]:
-    """The lower/upper bound of everything actually drawn on the axes: each stack's cumulative
-    area (including its zero/reference baseline) plus every line curve.
-
-    Unlike _CurveScalars (each curve's own unstacked value, used only for the legend), a stack
-    member's drawn top is the running sum other members pile onto - not its own min/max - so the
-    axis must be derived from the same bottom/top geometry _plot_stack draws. Otherwise a
-    multi-member stack gets clipped to a single member's range, and the area's baseline is lost
-    whenever every member's own value is > 0.
-    """
+    """Stack members are drawn at running sums, so the axis follows those and not the members'
+    own values, which would clip a stack to its largest member."""
     times = timestamps(graph.time_range)
     values: list[float] = []
     for stack in graph.stacks:
@@ -236,12 +218,8 @@ def _drawn_vertical_extent(graph: EvaluatedGraph) -> tuple[float | None, float |
 
 
 def _vertical_range_bounds(graph: EvaluatedGraph) -> tuple[float | None, float | None]:
-    """The bounds the Y-axis is pinned to: an explicit FIXED vertical_range always wins outright;
-    MINIMAL - or no vertical_range at all, the common template-graph case - combines any soft
-    bounds with the drawn curves' own extent, so the axis matches the same data-derived "useful
-    region" Vue's computeYDomain (yAxis.ts) shows, and horizontal rules far outside it are clipped
-    rather than stretching the axis via autoscale.
-    """
+    """Like Vue's computeYDomain (yAxis.ts): a fixed range wins, otherwise the drawn data widens
+    any soft bounds, and rules never stretch the axis."""
     lower: float | None = None
     upper: float | None = None
     if graph.vertical_range is not None:
@@ -257,11 +235,7 @@ def _vertical_range_bounds(graph: EvaluatedGraph) -> tuple[float | None, float |
 def _y_axis_limits(
     lower: float | None, upper: float | None, *, is_mirrored: bool
 ) -> tuple[float, float] | None:
-    """The final (lower, upper) ylim, given the bounds from _vertical_range_bounds.
-
-    A mirrored graph's 0 line sits exactly in the middle, and a graph with no vertical spread
-    (e.g. flat at zero) is widened so matplotlib has a non-degenerate range to draw.
-    """
+    """matplotlib cannot scale a flat graph, so it is widened."""
     if lower is None or upper is None:
         return None
     if is_mirrored:
@@ -312,10 +286,8 @@ def _graph_time_caption(time_range: TimeRange, texts: PngTexts, tz: datetime.tzi
 def _mirrored_y_labels(
     ax: Axes, formatter: NotationFormatter, target_number_of_labels: float
 ) -> Sequence[Label]:
-    """Labels for a mirrored graph: the negative half displays the same (positive-looking) text
-    as its mirror image above zero, since mirroring below zero is a display choice, not a sign
-    change in the underlying value.
-    """
+    """The negative half repeats the positive labels: mirroring below zero is a display choice,
+    not a change of sign."""
     lower, upper = ax.get_ylim()
     abs_limit = max(abs(lower), abs(upper))
     labels = formatter.render_y_labels(0, abs_limit, target_number_of_labels)
@@ -387,12 +359,8 @@ def _apply_render_config(
 
 
 def _fit_time_axis(ax: Axes, options: PngOptions, tz: datetime.tzinfo | None) -> None:
-    """Place the time axis ticks where the Vue graph places them, labelled the same way, in the
-    timezone tz (None: the local one).
-
-    The tick density follows the plot width and the measured label widths, so this must run
-    again after a layout pass (e.g. fig.tight_layout()) has settled the plot width.
-    """
+    """Ticks as the Vue graph places them. Their density follows the plot width, so this runs
+    again once a layout pass has settled it."""
     if not options.show_time_axis:
         return
     renderer = FigureCanvasAgg(ax.get_figure(root=True)).get_renderer()  # type: ignore[no-untyped-call]
@@ -417,11 +385,7 @@ def _fit_time_axis(ax: Axes, options: PngOptions, tz: datetime.tzinfo | None) ->
 
 
 def _align_title_to_y_ticks(fig: Figure, ax: Axes, title_artist: Text | None) -> None:
-    """Shift a loc="left" title so its x lines up with the y-axis tick labels' left edge.
-
-    Must run after a layout pass (e.g. fig.tight_layout()) and requires a renderer, since
-    tick label widths are only known once text has actually been measured.
-    """
+    """Runs after a layout pass: the tick label widths are only known once measured."""
     if title_artist is None:
         return
     renderer = FigureCanvasAgg(fig).get_renderer()  # type: ignore[no-untyped-call]
@@ -452,13 +416,8 @@ def _plot_legend_table(
     texts: PngTexts,
     formatter: NotationFormatter | None,
 ) -> None:
-    """Render the legend as a table (color swatch, name, min, max, average, last) onto ax.
-
-    Horizontal rules (e.g. warning/critical thresholds) are appended below the curves,
-    with their value shown in the "Last" column. Curves are listed topmost-drawn-first,
-    the reverse of draw order (a stack's top member, or the last-configured line, reads
-    first).
-    """
+    """Curves are listed topmost first, the reverse of their drawing order, so that the legend
+    reads like the graph."""
     ax.axis("off")
     ax.set_in_layout(False)
     col_labels = ["", "", texts.minimum, texts.maximum, texts.average, texts.last]
@@ -679,6 +638,7 @@ def _graph_in_user_unit(
         name=graph.name,
         title=graph.title,
         time_range=graph.time_range,
+        # A requested range comes from the browser, which shows it already converted.
         vertical_range=(
             _converted_vertical_range(graph.vertical_range, axis_conversion)
             if requested_vertical_range is None

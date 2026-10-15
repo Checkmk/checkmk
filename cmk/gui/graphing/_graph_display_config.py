@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Container, Mapping
+from collections.abc import Container
 from enum import StrEnum
 from typing import Literal, Self
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import (
@@ -18,8 +18,6 @@ from cmk.gui.type_defs import (
     VerticalAxisWidth,
 )
 
-from ._graph_ranges import compute_graph_ranges_for_width, GraphRanges
-
 # Pixels per "ex" graph-size unit: graph sizes are configured/stored in ex, this scales them to the
 # CSS pixel dimensions used by both the legacy HTML renderer and the engine (Vue) graph group.
 #
@@ -27,10 +25,6 @@ from ._graph_ranges import compute_graph_ranges_for_width, GraphRanges
 # this does not lead to correct results. We should find a way to fix this. Otherwise the font size
 # chaning of the graph rendering options won't work as expected.
 HTML_SIZE_PER_EX = 11.0
-
-
-def get_mm_per_ex(font_size: float) -> SizeMM:
-    return font_size / 3.0
 
 
 class GraphTitleFormat(BaseModel):
@@ -91,7 +85,7 @@ _DEFAULT_TITLE_FORMAT = GraphTitleFormat(
 )
 
 
-class _GraphDisplayConfigBase(BaseModel):
+class GraphDisplayConfigBase(BaseModel):
     font_size: SizePT = SizePT(8.0)
     show_graph_time: bool = True
     show_legend: bool = True
@@ -106,7 +100,7 @@ class _GraphDisplayConfigBase(BaseModel):
         return cls.model_validate(options.dump_set_fields())
 
 
-class GraphDisplayConfigHTML(_GraphDisplayConfigBase):
+class GraphDisplayConfigHTML(GraphDisplayConfigBase):
     fixed_timerange: bool = False
     preview: bool = False
     resizable: bool = True
@@ -114,18 +108,6 @@ class GraphDisplayConfigHTML(_GraphDisplayConfigBase):
     show_pin: bool = True
     show_time_range_previews: bool = True
     show_title: bool | Literal["inline"] = True
-
-
-class GraphDisplayConfigImage(_GraphDisplayConfigBase):
-    size: tuple[float, float] = (70, 16)
-    show_title: bool = True
-
-    @field_validator("show_title", mode="before")
-    @classmethod
-    def _show_inline_title_above_the_graph(cls, value: object) -> object:
-        # An image has no title on the graph area. Graph options of reports may still ask for
-        # it ("inline"), the image then shows the title as usual.
-        return True if value == "inline" else value
 
 
 _DEFAULT_GRAPH_SIZE: tuple[float, float] = (70.0, 16.0)
@@ -156,37 +138,3 @@ class GraphDestinations(StrEnum):
             (cls.report, _("Report")),
             (cls.notification, _("Notification")),
         ]
-
-
-def compute_image_graph_ranges(
-    display_config: GraphDisplayConfigImage, start_time: int, end_time: int
-) -> GraphRanges:
-    mm_per_ex = get_mm_per_ex(display_config.font_size)
-    width_mm = display_config.size[0] * mm_per_ex
-    return compute_graph_ranges_for_width(width_mm, start_time, end_time)
-
-
-def graph_image_render_options(
-    api_request: Mapping[str, object] | None = None,
-) -> GraphRenderOptions:
-    graph_render_options = GraphRenderOptions(
-        font_size=SizePT(8.0),
-        resizable=False,
-        show_controls=False,
-        title_format=GraphTitleFormat(
-            plain=True,
-            add_host_name=False,
-            add_host_alias=False,
-            add_service_description=True,
-        ),
-        size=(80, 30),  # ex
-        show_title=True,
-        border_width=0.05,
-    )
-    # Enforce settings optionally setable via request
-    if api_request and (render_opts := api_request.get("render_options")):
-        if not isinstance(render_opts, dict):
-            raise TypeError(f"render_options must be a dict, got {type(render_opts)}")
-        graph_render_options = graph_render_options.model_copy(update=render_opts)
-
-    return graph_render_options

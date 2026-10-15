@@ -2,12 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""The time axis ticks of a graph, computed the same way as cmk-frontend-vue's
-TimeSeriesGraph/axes/timeAxis.ts, so a PNG graph labels its time axis like the on-screen one.
-
-The timezone is injected (None: the local zone) so the axis is deterministic and testable
-across zones. Label widths are measured, so tick density follows the text that is really drawn.
-"""
+"""The time axis ticks as cmk-frontend-vue's TimeSeriesGraph/axes/timeAxis.ts computes them,
+so a PNG graph labels its time axis like the graph on screen."""
 
 import datetime
 import math

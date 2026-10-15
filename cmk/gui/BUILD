@@ -753,6 +753,7 @@ py_library(
         "//cmk/gui/pagetypes",
         "//cmk/gui/painter",
         "//cmk/gui/parentscan",
+        "//cmk/gui/png",
         "//cmk/gui/product_usage_analytics",
         "//cmk/gui/quick_setup",
         "//cmk/gui/rule_specs:legacy_converter",

@@ -7,7 +7,8 @@ from typing import Literal
 
 import pytest
 
-from cmk.gui.graphing import GraphDisplayConfigImage, GraphRenderOptions
+from cmk.gui.graphing import GraphRenderOptions
+from cmk.gui.png import GraphDisplayConfigImage
 
 
 @pytest.mark.parametrize(

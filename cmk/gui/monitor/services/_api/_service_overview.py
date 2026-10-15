@@ -8,6 +8,7 @@ from typing import Annotated, Self
 
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
+from cmk.gui.monitor.hosts._folder import monitor_folders
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -94,8 +95,8 @@ class ServiceOverviewResponse:
     )
     legacy_service_parameters_link: str | None = api_field(
         description=(
-            "URL to the Setup page listing the parameters of this service. Null for users who may "
-            "not see rulesets."
+            "URL to the Setup page listing the parameters of this service. Null when Setup is "
+            "disabled, for users who may not see rulesets, and for users Setup refuses the host."
         ),
         example="wato.py?mode=object_parameters&host=web-server-01&service=CPU+utilization",
     )
@@ -213,7 +214,9 @@ def get_service_overview(
             hostname=hostname,
             service_name=service_name,
             site_id=site_id,
-            may_see_parameters=api_context.user.may("wato.rulesets"),
+            may_see_parameters=api_context.config.wato_enabled
+            and api_context.user.may("wato.rulesets")
+            and monitor_folders.may_read_host(hostname, None),
         )
 
 
@@ -258,6 +261,8 @@ ENDPOINT_GET_SERVICE_OVERVIEW = VersionedEndpoint(
                     permissions.OkayToIgnorePerm("bi.see_all"),
                     permissions.OkayToIgnorePerm("mkeventd.seeall"),
                     permissions.OkayToIgnorePerm("wato.rulesets"),
+                    # Read while asking Setup whether the user may open the host.
+                    permissions.OkayToIgnorePerm("wato.see_all_folders"),
                     permissions.OkayToIgnorePerm("general.see_crash_reports"),
                 ]
             )

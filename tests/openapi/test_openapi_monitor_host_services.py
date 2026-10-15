@@ -15,6 +15,7 @@ from cmk.graphing.v1 import perfometers
 from cmk.gui.graphing import perfometers_from_api
 from cmk.gui.monitor.services._api._list_host_services import _MAX_HOST_SVC_LIMIT
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
@@ -1651,6 +1652,59 @@ class TestMonitorServiceOverview:
 
         assert [mode["icon_name"] for mode in resp.json["modes"]] == expected_icons
 
+    @staticmethod
+    def _get_overview_parameters_link(
+        clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+    ) -> str | None:
+        mock_livestatus.add_table("services", [_OVERVIEW_SERVICE_ROW])
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Columns: {_SERVICE_OVERVIEW_COLUMNS}",
+                f"Filter: host_name = {_HOSTNAME}",
+                f"Filter: description = {_SERVICE_DESCRIPTION}",
+                "And: 2",
+            ],
+            sites=[_SITE_ID],
+        )
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.get_service_overview(
+                hostname=_HOSTNAME, site_id=_SITE_ID, service_name=_SERVICE_DESCRIPTION
+            )
+        link: str | None = resp.json["legacy_service_parameters_link"]
+        return link
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_links_parameters_of_a_host_setup_grants(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        assert self._get_overview_parameters_link(clients, mock_livestatus) == (
+            f"wato.py?mode=object_parameters&host={_HOSTNAME}&service=CPU+load"
+        )
+
+    def test_no_parameters_link_for_a_host_setup_does_not_grant(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        assert self._get_overview_parameters_link(clients, mock_livestatus) is None
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_no_parameters_link_while_setup_is_disabled(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        set_config: SetConfig,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        with set_config(wato_enabled=False):
+            assert self._get_overview_parameters_link(clients, mock_livestatus) is None
+
     @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
     def test_passive_service_has_no_next_check(
         self,
@@ -2133,6 +2187,47 @@ _ACTION_MENU_SERVICE_ROW = {
     "service_cache_interval": 0,
 }
 _HOST_ALIAS = "Web Server"
+_OVERVIEW_SERVICE_ROW = {
+    "description": _SERVICE_DESCRIPTION,
+    "perf_data": "",
+    "check_command": "check_mk-test",
+    "check_type": 0,
+    "cached_at": 0,
+    "cache_interval": 0,
+    "host_name": _HOSTNAME,
+    "state": 0,
+    "has_been_checked": 1,
+    "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
+    "last_check": 0,
+    "last_state_change": 0,
+    "acknowledged": 0,
+    "scheduled_downtime_depth": 0,
+    "notifications_enabled": 1,
+    "comments": [],
+    "modified_attributes_list": [],
+    "active_checks_enabled": 1,
+    "accept_passive_checks": 1,
+    "in_notification_period": 1,
+    "in_service_period": 1,
+    "in_check_period": 1,
+    "in_passive_check_period": 1,
+    "is_flapping": 0,
+    "staleness": 0.0,
+    "host_alias": _HOST_ALIAS,
+    "host_state": 0,
+    "host_has_been_checked": 1,
+    "host_acknowledged": 0,
+    "host_scheduled_downtime_depth": 0,
+    "contact_groups": ["all"],
+    "long_plugin_output": "",
+    "current_attempt": 1,
+    "max_check_attempts": 1,
+    "next_check": 0,
+    "contacts": [],
+    "labels": {},
+    "label_sources": {},
+    "tags": {},
+}
 _SERVICE_OVERVIEW_COLUMNS = (
     "description host_name state has_been_checked plugin_output last_check last_state_change "
     "acknowledged "

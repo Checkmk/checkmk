@@ -105,18 +105,6 @@ The migration replaces this implicit global state with explicit dependency passi
 * Pass everything a mode or page needs into it explicitly, as the REST API v1 endpoints already do via ``ApiContext``.
 * Eliminate ``active_config`` in particular (around 200 call sites under ``cmk/gui``): thread through only the parts of the configuration actually needed — derived, narrowly typed objects rather than the whole ``Config``.
 
-GUI: centralize the ``FolderTree`` computation
-==============================================
-
-:Phase: in progress
-:Owner: Lars Michelsen
-:Old: ``folder_tree()`` builds a ``FolderTree`` from ``active_config`` on first use and memoizes it on the request-global ``g.folder_tree``
-:New: the ``FolderTree`` is computed once, high up in the call stack, and passed down explicitly as a parameter
-:References: ``cmk/gui/watolib/hosts_and_folders.py`` (``folder_tree()``, ``make_folder_tree``, ``FolderTree``)
-
-``folder_tree()`` is a request-global accessor (around 170 call sites) that hides both a dependency on ``active_config`` and shared mutable state on ``g``, which is exactly the implicit-global-state pattern the proxy migration above is removing.
-Computing the ``FolderTree`` once at a well-defined point and passing it down as an argument lets ``folder_tree()`` and ``g.folder_tree`` be removed, and makes the folder data a mode or page depends on explicit and testable.
-
 GUI: ``WatoMode`` lifecycle as an explicit sequence of calls
 ============================================================
 

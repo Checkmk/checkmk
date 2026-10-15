@@ -67,8 +67,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
 from cmk.gui import hooks, userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config, Config
-from cmk.gui.ctx_stack import g
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError, RequestTimeout
 from cmk.gui.groups import GroupName
 from cmk.gui.hooks import request_memoize
@@ -1946,16 +1945,6 @@ class FolderTree:
     def reset_cache(self) -> None:
         self.cache.reset()
 
-    def refresh_config(self) -> None:
-        """Re-read the config snapshot from the global active_config.
-
-        The config is snapshotted once when the tree is created (see folder_tree())
-        and stays valid for the lifetime of the request. This is only needed in tests
-        that change the global config between requests while reusing the same request
-        context (and thus the same cached tree).
-        """
-        self.config = HostsAndFoldersConfig.from_config(active_config)
-
     def all_host_attributes(self) -> dict[str, ABCHostAttribute]:
         if self._all_host_attributes is None:
             self._all_host_attributes = all_host_attributes(
@@ -2022,13 +2011,6 @@ ACTIVATION_FOLDER_TREE = ActivationContextKey("folder tree", FolderTree)
 
 def make_folder_tree(config: FolderTreeConfigSource) -> FolderTree:
     return FolderTree(config=HostsAndFoldersConfig.from_config(config))
-
-
-# Hope that we can cleanup these request global objects one day
-def folder_tree() -> FolderTree:
-    if "folder_tree" not in g:
-        g.folder_tree = make_folder_tree(active_config)
-    return g.folder_tree
 
 
 def folder_from_request(

@@ -123,9 +123,6 @@ class WebTestAppForCMK(FlaskClient):
                 self.environ_base.clear()
                 self.environ_base.update(backup)
 
-        if method.lower() == "get":
-            _reset_cache_for_folders_and_hosts_setup()
-
         if params and kw.get("data"):
             raise ValueError(
                 "Pass either `params` or `data` as an input argument to `call_method`!"
@@ -248,28 +245,6 @@ class WebTestAppForCMK(FlaskClient):
 
     def get_authorization(self) -> tuple[str, str] | None:
         return self._authorization_header_value
-
-
-def _reset_cache_for_folders_and_hosts_setup() -> None:
-    """Reset redis client and corresponding cache initialized in the Checkmk flask app context.
-
-    Cache related to folder and hosts is reset, along with the redis client.
-
-    NOTE: further investigation to be performed as documented in CMK-14175.
-    `request_context` should be made specific to the Rest API calls.
-    """
-    from flask.ctx import has_app_context
-    from flask.globals import g
-
-    # Without an application context, e.g. for a plain Flask app, accessing g raises a
-    # RuntimeError, which hasattr() doesn't catch.
-    if has_app_context() and hasattr(g, "folder_tree"):
-        g.folder_tree.invalidate_caches()
-        g.folder_tree.reset_cache()
-        # The folder tree snapshots the relevant config at creation time. Refresh it
-        # so config changes made between REST calls (e.g. via set_config) are reflected,
-        # just like in a freshly created request.
-        g.folder_tree.refresh_config()
 
 
 class CmkTestResponse(TestResponse):

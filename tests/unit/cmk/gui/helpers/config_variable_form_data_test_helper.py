@@ -877,7 +877,6 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "labels.shown.color": "#ffffff",
     },
     "data_backend": {
-        "address_seen_by_central": NoSaveableDefault(),
         "local_instance": {
             "https_port": 27909,
             "relative_memory_limit_percentage": 50.0,
@@ -2263,6 +2262,10 @@ CASES: Mapping[str, list[Case]] = {
             },
         ),
         CaseFail("central-feature-without-address", {"features": {"telemetry": "central"}}),
+        CasePass(
+            "address-kept-without-central-feature",
+            {"features": {"telemetry": "disabled"}, "address_seen_by_central": "10.0.0.2"},
+        ),
         CasePass(
             "local-instance",
             {

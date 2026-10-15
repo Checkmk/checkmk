@@ -39,7 +39,8 @@ def check_db2_connections(item, params, parsed):
         state = 1
     yield state, "Connections: %s" % connections, [("connections", connections, warn, crit)]
 
-    yield 0, "Port: %s" % data["port"]
+    if "port" in data:
+        yield 0, "Port: %s" % data["port"]
 
     if "latency" in data:
         latency = data["latency"]

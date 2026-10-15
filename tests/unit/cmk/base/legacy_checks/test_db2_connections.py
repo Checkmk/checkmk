@@ -5,17 +5,10 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-import pytest
-
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 from cmk.base.legacy_checks.db2_connections import check_db2_connections
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=KeyError,
-    reason="Crash report eab50590-9fa1-11f0-8071-c686f41beba6: KeyError",
-)
 def test_check_db2_connections_without_port() -> None:
     section = parse_db2_dbs([["[[[db2inst:DB1]]]"], ["connections", "40"]])
 

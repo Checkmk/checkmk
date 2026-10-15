@@ -33,7 +33,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.utils import transaction_manager
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.audit_log import AuditLogStore, make_audit_log_change_hook
-from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import FolderTree, Host
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.gui.watolib.services import (
     Discovery,
@@ -148,12 +148,12 @@ def fixture_sample_host_name() -> HostName:
 
 @pytest.fixture(name="sample_host")
 def fixture_sample_host(
-    request_context: None,
     with_admin_login: UserId,
     sample_host_name: HostName,
+    tree: FolderTree,
 ) -> Generator[Host]:
     hostname = sample_host_name
-    root_folder = folder_tree().root_folder()
+    root_folder = tree.root_folder()
     root_folder.create_hosts(
         [(hostname, {}, None)],
         pprint_value=False,

@@ -11,8 +11,9 @@ from pytest_mock import MockerFixture
 
 import cmk.gui.nagvis._hosttags
 from cmk.ccc.site import SiteId
+from cmk.gui.config import Config, get_default_config, make_config_object
 from cmk.gui.logged_in import user
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.gui.watolib.tags import (
     change_host_tags,
@@ -135,13 +136,20 @@ def test_tag_config_save(mocker: MockerFixture) -> None:
     assert cfg.tag_groups[0].id == "tgid2"
 
 
-@pytest.mark.usefixtures("test_cfg", "with_admin_login")
-def test_change_host_tags_removes_tag_group_from_folder() -> None:
+@pytest.fixture(name="config")
+def fixture_config(test_cfg: tags.TagConfig) -> Config:
+    raw_config = get_default_config()
+    raw_config["wato_tags"] = test_cfg.get_dict_format()
+    raw_config["tags"] = tags.get_effective_tag_config(raw_config["wato_tags"])
+    return make_config_object(raw_config)
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_change_host_tags_removes_tag_group_from_folder(tree: FolderTree) -> None:
     """A tag group explicitly set on a folder must be removable
 
     The removal has to be persisted, so the folder is re-read from disk here.
     """
-    tree = folder_tree()
     tree.root_folder().create_subfolder(
         "test_tag_group_removal",
         title="Test tag group removal",

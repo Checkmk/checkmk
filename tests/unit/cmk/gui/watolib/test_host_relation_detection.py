@@ -653,8 +653,8 @@ def test_a_pair_naming_an_end_the_relation_does_not_have_is_refused() -> None:
 
 @pytest.fixture(name="tree")
 def _tree() -> Iterator[FolderTree]:
-    # Built explicitly rather than through the request-global folder_tree(), so that no Flask
-    # request context is needed - the same way test_hosts_and_folders.py builds one.
+    # Built explicitly from a crafted config, so that no Flask request context is needed - the
+    # same way test_hosts_and_folders.py builds one.
     cmk.utils.paths.profile_dir.mkdir(parents=True, exist_ok=True)
     raw_config = get_default_config()
     raw_config["tags"] = cmk.ruleset_matcher.tags.get_effective_tag_config(raw_config["wato_tags"])

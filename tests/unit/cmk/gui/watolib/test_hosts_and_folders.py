@@ -175,8 +175,8 @@ def test_effective_attributes() -> None:
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def tree() -> Iterator[FolderTree]:
-    # Build the tree explicitly instead of using the request-global
-    # folder_tree(), so no Flask request context is needed at all.
+    # Build the tree explicitly from a crafted config, so no Flask request
+    # context is needed at all.
     # Computing effective attributes loads the users to determine the network
     # scan "run_as" default. Ensure the profile dir exists (usually done by
     # the load_config fixture).
@@ -1692,12 +1692,12 @@ def test_subfolder_cache_invalidated(tree: FolderTree) -> None:
     )
     subfolder.effective_attributes()
 
-    # WHEN cache is invalidated from folder_tree and attribute is updated
+    # WHEN cache is invalidated from the tree and attribute is updated
     tree.invalidate_caches()
     subfolder.attributes["alias"] = "other_alias"
 
     # THEN we read updated attribute
-    # There is a bug when invalidating cache from folder_tree(), not all
+    # There is a bug when invalidating cache from the tree, not all
     # subfolders are part of the tree
     with pytest.raises(AssertionError):
         assert subfolder.effective_attributes()["alias"] == "other_alias"

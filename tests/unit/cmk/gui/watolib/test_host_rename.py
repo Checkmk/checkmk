@@ -23,7 +23,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_rename import perform_rename_hosts
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.gui.wsgi.app import gui_context
 from cmk.livestatus_client import (
@@ -73,7 +73,7 @@ def _noop_pending_changes() -> PendingChanges:
 def test_env(
     monkeypatch: MonkeyPatch,
     with_admin_login: UserId,
-    load_config: None,
+    tree: FolderTree,
 ) -> Iterator[None]:
     monkeypatch.setattr(
         check_mk_automations,
@@ -84,8 +84,8 @@ def test_env(
     with disable_redis():
         yield
 
-    shutil.rmtree(folder_tree().root_folder().filesystem_path(), ignore_errors=True)
-    os.makedirs(folder_tree().root_folder().filesystem_path())
+    shutil.rmtree(tree.root_folder().filesystem_path(), ignore_errors=True)
+    os.makedirs(tree.root_folder().filesystem_path())
 
 
 @pytest.mark.parametrize(
@@ -153,6 +153,7 @@ def test_rename_host(
     renamings: list[tuple[HostName, HostName]],
     expected_hosts: set[str],
     expected_clusters: dict[str, set[str]],
+    tree: FolderTree,
 ) -> None:
     # GIVEN
     with open("/dev/null", "w") as progress_update:
@@ -164,7 +165,6 @@ def test_rename_host(
             lambda x: gui_context(),  # noqa: ARG005
             progress_update,
         )
-        tree = folder_tree()
         if use_subfolder:
             folder = tree.root_folder().create_subfolder(
                 "some_subfolder",
@@ -222,10 +222,9 @@ def test_rename_host(
     ],
 )
 @pytest.mark.usefixtures("test_env")
-def test_rename_host_rewrites_the_relations_pointing_at_it(kind: str) -> None:
+def test_rename_host_rewrites_the_relations_pointing_at_it(kind: str, tree: FolderTree) -> None:
     """Both halves of a relation are stored, but only the half sitting on the counterpart names
     the renamed host - so the pass is the same as for a parent definition."""
-    tree = folder_tree()
     folder = tree.root_folder()
     folder.create_hosts(
         [(HostName("os1"), HostAttributes(), None)],

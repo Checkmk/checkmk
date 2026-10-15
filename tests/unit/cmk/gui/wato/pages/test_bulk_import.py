@@ -33,7 +33,7 @@ from cmk.gui.wato.pages.bulk_import import (
     ModeBulkImport,
 )
 from cmk.gui.watolib.host_attributes import all_host_attributes
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.ruleset_matcher.tags import TagGroup
 from cmk.web.utils.choices import Choice
@@ -187,17 +187,18 @@ server01;192.168.1.101
 @pytest.mark.usefixtures(
     "request_context",
     "with_admin_login",
-    "load_config",
     "suppress_bake_agents_in_background",
 )
 def test_bulk_import_csv_parsing(
     csvtext: str,
     has_title_line: bool,
     test_edition: Edition,
+    config: Config,
+    tree: FolderTree,
 ) -> None:
     csv_bulk_import = CSVBulkImport(handle=StringIO(csvtext), has_title_line=has_title_line)
     host_attributes = all_host_attributes(
-        active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+        config.wato_host_attrs, config.tags.get_tag_groups_by_topic()
     )
     mode_bulk_import = ModeBulkImport(
         test_edition,
@@ -209,7 +210,7 @@ def test_bulk_import_csv_parsing(
     # Mock here is pretty unavoidable because of the use of nested function definitions
     with mock.patch("cmk.gui.wato.pages.bulk_import.ModeBulkImport._delete_csv_file"):
         mode_bulk_import._import(  # noqa: SLF001
-            folder_tree(),
+            tree,
             csv_bulk_import,
             host_attributes,
             validation_config=Config(),
@@ -218,7 +219,7 @@ def test_bulk_import_csv_parsing(
             pending_changes=_noop_pending_changes(),
         )
 
-    hosts = folder_tree().root_folder().hosts()
+    hosts = tree.root_folder().hosts()
     assert len(hosts) == 3
     assert hosts[HostAddress("server01")].attributes["ipaddress"] == "192.168.1.101"
     assert hosts[HostAddress("server02")].attributes["ipaddress"] == "192.168.1.102"

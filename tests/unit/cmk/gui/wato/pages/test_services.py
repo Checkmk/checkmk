@@ -14,9 +14,9 @@ from livestatus import SiteConfigurations
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.checkengine.discovery import CheckPreviewEntry
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.wato.pages.services import DiscoveryPageRenderer
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, Host
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.gui.watolib.services import DiscoveryAction, DiscoveryOptions, DiscoveryState
 
@@ -62,7 +62,6 @@ def _discovery_options() -> DiscoveryOptions:
     )
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 class TestDiscoveryPageRendererFolder:
     """The service discovery action menu must preserve the host's folder (CMK-35216).
 
@@ -71,21 +70,21 @@ class TestDiscoveryPageRendererFolder:
     """
 
     @pytest.fixture
-    def sub_host(self) -> Generator[Host]:
-        root_folder = folder_tree().root_folder()
+    def sub_host(self, tree: FolderTree) -> Generator[Host]:
+        root_folder = tree.root_folder()
         sub = root_folder.create_subfolder(
             name="sub",
             title="",
             attributes={},
             pprint_value=False,
             pending_changes=_noop_pending_changes(),
-            acting_user=user,
+            acting_user=LoggedInSuperUser(),
         )
         sub.create_hosts(
             [(HostName("sub_host"), {}, None)],
             pprint_value=False,
             pending_changes=_noop_pending_changes(),
-            acting_user=user,
+            acting_user=LoggedInSuperUser(),
         )
         yield sub.load_host(HostName("sub_host"))
         self._cleanup_fs(root_folder)
@@ -102,8 +101,6 @@ class TestDiscoveryPageRendererFolder:
         assert ("folder", "sub") in url_vars
         assert ("hostname", "sub_host") in url_vars
 
-    # A function-level `usefixtures` mark would order `sub_host` before the
-    # class-level `request_context`, which it needs, so keep it a parameter.
     def test_link_builders_point_to_the_hosts_folder(self, sub_host: Host) -> None:
         rulesets_link = DiscoveryPageRenderer.rulesets_button_link(
             sub_host.folder(), "CPU load", "sub_host"

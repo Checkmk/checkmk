@@ -29,7 +29,7 @@ from cmk.gui.watolib.configuration_bundles import (
     delete_config_bundle,
     identify_single_bundle_references,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree, make_folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.pending_changes import (
@@ -343,9 +343,9 @@ def test_create_and_delete_config_bundle_passwords(tree: FolderTree) -> None:
     )
 
 
-@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+@pytest.mark.usefixtures("mock_update_passwords_merged_file", "request_context")
 def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
-    load_config: Config,
+    config: Config, tree: FolderTree
 ) -> None:
     """Regression test: deleting a bundle's passwords must not delete unrelated passwords.
 
@@ -390,10 +390,10 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
         role="user",
         username=non_admin_username,
         custom_attrs={"contactgroups": [non_admin_username]},
-        config=load_config,
+        config=config,
     ) as (user_id, _password):
         user_permissions = UserPermissions(
-            load_config.roles,
+            config.roles,
             permission_registry,
             {user_id: ["user"]},
             [],
@@ -405,7 +405,7 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
         with login.TransactionIdContext(user_id, user_permissions):
             # Create the bundle – bundle password gets owned_by = user.id = "bundleuser".
             create_config_bundle(
-                folder_tree(),
+                tree,
                 bundle_id,
                 bundle,
                 CreateBundleEntities(
@@ -441,7 +441,7 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
             # Before the fix, remove_password() saved only the filtered (editable) subset
             # back to disk, wiping the standalone admin password.
             delete_config_bundle(
-                folder_tree(),
+                tree,
                 bundle_id,
                 acting_user=user,
                 user_permissions=user_permissions,
@@ -648,9 +648,9 @@ def test_create_and_delete_config_bundle_grouped_by_a_plain_ruleset(tree: Folder
     assert _len_rules() == before_create_rules_count, "Expected the created rule to be deleted"
 
 
-@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+@pytest.mark.usefixtures("mock_update_passwords_merged_file", "request_context")
 def test_create_config_bundle_does_not_replace_a_password_the_user_cannot_see(
-    load_config: Config,
+    config: Config, tree: FolderTree
 ) -> None:
     PasswordStore().save(
         {
@@ -667,10 +667,10 @@ def test_create_config_bundle_does_not_replace_a_password_the_user_cannot_see(
     )
 
     with create_and_destroy_user(
-        automation=False, role="user", username="bundleuser", config=load_config
+        automation=False, role="user", username="bundleuser", config=config
     ) as (user_id, _password):
         user_permissions = UserPermissions(
-            load_config.roles, permission_registry, {user_id: ["user"]}, []
+            config.roles, permission_registry, {user_id: ["user"]}, []
         )
         bundle_id, bundle = _make_bundle(owned_by="bundleuser")
         with (
@@ -678,7 +678,7 @@ def test_create_config_bundle_does_not_replace_a_password_the_user_cannot_see(
             pytest.raises(MKGeneralException, match="already exists"),
         ):
             create_config_bundle(
-                folder_tree(),
+                tree,
                 bundle_id,
                 bundle,
                 CreateBundleEntities(

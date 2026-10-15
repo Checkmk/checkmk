@@ -18,10 +18,10 @@ import pytest
 from cmk.automations.internal import AutomationResult
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.watolib import password_store, rulesets
 from cmk.gui.watolib import rulesets as gui_rulesets_module
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.gui.watolib.rulesets import Rule, Ruleset
 from cmk.livestatus_client import SiteConfigurations
@@ -55,7 +55,7 @@ GEN_ID_COUNT = {"c": 0}
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
-def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> None:
+def fixture_gen_id(monkeypatch: pytest.MonkeyPatch) -> None:
     GEN_ID_COUNT["c"] = 0
 
     def _gen_id() -> str:
@@ -65,9 +65,9 @@ def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> No
     monkeypatch.setattr(gui_rulesets_module, "gen_id", _gen_id)
 
 
-def test_rule_clone() -> None:
+def test_rule_clone(tree: FolderTree) -> None:
     rule = rulesets.Rule.from_config(
-        folder_tree().root_folder(),
+        tree.root_folder(),
         _ruleset("clustered_services"),
         {
             "id": "10",
@@ -92,9 +92,9 @@ def test_rule_clone() -> None:
     assert rule.id != cloned_rule.id
 
 
-def test_rule_clone_locked() -> None:
+def test_rule_clone_locked(tree: FolderTree) -> None:
     rule = rulesets.Rule.from_config(
-        folder_tree().root_folder(),
+        tree.root_folder(),
         _ruleset("clustered_services"),
         {
             "id": "10",
@@ -251,17 +251,21 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_analyze_host_rule_matches_automation", "with_admin_login")
+@pytest.mark.usefixtures("mock_analyze_host_rule_matches_automation")
 def test_matches_search_with_rules(  # type: ignore[misc]
     search_options: rulesets.SearchOptions,
     rule_config: RuleSpec,
     folder_name: str,
     expected_result: bool,
+    tree: FolderTree,
 ) -> None:
-    folder_tree().create_missing_folders(
-        folder_name, pprint_value=False, pending_changes=_noop_pending_changes(), acting_user=user
+    tree.create_missing_folders(
+        folder_name,
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=LoggedInSuperUser(),
     )
-    folder = folder_tree().folder(folder_name)
+    folder = tree.folder(folder_name)
     ruleset = _ruleset("host_contactgroups")
     rule = rulesets.Rule.from_config(folder, ruleset, rule_config)
     ruleset.append_rule(folder, rule)
@@ -295,10 +299,10 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
     )
 
 
-@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation", "with_admin_login")
-def test_matches_search_with_rules_negate_is_ineffective_finds_matching() -> None:
+@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
+def test_matches_search_with_rules_negate_is_ineffective_finds_matching(tree: FolderTree) -> None:
     (ruleset := _ruleset("host_contactgroups")).append_rule(
-        (folder := folder_tree().root_folder()),
+        (folder := tree.root_folder()),
         rulesets.Rule.from_config(
             folder,
             ruleset,
@@ -316,10 +320,10 @@ def test_matches_search_with_rules_negate_is_ineffective_finds_matching() -> Non
     assert ruleset.matches_search_with_rules({"rule_ineffective": False}, debug=False) is True
 
 
-@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation", "with_admin_login")
-def test_matches_search_with_rules_is_ineffective_finds_matching() -> None:
+@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
+def test_matches_search_with_rules_is_ineffective_finds_matching(tree: FolderTree) -> None:
     (ruleset := _ruleset("host_contactgroups")).append_rule(
-        (folder := folder_tree().root_folder()),
+        (folder := tree.root_folder()),
         rulesets.Rule.from_config(
             folder,
             ruleset,
@@ -337,10 +341,10 @@ def test_matches_search_with_rules_is_ineffective_finds_matching() -> None:
     assert ruleset.matches_search_with_rules({"rule_ineffective": True}, debug=False) is False
 
 
-@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation", "with_admin_login")
-def test_matches_search_with_rules_is_ineffective_finds_not_matching() -> None:
+@pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
+def test_matches_search_with_rules_is_ineffective_finds_not_matching(tree: FolderTree) -> None:
     (ruleset := _ruleset("host_contactgroups")).append_rule(
-        (folder := folder_tree().root_folder()),
+        (folder := tree.root_folder()),
         rulesets.Rule.from_config(
             folder,
             ruleset,
@@ -368,16 +372,17 @@ class _RuleHelper:
     other_attr: str
 
     @staticmethod
-    def _make_rule(ruleset: str, value: dict) -> rulesets.Rule:
+    def _make_rule(folder: Folder, ruleset: str, value: dict) -> rulesets.Rule:
         return rulesets.Rule.from_config(
-            folder_tree().root_folder(),
+            folder,
             _ruleset(ruleset),
             {"id": "1", "value": value, "condition": {"host_name": ["HOSTLIST"]}},
         )
 
     @staticmethod
-    def gcp_rule() -> rulesets.Rule:
+    def gcp_rule(folder: Folder) -> rulesets.Rule:
         return _RuleHelper._make_rule(
+            folder,
             RuleGroup.SpecialAgents("gcp"),
             {
                 "project": "old_value",
@@ -388,14 +393,17 @@ class _RuleHelper:
 
 
 @pytest.fixture()
-def rule_helper() -> _RuleHelper:
+def rule_helper(tree: FolderTree) -> _RuleHelper:
     return _RuleHelper(
-        _RuleHelper.gcp_rule, "credentials", ("explicit_password", "uuid", "geheim"), "project"
+        lambda: _RuleHelper.gcp_rule(tree.root_folder()),
+        "credentials",
+        ("explicit_password", "uuid", "geheim"),
+        "project",
     )
 
 
-def test_to_log_masks_secrets() -> None:
-    log = str(_RuleHelper.gcp_rule().to_log())
+def test_to_log_masks_secrets(tree: FolderTree) -> None:
+    log = str(_RuleHelper.gcp_rule(tree.root_folder()).to_log())
     assert "'explicit_password'" in log, "password tuple is present"
     assert "hunter2" not in log, "password is masked"
 
@@ -441,9 +449,8 @@ def test_diff_to_secret_and_other_attribute_changed(rule_helper: _RuleHelper) ->
     assert 'changed from "old_value" to "new_value".' in diff
 
 
-def test_rules_grouped_by_folder() -> None:
+def test_rules_grouped_by_folder(tree: FolderTree) -> None:
     """Test sort order of rules"""
-    tree = folder_tree()
     expected_folder_order: list[str] = [
         "folder2/folder2/folder2",
         "folder2/folder2/folder1",

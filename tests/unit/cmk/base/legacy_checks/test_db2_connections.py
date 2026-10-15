@@ -93,3 +93,16 @@ def test_check_db2_connections(
     parsed = parse_db2_dbs(info)
     result = list(check_db2_connections(item, params, parsed))
     assert result == expected_results
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=KeyError,
+    reason="Crash report eab50590-9fa1-11f0-8071-c686f41beba6: KeyError",
+)
+def test_check_db2_connections_without_port() -> None:
+    section = parse_db2_dbs([["[[[db2inst:DB1]]]"], ["connections", "40"]])
+
+    results = list(check_db2_connections("db2inst:DB1", {"levels_total": (150, 200)}, section))
+
+    assert [(state, text) for state, text, *_ in results] == [(0, "Connections: 40.00")]

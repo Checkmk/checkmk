@@ -459,7 +459,6 @@ def _vs_rules(
                     title=_('Checkmk agent port (<a href="%(url)s">rules</a>)')
                     % {
                         "url": folder.url(
-                            request,
                             [
                                 ("mode", "edit_ruleset"),
                                 ("varname", "agent_ports"),
@@ -483,7 +482,6 @@ def _vs_rules(
                     title=_('TCP connection timeout (<a href="%(url)s">Rules</a>)')
                     % {
                         "url": folder.url(
-                            request,
                             [
                                 ("mode", "edit_ruleset"),
                                 ("varname", "tcp_connect_timeouts"),
@@ -503,7 +501,6 @@ def _vs_rules(
                     title=_('SNMP-timeout (<a href="%(url)s">Rules</a>)')
                     % {
                         "url": folder.url(
-                            request,
                             [
                                 ("mode", "edit_ruleset"),
                                 ("varname", "snmp_timing"),
@@ -526,7 +523,6 @@ def _vs_rules(
                     title=_('SNMP-retries (<a href="%(url)s">Rules</a>)')
                     % {
                         "url": folder.url(
-                            request,
                             [
                                 ("mode", "edit_ruleset"),
                                 ("varname", "snmp_timing"),

@@ -712,7 +712,7 @@ class RenameHostBackgroundJob(RenameHostsBackgroundJob):
 
     @override
     def _back_url(self) -> str:
-        return self._host.folder().url(request)
+        return self._host.folder().url()
 
 
 class RenameHostsJobArgs(BaseModel, frozen=True):

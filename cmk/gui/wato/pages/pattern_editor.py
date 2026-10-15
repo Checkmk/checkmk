@@ -253,7 +253,6 @@ class ModePatternEditor(WatoMode):
                 "There are no logfile patterns defined. You may create "
                 'logfile patterns using the <a href="%s">Rule Editor</a>.'
                 % target_folder.url(
-                    request,
                     [
                         ("mode", "edit_ruleset"),
                         ("varname", "logwatch_rules"),
@@ -381,7 +380,6 @@ class ModePatternEditor(WatoMode):
                     table.row(fixed=True, collect_headers=False)
                     table.cell(colspan=7)
                     edit_url = target_folder.url(
-                        request,
                         [
                             ("mode", "edit_rule"),
                             ("varname", "logwatch_rules"),

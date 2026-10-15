@@ -150,7 +150,7 @@ class ModeParentScan(WatoMode):
             acting_user=user,
             request=request,
         )
-        self._job = ParentScanBackgroundJob(back_url=self._folder.url(request))
+        self._job = ParentScanBackgroundJob(back_url=self._folder.url())
 
     @override
     def action(self, config: Config) -> ActionResult:

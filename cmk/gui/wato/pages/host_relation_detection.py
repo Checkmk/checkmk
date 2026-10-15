@@ -115,9 +115,7 @@ def _folder_page_menu_entries(folder: Folder | SearchFolder) -> Iterator[PageMen
         yield PageMenuEntry(
             title=_("Relation detection"),
             icon_name=StaticIcon(IconNames.link),
-            item=make_simple_link(
-                folder.url(request, [("mode", ModeHostRelationDetection.name())])
-            ),
+            item=make_simple_link(folder.url([("mode", ModeHostRelationDetection.name())])),
         )
 
 

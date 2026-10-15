@@ -986,7 +986,7 @@ def _get_object_reference(
     if object_ref.object_type is ObjectRefType.Folder:
         if tree.folder_exists(object_ref.ident):
             folder = tree.folder(object_ref.ident)
-            return folder.url(request), folder.title()
+            return folder.url(), folder.title()
         return None, object_ref.ident
 
     if object_ref.object_type is ObjectRefType.User:

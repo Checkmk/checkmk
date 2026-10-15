@@ -110,9 +110,22 @@ class S3Bucket:
     name: str
 
 
+@dataclass(frozen=True)
+class ElastiCacheNode:
+    """An ElastiCache node, a cache cluster in the AWS API."""
+
+    node_id: str
+
+
 # Each of these resources always goes to a piggyback host of its own.
 PiggybackResource = (
-    ClassicLoadBalancer | LoadBalancerV2 | DynamoDBTable | WAFV2WebACL | GlacierVault | S3Bucket
+    ClassicLoadBalancer
+    | LoadBalancerV2
+    | DynamoDBTable
+    | WAFV2WebACL
+    | GlacierVault
+    | S3Bucket
+    | ElastiCacheNode
 )
 
 HostedResource = AccountScope | EBSAttachment | CloudFrontDistribution | PiggybackResource
@@ -150,6 +163,8 @@ def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost | No
             return _glacier_vault_host(resource)
         case S3Bucket():
             return _s3_bucket_host(resource)
+        case ElastiCacheNode():
+            return _elasticache_node_host(resource)
         case _:
             assert_never(resource)
 
@@ -228,6 +243,10 @@ def _glacier_vault_host(vault: GlacierVault) -> TargetHost:
 
 def _s3_bucket_host(bucket: S3Bucket) -> TargetHost:
     return TargetHost(bucket.name)
+
+
+def _elasticache_node_host(node: ElastiCacheNode) -> TargetHost:
+    return TargetHost(node.node_id)
 
 
 def _hostname_from_name_and_region(name: str, region: str) -> TargetHost:

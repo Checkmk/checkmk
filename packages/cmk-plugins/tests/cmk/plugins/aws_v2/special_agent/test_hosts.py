@@ -19,6 +19,7 @@ from cmk.plugins.aws_v2.special_agent.hosts import (
     DynamoDBTable,
     EBSAttachment,
     ec2_instance_hosts,
+    ElastiCacheNode,
     GlacierVault,
     HostedResource,
     LoadBalancerV2,
@@ -179,3 +180,9 @@ def test_account_data_goes_to_the_account_host_of_a_listed_account(
     )
 
     assert target_host(resource, naming) == "333333333333"
+
+
+def test_elasticache_node_goes_to_a_host_per_node() -> None:
+    node = ElastiCacheNode("test-redis-cluster-3-0001-001")
+
+    assert target_host(node, DEFAULT_NAMING) == "test-redis-cluster-3-0001-001"

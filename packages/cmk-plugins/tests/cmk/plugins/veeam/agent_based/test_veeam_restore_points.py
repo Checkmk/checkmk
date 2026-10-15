@@ -89,9 +89,10 @@ def test_parse_veeam_restore_points_without_data() -> None:
 def test_check_veeam_restore_points_summary_and_details() -> None:
     section = _section()
     assert list(check_veeam_restore_points(PARAMS, section, now=NOW)) == [
+        Result(state=State.OK, summary="Last restore point age: 2 hours 0 minutes"),
+        Metric("backup_age", 7200.0, levels=(30 * 3600.0, 48 * 3600.0)),
         Result(state=State.OK, summary="3 restore points"),
         Metric("veeam_restore_points", 3),
-        Result(state=State.OK, summary="last: 2 hours 0 minutes ago"),
         Result(state=State.OK, notice="Malware status: Clean"),
         Result(state=State.OK, notice="Platform: VMware"),
         Result(state=State.OK, notice="Object type: VM"),
@@ -137,10 +138,10 @@ def test_check_veeam_restore_points_zero_restore_points_is_crit() -> None:
     assert State.worst(*(r.state for r in results if isinstance(r, Result))) == State.CRIT
 
 
-def test_check_veeam_restore_points_newest_not_found_is_unknown() -> None:
+def test_check_veeam_restore_points_last_not_found_is_unknown() -> None:
     section = _section(lastRestorePoint=None, malwareStatus=None)
     assert Result(
-        state=State.UNKNOWN, summary="Newest restore point not found"
+        state=State.UNKNOWN, summary="Last restore point not found"
     ) in check_veeam_restore_points(PARAMS, section, now=NOW)
 
 
@@ -173,5 +174,5 @@ def test_check_veeam_restore_points_missing_fields_do_not_crash() -> None:
         lastRestorePoint={"creationTime": None, "type": None, "malwareStatus": None},
     )
     results = list(check_veeam_restore_points(PARAMS, section, now=NOW))
-    assert Result(state=State.UNKNOWN, summary="Newest restore point not found") in results
+    assert Result(state=State.UNKNOWN, summary="Last restore point not found") in results
     assert Result(state=State.OK, notice="Last restore point type: unknown") in results

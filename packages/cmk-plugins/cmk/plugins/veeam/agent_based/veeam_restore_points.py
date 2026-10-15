@@ -132,20 +132,21 @@ def check_veeam_restore_points(
         yield Result(state=State.CRIT, summary="0 restore points")
         yield Metric("veeam_restore_points", 0)
     else:
-        yield Result(state=State.OK, summary=f"{section.restore_points_count} restore points")
-        yield Metric("veeam_restore_points", section.restore_points_count)
         last = section.last_restore_point
         if last is None or last.creation_time is None:
-            yield Result(state=State.UNKNOWN, summary="Newest restore point not found")
+            yield Result(state=State.UNKNOWN, summary="Last restore point not found")
         elif (age := now - last.creation_time) < 0:
             yield Result(state=State.OK, summary="Last restore point is in the future")
         else:
             yield from check_levels(
                 age,
                 levels_upper=params["age"],
-                render_func=lambda v: f"{render.timespan(v)} ago",
-                label="last",
+                metric_name="backup_age",
+                render_func=render.timespan,
+                label="Last restore point age",
             )
+        yield Result(state=State.OK, summary=f"{section.restore_points_count} restore points")
+        yield Metric("veeam_restore_points", section.restore_points_count)
         if section.malware_status is None:
             yield Result(state=State.OK, notice="Malware status: not scanned")
         else:

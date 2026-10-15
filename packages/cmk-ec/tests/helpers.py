@@ -41,6 +41,9 @@ class FakeStatusSocket(socket.socket):
         return ast.literal_eval(self._response.decode("utf-8"))
         # assert isinstance(response, list)
 
+    def get_raw_response(self) -> bytes:
+        return self._response
+
 
 def new_event(attrs: Event) -> Event:
     now = time.time()

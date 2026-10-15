@@ -5,6 +5,8 @@
 
 #include "livestatus/TableEventConsole.h"
 
+#include <algorithm>
+#include <array>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
@@ -14,6 +16,8 @@
 #include <iostream>
 #include <optional>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 #include <unordered_set>
 #include <utility>
 
@@ -23,6 +27,7 @@
 #include "livestatus/Filter.h"
 #include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
+#include "livestatus/Logger.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
@@ -45,6 +50,58 @@ const std::vector<std::string> grepping_filters = {
 
 };
 
+// Livestatus and the EC agree on an operator's meaning only for some column
+// types: Livestatus uses the regex operators as bit mask operators for int
+// columns, and the EC can't compare a missing string (None) via an ordering
+// operator.
+bool isUnderstoodByEC(const std::string &column_name, RelationalOperator op) {
+    const bool is_int_column = column_name == "event_id";
+    switch (op) {
+        case RelationalOperator::equal:
+        case RelationalOperator::not_equal:
+            return true;
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+            return !is_int_column;
+        case RelationalOperator::less:
+        case RelationalOperator::greater_or_equal:
+        case RelationalOperator::greater:
+        case RelationalOperator::less_or_equal:
+            return is_int_column;
+    }
+    return false;  // unreachable
+}
+
+// See https://docs.python.org/3/library/stdtypes.html#str.splitlines
+constexpr auto python_line_boundaries = std::to_array<std::string_view>({
+    "\n",
+    "\r",
+    "\v",
+    "\f",
+    "\x1c",
+    "\x1d",
+    "\x1e",
+    "\u0085",
+    "\u2028",
+    "\u2029",
+});
+
+// The EC splits a request into lines via Python's str.splitlines(), which
+// splits at more than just \n. So a value containing such a line boundary would
+// inject header lines into the request, e.g. a Columns: header without the
+// columns needed for authorization. Note that we only accept UTF-8 requests, so
+// we can simply search for the UTF-8 encoded line boundaries.
+bool isSafeForEC(std::string_view value) {
+    return std::ranges::none_of(
+        python_line_boundaries, [value](std::string_view boundary) {
+            return value.find(boundary) != std::string_view::npos;
+        });
+}
+
 class ECTableConnection : public EventConsoleConnection {
 public:
     ECTableConnection(const ICore &mc, const Table &table, Query &query,
@@ -55,6 +112,15 @@ public:
         , table_{&table}
         , query_{&query}
         , is_authorized_{std::move(is_authorized)} {}
+
+    // The EC always replies with a header first, so no reply at all means that
+    // it failed before replying, e.g. due to an invalid regex in a filter.
+    void runQuery() {
+        run();
+        if (!received_reply_) {
+            throw std::runtime_error(prefix("received no reply"));
+        }
+    }
 
 private:
     void sendRequest(std::ostream &os) override {
@@ -115,50 +181,26 @@ private:
 
     void emitGreppingFilter(std::ostream &os) {
         for (const auto &column_name : grepping_filters) {
-            auto conjuncts =
-                query_
-                    ->partialFilter(
-                        column_name,
-                        [&column_name](const std::string &columnName) {
-                            return column_name == columnName;
-                        })
-                    ->conjuncts();
-            if (conjuncts.size() == 1) {
-                if (const auto *column_filter =
-                        conjuncts[0]->as_column_filter()) {
-                    // NOTE: Keep this in sync with EC code. Ugly...
-                    switch (column_filter->oper()) {
-                        case RelationalOperator::equal:
-                        case RelationalOperator::matches:
-                        case RelationalOperator::equal_icase:
-                        case RelationalOperator::matches_icase:
-                            os << "\nFilter: " << column_name << " "
-                               << column_filter->oper() << " "
-                               << column_filter->value();
-                            continue;
-                        case RelationalOperator::not_equal:
-                        case RelationalOperator::doesnt_match:
-                        case RelationalOperator::not_equal_icase:
-                        case RelationalOperator::doesnt_match_icase:
-                        case RelationalOperator::less:
-                        case RelationalOperator::greater_or_equal:
-                        case RelationalOperator::greater:
-                        case RelationalOperator::less_or_equal:
-                            break;
+            auto filter = query_->partialFilter(
+                column_name, [&column_name](const std::string &columnName) {
+                    return column_name == columnName;
+                });
+            for (const auto &conjunct : filter->conjuncts()) {
+                if (const auto *column_filter = conjunct->as_column_filter()) {
+                    const auto op = column_filter->oper();
+                    const auto &value = column_filter->value();
+                    const bool forward =
+                        isUnderstoodByEC(column_name, op) && isSafeForEC(value);
+                    Debug(mc_->loggerLivestatus())
+                        << "column " << table_->name() << "." << column_name
+                        << " is restricted by " << op << " " << value
+                        << (forward ? ", forwarding" : ", not forwarding")
+                        << " it to the EC";
+                    if (forward) {
+                        os << "\nFilter: " << column_name << " " << op << " "
+                           << value;
                     }
                 }
-            }
-            if (auto svr = query_->stringValueRestrictionFor(column_name)) {
-                os << "\nFilter: " << column_name << " = " << *svr;
-            } else {
-                auto glb = query_->greatestLowerBoundFor(column_name);
-                auto lub = query_->leastUpperBoundFor(column_name);
-                if (glb && lub && glb == lub) {
-                    os << "\nFilter: " << column_name << " = " << *glb;
-                }
-                // NOTE: We could emit >= or <= constraints for cases where we
-                // know only one bound or the bounds are different, but the EC
-                // can't make use of that currently.
             }
         }
     }
@@ -169,7 +211,11 @@ private:
         while (true) {
             std::string line;
             std::getline(is, line);
-            if (!is || line.empty()) {
+            if (!is) {
+                return;
+            }
+            received_reply_ = true;
+            if (line.empty()) {
                 return;
             }
             std::vector<std::string> columns = mk::split(line, '\t');
@@ -189,6 +235,7 @@ private:
     const Table *table_;
     Query *query_;
     std::function<bool(const row_type &)> is_authorized_;
+    bool received_reply_{false};
 };
 }  // namespace
 
@@ -299,7 +346,7 @@ void TableEventConsole::answerQuery(Query &query, const User &user,
     if (core.mkeventdEnabled()) {
         try {
             ECTableConnection{core, *this, query, get_authorizer(*this, user)}
-                .run();
+                .runQuery();
         } catch (const std::runtime_error &err) {
             query.badGateway(err.what());
         }

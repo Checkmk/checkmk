@@ -40,6 +40,9 @@ class FakeStatusSocket(socket.socket):
         # assert isinstance(response, list)
         return response
 
+    def get_raw_response(self) -> bytes:
+        return self._response
+
 
 def new_event(attrs: Event) -> Event:
     now = time.time()

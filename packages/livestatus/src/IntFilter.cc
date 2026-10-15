@@ -9,14 +9,19 @@
 #include <cstdlib>
 #include <memory>
 #include <optional>
+#include <string>
 #include <utility>
 
 #include "livestatus/Row.h"
 #include "livestatus/opids.h"
 
+// We parse the value leniently, e.g. "5.0" as 5, so we keep the int we actually
+// compare with as the filter's value, e.g. for forwarding it to the EC, which
+// isn't lenient.
 IntFilter::IntFilter(Kind kind, std::string columnName, function_type f,
                      RelationalOperator relOp, const std::string &value)
-    : ColumnFilter{kind, std::move(columnName), relOp, value}
+    : ColumnFilter{kind, std::move(columnName), relOp,
+                   std::to_string(atoi(value.c_str()))}
     , f_{std::move(f)}
     , _ref_value{atoi(value.c_str())} {}
 

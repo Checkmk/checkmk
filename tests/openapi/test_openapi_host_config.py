@@ -24,7 +24,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.logged_in import LoggedInUser, user
+from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser, user
 from cmk.gui.openapi.endpoints._common.host_attribute_schemas import (
     BaseHostAttribute,
     BaseHostTagGroup,
@@ -43,7 +43,7 @@ from cmk.gui.watolib.host_attributes import (
     BuiltInHostTagGroups,
     HostAttributes,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, FolderTree, Host
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, Host, make_folder_tree
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
     PendingChanges,
@@ -53,6 +53,7 @@ from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.ruleset_matcher.tags import BuiltinTagConfig
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
+from tests.testlib.unit.gui.common_fixtures import make_default_config
 from tests.testlib.unit.rest_api_client import ClientRegistry, RestApiException
 
 EDITIONS_ULTIMATE_PLUS = {
@@ -75,20 +76,27 @@ def _field_errors(fields: dict[str, Any], field_name: str) -> list[dict[str, Any
     ]
 
 
+def _tree_from_disk() -> FolderTree:
+    """A fresh view on the hosts and folders as currently stored on disk."""
+    return make_folder_tree(make_default_config())
+
+
 def _create_host_with_management_board(attributes: HostAttributes) -> None:
     """Management board attributes can no longer be set anew through the API, only where a host
     already has them - so these hosts are created the way they were before the deprecation."""
-    folder_tree().root_folder().create_hosts(
+    config = make_default_config()
+    acting_user = LoggedInSuperUser()
+    make_folder_tree(config).root_folder().create_hosts(
         [(HostName("heute"), attributes, None)],
         pprint_value=False,
         pending_changes=PendingChanges(
-            activation_sites=activation_sites(active_config.sites),
+            activation_sites=activation_sites(config.sites),
             local_site=omd_site(),
-            acting_user=user.id,
+            acting_user=acting_user.id,
             store=PendingChangesStore(),
             hooks=(),
         ),
-        acting_user=user,
+        acting_user=acting_user,
     )
 
 
@@ -97,7 +105,7 @@ def quick_setup_config_bundle() -> Iterator[tuple[BundleId, str]]:
     bundle_id = BundleId("bundle_id")
     program_id = PROGRAM_ID_QUICK_SETUP
     create_config_bundle(
-        folder_tree(),
+        _tree_from_disk(),
         acting_user=user,
         bundle_id=bundle_id,
         bundle={
@@ -226,7 +234,7 @@ def test_openapi_add_host_with_attributes(clients: ClientRegistry) -> None:
     assert api_attributes["locked_attributes"] == ["alias"]
 
     # Ensure that the attributes were stored as expected
-    hosts_config = folder_tree().root_folder()._load_hosts_file()  # noqa: SLF001
+    hosts_config = _tree_from_disk().root_folder()._load_hosts_file()  # noqa: SLF001
     assert hosts_config is not None
     assert hosts_config["host_attributes"]["foobar"]["locked_attributes"] == ["alias"]
     assert hosts_config["host_attributes"]["foobar"]["locked_by"] == (
@@ -1172,7 +1180,7 @@ def test_openapi_all_hosts_with_non_existing_site(
     def mock_all_hosts_recursively(_cls: Folder) -> dict[HostName, Host]:
         return {
             HostName("foo"): Host(
-                folder=folder_tree().root_folder(),
+                folder=_tree_from_disk().root_folder(),
                 host_name=HostName("foo"),
                 attributes=HostAttributes({"site": SiteId("a_non_existing_site")}),
                 cluster_nodes=None,
@@ -1189,7 +1197,7 @@ def test_openapi_host_with_non_existing_site(
 ) -> None:
     def mock_host(self: FolderTree, _hostname: HostName) -> Host:
         return Host(
-            folder=folder_tree().root_folder(),
+            folder=_tree_from_disk().root_folder(),
             host_name=HostName("foo"),
             attributes=HostAttributes({"site": SiteId("a_non_existing_site")}),
             cluster_nodes=None,
@@ -1328,7 +1336,6 @@ def test_openapi_host_config_snmpv3_auth_priv_passwords_redacted_on_get(
     assert "privacy_password" not in snmp
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_openapi_host_config_ipmi_password_redacted_on_get(
     clients: ClientRegistry,
 ) -> None:
@@ -1352,7 +1359,6 @@ def test_openapi_host_config_ipmi_password_redacted_on_get(
     assert "password" not in ipmi
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_openapi_host_config_management_snmp_community_redacted_on_get(
     clients: ClientRegistry,
 ) -> None:
@@ -2445,12 +2451,11 @@ def test_openapi_host_relations_not_named_in_a_full_replacement_are_removed(
 def _break_relations_of_board(clients: ClientRegistry) -> None:
     """Written in Setup directly, as by a manual edit of hosts.mk: the API refuses such a value."""
     clients.HostConfig.create(host_name="board", folder="/")
-    board = folder_tree().load_host(HostName("board"))
+    board = _tree_from_disk().load_host(HostName("board"))
     board.attributes["relations"] = "not-a-list"  # type: ignore[typeddict-item]
-    board.folder().save_hosts(pprint_value=False, acting_user=user)
+    board.folder().save_hosts(pprint_value=False, acting_user=LoggedInSuperUser())
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_openapi_host_relations_malformed_refuse_an_update_naming_the_way_out(
     clients: ClientRegistry,
 ) -> None:
@@ -2464,7 +2469,6 @@ def test_openapi_host_relations_malformed_refuse_an_update_naming_the_way_out(
     assert "Store valid ones or remove them." in resp.json["detail"]
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_openapi_host_relations_malformed_are_replaced_by_removing_them(
     clients: ClientRegistry,
 ) -> None:
@@ -2495,10 +2499,9 @@ def _create_heute_with_a_later_kind(clients: ClientRegistry) -> None:
 
 
 def _stored_relations_of_heute() -> object:
-    return folder_tree().load_host(HostName("heute")).attributes["relations"]
+    return _tree_from_disk().load_host(HostName("heute")).attributes["relations"]
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_openapi_host_relations_of_a_kind_the_api_does_not_show_are_not_shown(
     clients: ClientRegistry,
 ) -> None:
@@ -2509,7 +2512,6 @@ def test_openapi_host_relations_of_a_kind_the_api_does_not_show_are_not_shown(
     ]
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_openapi_host_relations_of_a_kind_the_api_does_not_show_survive_a_full_replacement(
     clients: ClientRegistry,
 ) -> None:
@@ -2521,7 +2523,6 @@ def test_openapi_host_relations_of_a_kind_the_api_does_not_show_survive_a_full_r
     assert _stored_relations_of_heute() == [_LATER_OF_OS1]
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_openapi_host_relations_of_a_kind_the_api_does_not_show_survive_an_update(
     clients: ClientRegistry,
 ) -> None:
@@ -2532,7 +2533,6 @@ def test_openapi_host_relations_of_a_kind_the_api_does_not_show_survive_an_updat
     assert _stored_relations_of_heute() == [_LATER_OF_OS1]
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_openapi_host_relations_of_a_kind_the_api_does_not_show_survive_removing_relations(
     clients: ClientRegistry,
 ) -> None:
@@ -2544,7 +2544,6 @@ def test_openapi_host_relations_of_a_kind_the_api_does_not_show_survive_removing
     assert "relations" not in _host_attributes(clients, "os2")
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_openapi_host_relations_removed_with_other_attributes_keep_the_kinds_not_shown(
     clients: ClientRegistry,
 ) -> None:
@@ -2593,7 +2592,6 @@ def test_openapi_host_relations_removed_by_bulk_update_are_removed_from_the_rela
     assert "relations" not in _host_attributes(clients, "os1")
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_openapi_host_relations_of_a_kind_the_api_does_not_show_survive_removing_them_in_bulk(
     clients: ClientRegistry,
 ) -> None:
@@ -2757,7 +2755,6 @@ def test_openapi_host_config_refuses_a_management_board_on_an_existing_host(
         pytest.param("management_address", "127.0.0.1", id="completed"),
     ],
 )
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_openapi_host_config_edits_an_existing_management_board(
     clients: ClientRegistry, name: str, value: str
 ) -> None:
@@ -2771,7 +2768,6 @@ def test_openapi_host_config_edits_an_existing_management_board(
     assert resp.json["extensions"]["attributes"][name] == value
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_openapi_host_config_removes_an_existing_management_board(
     clients: ClientRegistry,
 ) -> None:

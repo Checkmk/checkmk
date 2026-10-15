@@ -4,11 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import time
 from collections.abc import Mapping
 from dataclasses import dataclass
 
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -81,36 +83,49 @@ def monitoring_state(last_result: str) -> State:
             return State.UNKNOWN
 
 
-def check_veeam_backup_jobs(item: str, section: Section) -> CheckResult:
+def check_veeam_backup_jobs(item: str, section: Section, *, now: float) -> CheckResult:
     if (job := section.get(item)) is None:
         return
 
-    if job.status == "Disabled":
-        yield Result(state=State.OK, summary=f"Job is disabled, Last result: {job.last_result}")
-    elif job.last_run is None:
-        yield Result(state=State.OK, summary="No run has happened yet")
+    status = f"Status: {job.status}, " if job.status in ("Running", "Disabled") else ""
+    if job.last_run is None:
+        yield Result(state=State.OK, summary=f"{status}No run has happened yet")
     else:
         yield Result(
-            state=monitoring_state(job.last_result),
-            summary=f"Status: {job.status}, Result: {job.last_result}",
+            state=State.OK if job.status == "Disabled" else monitoring_state(job.last_result),
+            summary=f"{status}Result: {job.last_result}",
         )
+        if (age := now - job.last_run) < 0:
+            yield Result(state=State.OK, summary="Last run: in the future")
+        else:
+            yield from check_levels(
+                age,
+                metric_name="veeam_backup_job_age",
+                render_func=lambda v: f"{render.timespan(v)} ago",
+                label="Last run",
+            )
+        yield Result(state=State.OK, notice=f"Last run time: {render.datetime(job.last_run)}")
 
-    if job.last_run is not None:
-        yield Result(state=State.OK, summary=f"Last run: {render.datetime(job.last_run)}")
+    if not status:
+        yield Result(state=State.OK, notice=f"Status: {job.status}")
 
     if job.duration is not None:
-        yield Result(state=State.OK, summary=f"Duration: {render.timespan(job.duration)}")
+        yield Result(state=State.OK, notice=f"Duration: {render.timespan(job.duration)}")
         yield Metric("backup_duration", job.duration)
 
     if job.next_run is not None:
-        yield Result(state=State.OK, summary=f"Next run: {render.datetime(job.next_run)}")
+        yield Result(state=State.OK, notice=f"Next run: {render.datetime(job.next_run)}")
 
     if job.repository_name is not None:
-        yield Result(state=State.OK, summary=f"Target repository: {job.repository_name}")
+        yield Result(state=State.OK, notice=f"Target repository: {job.repository_name}")
 
-    yield Result(state=State.OK, summary=f"Objects: {job.objects_count}")
+    yield Result(state=State.OK, notice=f"Objects: {job.objects_count}")
     yield Metric("veeam_backup_job_objects", job.objects_count)
-    yield Result(state=State.OK, summary=f"Type: {job.job_type}")
+    yield Result(state=State.OK, notice=f"Type: {job.job_type}")
+
+
+def check_veeam_backup_jobs_now(item: str, section: Section) -> CheckResult:
+    yield from check_veeam_backup_jobs(item, section, now=time.time())
 
 
 agent_section_veeam_backup_jobs = AgentSection(
@@ -123,5 +138,5 @@ check_plugin_veeam_backup_jobs = CheckPlugin(
     name="veeam_backup_jobs",
     service_name="Backup job %s",
     discovery_function=discovery_veeam_backup_jobs,
-    check_function=check_veeam_backup_jobs,
+    check_function=check_veeam_backup_jobs_now,
 )

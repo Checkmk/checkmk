@@ -7,8 +7,10 @@ description:
  This check monitors the status of backup jobs reported by the Veeam
  Backup & Replication REST API, collected via the Veeam special agent.
  It reports the same information as the {VEEAM Job} service from the
- Veeam agent plug-in, and additionally reports the next scheduled run,
- the target repository and the number of objects processed.
+ Veeam agent plug-in, and additionally reports the time since the last
+ run, the next scheduled run, the target repository and the number of
+ objects processed. The summary shows the result and the time since the
+ last run, preceded by the status if the job is running or disabled.
 
  This check is {OK} if the result of the last run is Success. It is
  {WARN} if the result is Warning. It is {CRIT} if the result is Failed.

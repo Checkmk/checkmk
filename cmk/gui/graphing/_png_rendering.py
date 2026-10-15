@@ -5,7 +5,21 @@
 
 from cmk.gui.i18n import _
 
+from ._graph_display_config import GraphDisplayConfigImage
 from ._graph_png import PngTexts
+from ._graph_png_size import PngOptions
+
+
+def png_options(config: GraphDisplayConfigImage) -> PngOptions:
+    return PngOptions(
+        size=config.size,
+        font_size=config.font_size,
+        show_title=config.show_title,
+        show_legend=config.show_legend,
+        show_vertical_axis=config.show_vertical_axis,
+        show_time_axis=config.show_time_axis,
+        show_graph_time=config.show_graph_time,
+    )
 
 
 def png_texts() -> PngTexts:

@@ -37,8 +37,7 @@ from cmk.graphing_engine import (
 from cmk.web.utils.unit_formatter import Label, NotationFormatter
 
 from ._drawn_curves import drawn_curves
-from ._graph_display_config import GraphDisplayConfigImage
-from ._graph_png_size import ex_to_inches, legend_height_ex
+from ._graph_png_size import ex_to_inches, legend_height_ex, PngOptions
 from ._time_axis import compute_time_axis
 from ._user_specific_unit import formatter_from_unit
 
@@ -325,7 +324,7 @@ def _mirrored_y_labels(
 def _apply_render_config(
     ax: Axes,
     graph: EvaluatedGraph,
-    config: GraphDisplayConfigImage,
+    options: PngOptions,
     texts: PngTexts,
     y_axis_unit: Unit | NonConvertibleUnit | None,
     formatter: NotationFormatter | None,
@@ -333,31 +332,31 @@ def _apply_render_config(
     is_mirrored: bool,
     tz: datetime.tzinfo | None,
 ) -> Text | None:
-    ax.tick_params(labelsize=config.font_size, length=0)
+    ax.tick_params(labelsize=options.font_size, length=0)
     for spine in ax.spines.values():
         spine.set_color(DIVISION_COLOR)
     ax.spines["top"].set_visible(False)
 
     title_artist: Text | None = None
-    if config.show_title:
+    if options.show_title:
         title_artist = ax.set_title(
             graph.title,
-            fontsize=config.font_size * TITLE_FONT_SCALE,
+            fontsize=options.font_size * TITLE_FONT_SCALE,
             fontweight="bold",
             loc="left",
             color=TITLE_COLOR,
         )
 
-    if config.show_vertical_axis:
+    if options.show_vertical_axis:
         if y_axis_unit is not None and y_axis_unit.notation.symbol:
-            ax.set_ylabel(y_axis_unit.notation.symbol, fontsize=config.font_size)
+            ax.set_ylabel(y_axis_unit.notation.symbol, fontsize=options.font_size)
         if formatter is not None and is_mirrored:
-            target_number_of_labels = max(1.0, config.size[1] / 8.0 + 1)
+            target_number_of_labels = max(1.0, options.size[1] / 8.0 + 1)
             if labels := _mirrored_y_labels(ax, formatter, target_number_of_labels):
                 ax.set_yticks([label.position for label in labels])
                 ax.set_yticklabels([label.text for label in labels])
         elif formatter is not None:
-            target_number_of_labels = max(1.0, config.size[1] / 4.0 + 1)
+            target_number_of_labels = max(1.0, options.size[1] / 4.0 + 1)
             if labels := formatter.render_y_labels(*ax.get_ylim(), target_number_of_labels):
                 ax.set_yticks([label.position for label in labels])
                 ax.set_yticklabels([label.text for label in labels])
@@ -365,36 +364,36 @@ def _apply_render_config(
     else:
         ax.yaxis.set_visible(False)
 
-    if config.show_time_axis:
-        ax.tick_params(axis="x", which="minor", labelsize=config.font_size, length=0)
+    if options.show_time_axis:
+        ax.tick_params(axis="x", which="minor", labelsize=options.font_size, length=0)
         # A first placement, so the layout pass reserves room for the labels; the plot width
         # it settles on is only known afterwards (see _fit_time_axis).
-        _fit_time_axis(ax, config, tz)
+        _fit_time_axis(ax, options, tz)
         ax.grid(axis="x", color=DIVISION_COLOR, linestyle="--")
     else:
         ax.tick_params(axis="x", labelbottom=False, bottom=False)
 
-    if config.show_graph_time:
+    if options.show_graph_time:
         ax.set_title(
             _graph_time_caption(graph.time_range, texts, tz),
-            fontsize=config.font_size * X_AXIS_TITLE_FONT_SCALE,
+            fontsize=options.font_size * X_AXIS_TITLE_FONT_SCALE,
             loc="right",
         )
 
     return title_artist
 
 
-def _fit_time_axis(ax: Axes, config: GraphDisplayConfigImage, tz: datetime.tzinfo | None) -> None:
+def _fit_time_axis(ax: Axes, options: PngOptions, tz: datetime.tzinfo | None) -> None:
     """Place the time axis ticks where the Vue graph places them, labelled the same way, in the
     timezone tz (None: the local one).
 
     The tick density follows the plot width and the measured label widths, so this must run
     again after a layout pass (e.g. fig.tight_layout()) has settled the plot width.
     """
-    if not config.show_time_axis:
+    if not options.show_time_axis:
         return
     renderer = FigureCanvasAgg(ax.get_figure(root=True)).get_renderer()  # type: ignore[no-untyped-call]
-    font = FontProperties(size=config.font_size)
+    font = FontProperties(size=options.font_size)
 
     def measure_label(text: str) -> float:
         width, _height, _descent = renderer.get_text_width_height_descent(text, font, ismath=False)
@@ -446,7 +445,7 @@ def _plot_legend_table(
     scalars: Sequence[_CurveScalars],
     rules: Sequence[EvaluatedRule],
     regions: Sequence[EvaluatedRegion],
-    config: GraphDisplayConfigImage,
+    options: PngOptions,
     texts: PngTexts,
     formatter: NotationFormatter | None,
 ) -> None:
@@ -490,7 +489,7 @@ def _plot_legend_table(
     )
     table.set_in_layout(False)
     table.auto_set_font_size(False)
-    table.set_fontsize(config.font_size)
+    table.set_fontsize(options.font_size)
 
     for cell in table.get_celld().values():
         cell.visible_edges = ""
@@ -561,7 +560,7 @@ def _plot_legend_table(
 
 def render_png(
     graph: EvaluatedGraph,
-    config: GraphDisplayConfigImage,
+    options: PngOptions,
     texts: PngTexts,
     y_axis_unit: Unit | NonConvertibleUnit | None,
     *,
@@ -582,19 +581,21 @@ def render_png(
     # Y range; only the drawn horizontal lines are restricted to the in-range subset.
     in_range_rules = _rules_in_range(graph.rules, lower, upper)
     formatter = None if y_axis_unit is None else formatter_from_unit(y_axis_unit)
-    table_height_ex = legend_height_ex(graph, config)
+    table_height_ex = legend_height_ex(graph, options)
 
-    width_in = ex_to_inches(config.size[0], config.font_size)
-    height_in = ex_to_inches(config.size[1] + table_height_ex, config.font_size)
+    width_in = ex_to_inches(options.size[0], options.font_size)
+    height_in = ex_to_inches(options.size[1] + table_height_ex, options.font_size)
 
     fig = Figure(figsize=(width_in, height_in), dpi=DPI, facecolor=BACKGROUND_COLOR)
 
     if table_height_ex:
-        gs = fig.add_gridspec(2, 1, height_ratios=[config.size[1], table_height_ex])
+        gs = fig.add_gridspec(2, 1, height_ratios=[options.size[1], table_height_ex])
         ax = fig.add_subplot(gs[0])
         legend_ax = fig.add_subplot(gs[1])
         legend_ax.set_facecolor(BACKGROUND_COLOR)
-        _plot_legend_table(legend_ax, scalars, graph.rules, graph.regions, config, texts, formatter)
+        _plot_legend_table(
+            legend_ax, scalars, graph.rules, graph.regions, options, texts, formatter
+        )
     else:
         ax = fig.add_subplot(1, 1, 1)
     ax.set_facecolor(BACKGROUND_COLOR)
@@ -608,10 +609,10 @@ def render_png(
         sign = _mirroring_sign(rule.inverse)
         ax.axhline(sign * rule.value, color=rule.attributes.color)
     title_artist = _apply_render_config(
-        ax, graph, config, texts, y_axis_unit, formatter, is_mirrored=is_mirrored, tz=tz
+        ax, graph, options, texts, y_axis_unit, formatter, is_mirrored=is_mirrored, tz=tz
     )
     fig.tight_layout()
-    _fit_time_axis(ax, config, tz)
+    _fit_time_axis(ax, options, tz)
     _align_title_to_y_ticks(fig, ax, title_artist)
     buf = io.BytesIO()
     fig.savefig(buf, format="png")

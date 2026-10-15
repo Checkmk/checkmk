@@ -158,7 +158,7 @@ from ._plugins import (
     registered_metrics,
     registered_translations,
 )
-from ._png_rendering import png_texts
+from ._png_rendering import png_options, png_texts
 from ._popup import PageHostServiceGraphPopup
 from ._prediction_graphs import prediction_graph_dispatcher
 from ._settings import ConfigVariableGraphTimeranges
@@ -340,6 +340,7 @@ __all__ = [
     "render_global_time_picker",
     "resolve_default_time_range_seconds",
     "render_graph_error_html",
+    "png_options",
     "render_png",
     "resolve_graph_id_from_index",
     "resolve_size",

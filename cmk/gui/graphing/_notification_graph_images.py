@@ -37,7 +37,7 @@ from ._graph_display_config import (
 from ._graph_png import render_png
 from ._graph_specification import GraphEnvironment
 from ._graph_templates import build_template_graphs, TemplateGraphSpecification
-from ._png_rendering import png_texts
+from ._png_rendering import png_options, png_texts
 from ._source import RRDFetchMetricNames
 
 
@@ -128,10 +128,11 @@ def _answer_graph_image_request(
         },
     )
 
+    options = png_options(display_config)
     texts = png_texts()
     return [
         base64.b64encode(
-            render_png(evaluated_graph, display_config, texts, built.resolved_y_axis_unit())
+            render_png(evaluated_graph, options, texts, built.resolved_y_axis_unit())
         ).decode("ascii")
         # Assumes evaluate_built_graphs returns exactly one evaluated graph per input graph -
         # true for template graphs (the only kind this notification path builds above), but not

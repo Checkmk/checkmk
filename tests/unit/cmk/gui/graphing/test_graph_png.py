@@ -27,7 +27,7 @@ from cmk.graphing_engine import (
 matplotlib.use("Agg")
 from matplotlib.figure import Figure
 
-from cmk.gui.graphing import compute_png_size_mm, GraphDisplayConfigImage
+from cmk.gui.graphing import compute_png_size_mm
 from cmk.gui.graphing._graph_png import (
     _fit_time_axis,
     _graph_scalars,
@@ -42,11 +42,26 @@ from cmk.gui.graphing._graph_png import (
     PngTexts,
     render_png,
 )
-from cmk.gui.graphing._graph_png_size import MM_PER_INCH
+from cmk.gui.graphing._graph_png_size import MM_PER_INCH, PngOptions
 from cmk.gui.graphing._user_specific_unit import formatter_from_unit
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TIME_RANGE = TimeRange(start=0, end=180, step=60)
+
+
+def _options(*, show_legend: bool) -> PngOptions:
+    return PngOptions(
+        size=(70.0, 16.0),
+        font_size=8.0,
+        show_title=True,
+        show_legend=show_legend,
+        show_vertical_axis=True,
+        show_time_axis=True,
+        show_graph_time=True,
+    )
+
+
+_OPTIONS = _options(show_legend=True)
 _TEXTS = PngTexts(
     minimum="Min",
     maximum="Max",
@@ -132,7 +147,7 @@ def test_render_png_produces_bytes_for_an_empty_graph() -> None:
     graph = EvaluatedGraph(
         name="g", title="Empty", time_range=_TIME_RANGE, vertical_range=None, stacks=[], lines=[]
     )
-    png_bytes = render_png(graph, GraphDisplayConfigImage(), _TEXTS, None)
+    png_bytes = render_png(graph, _OPTIONS, _TEXTS, None)
 
     assert png_bytes.startswith(b"\x89PNG")
 
@@ -151,7 +166,7 @@ def test_render_png_with_a_unit_renders_ticks_and_legend_via_the_formatter() -> 
     )
     y_axis_unit = Unit(notation=DecimalNotation("X"), precision=AutoPrecision(2))
 
-    png_bytes = render_png(graph, GraphDisplayConfigImage(), _TEXTS, y_axis_unit)
+    png_bytes = render_png(graph, _OPTIONS, _TEXTS, y_axis_unit)
 
     assert png_bytes.startswith(b"\x89PNG")
 
@@ -259,11 +274,11 @@ def test_the_image_has_the_size_computed_for_it_without_a_legend() -> None:
         stacks=[EvaluatedStack(members=[curve], inverse=False)],
         lines=[],
     )
-    config = GraphDisplayConfigImage(show_legend=False)
+    options = _options(show_legend=False)
 
-    png_bytes = render_png(graph, config, _TEXTS, _UNIT)
+    png_bytes = render_png(graph, options, _TEXTS, _UNIT)
 
-    assert _size_in_px(png_bytes) == _px(compute_png_size_mm(graph, config))
+    assert _size_in_px(png_bytes) == _px(compute_png_size_mm(graph, options))
 
 
 def test_the_image_has_the_size_computed_for_it_with_a_legend() -> None:
@@ -283,11 +298,11 @@ def test_the_image_has_the_size_computed_for_it_with_a_legend() -> None:
         lines=[],
         rules=[rule],
     )
-    config = GraphDisplayConfigImage(show_legend=True)
+    options = _options(show_legend=True)
 
-    png_bytes = render_png(graph, config, _TEXTS, _UNIT)
+    png_bytes = render_png(graph, options, _TEXTS, _UNIT)
 
-    assert _size_in_px(png_bytes) == _px(compute_png_size_mm(graph, config))
+    assert _size_in_px(png_bytes) == _px(compute_png_size_mm(graph, options))
 
 
 def test_plot_metrics_spans_the_full_time_range_despite_a_long_leading_gap() -> None:
@@ -375,7 +390,7 @@ def test_time_axis_of_a_multi_day_graph_is_labelled_with_weekday_and_time() -> N
     ax = fig.add_subplot(1, 1, 1)
     _plot_metrics(ax, graph)
 
-    _fit_time_axis(ax, GraphDisplayConfigImage(), None)
+    _fit_time_axis(ax, _OPTIONS, None)
 
     labels = [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
     assert len(labels) > 2
@@ -428,7 +443,7 @@ def test_time_axis_is_labelled_in_the_given_time_zone() -> None:
         fig = Figure()
         ax = fig.add_subplot(1, 1, 1)
         _plot_metrics(ax, graph)
-        _fit_time_axis(ax, GraphDisplayConfigImage(), tz)
+        _fit_time_axis(ax, _OPTIONS, tz)
         return [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
 
     utc_labels = labels(ZoneInfo("UTC"))

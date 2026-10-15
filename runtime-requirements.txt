@@ -159,11 +159,12 @@ annotated-types==0.7.0 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   pydantic
-anthropic==1.6.0 \
-    --hash=sha256:049434f013d3a874acdfee696ec626e19166d58f4277e8fa34e5d0a5ec250ad0 \
-    --hash=sha256:ce3c032f940984f67c516db896375bff36959f8dc589973e386f8e6ea81bbec3
+anthropic==1.14.0 \
+    --hash=sha256:abd787048378abfabeebbad917ae0f9eae1eb4dfaa0a754096b5eea02dcf8c12 \
+    --hash=sha256:d9284895864a8457ed87f0accc51fd488ad9743952e597c814e7dc9d78ac8e38
     # via
     #   -c requirements.txt
+    #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   pydantic-ai-slim
 anyio==4.14.1 \
     --hash=sha256:4e5533c5b8ff0a24f5d7a176cbe6877129cd183893f66b537f8f227d10527d72 \
@@ -913,9 +914,9 @@ frozenlist==1.8.0 \
     #   -c requirements.txt
     #   aiohttp
     #   aiosignal
-genai-prices==0.1.7 \
-    --hash=sha256:090ba285549e0d2ea3187d05f091a5f0ae722e652143fa844ac809205aecd023 \
-    --hash=sha256:4305395c5891796860c697cc3a49ab50b751ed62c8ff1911e291ea8da77f3a91
+genai-prices==0.1.12 \
+    --hash=sha256:89d98303c5b7a366a05136ba03884c5951ec9a9ceb28fef62c7fa719f2828182 \
+    --hash=sha256:d1493977cb7f61bc436516a166f644f5bbb01e1a83365e2914c99c6298f77ca4
     # via
     #   -c requirements.txt
     #   pydantic-ai-slim
@@ -1116,9 +1117,9 @@ httpcore==1.0.9 \
     # via
     #   -c requirements.txt
     #   httpx
-httpcore2==2.11.0 \
-    --hash=sha256:82e6fc95d784e6ee22ebd4b2cb57df53a2efb13ad6a11260a236ecebbc5f50c7 \
-    --hash=sha256:c7c899fbc6b8abb6e747dda427aa6f52934c45e191eabb986965164ebb02a908
+httpcore2==2.13.1 \
+    --hash=sha256:e0aa977abe17e69a3b820a24542a6fa88702676d83880b8d194dcd18408e5103 \
+    --hash=sha256:e1e05d4f25f7d7d496bfb96748f6f4b67657b03da069b3a68c36069f3db73d0a
     # via
     #   -c requirements.txt
     #   httpx2
@@ -1137,9 +1138,9 @@ httpx==0.28.1 \
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-werks/requirements.in
-httpx2==2.11.0 \
-    --hash=sha256:c9790f62a327110f52a099f1e2030cbe32f78b28781ad68fe58bfd6f23e73ab0 \
-    --hash=sha256:ea01b2e8febfb026e2601814c77ecb1e64fff114a87bc789cb520e67f27e7809
+httpx2==2.13.1 \
+    --hash=sha256:6dff50fabc270ee5fd25d845d0b078ed20564579744d6d962850975996d2f9a4 \
+    --hash=sha256:e48744a19e3af5ee48313d0ce5fe941d5422fae5705ea922a4aabf94d7800dfa
     # via
     #   -c requirements.txt
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
@@ -2051,9 +2052,9 @@ oauthlib==3.3.1 \
     #   -r cmk/requirements.in
     #   exchangelib
     #   requests-oauthlib
-openai==3.14.1 \
-    --hash=sha256:2f3423a71af767d9071b059cf6df1e97a721c3a8d19417375ad7993d4df0d346 \
-    --hash=sha256:a6758739282f3b1cafe8df1204f7a2f7b1e9edbbcfa41c0efba687448fbc51cf
+openai==3.31.0 \
+    --hash=sha256:58110edba9acaf29cb2a675a1cbcccdd9f2fdb4932baed474dc847a7639e5d02 \
+    --hash=sha256:e5839f6670483f368de40ce3422f524c1afaf12ff8660539f53489e200db8d78
     # via
     #   -c requirements.txt
     #   pydantic-ai-slim
@@ -2079,6 +2080,7 @@ opentelemetry-api==1.44.0 \
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-trace/requirements.in
+    #   anthropic
     #   mcp
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
@@ -2710,9 +2712,9 @@ pydantic==2.12.5 \
     #   openai
     #   pydantic-ai-slim
     #   pydantic-graph
-pydantic-ai-slim[anthropic, openai]==2.44.0 \
-    --hash=sha256:67063d1b2900e92dc558079fa3854e0141ed6f81ec5fb7d9c4d1b3b86bd0c9b6 \
-    --hash=sha256:88be3150dc6c89383e4dd596414dda3479c2773ee6e9e40789596d82fc34a783
+pydantic-ai-slim[anthropic, openai]==2.56.0 \
+    --hash=sha256:58e8a3381749d448a7409f6cbf7acd13fa0549fa6668aa06a13e89695fe5f6a6 \
+    --hash=sha256:e257196b6b6d6919e8c2d9fd02365e8ded873e99ff0d283d41c3739b0f47de99
     # via
     #   -c requirements.txt
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
@@ -2846,9 +2848,9 @@ pydantic-core==2.41.5 \
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   pydantic
-pydantic-graph==2.44.0 \
-    --hash=sha256:7a7aec1399d8dfc09f0485c4f9749c568bc451ed517ee1f3e903c3d216ea17e5 \
-    --hash=sha256:e6d62aa8579b83815b9adcb3dbff210647951ef4fa5f6526b24ee9d168d385bb
+pydantic-graph==2.56.0 \
+    --hash=sha256:69f38003ecd20c8048d0327ee2cf5d27185eb887bb0d752e1cbed718d9836db7 \
+    --hash=sha256:d740518239671dcc1a160a73116ca16795889b54ae5e7d6c3e98e899881fb2bf
     # via
     #   -c requirements.txt
     #   pydantic-ai-slim

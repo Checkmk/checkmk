@@ -67,6 +67,28 @@ def test_eq_tilde_different_strings_do_not_match() -> None:
     assert cmp("hello", "world") is False
 
 
+# fmt: off
+@pytest.mark.parametrize(
+    "operator_name, value, argument, expected",
+    [
+        pytest.param("!=",  "Hello", "Hello", False, id="not equal, same value"),
+        pytest.param("!=",  "Hello", "hello", True,  id="not equal, value differs in case"),
+        pytest.param("!=~", "Hello", "hello", False, id="not equal ignoring case, value differs in case"),
+        pytest.param("!=~", "Hello", "world", True,  id="not equal ignoring case, different value"),
+        pytest.param("!~",  "Hello", "^He",   False, id="regex does not match, matching value"),
+        pytest.param("!~",  "Hello", "^he",   True,  id="regex does not match, value differs in case"),
+        pytest.param("!~~", "Hello", "^he",   False, id="regex does not match ignoring case, value differs in case"),
+        pytest.param("!~~", "Hello", "^wo",   True,  id="regex does not match ignoring case, non-matching value"),
+    ],
+)
+# fmt: on
+def test_negated_operator_holds_only_if_the_value_does_not_match(
+    operator_name: str, value: str, argument: str, expected: bool
+) -> None:
+    _, cmp = operator_for(operator_name)
+    assert cmp(value, argument) is expected
+
+
 def test_unknown_operator_raises() -> None:
     with pytest.raises(MKClientError, match="Unknown filter operator"):
         operator_for("??")

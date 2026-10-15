@@ -218,6 +218,26 @@ def test_case_insensitive_equality_filter_matches_only_the_whole_value_ignoring_
     assert bool(regex.search(value)) is expected
 
 
+def test_negated_case_insensitive_equality_filter_negates_the_same_regex() -> None:
+    assert mongo_filter_for("!=~", "a.b") == {"$not": mongo_regex_for("=~", "a.b")}
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "operator_name, expected",
+    [
+        pytest.param("!=",  {"$ne": "a.b"},                             id="not equal"),
+        pytest.param("!~",  {"$not": re.compile("a.b")},                id="regex does not match"),
+        pytest.param("!~~", {"$not": re.compile("a.b", re.IGNORECASE)}, id="regex does not match ignoring case"),
+    ],
+)
+# fmt: on
+def test_negated_filter_becomes_negated_mongo_query(
+    operator_name: OperatorName, expected: dict[str, object]
+) -> None:
+    assert mongo_filter_for(operator_name, "a.b") == expected
+
+
 def test_filters_to_mongo_query_Exception() -> None:
     """Exception on a column name not starting with "event_" or "history_"."""
 

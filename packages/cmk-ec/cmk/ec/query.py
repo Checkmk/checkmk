@@ -131,7 +131,17 @@ def filter_operator_in(a: str, b: Iterable[str]) -> bool:
     return a.lower() in {e.lower() for e in b}
 
 
-OperatorName = Literal["=", "~", "=~", "~~", "<", ">=", ">", "<=", "in"]
+# None stands for a missing value, which neither matches nor equals anything, so
+# the negated operators select it, just like operator.ne does.
+def _matches(value: str | None, regex: str, flags: re.RegexFlag = re.NOFLAG) -> bool:
+    return value is not None and re.search(regex, value, flags) is not None
+
+
+def _equals_ignoring_case(value: str | None, argument: str) -> bool:
+    return value is not None and value.lower() == argument.lower()
+
+
+OperatorName = Literal["=", "!=", "~", "!~", "=~", "!=~", "~~", "!~~", "<", ">=", ">", "<=", "in"]
 
 
 @dataclass(frozen=True)
@@ -147,9 +157,13 @@ class QueryFilter:
 # operator_for(). We're choosing evil no. 1... :-/
 _filter_operators: dict[str, tuple[OperatorName, Callable[[Any, Any], bool]]] = {
     "=": ("=", operator.eq),
-    "~": ("~", lambda a, b: bool(re.search(b, a))),
-    "=~": ("=~", lambda a, b: a.lower() == b.lower()),
-    "~~": ("~~", lambda a, b: bool(re.search(b, a, re.IGNORECASE))),
+    "!=": ("!=", operator.ne),
+    "~": ("~", _matches),
+    "!~": ("!~", lambda a, b: not _matches(a, b)),
+    "=~": ("=~", _equals_ignoring_case),
+    "!=~": ("!=~", lambda a, b: not _equals_ignoring_case(a, b)),
+    "~~": ("~~", lambda a, b: _matches(a, b, re.IGNORECASE)),
+    "!~~": ("!~~", lambda a, b: not _matches(a, b, re.IGNORECASE)),
     "<": ("<", operator.lt),
     ">=": (">=", operator.ge),
     ">": (">", operator.gt),

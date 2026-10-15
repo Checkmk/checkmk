@@ -14,12 +14,14 @@
 #include <functional>
 #include <iosfwd>
 #include <iostream>
+#include <iterator>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 #include "livestatus/Column.h"
 #include "livestatus/ColumnFilter.h"
@@ -181,31 +183,71 @@ private:
 
     void emitGreppingFilter(std::ostream &os) {
         for (const auto &column_name : grepping_filters) {
-            auto filter = query_->partialFilter(
-                column_name, [&column_name](const std::string &columnName) {
-                    return column_name == columnName;
-                });
-            for (const auto &conjunct : filter->conjuncts()) {
-                if (const auto *column_filter = conjunct->as_column_filter()) {
-                    // Not all EC tables have the grepping columns, but a filter
-                    // on one of them implies that our table has it.
-                    const auto type = table_->column(column_name)->type();
-                    const auto op = column_filter->oper();
-                    const auto &value = column_filter->value();
-                    const bool forward =
-                        isUnderstoodByEC(type, op) && isSafeForEC(value);
-                    Debug(mc_->loggerLivestatus())
-                        << "column " << table_->name() << "." << column_name
-                        << " is restricted by " << op << " " << value
-                        << (forward ? ", forwarding" : ", not forwarding")
-                        << " it to the EC";
-                    if (forward) {
-                        os << "\nFilter: " << column_name << " " << op << " "
-                           << value;
-                    }
+            const auto restrictions = restrictionsFor(column_name);
+            if (restrictions.empty()) {
+                continue;
+            }
+            // Not all EC tables have the grepping columns, but a restriction
+            // on one of them implies that our table has it.
+            const auto type = table_->column(column_name)->type();
+            for (const auto &[op, value] : restrictions) {
+                const bool forward =
+                    isUnderstoodByEC(type, op) && isSafeForEC(value);
+                Debug(mc_->loggerLivestatus())
+                    << "column " << table_->name() << "." << column_name
+                    << " is restricted by " << op << " " << value
+                    << (forward ? ", forwarding" : ", not forwarding")
+                    << " it to the EC";
+                if (forward) {
+                    os << "\nFilter: " << column_name << " " << op << " "
+                       << value;
                 }
             }
         }
+    }
+
+    // The restrictions of the query on the given column, one for each column
+    // filter in its conjuncts. For a disjunction, only what holds for all of
+    // its disjuncts is a restriction, e.g. Or(event_id = 3, event_id = 7)
+    // restricts event_id to the range from 3 to 7.
+    [[nodiscard]] std::vector<std::pair<RelationalOperator, std::string>>
+    restrictionsFor(const std::string &column_name) const {
+        std::vector<std::pair<RelationalOperator, std::string>> restrictions;
+        auto filter = query_->partialFilter(
+            column_name, [&column_name](const std::string &columnName) {
+                return column_name == columnName;
+            });
+        const auto timezone_offset = query_->timezoneOffset();
+        for (const auto &conjunct : filter->conjuncts()) {
+            if (const auto *column_filter = conjunct->as_column_filter()) {
+                restrictions.emplace_back(column_filter->oper(),
+                                          column_filter->value());
+                continue;
+            }
+            if (auto value = conjunct->stringValueRestrictionFor(column_name)) {
+                restrictions.emplace_back(RelationalOperator::equal, *value);
+            }
+            auto glb =
+                conjunct->greatestLowerBoundFor(column_name, timezone_offset);
+            auto lub =
+                conjunct->leastUpperBoundFor(column_name, timezone_offset);
+            if (glb && lub && *glb == *lub) {
+                // A range of a single value is an equality, which the EC's
+                // history can use for grepping, unlike the bounds.
+                restrictions.emplace_back(RelationalOperator::equal,
+                                          std::to_string(*glb));
+                continue;
+            }
+            if (glb) {
+                restrictions.emplace_back(RelationalOperator::greater_or_equal,
+                                          std::to_string(*glb));
+            }
+            if (lub) {
+                restrictions.emplace_back(RelationalOperator::less_or_equal,
+                                          std::to_string(*lub));
+            }
+        }
+        return restrictions;
     }
 
     void receiveReply(std::istream &is) override {

@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "DummyMonitoringCore.h"
+#include "TemporaryDirectory.h"
 #include "asio/buffer.hpp"
 #include "asio/io_context.hpp"
 #include "asio/local/stream_protocol.hpp"
@@ -166,15 +167,7 @@ class TableEventConsoleTest : public ::testing::Test {
 protected:
     // Keep this short, the path of a Unix domain socket is limited to 108
     // characters.
-    const std::filesystem::path basepath_{
-        std::filesystem::temp_directory_path() / "ec_tests"};
-
-    void SetUp() override {
-        std::filesystem::remove_all(basepath_);
-        std::filesystem::create_directories(basepath_);
-    }
-
-    void TearDown() override { std::filesystem::remove_all(basepath_); }
+    const TemporaryDirectory basedir_{"ec_tests"};
 
     struct QueryResult {
         std::string error;
@@ -186,7 +179,7 @@ protected:
     QueryResult runQuery(TableEventConsole &table,
                          const std::vector<std::string> &query_lines,
                          std::string reply = "event_id\n") {
-        const auto socket_path = basepath_ / "status";
+        const auto socket_path = basedir_.path() / "status";
         FakeEventConsole event_console{socket_path, std::move(reply)};
         const ECCore core{socket_path};
         OutputBuffer output{-1, [] { return false; }, core.loggerLivestatus()};

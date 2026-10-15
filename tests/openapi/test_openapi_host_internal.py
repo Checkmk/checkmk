@@ -11,7 +11,8 @@ from uuid import UUID
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.utils.agent_registration import UUIDLinkManager
+from cmk.ccc.user import UserId
+from cmk.utils.agent_registration import RegistrationRoute, UUIDLinkManager
 from cmk.utils.paths import (
     data_source_push_agent_dir,
     r4r_discoverable_dir,
@@ -38,6 +39,11 @@ def _uuid_link_manager() -> UUIDLinkManager:
 
 def _links() -> dict[UUID, HostName]:
     return {link.uuid: link.hostname for link in _uuid_link_manager()}
+
+
+def _recorded_registration(uuid: UUID) -> dict[str, object] | None:
+    registration = _uuid_link_manager().registration(uuid)
+    return None if registration is None else registration.model_dump(exclude={"registered_at"})
 
 
 @pytest.mark.usefixtures("with_host")
@@ -149,3 +155,26 @@ def test_openapi_host_register_refuses_a_uuid_that_is_linked_to_the_same_host(
     )
 
     assert _links() == {uuid: HostName("example.com")}
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_register_records_no_update_permission_on_a_site_without_agent_updates(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
+) -> None:
+    """CMK-39504: a registration on a site without agent updates, such as a Community site, records no result."""
+    uuid = UUID("1409ac78-6548-4138-9285-12484409ddf2")
+
+    aut_user_auth_wsgi_app.call_method(
+        "put",
+        _URL_REGISTER,
+        params=json.dumps({"uuid": str(uuid)}),
+        status=HTTPStatus.OK,
+        headers={"Accept": "application/json"},
+        content_type="application/json; charset=utf-8",
+    )
+
+    assert _recorded_registration(uuid) == {
+        "agent_updates_permitted": None,
+        "subject": with_automation_user[0],
+        "registration_route": RegistrationRoute.REGISTER,
+    }

@@ -999,11 +999,18 @@ class HostConfigClient(RestApiClient):
             follow_redirects=follow_redirects,
         )
 
-    def register(self, host_name: str, uuid: str, expect_ok: bool = True) -> Response:
+    def register(
+        self,
+        host_name: str,
+        uuid: str,
+        headers: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
         return self.request(
             "put",
             url=f"/objects/host_config_internal/{host_name}/actions/register/invoke",
             body={"uuid": uuid},
+            headers=headers,
             expect_ok=expect_ok,
         )
 

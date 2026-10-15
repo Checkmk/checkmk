@@ -30,6 +30,7 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.watolib import bakery
 from cmk.gui.watolib.agent_registration import (
     link_uuid_of_existing_host,
     UUIDAlreadyLinkedError,
@@ -102,23 +103,28 @@ permission_registry.register(
     ],
     request_schema=RegisterHostRequest,
     response_schema=HostConnectionMode,
-    permissions_required=permissions.AnyPerm(
+    permissions_required=permissions.AllPerm(
         [
-            permissions.Perm("agent_registration.register_any_existing_host"),
-            permissions.Perm("agent_registration.register_managed_existing_host"),
-            permissions.AllPerm(
+            permissions.AnyPerm(
                 [
-                    # read access
-                    permissions.Optional(permissions.Perm("wato.see_all_folders")),
-                    # write access
-                    permissions.AnyPerm(
+                    permissions.Perm("agent_registration.register_any_existing_host"),
+                    permissions.Perm("agent_registration.register_managed_existing_host"),
+                    permissions.AllPerm(
                         [
-                            permissions.Perm("wato.all_folders"),
-                            permissions.Perm("wato.edit_hosts"),
+                            # read access
+                            permissions.Optional(permissions.Perm("wato.see_all_folders")),
+                            # write access
+                            permissions.AnyPerm(
+                                [
+                                    permissions.Perm("wato.all_folders"),
+                                    permissions.Perm("wato.edit_hosts"),
+                                ]
+                            ),
                         ]
                     ),
                 ]
             ),
+            bakery.PERMISSIONS_MAY_REGISTER_FOR_AGENT_UPDATES,
         ]
     ),
 )
@@ -138,7 +144,9 @@ def _link_registration(host: Host, uuid: UUID, connection_mode: HostAgentConnect
             uuid,
             push_configured=connection_mode is HostAgentConnectionMode.PUSH,
             registration=UUIDRegistration(
-                agent_updates_permitted=None,
+                agent_updates_permitted=bakery.may_register_for_agent_updates(
+                    user, is_contact=host.is_contact(user)
+                ),
                 subject=user.ident,
                 registration_route=RegistrationRoute.REGISTER,
             ),

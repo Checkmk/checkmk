@@ -4,10 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from datetime import datetime
+from datetime import datetime, UTC
+
+import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.veeam.agent_based.veeam_config_backup import (
+    check_plugin_veeam_config_backup,
     check_veeam_config_backup,
     CheckParameters,
     ConfigBackup,
@@ -128,3 +131,39 @@ def test_check_veeam_config_backup_details() -> None:
     assert Result(state=State.OK, notice="Restore points kept: 7") in results
     assert Result(state=State.OK, notice="Encryption: enabled") in results
     assert Result(state=State.OK, notice="Target repository ID: repo-1") in results
+
+
+def _age_state(params: CheckParameters, hours_ago: float) -> State:
+    last_success = datetime.fromtimestamp(NOW - hours_ago * 3600, tz=UTC).isoformat()
+    assert (
+        section := parse_veeam_config_backup(
+            _config_backup(lastSuccessfulBackup={"lastSuccessfulTime": last_success})
+        )
+    ) is not None
+    (result,) = [
+        r
+        for r in check_veeam_config_backup(params, section, now=NOW)
+        if isinstance(r, Result) and r.summary.startswith("Last successful backup age")
+    ]
+    return result.state
+
+
+def test_default_levels_are_the_ones_tested_here() -> None:
+    assert check_plugin_veeam_config_backup.check_default_parameters == PARAMS
+
+
+@pytest.mark.parametrize(
+    "hours_ago, expected",
+    [
+        pytest.param(47, State.OK, id="less than 48 hours"),
+        pytest.param(50, State.WARN, id="48 hours or more"),
+        pytest.param(100, State.CRIT, id="96 hours or more"),
+    ],
+)
+def test_backup_age_default_levels(hours_ago: float, expected: State) -> None:
+    assert _age_state(PARAMS, hours_ago) is expected
+
+
+def test_changed_backup_age_levels_are_applied() -> None:
+    params = CheckParameters(disabled_state=1, age=("fixed", (12 * 3600.0, 24 * 3600.0)))
+    assert _age_state(params, 13) is State.WARN

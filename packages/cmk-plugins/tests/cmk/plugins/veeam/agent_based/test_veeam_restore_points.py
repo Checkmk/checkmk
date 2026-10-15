@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from datetime import datetime
 
 import pytest
-import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.veeam.agent_based.veeam_restore_points import (
@@ -21,6 +21,7 @@ PARAMS = CheckParameters(age=("fixed", (30 * 3600.0, 48 * 3600.0)))
 
 
 LAST_CREATION_TIME = "2026-10-01T00:00:00+00:00"
+NOW = datetime.fromisoformat("2026-10-01T02:00:00+00:00").timestamp()
 
 
 def _object(**overrides: object) -> list[str]:
@@ -45,8 +46,12 @@ def _section(**overrides: object) -> BackupObject:
     return section
 
 
-def _states(section: BackupObject) -> list[State]:
-    return [r.state for r in check_veeam_restore_points(PARAMS, section) if isinstance(r, Result)]
+def _states(section: BackupObject, now: float = NOW) -> list[State]:
+    return [
+        r.state
+        for r in check_veeam_restore_points(PARAMS, section, now=now)
+        if isinstance(r, Result)
+    ]
 
 
 def test_discovery_veeam_restore_points() -> None:
@@ -81,10 +86,9 @@ def test_parse_veeam_restore_points_without_data() -> None:
     assert parse_veeam_restore_points([]) is None
 
 
-@time_machine.travel("2026-10-01T02:00:00+00:00", tick=False)
 def test_check_veeam_restore_points_summary_and_details() -> None:
     section = _section()
-    assert list(check_veeam_restore_points(PARAMS, section)) == [
+    assert list(check_veeam_restore_points(PARAMS, section, now=NOW)) == [
         Result(state=State.OK, summary="3 restore points"),
         Metric("veeam_restore_points", 3),
         Result(state=State.OK, summary="last: 2 hours 0 minutes ago"),
@@ -105,11 +109,9 @@ def test_check_veeam_restore_points_summary_and_details() -> None:
     ],
 )
 def test_check_veeam_restore_points_age_levels(now: str, expected: State) -> None:
-    with time_machine.travel(now, tick=False):
-        assert State.worst(*_states(_section())) == expected
+    assert State.worst(*_states(_section(), datetime.fromisoformat(now).timestamp())) == expected
 
 
-@time_machine.travel("2026-10-01T02:00:00+00:00", tick=False)
 @pytest.mark.parametrize(
     "malware_status, expected",
     [
@@ -129,7 +131,7 @@ def test_check_veeam_restore_points_malware_status(
 
 def test_check_veeam_restore_points_zero_restore_points_is_crit() -> None:
     section = _section(restorePointsCount=0, lastRestorePoint=None, malwareStatus=None)
-    results = list(check_veeam_restore_points(PARAMS, section))
+    results = list(check_veeam_restore_points(PARAMS, section, now=NOW))
     assert results[0] == Result(state=State.CRIT, summary="0 restore points")
     assert Metric("veeam_restore_points", 0) in results
     assert State.worst(*(r.state for r in results if isinstance(r, Result))) == State.CRIT
@@ -139,36 +141,37 @@ def test_check_veeam_restore_points_newest_not_found_is_unknown() -> None:
     section = _section(lastRestorePoint=None, malwareStatus=None)
     assert Result(
         state=State.UNKNOWN, summary="Newest restore point not found"
-    ) in check_veeam_restore_points(PARAMS, section)
+    ) in check_veeam_restore_points(PARAMS, section, now=NOW)
 
 
-@time_machine.travel("2026-09-30T00:00:00+00:00", tick=False)
 def test_check_veeam_restore_points_in_the_future() -> None:
     section = _section()
+    now = datetime.fromisoformat("2026-09-30T00:00:00+00:00").timestamp()
     assert Result(
         state=State.OK, summary="Last restore point is in the future"
-    ) in check_veeam_restore_points(PARAMS, section)
+    ) in check_veeam_restore_points(PARAMS, section, now=now)
 
 
 def test_check_veeam_restore_points_unknown_count_is_unknown() -> None:
     section = _section(restorePointsCount=None)
-    assert next(iter(check_veeam_restore_points(PARAMS, section))) == Result(
+    assert next(iter(check_veeam_restore_points(PARAMS, section, now=NOW))) == Result(
         state=State.UNKNOWN, summary="Number of restore points unknown"
     )
 
 
 def test_check_veeam_restore_points_unknown_count_has_no_metric() -> None:
     section = _section(restorePointsCount=None)
-    assert not any(isinstance(r, Metric) for r in check_veeam_restore_points(PARAMS, section))
+    assert not any(
+        isinstance(r, Metric) for r in check_veeam_restore_points(PARAMS, section, now=NOW)
+    )
 
 
-@time_machine.travel("2026-10-01T02:00:00+00:00", tick=False)
 def test_check_veeam_restore_points_missing_fields_do_not_crash() -> None:
     section = _section(
         platformName=None,
         type=None,
         lastRestorePoint={"creationTime": None, "type": None, "malwareStatus": None},
     )
-    results = list(check_veeam_restore_points(PARAMS, section))
+    results = list(check_veeam_restore_points(PARAMS, section, now=NOW))
     assert Result(state=State.UNKNOWN, summary="Newest restore point not found") in results
     assert Result(state=State.OK, notice="Last restore point type: unknown") in results

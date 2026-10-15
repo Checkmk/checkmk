@@ -163,7 +163,7 @@ def _tb_to_bytes(value: float | None) -> float | None:
     return None if value is None else value * 1e12
 
 
-def check_veeam_license(params: CheckParameters, section: Section) -> CheckResult:
+def check_veeam_license(params: CheckParameters, section: Section, *, now: float) -> CheckResult:
     yield Result(
         state=monitoring_state(section.status),
         summary=f"{section.edition}, {section.status}",
@@ -177,7 +177,6 @@ def check_veeam_license(params: CheckParameters, section: Section) -> CheckResul
         summary=f"Auto update: {'enabled' if section.auto_update_enabled else 'disabled'}",
     )
 
-    now = time.time()
     yield from _check_expiry(
         "License expiry",
         "veeam_license_expiry",
@@ -232,6 +231,10 @@ def check_veeam_license(params: CheckParameters, section: Section) -> CheckResul
     )
 
 
+def check_veeam_license_now(params: CheckParameters, section: Section) -> CheckResult:
+    yield from check_veeam_license(params, section, now=time.time())
+
+
 agent_section_veeam_license = AgentSection(
     name="veeam_license",
     parse_function=parse_veeam_license,
@@ -242,7 +245,7 @@ check_plugin_veeam_license = CheckPlugin(
     name="veeam_license",
     service_name="Veeam License",
     discovery_function=discovery_veeam_license,
-    check_function=check_veeam_license,
+    check_function=check_veeam_license_now,
     check_ruleset_name="veeam_license",
     # TODO: proposed defaults, unvalidated against a real VBR instance. Revisit
     # once real license expiry/consumption data is available.

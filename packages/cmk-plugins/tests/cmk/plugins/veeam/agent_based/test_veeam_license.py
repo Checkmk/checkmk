@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from datetime import datetime
 
 import pytest
 
@@ -18,6 +19,8 @@ from cmk.plugins.veeam.agent_based.veeam_license import (
     VeeamLicense,
 )
 from cmk.plugins.veeam.lib import parse_iso8601_epoch
+
+NOW = datetime.fromisoformat("2026-09-21T00:00:00+00:00").timestamp()
 
 PARAMS = CheckParameters(
     license_expiry=("fixed", (30 * 86400.0, 7 * 86400.0)),
@@ -83,7 +86,7 @@ def test_monitoring_state(status: str, expected: State) -> None:
 
 def test_check_veeam_license_summary_and_details() -> None:
     section = parse_veeam_license(_license())
-    results = list(check_veeam_license(PARAMS, section))
+    results = list(check_veeam_license(PARAMS, section, now=NOW))
     assert results[0] == Result(state=State.OK, summary="Enterprise Plus, Valid")
     assert Result(state=State.OK, summary="Licensed to: ACME Corp") in results
     assert Result(state=State.OK, summary="Type: Perpetual") in results
@@ -92,32 +95,32 @@ def test_check_veeam_license_summary_and_details() -> None:
 
 def test_check_veeam_license_omits_type_when_absent() -> None:
     section = parse_veeam_license(_license(type=None))
-    results = list(check_veeam_license(PARAMS, section))
+    results = list(check_veeam_license(PARAMS, section, now=NOW))
     assert not any(isinstance(r, Result) and r.summary.startswith("Type:") for r in results)
 
 
 def test_check_veeam_license_invalid_is_crit() -> None:
     section = parse_veeam_license(_license(status="Invalid"))
-    results = list(check_veeam_license(PARAMS, section))
+    results = list(check_veeam_license(PARAMS, section, now=NOW))
     assert results[0] == Result(state=State.CRIT, summary="Enterprise Plus, Invalid")
 
 
 def test_check_veeam_license_no_expiry_reports_nothing() -> None:
     section = parse_veeam_license(_license())
-    results = list(check_veeam_license(PARAMS, section))
+    results = list(check_veeam_license(PARAMS, section, now=NOW))
     assert not any(isinstance(r, Metric) and r.name == "veeam_license_expiry" for r in results)
 
 
 def test_check_veeam_license_future_expiry_reports_remaining_time() -> None:
     section = parse_veeam_license(_license(expirationDate="2999-01-21T00:00:00.000+00:00"))
-    results = list(check_veeam_license(PARAMS, section))
+    results = list(check_veeam_license(PARAMS, section, now=NOW))
     assert any(isinstance(r, Result) and r.summary.startswith("License expiry:") for r in results)
     assert any(isinstance(r, Metric) and r.name == "veeam_license_expiry" for r in results)
 
 
 def test_check_veeam_license_past_expiry_is_crit_and_says_expired() -> None:
     section = parse_veeam_license(_license(expirationDate="2019-01-21T00:00:00.000+00:00"))
-    results = list(check_veeam_license(PARAMS, section))
+    results = list(check_veeam_license(PARAMS, section, now=NOW))
     assert any(
         isinstance(r, Result) and r.state is State.CRIT and "expired" in r.summary for r in results
     )
@@ -131,7 +134,7 @@ def test_check_veeam_license_past_expiry_can_be_silenced_with_no_levels() -> Non
         consumption=("fixed", (80.0, 95.0)),
     )
     section = parse_veeam_license(_license(expirationDate="2019-01-21T00:00:00.000+00:00"))
-    results = list(check_veeam_license(params, section))
+    results = list(check_veeam_license(params, section, now=NOW))
     assert any(
         isinstance(r, Result) and r.state is State.OK and "expired" in r.summary for r in results
     )
@@ -141,7 +144,7 @@ def test_check_veeam_license_instances_consumption_metric() -> None:
     section = parse_veeam_license(
         _license(instanceLicenseSummary={"licensedInstancesNumber": 100, "usedInstancesNumber": 50})
     )
-    results = list(check_veeam_license(PARAMS, section))
+    results = list(check_veeam_license(PARAMS, section, now=NOW))
     assert Metric("veeam_license_instances_percent", 50.0, levels=(80.0, 95.0)) in results
 
 
@@ -149,7 +152,7 @@ def test_check_veeam_license_zero_licensed_omits_consumption() -> None:
     section = parse_veeam_license(
         _license(instanceLicenseSummary={"licensedInstancesNumber": 0, "usedInstancesNumber": 0})
     )
-    results = list(check_veeam_license(PARAMS, section))
+    results = list(check_veeam_license(PARAMS, section, now=NOW))
     assert not any(
         isinstance(r, Metric) and r.name == "veeam_license_instances_percent" for r in results
     )
@@ -159,7 +162,7 @@ def test_check_veeam_license_sockets_and_capacity_are_independent_of_instances()
     section = parse_veeam_license(
         _license(socketLicenseSummary={"licensedSocketsNumber": 10, "usedSocketsNumber": 9})
     )
-    results = list(check_veeam_license(PARAMS, section))
+    results = list(check_veeam_license(PARAMS, section, now=NOW))
     assert Metric("veeam_license_sockets_percent", 90.0, levels=(80.0, 95.0)) in results
     assert not any(
         isinstance(r, Metric) and r.name == "veeam_license_instances_percent" for r in results
@@ -170,7 +173,7 @@ def test_check_veeam_license_instances_usage_metrics() -> None:
     section = parse_veeam_license(
         _license(instanceLicenseSummary={"licensedInstancesNumber": 100, "usedInstancesNumber": 50})
     )
-    results = list(check_veeam_license(PARAMS, section))
+    results = list(check_veeam_license(PARAMS, section, now=NOW))
     assert Metric("veeam_license_instances_licensed", 100) in results
     assert Metric("veeam_license_instances_used", 50) in results
 
@@ -179,7 +182,7 @@ def test_check_veeam_license_sockets_usage_metrics() -> None:
     section = parse_veeam_license(
         _license(socketLicenseSummary={"licensedSocketsNumber": 10, "usedSocketsNumber": 9})
     )
-    results = list(check_veeam_license(PARAMS, section))
+    results = list(check_veeam_license(PARAMS, section, now=NOW))
     assert Metric("veeam_license_sockets_licensed", 10) in results
     assert Metric("veeam_license_sockets_used", 9) in results
 
@@ -188,7 +191,7 @@ def test_check_veeam_license_capacity_usage_metrics_are_in_bytes() -> None:
     section = parse_veeam_license(
         _license(capacityLicenseSummary={"licensedCapacityTb": 10.0, "usedCapacityTb": 2.5})
     )
-    results = list(check_veeam_license(PARAMS, section))
+    results = list(check_veeam_license(PARAMS, section, now=NOW))
     assert Metric("veeam_license_capacity_licensed", 10e12) in results
     assert Metric("veeam_license_capacity_used", 2.5e12) in results
 
@@ -197,7 +200,7 @@ def test_check_veeam_license_zero_licensed_still_records_usage() -> None:
     section = parse_veeam_license(
         _license(instanceLicenseSummary={"licensedInstancesNumber": 0, "usedInstancesNumber": 0})
     )
-    results = list(check_veeam_license(PARAMS, section))
+    results = list(check_veeam_license(PARAMS, section, now=NOW))
     assert Metric("veeam_license_instances_licensed", 0) in results
     assert Metric("veeam_license_instances_used", 0) in results
 

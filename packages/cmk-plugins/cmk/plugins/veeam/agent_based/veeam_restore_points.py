@@ -123,7 +123,9 @@ def _malware_state(malware_status: str) -> State:
             return State.UNKNOWN
 
 
-def check_veeam_restore_points(params: CheckParameters, section: BackupObject) -> CheckResult:
+def check_veeam_restore_points(
+    params: CheckParameters, section: BackupObject, *, now: float
+) -> CheckResult:
     if section.restore_points_count is None:
         yield Result(state=State.UNKNOWN, summary="Number of restore points unknown")
     elif section.restore_points_count == 0:
@@ -135,7 +137,7 @@ def check_veeam_restore_points(params: CheckParameters, section: BackupObject) -
         last = section.last_restore_point
         if last is None or last.creation_time is None:
             yield Result(state=State.UNKNOWN, summary="Newest restore point not found")
-        elif (age := time.time() - last.creation_time) < 0:
+        elif (age := now - last.creation_time) < 0:
             yield Result(state=State.OK, summary="Last restore point is in the future")
         else:
             yield from check_levels(
@@ -162,6 +164,10 @@ def check_veeam_restore_points(params: CheckParameters, section: BackupObject) -
         )
 
 
+def check_veeam_restore_points_now(params: CheckParameters, section: BackupObject) -> CheckResult:
+    yield from check_veeam_restore_points(params, section, now=time.time())
+
+
 agent_section_veeam_restore_points = AgentSection(
     name="veeam_restore_points",
     parse_function=parse_veeam_restore_points,
@@ -171,7 +177,7 @@ check_plugin_veeam_restore_points = CheckPlugin(
     name="veeam_restore_points",
     service_name="Restore points",
     discovery_function=discovery_veeam_restore_points,
-    check_function=check_veeam_restore_points,
+    check_function=check_veeam_restore_points_now,
     check_ruleset_name="veeam_restore_points",
     # Carried over from the VEEAM Client check, so users moving over see the same levels.
     check_default_parameters=CheckParameters(age=("fixed", (30 * 3600.0, 48 * 3600.0))),

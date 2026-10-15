@@ -65,7 +65,9 @@ def discovery_veeam_config_backup(section: Section) -> DiscoveryResult:  # noqa:
     yield Service()
 
 
-def check_veeam_config_backup(params: CheckParameters, section: Section) -> CheckResult:
+def check_veeam_config_backup(
+    params: CheckParameters, section: Section, *, now: float
+) -> CheckResult:
     if not section.is_enabled:
         yield Result(
             state=State(params["disabled_state"]),
@@ -80,7 +82,7 @@ def check_veeam_config_backup(params: CheckParameters, section: Section) -> Chec
         )
     else:
         yield from check_levels(
-            time.time() - section.last_successful_time,
+            now - section.last_successful_time,
             levels_upper=params["age"],
             metric_name="veeam_config_backup_age",
             render_func=lambda v: (
@@ -103,6 +105,10 @@ def check_veeam_config_backup(params: CheckParameters, section: Section) -> Chec
     )
 
 
+def check_veeam_config_backup_now(params: CheckParameters, section: Section) -> CheckResult:
+    yield from check_veeam_config_backup(params, section, now=time.time())
+
+
 agent_section_veeam_config_backup = AgentSection(
     name="veeam_config_backup",
     parse_function=parse_veeam_config_backup,
@@ -112,7 +118,7 @@ check_plugin_veeam_config_backup = CheckPlugin(
     name="veeam_config_backup",
     service_name="Configuration backup",
     discovery_function=discovery_veeam_config_backup,
-    check_function=check_veeam_config_backup,
+    check_function=check_veeam_config_backup_now,
     check_ruleset_name="veeam_config_backup",
     # TODO: thresholds are proposed and unvalidated. The reference PowerShell
     # implementation instead uses 7/14 days, looser than a daily backup schedule

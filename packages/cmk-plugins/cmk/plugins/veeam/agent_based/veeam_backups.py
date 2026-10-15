@@ -140,7 +140,9 @@ def monitoring_state(state: str, result: str) -> State:
             return State.UNKNOWN
 
 
-def check_veeam_backups(item: str, params: CheckParameters, section: Section) -> CheckResult:
+def check_veeam_backups(
+    item: str, params: CheckParameters, section: Section, *, now: float
+) -> CheckResult:
     if (task := section.get(item)) is None:
         return
 
@@ -198,10 +200,14 @@ def check_veeam_backups(item: str, params: CheckParameters, section: Section) ->
                 state=State.UNKNOWN,
                 summary=f"FAILED TO PARSE -> End time: ({task.end_time})",
             )
-        elif (age := time.time() - end_time) < 0:
+        elif (age := now - end_time) < 0:
             yield Result(state=State.UNKNOWN, summary="Last backup: end time is in the future")
         else:
             yield from check_backup_age(age, params["age"])
+
+
+def check_veeam_backups_now(item: str, params: CheckParameters, section: Section) -> CheckResult:
+    yield from check_veeam_backups(item, params, section, now=time.time())
 
 
 agent_section_veeam_backups = AgentSection(
@@ -214,7 +220,7 @@ check_plugin_veeam_backups = CheckPlugin(
     name="veeam_backups",
     service_name="Backup %s",
     discovery_function=discovery_veeam_backups,
-    check_function=check_veeam_backups,
+    check_function=check_veeam_backups_now,
     check_ruleset_name="veeam_backup",
     check_default_parameters=CheckParameters(
         age=("fixed", (108000.0, 172800.0)),  # 30h/2d, as the agent plug-in's VEEAM Client

@@ -5,9 +5,9 @@
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from pathlib import PurePosixPath
 
 from cmk.gui.type_defs import FilterHTTPVariables, FilterName
+from cmk.gui.views.drilldown_filters import ROW_FILTERS
 from cmk.livestatus_client import LivestatusColumn
 
 from .model.contextual_link import VisualLocation
@@ -76,31 +76,11 @@ def clicked_object_values(
 ) -> dict[FilterName, FilterHTTPVariables]:
     """What a custom link may carry beyond the native key of a clicked host or service row:
     the states and the folder."""
-    values: dict[FilterName, FilterHTTPVariables] = {
-        "hoststate": {_state_variable("hst", row["host_state"], row["host_has_been_checked"]): "on"}
+    return {
+        filter_name: variables
+        for filter_name in ("hoststate", "svcstate", "wato_folder")
+        if (variables := ROW_FILTERS[filter_name].variables(row, [])) is not None
     }
-    if "service_state" in row:
-        values["svcstate"] = {
-            _state_variable("st", row["service_state"], row["service_has_been_checked"]): "on"
-        }
-    if (folder := _folder_path(str(row["host_filename"]))) is not None:
-        values["wato_folder"] = {"wato_folder": folder}
-    return values
-
-
-def _state_variable(
-    prefix: str, state: LivestatusColumn, has_been_checked: LivestatusColumn
-) -> str:
-    return f"{prefix}p" if has_been_checked != 1 else f"{prefix}{int(str(state))}"
-
-
-def _folder_path(filename: str) -> str | None:
-    # Setup writes one hosts.mk per folder below /wato, so the path between them is the folder.
-    path = PurePosixPath(filename)
-    if path.name != "hosts.mk" or path.parts[:2] != ("/", "wato"):
-        return None
-    folder = path.relative_to("/wato").parent
-    return "" if folder == PurePosixPath(".") else str(folder)
 
 
 def _encoded(key: Mapping[FilterName, FilterHTTPVariables]) -> dict[FilterName, FilterResult]:

@@ -308,6 +308,8 @@ _VALID_PROVIDER_OPTIONS = {
     "model": "claude-opus-5",
     "credential": _STORED_API_KEY,
     "prompt_cache": "five_minutes",
+    "rounds_per_turn": 50,
+    "output_tokens_per_reply": 32768,
 }
 
 CHECKBOX_CASES: list[Case] = [
@@ -716,12 +718,16 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
             "model": NoSaveableDefault(),
             "credential": NoSaveableDefault(),
             "prompt_cache": "five_minutes",
+            "rounds_per_turn": 50,
+            "output_tokens_per_reply": 32768,
         },
         "anthropic.base_url": NoSaveableDefault(),
         "openai": {
             "model": NoSaveableDefault(),
             "credential": NoSaveableDefault(),
             "prompt_cache": "five_minutes",
+            "rounds_per_turn": 50,
+            "output_tokens_per_reply": 32768,
         },
         "openai.base_url": NoSaveableDefault(),
     },
@@ -1609,7 +1615,12 @@ CASES: Mapping[str, list[Case]] = {
             "anthropic",
             (
                 "anthropic",
-                {"model": "claude-opus-5", "credential": _STORED_API_KEY, "prompt_cache": "off"},
+                {
+                    **_VALID_PROVIDER_OPTIONS,
+                    "prompt_cache": "off",
+                    "rounds_per_turn": 7,
+                    "output_tokens_per_reply": 20000,
+                },
             ),
         ),
         CasePass(
@@ -1621,6 +1632,8 @@ CASES: Mapping[str, list[Case]] = {
                     "base_url": "https://llm.corp.example/v1",
                     "credential": _STORED_API_KEY,
                     "prompt_cache": "one_hour",
+                    "rounds_per_turn": 50,
+                    "output_tokens_per_reply": 32768,
                 },
             ),
         ),
@@ -1632,6 +1645,31 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail(
             "non-http-base-url",
             ("openai", {**_VALID_PROVIDER_OPTIONS, "base_url": "ftp://x"}),
+        ),
+        CaseFail(
+            "missing-rounds-per-turn",
+            (
+                "anthropic",
+                {k: v for k, v in _VALID_PROVIDER_OPTIONS.items() if k != "rounds_per_turn"},
+            ),
+        ),
+        CaseFail(
+            "missing-output-tokens-per-reply",
+            (
+                "anthropic",
+                {
+                    k: v
+                    for k, v in _VALID_PROVIDER_OPTIONS.items()
+                    if k != "output_tokens_per_reply"
+                },
+            ),
+        ),
+        CaseFail(
+            "rounds-below-minimum", ("anthropic", {**_VALID_PROVIDER_OPTIONS, "rounds_per_turn": 1})
+        ),
+        CaseFail(
+            "tokens-below-minimum",
+            ("anthropic", {**_VALID_PROVIDER_OPTIONS, "output_tokens_per_reply": 16383}),
         ),
         CaseFail(
             "explicit-password",

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.png.renderer import PngTexts, render_png
+from cmk.gui.png.renderer import PngGraph, PngTexts, render_pngs, RenderingFailure
 
 from ._notification_images import AjaxGraphImagesForNotifications
 from ._settings import (
@@ -24,7 +24,9 @@ __all__ = [
     "mm_per_ex",
     "png_options",
     "png_texts",
+    "PngGraph",
     "PngOptions",
     "PngTexts",
-    "render_png",
+    "render_pngs",
+    "RenderingFailure",
 ]

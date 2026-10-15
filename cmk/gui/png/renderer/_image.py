@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
 import io
+import traceback
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 
@@ -520,58 +521,6 @@ def _plot_legend_table(
         add_marker(marker_x, marker_y(row), region.attributes.color)
 
 
-def _render_png(
-    graph: EvaluatedGraph,
-    options: PngOptions,
-    texts: PngTexts,
-    formatter: NotationFormatter | None,
-    tz: datetime.tzinfo | None,
-) -> bytes:
-    scalars = _graph_scalars(graph)
-    is_mirrored = any(drawn.mirrored for drawn in drawn_curves(graph.stacks, graph.lines))
-    lower, upper = _vertical_range_bounds(graph)
-    # The legend always lists every rule (e.g. warning/critical), even ones outside the visible
-    # Y range; only the drawn horizontal lines are restricted to the in-range subset.
-    in_range_rules = _rules_in_range(graph.rules, lower, upper)
-    table_height_ex = legend_height_ex(graph, options)
-
-    width_in = ex_to_inches(options.size[0], options.font_size)
-    height_in = ex_to_inches(options.size[1] + table_height_ex, options.font_size)
-
-    fig = Figure(figsize=(width_in, height_in), dpi=DPI, facecolor=BACKGROUND_COLOR)
-
-    if table_height_ex:
-        gs = fig.add_gridspec(2, 1, height_ratios=[options.size[1], table_height_ex])
-        ax = fig.add_subplot(gs[0])
-        legend_ax = fig.add_subplot(gs[1])
-        legend_ax.set_facecolor(BACKGROUND_COLOR)
-        _plot_legend_table(
-            legend_ax, scalars, graph.rules, graph.regions, options, texts, formatter
-        )
-    else:
-        ax = fig.add_subplot(1, 1, 1)
-    ax.set_facecolor(BACKGROUND_COLOR)
-    _plot_metrics(ax, graph)
-    if (limits := _y_axis_limits(lower, upper, is_mirrored=is_mirrored)) is not None:
-        # Set explicitly (not just autoscaled) *before* the rules below are drawn, so a rule far
-        # outside the data's range doesn't stretch the view via matplotlib's own autoscale.
-        ax.set_ylim(*limits)
-    _plot_regions(ax, graph)
-    for rule in in_range_rules:
-        sign = _mirroring_sign(rule.inverse)
-        ax.axhline(sign * rule.value, color=rule.attributes.color)
-    title_artist = _apply_render_config(
-        ax, graph, options, texts, formatter, is_mirrored=is_mirrored, tz=tz
-    )
-    fig.tight_layout()
-    _fit_time_axis(ax, options, tz)
-    _align_title_to_y_ticks(fig, ax, title_artist)
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png")
-    buf.seek(0)
-    return buf.read()
-
-
 def _converted_curve(curve: EvaluatedCurve, temperature_unit: TemperatureUnit) -> EvaluatedCurve:
     conversion = user_specific_unit(curve.attributes.unit, temperature_unit).conversion
     return EvaluatedCurve(
@@ -656,37 +605,100 @@ def _graph_in_user_unit(
     )
 
 
-def render_png(
-    graph: EvaluatedGraph,
-    options: PngOptions,
-    texts: PngTexts,
-    y_axis_unit: Unit | NonConvertibleUnit | None,
-    temperature_unit: TemperatureUnit,
-    *,
-    requested_vertical_range: EvaluatedVerticalRange | None = None,
-    tz: datetime.tzinfo | None = None,
-) -> bytes:
-    """Render a single evaluated graph to PNG bytes.
+@dataclass(frozen=True, kw_only=True)
+class PngGraph:
+    graph: EvaluatedGraph
+    options: PngOptions
+    y_axis_unit: Unit | NonConvertibleUnit | None
+    requested_vertical_range: EvaluatedVerticalRange | None
+    # None: the site's local zone. An export passes the browser's zone, so that its time
+    # axis matches the one of the Vue graph.
+    time_zone: datetime.tzinfo | None
 
-    ``tz`` is the timezone the time axis and the graph time are rendered in. It defaults to the
-    site's local one; a PNG exported from the browser passes the browser's, the one the Vue
-    graph labels its time axis in.
-    """
-    if y_axis_unit is None:
-        return _render_png(
-            _graph_in_user_unit(
-                graph, lambda value: value, temperature_unit, requested_vertical_range
-            ),
-            options,
-            texts,
-            None,
-            tz,
-        )
-    axis = user_specific_unit(y_axis_unit, temperature_unit)
-    return _render_png(
-        _graph_in_user_unit(graph, axis.conversion, temperature_unit, requested_vertical_range),
-        options,
-        texts,
-        axis.formatter,
-        tz,
+
+@dataclass(frozen=True)
+class RenderingFailure:
+    message: str
+
+
+def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: TemperatureUnit) -> bytes:
+    axis = (
+        None
+        if png_graph.y_axis_unit is None
+        else user_specific_unit(png_graph.y_axis_unit, temperature_unit)
     )
+    graph = _graph_in_user_unit(
+        png_graph.graph,
+        (lambda value: value) if axis is None else axis.conversion,
+        temperature_unit,
+        png_graph.requested_vertical_range,
+    )
+    formatter = None if axis is None else axis.formatter
+    scalars = _graph_scalars(graph)
+    is_mirrored = any(drawn.mirrored for drawn in drawn_curves(graph.stacks, graph.lines))
+    lower, upper = _vertical_range_bounds(graph)
+    # The legend always lists every rule (e.g. warning/critical), even ones outside the visible
+    # Y range; only the drawn horizontal lines are restricted to the in-range subset.
+    in_range_rules = _rules_in_range(graph.rules, lower, upper)
+    table_height_ex = legend_height_ex(graph, png_graph.options)
+
+    width_in = ex_to_inches(png_graph.options.size[0], png_graph.options.font_size)
+    height_in = ex_to_inches(
+        png_graph.options.size[1] + table_height_ex, png_graph.options.font_size
+    )
+
+    fig = Figure(figsize=(width_in, height_in), dpi=DPI, facecolor=BACKGROUND_COLOR)
+
+    if table_height_ex:
+        gs = fig.add_gridspec(2, 1, height_ratios=[png_graph.options.size[1], table_height_ex])
+        ax = fig.add_subplot(gs[0])
+        legend_ax = fig.add_subplot(gs[1])
+        legend_ax.set_facecolor(BACKGROUND_COLOR)
+        _plot_legend_table(
+            legend_ax, scalars, graph.rules, graph.regions, png_graph.options, texts, formatter
+        )
+    else:
+        ax = fig.add_subplot(1, 1, 1)
+    ax.set_facecolor(BACKGROUND_COLOR)
+    _plot_metrics(ax, graph)
+    if (limits := _y_axis_limits(lower, upper, is_mirrored=is_mirrored)) is not None:
+        # Set explicitly (not just autoscaled) *before* the rules below are drawn, so a rule far
+        # outside the data's range doesn't stretch the view via matplotlib's own autoscale.
+        ax.set_ylim(*limits)
+    _plot_regions(ax, graph)
+    for rule in in_range_rules:
+        sign = _mirroring_sign(rule.inverse)
+        ax.axhline(sign * rule.value, color=rule.attributes.color)
+    title_artist = _apply_render_config(
+        ax,
+        graph,
+        png_graph.options,
+        texts,
+        formatter,
+        is_mirrored=is_mirrored,
+        tz=png_graph.time_zone,
+    )
+    fig.tight_layout()
+    _fit_time_axis(ax, png_graph.options, png_graph.time_zone)
+    _align_title_to_y_ticks(fig, ax, title_artist)
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png")
+    buf.seek(0)
+    return buf.read()
+
+
+def _rendered_or_failure(
+    png_graph: PngGraph, texts: PngTexts, temperature_unit: TemperatureUnit
+) -> bytes | RenderingFailure:
+    try:
+        return _render_png(png_graph, texts, temperature_unit)
+    except Exception as exc:
+        return RenderingFailure("".join(traceback.format_exception_only(exc)).strip())
+
+
+def render_pngs(
+    graphs: Sequence[PngGraph], texts: PngTexts, temperature_unit: TemperatureUnit
+) -> Sequence[bytes | RenderingFailure]:
+    """One result per graph, in the order of the graphs. A graph that fails to render yields a
+    RenderingFailure, so that the other graphs still get their images."""
+    return [_rendered_or_failure(graph, texts, temperature_unit) for graph in graphs]

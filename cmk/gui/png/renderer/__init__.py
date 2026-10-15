@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._image import PngTexts, render_png
+from ._image import PngGraph, PngTexts, render_pngs, RenderingFailure
 
 __all__ = [
+    "PngGraph",
     "PngTexts",
-    "render_png",
+    "render_pngs",
+    "RenderingFailure",
 ]

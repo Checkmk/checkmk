@@ -42,8 +42,10 @@ from cmk.gui.png.renderer._image import (
     _vertical_range_bounds,
     _y_axis_limits,
     DPI,
+    PngGraph,
     PngTexts,
-    render_png,
+    render_pngs,
+    RenderingFailure,
 )
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.unit_formatter import DecimalFormatter
@@ -146,9 +148,21 @@ def test_render_png_produces_bytes_for_an_empty_graph() -> None:
     graph = EvaluatedGraph(
         name="g", title="Empty", time_range=_TIME_RANGE, vertical_range=None, stacks=[], lines=[]
     )
-    png_bytes = render_png(graph, _OPTIONS, _TEXTS, None, TemperatureUnit.CELSIUS)
+    (png_bytes,) = render_pngs(
+        [
+            PngGraph(
+                graph=graph,
+                options=_OPTIONS,
+                y_axis_unit=None,
+                requested_vertical_range=None,
+                time_zone=None,
+            )
+        ],
+        _TEXTS,
+        TemperatureUnit.CELSIUS,
+    )
 
-    assert png_bytes.startswith(b"\x89PNG")
+    assert isinstance(png_bytes, bytes) and png_bytes.startswith(b"\x89PNG")
 
 
 def test_render_png_with_a_unit_renders_ticks_and_legend_via_the_formatter() -> None:
@@ -163,9 +177,21 @@ def test_render_png_with_a_unit_renders_ticks_and_legend_via_the_formatter() -> 
     )
     y_axis_unit = Unit(notation=DecimalNotation("X"), precision=AutoPrecision(2))
 
-    png_bytes = render_png(graph, _OPTIONS, _TEXTS, y_axis_unit, TemperatureUnit.CELSIUS)
+    (png_bytes,) = render_pngs(
+        [
+            PngGraph(
+                graph=graph,
+                options=_OPTIONS,
+                y_axis_unit=y_axis_unit,
+                requested_vertical_range=None,
+                time_zone=None,
+            )
+        ],
+        _TEXTS,
+        TemperatureUnit.CELSIUS,
+    )
 
-    assert png_bytes.startswith(b"\x89PNG")
+    assert isinstance(png_bytes, bytes) and png_bytes.startswith(b"\x89PNG")
 
 
 def test_graph_scalars_are_natural_values_even_when_mirrored() -> None:
@@ -262,9 +288,23 @@ def test_the_image_has_the_size_computed_for_it_without_a_legend() -> None:
     )
     options = _options(show_legend=False)
 
-    png_bytes = render_png(graph, options, _TEXTS, _UNIT, TemperatureUnit.CELSIUS)
+    (png_bytes,) = render_pngs(
+        [
+            PngGraph(
+                graph=graph,
+                options=options,
+                y_axis_unit=_UNIT,
+                requested_vertical_range=None,
+                time_zone=None,
+            )
+        ],
+        _TEXTS,
+        TemperatureUnit.CELSIUS,
+    )
 
-    assert _size_in_px(png_bytes) == _px(compute_png_size_mm(graph, options))
+    assert isinstance(png_bytes, bytes) and _size_in_px(png_bytes) == _px(
+        compute_png_size_mm(graph, options)
+    )
 
 
 def test_the_image_has_the_size_computed_for_it_with_a_legend() -> None:
@@ -286,9 +326,23 @@ def test_the_image_has_the_size_computed_for_it_with_a_legend() -> None:
     )
     options = _options(show_legend=True)
 
-    png_bytes = render_png(graph, options, _TEXTS, _UNIT, TemperatureUnit.CELSIUS)
+    (png_bytes,) = render_pngs(
+        [
+            PngGraph(
+                graph=graph,
+                options=options,
+                y_axis_unit=_UNIT,
+                requested_vertical_range=None,
+                time_zone=None,
+            )
+        ],
+        _TEXTS,
+        TemperatureUnit.CELSIUS,
+    )
 
-    assert _size_in_px(png_bytes) == _px(compute_png_size_mm(graph, options))
+    assert isinstance(png_bytes, bytes) and _size_in_px(png_bytes) == _px(
+        compute_png_size_mm(graph, options)
+    )
 
 
 def test_plot_metrics_spans_the_full_time_range_despite_a_long_leading_gap() -> None:
@@ -471,19 +525,73 @@ def test_a_celsius_graph_renders_like_its_fahrenheit_twin_for_a_fahrenheit_user(
     celsius = Unit(notation=DecimalNotation("°C"), precision=AutoPrecision(2))
     fahrenheit = Unit(notation=DecimalNotation("°F"), precision=AutoPrecision(2))
 
-    assert render_png(
-        _temperature_graph(celsius, [0.0, 50.0, 100.0], 80.0),
-        _OPTIONS,
+    (celsius_png,) = render_pngs(
+        [
+            PngGraph(
+                graph=_temperature_graph(celsius, [0.0, 50.0, 100.0], 80.0),
+                options=_OPTIONS,
+                y_axis_unit=celsius,
+                requested_vertical_range=None,
+                time_zone=None,
+            )
+        ],
         _TEXTS,
-        celsius,
-        TemperatureUnit.FAHRENHEIT,
-    ) == render_png(
-        _temperature_graph(fahrenheit, [32.0, 122.0, 212.0], 176.0),
-        _OPTIONS,
-        _TEXTS,
-        fahrenheit,
         TemperatureUnit.FAHRENHEIT,
     )
+    (fahrenheit_png,) = render_pngs(
+        [
+            PngGraph(
+                graph=_temperature_graph(fahrenheit, [32.0, 122.0, 212.0], 176.0),
+                options=_OPTIONS,
+                y_axis_unit=fahrenheit,
+                requested_vertical_range=None,
+                time_zone=None,
+            )
+        ],
+        _TEXTS,
+        TemperatureUnit.FAHRENHEIT,
+    )
+
+    assert isinstance(celsius_png, bytes) and celsius_png == fahrenheit_png
+
+
+def test_each_graph_of_a_batch_gets_its_own_image_in_order() -> None:
+    graph = EvaluatedGraph(
+        name="g",
+        title="Graph",
+        time_range=_TIME_RANGE,
+        vertical_range=None,
+        stacks=[EvaluatedStack(members=[_curve("m", [1.0, 2.0, 3.0])], inverse=False)],
+        lines=[],
+    )
+    with_legend = _options(show_legend=True)
+    without_legend = _options(show_legend=False)
+
+    pngs = render_pngs(
+        [
+            PngGraph(
+                graph=graph,
+                options=with_legend,
+                y_axis_unit=None,
+                requested_vertical_range=None,
+                time_zone=None,
+            ),
+            PngGraph(
+                graph=graph,
+                options=without_legend,
+                y_axis_unit=None,
+                requested_vertical_range=None,
+                time_zone=None,
+            ),
+        ],
+        _TEXTS,
+        TemperatureUnit.CELSIUS,
+    )
+
+    assert [_size_in_px(png) for png in pngs if isinstance(png, bytes)] == [
+        _px(compute_png_size_mm(graph, with_legend)),
+        _px(compute_png_size_mm(graph, without_legend)),
+    ]
 
 
 def test_a_requested_vertical_range_is_taken_in_the_users_unit() -> None:
@@ -492,26 +600,66 @@ def test_a_requested_vertical_range_is_taken_in_the_users_unit() -> None:
     requested = EvaluatedVerticalRange(range_kind=VerticalRangeKind.FIXED, lower=50.0, upper=100.0)
     twin = _temperature_graph(fahrenheit, [32.0, 122.0, 212.0], 176.0)
 
-    assert render_png(
-        _temperature_graph(celsius, [0.0, 50.0, 100.0], 80.0),
-        _OPTIONS,
+    (celsius_png,) = render_pngs(
+        [
+            PngGraph(
+                graph=_temperature_graph(celsius, [0.0, 50.0, 100.0], 80.0),
+                options=_OPTIONS,
+                y_axis_unit=celsius,
+                requested_vertical_range=requested,
+                time_zone=None,
+            )
+        ],
         _TEXTS,
-        celsius,
-        TemperatureUnit.FAHRENHEIT,
-        requested_vertical_range=requested,
-    ) == render_png(
-        EvaluatedGraph(
-            name=twin.name,
-            title=twin.title,
-            time_range=twin.time_range,
-            vertical_range=requested,
-            stacks=twin.stacks,
-            lines=twin.lines,
-            rules=twin.rules,
-            regions=twin.regions,
-        ),
-        _OPTIONS,
-        _TEXTS,
-        fahrenheit,
         TemperatureUnit.FAHRENHEIT,
     )
+    (fahrenheit_png,) = render_pngs(
+        [
+            PngGraph(
+                graph=EvaluatedGraph(
+                    name=twin.name,
+                    title=twin.title,
+                    time_range=twin.time_range,
+                    vertical_range=requested,
+                    stacks=twin.stacks,
+                    lines=twin.lines,
+                    rules=twin.rules,
+                    regions=twin.regions,
+                ),
+                options=_OPTIONS,
+                y_axis_unit=fahrenheit,
+                requested_vertical_range=None,
+                time_zone=None,
+            )
+        ],
+        _TEXTS,
+        TemperatureUnit.FAHRENHEIT,
+    )
+
+    assert isinstance(celsius_png, bytes) and celsius_png == fahrenheit_png
+
+
+def test_a_graph_that_fails_to_render_leaves_the_others_their_images() -> None:
+    def png_graph(values: list[float | None]) -> PngGraph:
+        return PngGraph(
+            graph=EvaluatedGraph(
+                name="g",
+                title="Graph",
+                time_range=_TIME_RANGE,
+                vertical_range=None,
+                stacks=[],
+                lines=[EvaluatedLine(curve=_curve("m", values), inverse=False)],
+            ),
+            options=_OPTIONS,
+            y_axis_unit=None,
+            requested_vertical_range=None,
+            time_zone=None,
+        )
+
+    results = render_pngs(
+        [png_graph([1.0, 2.0, 3.0, 4.0]), png_graph([1.0, 2.0, 3.0])],
+        _TEXTS,
+        TemperatureUnit.CELSIUS,
+    )
+
+    assert [type(result) for result in results] == [RenderingFailure, bytes]

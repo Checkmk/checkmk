@@ -33,7 +33,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.permissions import permission_registry
-from cmk.gui.png.renderer import render_png
+from cmk.gui.png.renderer import PngGraph, render_pngs, RenderingFailure
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
@@ -130,12 +130,24 @@ def _answer_graph_image_request(
     )
 
     options = png_options(display_config)
-    texts = png_texts()
-    return [
-        base64.b64encode(
-            render_png(
-                evaluated_graph, options, texts, built.resolved_y_axis_unit(), temperature_unit
+    results = render_pngs(
+        [
+            PngGraph(
+                graph=evaluated_graph,
+                options=options,
+                y_axis_unit=built.resolved_y_axis_unit(),
+                requested_vertical_range=None,
+                time_zone=None,
             )
-        ).decode("ascii")
-        for built, evaluated_graph in zip(requested, evaluated.graphs, strict=True)
-    ]
+            for built, evaluated_graph in zip(requested, evaluated.graphs, strict=True)
+        ],
+        png_texts(),
+        temperature_unit,
+    )
+    for result in results:
+        if isinstance(result, RenderingFailure):
+            logger.warning(
+                "Cannot render a graph for the notification: %(message)s",
+                {"message": result.message},
+            )
+    return [base64.b64encode(png).decode("ascii") for png in results if isinstance(png, bytes)]

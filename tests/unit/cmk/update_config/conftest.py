@@ -79,9 +79,11 @@ def fixture_config() -> Config:
 
 
 @pytest.fixture(name="tree")
-def fixture_tree(patch_omd_site: None, config: Config) -> Iterator[FolderTree]:
+def fixture_tree(config: Config) -> Iterator[FolderTree]:
     with disable_redis():
-        yield make_folder_tree(config)
+        tree = make_folder_tree(config)
+        Path(tree.get_root_dir()).mkdir(parents=True, exist_ok=True)
+        yield tree
 
 
 @pytest.fixture()

@@ -8,7 +8,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
     Rule,
@@ -16,7 +16,6 @@ from cmk.gui.watolib.rulesets import (
     RuleOptions,
     Ruleset,
 )
-from cmk.gui.wsgi.app import gui_context
 from cmk.ruleset_matcher.conditions import HostOrServiceConditions
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.update_config.lib import ExpiryVersion
@@ -64,10 +63,12 @@ pytestmark = pytest.mark.usefixtures("load_plugins")
     ],
 )
 def test_validate_host_condition(
-    host_condition: HostOrServiceConditions, expected: str | None, mocker: MockerFixture
+    host_condition: HostOrServiceConditions,
+    expected: str | None,
+    mocker: MockerFixture,
+    tree: FolderTree,
 ) -> None:
-    with gui_context():
-        root_folder = folder_tree().root_folder()
+    root_folder = tree.root_folder()
     ruleset_name = "automatic_host_removal"
     ruleset: Ruleset = Ruleset(ruleset_name, None)
     ruleset.append_rule(
@@ -108,14 +109,15 @@ def test_validate_host_condition(
         _execute_pre_update_rulesets(mocker)
 
 
-def test_legacy_wmic_process_parameters_survive_the_pre_action(mocker: MockerFixture) -> None:
+def test_legacy_wmic_process_parameters_survive_the_pre_action(
+    mocker: MockerFixture, tree: FolderTree
+) -> None:
     """Until 3.0 these parameters were a positional tuple.
 
     The migrate_wmic_process_params action rewrites them, but it runs after this
     pre-action, so validating them here can only ever fail.
     """
-    with gui_context():
-        root_folder = folder_tree().root_folder()
+    root_folder = tree.root_folder()
     ruleset_name = RuleGroup.StaticChecks("wmic_process")
     ruleset: Ruleset = Ruleset(ruleset_name, None)
     ruleset.append_rule(
@@ -150,11 +152,10 @@ def test_legacy_wmic_process_parameters_survive_the_pre_action(mocker: MockerFix
 
 
 def test_rules_referring_to_a_replaced_snmp_section_pass_the_pre_action(
-    mocker: MockerFixture,
+    mocker: MockerFixture, tree: FolderTree
 ) -> None:
     """The rulesets action renames the section after this pre-action"""
-    with gui_context():
-        root_folder = folder_tree().root_folder()
+    root_folder = tree.root_folder()
     ruleset_name = "snmpv3_contexts"
     ruleset: Ruleset = Ruleset(ruleset_name, None)
     ruleset.append_rule(

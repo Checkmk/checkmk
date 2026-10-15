@@ -43,7 +43,6 @@ py_cmk_test(
         "//packages/cmk-maps:registration",
         "//packages/cmk-plugins/cmk/plugins/lib",
         "//packages/cmk-werks:site",
-        "//packages/cmk-wsgi",
         "//tests/testlib/unit",
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:helpers",

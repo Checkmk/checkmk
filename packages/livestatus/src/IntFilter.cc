@@ -7,6 +7,7 @@
 
 #include <bitset>
 #include <cstdlib>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <string>
@@ -74,6 +75,10 @@ std::optional<int32_t> IntFilter::greatestLowerBoundFor(
         case RelationalOperator::greater_or_equal:
             return {_ref_value};
         case RelationalOperator::greater:
+            if (_ref_value == std::numeric_limits<int32_t>::max()) {
+                // Avoid overflow: No value is greater than the maximum, anyway.
+                return std::nullopt;
+            }
             return {_ref_value + 1};
         case RelationalOperator::not_equal:
         case RelationalOperator::matches:             // superset
@@ -103,6 +108,10 @@ std::optional<int32_t> IntFilter::leastUpperBoundFor(
         case RelationalOperator::less_or_equal:
             return {_ref_value};
         case RelationalOperator::less:
+            if (_ref_value == std::numeric_limits<int32_t>::min()) {
+                // Avoid overflow: No value is less than the minimum, anyway.
+                return std::nullopt;
+            }
             return {_ref_value - 1};
         case RelationalOperator::not_equal:
         case RelationalOperator::matches:             // superset

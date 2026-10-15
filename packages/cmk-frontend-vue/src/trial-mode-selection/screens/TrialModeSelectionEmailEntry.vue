@@ -163,7 +163,7 @@ function clearErrors(): void {
     <CmkParagraph class="trial-mode-selection-email-entry__hint">
       {{
         _t(
-          'Use an address you can access now — codes expire after 24 hours. Verification links this site to your trial registration.'
+          'Use an address you can access now. Verification links this site to your trial registration.'
         )
       }}
     </CmkParagraph>

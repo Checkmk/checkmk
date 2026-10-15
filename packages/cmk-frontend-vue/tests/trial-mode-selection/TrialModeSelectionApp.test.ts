@@ -132,7 +132,7 @@ const pageHref = window.location.href
 
 const VERIFY_ONLINE_URL = 'wato.py?mode=edit_licensing_settings&online=1'
 const VERIFY_OFFLINE_URL = 'wato.py?mode=licensing_offline_verification'
-const CODE_SENT = 'We sent a 6-digit code to jane.doe@example.com. It expires after 24 hours.'
+const CODE_SENT = 'We sent a 6-digit code to jane.doe@example.com.'
 const SITE_UNREACHABLE = 'Unable to reach Checkmk site. Please check that it is started.'
 const SITE_ERROR = 'Simulated Failure (as returned by the backend).'
 const INTERNAL_ERROR = 'Internal error. Please try again.'

@@ -155,7 +155,7 @@ onMounted(() => codeInput.value?.focus())
     </TrialModeSelectionScreenHeading>
     <CmkParagraph v-if="!sendCodeErrorMessage" class="trial-mode-selection-code-entry__subtitle">
       {{
-        _t('We sent a 6-digit code to %{email}. It expires after 24 hours.', {
+        _t('We sent a 6-digit code to %{email}.', {
           email
         })
       }}

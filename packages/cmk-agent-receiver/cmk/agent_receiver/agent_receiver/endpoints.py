@@ -65,6 +65,7 @@ from cmk.agent_receiver.agent_receiver.models import (
     UpdateStatusResponse,
 )
 from cmk.agent_receiver.agent_receiver.utils import (
+    agent_update_authorization,
     NotRegisteredException,
     R4R,
     RegisteredHost,
@@ -173,6 +174,7 @@ async def register_existing(
         root_cert=root_cert,
         agent_cert=agent_cert,
         connection_mode=register_response.connection_mode,
+        agent_update_authorization=agent_update_authorization(registration_body.uuid),
     )
 
 
@@ -207,6 +209,7 @@ async def register_existing_token(
         root_cert=root_cert,
         agent_cert=agent_cert,
         connection_mode=register_response.connection_mode,
+        agent_update_authorization=agent_update_authorization(registration_body.uuid),
     )
 
 
@@ -320,6 +323,7 @@ async def register_new_ongoing(
             return RegisterNewOngoingResponseSuccess(
                 agent_cert=r4r.request.agent_cert,
                 connection_mode=host.connection_mode,
+                agent_update_authorization=agent_update_authorization(uuid),
             )
 
     assert_never(r4r.status)

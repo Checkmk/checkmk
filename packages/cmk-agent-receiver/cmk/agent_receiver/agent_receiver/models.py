@@ -137,10 +137,23 @@ class ConnectionMode(Enum):
     PUSH = "push-agent"
 
 
+class AgentUpdateAuthorization(Enum):
+    AUTHORIZED = "authorized"
+    NOT_PERMITTED = "not_permitted"
+    UNAVAILABLE = "unavailable"
+
+
+class UUIDRegistration(BaseModel, frozen=True):
+    """The registration file that the site writes when it links a UUID"""
+
+    agent_updates_permitted: bool | None = None
+
+
 class RegisterExistingResponse(BaseModel, frozen=True):
     root_cert: str
     agent_cert: str
     connection_mode: ConnectionMode
+    agent_update_authorization: AgentUpdateAuthorization
 
 
 class RegisterNewBody(BaseModel, frozen=True):
@@ -168,6 +181,7 @@ class RegisterNewOngoingResponseSuccess(BaseModel, frozen=True):
     status: Literal["Success"] = "Success"
     agent_cert: str
     connection_mode: ConnectionMode
+    agent_update_authorization: AgentUpdateAuthorization
 
 
 class RequestForRegistration(BaseModel, frozen=True):

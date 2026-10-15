@@ -10,11 +10,17 @@ import pytest
 from pydantic import UUID4
 
 from cmk.agent_receiver.agent_receiver.models import (
+    AgentUpdateAuthorization,
     ConnectionMode,
     R4RStatus,
     RequestForRegistration,
 )
-from cmk.agent_receiver.agent_receiver.utils import NotRegisteredException, R4R, RegisteredHost
+from cmk.agent_receiver.agent_receiver.utils import (
+    agent_update_authorization,
+    NotRegisteredException,
+    R4R,
+    RegisteredHost,
+)
 from cmk.agent_receiver.lib.config import get_config
 
 pytestmark = pytest.mark.usefixtures("setup_site_context")
@@ -77,3 +83,54 @@ def test_r4r(uuid: UUID4) -> None:
 def test_r4r_raises(uuid: UUID4) -> None:
     with pytest.raises(FileNotFoundError, match="No request for registration with UUID"):
         R4R.read(uuid)
+
+
+def _write_registration_file(uuid: UUID4, content: str) -> None:
+    (registrations_dir := get_config().registrations_dir).mkdir(parents=True, exist_ok=True)
+    (registrations_dir / f"{uuid}.json").write_text(content)
+
+
+def test_a_registration_that_permits_updates_is_authorized(uuid: UUID4) -> None:
+    """CMK-39504: the registration response reports agent_update_authorization from the registration file of the UUID."""
+    _write_registration_file(
+        uuid,
+        '{"agent_updates_permitted": true, "subject": "automation",'
+        ' "registration_route": "register", "registered_at": 1760000000.0}',
+    )
+
+    assert agent_update_authorization(uuid) is AgentUpdateAuthorization.AUTHORIZED
+
+
+def test_a_registration_without_the_permission_is_not_permitted(uuid: UUID4) -> None:
+    """CMK-39504: the registration response reports agent_update_authorization from the registration file of the UUID."""
+    _write_registration_file(
+        uuid,
+        '{"agent_updates_permitted": false, "subject": "automation",'
+        ' "registration_route": "register", "registered_at": 1760000000.0}',
+    )
+
+    assert agent_update_authorization(uuid) is AgentUpdateAuthorization.NOT_PERMITTED
+
+
+def test_a_registration_without_a_result_is_unavailable(uuid: UUID4) -> None:
+    """CMK-39504: the registration response reports unavailable when the registration file is missing or holds no result."""
+    _write_registration_file(
+        uuid,
+        '{"agent_updates_permitted": null, "subject": "automation",'
+        ' "registration_route": "register", "registered_at": 1760000000.0}',
+    )
+
+    assert agent_update_authorization(uuid) is AgentUpdateAuthorization.UNAVAILABLE
+
+
+def test_an_unreadable_registration_file_is_unavailable(uuid: UUID4) -> None:
+    """CMK-39504: the registration response reports unavailable when the registration file is missing or holds no result."""
+    (registrations_dir := get_config().registrations_dir).mkdir(parents=True, exist_ok=True)
+    (registrations_dir / f"{uuid}.json").write_bytes(b'{"agent_updates_permitted": \xff')
+
+    assert agent_update_authorization(uuid) is AgentUpdateAuthorization.UNAVAILABLE
+
+
+def test_a_registration_without_a_file_is_unavailable(uuid: UUID4) -> None:
+    """CMK-39504: the registration response reports unavailable when the registration file is missing or holds no result."""
+    assert agent_update_authorization(uuid) is AgentUpdateAuthorization.UNAVAILABLE

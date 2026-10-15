@@ -48,6 +48,10 @@ class Config(BaseModel):
         return self.omd_root / "var/agent-receiver/received-outputs"
 
     @property
+    def registrations_dir(self) -> Path:
+        return self.omd_root / "var/agent-receiver/registrations"
+
+    @property
     def r4r_dir(self) -> Path:
         return self.omd_root / "var/check_mk/wato/requests-for-registration"
 

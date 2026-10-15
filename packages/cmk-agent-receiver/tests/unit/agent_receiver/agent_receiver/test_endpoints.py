@@ -94,7 +94,67 @@ def test_register_existing_ok(
         },
     )
     assert response.status_code == HTTPStatus.OK
-    assert set(response.json()) == {"root_cert", "agent_cert", "connection_mode"}
+    assert set(response.json()) == {
+        "root_cert",
+        "agent_cert",
+        "connection_mode",
+        "agent_update_authorization",
+    }
+
+
+def _register_permitting_updates_at_the_site(tmp_path: Path, uuid: UUID4) -> RegisterResponse:
+    config = get_config()
+    _symlink_push_host(config, tmp_path, uuid)
+    config.registrations_dir.mkdir(parents=True, exist_ok=True)
+    (config.registrations_dir / f"{uuid}.json").write_text(
+        '{"agent_updates_permitted": true, "subject": "herbert",'
+        ' "registration_route": "register", "registered_at": 1760000000.0}'
+    )
+    return RegisterResponse(connection_mode=ConnectionMode.PULL)
+
+
+def test_register_existing_reports_the_update_permission_of_the_registration(
+    tmp_path: Path,
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID4,
+    serialized_csr: str,
+) -> None:
+    """CMK-39504: the registration response reports agent_update_authorization from the registration file of the UUID."""
+    mocker.patch(
+        "cmk.agent_receiver.agent_receiver.endpoints.register",
+        lambda *_args, **_kwargs: _register_permitting_updates_at_the_site(tmp_path, uuid),
+    )
+
+    response = client.post(
+        "/register_existing",
+        auth=("herbert", "joergl"),
+        json={"uuid": str(uuid), "host_name": "myhost", "csr": serialized_csr},
+    )
+
+    assert response.json()["agent_update_authorization"] == "authorized"
+
+
+def test_register_existing_token_reports_the_update_permission_of_the_registration(
+    tmp_path: Path,
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID4,
+    serialized_csr: str,
+) -> None:
+    """CMK-39504: the registration response reports agent_update_authorization from the registration file of the UUID."""
+    mocker.patch(
+        "cmk.agent_receiver.agent_receiver.endpoints.register_token",
+        lambda *_args, **_kwargs: _register_permitting_updates_at_the_site(tmp_path, uuid),
+    )
+
+    response = client.post(
+        "/register_existing_token",
+        headers={"Authorization": f"CMK-TOKEN 0:{uuid4()}"},
+        json={"uuid": str(uuid), "host_name": "myhost", "csr": serialized_csr},
+    )
+
+    assert response.json()["agent_update_authorization"] == "authorized"
 
 
 def test_register_existing_uuid_csr_mismatch(
@@ -477,7 +537,35 @@ def test_register_new_ongoing_success(
         "status": "Success",
         "agent_cert": "cert",
         "connection_mode": "push-agent",
+        "agent_update_authorization": "unavailable",
     }
+
+
+@pytest.mark.usefixtures("symlink_push_host")
+def test_register_new_ongoing_reports_the_update_permission_of_the_registration(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID4,
+) -> None:
+    """CMK-39504: the registration response reports agent_update_authorization from the registration file of the UUID."""
+    R4R(
+        status=R4RStatus.DISCOVERABLE,
+        request=RequestForRegistration(
+            uuid=uuid,
+            username="user",
+            agent_labels={},
+            agent_cert="cert",
+        ),
+    ).write()
+    (registrations_dir := get_config().registrations_dir).mkdir(parents=True, exist_ok=True)
+    (registrations_dir / f"{uuid}.json").write_text(
+        '{"agent_updates_permitted": false, "subject": "user",'
+        ' "registration_route": "register_new", "registered_at": 1760000000.0}'
+    )
+
+    response = _call_register_new_ongoing_ultimate(mocker, client, uuid)
+
+    assert response.json()["agent_update_authorization"] == "not_permitted"
 
 
 def _agent_ca_common_name() -> str:

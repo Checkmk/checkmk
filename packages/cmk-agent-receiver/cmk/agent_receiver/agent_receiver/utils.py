@@ -8,14 +8,17 @@ from contextlib import suppress
 from dataclasses import dataclass
 from typing import Final, Self
 
-from pydantic import UUID4
+from pydantic import UUID4, ValidationError
 
 from cmk.agent_receiver.agent_receiver.models import (
+    AgentUpdateAuthorization,
     ConnectionMode,
     R4RStatus,
     RequestForRegistration,
+    UUIDRegistration,
 )
 from cmk.agent_receiver.lib.config import get_config
+from cmk.agent_receiver.lib.log import logger
 
 
 class NotRegisteredException(Exception): ...
@@ -33,6 +36,25 @@ class RegisteredHost:
         self.connection_mode: Final = (
             ConnectionMode.PUSH if target_path.parent.name == "push-agent" else ConnectionMode.PULL
         )
+
+
+def agent_update_authorization(uuid: UUID4) -> AgentUpdateAuthorization:
+    try:
+        raw = (get_config().registrations_dir / f"{uuid}.json").read_bytes()
+        registration = UUIDRegistration.model_validate_json(raw)
+    except (OSError, ValidationError) as e:
+        logger.warning(
+            "uuid=%(uuid)s Reading the registration file failed: %(error)s",
+            {"uuid": uuid, "error": e},
+        )
+        return AgentUpdateAuthorization.UNAVAILABLE
+    match registration.agent_updates_permitted:
+        case True:
+            return AgentUpdateAuthorization.AUTHORIZED
+        case False:
+            return AgentUpdateAuthorization.NOT_PERMITTED
+        case None:
+            return AgentUpdateAuthorization.UNAVAILABLE
 
 
 @dataclass(frozen=True)

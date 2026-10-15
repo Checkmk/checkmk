@@ -28,6 +28,7 @@
 #include "livestatus/Query.h"
 #include "livestatus/TableEventConsole.h"
 #include "livestatus/TableEventConsoleEvents.h"
+#include "livestatus/TableEventConsoleStatus.h"
 #include "livestatus/User.h"
 
 using namespace std::chrono_literals;
@@ -307,4 +308,10 @@ TEST_F(TableEventConsoleTest, ReportsAnECFailingBeforeItReplies) {
 
     EXPECT_TRUE(runQuery(table, {"Filter: event_text ~ \\p{Lu}"}, "")
                     .error.ends_with("received no reply\n"));
+}
+
+TEST_F(TableEventConsoleTest, AnswersQueriesOnTablesWithoutGreppingColumns) {
+    TableEventConsoleStatus table;
+
+    EXPECT_EQ(runQuery(table, {}).error, "");
 }

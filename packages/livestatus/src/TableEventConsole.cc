@@ -14,6 +14,7 @@
 #include <functional>
 #include <iosfwd>
 #include <iostream>
+#include <iterator>
 #include <optional>
 #include <stdexcept>
 #include <string>

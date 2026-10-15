@@ -6,7 +6,7 @@
 #include "livestatus/opids.h"
 
 #include <array>
-#include <functional>
+#include <iterator>
 #include <ostream>
 #include <stdexcept>
 #include <utility>

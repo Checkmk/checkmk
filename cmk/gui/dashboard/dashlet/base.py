@@ -7,7 +7,7 @@
 
 import abc
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import cast, Generic, Self, TypeVar
 
 from cmk.gui import visuals
@@ -89,6 +89,25 @@ class ResponsiveLayoutConstraints:
                 minimum_size=WidgetSize(width=4, height=4),
                 initial_size=WidgetSize(width=8, height=7),
             ),
+        )
+
+    def with_minimum_height(self, height: int) -> Self:
+        """Same constraints, but with the given minimum height on all breakpoints."""
+
+        def adjust(
+            constraints: ResponsiveLayoutBreakpointConstraints,
+        ) -> ResponsiveLayoutBreakpointConstraints:
+            return replace(
+                constraints, minimum_size=replace(constraints.minimum_size, height=height)
+            )
+
+        return replace(
+            self,
+            XS=adjust(self.XS),
+            S=adjust(self.S),
+            M=adjust(self.M),
+            L=adjust(self.L),
+            XL=adjust(self.XL),
         )
 
     def to_dict(self) -> dict[ResponsiveGridBreakpoint, ResponsiveLayoutBreakpointConstraints]:

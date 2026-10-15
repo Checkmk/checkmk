@@ -161,6 +161,19 @@ def test_dashboard_constants_responsive_breakpoints_make_sense(clients: ClientRe
             )
 
 
+@pytest.mark.parametrize("widget_type", ["embedded_view", "linked_view"])
+def test_view_widgets_allow_a_minimum_height_of_two_rows(
+    clients: ClientRegistry, widget_type: str
+) -> None:
+    resp = clients.ConstantClient.get_dashboard()
+    responsive_constraints = resp.json["extensions"]["widgets"][widget_type]["layout"]["responsive"]
+
+    assert {
+        breakpoint_id: constraints["minimum_size"]["rows"]
+        for breakpoint_id, constraints in responsive_constraints.items()
+    } == dict.fromkeys(RESPONSIVE_GRID_BREAKPOINTS, 2)
+
+
 def test_show_dashboard(clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection) -> None:
     # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
     # No queries are actually executed.

@@ -6,7 +6,6 @@
 from cmk.gui.dashboard.dashlet.base import (
     Dashlet,
     RelativeLayoutConstraints,
-    ResponsiveLayoutBreakpointConstraints,
     ResponsiveLayoutConstraints,
     WidgetSize,
 )
@@ -43,27 +42,4 @@ class StaticTextDashlet(Dashlet[StaticTextDashletConfig]):
 
     @classmethod
     def responsive_layout_constraints(cls) -> ResponsiveLayoutConstraints:
-        # same as default, but allow minimum height of 1 for all breakpoints
-        default = ResponsiveLayoutConstraints()
-        return ResponsiveLayoutConstraints(
-            XS=ResponsiveLayoutBreakpointConstraints(
-                initial_size=default.XS.initial_size,
-                minimum_size=WidgetSize(width=default.XS.minimum_size.width, height=1),
-            ),
-            S=ResponsiveLayoutBreakpointConstraints(
-                initial_size=default.S.initial_size,
-                minimum_size=WidgetSize(width=default.S.minimum_size.width, height=1),
-            ),
-            M=ResponsiveLayoutBreakpointConstraints(
-                initial_size=default.M.initial_size,
-                minimum_size=WidgetSize(width=default.M.minimum_size.width, height=1),
-            ),
-            L=ResponsiveLayoutBreakpointConstraints(
-                initial_size=default.L.initial_size,
-                minimum_size=WidgetSize(width=default.L.minimum_size.width, height=1),
-            ),
-            XL=ResponsiveLayoutBreakpointConstraints(
-                initial_size=default.XL.initial_size,
-                minimum_size=WidgetSize(width=default.XL.minimum_size.width, height=1),
-            ),
-        )
+        return ResponsiveLayoutConstraints().with_minimum_height(1)

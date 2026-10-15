@@ -976,6 +976,53 @@
         }
       ]
     },
+    "data_backend_settings": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "data_backend_settings",
+              "default": "data_backend_settings"
+            },
+            "elements": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/dictionary_element"
+              },
+              "default": []
+            },
+            "groups": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/dictionary_group"
+              }
+            },
+            "no_elements_text": {
+              "type": "string"
+            },
+            "additional_static_elements": {
+              "type": ["object", "null"]
+            },
+            "central_location": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "elements",
+            "additional_static_elements",
+            "no_elements_text",
+            "groups",
+            "central_location"
+          ]
+        }
+      ]
+    },
     "oauth2_connection_setup": {
       "type": "object",
       "allOf": [
@@ -1938,6 +1985,9 @@
         },
         {
           "$ref": "#/$defs/oauth2_connection_setup"
+        },
+        {
+          "$ref": "#/$defs/data_backend_settings"
         },
         {
           "$ref": "#/$defs/metric"

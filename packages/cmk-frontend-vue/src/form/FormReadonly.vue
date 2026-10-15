@@ -16,6 +16,7 @@ import type {
   ConditionChoices,
   ConditionChoicesValue,
   ConditionGroup,
+  DataBackendSettings,
   Dictionary,
   DictionaryElement,
   DictionaryGroup,
@@ -59,6 +60,11 @@ import {
   groupNestedValidations
 } from '@/form/private/validation'
 
+import {
+  ADDRESS_SEEN_BY_CENTRAL,
+  dictionaryOf,
+  placesAFeatureCentrally
+} from '@/data-backend/settings'
 import { attributeKindPrefix, pillLabel } from '@/telemetry-metrics/attribute-filter/pill-label'
 import { fromAttributeFilter } from '@/telemetry-metrics/attributeFilterAdapter'
 import {
@@ -189,6 +195,12 @@ function _renderForm(
       return h('div', 'DCD Telemetry metrics Filter does not support readonly')
     case 'oauth2_connection_setup':
       return renderOAuth2ConnectionSetup(formSpec as Oauth2ConnectionSetup, value)
+    case 'data_backend_settings':
+      return renderDataBackendSettings(
+        formSpec as DataBackendSettings,
+        value as Record<string, unknown>,
+        backendValidation
+      )
     // Do not add a default case here. This is intentional to make sure that all form types are covered.
   }
 }
@@ -222,6 +234,20 @@ function renderOAuth2ConnectionSetup(
   value: unknown
 ): VNode | null {
   return renderForm(formSpec.form_spec, value)
+}
+
+function renderDataBackendSettings(
+  formSpec: DataBackendSettings,
+  value: Record<string, unknown>,
+  backendValidation: ValidationMessages
+): VNode {
+  const showAddress = placesAFeatureCentrally(formSpec, value)
+  return renderDict(
+    dictionaryOf(formSpec, (name) => showAddress || name !== ADDRESS_SEEN_BY_CENTRAL),
+    'one_column',
+    value,
+    backendValidation
+  )
 }
 
 function consolidationParams(

@@ -13,6 +13,7 @@ import { FormApp } from '@/form'
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 
 import '@/assets/variables.css'
+import { registerDataBackendFormComponents } from '@/data-backend/registerFormComponents'
 import MapsApp from '@/maps/MapsApp.vue'
 import ModeHostRelationDetectionApp from '@/mode-host-relation-detection/ModeHostRelationDetectionApp.vue'
 import ModeHostApp from '@/mode-host/ModeHostApp.vue'
@@ -62,6 +63,7 @@ const { defineCmkComponent } = initCmkUi({ translationLoader })
 
 initializeComponentRegistry()
 registerCustomQueryFormComponents()
+registerDataBackendFormComponents()
 registerOAuth2ConnectionFormComponents()
 registerTelemetryMetricsFormComponents()
 

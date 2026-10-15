@@ -1026,13 +1026,15 @@ def test_a_demo_board_is_recorded_as_skipped(admin: UserId) -> None:
     assert _outcomes()["demo-static"] == "skipped"
 
 
-def test_existing_map_name_is_recorded_as_skipped(admin: UserId) -> None:
-    _migrated(admin, "dup", _complete_map())
+def test_a_board_named_like_one_of_the_admin_gets_the_fallback_name(admin: UserId) -> None:
+    _run_with_board("dup", _complete_map(alias="First"))
     store.save_object_to_file(_record_path(), {})
+    _run_with_board("dup", _complete_map(alias="Second"))
 
-    _action()(_LOGGER)
-
-    assert _outcomes()["dup"] == "skipped"
+    page = get_own_map(admin, "dup_legacy")
+    assert page is not None
+    assert page.config.map_spec["alias"] == "Second"
+    assert _outcomes()["dup"] == "migrated"
 
 
 def test_existing_map_keeps_its_content(admin: UserId) -> None:
@@ -1043,6 +1045,23 @@ def test_existing_map_keeps_its_content(admin: UserId) -> None:
     page = get_own_map(admin, "dup")
     assert page is not None
     assert page.config.map_spec["alias"] == "First"
+
+
+def test_a_board_stored_by_a_stopped_run_is_recorded_as_migrated(admin: UserId) -> None:
+    _migrated(admin, "legacy", _complete_map())
+    store.save_object_to_file(_record_path(), {"pending": {"legacy": "legacy"}})
+
+    _action()(_LOGGER)
+
+    assert _outcomes() == {"legacy": "migrated"}
+
+
+def test_a_board_a_stopped_run_did_not_store_is_migrated_again(admin: UserId) -> None:
+    store.save_object_to_file(_record_path(), {"pending": {"legacy": "legacy"}})
+
+    _migrated(admin, "legacy", _complete_map())
+
+    assert _outcomes() == {"legacy": "migrated"}
 
 
 def test_a_board_named_like_a_builtin_map_gets_a_fallback_name(admin: UserId) -> None:
@@ -1070,7 +1089,7 @@ def test_the_fallback_name_keeps_the_boards_visibility() -> None:
 
 
 def test_a_taken_fallback_name_is_recorded_as_skipped(admin: UserId) -> None:
-    # A fixed fallback name keeps a rerun after a stopped run from importing twice.
+    # Not imported over the map of the fallback name.
     save_user_file("user_maps", {"infrastructure_legacy": {"title": "Taken"}}, admin)
     _run_with_board("infrastructure", _complete_map())
 
@@ -1090,14 +1109,13 @@ def test_a_board_named_like_another_users_map_gets_a_fallback_name(
         assert get_own_map(admin, "dc1_legacy") is not None
 
 
-@pytest.mark.usefixtures("with_admin")
-def test_a_fallback_name_too_long_for_a_map_is_left_for_a_later_run(load_config: Config) -> None:
+def test_a_long_name_is_shortened_for_its_fallback(load_config: Config, admin: UserId) -> None:
     board = "a" * 100
     with create_and_destroy_user(username="bob", config=load_config):
         save_user_file("user_maps", {board: {"title": "Bob's"}}, UserId("bob"))
         _run_with_board(board, _complete_map())
 
-        assert board not in _outcomes()
+        assert get_own_map(admin, "a" * 93 + "_legacy") is not None
 
 
 @pytest.mark.usefixtures("with_admin")

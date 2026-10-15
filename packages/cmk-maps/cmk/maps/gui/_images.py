@@ -16,7 +16,7 @@ the old daemon endpoint they never disclose maps outside the caller's scope.
 
 import hashlib
 import secrets
-from collections.abc import Container
+from collections.abc import Container, Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -227,21 +227,42 @@ def import_icon(name: str, contents: bytes) -> str:
     reused. A different file is never replaced, and a built-in's name never taken,
     seeded yet or not: the icon gets a free variant of the name instead.
     """
+    stored = icon_name_for(name, contents)
+    store_icon(stored, contents)
+    return stored
+
+
+def icon_name_for(name: str, contents: bytes, planned: Mapping[str, bytes] | None = None) -> str:
+    """The name :func:`import_icon` gives the icon, without adding it yet.
+
+    ``planned`` holds icons, by name, that are to be added and count as in the library.
+    """
     if _is_builtin(name) and (_BUILTIN_DIR / name).read_bytes() == contents:
         return name
     images_dir = _images_dir()
     stem, suffix = Path(name).stem, Path(name).suffix
     candidate, n = name, 1
     while True:
-        target = images_dir / candidate
         if not _is_builtin(candidate):
-            if not target.exists():
-                store.save_bytes_to_file(target, contents)
-                return candidate
-            if target.read_bytes() == contents:
+            if (existing := (planned or {}).get(candidate)) is None:
+                target = images_dir / candidate
+                if not target.exists():
+                    return candidate
+                existing = target.read_bytes()
+            if existing == contents:
                 return candidate
         n += 1
         candidate = f"{stem}-{n}{suffix}"
+
+
+def store_icon(name: str, contents: bytes) -> bool:
+    """Add the icon under the name :func:`icon_name_for` gave it, unless it is there;
+    returns whether it was added."""
+    target = _images_dir() / name
+    if _is_builtin(name) or target.exists():
+        return False
+    store.save_bytes_to_file(target, contents)
+    return True
 
 
 def delete_image(name: str, force: bool) -> list[ImageUsageEntry]:
@@ -371,6 +392,20 @@ def store_background(owner: str, map_name: str, suffix: str, contents: bytes) ->
         if stale.resolve() != written:
             stale.unlink(missing_ok=True)
     return stored
+
+
+def import_background(owner: str, map_name: str, ref: str, contents: bytes) -> str | None:
+    """Store the image file ``ref`` as the background of ``owner``'s map, if it is one.
+
+    For a migration, which brings its files without an upload: the same name and
+    content checks, but no size limit. Returns what :func:`store_background` does.
+    """
+    suffix = Path(ref).suffix.lower()
+    if not (
+        is_valid_image_name(ref) and suffix in BACKGROUND_SUFFIXES and is_valid_image(contents)
+    ):
+        return None
+    return store_background(owner, map_name, suffix, contents)
 
 
 def delete_background(map_name: str) -> None:

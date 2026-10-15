@@ -1193,16 +1193,64 @@ record); reading and translating the OrbVis files is
   in the Maps settings.
 * Every board is validated against the REST model before it is stored. A board
   named like a built-in map or another user's map becomes ``<name>_legacy``,
-  since a map name carries one ``map.<name>`` permission for all owners. A board
-  that does not validate, or whose name is taken, is logged with a warning and
-  can be brought over with *Import map…*.
+  its name shortened so the suffix fits, since a map name carries one
+  ``map.<name>`` permission for all owners; one named like a map of the owner
+  does too, so a board added later is not lost.
+  A board that does not validate, or whose fallback name is taken too, is
+  logged with a warning and can be brought over with *Import map…*.
 * OrbVis's demo boards are not migrated. They are the only read-only boards:
   OrbVis seeded them itself and refused edits to them.
 * The OrbVis files are left alone. The outcome per board and per icon is
   recorded in ``var/maps/legacy_maps_migration.mk``, so a re-run only looks at
   new boards and icons. A board that could not be migrated is not recorded:
   every update tries it again and says so, until its file is fixed or removed.
-  An icon that could not be copied is tried again in the same way.
+  An icon that could not be copied is tried again in the same way. Before
+  storing, a run notes the name each board is stored as (``pending``); a run
+  stopping after the maps were stored is settled by the next, which finds the
+  map under that name.
+
+Update from NagVis
+------------------
+
+On update, ``cmk.update_config.plugins.actions.nagvis_maps`` (action
+``migrate_nagvis_maps``) imports the maps of the site's NagVis into the
+pagetype store, after the OrbVis boards. Reading the NagVis files is
+``cmk.maps.gui.nagvis_maps``, which translates each map with the ``.cfg``
+import of the editor:
+
+* Source: ``etc/nagvis/maps/<name>.cfg``; backgrounds and shapes from
+  ``userfiles/images/maps`` and ``userfiles/images/shapes`` below
+  ``local/share/nagvis/htdocs``, then ``share/nagvis/htdocs``; rotation pools
+  from ``etc/nagvis/conf.d/*.ini.php`` and ``etc/nagvis/nagvis.ini.php``, read
+  in that order as NagVis does.
+* Owner, names, validation and retries follow the OrbVis migration, so a map
+  named like a board the OrbVis migration just stored becomes
+  ``<name>_legacy``. A character Maps does not take
+  in a name becomes ``_``, as in the editor's import. The outcome per map is
+  recorded in ``var/maps/nagvis_maps_migration.mk``.
+* Visibility: NagVis shows a map to roles with ``nagvis.*_*_*`` or
+  ``nagvis.Map_view_*``, and to roles with ``nagvis.Map_view`` whose user is in
+  a contact group listing the map (``nagvis_maps``). Maps requires both the
+  ``map.<name>`` permission and the publishing, so a map listed by a contact
+  group is published to those groups and granted to both kinds of roles, and
+  one listed by none is published to all and granted to the first kind. Where
+  that hides the map from roles that saw it in NagVis, the update output says
+  so; it never shows a map to more users. With an authorisation module other
+  than ``CoreAuthorisationModMultisite`` the maps stay private to the owner.
+* Shapes are copied into the image library like uploads; an identical file of
+  the same name is reused. Their names are settled while the maps are
+  prepared, the files added right before the maps are stored, so a run
+  stopping after the store leaves no map without its shapes; a failed store
+  removes the ones it added. Those of a run stopped before the store stay and
+  are reused by the next; they are left over only if no later run stores the
+  maps showing them. A background is stored as the map's own. A file
+  that is missing or not a supported image, GIF shapes among them, keeps its
+  reference without the image.
+* A map takes part in each pool that lists it. A pool interval other than
+  Maps' 60 seconds becomes the map's ``rotation_interval``, the shortest one
+  where its pools differ. URL entries of a pool are left out and named.
+* Worldmap and geomap markers are kept outside the ``.cfg`` and are not
+  migrated; such a map is framed and named in the update output.
 
 Touchpoints in the core
 =======================
@@ -1231,8 +1279,8 @@ core, each generic rather than Maps-specific:
   editor (``central_settings``, ``render_settings_page``).
 * GUI hooks: ``sites-saved`` writes ``sitespecs.mk``, ``pre-activate-changes``
   writes ``sitespecs.mk`` and ``folder_perms.mk``.
-* ``cmk.update_config``: the OrbVis migration, which also writes role
-  permissions.
+* ``cmk.update_config``: the OrbVis and NagVis migrations, which also write
+  role permissions.
 
 Risks and technical debts
 =========================

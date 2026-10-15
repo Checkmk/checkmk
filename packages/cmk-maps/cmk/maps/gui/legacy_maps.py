@@ -24,13 +24,12 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
 from cmk.maps.gui._image_security import (
-    BACKGROUND_SUFFIXES,
     ICON_SUFFIXES,
     is_valid_image,
     is_valid_image_name,
     safe_image_stem,
 )
-from cmk.maps.gui._images import delete_background_files, import_icon, store_background
+from cmk.maps.gui._images import import_background, import_icon
 from cmk.maps.shared.geo import bounded_view
 from cmk.maps.shared.map_compat import (
     accept_legacy_backend_id,
@@ -360,23 +359,17 @@ def copy_legacy_background(
     ref = spec.get("background_image")
     if not isinstance(ref, str) or not ref:
         return
-    path = legacy_maps_dir() / "boards" / "backgrounds" / ref
     with suppress(OSError):
-        if (
-            is_valid_image_name(ref)
-            and path.suffix.lower() in BACKGROUND_SUFFIXES
-            and path.is_file()
-            and is_valid_image(contents := path.read_bytes())
+        # Checked before the path is built from it.
+        if is_valid_image_name(ref) and (
+            stored := import_background(
+                owner, name, ref, (legacy_maps_dir() / "boards" / "backgrounds" / ref).read_bytes()
+            )
         ):
-            spec["background_image"] = store_background(owner, name, path.suffix.lower(), contents)
+            spec["background_image"] = stored
             return
     logger.warning(
         "The background %(file)s of the migrated map %(name)r is missing, unreadable or not a "
         "supported image; the map keeps the reference without the image.",
         {"file": ref, "name": name},
     )
-
-
-def drop_legacy_background(owner: UserId, name: str) -> None:
-    """Remove what ``copy_legacy_background`` stored for a map that was not created."""
-    delete_background_files(owner, name)

@@ -4,12 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from datetime import datetime
+from collections.abc import Sequence
+from datetime import datetime, UTC
 
 import pytest
 
-from cmk.agent_based.v2 import HostLabel, Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import (
+    CheckResult,
+    HostLabel,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.veeam.agent_based.veeam_license import (
+    check_plugin_veeam_license,
     check_veeam_license,
     CheckParameters,
     discovery_veeam_license,
@@ -243,3 +253,94 @@ def test_host_labels_veeam_license_sets_the_edition() -> None:
     assert list(host_labels_veeam_license(parse_veeam_license(STRING_TABLE))) == [
         HostLabel("cmk/veeam_vbr/edition", "EnterprisePlus"),
     ]
+
+
+_DAY = 86400.0
+
+
+def _in_days(days: float) -> str:
+    return datetime.fromtimestamp(NOW + days * _DAY, tz=UTC).isoformat()
+
+
+def _state_of(results: Sequence[object], label: str) -> State:
+    (result,) = [r for r in results if isinstance(r, Result) and r.details.startswith(label)]
+    return result.state
+
+
+def _run(params: CheckParameters, **license_fields: object) -> CheckResult:
+    return check_veeam_license(params, parse_veeam_license(_license(**license_fields)), now=NOW)
+
+
+def test_default_levels_are_the_ones_tested_here() -> None:
+    assert check_plugin_veeam_license.check_default_parameters == PARAMS
+
+
+@pytest.mark.parametrize(
+    "days_left, expected",
+    [
+        pytest.param(31, State.OK, id="more than 30 days"),
+        pytest.param(20, State.WARN, id="30 days or fewer"),
+        pytest.param(5, State.CRIT, id="7 days or fewer"),
+    ],
+)
+def test_license_expiry_default_levels(days_left: float, expected: State) -> None:
+    results = list(_run(PARAMS, expirationDate=_in_days(days_left)))
+    assert _state_of(results, "License expiry") is expected
+
+
+@pytest.mark.parametrize(
+    "days_left, expected",
+    [
+        pytest.param(31, State.OK, id="more than 30 days"),
+        pytest.param(20, State.WARN, id="30 days or fewer"),
+        pytest.param(5, State.CRIT, id="7 days or fewer"),
+    ],
+)
+def test_support_expiry_default_levels(days_left: float, expected: State) -> None:
+    results = list(_run(PARAMS, supportExpirationDate=_in_days(days_left)))
+    assert _state_of(results, "Support expiry") is expected
+
+
+@pytest.mark.parametrize(
+    "used, expected",
+    [
+        pytest.param(79, State.OK, id="below 80 percent"),
+        pytest.param(85, State.WARN, id="80 percent or more"),
+        pytest.param(96, State.CRIT, id="95 percent or more"),
+    ],
+)
+def test_consumption_default_levels(used: int, expected: State) -> None:
+    results = list(
+        _run(
+            PARAMS,
+            instanceLicenseSummary={"licensedInstancesNumber": 100, "usedInstancesNumber": used},
+        )
+    )
+    assert _state_of(results, "Instances used") is expected
+
+
+_CHANGED_PARAMS = CheckParameters(
+    license_expiry=("fixed", (60 * _DAY, 14 * _DAY)),
+    support_expiry=("fixed", (60 * _DAY, 14 * _DAY)),
+    consumption=("fixed", (50.0, 70.0)),
+)
+
+
+def test_changed_license_expiry_levels_are_applied() -> None:
+    results = list(_run(_CHANGED_PARAMS, expirationDate=_in_days(10)))
+    assert _state_of(results, "License expiry") is State.CRIT
+
+
+def test_changed_support_expiry_levels_are_applied() -> None:
+    results = list(_run(_CHANGED_PARAMS, supportExpirationDate=_in_days(45)))
+    assert _state_of(results, "Support expiry") is State.WARN
+
+
+def test_changed_consumption_levels_are_applied() -> None:
+    results = list(
+        _run(
+            _CHANGED_PARAMS,
+            instanceLicenseSummary={"licensedInstancesNumber": 100, "usedInstancesNumber": 60},
+        )
+    )
+    assert _state_of(results, "Instances used") is State.WARN

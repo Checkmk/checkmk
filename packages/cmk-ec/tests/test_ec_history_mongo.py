@@ -6,6 +6,7 @@
 
 import logging
 import os
+import re
 
 import pytest
 
@@ -13,7 +14,7 @@ import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
 from cmk.ec.history_mongo import filters_to_mongo_query, MongoDBHistory
 from cmk.ec.main import StatusTableHistory
-from cmk.ec.query import QueryFilter, QueryGET, StatusTable
+from cmk.ec.query import OperatorName, QueryFilter, QueryGET, StatusTable
 
 requires_mongodb = pytest.mark.skipif(
     os.getenv("MONGODB_CONNECTION_STRING") is None,
@@ -135,13 +136,51 @@ def test_filters_to_mongo_query() -> None:
         "event.time": {"$lt": 1234},
         "event.delay_until": {"$lte": 120},
         "event.comment": {"$regex": "test", "$options": ""},
-        "event.location": {"$regex": "seattle", "$options": "mi"},
+        "event.location": {"$regex": re.compile(r"\Aseattle(?![\s\S])", re.IGNORECASE)},
         "event.phase": {"$regex": "test", "$options": "i"},
         "event.owner": {"$in": ["foo", "bar"]},
         "owner": {"$in": "foobar"},
         "_id": {"$in": "some text"},
     }
     assert filters_to_mongo_query(filters) == expected_output
+
+
+def mongo_filter_for(operator_name: OperatorName, argument: str) -> object:
+    query_filter = QueryFilter(
+        column_name="event_text",
+        operator_name=operator_name,
+        predicate=lambda _: True,
+        argument=argument,
+    )
+    return filters_to_mongo_query([query_filter])["event.text"]
+
+
+def mongo_regex_for(operator_name: OperatorName, argument: str) -> re.Pattern[str]:
+    match mongo_filter := mongo_filter_for(operator_name, argument):
+        case {"$regex": re.Pattern() as regex}:
+            return regex
+        case _:
+            raise AssertionError(f"no regex in MongoDB filter {mongo_filter!r}")
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        pytest.param("a.b",   True,  id="same value"),
+        pytest.param("A.B",   True,  id="value differs in case"),
+        pytest.param("axb",   False, id="value matches the argument only as a regex"),
+        pytest.param("xa.bx", False, id="value contains the argument"),
+        pytest.param("a.b\n", False, id="value has a trailing newline"),
+    ],
+)
+# fmt: on
+def test_case_insensitive_equality_filter_matches_only_the_whole_value_ignoring_case(
+    value: str, expected: bool
+) -> None:
+    regex = mongo_regex_for("=~", "a.b")
+
+    assert bool(regex.search(value)) is expected
 
 
 def test_filters_to_mongo_query_Exception() -> None:

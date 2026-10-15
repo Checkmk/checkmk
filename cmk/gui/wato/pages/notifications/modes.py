@@ -959,8 +959,10 @@ class ModeNotifications(ABCNotificationsMode):
                                     name="test_notifications",
                                     icon_name=StaticIcon(IconNames.analysis),
                                     item=make_simple_link(
-                                        folder_preserving_link(
-                                            request, [("mode", "test_notifications")]
+                                        makeuri_contextless(
+                                            request,
+                                            [("mode", "test_notifications")],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -970,8 +972,10 @@ class ModeNotifications(ABCNotificationsMode):
                                     title=_("Analyze recent notifications"),
                                     icon_name=StaticIcon(IconNames.analyze),
                                     item=make_simple_link(
-                                        folder_preserving_link(
-                                            request, [("mode", "analyze_notifications")]
+                                        makeuri_contextless(
+                                            request,
+                                            [("mode", "analyze_notifications")],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -1472,12 +1476,13 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                     title=_("Add notification rule"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
                                             [
                                                 ("mode", "notification_rule_quick_setup"),
                                                 ("back_mode", self.name()),
                                             ],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=False,
@@ -1493,8 +1498,10 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                     name="test_notifications",
                                     icon_name=StaticIcon(IconNames.analysis),
                                     item=make_simple_link(
-                                        folder_preserving_link(
-                                            request, [("mode", "test_notifications")]
+                                        makeuri_contextless(
+                                            request,
+                                            [("mode", "test_notifications")],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -1897,8 +1904,10 @@ class ModeTestNotifications(ModeNotifications):
                                     name="analyze_notifications",
                                     icon_name=StaticIcon(IconNames.analyze),
                                     item=make_simple_link(
-                                        folder_preserving_link(
-                                            request, [("mode", "analyze_notifications")]
+                                        makeuri_contextless(
+                                            request,
+                                            [("mode", "analyze_notifications")],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -1919,7 +1928,9 @@ class ModeTestNotifications(ModeNotifications):
                                     title=_("Notifications"),
                                     icon_name=StaticIcon(IconNames.notifications),
                                     item=make_simple_link(
-                                        folder_preserving_link(request, [("mode", "notifications")])
+                                        makeuri_contextless(
+                                            request, [("mode", "notifications")], filename="wato.py"
+                                        )
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -2994,7 +3005,9 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         yield PageMenuEntry(
             title=_("Users"),
             icon_name=StaticIcon(IconNames.users),
-            item=make_simple_link(folder_preserving_link(request, [("mode", "users")])),
+            item=make_simple_link(
+                makeuri_contextless(request, [("mode", "users")], filename="wato.py")
+            ),
         )
 
 
@@ -4003,7 +4016,7 @@ class ModeNotificationParametersOverview(WatoMode):
                                     title=_("Define parameters for HTML email"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
                                             [
                                                 ("mode", "notification_parameters"),
@@ -4011,6 +4024,7 @@ class ModeNotificationParametersOverview(WatoMode):
                                                 ("back_mode", self.name()),
                                                 ("rule_folder", ""),
                                             ],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,

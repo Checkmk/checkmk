@@ -26,7 +26,6 @@ from ._api_plugins import (
 from ._fetched import PerformanceData, value_of
 from ._naming import MetricName, Service
 from ._operations import (
-    apply_operator,
     op_difference,
     op_fraction,
     op_product,
@@ -144,7 +143,7 @@ def _value_of(
             present = [operand.value for operand in operands if operand is not None]
             if not operands or len(present) != len(operands):
                 return None
-            return _Value(apply_operator(_operator_of(quantity), present))
+            return _Value(_operator_of(quantity)(present))
         case _:
             assert_never(quantity)
 

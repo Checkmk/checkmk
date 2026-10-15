@@ -33,9 +33,3 @@ def op_fraction(values: Sequence[float | None]) -> float | None:
     if dividend is None or divisor is None or divisor == 0:
         return None
     return dividend / divisor
-
-
-def apply_operator(operator: Operator, values: Sequence[float | None]) -> float | None:
-    if all(value is None for value in values):
-        return None
-    return operator(values)

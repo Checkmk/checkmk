@@ -15,7 +15,6 @@ from ._display import metric_display_attributes
 from ._fetched import ScalarKind, SeriesAttributes, value_of
 from ._naming import HostName, MetricName, Service, ServiceName, SiteID
 from ._operations import (
-    apply_operator,
     op_difference,
     op_fraction,
     op_product,
@@ -56,18 +55,12 @@ def _apply_to_operands(
     operands: Sequence[EvaluatedQuantity],
     context: EvaluationContext,
 ) -> EvaluatedQuantity:
-    # The scalar value and every series point run through the same apply_operator, so an operator's None
-    # handling (Sum folds present values, Product / Difference / Fraction null on a gap) is identical
-    # at both levels.
     return EvaluatedQuantity(
-        value=apply_operator(operator, [operand.value for operand in operands]),
+        value=operator([operand.value for operand in operands]),
         time_series=TimeSeries(
             time_range=context.time_range,
             values=[
-                apply_operator(operator, point)
-                # Operands are normally on one grid, but a fetch that snapped a series differently
-                # can make them differ in length. Pad the short ones rather than truncate the whole
-                # curve to the shortest: a missing point is a gap, which apply_operator already handles.
+                operator(point)
                 for point in itertools.zip_longest(
                     *(operand.time_series.values for operand in operands), fillvalue=None
                 )
@@ -94,8 +87,7 @@ def _collapse_operands(
     results: Sequence[Sequence[EvaluatedQuantity]],
 ) -> Sequence[EvaluatedQuantity] | None:
     # An operation is absent unless it has operands and every one of them is present: an empty
-    # operation and any absent operand alike make the whole operation absent (value and series). Gaps
-    # within present operands are handled point-wise by apply_operator.
+    # operation and any absent operand alike make the whole operation absent (value and series).
     operands = [_collapse(result) for result in results]
     present = [operand for operand in operands if operand is not None]
     if not operands or len(present) != len(operands):

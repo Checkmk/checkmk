@@ -5,6 +5,7 @@
 
 #include "livestatus/LogCache.h"
 
+#include <ctime>
 #include <iostream>
 #include <optional>
 #include <string>
@@ -32,11 +33,12 @@ constexpr unsigned long check_mem_cycle = 1000;
 LogPeriod LogPeriod ::make(const Query &query) {
     using sc = std::chrono::system_clock;
     auto now = sc::to_time_t(sc::now());
+    // Add 1 to a time_t, the LUB can be the maximum int32_t.
+    auto lub = query.leastUpperBoundFor("time");
     return {
         .since =
             sc::from_time_t(query.greatestLowerBoundFor("time").value_or(0)),
-        .until =
-            sc::from_time_t(query.leastUpperBoundFor("time").value_or(now) + 1),
+        .until = sc::from_time_t((lub ? std::time_t{*lub} : now) + 1),
     };
 }
 

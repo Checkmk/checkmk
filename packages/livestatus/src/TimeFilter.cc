@@ -25,7 +25,7 @@ TimeFilter::TimeFilter(Kind kind, std::string columnName,
     , _ref_value(atoi(value.c_str())) {}
 
 namespace {
-bool eval(int32_t x, RelationalOperator op, int32_t y) {
+bool eval(int64_t x, RelationalOperator op, int64_t y) {
     switch (op) {
         case RelationalOperator::equal:
             return x == y;
@@ -54,12 +54,21 @@ bool eval(int32_t x, RelationalOperator op, int32_t y) {
     }
     return false;
 }
+
+// We compute the bounds in a wider type, so they can't overflow. A bound
+// outside of int32_t's range either doesn't restrict the column at all or no
+// value can fulfill it, so there's no bound in both cases.
+std::optional<int32_t> asBound(int64_t value) {
+    if (!std::in_range<int32_t>(value)) {
+        return {};
+    }
+    return {static_cast<int32_t>(value)};
+}
 }  // namespace
 
 bool TimeFilter::accepts(Row row, const User & /*user*/,
                          std::chrono::seconds timezone_offset) const {
     return eval(
-        // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
         std::chrono::system_clock::to_time_t(_getValue(row, timezone_offset)),
         oper(), _ref_value);
 }
@@ -70,15 +79,14 @@ std::optional<int32_t> TimeFilter::greatestLowerBoundFor(
     if (column_name != columnName()) {
         return {};  // wrong column
     }
-    int32_t ref_value =
-        // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-        _ref_value - mk::ticks<std::chrono::seconds>(timezone_offset);
+    const int64_t ref_value =
+        int64_t{_ref_value} - mk::ticks<std::chrono::seconds>(timezone_offset);
     switch (oper()) {
         case RelationalOperator::equal:
         case RelationalOperator::greater_or_equal:
-            return {ref_value};
+            return asBound(ref_value);
         case RelationalOperator::greater:
-            return {ref_value + 1};
+            return asBound(ref_value + 1);
         case RelationalOperator::not_equal:
         case RelationalOperator::matches:             // superset
         case RelationalOperator::doesnt_match:        // not superset
@@ -99,15 +107,14 @@ std::optional<int32_t> TimeFilter::leastUpperBoundFor(
     if (column_name != columnName()) {
         return {};  // wrong column
     }
-    int32_t ref_value =
-        // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-        _ref_value - mk::ticks<std::chrono::seconds>(timezone_offset);
+    const int64_t ref_value =
+        int64_t{_ref_value} - mk::ticks<std::chrono::seconds>(timezone_offset);
     switch (oper()) {
         case RelationalOperator::equal:
         case RelationalOperator::less_or_equal:
-            return {ref_value};
+            return asBound(ref_value);
         case RelationalOperator::less:
-            return {ref_value - 1};
+            return asBound(ref_value - 1);
         case RelationalOperator::not_equal:
         case RelationalOperator::matches:             // superset
         case RelationalOperator::doesnt_match:        // not superset
@@ -128,12 +135,11 @@ std::optional<std::bitset<32>> TimeFilter::valueSetLeastUpperBoundFor(
     if (column_name != columnName()) {
         return {};  // wrong column
     }
+    const int64_t ref_value =
+        int64_t{_ref_value} - mk::ticks<std::chrono::seconds>(timezone_offset);
     std::bitset<32> result;
     for (int32_t bit = 0; bit < 32; ++bit) {
-        result[bit] = eval(
-            bit, oper(),
-            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-            _ref_value - mk::ticks<std::chrono::seconds>(timezone_offset));
+        result[bit] = eval(bit, oper(), ref_value);
     }
     return {result};
 }

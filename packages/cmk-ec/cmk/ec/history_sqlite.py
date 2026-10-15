@@ -122,7 +122,7 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[o
         query_conditions.append(query_filter_to_sqlite_filter(f, adjusted_column_name))
 
     return (
-        f"SELECT * FROM history {'WHERE' if query_arguments else ''} {' AND '.join(query_conditions)}",  # nosec B608 # BNS:6b6392
+        f"SELECT * FROM history {'WHERE' if query_conditions else ''} {' AND '.join(query_conditions)}",  # nosec B608 # BNS:6b6392
         query_arguments,
     )
 

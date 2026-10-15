@@ -9,7 +9,7 @@ from logging import getLogger
 import pytest
 
 from cmk.gui.watolib.config_domains import ConfigDomainCore
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ExpiryVersion
 from cmk.update_config.plugins.actions.warn_encoded_proxy_credentials import (
     proxies_with_encoded_credentials,
     WarnEncodedProxyCredentials,

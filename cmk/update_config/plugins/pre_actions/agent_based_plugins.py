@@ -10,19 +10,22 @@ from typing import override
 
 from cmk.gui.exceptions import MKUserError
 from cmk.mkp_tool import Manifest, PackageID
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.plugins.pre_actions.utils import (
-    AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX,
+from cmk.update_config.internal import (
     ConflictMode,
     continue_per_users_choice,
+    ExpiryVersion,
+    PreUpdateAction,
+    Resume,
+)
+from cmk.update_config.plugins.pre_actions.utils import (
+    AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX,
     disable_incomp_mkp,
     get_installer_and_package_map,
     is_applicable_mkp,
     make_path_config,
     PACKAGE_STORE,
-    Resume,
 )
-from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
+from cmk.update_config.registry import pre_update_action_registry
 from cmk.utils.paths import local_agent_based_plugins_dir
 from cmk.web.utils.doc_references import werk_reference_url, WerkReference
 

@@ -12,8 +12,9 @@ from typing import Final, override
 from cmk.ccc import store
 from cmk.gui.config import active_config
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.update_config.lib import ExpiryVersion, format_warning
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.lib import format_warning
+from cmk.update_config.registry import update_action_registry
 from cmk.utils.paths import default_config_dir
 
 _REGEX_FIELDS: Final = frozenset(

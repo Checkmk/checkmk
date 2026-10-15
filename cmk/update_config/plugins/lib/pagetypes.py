@@ -18,14 +18,12 @@ from cmk.gui.pagetypes import (
 )
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.plugins.pre_actions.utils import (
+from cmk.update_config.internal import (
     ConflictMode,
     continue_per_users_choice,
-    Resume,
-)
-from cmk.update_config.registry import (
+    ExpiryVersion,
     PreUpdateAction,
+    Resume,
     UpdateAction,
 )
 

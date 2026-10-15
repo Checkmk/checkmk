@@ -20,9 +20,10 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.gui.watolib.rulesets import Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError
-from cmk.update_config.lib import ExpiryVersion, format_warning
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.lib import format_warning
 from cmk.update_config.plugins.lib.rulesets import load_and_transform, SKIP_ACTION
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.registry import update_action_registry
 
 
 class UpdateRulesets(UpdateAction):

@@ -26,8 +26,8 @@ from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, RulesetCollection
 from cmk.gui.watolib.sites import site_globals_editable, site_management_registry
 from cmk.livestatus_client import SiteConfigurations
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 
 _GLOBAL_SETTING: Final = "snmp_backend_default"
 _RULESET_NAME: Final = "snmp_backend_hosts"

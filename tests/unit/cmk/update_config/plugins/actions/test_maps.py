@@ -24,7 +24,7 @@ from cmk.maps.gui.legacy_maps import legacy_maps_dir
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import get_own_map
 from cmk.maps.rest_api.utils import map_from_spec
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ExpiryVersion
 from cmk.update_config.plugins.actions.maps import MigrateLegacyMaps
 from cmk.utils import paths
 from tests.testlib.unit.gui.users import create_and_destroy_user

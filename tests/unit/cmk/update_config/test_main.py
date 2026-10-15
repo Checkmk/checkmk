@@ -17,7 +17,7 @@ from cmk.ccc.version import Edition
 from cmk.gui.watolib.pending_changes import PendingChangesStore
 from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.update_config import main, registry
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
@@ -66,7 +66,7 @@ def test_main_calls_config_updater(monkeypatch: pytest.MonkeyPatch, mocker: Mock
     mock_config_udpater_call.assert_called_once()
 
 
-class MockUpdateAction(registry.UpdateAction):
+class MockUpdateAction(UpdateAction):
     def __init__(self, name: str, title: str, sort_index: int) -> None:
         super().__init__(
             name=name, title=title, sort_index=sort_index, expiry_version=ExpiryVersion.NEVER
@@ -113,7 +113,7 @@ def test_load_plugins(test_edition: Edition) -> None:
     assert registry.update_action_registry
 
 
-class _WritesPendingChange(registry.UpdateAction):
+class _WritesPendingChange(UpdateAction):
     @override
     def __call__(self, logger: logging.Logger) -> None:
         PendingChangesStore().append(

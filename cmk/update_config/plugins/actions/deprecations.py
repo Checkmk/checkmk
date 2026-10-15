@@ -7,8 +7,8 @@ from logging import Logger
 from typing import override
 
 from cmk.gui import job_scheduler
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 
 
 class ResetDeprecationsScheduling(UpdateAction):

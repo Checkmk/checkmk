@@ -18,9 +18,8 @@ from cmk.gui.watolib.rulesets import (
 )
 from cmk.ruleset_matcher.conditions import HostOrServiceConditions
 from cmk.ruleset_matcher.definition import RuleGroup
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ConflictMode, ExpiryVersion
 from cmk.update_config.plugins.pre_actions.rulesets import PreUpdateRulesets
-from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 

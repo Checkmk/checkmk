@@ -14,13 +14,14 @@ from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.wsgi.app import gui_context
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.plugins.pre_actions.utils import (
+from cmk.update_config.internal import (
     ConflictMode,
     continue_per_users_choice,
+    ExpiryVersion,
+    PreUpdateAction,
     Resume,
 )
-from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
+from cmk.update_config.registry import pre_update_action_registry
 from cmk.utils.redis import disable_redis
 
 

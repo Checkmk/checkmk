@@ -10,7 +10,7 @@ import pytest
 import cmk.update_config.plugins.actions.restore_backup_target_passwords as action_module
 from cmk.backup.utils.config import CMASystemConfig, Config, SiteConfig
 from cmk.ccc.store import load_object_from_file, save_object_to_file
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ExpiryVersion
 
 _LOGGER = logging.getLogger(__name__)
 

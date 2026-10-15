@@ -6,8 +6,7 @@
 from typing import override
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.update_config.internal import PreUpdateAction as PreUpdateAction
-from cmk.update_config.internal import UpdateAction as UpdateAction
+from cmk.update_config.internal import PreUpdateAction, UpdateAction
 
 
 class UpdateActionRegistry(Registry[UpdateAction]):

@@ -41,6 +41,7 @@ py_cmk_test(
         "//packages/cmk-backup:utils",
         "//packages/cmk-ccc:store",
         "//packages/cmk-maps:registration",
+        "//packages/cmk-plugin-apis:update_config",
         "//packages/cmk-plugins/cmk/plugins/lib",
         "//packages/cmk-werks:site",
         "//tests/testlib/unit",
@@ -48,7 +49,7 @@ py_cmk_test(
         "//tests/unit/cmk/gui:helpers",
         requirement("flask"),
         requirement("pytest-asyncio"),
-        requirement("pytest-random-order"),
         requirement("pytest-mock"),
+        requirement("pytest-random-order"),
     ],
 )

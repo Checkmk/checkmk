@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc import tty
-from cmk.update_config.internal import ExpiryVersion as ExpiryVersion
 
 
 def format_warning(msg: str) -> str:

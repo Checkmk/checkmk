@@ -23,10 +23,7 @@ from cmk.mkp_tool import (
     PathConfig,
     reload_services_affected_by_mkp_changes,
 )
-from cmk.update_config.internal import ConflictMode as ConflictMode
-from cmk.update_config.internal import continue_per_users_choice as continue_per_users_choice
-from cmk.update_config.internal import prompt
-from cmk.update_config.internal import Resume as Resume
+from cmk.update_config.internal import ConflictMode, prompt, Resume
 from cmk.utils import paths
 from cmk.utils.visuals import invalidate_visuals_cache
 

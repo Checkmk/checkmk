@@ -18,7 +18,7 @@ from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
 from cmk.gui.watolib.rulespecs import HostRulespec
 from cmk.livestatus_client import NetworkSocketDetails, SiteConfiguration, SiteConfigurations
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ExpiryVersion
 from cmk.update_config.plugins.actions import warn_unavailable_snmp_backend as action_module
 from cmk.update_config.plugins.actions.warn_unavailable_snmp_backend import (
     warn_unavailable_snmp_backend,

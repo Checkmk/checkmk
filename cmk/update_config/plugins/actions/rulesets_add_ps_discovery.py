@@ -11,8 +11,8 @@ from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, make_folder_tr
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
 from cmk.gui.watolib.sample_config import INVENTORY_PROCESS_DISCOVERY_RULES
 from cmk.ruleset_matcher.definition import RuleGroup
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 
 PS_DISCOVERY_RULE_NAME = RuleGroup.DiscoveryParameters("inventory_processes_rules")
 _NEW_DEFAULT_RULE_IDS = frozenset(

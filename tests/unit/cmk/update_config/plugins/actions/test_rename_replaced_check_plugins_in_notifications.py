@@ -13,7 +13,7 @@ from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.userdb.store import load_users_uncached
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ExpiryVersion
 from cmk.update_config.plugins.actions.rename_replaced_check_plugins_in_notifications import (
     RenameReplacedCheckPluginsInNotificationRules,
 )

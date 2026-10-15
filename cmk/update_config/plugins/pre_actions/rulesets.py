@@ -24,14 +24,15 @@ from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError
 from cmk.gui.wsgi.app import gui_context
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.plugins.lib.rulesets import rename_replaced_plugins, SKIP_PREACTION
-from cmk.update_config.plugins.pre_actions.utils import (
+from cmk.update_config.internal import (
     ConflictMode,
     continue_per_users_choice,
+    ExpiryVersion,
+    PreUpdateAction,
     Resume,
 )
-from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
+from cmk.update_config.plugins.lib.rulesets import rename_replaced_plugins, SKIP_PREACTION
+from cmk.update_config.registry import pre_update_action_registry
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.redis import disable_redis

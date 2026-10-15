@@ -10,12 +10,13 @@ from typing import override
 
 from cmk.base.config import get_config_file_paths, get_default_config
 from cmk.gui.exceptions import MKUserError
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.plugins.pre_actions.utils import (
+from cmk.update_config.internal import (
     ConflictMode,
     continue_per_users_choice,
+    ExpiryVersion,
+    PreUpdateAction,
 )
-from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
+from cmk.update_config.registry import pre_update_action_registry
 from cmk.utils.check_utils import maincheckify
 
 _VARNAME = "service_descriptions"

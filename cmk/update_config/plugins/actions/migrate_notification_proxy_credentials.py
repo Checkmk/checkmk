@@ -46,8 +46,8 @@ from cmk.rulesets.internal.form_specs import (
     InternalProxy,
     parse_proxy_url_leniently,
 )
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 from cmk.utils.http_proxy_config import ProxyAuthSpec
 from cmk.utils.password_store import PasswordConfig
 

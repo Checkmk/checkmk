@@ -27,7 +27,10 @@ afterEach(() => {
 
 describe('sharedTypingConsumers', () => {
   it('finds the packages that link shared typing, free and non-free', () => {
-    writeBuild('packages/cmk-profiling', 'link_shared_typing()\n\nvue_package(name = "x")\n')
+    writeBuild(
+      'packages/cmk-profiling',
+      'link_shared_typing()\n\nvitest_test(name = "unit-test")\n'
+    )
     writeBuild('non-free/packages/cmk-ai', 'link_shared_typing()\n')
     writeBuild('packages/cmk-ccc', 'py_library(name = "ccc")\n')
     writeBuild(

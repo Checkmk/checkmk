@@ -102,21 +102,4 @@ vitest_bin.vitest_test(
       { label: '//packages/app:unit-test', kind: 'vitest_test' }
     ])
   })
-
-  it('discovers the unit-test target that vue_package generates', async () => {
-    writeBuild(
-      'packages/cmk-ui-library',
-      `load("//bazel/rules:vue_package.bzl", "vue_package")
-
-vue_package(
-    name = "cmk-ui-library",
-    test_deps = [":node_modules/msw"],
-)
-`
-    )
-
-    const targets = await discoverTargetsFromFilesystem(wsPath)
-
-    expect(targets).toEqual([{ label: '//packages/cmk-ui-library:unit-test', kind: 'vitest_test' }])
-  })
 })

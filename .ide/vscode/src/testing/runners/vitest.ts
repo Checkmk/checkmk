@@ -10,10 +10,6 @@ import type { DiscoveredTest, JUnitTestCase, RuleScope, RunOptions } from '../ty
 
 export const VITEST_TEST_RULE_REGEX = /\bvitest_test\s*\(\s*[\s\S]*?name\s*=\s*"([^"]+)"/g
 
-// vue_package() in //bazel/rules:vue_package.bzl always names its vitest target `unit-test`.
-export const VUE_PACKAGE_RULE_REGEX = /^vue_package\s*\(/gm
-export const VUE_PACKAGE_TEST_NAME = 'unit-test'
-
 export const VITEST_FILE_EXTS = ['.test.ts', '.test.tsx', '.test.vue', '.spec.ts', '.test.js']
 export const VITEST_FILE_REGEX = /\.(?:test|spec)\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs|vue)$/
 const VITEST_TEST_NAME_REGEX = /(?:^|\s)(?:test|it)(?:\.[a-z]+)*\s*\(\s*['"`](.+?)['"`]/

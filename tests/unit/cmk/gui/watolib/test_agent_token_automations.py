@@ -101,6 +101,26 @@ class TestAutomationAgentRegistrationTokenCreate:
         assert isinstance(stored.details, AgentRegistrationToken)
         assert stored.details.connection_mode is HostAgentConnectionMode.PUSH
 
+    @pytest.mark.usefixtures("isolated_token_store")
+    def test_the_token_carries_the_update_permission_that_the_issuing_site_checked(
+        self,
+    ) -> None:
+        """CMK-39504: a one-time token carries the update permission of its issuer, checked at the issuance."""
+        api_request = AgentRegistrationTokenCreateRequest(
+            issuer=UserId("admin"),
+            host_name=HostName("my-host"),
+            connection_mode=HostAgentConnectionMode.PULL,
+            agent_updates_permitted=True,
+        )
+
+        result = TokenCreateResponse.model_validate(
+            AutomationAgentRegistrationTokenCreate().execute(api_request)
+        )
+
+        stored = get_token_store().verify(f"0:{result.id}", now=dt.datetime.now(dt.UTC))
+        assert isinstance(stored.details, AgentRegistrationToken)
+        assert stored.details.agent_updates_permitted is True
+
 
 class TestRequestModelValidation:
     def test_download_request_rejects_invalid_user_id(self) -> None:

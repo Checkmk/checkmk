@@ -83,6 +83,9 @@ class AgentRegistrationToken(BaseModel):
     comment: str = ""
     host_registration_completed_at: datetime | None = None
     updater_registration_completed_at: datetime | None = None
+    # Whether the issuer may download the agent of the host, checked at the issuance. None: the
+    # issuing site offers no agent updates, or the token predates this field.
+    agent_updates_permitted: bool | None = None
 
 
 class RelayRegistrationToken(BaseModel):

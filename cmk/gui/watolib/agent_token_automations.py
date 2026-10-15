@@ -56,6 +56,7 @@ class AgentRegistrationTokenCreateRequest(BaseModel):
     connection_mode: HostAgentConnectionMode
     expires_at: AwareDatetime | None = None
     comment: str = ""
+    agent_updates_permitted: bool | None = None
 
 
 class TokenCreateResponse(BaseModel):
@@ -122,6 +123,7 @@ class AutomationAgentRegistrationTokenCreate(
                 comment=api_request.comment,
                 host_name=api_request.host_name,
                 connection_mode=api_request.connection_mode,
+                agent_updates_permitted=api_request.agent_updates_permitted,
             ),
             issuer=api_request.issuer,
             now=now,

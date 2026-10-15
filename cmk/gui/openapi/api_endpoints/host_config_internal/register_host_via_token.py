@@ -62,7 +62,9 @@ def register_host_via_token_v1(
     cluster check, user permissions, target site). This endpoint therefore
     trusts the token's payload and does not re-load the host from the local
     WATO config — that allows registration to succeed even before the host
-    config has been replicated to a remote site via Activate Changes.
+    config has been replicated to a remote site via Activate Changes. For the
+    same reason, the registration records the update permission of the issuer
+    that the token carries from its issuance.
     """
     if not api_context.token:
         raise ProblemException(
@@ -92,7 +94,7 @@ def register_host_via_token_v1(
                 body.uuid,
                 push_configured=connection_mode is HostAgentConnectionMode.PUSH,
                 registration=UUIDRegistration(
-                    agent_updates_permitted=None,
+                    agent_updates_permitted=api_context.token.details.agent_updates_permitted,
                     subject=api_context.token.issuer,
                     registration_route=RegistrationRoute.REGISTER_VIA_TOKEN,
                 ),

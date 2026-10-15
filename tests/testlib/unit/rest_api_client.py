@@ -2589,12 +2589,16 @@ class AgentClient(RestApiClient):
         )
 
     def create_registration_token(
-        self, body: Mapping[str, Any], expect_ok: bool = True
+        self,
+        body: Mapping[str, Any],
+        headers: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "post",
             url="/domain-types/agent_registration_token/collections/all",
             body=dict(body),
+            headers=headers,
             expect_ok=expect_ok,
             api_version=APIVersion.INTERNAL,
         )

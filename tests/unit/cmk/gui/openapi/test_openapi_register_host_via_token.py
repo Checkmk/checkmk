@@ -31,7 +31,7 @@ from cmk.gui.openapi.framework import ApiContext, APIVersion
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.token_auth import AgentRegistrationToken, AuthToken, get_token_store
 from cmk.gui.token_auth._store import TokenRevoked
-from cmk.utils.agent_registration import get_r4r_filepath, UUIDLinkManager
+from cmk.utils.agent_registration import get_r4r_filepath, RegistrationRoute, UUIDLinkManager
 from tests.testlib.unit.fake_site import LoggedSecurityEvent
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
@@ -45,17 +45,23 @@ def _issue_token(host_name: str) -> AuthToken:
     )
 
 
+def _uuid_link_manager() -> UUIDLinkManager:
+    return UUIDLinkManager(
+        received_outputs_dir=cmk.utils.paths.received_outputs_dir,
+        data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
+        r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
+        uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
+        registrations_dir=cmk.utils.paths.registrations_dir,
+    )
+
+
 def _links() -> dict[UUID, HostName]:
-    return {
-        link.uuid: link.hostname
-        for link in UUIDLinkManager(
-            received_outputs_dir=cmk.utils.paths.received_outputs_dir,
-            data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
-            r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
-            uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
-            registrations_dir=cmk.utils.paths.registrations_dir,
-        )
-    }
+    return {link.uuid: link.hostname for link in _uuid_link_manager()}
+
+
+def _recorded_registration(uuid: UUID) -> dict[str, object] | None:
+    registration = _uuid_link_manager().registration(uuid)
+    return None if registration is None else registration.model_dump(exclude={"registered_at"})
 
 
 def _register_with_authenticated_token(token: AuthToken) -> None:
@@ -219,3 +225,25 @@ class TestRegisterHostViaToken:
             _register_with_authenticated_token(token)
 
         assert exc_info.value.code == HTTPStatus.UNAUTHORIZED
+
+    def test_the_registration_records_the_update_permission_that_the_token_carries(
+        self, clients: ClientRegistry
+    ) -> None:
+        """CMK-39504: the token registration records the update permission that the token carries."""
+        token = get_token_store().issue(
+            token_details=AgentRegistrationToken(
+                host_name=HostName("heute"), agent_updates_permitted=True
+            ),
+            issuer=UserId("issuer"),
+            now=dt.datetime.now(dt.UTC),
+            valid_for=relativedelta(days=1),
+        )
+        uuid = uuid4()
+
+        clients.HostConfig.register_via_token("heute", f"0:{token.token_id}", str(uuid))
+
+        assert _recorded_registration(uuid) == {
+            "agent_updates_permitted": True,
+            "subject": "issuer",
+            "registration_route": RegistrationRoute.REGISTER_VIA_TOKEN,
+        }

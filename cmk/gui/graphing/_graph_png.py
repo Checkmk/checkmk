@@ -34,7 +34,7 @@ from cmk.graphing_engine import (
     VerticalRangeKind,
 )
 from cmk.gui.i18n import _
-from cmk.gui.unit_formatter import Label, NegativeYRange, NotationFormatter, PositiveYRange
+from cmk.gui.unit_formatter import Label, NotationFormatter
 
 from ._drawn_curves import drawn_curves
 from ._graph_display_config import GraphDisplayConfigImage
@@ -305,15 +305,6 @@ def _graph_time_caption(time_range: TimeRange, tz: datetime.tzinfo | None) -> st
     }
 
 
-def _y_range_for_labels(ax: Axes) -> PositiveYRange | NegativeYRange | None:
-    lower, upper = ax.get_ylim()
-    if lower >= 0:
-        return PositiveYRange(start=lower, end=upper)
-    if upper <= 0:
-        return NegativeYRange(start=lower, end=upper)
-    return None  # straddles zero (a mirrored graph) - matplotlib's own ticks apply there
-
-
 def _mirrored_y_labels(
     ax: Axes, formatter: NotationFormatter, target_number_of_labels: float
 ) -> Sequence[Label]:
@@ -323,9 +314,7 @@ def _mirrored_y_labels(
     """
     lower, upper = ax.get_ylim()
     abs_limit = max(abs(lower), abs(upper))
-    labels = formatter.render_y_labels(
-        PositiveYRange(start=0, end=abs_limit), target_number_of_labels
-    )
+    labels = formatter.render_y_labels(0, abs_limit, target_number_of_labels)
     return [
         *(Label(-label.position, label.text) for label in labels if label.position != 0),
         *labels,
@@ -365,9 +354,9 @@ def _apply_render_config(
             if labels := _mirrored_y_labels(ax, formatter, target_number_of_labels):
                 ax.set_yticks([label.position for label in labels])
                 ax.set_yticklabels([label.text for label in labels])
-        elif formatter is not None and (y_range := _y_range_for_labels(ax)) is not None:
+        elif formatter is not None:
             target_number_of_labels = max(1.0, config.size[1] / 4.0 + 1)
-            if labels := formatter.render_y_labels(y_range, target_number_of_labels):
+            if labels := formatter.render_y_labels(*ax.get_ylim(), target_number_of_labels):
                 ax.set_yticks([label.position for label in labels])
                 ax.set_yticklabels([label.text for label in labels])
         ax.grid(axis="y", color=DIVISION_COLOR, linestyle="--")

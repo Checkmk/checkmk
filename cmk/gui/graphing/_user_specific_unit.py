@@ -9,7 +9,6 @@ from dataclasses import dataclass, replace
 from typing import assert_never
 
 from cmk.graphing_engine import (
-    AutoPrecision,
     DecimalNotation,
     EngineeringScientificNotation,
     IECNotation,
@@ -18,12 +17,10 @@ from cmk.graphing_engine import (
     Precision,
     SINotation,
     StandardScientificNotation,
-    StrictPrecision,
     TimeNotation,
     Unit,
 )
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.unit_formatter import AutoPrecision as FormatterAutoPrecision
 from cmk.gui.unit_formatter import (
     DecimalFormatter,
     EngineeringScientificFormatter,
@@ -33,10 +30,10 @@ from cmk.gui.unit_formatter import (
     StandardScientificFormatter,
     TimeFormatter,
 )
-from cmk.gui.unit_formatter import Precision as FormatterPrecision
-from cmk.gui.unit_formatter import StrictPrecision as FormatterStrictPrecision
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat as SharedUnitFormat
+
+from ._unit_format import precision_kind
 
 
 @dataclass(frozen=True)
@@ -51,33 +48,32 @@ class _Conversion:
     converter: Callable[[float], float]
 
 
-def _formatter_precision(precision: Precision) -> FormatterPrecision:
-    match precision:
-        case AutoPrecision(digits=digits):
-            return FormatterAutoPrecision(digits)
-        case StrictPrecision(digits=digits):
-            return FormatterStrictPrecision(digits)
-        case _:
-            assert_never(precision)
-
-
-def _notation_formatter(
-    notation: Notation, symbol: str, unit_precision: Precision
-) -> NotationFormatter:
-    precision = _formatter_precision(unit_precision)
+def _notation_formatter(notation: Notation, symbol: str, precision: Precision) -> NotationFormatter:
     match notation:
         case DecimalNotation():
-            return DecimalFormatter(symbol=symbol, precision=precision)
+            return DecimalFormatter(
+                symbol=symbol, precision_kind=precision_kind(precision), digits=precision.digits
+            )
         case SINotation():
-            return SIFormatter(symbol=symbol, precision=precision)
+            return SIFormatter(
+                symbol=symbol, precision_kind=precision_kind(precision), digits=precision.digits
+            )
         case IECNotation():
-            return IECFormatter(symbol=symbol, precision=precision)
+            return IECFormatter(
+                symbol=symbol, precision_kind=precision_kind(precision), digits=precision.digits
+            )
         case StandardScientificNotation():
-            return StandardScientificFormatter(symbol=symbol, precision=precision)
+            return StandardScientificFormatter(
+                symbol=symbol, precision_kind=precision_kind(precision), digits=precision.digits
+            )
         case EngineeringScientificNotation():
-            return EngineeringScientificFormatter(symbol=symbol, precision=precision)
+            return EngineeringScientificFormatter(
+                symbol=symbol, precision_kind=precision_kind(precision), digits=precision.digits
+            )
         case TimeNotation():
-            return TimeFormatter(symbol=symbol, precision=precision)
+            return TimeFormatter(
+                symbol=symbol, precision_kind=precision_kind(precision), digits=precision.digits
+            )
         case _:
             assert_never(notation)
 
@@ -125,25 +121,44 @@ def apply_temperature_unit(
 
 def formatter_from_unit_format(unit_format: SharedUnitFormat) -> NotationFormatter:
     """The formatter for values already in ``unit_format``; it converts nothing."""
-    precision: FormatterPrecision = (
-        FormatterAutoPrecision(digits=unit_format.precision.digits)
-        if unit_format.precision.type == "auto"
-        else FormatterStrictPrecision(digits=unit_format.precision.digits)
-    )
     symbol = unit_format.symbol
     match unit_format.notation:
         case "decimal":
-            return DecimalFormatter(symbol=symbol, precision=precision)
+            return DecimalFormatter(
+                symbol=symbol,
+                precision_kind=unit_format.precision.type,
+                digits=unit_format.precision.digits,
+            )
         case "si":
-            return SIFormatter(symbol=symbol, precision=precision)
+            return SIFormatter(
+                symbol=symbol,
+                precision_kind=unit_format.precision.type,
+                digits=unit_format.precision.digits,
+            )
         case "iec":
-            return IECFormatter(symbol=symbol, precision=precision)
+            return IECFormatter(
+                symbol=symbol,
+                precision_kind=unit_format.precision.type,
+                digits=unit_format.precision.digits,
+            )
         case "standard_scientific":
-            return StandardScientificFormatter(symbol=symbol, precision=precision)
+            return StandardScientificFormatter(
+                symbol=symbol,
+                precision_kind=unit_format.precision.type,
+                digits=unit_format.precision.digits,
+            )
         case "engineering_scientific":
-            return EngineeringScientificFormatter(symbol=symbol, precision=precision)
+            return EngineeringScientificFormatter(
+                symbol=symbol,
+                precision_kind=unit_format.precision.type,
+                digits=unit_format.precision.digits,
+            )
         case "time":
-            return TimeFormatter(symbol=symbol, precision=precision)
+            return TimeFormatter(
+                symbol=symbol,
+                precision_kind=unit_format.precision.type,
+                digits=unit_format.precision.digits,
+            )
         case other:
             assert_never(other)
 

@@ -22,7 +22,6 @@ from cmk.gui.graphing._user_specific_unit import (
     formatter_from_unit,
     formatter_from_unit_format,
 )
-from cmk.gui.unit_formatter import AutoPrecision as FormatterAutoPrecision
 from cmk.gui.unit_formatter import (
     DecimalFormatter,
     EngineeringScientificFormatter,
@@ -32,7 +31,6 @@ from cmk.gui.unit_formatter import (
     StandardScientificFormatter,
     TimeFormatter,
 )
-from cmk.gui.unit_formatter import StrictPrecision as FormatterStrictPrecision
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import Precision as SharedPrecision
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat
@@ -48,7 +46,8 @@ from cmk.shared_typing.cmk_time_series_graph import UnitFormat
             ),
             DecimalFormatter(
                 symbol="U",
-                precision=FormatterAutoPrecision(digits=2),
+                precision_kind="auto",
+                digits=2,
             ),
             id="decimal",
         ),
@@ -59,7 +58,8 @@ from cmk.shared_typing.cmk_time_series_graph import UnitFormat
             ),
             SIFormatter(
                 symbol="U",
-                precision=FormatterAutoPrecision(digits=2),
+                precision_kind="auto",
+                digits=2,
             ),
             id="si",
         ),
@@ -70,7 +70,8 @@ from cmk.shared_typing.cmk_time_series_graph import UnitFormat
             ),
             IECFormatter(
                 symbol="U",
-                precision=FormatterAutoPrecision(digits=2),
+                precision_kind="auto",
+                digits=2,
             ),
             id="iec",
         ),
@@ -81,7 +82,8 @@ from cmk.shared_typing.cmk_time_series_graph import UnitFormat
             ),
             StandardScientificFormatter(
                 symbol="U",
-                precision=FormatterAutoPrecision(digits=2),
+                precision_kind="auto",
+                digits=2,
             ),
             id="standard-scientific",
         ),
@@ -92,7 +94,8 @@ from cmk.shared_typing.cmk_time_series_graph import UnitFormat
             ),
             EngineeringScientificFormatter(
                 symbol="U",
-                precision=FormatterAutoPrecision(digits=2),
+                precision_kind="auto",
+                digits=2,
             ),
             id="standard-scientific",
         ),
@@ -103,7 +106,8 @@ from cmk.shared_typing.cmk_time_series_graph import UnitFormat
             ),
             TimeFormatter(
                 symbol="s",
-                precision=FormatterAutoPrecision(digits=2),
+                precision_kind="auto",
+                digits=2,
             ),
             id="time",
         ),
@@ -129,7 +133,8 @@ def test_user_specific_unit_formatter(
             TemperatureUnit.CELSIUS,
             DecimalFormatter(
                 symbol="°C",
-                precision=FormatterAutoPrecision(digits=2),
+                precision_kind="auto",
+                digits=2,
             ),
             10,
             10,
@@ -143,7 +148,8 @@ def test_user_specific_unit_formatter(
             TemperatureUnit.FAHRENHEIT,
             DecimalFormatter(
                 symbol="°F",
-                precision=FormatterAutoPrecision(digits=2),
+                precision_kind="auto",
+                digits=2,
             ),
             10,
             50,
@@ -157,7 +163,8 @@ def test_user_specific_unit_formatter(
             TemperatureUnit.CELSIUS,
             DecimalFormatter(
                 symbol="°C",
-                precision=FormatterAutoPrecision(digits=2),
+                precision_kind="auto",
+                digits=2,
             ),
             50,
             10,
@@ -171,7 +178,8 @@ def test_user_specific_unit_formatter(
             TemperatureUnit.FAHRENHEIT,
             DecimalFormatter(
                 symbol="°F",
-                precision=FormatterAutoPrecision(digits=2),
+                precision_kind="auto",
+                digits=2,
             ),
             50,
             50,
@@ -202,7 +210,8 @@ def test_user_specific_unit_convertible(
             TemperatureUnit.CELSIUS,
             DecimalFormatter(
                 symbol="°C",
-                precision=FormatterAutoPrecision(digits=2),
+                precision_kind="auto",
+                digits=2,
             ),
             id="celsius-celsius",
         ),
@@ -214,7 +223,8 @@ def test_user_specific_unit_convertible(
             TemperatureUnit.FAHRENHEIT,
             DecimalFormatter(
                 symbol="°C",
-                precision=FormatterAutoPrecision(digits=2),
+                precision_kind="auto",
+                digits=2,
             ),
             id="celsius-fahrenheit",
         ),
@@ -226,7 +236,8 @@ def test_user_specific_unit_convertible(
             TemperatureUnit.CELSIUS,
             DecimalFormatter(
                 symbol="°F",
-                precision=FormatterAutoPrecision(digits=2),
+                precision_kind="auto",
+                digits=2,
             ),
             id="fahrenheit-celsius",
         ),
@@ -238,7 +249,8 @@ def test_user_specific_unit_convertible(
             TemperatureUnit.FAHRENHEIT,
             DecimalFormatter(
                 symbol="°F",
-                precision=FormatterAutoPrecision(digits=2),
+                precision_kind="auto",
+                digits=2,
             ),
             id="fahrenheit-fahrenheit",
         ),
@@ -261,21 +273,21 @@ def test_user_specific_unit_not_convertible(
             UnitFormat(
                 notation="decimal", symbol="U", precision=SharedPrecision(type="auto", digits=2)
             ),
-            DecimalFormatter(symbol="U", precision=FormatterAutoPrecision(digits=2)),
+            DecimalFormatter(symbol="U", precision_kind="auto", digits=2),
             id="decimal",
         ),
         pytest.param(
             UnitFormat(
                 notation="si", symbol="U", precision=SharedPrecision(type="strict", digits=3)
             ),
-            SIFormatter(symbol="U", precision=FormatterStrictPrecision(digits=3)),
+            SIFormatter(symbol="U", precision_kind="strict", digits=3),
             id="si-strict-precision",
         ),
         pytest.param(
             UnitFormat(
                 notation="iec", symbol="U", precision=SharedPrecision(type="auto", digits=2)
             ),
-            IECFormatter(symbol="U", precision=FormatterAutoPrecision(digits=2)),
+            IECFormatter(symbol="U", precision_kind="auto", digits=2),
             id="iec",
         ),
         pytest.param(
@@ -284,7 +296,7 @@ def test_user_specific_unit_not_convertible(
                 symbol="U",
                 precision=SharedPrecision(type="auto", digits=2),
             ),
-            StandardScientificFormatter(symbol="U", precision=FormatterAutoPrecision(digits=2)),
+            StandardScientificFormatter(symbol="U", precision_kind="auto", digits=2),
             id="standard-scientific",
         ),
         pytest.param(
@@ -293,14 +305,14 @@ def test_user_specific_unit_not_convertible(
                 symbol="U",
                 precision=SharedPrecision(type="auto", digits=2),
             ),
-            EngineeringScientificFormatter(symbol="U", precision=FormatterAutoPrecision(digits=2)),
+            EngineeringScientificFormatter(symbol="U", precision_kind="auto", digits=2),
             id="engineering-scientific",
         ),
         pytest.param(
             UnitFormat(
                 notation="time", symbol="s", precision=SharedPrecision(type="auto", digits=2)
             ),
-            TimeFormatter(symbol="s", precision=FormatterAutoPrecision(digits=2)),
+            TimeFormatter(symbol="s", precision_kind="auto", digits=2),
             id="time",
         ),
     ],
@@ -406,7 +418,7 @@ def test_formatter_from_unit_format_keeps_a_temperature_symbol_as_given() -> Non
             notation="decimal", symbol="°C", precision=SharedPrecision(type="auto", digits=2)
         )
     )
-    assert formatter == DecimalFormatter(symbol="°C", precision=FormatterAutoPrecision(digits=2))
+    assert formatter == DecimalFormatter(symbol="°C", precision_kind="auto", digits=2)
 
 
 def test_formatter_from_unit_never_converts_temperature_values() -> None:

@@ -11,11 +11,9 @@ from cmk.graphing_engine import MetricName, PerformanceData
 from cmk.gui.dashboard.dashlet.dashlets.status_helpers import purge_evaluated_metric_for_js
 from cmk.gui.graphing import EvaluatedMetric
 from cmk.gui.unit_formatter import (
-    AutoPrecision,
     DecimalFormatter,
     IECFormatter,
     NotationFormatter,
-    StrictPrecision,
 )
 from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
 
@@ -37,7 +35,7 @@ def _metric(formatter: NotationFormatter, performance_data: PerformanceData) -> 
     ["formatter", "expected_unit"],
     [
         pytest.param(
-            DecimalFormatter(symbol="Hz", precision=AutoPrecision(digits=3)),
+            DecimalFormatter(symbol="Hz", precision_kind="auto", digits=3),
             {
                 "formatter_type": "DecimalFormatter",
                 "symbol": "Hz",
@@ -48,7 +46,7 @@ def _metric(formatter: NotationFormatter, performance_data: PerformanceData) -> 
             id="standard stepping",
         ),
         pytest.param(
-            IECFormatter(symbol="X", precision=StrictPrecision(digits=2)),
+            IECFormatter(symbol="X", precision_kind="strict", digits=2),
             {
                 "formatter_type": "IECFormatter",
                 "symbol": "X",
@@ -70,7 +68,7 @@ def test_the_unit_describes_the_formatter_of_the_metric(
 
 def test_the_bounds_hold_only_the_levels_the_metric_reports() -> None:
     metric = _metric(
-        DecimalFormatter(symbol="", precision=AutoPrecision(digits=2)),
+        DecimalFormatter(symbol="", precision_kind="auto", digits=2),
         PerformanceData(value=1.0, warning=2.0, maximum=4.0),
     )
 

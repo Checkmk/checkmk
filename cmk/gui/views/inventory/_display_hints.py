@@ -40,14 +40,12 @@ from cmk.gui.inventory.filters import (
 )
 from cmk.gui.log import logger
 from cmk.gui.unit_formatter import (
-    AutoPrecision,
     DecimalFormatter,
     EngineeringScientificFormatter,
     IECFormatter,
-    Precision,
+    PrecisionKind,
     SIFormatter,
     StandardScientificFormatter,
-    StrictPrecision,
     TimeFormatter,
 )
 from cmk.inventory.raw_paths import InventoryPath, parse_internal_raw_path, TreeSource
@@ -236,36 +234,45 @@ class _PaintBool:
 
 
 def _render_unit(unit: UnitFromAPI, value: int | float, now: float) -> str:
-    precision: Precision
+    precision_kind: PrecisionKind
     match unit.precision:
         case AutoPrecisionFromAPI():
-            precision = AutoPrecision(digits=unit.precision.digits)
+            precision_kind = "auto"
         case StrictPrecisionFromAPI():
-            precision = StrictPrecision(digits=unit.precision.digits)
+            precision_kind = "strict"
         case _:
             assert_never(unit.precision)
+    digits = unit.precision.digits
 
     match unit.notation:
         case DecimalNotationFromAPI():
-            return DecimalFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
+            return DecimalFormatter(
+                symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
+            ).render(value)
         case SINotationFromAPI():
-            return SIFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
+            return SIFormatter(
+                symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
+            ).render(value)
         case IECNotationFromAPI():
-            return IECFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
+            return IECFormatter(
+                symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
+            ).render(value)
         case StandardScientificNotationFromAPI():
             return StandardScientificFormatter(
-                symbol=unit.notation.symbol, precision=precision
+                symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
             ).render(value)
         case EngineeringScientificNotationFromAPI():
             return EngineeringScientificFormatter(
-                symbol=unit.notation.symbol, precision=precision
+                symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
             ).render(value)
         case TimeNotationFromAPI():
-            return TimeFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
+            return TimeFormatter(
+                symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
+            ).render(value)
         case AgeNotationFromAPI():
-            return TimeFormatter(symbol=unit.notation.symbol, precision=precision).render(
-                now - value
-            )
+            return TimeFormatter(
+                symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
+            ).render(now - value)
         case _:
             assert_never(unit.notation)
 

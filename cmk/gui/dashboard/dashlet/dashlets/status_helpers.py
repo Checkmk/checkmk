@@ -5,7 +5,6 @@
 
 
 from collections.abc import Iterable, Mapping
-from typing import assert_never, Literal
 
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.graphing_engine import PerformanceData
@@ -15,13 +14,7 @@ from cmk.gui.graphing import EvaluatedMetric
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName, VisualContext
-from cmk.gui.unit_formatter import (
-    AutoPrecision,
-    IECFormatter,
-    NotationFormatter,
-    Precision,
-    StrictPrecision,
-)
+from cmk.gui.unit_formatter import IECFormatter, NotationFormatter
 from cmk.livestatus_client import LivestatusResponse
 from cmk.web.utils.urls import makeuri_contextless
 
@@ -92,22 +85,12 @@ def purge_evaluated_metric_for_js(metric: EvaluatedMetric) -> dict[str, object]:
     }
 
 
-def _precision_type(precision: Precision) -> Literal["auto", "strict"]:
-    match precision:
-        case AutoPrecision():
-            return "auto"
-        case StrictPrecision():
-            return "strict"
-        case _:
-            assert_never(precision)
-
-
 def _formatter_for_js(formatter: NotationFormatter) -> dict[str, object]:
     return {
         "formatter_type": formatter.js_formatter_name,
         "symbol": formatter.symbol,
-        "precision_type": _precision_type(formatter.precision),
-        "precision_digits": formatter.precision.digits,
+        "precision_type": formatter.precision_kind,
+        "precision_digits": formatter.digits,
         "stepping": "binary" if isinstance(formatter, IECFormatter) else None,
     }
 

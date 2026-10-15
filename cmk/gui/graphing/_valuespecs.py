@@ -32,9 +32,7 @@ from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.type_defs import GraphTitleFormatVS, VisualContext
-from cmk.gui.unit_formatter import AutoPrecision as FormatterAutoPrecision
 from cmk.gui.unit_formatter import NotationFormatter, TimeFormatter
-from cmk.gui.unit_formatter import StrictPrecision as FormatterStrictPrecision
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Age,
@@ -445,13 +443,7 @@ def id_from_unit(unit: Unit) -> str:
 
 
 def _title_from_formatter(formatter: NotationFormatter) -> str:
-    match formatter.precision:
-        case FormatterAutoPrecision(digits=digits):
-            precision_title = f"auto precision, {digits} digits"
-        case FormatterStrictPrecision(digits=digits):
-            precision_title = f"strict precision, {digits} digits"
-        case _:
-            assert_never(formatter.precision)
+    precision_title = f"{formatter.precision_kind} precision, {formatter.digits} digits"
     return " ".join(
         [
             formatter.symbol or "no symbol",
@@ -467,7 +459,7 @@ def _vs_type_from_formatter(
         return Age
     if formatter.symbol.startswith("%"):
         return Percentage
-    if formatter.precision.digits == 0:
+    if formatter.digits == 0:
         return Integer
     return Float
 

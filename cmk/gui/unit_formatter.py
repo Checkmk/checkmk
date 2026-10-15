@@ -7,20 +7,9 @@ import abc
 import math
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
-from typing import assert_never, Final, Literal, override
+from typing import Final, Literal, override
 
-
-@dataclass(frozen=True)
-class AutoPrecision:
-    digits: int
-
-
-@dataclass(frozen=True)
-class StrictPrecision:
-    digits: int
-
-
-type Precision = AutoPrecision | StrictPrecision
+type PrecisionKind = Literal["auto", "strict"]
 
 
 _MAX_DIGITS: Final = 5
@@ -83,17 +72,6 @@ def _decimals_needed_to_write(spacing: float) -> int:
     return max(0, math.ceil(-math.log10(spacing)))
 
 
-def precision_for_spacing(unit_precision: Precision, spacing: float) -> Precision:
-    digits = max(unit_precision.digits, _decimals_needed_to_write(spacing))
-    match unit_precision:
-        case AutoPrecision():
-            return AutoPrecision(digits)
-        case StrictPrecision():
-            return StrictPrecision(digits)
-        case _:
-            assert_never(unit_precision)
-
-
 def _displayed_resolution(
     resolution: float, raw_value: int | float, part: _PreFormattedPart
 ) -> float:
@@ -112,30 +90,11 @@ def _multiples_within(start: float, end: float, spacing: float) -> Sequence[floa
     return [index * spacing for index in range(first_index, last_index + 1)]
 
 
-@dataclass(frozen=True, kw_only=True)
-class PositiveYRange:
-    start: float
-    end: float
-
-    def __post_init__(self) -> None:
-        if self.start < 0 or self.start > self.end:
-            raise ValueError("PositiveRange must have 0 <= start <= end")
-
-
-@dataclass(frozen=True, kw_only=True)
-class NegativeYRange:
-    start: float
-    end: float
-
-    def __post_init__(self) -> None:
-        if self.start > 0 or self.start > self.end:
-            raise ValueError("NegativeRange must have start <= end <= 0")
-
-
 @dataclass(frozen=True)
 class NotationFormatter(abc.ABC):
     symbol: str
-    precision: Precision
+    precision_kind: PrecisionKind
+    digits: int
     use_max_digits_for_labels: bool = True
 
     @abc.abstractmethod
@@ -160,17 +119,17 @@ class NotationFormatter(abc.ABC):
     def _apply_precision(
         self,
         value: int | float,
-        precision: Precision,
+        unit_digits: int,
         use_max_digits_for_labels: bool,
     ) -> float:
         value_floor = math.floor(value)
         if value == value_floor:
             return value
-        digits = precision.digits
-        if isinstance(precision, AutoPrecision) and (
+        digits = unit_digits
+        if self.precision_kind == "auto" and (
             exponent := abs(math.ceil(math.log10(value - value_floor)))
         ):
-            digits = max(exponent + 1, precision.digits)
+            digits = max(exponent + 1, unit_digits)
         return (
             round(value, min(digits, _MAX_DIGITS))
             if use_max_digits_for_labels
@@ -204,15 +163,16 @@ class NotationFormatter(abc.ABC):
         """`raw_value` is the value the parts were preformatted from; `resolution` the gap in raw
         units two rendered values must stay apart by, or None for the unit's own precision."""
         for part in pre_formatted_parts:
-            precision = (
-                self.precision
+            digits = (
+                self.digits
                 if resolution is None
-                else precision_for_spacing(
-                    self.precision, _displayed_resolution(resolution, raw_value, part)
+                else max(
+                    self.digits,
+                    _decimals_needed_to_write(_displayed_resolution(resolution, raw_value, part)),
                 )
             )
             text = self._stringify_formatted_value(
-                self._apply_precision(part.value, precision, use_max_digits_for_labels)
+                self._apply_precision(part.value, digits, use_max_digits_for_labels)
             )
             yield self._format_text_and_unit(
                 text=text.rstrip("0").rstrip(".") if "." in text else text,
@@ -252,19 +212,23 @@ class NotationFormatter(abc.ABC):
 
     def render_y_labels(
         self,
-        y_range: PositiveYRange | NegativeYRange,
+        lower: float,
+        upper: float,
         target_number_of_labels: float,
     ) -> Sequence[Label]:
         assert target_number_of_labels >= 0
 
-        if isinstance(y_range, PositiveYRange):
-            low_magnitude, high_magnitude = y_range.start, y_range.end
-            sign_text: Literal["", "-"] = ""
+        sign_text: Literal["", "-"]
+        if lower >= 0:
+            low_magnitude, high_magnitude = lower, upper
+            sign_text = ""
             sign_number = 1
-        else:
-            low_magnitude, high_magnitude = -y_range.end, -y_range.start
+        elif upper <= 0:
+            low_magnitude, high_magnitude = -upper, -lower
             sign_text = "-"
             sign_number = -1
+        else:
+            return []
 
         span = high_magnitude - low_magnitude
         if span <= 0 or target_number_of_labels == 0:

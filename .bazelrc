@@ -5,14 +5,14 @@
 #
 #   dependencies.rc  registries, download mirrors, Bzlmod
 #   cache.rc         disk cache, repository contents cache, remote cache
-#   performance.rc   resource usage of local execution
+#   performance.rc   resource usage of the Bazel server
 #   correctness.rc   hermeticity, lockfile and incompatible/migration flags
 #   checkmk.rc       Checkmk specific build settings
 #   ci.rc, debug.rc, iwyu.rc, mypy.rc, deballast.rc  the respective --config
 #
 # The import order matters for options set in more than one file: the last value of a single
-# value option wins, repeatable options keep the order.  Today no option is set in more than one
-# of them; mind the order when that changes.
+# value option wins, repeatable options keep the order.  Today only the startup --host_jvm_args
+# span files (performance.rc, then correctness.rc); keep that order when moving things around.
 
 # Add git hash to workspace status
 build --workspace_status_command=bazel/tools/workspace_status.sh

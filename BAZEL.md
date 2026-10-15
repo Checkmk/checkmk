@@ -150,61 +150,24 @@ $ bazel build --config=mypy //cmk/...
 | `--config=mypy-gpl`     | off            | Like `--config=mypy`, but with `mypy-gpl.toml`       |
 | `--test_output=errors`  | `summary`      | Show full test output only on failures               |
 
-## Resource usage on developer machines
+## Personal settings
 
-The repository ships defaults which keep a developer machine usable while Bazel
-builds. They live in `bazel/rc/` and apply to every worktree without any setup.
+For user-global settings that apply across all worktrees, use `~/.bazelrc`.
 
-`--config=ci` overrides the resource limits with values matching the CI pods
-(see `bazel/rc/ci.rc`); CI disables the disk cache in `/etc/ci.bazelrc`.
-
-### What the limits do
-
-- **CPU** is the effective knob: most actions declare one CPU, so
-  `--local_resources=cpu=HOST_CPUS-2` limits how many actions run locally at the
-  same time and leaves two CPUs to the desktop. `HOST_CPUS` counts hardware
-  threads (not physical cores), or the CPU limit of a container.
-- **Memory** stays at Bazel's default of `HOST_RAM*.67`. It is only checked
-  against the RAM each action declares, which is an estimate for most actions.
-  The Bazel server, persistent workers (e.g. tsc, mypy) and tests that use more
-  than declared are not counted, so a lower limit would not reliably prevent
-  swapping or OOM kills.
-- **Workers** stay at Bazel's default of 4 per worker kind (mnemonic). Worker
-  actions also wait for free CPUs, so more workers would only add resident
-  memory.
-- Tools which run several threads per action (e.g. rustc, linkers) can still use
-  more CPUs than the limit suggests.
-
-### Disk usage
-
-Bazel keeps several caches below `~/.cache`:
-
-| Path                                  | Bounded by                                                     |
-| ------------------------------------- | -------------------------------------------------------------- |
-| `~/.cache/bazel_disk_cache/`          | 30G, collected in the background once the Bazel server is idle |
-| `~/.cache/bazel/repo_contents_cache/` | entries unused for 14 days are collected                       |
-| `~/.cache/bazel/_bazel_$USER/<hash>/` | nothing: one output base per worktree                          |
-
-### Personal overrides
-
-Put options for all worktrees into `~/.bazelrc` and options for a single
-worktree into `user.bazelrc` in its root (not tracked by git). Both are read
-after the repository defaults, so their values win.
-
-Further options to try if the machine still becomes unresponsive:
+A good default to reign in bazel is
 
 ```
-# Run the Bazel server with lower CPU and IO priority
-startup --batch_cpu_scheduling
+# --- 1. Prevent Disk/CPU priority hogging (The "Browser Savers") ---
 startup --io_nice_level=7
+startup --batch_cpu_scheduling
 
-# Cap the heap of the Bazel server
+# --- 2. Cap the Server itself ---
 startup --host_jvm_args=-Xmx4g
 
-# Schedule local actions based on the actual CPU load instead of declared costs
-# (experimental, used on CI)
-common --experimental_cpu_load_scheduling
+# --- 3. Existing Limits (Accumulated is fine!) ---
+common --local_resources=cpu=HOST_CPUS*.5
+common --local_resources=memory=HOST_RAM*.5
 
-# Fewer threads for loading and analysis
+# --- 4. The Hidden CPU hog (Analysis Phase) ---
 common --loading_phase_threads=HOST_CPUS*.5
 ```

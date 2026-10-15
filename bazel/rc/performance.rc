@@ -1,14 +1,7 @@
-# Resource usage of local execution
-#
-# HOST_CPUS and HOST_RAM come from the JVM of the Bazel server, which honours cgroup limits, so they
-# match the developer machine.  Do not pin -XX:ActiveProcessorCount: HOST_CPUS would take that
-# value on every host (CMK-39409).
+# Resource usage of the Bazel server
 
-# Keep a developer machine responsive while building: leave two CPUs to the desktop.
-# Most actions declare one CPU, so this effectively limits how many run in parallel.
-# The keyword scales with the host, so there is no fixed --jobs.
-common --local_resources=cpu=HOST_CPUS-2
-
-# Memory and persistent workers stay at Bazel's defaults (memory=HOST_RAM*.67,
-# 4 workers per mnemonic): the memory check only uses each action's declared,
-# estimated RAM, and more workers would only add resident memory.
+# Limit JVM thread pools to match cgroup CPU limit (nproc reports host CPUs, not cgroup)
+# --host_jvm_args is a startup option, see https://bazel.build/run/bazelrc
+startup --host_jvm_args=-XX:ActiveProcessorCount=8
+startup --host_jvm_args=-XX:ParallelGCThreads=4
+startup --host_jvm_args=-XX:ConcGCThreads=2

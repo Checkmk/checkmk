@@ -106,11 +106,10 @@ export interface SlideInWriterOptions<TRow, TIdentity> {
 /**
  * The open detail panel as a slice of the URL fragment.
  *
- * The fragment rather than the query string because opening a panel is a
- * navigation: it gets its own history entry, so Back closes the panel and
- * returns to the listing instead of leaving the page. The query string keeps
- * carrying what the listing shows, and Back over a filter change would be a
- * different feature.
+ * The fragment rather than the query string, which keeps carrying what the
+ * listing shows. Like every other slice it rewrites the current history entry
+ * instead of adding one: Back leaves the page rather than closing the panel,
+ * and opening and closing panels leaves no entries behind for Back to reopen.
  *
  * A fragment is honoured exactly once per navigation, and only after the
  * listing has answered: a row it has is opened from the row it loaded and
@@ -153,7 +152,6 @@ class SlideInUrlSlice<TRow, TIdentity> {
       name: 'slide-in',
       keys: [...descriptor.keys, TAB_KEY],
       target: 'hash',
-      history: 'push',
       params: this.params(),
       apply: (params) => this.applyUrl(params)
     }

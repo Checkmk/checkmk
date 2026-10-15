@@ -60,12 +60,6 @@ export interface UrlStateWriter {
   /** Defaults to `'query'`. */
   readonly target?: UrlStateTarget
   /**
-   * `'push'` gives the change its own history entry, so Back undoes it;
-   * `'replace'` (the default) rewrites the current one. Adjusting the listing
-   * you are already looking at is not a navigation - opening a detail panel is.
-   */
-  readonly history?: 'push' | 'replace'
-  /**
    * Called when the user navigates the history, with this slice's params as the
    * URL now spells them. A slice without it is write-only: Back and Forward
    * change the address bar and nothing else.

@@ -24,6 +24,7 @@ from cmk.plugins.aws_v2.special_agent.hosts import (
     HostedResource,
     LoadBalancerV2,
     PiggybackResource,
+    RDSInstance,
     S3Bucket,
     SOURCE_HOST,
     target_host,
@@ -186,3 +187,9 @@ def test_elasticache_node_goes_to_a_host_per_node() -> None:
     node = ElastiCacheNode("test-redis-cluster-3-0001-001")
 
     assert target_host(node, DEFAULT_NAMING) == "test-redis-cluster-3-0001-001"
+
+
+def test_rds_instance_goes_to_a_host_per_instance() -> None:
+    instance = RDSInstance("mydb")
+
+    assert target_host(instance, DEFAULT_NAMING) == "mydb"

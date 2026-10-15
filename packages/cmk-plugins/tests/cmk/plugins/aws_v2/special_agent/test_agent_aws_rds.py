@@ -19,7 +19,13 @@ from cmk.plugins.aws_v2.special_agent.config import (
 )
 from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
-from cmk.plugins.aws_v2.special_agent.sections.rds import RDS, RDSLimits, RDSSummary
+from cmk.plugins.aws_v2.special_agent.sections.rds import (
+    ON_INSTANCE_HOST,
+    RDS,
+    RDSLabels,
+    RDSLimits,
+    RDSSummary,
+)
 
 from .agent_aws_fake_clients import (
     FakeCloudwatchClient,
@@ -77,7 +83,7 @@ class FakeRDSClient:
         raise NotImplementedError
 
 
-RDSSectionsOut = tuple[RDSLimits, RDSSummary, RDS]
+RDSSectionsOut = tuple[RDSLimits, RDSSummary, RDSLabels, RDS]
 
 
 class RDSSections(Protocol):
@@ -95,7 +101,7 @@ def get_rds_sections() -> RDSSections:
         names: object | None = None,
         tags: OverallTags = (None, None),
         tag_import: TagsOption = TagsImportPatternOption.import_all,
-    ) -> tuple[RDSLimits, RDSSummary, RDS]:
+    ) -> RDSSectionsOut:
         region = "region"
         config = AWSConfig(
             "hostname",
@@ -115,10 +121,11 @@ def get_rds_sections() -> RDSSections:
         # TODO: FakeRDSClient shoud actually subclass RDSClient, etc.
         rds_limits = RDSLimits(FakeRDSClient(), region, config)
         rds_summary = RDSSummary(fake_rds_client, region, config, distributor)
+        rds_labels = RDSLabels(fake_rds_client, region, config)
         rds = RDS(fake_cloudwatch_client, region, config)
-
+        distributor.add(rds_summary.name, rds_labels)
         distributor.add(rds_summary.name, rds)
-        return rds_limits, rds_summary, rds
+        return rds_limits, rds_summary, rds_labels, rds
 
     return _create_rds_sections
 
@@ -174,7 +181,7 @@ def test_agent_aws_rds_limits(
     tags: OverallTags,
     found_instances: Sequence[str],  # noqa: ARG001
 ) -> None:
-    rds_limits, _rds_summary, _rds = get_rds_sections(names, tags)
+    rds_limits, _rds_summary, _rds_labels, _rds = get_rds_sections(names, tags)
     rds_limits_results = rds_limits.run().results
 
     assert rds_limits.cache_interval == 300
@@ -195,20 +202,19 @@ def test_agent_aws_rds_summary(
     tags: OverallTags,
     found_instances: Sequence[str],
 ) -> None:
-    _rds_limits, rds_summary, _rds = get_rds_sections(names, tags)
+    _rds_limits, rds_summary, _rds_labels, _rds = get_rds_sections(names, tags)
     rds_summary_results = rds_summary.run().results
 
     assert rds_summary.cache_interval == 300
     assert rds_summary.period == 600
     assert rds_summary.name == "rds_summary"
 
+    account_results = [r for r in rds_summary_results if r.piggyback_hostname is SOURCE_HOST]
     if found_instances:
-        assert len(rds_summary_results) == 1
-        rds_summary_result = rds_summary_results[0]
-        assert rds_summary_result.piggyback_hostname is SOURCE_HOST
-        assert len(rds_summary_result.content) == len(found_instances)
+        assert len(account_results) == 1
+        assert len(account_results[0].content) == len(found_instances)
     else:
-        assert len(rds_summary_results) == 0
+        assert len(account_results) == 0
 
 
 @pytest.mark.parametrize("names,tags,found_instances", rds_params)
@@ -218,7 +224,7 @@ def test_agent_aws_rds(
     tags: OverallTags,
     found_instances: Sequence[str],
 ) -> None:
-    _rds_limits, rds_summary, rds = get_rds_sections(names, tags)
+    _rds_limits, rds_summary, _rds_labels, rds = get_rds_sections(names, tags)
     rds_summary.run()
     rds_results = rds.run().results
 
@@ -226,14 +232,10 @@ def test_agent_aws_rds(
     assert rds.period == 600
     assert rds.name == "rds"
 
-    if found_instances:
-        assert len(rds_results) == 1
-        rds_result = rds_results[0]
-        assert rds_result.piggyback_hostname is SOURCE_HOST
-        # 21 (metrics) * X (DBs) == Y (len results)
-        assert len(rds_result.content) == 21 * len(found_instances)
-    else:
-        assert len(rds_results) == 0
+    # 21 metrics per instance, each instance on its own host
+    assert {
+        result.piggyback_hostname: len(result.content) for result in rds_results
+    } == dict.fromkeys(found_instances, 21)
 
 
 @pytest.mark.parametrize(
@@ -249,11 +251,81 @@ def test_agent_aws_rds_tags_are_filtered(
     tag_import: TagsOption,
     expected_tags: list[str],
 ) -> None:
-    _rds_limits, rds_summary, rds = get_rds_sections(tag_import=tag_import)
+    _rds_limits, rds_summary, _rds_labels, rds = get_rds_sections(tag_import=tag_import)
     rds_summary.run()
     rds_results = rds.run().results
 
-    assert len(rds_results) == 1
     # We assume all instances follow the same schema so we don't repeat the test n times
     row = rds_results[0].content[0]
     assert list(row["TagsForCmkLabels"].keys()) == expected_tags
+
+
+def test_agent_aws_rds_summary_reaches_each_instance_host_with_only_its_instance(
+    get_rds_sections: RDSSections,
+) -> None:
+    _rds_limits, rds_summary, _rds_labels, _rds = get_rds_sections()
+
+    rds_summary_results = rds_summary.run().results
+
+    assert {
+        result.piggyback_hostname: [
+            (instance["DBInstanceIdentifier"], instance.get(ON_INSTANCE_HOST))
+            for instance in result.content
+        ]
+        for result in rds_summary_results
+        if result.piggyback_hostname
+    } == {
+        "DBInstanceIdentifier-0": [("DBInstanceIdentifier-0", True)],
+        "DBInstanceIdentifier-1": [("DBInstanceIdentifier-1", True)],
+        "DBInstanceIdentifier-2": [("DBInstanceIdentifier-2", True)],
+    }
+
+
+def test_agent_aws_rds_summary_on_the_account_host_has_no_instance_host_marker(
+    get_rds_sections: RDSSections,
+) -> None:
+    _rds_limits, rds_summary, _rds_labels, _rds = get_rds_sections()
+
+    rds_summary_results = rds_summary.run().results
+
+    account_instances = [r for r in rds_summary_results if r.piggyback_hostname is SOURCE_HOST][
+        0
+    ].content
+    assert [ON_INSTANCE_HOST in instance for instance in account_instances] == [False] * 3
+
+
+def test_agent_aws_rds_tags_go_to_the_host_of_their_instance(
+    get_rds_sections: RDSSections,
+) -> None:
+    _rds_limits, rds_summary, rds_labels, _rds = get_rds_sections()
+    rds_summary.run()
+
+    rds_labels_results = rds_labels.run().results
+
+    # The third instance has no tags, so its host gets no labels section.
+    assert {result.piggyback_hostname: result.content for result in rds_labels_results} == {
+        "DBInstanceIdentifier-0": {
+            "Key-0": "Value-0",
+            "Key-1": "Value-1",
+            "Key-2": "Value-2",
+        },
+        "DBInstanceIdentifier-1": {
+            "Key-0": "Value-0",
+            "Key-1": "Value-1",
+            "Key-2": "Value-2",
+        },
+    }
+
+
+def test_agent_aws_rds_instance_hosts_get_the_service_label(
+    get_rds_sections: RDSSections,
+) -> None:
+    _rds_limits, rds_summary, _rds_labels, rds = get_rds_sections()
+
+    results = [*rds_summary.run().results, *rds.run().results]
+
+    assert {
+        result.piggyback_hostname: result.piggyback_host_labels
+        for result in results
+        if result.piggyback_hostname
+    } == {f"DBInstanceIdentifier-{i}": {"cmk/aws/service": "rds"} for i in range(3)}

@@ -22,12 +22,26 @@ from .core import (
     AWSRawContent,
     AWSSection,
     AWSSectionCloudwatch,
+    AWSSectionLabels,
     AWSSectionLimits,
     AWSSectionResult,
     Metric,
     Metrics,
     ResultDistributor,
 )
+
+RDS_HOST_LABELS: Mapping[str, str] = {"cmk/aws/service": "rds"}
+
+# The RDS summary goes to the account host with all instances and to each instance host with
+# only that instance. The copy on an instance host carries this key, so that the checks find
+# the "Summary" service on the account host and the per-instance "Info" service on the
+# instance hosts only.
+ON_INSTANCE_HOST = "CmkOnInstanceHost"
+
+
+def _rds_instance(instance: Mapping[str, object]) -> hosts.RDSInstance:
+    return hosts.RDSInstance(str(instance["DBInstanceIdentifier"]))
+
 
 AWSRDSLimitNameMap: Mapping[str, tuple[str, str]] = {
     "DBClusters": ("db_clusters", "DB clusters"),
@@ -193,11 +207,60 @@ class RDSSummary(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        instances = list(computed_content.content.values())
         return [
-            AWSSectionResult(
-                self._target_host(hosts.AccountScope()), list(computed_content.content.values())
-            )
+            AWSSectionResult(self._target_host(hosts.AccountScope()), instances),
+            *(
+                AWSSectionResult(
+                    self._target_host(_rds_instance(instance)),
+                    [{**instance, ON_INSTANCE_HOST: True}],
+                    RDS_HOST_LABELS,
+                )
+                for instance in instances
+            ),
         ]
+
+
+class RDSLabels(AWSSectionLabels):
+    @property
+    @override
+    def name(self) -> str:
+        return "rds_labels"
+
+    @property
+    @override
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    @override
+    def granularity(self) -> int:
+        return 300
+
+    @override
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        colleague = self._received_results.get("rds_summary")
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    @override
+    def get_live_data(self, *args: AWSColleagueContents) -> Mapping[str, Mapping[str, object]]:
+        (colleague_contents,) = args
+        return colleague_contents.content
+
+    @override
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        return AWSComputedContent(
+            {
+                self._target_host(_rds_instance(instance)): instance["TagsForCmkLabels"]
+                for instance in raw_content.content.values()
+                if instance.get("TagsForCmkLabels")
+            },
+            raw_content.cache_timestamp,
+        )
 
 
 class RDS(AWSSectionCloudwatch):
@@ -295,11 +358,16 @@ class RDS(AWSSectionCloudwatch):
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
+        content_by_instance: dict[hosts.RDSInstance, list[Mapping[str, object]]] = {}
         for row in raw_content.content:
             instance_id = row["Label"].split(self._separator)[0]
             row.update(colleague_contents.content.get(instance_id, {}))
-        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+            content_by_instance.setdefault(hosts.RDSInstance(instance_id), []).append(row)
+        return AWSComputedContent(content_by_instance, raw_content.cache_timestamp)
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
+        return [
+            AWSSectionResult(self._target_host(instance), rows, RDS_HOST_LABELS)
+            for instance, rows in computed_content.content.items()
+        ]

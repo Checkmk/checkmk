@@ -60,7 +60,7 @@ from .sections.elbv2 import (
     ELBv2TargetGroups,
 )
 from .sections.glacier import Glacier, GlacierLimits, GlacierSummary
-from .sections.rds import RDS, RDSLimits, RDSSummary
+from .sections.rds import RDS, RDSLabels, RDSLimits, RDSSummary
 from .sections.route53 import Route53Cloudwatch, Route53HealthChecks
 from .sections.s3 import (
     ResultDistributorS3Limits,
@@ -145,6 +145,8 @@ def datetime_serializer(obj):
 # RDSLimits
 
 # RDSSummary
+# |
+# |-- RDSLabels
 # |
 # '-- RDS
 
@@ -685,11 +687,14 @@ class AWSSectionsGeneric(AWSSections):
             rds_client = self._init_client("rds")
             rds_summary = RDSSummary(rds_client, region, config, distributor)
             rds_limits = RDSLimits(rds_client, region, config)
+            rds_labels = RDSLabels(rds_client, region, config)
             rds = RDS(cloudwatch_client, region, config)
+            distributor.add(rds_summary.name, rds_labels)
             distributor.add(rds_summary.name, rds)
             if config.service_config.get("rds_limits"):
                 self._sections.append(rds_limits)
             self._sections.append(rds_summary)
+            self._sections.append(rds_labels)
             self._sections.append(rds)
 
         if "cloudwatch_alarms" in services:

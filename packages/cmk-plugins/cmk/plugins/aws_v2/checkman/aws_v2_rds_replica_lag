@@ -21,5 +21,6 @@ item:
  in case of multi-region monitoring).
 
 discovery:
- One service is created for each database if all required metrics
+ Each instance is a piggyback host with the name {<instance ID>}.
+ One service is created on this host if all required metrics
  (ReplicaLag) are given.

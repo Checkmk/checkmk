@@ -29,8 +29,8 @@ def check_fireeye_bypass(_no_item, params, info):
         yield 2, " (was %d before)" % expected_value
 
 
-def parse_fireeye_bypass(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_fireeye_bypass(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["fireeye_bypass"] = LegacyCheckDefinition(

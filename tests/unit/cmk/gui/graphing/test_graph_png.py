@@ -43,7 +43,7 @@ from cmk.gui.graphing._graph_png import (
     render_png,
 )
 from cmk.gui.graphing._graph_png_size import MM_PER_INCH, PngOptions
-from cmk.gui.graphing._user_specific_unit import formatter_from_unit
+from cmk.web.utils.unit_formatter import DecimalFormatter
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TIME_RANGE = TimeRange(start=0, end=180, step=60)
@@ -197,7 +197,7 @@ def test_mirrored_y_labels_mirrors_positive_text_to_the_negative_side() -> None:
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
     ax.set_ylim(-2000, 2000)
-    formatter = formatter_from_unit(Unit(notation=DecimalNotation("B"), precision=AutoPrecision(2)))
+    formatter = DecimalFormatter(symbol="B", precision_kind="auto", digits=2)
 
     labels = _mirrored_y_labels(ax, formatter, 4.0)
 

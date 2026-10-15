@@ -31,7 +31,7 @@ from cmk.gui.type_defs import ColumnName
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.livestatus_client.tables.services import Services
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat
-from cmk.web.utils.unit_formatter import NotationFormatter
+from cmk.web.utils.unit_formatter import notation_formatter, NotationFormatter
 
 from ._performance_data import (
     parse_performance_data,
@@ -41,7 +41,6 @@ from ._performance_data import (
 from ._unit_format import unit_to_unit_format
 from ._user_specific_unit import (
     apply_temperature_unit,
-    formatter_from_unit_format,
     user_specific_unit_from_unit_format,
 )
 
@@ -523,7 +522,12 @@ def evaluated_metrics(
             name=name,
             title=attributes.title,
             color=attributes.color,
-            formatter=formatter_from_unit_format(unit_format),
+            formatter=notation_formatter(
+                unit_format.notation,
+                unit_format.symbol,
+                unit_format.precision.type,
+                unit_format.precision.digits,
+            ),
             unit_format=unit_format,
             performance_data=_in_user_unit(performance_data, conversion),
         )

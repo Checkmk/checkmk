@@ -28,18 +28,19 @@ from cmk.graphing_engine import (
     EvaluatedRule,
     EvaluatedStack,
     NonConvertibleUnit,
+    notation_name,
+    precision_kind,
     TimeRange,
     TimeSeries,
     timestamps,
     Unit,
     VerticalRangeKind,
 )
-from cmk.web.utils.unit_formatter import Label, NotationFormatter
+from cmk.web.utils.unit_formatter import Label, notation_formatter, NotationFormatter
 
 from ._drawn_curves import drawn_curves
 from ._graph_png_size import ex_to_inches, legend_height_ex, PngOptions
 from ._time_axis import compute_time_axis
-from ._user_specific_unit import formatter_from_unit
 
 DPI = 96
 TITLE_COLOR = "#1E262E"
@@ -580,7 +581,16 @@ def render_png(
     # The legend always lists every rule (e.g. warning/critical), even ones outside the visible
     # Y range; only the drawn horizontal lines are restricted to the in-range subset.
     in_range_rules = _rules_in_range(graph.rules, lower, upper)
-    formatter = None if y_axis_unit is None else formatter_from_unit(y_axis_unit)
+    formatter = (
+        None
+        if y_axis_unit is None
+        else notation_formatter(
+            notation_name(y_axis_unit.notation),
+            y_axis_unit.notation.symbol,
+            precision_kind(y_axis_unit.precision),
+            y_axis_unit.precision.digits,
+        )
+    )
     table_height_ex = legend_height_ex(graph, options)
 
     width_in = ex_to_inches(options.size[0], options.font_size)

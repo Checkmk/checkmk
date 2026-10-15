@@ -133,7 +133,7 @@ class ABCViewDashlet(IFrameDashlet[VT]):
     @classmethod
     @override
     def responsive_layout_constraints(cls) -> ResponsiveLayoutConstraints:
-        return ResponsiveLayoutConstraints.large_default()
+        return ResponsiveLayoutConstraints.large_default().with_minimum_height(2)
 
     def _get_infos_from_view_spec(self, view_spec: ViewSpec | ViewDashletConfig) -> SingleInfos:
         ds_name = view_spec["datasource"]

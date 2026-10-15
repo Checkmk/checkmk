@@ -57,6 +57,9 @@ def _check_backup_age(data, params, state):
     else:
         return 2, "No complete Backup(!!)"
 
+    if age < 0:
+        return 3, "Last backup: end time is in the future(?)"
+
     warn, crit = params["age"]
     levels = ""
     label = ""

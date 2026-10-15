@@ -139,15 +139,10 @@ def test_inventory_veeam_client(
             ],
             [
                 3,
-                "Status: Success, Size (total): 100 B, Last backup: end time is in the future, "
-                "Duration: 1 hour 0 minutes, Average Speed: 100 B/s",
+                "Status: Success, Size (total): 100 B, Last backup: end time is in the "
+                "future(?), Duration: 1 hour 0 minutes, Average Speed: 100 B/s",
                 [("totalsize", 100), ("duration", 3600), ("avgspeed", 100)],
             ],
-            marks=pytest.mark.xfail(
-                strict=True,
-                raises=ValueError,
-                reason="Crash report 95a39968-b207-11f0-bd07-0050569e71f5: ValueError",
-            ),
             id="negative LastBackupAge from clock skew",
         ),
     ],

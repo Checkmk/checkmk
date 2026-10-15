@@ -27,7 +27,7 @@ def check_lvm_vgs(item, params, info):
 
 
 def parse_lvm_vgs(string_table: StringTable) -> StringTable:
-    return string_table
+    return [line for line in string_table if len(line) == 7]
 
 
 check_info["lvm_vgs"] = LegacyCheckDefinition(

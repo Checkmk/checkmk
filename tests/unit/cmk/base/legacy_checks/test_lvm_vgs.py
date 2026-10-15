@@ -11,11 +11,7 @@ from cmk.base.check_legacy_includes.df import FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.legacy_checks.lvm_vgs import check_lvm_vgs, parse_lvm_vgs
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report 40c86a5e-9e89-11f0-a01e-0050569ce904: ValueError",
-)
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_lvm_vgs_ignores_foreign_line() -> None:
     section = parse_lvm_vgs(
         [

@@ -74,6 +74,14 @@ class TerminateAgent(RuntimeError):
     """
 
 
+class AccessDenied(TerminateAgent):
+    """The Veeam user may not read an endpoint (HTTP 403)."""
+
+    def __init__(self, path: str) -> None:
+        self.endpoint = path.split("?", 1)[0]
+        super().__init__(f"Access to {self.endpoint} was denied (HTTP 403)")
+
+
 class VeeamApiError(RuntimeError):
     """The REST API answered a request with an HTTP error."""
 
@@ -370,10 +378,7 @@ class VeeamClient:
                 f"The Veeam REST API rejected the session on {path}: {error.message}"
             ) from error
         if error.status == HTTPStatus.FORBIDDEN:
-            raise TerminateAgent(
-                f"Access to {path} was denied (HTTP 403): {error.message} "
-                f"(the Veeam user lacks a role required for this endpoint)"
-            ) from error
+            raise AccessDenied(path) from error
         raise TerminateAgent(str(error)) from error
 
     def get_all(self, path: str, limit: int | None = None, extra_params: str = "") -> list[object]:
@@ -1046,7 +1051,12 @@ def write_sections(client: VeeamClient, sections: Sequence[Section]) -> None:
     """Each piggyback host is written once, with the sections of all fetches for it."""
     piggyback: dict[str, list[str]] = {}
     for name, fetch in sections:
-        fetched = fetch(client, name)
+        try:
+            fetched = fetch(client, name)
+        except AccessDenied as exc:
+            raise TerminateAgent(
+                f"Could not create section '{name}': denied permission to endpoint {exc.endpoint}"
+            ) from exc
         sys.stdout.write(fetched.own)
         for host, text in fetched.piggyback.items():
             piggyback.setdefault(host, []).append(text)

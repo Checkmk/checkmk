@@ -272,10 +272,9 @@ def test_broken_response_on_a_data_endpoint_does_stop_the_other_sections(
     assert "<<<veeam_jobs:sep(0)>>>" not in captured.out
 
 
-def test_access_denied_is_fatal(
+def test_access_denied_names_the_section_and_the_endpoint(
     api: responses.RequestsMock, storage: Storage, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    # The API message ends with a period; the appended note must not double it up.
     api.get(
         f"{URL}/api/v1/replicas",
         status=HTTPStatus.FORBIDDEN,
@@ -287,10 +286,9 @@ def test_access_denied_is_fatal(
             _client(_auth(storage), storage), [("veeam_replicas", fetch_list("/api/v1/replicas"))]
         )
 
-    message = str(excinfo.value)
-    assert "HTTP 403" in message
-    assert "lacks a role" in message
-    assert ".." not in message
+    assert str(excinfo.value) == (
+        "Could not create section 'veeam_replicas': denied permission to endpoint /api/v1/replicas"
+    )
     assert capsys.readouterr().out == ""
 
 

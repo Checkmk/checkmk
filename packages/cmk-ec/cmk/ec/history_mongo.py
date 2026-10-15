@@ -135,20 +135,28 @@ class MongoDBHistory(History):
 
 def filters_to_mongo_query(
     filters: Iterable[QueryFilter],
-) -> dict[str, str | dict[str, object]]:
+) -> dict[str, object]:
     """Construct the mongodb filtering specification."""
-    mongo_query = {}
+    mongo_query: dict[str, object] = {}
+    further_conditions: list[dict[str, object]] = []
     for f in filters:
-        mongo_filter = query_filter_to_mongo_filter(f)
         if f.column_name[:6] == "event_":
-            mongo_query["event." + f.column_name[6:]] = mongo_filter
+            key = "event." + f.column_name[6:]
         elif f.column_name[:8] == "history_":
             key = f.column_name[8:]
             if key == "line":
                 key = "_id"
-            mongo_query[key] = mongo_filter
         else:
             raise Exception(f"Filter {f.column_name} not implemented for MongoDB")
+        mongo_filter = query_filter_to_mongo_filter(f)
+        # A key can occur only once in a query document, so further conditions
+        # for the same key need an explicit $and.
+        if key in mongo_query:
+            further_conditions.append({key: mongo_filter})
+        else:
+            mongo_query[key] = mongo_filter
+    if further_conditions:
+        mongo_query["$and"] = further_conditions
     return mongo_query
 
 

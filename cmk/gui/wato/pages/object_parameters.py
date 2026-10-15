@@ -38,7 +38,6 @@ from cmk.gui.watolib.check_mk_automations import analyse_host, analyse_service
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
-    folder_preserving_link,
     Host,
     make_folder_tree,
 )
@@ -344,7 +343,7 @@ class ModeObjectParameters(WatoMode):
             return
 
         rulespec = rulespec_registry[RuleGroup.StaticChecks(checkgroup)]
-        url = folder_preserving_link(
+        url = self._host.folder().url(
             request,
             [
                 ("mode", "edit_ruleset"),
@@ -460,12 +459,12 @@ class ModeObjectParameters(WatoMode):
             )
         rule_folder, rule_index, rule = origin_rule_result
 
-        url = folder_preserving_link(
+        url = self._host.folder().url(
             request,
             [("mode", "edit_ruleset"), ("varname", "custom_checks"), ("host", self._hostname)],
         )
         forms.section(HTMLWriter.render_a(_("Command line"), href=url))
-        url = folder_preserving_link(
+        url = self._host.folder().url(
             request,
             [
                 ("mode", "edit_rule"),
@@ -582,7 +581,7 @@ class ModeObjectParameters(WatoMode):
             known_settings = self._PARAMETERS_UNKNOWN
 
         def rule_url(rule: Rule) -> str:
-            return folder_preserving_link(
+            return self._host.folder().url(
                 request,
                 [
                     ("mode", "edit_rule"),
@@ -601,7 +600,7 @@ class ModeObjectParameters(WatoMode):
         varname = rulespec.name
         value_model = rulespec.value_model
 
-        url = folder_preserving_link(
+        url = self._host.folder().url(
             request,
             [
                 ("mode", "edit_ruleset"),

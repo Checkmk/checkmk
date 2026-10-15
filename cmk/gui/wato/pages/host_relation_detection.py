@@ -37,7 +37,6 @@ from cmk.gui.watolib.host_relation_detection import (
 )
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
-    folder_preserving_link,
     make_folder_tree,
     SearchFolder,
 )
@@ -109,7 +108,7 @@ def _opened_from(folders: Sequence[ScopeChoice]) -> str:
     return wanted if any(folder.name == wanted for folder in folders) else "/"
 
 
-def _folder_page_menu_entries(_folder: Folder | SearchFolder) -> Iterator[PageMenuEntry]:
+def _folder_page_menu_entries(folder: Folder | SearchFolder) -> Iterator[PageMenuEntry]:
     # Next to the other tools that work on all of Setup rather than on the folder at hand: the
     # page reads every host, and only starts out looking for relations in this folder.
     if user.may("wato.edit") and user.may("wato.hosts") and user.may("wato.edit_hosts"):
@@ -117,7 +116,7 @@ def _folder_page_menu_entries(_folder: Folder | SearchFolder) -> Iterator[PageMe
             title=_("Relation detection"),
             icon_name=StaticIcon(IconNames.link),
             item=make_simple_link(
-                folder_preserving_link(request, [("mode", ModeHostRelationDetection.name())])
+                folder.url(request, [("mode", ModeHostRelationDetection.name())])
             ),
         )
 

@@ -104,7 +104,6 @@ from cmk.gui.watolib.host_relations import relations_deletion_note
 from cmk.gui.watolib.hosts_and_folders import (
     collect_all_hosts,
     folder_from_request,
-    folder_preserving_link,
     FolderTree,
     Host,
     host_url_resolver,
@@ -409,7 +408,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             host_name = None
         folder = folder_from_request(tree, request.var("folder"), host_name)
         if tree.host_exists(self._host.name()):
-            all_agents_url = folder_preserving_link(
+            all_agents_url = self._host.folder().url(
                 request, [("mode", "agent_of_host"), ("host", self._host.name())]
             )
         else:
@@ -811,7 +810,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             title=_("Properties"),
             icon_name=StaticIcon(IconNames.edit),
             item=make_simple_link(
-                folder_preserving_link(
+                host.folder().url(
                     request, [("mode", "edit_host"), (ABCHostMode.VAR_HOST, host.name())]
                 )
             ),
@@ -822,7 +821,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             title=_("Run service discovery"),
             icon_name=StaticIcon(IconNames.services),
             item=make_simple_link(
-                folder_preserving_link(
+                host.folder().url(
                     request, [("mode", "inventory"), (ABCHostMode.VAR_HOST, host.name())]
                 )
             ),
@@ -833,7 +832,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             title=_("Test connection"),
             icon_name=StaticIcon(IconNames.analysis),
             item=make_simple_link(
-                folder_preserving_link(
+                host.folder().url(
                     request, [("mode", "diag_host"), (ABCHostMode.VAR_HOST, host.name())]
                 )
             ),
@@ -859,7 +858,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             title=_("Effective parameters"),
             icon_name=StaticIcon(IconNames.rulesets),
             item=make_simple_link(
-                folder_preserving_link(
+                host.folder().url(
                     request,
                     [("mode", "object_parameters"), (ABCHostMode.VAR_HOST, host.name())],
                 ),
@@ -893,7 +892,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             title=_("Clustered services"),
             icon_name=StaticIcon(IconNames.rulesets),
             item=make_simple_link(
-                folder_preserving_link(
+                host.folder().url(
                     request, [("mode", "edit_ruleset"), ("varname", "clustered_services")]
                 )
             ),
@@ -908,7 +907,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
                 title=_("Rename"),
                 icon_name=StaticIcon(IconNames.rename_host),
                 item=make_simple_link(
-                    folder_preserving_link(
+                    host.folder().url(
                         request,
                         [("mode", "rename_host"), (ABCHostMode.VAR_HOST, host.name())],
                     )
@@ -1076,7 +1075,7 @@ class CreateHostMode(ABCHostMode):
         self._host = folder.load_host(hostname)
         bakery.try_bake_agents_for_hosts([hostname], debug=config.debug)
 
-        inventory_url = folder_preserving_link(
+        inventory_url = self._host.folder().url(
             request,
             [
                 ("mode", "inventory"),

@@ -149,7 +149,7 @@ _filter_operators: dict[str, tuple[OperatorName, Callable[[Any, Any], bool]]] = 
     "=": ("=", operator.eq),
     "~": ("~", lambda a, b: bool(re.search(b, a))),
     "=~": ("=~", lambda a, b: a.lower() == b.lower()),
-    "~~": ("~~", lambda a, b: bool(re.search(b.lower(), a.lower()))),
+    "~~": ("~~", lambda a, b: bool(re.search(b, a, re.IGNORECASE))),
     "<": ("<", operator.lt),
     ">=": (">=", operator.ge),
     ">": (">", operator.gt),

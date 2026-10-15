@@ -47,6 +47,11 @@ def test_tilde_tilde_differs_from_case_sensitive_tilde() -> None:
     assert case_insensitive("Hello", "hello") is True
 
 
+def test_tilde_tilde_keeps_the_meaning_of_uppercase_regex_escapes() -> None:
+    _, cmp = operator_for("~~")
+    assert cmp("Disk full", r"^\S+ full$") is True
+
+
 def test_eq_tilde_differs_only_in_case() -> None:
     _, cmp = operator_for("=~")
     assert cmp("Hello", "hello") is True

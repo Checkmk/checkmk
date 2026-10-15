@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
+import pytest
 import time_machine
 
 import cmk.ec.export as ec
@@ -54,6 +55,41 @@ def test_file_add_get(history: FileHistory) -> None:
     column_index = get_table("history").column_names.index
     assert row[column_index("history_what")] == "NEW"
     assert row[column_index("event_host")] == "ABC1"
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "operator_name, argument, expected_texts",
+    [
+        pytest.param("~",  "load",          {"CPU load high"},   id="plain string"),
+        pytest.param("~~", "LOAD",          {"CPU load high"},   id="plain string, ignoring case"),
+        pytest.param("~",  "Event.17",      {"Event 17"},        id="dot"),
+        pytest.param("~~", "EVENT.17",      {"Event 17"},        id="dot, ignoring case"),
+        pytest.param("~",  r"www\.example", {"www.example.com"}, id="escaped dot"),
+        pytest.param("~",  "^disk",         {"disk full"},       id="anchored at the start of the value"),
+        pytest.param("~",  "full$",         {"disk full"},       id="anchored at the end of the value"),
+        pytest.param("~~", "^DISK",         {"disk full"},       id="anchored, ignoring case"),
+        pytest.param("~",  r"\d",           {"Event 17"},        id="escape unknown to grep"),
+        pytest.param("~",  "(?i)cpu",       {"CPU load high"},   id="inline flag unknown to grep"),
+    ],
+)
+# fmt: on
+def test_regex_filter_selects_all_history_entries_whose_value_matches(
+    history: FileHistory, operator_name: str, argument: str, expected_texts: set[str]
+) -> None:
+    for text in ("disk full", "Event 17", "CPU load high", "www.example.com"):
+        history.add(event=ec.Event(text=text), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history)
+    query = QueryGET(
+        lambda _name: table,
+        ["GET history", "Columns: event_text", f"Filter: event_text {operator_name} {argument}"],
+        logger,
+    )
+
+    _header, *rows = table.query(query)
+
+    assert {text for (text,) in rows} == expected_texts
 
 
 def test_current_history_period(config: Config) -> None:

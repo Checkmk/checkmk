@@ -11,6 +11,40 @@ from urllib.parse import quote as urlquote
 _STORAGE_PATH_ENV: Final = "SERVER_SIDE_PROGRAM_STORAGE_PATH"
 
 
+def _get_base_path() -> Path:
+    if p := os.getenv(_STORAGE_PATH_ENV):
+        return Path(p)
+    raise RuntimeError(f"{_STORAGE_PATH_ENV} environment variable is not set.")
+
+
+def _sanitize_key(key: str) -> str:
+    skey = urlquote(key, safe="")
+    if len(skey) > 255:
+        raise ValueError(f"too long (max 255 characters after URL quoting): {skey!r}")
+    return skey
+
+
+def _storage_dir(*, host: str, ident: str) -> Path:
+    return Path(_get_base_path(), _sanitize_key(host), _sanitize_key(ident))
+
+
+def _key_path(directory: Path, key: str) -> Path:
+    return directory / _sanitize_key(key)
+
+
+def _write_atomically(path: Path, content: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # The "%t" prefix can never be the result of URL quoting, so the temporary
+    # file never collides with a key. The replace stays inside the with, so any
+    # exception deletes the temp file instead.
+    with tempfile.NamedTemporaryFile(
+        "wb", dir=path.parent, prefix="%tmp", delete_on_close=False
+    ) as tmp:
+        tmp.write(content)
+        tmp.close()
+        os.replace(tmp.name, path)
+
+
 class Storage:
     """
     Storage interface for special agents and active checks.
@@ -30,30 +64,8 @@ class Storage:
         self._ident: Final = program_ident
         self._host: Final = host
 
-    @property
-    def _full_dir(self) -> Path:
-        return Path(
-            self._get_base_path(),
-            self._sanitize_key(self._host),
-            self._sanitize_key(self._ident),
-        )
-
-    @staticmethod
-    def _get_base_path() -> Path:
-        if p := os.getenv(_STORAGE_PATH_ENV):
-            return Path(p)
-        raise RuntimeError(f"{_STORAGE_PATH_ENV} environment variable is not set.")
-
-    @staticmethod
-    def _sanitize_key(key: str) -> str:
-        skey = urlquote(key, safe="")
-        if len(skey) > 255:
-            raise ValueError(f"too long (max 255 characters after URL quoting): {skey!r}")
-        return skey
-
-    def _get_path(self, key: str) -> Path:
-        safe_key = self._sanitize_key(key)
-        return self._full_dir / safe_key
+    def _path(self, key: str) -> Path:
+        return _key_path(_storage_dir(host=self._host, ident=self._ident), key)
 
     def write(self, key: str, content: str) -> None:
         """
@@ -70,18 +82,7 @@ class Storage:
         Raises:
             A RuntimeError is raised if SERVER_SIDE_PROGRAM_STORAGE_PATH environment variable is not set.
         """
-        path = self._get_path(key)
-        bytes_to_write = content.encode("utf-8")
-        path.parent.mkdir(parents=True, exist_ok=True)
-        # The "%t" prefix can never be the result of URL quoting, so the temporary
-        # file never collides with a key. The replace stays inside the with, so any
-        # exception deletes the temp file instead.
-        with tempfile.NamedTemporaryFile(
-            "wb", dir=path.parent, prefix="%tmp", delete_on_close=False
-        ) as tmp:
-            tmp.write(bytes_to_write)
-            tmp.close()
-            os.replace(tmp.name, path)
+        _write_atomically(self._path(key), content.encode("utf-8"))
 
     def unset(self, key: str) -> None:
         """
@@ -93,8 +94,7 @@ class Storage:
         Raises:
             A RuntimeError is raised if SERVER_SIDE_PROGRAM_STORAGE_PATH environment variable is not set.
         """
-        path = self._get_path(key)
-        path.unlink(missing_ok=True)
+        self._path(key).unlink(missing_ok=True)
 
     def read[T](self, key: str, default: T) -> str | T:
         """
@@ -107,7 +107,7 @@ class Storage:
         Raises:
             A RuntimeError is raised if SERVER_SIDE_PROGRAM_STORAGE_PATH environment variable is not set.
         """
-        path = self._get_path(key)
+        path = self._path(key)
         try:
             return path.read_bytes().decode("utf-8")
         except OSError, ValueError:

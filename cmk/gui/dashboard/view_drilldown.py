@@ -11,6 +11,7 @@ from cmk.gui.http import request
 from cmk.gui.painter import CellDrilldown
 from cmk.gui.type_defs import (
     ColumnName,
+    ContextFilterConfig,
     ContextualLinkEntryConfig,
     ContextualLinkTargetType,
     FilterHTTPVariables,
@@ -22,7 +23,9 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.views.drilldown_filters import drilldown_filters, ROW_FILTERS
 from cmk.gui.views.page_edit_view import ColumnDrilldownTarget
+from cmk.gui.visuals import get_single_info_keys, missing_context_filters
 from cmk.web.utils.urls import makeuri_contextless
 
 from .api.model.contextual_link import (
@@ -44,21 +47,14 @@ def column_drilldowns(
     context: VisualContext,
     user_permissions: UserPermissions,
 ) -> dict[int, CellDrilldown]:
-    """The drill-downs of an embedded view's columns, by painter index.
-
-    A row of the view is one host or one service, so a link carries that object on top of the
-    effective context the view renders with. A row that names less than the target needs, like a
-    host downtime for a service view, links nowhere.
-    """
+    """The drill-downs of an embedded view's columns, by painter index."""
     if (
         not column_links
-        or (data_source := data_source_registry.get(view_spec["datasource"])) is None
+        or (data_source_type := data_source_registry.get(view_spec["datasource"])) is None
     ):
         return {}
-    infos = data_source().infos
-    object_infos = [info for info in ("host", "service") if info in infos]
-    if not object_infos:
-        return {}
+    data_source = data_source_type()
+    object_infos = [info for info in ("host", "service") if info in data_source.infos]
     drilldowns: dict[int, CellDrilldown] = {}
     for index, link in column_links.items():
         location = location_from_internal(link["location"])
@@ -67,20 +63,39 @@ def column_drilldowns(
             or (target := _permitted_target(location, user_permissions)) is None
         ):
             continue
-        # TODO(CMK-39811): carry the filters a custom column link configures.
+        link_context = context if link["include_context"] else {}
         if link["filters"]:
-            continue
-        drilldowns[index] = CellDrilldown(
-            columns=_object_columns(object_infos),
-            url=partial(
-                _url,
-                location,
-                context if link["include_context"] else {},
-                object_infos,
-                [info for info in target["single_infos"] if info in object_infos],
-                show_filter_form=link["show_filter_form"],
-            ),
-        )
+            carriable = set(drilldown_filters(data_source, location.type))
+            filter_keys = _filter_keys([f for f in link["filters"] if f["filter_id"] in carriable])
+            if not filter_keys:
+                continue
+            drilldowns[index] = CellDrilldown(
+                columns=[
+                    column
+                    for filter_name in filter_keys
+                    for column in ROW_FILTERS[filter_name].columns
+                ],
+                url=partial(
+                    _custom_url,
+                    location,
+                    link_context,
+                    filter_keys,
+                    set(get_single_info_keys(target["single_infos"])),
+                    show_filter_form=link["show_filter_form"],
+                ),
+            )
+        elif object_infos:
+            drilldowns[index] = CellDrilldown(
+                columns=_object_columns(object_infos),
+                url=partial(
+                    _inherited_url,
+                    location,
+                    link_context,
+                    object_infos,
+                    [info for info in target["single_infos"] if info in object_infos],
+                    show_filter_form=link["show_filter_form"],
+                ),
+            )
     return drilldowns
 
 
@@ -117,22 +132,22 @@ def _permitted_target(location: VisualLocation, user_permissions: UserPermission
     return permitted_copies(location, user_permissions).get(location.owner)
 
 
-def _object_key(
+def _object_filters(
     row: Row, object_infos: Sequence[InfoName]
 ) -> dict[FilterName, FilterHTTPVariables]:
     """The filters naming the row's object, as the Vue object widgets carry them.
 
     A row of a data source of hosts and services may be about a host alone, with an empty service.
     """
-    key: dict[FilterName, FilterHTTPVariables] = {"siteopt": {"site": str(row["site"])}}
+    filters: dict[FilterName, FilterHTTPVariables] = {"siteopt": {"site": str(row["site"])}}
     if host_name := row["host_name"]:
-        key["host"] = {"host": str(host_name)}
+        filters["host"] = {"host": str(host_name)}
     if "service" in object_infos and (service_description := row["service_description"]):
-        key["service"] = {"service": str(service_description)}
-    return key
+        filters["service"] = {"service": str(service_description)}
+    return filters
 
 
-def _url(
+def _inherited_url(
     location: VisualLocation,
     context: VisualContext,
     object_infos: Sequence[InfoName],
@@ -141,18 +156,53 @@ def _url(
     *,
     show_filter_form: bool,
 ) -> str | None:
-    object_key = _object_key(row, object_infos)
-    # The filters of the object key are named after the infos they fill.
-    if any(info not in object_key for info in target_infos):
+    object_filters = _object_filters(row, object_infos)
+    # The object filters are named after the infos they fill.
+    if any(info not in object_filters for info in target_infos):
         return None
+    # The clicked object goes last, so it wins over the same filter in the context.
+    return _target_url(location, {**context, **object_filters}, show_filter_form=show_filter_form)
+
+
+def _filter_keys(filters: Sequence[ContextFilterConfig]) -> dict[FilterName, list[str]]:
+    filter_keys: dict[FilterName, list[str]] = {}
+    for filter_config in filters:
+        keys = filter_keys.setdefault(filter_config["filter_id"], [])
+        if "key" in filter_config:
+            keys.append(filter_config["key"])
+    return filter_keys
+
+
+def _custom_url(
+    location: VisualLocation,
+    context: VisualContext,
+    filter_keys: Mapping[FilterName, Sequence[str]],
+    single_info_keys: set[FilterName],
+    row: Row,
+    *,
+    show_filter_form: bool,
+) -> str | None:
+    carried = {
+        filter_name: variables
+        for filter_name, keys in filter_keys.items()
+        if (variables := ROW_FILTERS[filter_name].variables(row, keys)) is not None
+    }
+    filters = {**context, **carried}
+    if missing_context_filters(single_info_keys, filters):
+        return None
+    return _target_url(location, filters, show_filter_form=show_filter_form)
+
+
+def _target_url(location: VisualLocation, context: VisualContext, *, show_filter_form: bool) -> str:
     page, name_variable = _PAGE_BY_TARGET_TYPE[location.type]
-    variables = {name_variable: location.name}
+    variables: dict[str, str] = {}
+    for filter_variables in context.values():
+        variables.update(filter_variables)
+    # The target's own variables go last, so no filter can override them.
+    variables[name_variable] = location.name
     # Without an owner, the target page resolves the name for each viewer.
     if location.owner is not None:
         variables["owner"] = str(location.owner)
-    # The clicked object goes last, so it wins over the same filter in the context.
-    for filter_variables in {**context, **object_key}.values():
-        variables.update(filter_variables)
     variables["filled_in"] = "filter"
     variables["_show_filter_form"] = "1" if show_filter_form else "0"
     return makeuri_contextless(request, list(variables.items()), filename=page)

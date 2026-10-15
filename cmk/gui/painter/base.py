@@ -553,7 +553,7 @@ class Cell:
         link_renderer: Callable[[str | HTML, Row, VisualLinkSpec], str | HTML] | None,
         user: LoggedInUser,
     ) -> tuple[str, str | HTML]:
-        # A drill-down names the object of the view's row, which a joined row may not carry.
+        # A drill-down reads the view's row, which a joined row may not carry.
         view_row = row
         row = join_row(row, self)
 

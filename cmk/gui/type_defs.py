@@ -673,6 +673,8 @@ type ContextualLinkLocationConfig = (
 
 class ContextFilterConfig(TypedDict):
     filter_id: FilterName
+    # The label key, tag group or auxiliary tag of a filter that needs one.
+    key: NotRequired[str]
 
 
 class ContextualLinkEntryConfig(TypedDict):

@@ -104,8 +104,7 @@ vue_library(
     srcs = glob(
         ["src/**/*.vue"],
         exclude = NONFREE,
-    ),
-    data = [":tsconfig"],
+    ) + [":tsconfig"],
     deps = [
         ":src_ts",
         "//:node_modules/vue",
@@ -136,8 +135,7 @@ vue_library(
     srcs = glob(
         ["src/**/nonfree/**/*.vue"],
         allow_empty = True,
-    ),
-    data = [":tsconfig"],
+    ) + [":tsconfig"],
     deps = [
         ":src_ts",
         "//:node_modules/vue",
@@ -178,8 +176,7 @@ copy_file(
 
 vue_library(
     name = "demo_vue",
-    srcs = glob(["ui-component-library/**/*.vue"]),
-    data = [":tsconfig"],
+    srcs = glob(["ui-component-library/**/*.vue"]) + [":tsconfig"],
     deps = [
         ":demo_ts",
         "//:node_modules/vue",
@@ -341,8 +338,7 @@ SRCS = DEV_SERVER_SRCS + LOCALE_OUTS
 
 vue_library(
     name = "test_vue",
-    srcs = glob(["tests/**/*.vue"]),
-    data = [":tsconfig"],
+    srcs = glob(["tests/**/*.vue"]) + [":tsconfig"],
     deps = [
         ":src_ts",
         ":test_ts",

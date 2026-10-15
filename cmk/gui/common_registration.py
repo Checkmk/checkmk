@@ -436,6 +436,7 @@ def _register_visuals_autocompleters(
         check_command_autocompleter,
         kubernetes_labels_autocompleter,
         label_autocompleter,
+        label_key_autocompleter,
         monitored_hostname_autocompleter,
         monitored_service_description_autocompleter,
     )
@@ -451,3 +452,4 @@ def _register_visuals_autocompleters(
         "kubernetes_labels", kubernetes_labels_autocompleter
     )
     autocompleter_registry.register_autocompleter("label", label_autocompleter)
+    autocompleter_registry.register_autocompleter("label_key", label_key_autocompleter)

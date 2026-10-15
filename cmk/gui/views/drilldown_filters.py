@@ -5,16 +5,24 @@
 
 """The filters a drill-down may carry, each valued from the clicked row."""
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Literal
 
 from cmk.gui.data_source import ABCDataSource
 from cmk.gui.monitor.hosts import folder_path_from_filename
-from cmk.gui.type_defs import ColumnName, ContextualLinkTargetType, FilterHTTPVariables, FilterName
+from cmk.gui.type_defs import (
+    ColumnName,
+    ContextualLinkTargetType,
+    FilterHTTPVariables,
+    FilterName,
+    InfoName,
+)
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
+from cmk.gui.visuals import info_params
 from cmk.gui.visuals.filter import filter_registry
+from cmk.gui.visuals.info import visual_info_registry
 
 type RowValues = Mapping[ColumnName, object]
 
@@ -56,6 +64,16 @@ def drilldown_filters(
         # A Stats query counts log entries per object, so a log filter would split its counts.
         and not (filter_.info == "log" and "Stats:" in data_source.add_headers)
     ]
+
+
+def filled_single_infos(filter_names: Iterable[FilterName]) -> set[InfoName]:
+    """The infos whose single-object filters are all among the filters."""
+    names = set(filter_names)
+    return {
+        ident
+        for ident in visual_info_registry
+        if (single_info_filters := info_params(ident)) and set(single_info_filters) <= names
+    }
 
 
 def _value(row: RowValues, column: ColumnName) -> str | None:

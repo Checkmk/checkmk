@@ -9,7 +9,12 @@ import pytest
 
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.type_defs import FilterHTTPVariables, FilterName
-from cmk.gui.views.drilldown_filters import drilldown_filters, ROW_FILTERS, RowValues
+from cmk.gui.views.drilldown_filters import (
+    drilldown_filters,
+    filled_single_infos,
+    ROW_FILTERS,
+    RowValues,
+)
 from cmk.gui.visuals.filter import filter_registry
 from tests.testlib.unit.gui.web_test_app import SetConfig
 
@@ -381,3 +386,14 @@ def test_drilldown_filters_offer_only_group_filters_on_a_group_view() -> None:
         "hostgroup",
         "hostsgroups_having_problems",
     ]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_filled_single_infos_name_the_host_by_its_name_filter_only() -> None:
+    assert "host" in filled_single_infos(["host"])
+    assert "host" not in filled_single_infos(["hoststate"])
+
+
+@pytest.mark.usefixtures("request_context")
+def test_filled_single_infos_name_an_aggregation_by_its_name_filter() -> None:
+    assert "aggr" in filled_single_infos(["aggr_name"])

@@ -21,6 +21,7 @@ def test_builtin_autocompleters_registered() -> None:
         "config_hostname",
         "kubernetes_labels",
         "label",
+        "label_key",
         "monitored_hostname",
         "monitored_metrics",
         "monitored_service_description",

@@ -150,6 +150,29 @@ def label_autocompleter(config: Config, value: str, params: dict) -> list[Choice
     return [(value, value)] if regex(LABEL_REGEX).match(value) else []
 
 
+def label_key_autocompleter(config: Config, value: str, params: dict) -> list[Choice]:  # noqa: ARG001
+    """Return the typed key, then the known label keys containing it in any case."""
+    from cmk.gui.valuespec import Labels
+
+    object_type = params.get("object_type")
+    if object_type not in ("host", "service"):
+        object_type = None
+    keys = sorted(
+        {
+            key
+            # Filter here: the core matches case-sensitively and on the value as well.
+            for key, _value in Labels.get_labels(
+                world=Labels.World.CORE, search_label="", object_type=object_type
+            )
+            if value.lower() in key.lower()
+        }
+    )
+    # A key no host or service has yet is valid as well.
+    if value and value not in keys:
+        keys.insert(0, value)
+    return [(key, key) for key in keys]
+
+
 def kubernetes_labels_autocompleter(config: Config, value: str, params: dict) -> list[Choice]:  # noqa: ARG001
     filter_id = params["group_type"]
     object_type = filter_id.removeprefix("kubernetes_")

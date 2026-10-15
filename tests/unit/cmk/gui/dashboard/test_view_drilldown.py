@@ -10,11 +10,7 @@ import pytest
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
 from cmk.gui.config import Config
-from cmk.gui.dashboard.view_drilldown import (
-    column_drilldown_targets,
-    column_drilldowns,
-    inherited_column_link,
-)
+from cmk.gui.dashboard.view_drilldown import column_drilldowns
 from cmk.gui.http import request
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
@@ -522,16 +518,3 @@ def test_column_drilldowns_custom_link_drills_down_from_a_host_group(
     )
 
     assert variables["hostgroup"] == "linux"
-
-
-def test_column_drilldown_targets_reads_back_what_the_editor_stored() -> None:
-    column_links = {2: inherited_column_link(("dashboards", "main"))}
-
-    assert column_drilldown_targets(column_links) == {2: ("dashboards", "main")}
-
-
-def test_column_drilldown_targets_leaves_out_a_link_with_filters() -> None:
-    custom = _inherited()
-    custom["filters"] = [ContextFilterConfig(filter_id="host")]
-
-    assert column_drilldown_targets({0: custom}) == {}

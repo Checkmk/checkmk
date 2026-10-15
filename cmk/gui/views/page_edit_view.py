@@ -12,7 +12,7 @@
 import ast
 import datetime as dt
 import string
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence, Set
 from functools import partial
 from typing import Any, Literal, NamedTuple, overload, override, TypedDict, TypeIs
 
@@ -25,7 +25,7 @@ from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.http import request, response
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.painter import all_painters, Cell, InternalPainter, PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
@@ -36,7 +36,11 @@ from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
     ColumnTypes,
+    ContextFilterConfig,
+    ContextualLinkEntryConfig,
     ContextualLinkTargetType,
+    FilterName,
+    InfoName,
     InventoryJoinMacrosSpec,
     PainterName,
     PainterParameters,
@@ -50,9 +54,12 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import (
+    AjaxDropdownChoice,
     CascadingDropdown,
     CascadingDropdownChoice,
+    Checkbox,
     Dictionary,
+    DictionaryModel,
     DropdownChoice,
     DropdownChoiceEntries,
     DropdownChoiceEntry,
@@ -73,26 +80,43 @@ from cmk.gui.views.inventory import (
     OrderedColumnDisplayHintsOfView,
     TableWithView,
 )
+from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.inventory.trees import SDPath
+from cmk.ruleset_matcher.tags import TagConfig
+from cmk.web.utils.autocompleter_config import AutocompleterConfig, AutocompleterParams
 from cmk.web.utils.icons import DynamicIconName
 
+from .drilldown_filters import drilldown_filters, filled_single_infos
 from .layout import layout_registry
 from .sorter import all_sorters, ParameterizedSorter, Sorter
 from .store import get_all_views, get_permitted_views
 from .view_choices import view_choices
 
-type ColumnDrilldownTarget = tuple[ContextualLinkTargetType, VisualName]
-
-# The Link choices of a column that carries the context it is shown in, by the visual it opens.
-type _DrilldownChoice = Literal["drilldown_views", "drilldown_dashboards"]
-_DRILLDOWN_TARGETS: Mapping[_DrilldownChoice, ContextualLinkTargetType] = {
+# Inherited: carries the clicked row's object; custom: the filters the user picks.
+type _InheritedDrilldownChoice = Literal["drilldown_views", "drilldown_dashboards"]
+_INHERITED_DRILLDOWN_TARGETS: Mapping[_InheritedDrilldownChoice, ContextualLinkTargetType] = {
     "drilldown_views": "views",
     "drilldown_dashboards": "dashboards",
 }
-_DRILLDOWN_CHOICES: Mapping[ContextualLinkTargetType, _DrilldownChoice] = {
-    target: choice for choice, target in _DRILLDOWN_TARGETS.items()
+_INHERITED_DRILLDOWN_CHOICES: Mapping[ContextualLinkTargetType, _InheritedDrilldownChoice] = {
+    target: choice for choice, target in _INHERITED_DRILLDOWN_TARGETS.items()
+}
+
+type _CustomDrilldownChoice = Literal["custom_drilldown_views", "custom_drilldown_dashboards"]
+_CUSTOM_DRILLDOWN_TARGETS: Mapping[_CustomDrilldownChoice, ContextualLinkTargetType] = {
+    "custom_drilldown_views": "views",
+    "custom_drilldown_dashboards": "dashboards",
+}
+_CUSTOM_DRILLDOWN_CHOICES: Mapping[ContextualLinkTargetType, _CustomDrilldownChoice] = {
+    target: choice for choice, target in _CUSTOM_DRILLDOWN_TARGETS.items()
+}
+_DRILLDOWN_TITLES = {
+    "drilldown_views": _l("Drill down to view (inherited)"),
+    "drilldown_dashboards": _l("Drill down to dashboard (inherited)"),
+    "custom_drilldown_views": _l("Drill down to view (custom)"),
+    "custom_drilldown_dashboards": _l("Drill down to dashboard (custom)"),
 }
 
 
@@ -296,11 +320,14 @@ def view_editor_column_spec(
 ) -> Dictionary:
     """The columns of the view editor.
 
-    With drill-down, a column may also link to a view or dashboard carrying the context it is
-    shown in, and each column's value is a pair of its spec and that drill-down target.
+    With drill-down, each column's value is a pair of its spec and its drill-down link.
     """
     drilldown_choices = (
-        _drilldown_link_choices(ds_name, painter_context.user_permissions) if with_drilldown else []
+        _drilldown_link_choices(
+            ds_name, painter_context.user_permissions, painter_context.config.tags
+        )
+        if with_drilldown
+        else []
     )
     choices = [
         _get_common_vs_column_choice(
@@ -601,7 +628,21 @@ def _get_vs_link_or_tooltip_elements(
     ]
 
 
-type _RawVSLinkSpec = tuple[VisualTypeName, VisualName] | tuple[_DrilldownChoice, VisualName]
+type _RawVSDrilldownFilter = FilterName | tuple[FilterName, str]
+
+
+class _RawVSCustomDrilldown(TypedDict):
+    target: VisualName
+    filters: list[_RawVSDrilldownFilter]
+    include_context: bool
+    include_time_range: bool
+
+
+type _RawVSLinkSpec = (
+    tuple[VisualTypeName, VisualName]
+    | tuple[_InheritedDrilldownChoice, VisualName]
+    | tuple[_CustomDrilldownChoice, _RawVSCustomDrilldown]
+)
 
 
 class _RawVSColumnSpecOptional(TypedDict, total=False):
@@ -609,8 +650,64 @@ class _RawVSColumnSpecOptional(TypedDict, total=False):
     tooltip: ColumnName
 
 
-def _is_drilldown(link_spec: _RawVSLinkSpec) -> TypeIs[tuple[_DrilldownChoice, VisualName]]:
-    return link_spec[0] in _DRILLDOWN_TARGETS
+def _is_inherited_drilldown(
+    link_spec: _RawVSLinkSpec,
+) -> TypeIs[tuple[_InheritedDrilldownChoice, VisualName]]:
+    return link_spec[0] in _INHERITED_DRILLDOWN_TARGETS
+
+
+def _is_custom_drilldown(
+    link_spec: _RawVSLinkSpec,
+) -> TypeIs[tuple[_CustomDrilldownChoice, _RawVSCustomDrilldown]]:
+    return link_spec[0] in _CUSTOM_DRILLDOWN_TARGETS
+
+
+def _drilldown_link(link_spec: _RawVSLinkSpec | None) -> ContextualLinkEntryConfig | None:
+    if link_spec is None:
+        return None
+    if _is_inherited_drilldown(link_spec):
+        target_type, name = _INHERITED_DRILLDOWN_TARGETS[link_spec[0]], link_spec[1]
+        # Like a new inherited link in the wizard, it carries the context and the time range.
+        return ContextualLinkEntryConfig(
+            title=name,
+            location=(target_type, name),
+            filters=[],
+            include_context=True,
+            include_time_range=True,
+            show_filter_form=False,
+        )
+    if _is_custom_drilldown(link_spec):
+        target_type, custom = _CUSTOM_DRILLDOWN_TARGETS[link_spec[0]], link_spec[1]
+        # The editor offers no title, owner or filter form, so it saves the defaults.
+        return ContextualLinkEntryConfig(
+            title=custom["target"],
+            location=(target_type, custom["target"]),
+            filters=[
+                ContextFilterConfig(filter_id=raw)
+                if isinstance(raw, str)
+                else ContextFilterConfig(filter_id=raw[0], key=raw[1])
+                for raw in custom["filters"]
+            ],
+            include_context=custom["include_context"],
+            include_time_range=custom["include_time_range"],
+            show_filter_form=False,
+        )
+    return None
+
+
+def _drilldown_link_spec(link: ContextualLinkEntryConfig) -> _RawVSLinkSpec:
+    target_type, name = link["location"][0], link["location"][1]
+    if not link["filters"]:
+        return _INHERITED_DRILLDOWN_CHOICES[target_type], name
+    return _CUSTOM_DRILLDOWN_CHOICES[target_type], _RawVSCustomDrilldown(
+        target=name,
+        filters=[
+            (config["filter_id"], config["key"]) if "key" in config else config["filter_id"]
+            for config in link["filters"]
+        ],
+        include_context=link["include_context"],
+        include_time_range=link["include_time_range"],
+    )
 
 
 class _RawVSColumnSpec(_RawVSColumnSpecOptional):
@@ -713,7 +810,11 @@ def _view_editor_spec(
         return painter_spec, PainterParameters()
 
     def _get_link_spec(value: _RawVSColumnSpec | _RawVSJoinInvColumnSpec) -> VisualLinkSpec | None:
-        if (ls := value.get("link_spec")) is None or _is_drilldown(ls):
+        if (
+            (ls := value.get("link_spec")) is None
+            or _is_inherited_drilldown(ls)
+            or _is_custom_drilldown(ls)
+        ):
             return None
         return VisualLinkSpec.from_raw(ls)
 
@@ -774,19 +875,17 @@ def _view_editor_spec(
 
     def _from_vs_with_drilldown(
         value: _RawVSColumn,
-    ) -> tuple[ColumnSpec | _RawVSColumn, ColumnDrilldownTarget | None]:
-        if (ls := value[1].get("link_spec")) is None or not _is_drilldown(ls):
-            return _from_vs(value), None
-        return _from_vs(value), (_DRILLDOWN_TARGETS[ls[0]], ls[1])
+    ) -> tuple[ColumnSpec | _RawVSColumn, ContextualLinkEntryConfig | None]:
+        return _from_vs(value), _drilldown_link(value[1].get("link_spec"))
 
     def _to_vs_with_drilldown(
-        value: tuple[ColumnSpec | _RawVSColumn, ColumnDrilldownTarget | None] | None,
+        value: tuple[ColumnSpec | _RawVSColumn, ContextualLinkEntryConfig | None] | None,
     ) -> _RawVSColumn | None:
         if value is None:
             return None
-        column_spec, drilldown = value
-        if (raw := _to_vs(column_spec)) is not None and drilldown is not None:
-            raw[1]["link_spec"] = (_DRILLDOWN_CHOICES[drilldown[0]], drilldown[1])
+        column_spec, link = value
+        if (raw := _to_vs(column_spec)) is not None and link is not None:
+            raw[1]["link_spec"] = _drilldown_link_spec(link)
         return raw
 
     vs_column = (
@@ -845,50 +944,199 @@ def _column_link_choices(user_permissions: UserPermissions) -> list[CascadingDro
 
 
 def _drilldown_link_choices(
-    ds_name: str, user_permissions: UserPermissions
+    ds_name: str, user_permissions: UserPermissions, tags: TagConfig
 ) -> list[CascadingDropdownChoice]:
-    """The targets a row of the data source can drill down to: those whose single infos it fills.
+    """Inherited drill-downs need host or service rows, custom ones a filter the row can value."""
+    data_source = data_source_registry[ds_name]()
+    object_infos = {info for info in ("host", "service") if info in data_source.infos}
+    choices: list[CascadingDropdownChoice] = []
+    if object_infos:
+        choices += [
+            (
+                choice,
+                f"{_DRILLDOWN_TITLES[choice]}:",
+                DropdownChoice(
+                    choices=_fillable_targets(
+                        target_type,
+                        _permitted_target_single_infos(target_type, user_permissions),
+                        object_infos,
+                        user_permissions,
+                    ),
+                    sorted=True,
+                ),
+            )
+            for choice, target_type in _INHERITED_DRILLDOWN_TARGETS.items()
+        ]
+    choices += [
+        (
+            choice,
+            f"{_DRILLDOWN_TITLES[choice]}:",
+            _custom_drilldown_valuespec(target_type, filters, tags, user_permissions),
+        )
+        for choice, target_type in _CUSTOM_DRILLDOWN_TARGETS.items()
+        if (filters := drilldown_filters(data_source, target_type))
+    ]
+    return choices
 
-    A row names one host or one service, so a data source of neither offers no drill-down.
-    """
-    infos = data_source_registry[ds_name]().infos
-    if not (object_infos := {info for info in ("host", "service") if info in infos}):
-        return []
-    dashboard_type = visual_type_registry["dashboards"]()
-    fillable_views = {
-        name
-        for name, view in get_permitted_views().items()
-        if set(view["single_infos"]) <= object_infos
+
+def _fillable_targets(
+    target_type: ContextualLinkTargetType,
+    target_single_infos: Mapping[VisualName, SingleInfos],
+    infos: Set[InfoName],
+    user_permissions: UserPermissions,
+) -> DropdownChoiceEntries:
+    fillable = {
+        name for name, single_infos in target_single_infos.items() if set(single_infos) <= infos
     }
-    fillable_dashboards = {
-        name
+    if target_type == "views":
+        return [choice for choice in view_choices() if choice[0] in fillable]
+    dashboard_type = visual_type_registry["dashboards"]()
+    return [
+        choice
+        for choice in dashboard_type.choices(dashboard_type.visuals(), user_permissions)
+        if choice[0] in fillable
+    ]
+
+
+def _permitted_target_single_infos(
+    target_type: ContextualLinkTargetType, user_permissions: UserPermissions
+) -> dict[VisualName, SingleInfos]:
+    if target_type == "views":
+        return {name: view["single_infos"] for name, view in get_permitted_views().items()}
+    dashboard_type = visual_type_registry["dashboards"]()
+    return {
+        name: dashboard["single_infos"]
         for name, dashboard in dashboard_type.permitted_visuals(
             dashboard_type.visuals(), user_permissions
         ).items()
-        if set(dashboard["single_infos"]) <= object_infos
     }
-    return [
-        (
-            "drilldown_views",
-            _("Drill down to view") + ":",
-            DropdownChoice(
-                choices=[choice for choice in view_choices() if choice[0] in fillable_views],
-                sorted=True,
+
+
+def _custom_drilldown_valuespec(
+    target_type: ContextualLinkTargetType,
+    filters: Sequence[FilterName],
+    tags: TagConfig,
+    user_permissions: UserPermissions,
+) -> Dictionary:
+    target_single_infos = _permitted_target_single_infos(target_type, user_permissions)
+    targets = _fillable_targets(
+        target_type, target_single_infos, filled_single_infos(filters), user_permissions
+    )
+    return Dictionary(
+        elements=[
+            ("target", DropdownChoice(title=_("Target page"), choices=targets, sorted=True)),
+            (
+                "filters",
+                ListOf(
+                    valuespec=CascadingDropdown(
+                        choices=[
+                            (
+                                filter_name,
+                                _filter_title(filter_name),
+                                _filter_key_valuespec(filter_name, tags),
+                            )
+                            for filter_name in filters
+                        ],
+                        orientation="horizontal",
+                    ),
+                    title=_("Filters of the clicked element"),
+                    add_label=_("Add filter"),
+                    # Distinct from the default placeholder of the enclosing column list.
+                    magic="@!!",
+                    allow_empty=False,
+                    empty_text=_("Please add at least one filter."),
+                    validate=_validate_filters,
+                ),
             ),
-        ),
-        (
-            "drilldown_dashboards",
-            _("Drill down to dashboard") + ":",
-            DropdownChoice(
-                choices=[
-                    choice
-                    for choice in dashboard_type.choices(dashboard_type.visuals(), user_permissions)
-                    if choice[0] in fillable_dashboards
-                ],
-                sorted=True,
+            (
+                "include_context",
+                Checkbox(label=_("Include dashboard and widget filters"), default_value=True),
             ),
-        ),
-    ]
+            (
+                "include_time_range",
+                Checkbox(label=_("Include current time range"), default_value=True),
+            ),
+        ],
+        optional_keys=[],
+        validate=partial(_validate_named_target, target_single_infos),
+    )
+
+
+def _validate_named_target(
+    target_single_infos: Mapping[VisualName, SingleInfos], value: DictionaryModel, varprefix: str
+) -> None:
+    if value["include_context"]:
+        return
+    filter_names = [raw if isinstance(raw, str) else raw[0] for raw in value["filters"]]
+    if not set(target_single_infos.get(value["target"], ())) <= filled_single_infos(filter_names):
+        raise MKUserError(
+            f"{varprefix}_p_filters",
+            _(
+                "The target page shows a single object. Without the dashboard and widget filters,"
+                " add a filter that identifies it."
+            ),
+        )
+
+
+def _filter_title(filter_name: FilterName) -> str:
+    """Prefixed with its info's title, as in the filter menu."""
+    filter_ = filter_registry[filter_name]
+    return f"{visual_info_registry[filter_.info]().title}: {str(filter_.title).strip()}"
+
+
+class _LabelKeyAutocompleterConfig(AutocompleterConfig):
+    def __init__(self, *, object_type: Literal["host", "service"]) -> None:
+        super().__init__(ident="label_key")
+        self._object_type = object_type
+
+    @property
+    @override
+    def params(self) -> AutocompleterParams:
+        return {"object_type": self._object_type, **super().params}
+
+
+def _filter_key_valuespec(filter_name: FilterName, tags: TagConfig) -> ValueSpec | None:
+    """The label key, tag group or auxiliary tag a filter needs, if any."""
+    match filter_name:
+        case "host_labels" | "service_labels":
+            return AjaxDropdownChoice(
+                title=_("Label key"),
+                autocompleter=_LabelKeyAutocompleterConfig(
+                    object_type="host" if filter_name == "host_labels" else "service"
+                ),
+                validate=_validate_label_key,
+            )
+        # The service tag filter resolves its group through the tag config, like the host one.
+        case "host_tags" | "service_tags":
+            return DropdownChoice(title=_("Tag group"), choices=tags.get_tag_group_choices())
+        case "host_auxtags":
+            return DropdownChoice(title=_("Auxiliary tag"), choices=tags.aux_tag_list.get_choices())
+        case _:
+            return None
+
+
+def _validate_label_key(value: str | None, varprefix: str) -> None:
+    if not value:
+        raise MKUserError(varprefix, _("Please enter a label key."))
+    # A label is parsed as key:value, so a colon would end the key early.
+    if ":" in value:
+        raise MKUserError(varprefix, _("A label key must not contain a colon."))
+
+
+def _validate_filters(value: Sequence[object], varprefix: str) -> None:
+    if len(set(value)) != len(value):
+        raise MKUserError(
+            varprefix,
+            _("Add each filter only once, and a label or tag filter only once per key."),
+        )
+    aux_tag_field_count = sum(
+        1 for variable in filter_registry["host_auxtags"].htmlvars if not variable.endswith("_neg")
+    )
+    aux_tags = [raw for raw in value if isinstance(raw, tuple) and raw[0] == "host_auxtags"]
+    if len(aux_tags) > aux_tag_field_count:
+        raise MKUserError(
+            varprefix, _("Add up to %(count)d auxiliary tags.") % {"count": aux_tag_field_count}
+        )
 
 
 def view_editor_sorter_specs(
@@ -989,15 +1237,27 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         raise MKGeneralException("Invaild choice")
 
 
+def _link_with_offered_filters(
+    link: ContextualLinkEntryConfig | None, data_source: ABCDataSource
+) -> ContextualLinkEntryConfig | None:
+    """Without the filters no longer offered, None if none is left: the editor can't show them."""
+    if link is None or not link["filters"]:
+        return link
+    offered = drilldown_filters(data_source, link["location"][0])
+    if not (filters := [f for f in link["filters"] if f["filter_id"] in offered]):
+        return None
+    return {**link, "filters": filters}
+
+
 def render_view_config(
     view_spec: ViewSpec,
     general_properties: bool = True,
     *,
     allow_browser_reload: bool,
     config: Config,
-    column_drilldowns: Mapping[int, ColumnDrilldownTarget] | None = None,
+    column_links: Mapping[int, ContextualLinkEntryConfig] | None = None,
 ) -> None:
-    """Render the view editor's fields; with column_drilldowns, a column may also drill down."""
+    """Render the view editor's fields; with column_links, a column may also drill down."""
     value = _transform_view_to_valuespec_value(view_spec)
 
     # TODO: This and the modification of the view_spec should not be here. Find a better place
@@ -1028,18 +1288,19 @@ def render_view_config(
         url_renderer=RenderLink(request, response, display_options),
         user_permissions=UserPermissions.from_config(config, permission_registry),
     )
-    if column_drilldowns is None:
+    if column_links is None:
         vs_columns = view_editor_column_spec("columns", ds_name, painter_context)
         vs_columns.render_input("columns", value["columns"])
     else:
         vs_columns = view_editor_column_spec(
             "columns", ds_name, painter_context, with_drilldown=True
         )
+        data_source = data_source_registry[ds_name]()
         vs_columns.render_input(
             "columns",
             {
                 "columns": [
-                    (column, column_drilldowns.get(index))
+                    (column, _link_with_offered_filters(column_links.get(index), data_source))
                     for index, column in enumerate(value["columns"]["columns"])
                 ]
             },
@@ -1129,7 +1390,7 @@ def _update_view_with_valuespec_values(
 def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
     old_view: T, view: T, *, allow_browser_reload: bool, config: Config
 ) -> T:
-    view, _column_drilldowns = _create_view_from_valuespec(
+    view, _column_links = _create_view_from_valuespec(
         old_view,
         view,
         allow_browser_reload=allow_browser_reload,
@@ -1141,10 +1402,10 @@ def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
 
 def create_embedded_view_from_valuespec(
     old_view: ViewSpec, view: ViewSpec, *, allow_browser_reload: bool, config: Config
-) -> tuple[ViewSpec, dict[int, ColumnDrilldownTarget]]:
+) -> tuple[ViewSpec, dict[int, ContextualLinkEntryConfig]]:
     """Like create_view_from_valuespec, where a column may also drill down.
 
-    The drill-down targets come by painter index, beside the view they have no place in.
+    The drill-down links come by painter index, beside the view they have no place in.
     """
     return _create_view_from_valuespec(
         old_view,
@@ -1157,7 +1418,7 @@ def create_embedded_view_from_valuespec(
 
 def _create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
     old_view: T, view: T, *, allow_browser_reload: bool, config: Config, with_drilldown: bool
-) -> tuple[T, dict[int, ColumnDrilldownTarget]]:
+) -> tuple[T, dict[int, ContextualLinkEntryConfig]]:
     ds_name = old_view.get("datasource") or request.get_ascii_input_mandatory("datasource")
     view["datasource"] = ds_name
 
@@ -1183,14 +1444,14 @@ def _create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
     )
     columns = vs_columns.from_html_vars("columns")
     vs_columns.validate_value(columns, "columns")
-    column_drilldowns: dict[int, ColumnDrilldownTarget] = {}
+    column_links: dict[int, ContextualLinkEntryConfig] = {}
     if with_drilldown:
-        column_drilldowns = {
-            index: target
-            for index, (_column, target) in enumerate(columns["columns"])
-            if target is not None
+        column_links = {
+            index: link
+            for index, (_column, link) in enumerate(columns["columns"])
+            if link is not None
         }
-        columns = {"columns": [column for column, _target in columns["columns"]]}
+        columns = {"columns": [column for column, _link in columns["columns"]]}
     _update_view_with_valuespec_values(view, "columns", columns)
 
     update_view("grouping", view_editor_grouping_spec("grouping", ds_name, painter_context))
@@ -1209,7 +1470,7 @@ def _create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
 
     view["modified_at"] = dt.datetime.now(dt.UTC).isoformat()
 
-    return view, column_drilldowns
+    return view, column_links
 
 
 def _painter_choices(

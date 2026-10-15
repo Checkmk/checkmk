@@ -83,6 +83,24 @@ def notation_name(notation: Notation) -> NotationName:
             assert_never(notation)
 
 
+def notation_from_name(name: str, symbol: str) -> Notation:
+    match name:
+        case "decimal":
+            return DecimalNotation(symbol)
+        case "si":
+            return SINotation(symbol)
+        case "iec":
+            return IECNotation(symbol)
+        case "standard_scientific":
+            return StandardScientificNotation(symbol)
+        case "engineering_scientific":
+            return EngineeringScientificNotation(symbol)
+        case "time":
+            return TimeNotation(symbol)
+        case other:
+            raise ValueError(f"unknown notation: {other!r}")
+
+
 def precision_kind(precision: Precision) -> PrecisionKind:
     match precision:
         case AutoPrecision():
@@ -91,6 +109,16 @@ def precision_kind(precision: Precision) -> PrecisionKind:
             return "strict"
         case _:
             assert_never(precision)
+
+
+def precision_from_kind(kind: str, digits: int) -> Precision:
+    match kind:
+        case "auto":
+            return AutoPrecision(digits)
+        case "strict":
+            return StrictPrecision(digits)
+        case other:
+            raise ValueError(f"unknown precision: {other!r}")
 
 
 @dataclass(frozen=True)

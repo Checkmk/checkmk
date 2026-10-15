@@ -99,6 +99,8 @@ class LabelConfig(BaseModel):
     # NagVis label_width — fixed pixel width that wraps long labels.
     width: int | None = None
     weight: Literal["normal", "bold"] | None = None
+    # How a text box aligns its text. An object's label in the NagVis-compatible
+    # renderer starts at ``x`` when left-aligned and is centered on it otherwise.
     align: Literal["left", "right", "center", "justify"] | None = None
 
     @field_validator("color", "background")

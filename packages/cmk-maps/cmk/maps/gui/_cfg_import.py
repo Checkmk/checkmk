@@ -80,9 +80,10 @@ _LINE_PERFDATA_LABELS: dict[int, LinePerfdataLabel] = {
     15: "bandwidth",
 }
 
+# The pixel size of the iconsets NagVis ships.
 ICONSET_SIZE: dict[str, int] = {
-    "std_big": 30,
-    "std_medium": 24,
+    "std_big": 32,
+    "std_medium": 22,
     "std": 22,
     "std_small": 16,
 }
@@ -238,6 +239,9 @@ class _ImportObject:
     payload: MapObject
     pending: dict[_Axis, _PendingRef] = field(default_factory=dict)
     ref_id: str | None = None
+    # A label's map coordinate on an axis whose object position is only known
+    # once ``pending`` resolves.
+    label_at: dict[Literal["x", "y"], int] = field(default_factory=dict)
 
 
 def _pending(coords: Mapping[_Axis, _Coord]) -> dict[_Axis, _PendingRef]:
@@ -291,6 +295,9 @@ def _resolve_pending_refs(objects: list[_ImportObject]) -> None:
                 changed = True
         if not changed:
             break
+    for obj in objects:
+        for label_axis, at in obj.label_at.items():
+            obj.payload["label"][label_axis] = at - obj.payload[label_axis]
 
 
 def _axis_coords(
@@ -318,17 +325,31 @@ def _line_coords(
     return x, y, x2, y2, mid_x, mid_y
 
 
-def _label_x(raw: str | None) -> int:
-    """Parse legacy ``label_x``. NagVis allows ``center`` to mean 0-offset."""
-    if raw is None:
-        return 0
-    v = raw.strip().lower()
-    if v == "center":
-        return 0
+def _label_map_coord(raw: str | None) -> int | None:
+    """``label_x`` or ``label_y`` as a map coordinate; ``None`` for a keyword or a
+    number relative to the object, a signed one or 0."""
+    v = (raw or "").strip()
     try:
-        return int(v.lstrip("+"))
+        at = int(v)
     except ValueError:
-        return 0
+        return None
+    return None if v[0] in "+-" or at == 0 else at
+
+
+def _label_x(raw: str | None, object_x: int) -> int | None:
+    """Where ``label_x`` puts the label's left edge, relative to the object.
+
+    ``None`` for ``center``, NagVis' default, which centers the label on the
+    icon instead. A signed number or 0 is relative to the object, any other
+    number a map coordinate.
+    """
+    v = (raw or "center").strip().lower()
+    if (at := _label_map_coord(v)) is not None:
+        return at - object_x
+    try:
+        return int(v)
+    except ValueError:
+        return None
 
 
 # CSS named colors are valid label backgrounds (see shared.validators), and the
@@ -388,27 +409,24 @@ def _bg_is_opaque_dark(value: str | None) -> bool:
     return b is not None and b < 100
 
 
-def _label_y(raw: str | None) -> int:
-    """Parse legacy ``label_y``.
+def _label_y(raw: str | None, object_y: int, icon_size: int) -> int:
+    """Where ``label_y`` puts the label's top edge, relative to the object.
 
-    NagVis defaults to ``bottom`` which places the label top flush with the
-    icon's bottom edge — that's ``label_top = object_y + icon_height``. With
-    Maps' 22-px default icon that's 22. Anything explicit (``+25``, ``-3``,
-    ``0``) is honoured as a relative pixel offset.
+    NagVis defaults to ``bottom``, which puts the label right below the icon.
+    A signed number or 0 is relative to the object, any other number a map
+    coordinate.
     """
     if raw is None:
-        return 22
+        return icon_size
     v = raw.strip().lower()
     if v in ("", "bottom"):
-        return 22
-    if v == "top":
-        return 0
-    if v == "center":
-        return -11
+        return icon_size
+    if (at := _label_map_coord(v)) is not None:
+        return at - object_y
     try:
-        return int(v.lstrip("+"))
+        return int(v)
     except ValueError:
-        return 22
+        return icon_size
 
 
 def _hidden_label() -> MapLabel:
@@ -422,20 +440,26 @@ def _hidden_label() -> MapLabel:
     return {**LABEL_FIELD_DEFAULTS, "show": False, "color": "#000000"}
 
 
-def _label(p: dict[str, str], *, show_default: bool = True) -> MapLabel:
+def _label(
+    p: dict[str, str], object_x: int, object_y: int, icon_size: int, *, show_default: bool = True
+) -> MapLabel:
     raw_bg = p.get("label_background", "transparent")
     # NagVis canvas is light, so default to black; flip only for opaque-dark bg.
     default_color = "#ffffff" if _bg_is_opaque_dark(raw_bg) else "#000000"
-    return {
+    left = _label_x(p.get("label_x"), object_x)
+    label: MapLabel = {
         "show": _bool(p.get("label_show"), show_default),
         "text": p.get("label_text") or None,
-        "x": _label_x(p.get("label_x")),
-        "y": _label_y(p.get("label_y")),
+        "x": left or 0,
+        "y": _label_y(p.get("label_y"), object_y, icon_size),
         "size": _int(p.get("label_size"), 11),
         "color": _color(p.get("label_color"), default_color),
         "background": _color(raw_bg, "transparent"),
         "width": _int(p.get("label_width")) or None,
     }
+    if left is not None:
+        label["align"] = "left"
+    return label
 
 
 # ---------------------------------------------------------------------------
@@ -855,17 +879,23 @@ def _apply_type_specific(obj: MapObject, block_type: str, p: dict[str, str]) -> 
             obj["recognize_services"] = _bool(p.get("recognize_services"), True)
 
 
-def _handle_monitor_block(block_type: str, p: dict[str, str], raw_id: str) -> _ImportObject:
+def _handle_monitor_block(
+    block_type: str, p: dict[str, str], raw_id: str, map_icon_size: int
+) -> _ImportObject:
     """host / service / hostgroup / servicegroup / map / aggr."""
     maps_type = _MONITOR_OBJECT_TYPES[block_type]
     x, y = _parse_coord(p.get("x", "0"), "x"), _parse_coord(p.get("y", "0"), "y")
+    display = _build_display(p)
+    icon_size = map_icon_size
+    if display["mode"] == "icon" and (own := ICONSET_SIZE.get(p.get("iconset", ""))):
+        display["image_size"] = icon_size = own
     payload: MapObject = {
         "id": f"{maps_type}_{raw_id}",
         "type": maps_type,
         "x": x.value,
         "y": y.value,
-        "label": _label(p),
-        "display": _build_display(p),
+        "label": _label(p, x.value, y.value, icon_size),
+        "display": display,
         # NagVis .box CSS draws every label with a 1px solid border (#e5e5e5).
         "label_border": _color(p.get("label_border"), "#e5e5e5"),
     }
@@ -874,7 +904,13 @@ def _handle_monitor_block(block_type: str, p: dict[str, str], raw_id: str) -> _I
     _apply_links(payload, p)
     if (maxlen := _int(p.get("label_maxlen"))) > 0:
         payload["label_maxlen"] = maxlen
-    return _ImportObject(payload, _pending({"x": x, "y": y}))
+    axes: tuple[tuple[Literal["x", "y"], _Coord], ...] = (("x", x), ("y", y))
+    label_at = {
+        axis: at
+        for axis, coord in axes
+        if coord.ref is not None and (at := _label_map_coord(p.get(f"label_{axis}"))) is not None
+    }
+    return _ImportObject(payload, _pending({"x": x, "y": y}), label_at=label_at)
 
 
 def _apply_links(payload: MapObject, p: dict[str, str]) -> None:
@@ -915,7 +951,9 @@ def _translate_macros(payload: MapObject, block_type: str) -> None:
     label["text"] = _MACRO_RE.sub(lambda m: macros.get(m.group(1), m.group(0)), text)
 
 
-def _handle_object_block(block_type: str, p: dict[str, str], raw_id: str) -> _ImportObject | None:
+def _handle_object_block(
+    block_type: str, p: dict[str, str], raw_id: str, map_icon_size: int
+) -> _ImportObject | None:
     if p.get("view_type") == "line" and block_type in _MONITOR_OBJECT_TYPES:
         return _handle_view_type_line(block_type, p, raw_id)
     if block_type == "line":
@@ -926,7 +964,7 @@ def _handle_object_block(block_type: str, p: dict[str, str], raw_id: str) -> _Im
         return _handle_textbox(p, raw_id)
     if block_type == "container":
         return _handle_container(p, raw_id)
-    return _handle_monitor_block(block_type, p, raw_id)
+    return _handle_monitor_block(block_type, p, raw_id, map_icon_size)
 
 
 def cfg_to_map(content: str, map_name: str) -> MapPayload:
@@ -982,6 +1020,7 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
         for k, v in global_props.items()
         if k not in _NON_INHERITED_KEYS and k not in _GLOBAL_MAP_KEYS
     }
+    map_icon_size = ICONSET_SIZE.get(global_props.get("iconset", ""), 22)
 
     for block_type, p in blocks:
         if block_type == "global":
@@ -1000,7 +1039,7 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
         }
         effective = {**global_defaults, **tmpl, **p}
         effective.pop("template", None)
-        obj = _handle_object_block(block_type, effective, raw_id)
+        obj = _handle_object_block(block_type, effective, raw_id, map_icon_size)
         if obj is not None:
             # ``url_target`` is a required field on every map object; only the
             # monitor handler sets it (and only when the cfg gave a target). Give

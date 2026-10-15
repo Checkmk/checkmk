@@ -32,18 +32,22 @@ const props = defineProps<{
 /**
  * Where the label sits. The classic renderer treats ``label_y`` as the
  * absolute offset from the object's anchor rather than as a delta on top of an
- * already-stacked layout, so it positions rather than translates.
+ * already-stacked layout, so it positions rather than translates. As in NagVis,
+ * a left-aligned label starts ``x`` from the object's left edge, any other one
+ * is centered on the object.
  */
 const position = computed(() => {
   const x = props.object.label?.x ?? 0
   const y = props.object.label?.y ?? 0
   if (props.classic) {
-    return {
-      position: 'absolute' as const,
-      left: '50%',
-      top: `${y}px`,
-      transform: `translateX(calc(-50% + ${x}px))`
-    }
+    return props.object.label?.align === 'left'
+      ? { position: 'absolute' as const, left: `${x}px`, top: `${y}px` }
+      : {
+          position: 'absolute' as const,
+          left: '50%',
+          top: `${y}px`,
+          transform: `translateX(calc(-50% + ${x}px))`
+        }
   }
   return { transform: x || y ? `translate(${x}px, ${y}px)` : undefined }
 })

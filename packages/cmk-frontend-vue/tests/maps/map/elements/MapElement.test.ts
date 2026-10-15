@@ -44,6 +44,28 @@ describe('MapElement caption', () => {
 
     expect(screen.queryByText('web01')).toBeNull()
   })
+
+  function classicLabel(align: 'left' | null): HTMLElement {
+    const label = { show: true, text: 'web01', x: 30, y: 22, size: 11, color: '#000000' }
+    renderElement(aHost({ label: { ...label, background: 'transparent', align } }), 'UP', {
+      renderMode: 'nagvis_classic'
+    })
+    return screen.getByText('web01')
+  }
+
+  it('starts a left-aligned label x from the object in the NagVis-compatible renderer', () => {
+    const label = classicLabel('left')
+
+    expect(label.style.left).toBe('30px')
+    expect(label.style.transform).toBe('')
+  })
+
+  it('centers any other label on the object in the NagVis-compatible renderer', () => {
+    const label = classicLabel(null)
+
+    expect(label.style.left).toBe('50%')
+    expect(label.style.transform).toBe('translateX(calc(-50% + 30px))')
+  })
 })
 
 describe('MapElement problem pulse', () => {

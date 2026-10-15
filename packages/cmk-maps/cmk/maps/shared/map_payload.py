@@ -92,6 +92,7 @@ class MapLabel(TypedDict):
 
 class MapDisplay(TypedDict):
     mode: DisplayMode
+    image_size: NotRequired[int | None]
     gadget_type: NotRequired[GadgetType]
     gadget_metric: NotRequired[str | None]
 

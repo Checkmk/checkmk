@@ -241,7 +241,7 @@ def test_cfg_to_map_global_background_rgb_color_becomes_hex(css: str, hex_color:
 def test_cfg_to_map_global_iconset() -> None:
     content = "define global {\n    iconset = std_big\n}\n"
     parsed_map = cfg_to_map(content, "x")
-    assert parsed_map["icon_size"] == 30
+    assert parsed_map["icon_size"] == 32
 
 
 def _first_obj(parsed_map: MapPayload) -> MapObject:
@@ -630,6 +630,58 @@ def test_cfg_to_map_object_keeps_its_label_length() -> None:
     assert _first_obj(cfg_to_map(content, "test"))["label_maxlen"] == 12
 
 
+@pytest.mark.parametrize(
+    "label_x, expected",
+    [
+        pytest.param("+30", {"x": 30, "align": "left"}, id="relative"),
+        pytest.param("-30", {"x": -30, "align": "left"}, id="relative-negative"),
+        pytest.param("0", {"x": 0, "align": "left"}, id="object-edge"),
+        pytest.param("700", {"x": 600, "align": "left"}, id="map-coordinate"),
+    ],
+)
+def test_cfg_to_map_starts_a_numbered_label_at_its_left_edge(
+    label_x: str, expected: dict[str, object]
+) -> None:
+    content = f"define host {{\n    host_name = web\n    x = 100\n    label_x = {label_x}\n}}\n"
+    label = _first_obj(cfg_to_map(content, "test"))["label"]
+    assert {"x": label["x"], "align": label.get("align")} == expected
+
+
+def test_cfg_to_map_centers_a_label_by_default() -> None:
+    content = "define host {\n    host_name = web\n    x = 100\n}\n"
+    label = _first_obj(cfg_to_map(content, "test"))["label"]
+    assert (label["x"], label.get("align")) == (0, None)
+
+
+@pytest.mark.parametrize(
+    "label_y, expected",
+    [
+        pytest.param("+40", 40, id="relative"),
+        pytest.param("-15", -15, id="relative-negative"),
+        pytest.param("0", 0, id="object-edge"),
+        pytest.param("120", -180, id="map-coordinate"),
+        pytest.param("bottom", 22, id="below-the-icon"),
+        # NagVis' own check rejects any keyword but ``bottom``.
+        pytest.param("top", 22, id="unknown-keyword-below-the-icon"),
+    ],
+)
+def test_cfg_to_map_puts_a_label_at_label_y(label_y: str, expected: int) -> None:
+    content = f"define host {{\n    host_name = web\n    y = 300\n    label_y = {label_y}\n}}\n"
+    assert _first_obj(cfg_to_map(content, "test"))["label"]["y"] == expected
+
+
+def test_cfg_to_map_sizes_an_object_by_its_own_iconset() -> None:
+    content = "define host {\n    host_name = web\n    iconset = std_big\n}\n"
+    obj = _first_obj(cfg_to_map(content, "test"))
+    assert (obj["display"].get("image_size"), obj["label"]["y"]) == (32, 32)
+
+
+def test_cfg_to_map_puts_a_label_below_the_map_iconset() -> None:
+    content = "define global {\n    iconset = std_small\n}\ndefine host {\n    host_name = web\n}\n"
+    obj = _first_obj(cfg_to_map(content, "test"))
+    assert (obj["display"].get("image_size"), obj["label"]["y"]) == (None, 16)
+
+
 def test_parse_keeps_a_group_with_the_members_it_leaves_out() -> None:
     content = (
         "define hostgroup {\n    hostgroup_name = web\n    exclude_members = ^test-~~^CPU\n"
@@ -901,6 +953,16 @@ def test_relative_coordinate_resolves_against_the_explicit_object_id() -> None:
     assert (objects[1]["x"], objects[1]["y"]) == (140, 40)
 
 
+def test_a_label_at_a_map_coordinate_stays_there_for_a_relative_object() -> None:
+    content = (
+        "define host {\n    object_id = anchor\n    host_name = h1\n    x = 100\n    y = 50\n}\n"
+        "define host {\n    host_name = h2\n    x = anchor%+40\n    y = anchor%-10\n"
+        "    label_x = 200\n    label_y = 100\n}\n"
+    )
+    label = cfg_to_map(content, "m")["objects"][1]["label"]
+    assert (label["x"], label["y"]) == (60, 60)
+
+
 def test_counter_derived_ids_are_not_referenceable() -> None:
     # Only an explicit object_id is indexed for reference resolution. The second
     # block gets the counter id "2"; a reference to it must NOT resolve to it (it
@@ -961,7 +1023,7 @@ def _by_id(parsed_map: MapPayload, obj_id: str) -> MapObject:
 def test_fixture_global_settings(all_objects_map: MapPayload) -> None:
     assert all_objects_map["alias"] == "All Objects"
     assert all_objects_map["connection_id"] == "ZWEIFUENF"
-    assert all_objects_map["icon_size"] == 30  # iconset=std_big
+    assert all_objects_map["icon_size"] == 32  # iconset=std_big
     assert all_objects_map["view"] == {"type": "static"}
     # cfg-import maps opt into the NagVis-classic renderer with a white canvas
     assert all_objects_map["render_mode"] == "nagvis_classic"

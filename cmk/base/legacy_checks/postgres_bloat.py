@@ -37,6 +37,9 @@ def inventory_postgres_bloat(parsed):
     return [(entry, {}) for entry, values in parsed.items() if values]
 
 
+_REQUIRED_COLUMNS = ("tbloat", "wastedbytes", "ibloat", "wastedibytes", "tablename")
+
+
 def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-branches
     database = parsed.get(item)
     if not database:
@@ -44,6 +47,10 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
         raise IgnoreResultsError("Login into database failed")
+
+    if missing := [column for column in _REQUIRED_COLUMNS if column not in database[0]]:
+        yield 3, f"Cannot evaluate bloat data: column '{missing[0]}' is missing in the agent output"
+        return
 
     table_perc_max = None
     table_abs_max = None

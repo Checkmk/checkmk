@@ -33,7 +33,9 @@ type Section = Sequence[VolumeGroup]
 def parse_lvm_vgs(string_table: StringTable) -> Section:
     return [
         VolumeGroup(vg, int(size), int(free))
-        for vg, _pvs, _lvs, _sns, _attr, size, free in string_table
+        for vg, _pvs, _lvs, _sns, _attr, size, free in (
+            line for line in string_table if len(line) == 7
+        )
     ]
 
 

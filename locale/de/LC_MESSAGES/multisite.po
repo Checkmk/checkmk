@@ -3502,6 +3502,46 @@ msgstr "AWS Services gefunden!"
 msgid "AWS tags"
 msgstr "AWS-Merkmale"
 
+#, fuzzy
+msgid "AWS v2/EBS burst balance"
+msgstr "AWS/EBS Burst-Balance"
+
+#, fuzzy
+msgid "AWS v2/EBS limits"
+msgstr "AWS/EBS Limits"
+
+#, fuzzy
+msgid "AWS v2/EC2 CPU credits"
+msgstr "AWS/EC2 CPU Guthaben"
+
+#, fuzzy
+msgid "AWS v2/EC2 limits"
+msgstr "AWS/EC2 Limits"
+
+#, fuzzy
+msgid "AWS v2/ELB HTTP errors"
+msgstr "AWS/ELB HTTP Fehler"
+
+#, fuzzy
+msgid "AWS v2/ELB backend connection errors"
+msgstr "AWS/ELB Backend Verbindungsfehler"
+
+#, fuzzy
+msgid "AWS v2/ELB healthy hosts"
+msgstr "AWS/ELB gesunde Hosts"
+
+#, fuzzy
+msgid "AWS v2/ELB latency"
+msgstr "AWS/ELB Latenz"
+
+#, fuzzy
+msgid "AWS v2/ELB limits"
+msgstr "AWS/ELB Limits"
+
+#, fuzzy
+msgid "AWS v2/ELB statistics"
+msgstr "AWS/ELB Statistiken"
+
 msgid "AWS/CE costs and usage"
 msgstr "AWS/CE Kosten und Auslastung"
 
@@ -4235,6 +4275,10 @@ msgstr "Änderungen aktivieren für Event Console"
 msgid "Activate changes of other users"
 msgstr "Änderungen anderer Benutzer aktivieren"
 
+#, fuzzy
+msgid "Activate changes requested by central site"
+msgstr "Planer zum Aktivieren von Änderungen gestartet"
+
 msgid "Activate changes scheduler"
 msgstr "Planer zum Aktivieren von Änderungen"
 
@@ -4336,6 +4380,14 @@ msgstr ""
 "auf dieser Instanz.<br>Die laufende Aktivierung wurde von Checkmk "
 "%(current_source)s ausgeführt."
 
+#, fuzzy, python-format
+msgid "Activation failed: %(error)s"
+msgstr "Verifizierung fehlgeschlagen (%(error)s)"
+
+#, fuzzy
+msgid "Activation finished"
+msgstr "Aktivierung ist abgeschlossen."
+
 msgid "Activation has finished."
 msgstr "Aktivierung ist abgeschlossen."
 
@@ -4356,6 +4408,23 @@ msgstr ""
 "Die Aktivierung von Änderungen für die Event Console (Regeländerungen, "
 "globale Einstellungen) wird getrennt von der Monitoring-Konfiguration "
 "durchgeführt und braucht diese Berechtigung."
+
+#, python-format
+msgid ""
+"Activation on site %(site_id)s did not finish within %(minutes)d minutes. "
+"The job %(job_id)s may still be running on the remote site and holding its "
+"configuration lock."
+msgstr ""
+
+#, python-format
+msgid ""
+"Activation on site %(site_id)s did not finish: The job %(job_id)s on the "
+"remote site is no longer running."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Activation on site %(site_id)s failed: %(error)s"
+msgstr "Replikation nach %(site_id)s fehlgeschlagen: %(error)s"
 
 msgid "Activation status"
 msgstr "Aktivierungsstatus"
@@ -5540,6 +5609,10 @@ msgstr "Abgleich der Adresse"
 
 msgid "Address name"
 msgstr "Adressname"
+
+#, fuzzy
+msgid "Address of the central site"
+msgstr "Kopierte Regeln von der Zentralinstanz"
 
 msgid ""
 "Address of the collector the processing layer connects to, given as "
@@ -8869,6 +8942,11 @@ msgstr "Automatischer Start"
 
 msgid "Auto-start services"
 msgstr "Services automatisch starten"
+
+msgid ""
+"Autocheck files below var/check_mk/autochecks that contain the discovered "
+"services of each host including their discovered parameters"
+msgstr ""
 
 msgid "Autoextend is expected to be ON"
 msgstr "Automatische Erweiterung wird als ON erwartet"
@@ -14561,16 +14639,17 @@ msgstr "Bedingung auswählen"
 
 msgid ""
 "Choose how Checkmk logs in to AWS.<br><b>Access key:</b> the access key ID "
-"and secret access key of an IAM user. Use this when Checkmk does not run on "
-"AWS.<br><b>Default AWS credentials:</b> Checkmk stores no secret. The agent "
-"uses the default credential chain of the AWS SDK: environment variables, the "
-"files in <tt>~/.aws</tt> of the site user, and the instance profile or EKS "
-"Pod Identity when Checkmk runs on AWS. Use this when Checkmk runs on AWS."
-"<br>Both can be combined with an IAM role. The agent then assumes this role "
-"and monitors the account the role belongs to. The AWS CloudTrail log shows "
-"these calls with the session name <tt>checkmk-&lt;site&gt;</tt>.<br>Only the "
-"choices without an IAM role can monitor a list of accounts: each account "
-"role must be assumed directly from the credentials."
+"and secret access key of an IAM user.<br><b>Default AWS credentials:</b> "
+"Checkmk stores no secret. The agent uses the default credential chain of the "
+"AWS SDK: environment variables, the files in <tt>~/.aws</tt> of the site "
+"user, and the instance profile or EKS Pod Identity when Checkmk runs on AWS. "
+"Recommended on AWS, because AWS renews the instance profile and EKS Pod "
+"Identity credentials itself.<br>Both can be combined with an IAM role. The "
+"agent then assumes this role and monitors the account the role belongs to. "
+"The AWS CloudTrail log shows these calls with the session name <tt>checkmk-"
+"&lt;site&gt;</tt>.<br>Only the choices without an IAM role can monitor a "
+"list of accounts: each account role must be assumed directly from the "
+"credentials."
 msgstr ""
 
 msgid "Choose if this rule applies to plug-ins or local checks"
@@ -19383,13 +19462,6 @@ msgstr "Zyklus-ID"
 
 msgid "Cycle not found"
 msgstr "Zyklus nicht gefunden"
-
-msgid ""
-"Cycle not found, the information is expired, please return back to select a "
-"cycle"
-msgstr ""
-"Zyklus nicht gefunden, die Informationen sind abgelaufen, bitte kehren Sie "
-"zurück, um einen Zyklus auszuwählen"
 
 msgid "Cycle steps"
 msgstr "Zyklusschritte"
@@ -38167,6 +38239,10 @@ msgstr "Ungültiges Datumsformat %(value)s"
 msgid "Invalid date format: %(e)s"
 msgstr "Ungültiges Datenformat: %(e)s"
 
+#, fuzzy, python-format
+msgid "Invalid domain requests: %(raw)r"
+msgstr "Ungültige Anfrage: %(domains)r"
+
 msgid ""
 "Invalid entry. You need to specify an IPv4/IPv6 address or a subnet in CIDR "
 "notation (e.g. 192.168.1.0/24)."
@@ -38264,6 +38340,10 @@ msgstr "Ungültiger Schlüssel"
 #, python-format
 msgid "Invalid ident: %(ident)s"
 msgstr "Ungültiger Ident: %(ident)s"
+
+#, fuzzy, python-format
+msgid "Invalid job ID: %(job_id)s"
+msgstr "ID: %(job_id)s"
 
 msgid "Invalid login credentials."
 msgstr "Login-Daten sind ungültig."
@@ -38382,10 +38462,6 @@ msgstr "Ungültige Parameter der Anfrage."
 #, fuzzy
 msgid "Invalid request."
 msgstr "Ungültige Anfrage"
-
-#, python-format
-msgid "Invalid request: %(domains)r"
-msgstr "Ungültige Anfrage: %(domains)r"
 
 msgid "Invalid response"
 msgstr "Ungültige Antwort"
@@ -48871,6 +48947,12 @@ msgstr ""
 "regelmäßig alle ausstehenden Änderungen an der ausgewählten Instanz "
 "aktiviert."
 
+#, fuzzy, python-format
+msgid "Note: To authenticate with an IAM role, please use the %(link)s."
+msgstr ""
+"Hinweis: Für Zugriffsoptionen wie AssumeRole oder eine benutzerdefinierte "
+"IAM-Region verwenden Sie bitte %(link)s."
+
 msgid ""
 "Note: With this command you can archive all events of one host. Needs a rule "
 "\"Check event state in Event Console\" to be configured."
@@ -50899,6 +50981,12 @@ msgstr "Offene Ausgangs-Handles"
 msgid "Open slots"
 msgstr "Offene Slots"
 
+#, python-format
+msgid ""
+"Open the <a href=\"%(url)s\">crash report page</a> of the remote site for "
+"details."
+msgstr ""
+
 msgid "Open the action menu"
 msgstr "Aktionsmenü öffnen"
 
@@ -52178,6 +52266,10 @@ msgstr "Andere Protokolle für diesen Dienst"
 
 msgid "Other operating systems"
 msgstr "Andere Betriebssysteme"
+
+#, fuzzy
+msgid "Other options"
+msgstr "Applikation autorisieren"
 
 msgid "Other services"
 msgstr "Andere Services"
@@ -54943,6 +55035,12 @@ msgid "Please select at least one or more regions to continue."
 msgstr ""
 "Bitte wählen Sie mindestens eine oder mehrere Regionen aus, um fortzufahren."
 
+#, fuzzy, python-format
+msgid "Please select at most %(max_regions)s regions."
+msgstr ""
+"Bitte wählen Sie mindestens eine und höchstens {max_regions} Regionen aus, "
+"um fortzufahren"
+
 msgid "Please select some hosts before doing bulk actions on hosts."
 msgstr ""
 "Bitte ein paar Hosts auswählen bevor Sie Bulk-Aufgaben auf Hosts ausführen."
@@ -57142,6 +57240,10 @@ msgstr "OpenTelemetry-Konfigurationen einlesen"
 
 msgid "Read OpenTelemetry configurations."
 msgstr "OpenTelemetry-Konfigurationen einlesen."
+
+#, fuzzy
+msgid "Read access by the central site"
+msgstr "Max. Zeit hinter der Zentralinstanz"
 
 msgid "Read access to all hosts and folders"
 msgstr "Lesezugriff auf alle Hosts/Ordner"
@@ -62485,6 +62587,13 @@ msgstr "Gesendet am: %(sent_on)s, läuft ab am: %(expires_on)s"
 
 msgid "Sent vs Received Traffic Breakdown"
 msgstr "Vergleich versendeter und empfangener Traffic"
+
+msgid ""
+"Sent with every AssumeRole call, the same for every account. Set it when the "
+"roles in the accounts require one. A rule on this site can then use those "
+"roles only if it knows the ID. It is not a secret: it is stored and passed "
+"in plain text, so every user who can read this rule can copy it."
+msgstr ""
 
 msgid "Sentinel"
 msgstr "Markierung"
@@ -71410,6 +71519,13 @@ msgstr ""
 "Die Referenz der Authentifizierungskontextklasse (zum Beispiel "
 "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport)"
 
+#, python-format
+msgid ""
+"The automation helper did not answer within %(timeout)d seconds. Possibly "
+"the service <tt>automation-helper</tt> hangs, please check the state of the "
+"site services."
+msgstr ""
+
 msgid ""
 "The availability is computed by processing entries from a data table of "
 "historic events and state phases. In order to avoid a hanging system in "
@@ -72144,6 +72260,13 @@ msgid ""
 msgstr ""
 "Das Dashboard '%(dashboard_name)s' existiert nicht oder Sie haben keine "
 "Berechtigung, um es zu sehen."
+
+#, python-brace-format
+msgid ""
+"The data backend certificate authority {path} holds no certificate. Create "
+"it as the site user with 'cmk-cert init data-backend-ca' and 'cmk-cert init "
+"data-backend'."
+msgstr ""
 
 #. weblate-flags: read-only, domain-specific
 #, fuzzy
@@ -75205,13 +75328,6 @@ msgstr ""
 "oder dass der Test selbst nachjustiert werden sollte (z. B. durch "
 "Verringerung der Keyword-Timeouts). "
 
-msgid ""
-"The same external ID for the role in every account. It prevents another user "
-"of this site from monitoring an account through these credentials without "
-"knowing the ID. Use it on sites where several teams or customers can create "
-"AWS rules."
-msgstr ""
-
 #, fuzzy
 msgid "The same shared secret will be saved in the Checkmk password store."
 msgstr "Der Name, der im Service-Namen verwendet wird"
@@ -77652,6 +77768,12 @@ msgid ""
 msgstr ""
 "Dieses Dashboard zeichnet eine hierarchische Karte Ihrer Hosts aufgrund der "
 "von Ihnen gepflegten Parent-Beziehungen."
+
+#. weblate-flags: read-only, domain-specific
+msgid ""
+"This data backend is to be opened to the central site, but the central site "
+"is not known here yet. Activate the changes on the central site."
+msgstr ""
 
 msgid "This defaults to the host for which the active check is configured."
 msgstr ""
@@ -92657,6 +92779,14 @@ msgid ""
 "interface."
 msgstr ""
 
+#. weblate-flags: read-only, domain-specific
+msgid ""
+"Whether the central site may read the data this remote site keeps in its own "
+"data backend, and the address the central site connects from. The central "
+"site authenticates with its data backend certificate. Opening this binds the "
+"service beyond the loopback interface."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Whether the plug-in looks for local Oracle database instances on its own. It "
@@ -99321,10 +99451,12 @@ msgstr "Einstellungen-Menü"
 msgid "Show date and time"
 msgstr "Tag und Zeit anzeigen"
 
-msgid "Sharing"
-msgstr "Freigabe"
+#, fuzzy
+msgid "Public sharing"
+msgstr "Öffentlicher Link"
 
-msgid "Sharing until"
+#, fuzzy
+msgid "Public sharing until"
 msgstr "Freigabe bis"
 
 msgid "expires in %{days} days"
@@ -99336,7 +99468,8 @@ msgstr "läuft in einem Tag ab"
 msgid "expires today"
 msgstr "läuft heute ab"
 
-msgid "Sharing expired on"
+#, fuzzy
+msgid "Public sharing expired on"
 msgstr "Freigabe lief ab am"
 
 #, fuzzy
@@ -102769,6 +102902,16 @@ msgstr "Entfernt"
 msgid "Duplicate"
 msgstr "Deduplizierungsrate"
 
+msgid "Site unreachable: %{sites} — showing last known state for its hosts"
+msgstr ""
+
+#, fuzzy
+msgid "Site unreachable: %{sites} — its hosts show no current state"
+msgstr "Host ist unerreichbar oder hat unbekannte Services"
+
+msgid "Site unreachable: %{sites} — its hosts are missing from the map"
+msgstr ""
+
 #, fuzzy
 msgid "next check in %{duration}"
 msgstr "Dauer des Host-Checks"
@@ -102809,6 +102952,9 @@ msgstr ""
 #, fuzzy
 msgid "Exit full screen"
 msgstr "An den Bildschirm anpassen"
+
+msgid "Connection lost — showing last known state"
+msgstr ""
 
 msgid "Live"
 msgstr ""
@@ -102860,6 +103006,12 @@ msgid ""
 "Pick one here, or type '/' in the search box. Without a prefix all fields "
 "are searched; multiple terms must all match."
 msgstr ""
+
+#, fuzzy
+msgid "%{n} site unreachable"
+msgid_plural "%{n} sites unreachable"
+msgstr[0] "Host wird unerreichbar"
+msgstr[1] "Host wird unerreichbar"
 
 msgid "Open in new tab (full screen)"
 msgstr ""
@@ -103630,12 +103782,21 @@ msgstr "Tabellenansicht kopieren"
 msgid "Latitude"
 msgstr ""
 
+msgid "Between -90 and 90."
+msgstr ""
+
 #, fuzzy
 msgid "Longitude"
 msgstr "Längster"
 
+msgid "Between -180 and 180."
+msgstr ""
+
 msgid ""
 "Pan/zoom the map first, then reopen settings to capture the current view."
+msgstr ""
+
+msgid "A whole number from 0 to %{max}."
 msgstr ""
 
 msgid "Closes settings and switches the map to picker mode."
@@ -103678,6 +103839,10 @@ msgstr "Keine erkennbaren Hosts gefunden"
 #, fuzzy
 msgid "%{field} is required."
 msgstr "Titel ist erforderlich."
+
+#, fuzzy
+msgid "The map view is out of range."
+msgstr "Wert außerhalb des Bereichs"
 
 #, fuzzy
 msgid "No changes to save"
@@ -104006,12 +104171,6 @@ msgstr ""
 msgid "Folder tree drawing"
 msgstr "Ordnerbaum"
 
-msgid "Connection lost — showing last known state"
-msgstr ""
-
-msgid "Site unreachable: %{sites} — showing last known state for its hosts"
-msgstr ""
-
 #, fuzzy
 msgid "Waiting for folder data…"
 msgstr "Warnung wenn älter als"
@@ -104052,6 +104211,10 @@ msgstr "Prozess löschen"
 #, fuzzy
 msgid "Save failed"
 msgstr "Anmeldung ist fehlgeschlagen"
+
+#, fuzzy
+msgid "Live update failed"
+msgstr "Anfrage fehlgeschlagen"
 
 #, fuzzy
 msgid "Loading map…"
@@ -104602,6 +104765,21 @@ msgstr "Diese Gruppe existiert nicht."
 msgid "Geo map canvas"
 msgstr ""
 
+msgid ""
+"No hosts with geo coordinates found — set the maps_lat and maps_lng labels "
+"on hosts to show them here"
+msgstr ""
+
+msgid ""
+"No objects yet — click the Edit button (bottom right) to place some, or "
+"populate the map from hosts with the maps_lat and maps_lng labels under Map "
+"settings → Automap source"
+msgstr ""
+
+#, fuzzy
+msgid "Loading hosts…"
+msgstr "Lädt Optionen…"
+
 #, fuzzy
 msgid "Save current view as default"
 msgstr "Die Seite zur vollständigen Aktivierung als Standard festlegen"
@@ -104721,22 +104899,6 @@ msgstr "Knoten-Zustand"
 msgid "Failed to create the alert."
 msgstr "Fehler beim Darstellen des Werts:"
 
-#, fuzzy
-msgid "Define threshold"
-msgstr "Sensorschwellwert"
-
-#, fuzzy
-msgid "Defining the threshold will become available here."
-msgstr "Benutzerdefinierte Aktionen, die für den Alert zur Verfügung stehen."
-
-#, fuzzy
-msgid "The alert was created."
-msgstr "Zeit, wann die Wartungszeit erstellt wurde"
-
-#, fuzzy
-msgid "Create alert"
-msgstr "Erstellt am"
-
 msgid "Unknown error"
 msgstr "Unbekannter Fehler"
 
@@ -104757,6 +104919,14 @@ msgid "An alert name is required"
 msgstr "Ein Makroname ist erforderlich"
 
 #, fuzzy
+msgid "Name the alert"
+msgstr "Name des Peers"
+
+#, fuzzy
+msgid "Alert name"
+msgstr "Namen der Alert-Regeln"
+
+#, fuzzy
 msgid "A service name is required"
 msgstr "Service-Name ist erforderlich"
 
@@ -104764,39 +104934,36 @@ msgstr "Service-Name ist erforderlich"
 msgid "This is not a valid regular expression"
 msgstr "Ungültiger regulärer Ausdruck"
 
-msgid ""
-"Exact matching needs the complete service name. Switch to a regular "
-"expression to match part of it."
-msgstr ""
-
-msgid ""
-"A regular expression matches from the start of the service name, so begin it "
-"with .* to match anywhere in it. Only already discovered custom services can "
-"be matched."
-msgstr ""
-
 #, fuzzy
 msgid "Failed to search for custom services."
 msgstr "Name des benutzerdefinierten Service"
 
 #, fuzzy
-msgid "Name the alert and select services"
-msgstr "Alle Hosts und Services sehen"
+msgid "Select services"
+msgstr "(Service auswählen)"
 
 #, fuzzy
-msgid ""
-"Name the alert, then select the custom services it applies to by their "
-"service name."
+msgid "Select the custom services the alert applies to by their service name."
 msgstr ""
 "Der Name der Cluster-Ressource, so wie er im Service-Namen angezeigt wird."
 
 #, fuzzy
-msgid "Alert name"
-msgstr "Namen der Alert-Regeln"
+msgid "How are service names matched?"
+msgstr "Service-Name anzeigen"
+
+msgid ""
+"Exact matching needs the complete service name. A regular expression matches "
+"from the start of the service name, so begin it with .* to match anywhere in "
+"it."
+msgstr ""
 
 #, fuzzy
 msgid "Match service name by"
 msgstr "Service-Labels abgleichen"
+
+#, fuzzy
+msgid "No matching services. Only discovered services can be selected."
+msgstr "Aktive, erkannte Service-Labels anzeigen"
 
 #, fuzzy
 msgid "Matching services"
@@ -104806,6 +104973,24 @@ msgid ""
 "Only the first %{count} matches are shown. Refine the service name to narrow "
 "them down."
 msgstr ""
+
+msgid "Define at least one threshold: upper levels, lower levels or both."
+msgstr ""
+
+msgid "Fill in the warning and critical levels."
+msgstr ""
+
+#, fuzzy
+msgid "Define threshold"
+msgstr "Sensorschwellwert"
+
+#, fuzzy
+msgid "Set the default levels of the selected custom services."
+msgstr "Standardfarbe des Themas oder der Metrik verwenden."
+
+#, fuzzy
+msgid "Create & activate changes"
+msgstr "Änderungen nicht aktivieren"
 
 #, fuzzy
 msgid "Failed to create the custom service."
@@ -104821,10 +105006,6 @@ msgstr "Name des benutzerdefinierten Service"
 
 #, fuzzy
 msgid "Save & activate changes"
-msgstr "Änderungen nicht aktivieren"
-
-#, fuzzy
-msgid "Create & activate changes"
 msgstr "Änderungen nicht aktivieren"
 
 #, fuzzy
@@ -104883,6 +105064,14 @@ msgstr ""
 #, fuzzy
 msgid "Select the metric for this service"
 msgstr "Parameter für diesen Service ansehen und bearbeiten"
+
+#, fuzzy
+msgid "No metric selected"
+msgstr "Kein Symbol ausgewählt"
+
+#, fuzzy
+msgid "Select a metric to see its graph"
+msgstr "Einen benutzerdefinierten Graph auswählen"
 
 msgid "%{source} %{relation} %{target} (%{finding})"
 msgstr ""
@@ -106871,12 +107060,8 @@ msgid "Passive checks disabled"
 msgstr "Passive Checks"
 
 #, fuzzy
-msgid "In service period"
-msgstr "Host in Serviceperiode"
-
-#, fuzzy
-msgid "In check period"
-msgstr "Check-Periode"
+msgid "Out of check period"
+msgstr "Nicht in Serviceperiode"
 
 #, fuzzy
 msgid "Number of related hosts"
@@ -107525,15 +107710,13 @@ msgstr ""
 msgid "no match"
 msgstr "Keine Übereinstimmungen"
 
-msgid "Press [/] to search the table"
-msgstr ""
-
 msgid "Press [Enter] on a column header to sort by it"
 msgstr ""
 
 msgid ""
-"Press [Enter] on a column's filter button to filter for that column, "
-"[ArrowDown]/[ArrowUp] to move between the rows, [Escape] to close"
+"Press [Enter] or [Alt]+[ArrowDown] on a column's filter button to filter for "
+"that column, [ArrowDown]/[ArrowUp] to move between the rows, [Escape] to "
+"close"
 msgstr ""
 
 msgid "Press [Space] on a quick filter chip to filter for unhandled problems"
@@ -107564,14 +107747,15 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Type letters to focus the first clickable text containing them, [ArrowDown]/"
-"[ArrowUp] for the next/previous match, [Enter] to activate it, [Escape] to "
-"clear"
+"Type letters to focus the first clickable text or field containing them, "
+"[ArrowDown]/[ArrowUp] or [Tab]/[Shift]+[Tab] for the next/previous match, "
+"[Enter] to activate it, [Escape] to end the search, again to let go of the "
+"focus"
 msgstr ""
 
 #, fuzzy
-msgid "Focus search"
-msgstr "Host-Suche"
+msgid "Search this page"
+msgstr "Host-Namen abgleichen"
 
 #, fuzzy
 msgid "Donut chart"
@@ -108429,10 +108613,12 @@ msgid "Resend code"
 msgstr "Codes neu erstellen"
 
 #, fuzzy
-msgid "Internal error. Please try again or contact Checkmk support."
+msgid "Internal error. Please try again."
 msgstr ""
-"Wenn dieser Fehler weiter besteht, wenden Sie sich bitte an das Checkmk "
-"Support-Team."
+"Falscher Benutzername oder falsches Passwort. Bitte versuchen Sie es erneut."
+
+msgid "Checkmk could not process the request. Reload the page and try again."
+msgstr ""
 
 msgid "Unable to reach Checkmk site. Please check that it is started."
 msgstr ""
@@ -108777,10 +108963,6 @@ msgstr "2FA nicht möglich (Details siehe #13325)"
 msgid "Search providers"
 msgstr "Provider-Suche"
 
-#, fuzzy
-msgid "Apply filter"
-msgstr "Filter anwenden"
-
 msgid "Search operator suggestions"
 msgstr "Vorschläge für Suchoperatoren"
 
@@ -108797,10 +108979,6 @@ msgstr ""
 msgid "Note that for simplicity '*' will be substituted with '.*'."
 msgstr "Beachten Sie, dass der Einfachheit halber '*' durch '.*' ersetzt wird."
 
-#, fuzzy
-msgid "Run search"
-msgstr "Regelsuche"
-
 msgid "Search across Checkmk – Type '/' for search operators"
 msgstr "Suche in Checkmk – geben Sie '/' für Suchoperatoren ein"
 
@@ -108812,10 +108990,6 @@ msgstr "In 'Anpassen' suchen"
 
 msgid "Search in setup"
 msgstr "Suche in 'Setup'"
-
-#, fuzzy
-msgid "Insert operator"
-msgstr "Operator auswählen"
 
 msgid "Only available for 'Monitoring' and 'All'"
 msgstr "Nur für 'Monitoring' und 'Alle' verfügbar"
@@ -108854,10 +109028,6 @@ msgstr ""
 "um alle Suchoperatoren zu sehen und z.B. alle Hosts mit dem gleichen Host-"
 "Label zu finden (hl:)"
 
-#, fuzzy
-msgid "Open entry"
-msgstr "Pro Eintrag"
-
 msgid "Recently viewed"
 msgstr "Zuletzt angesehen"
 
@@ -108866,10 +109036,6 @@ msgstr "Alle leeren"
 
 msgid "Recently searched"
 msgstr "Zuletzt gesucht"
-
-#, fuzzy
-msgid "Open result"
-msgstr "Offene Slots"
 
 msgid "Press"
 msgstr "Drücken"
@@ -109532,6 +109698,71 @@ msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
 
+#~ msgid ""
+#~ "Cycle not found, the information is expired, please return back to select "
+#~ "a cycle"
+#~ msgstr ""
+#~ "Zyklus nicht gefunden, die Informationen sind abgelaufen, bitte kehren "
+#~ "Sie zurück, um einen Zyklus auszuwählen"
+
+#~ msgid "Sharing"
+#~ msgstr "Freigabe"
+
+#, fuzzy
+#~ msgid "Defining the threshold will become available here."
+#~ msgstr ""
+#~ "Benutzerdefinierte Aktionen, die für den Alert zur Verfügung stehen."
+
+#, fuzzy
+#~ msgid "The alert was created."
+#~ msgstr "Zeit, wann die Wartungszeit erstellt wurde"
+
+#, fuzzy
+#~ msgid "Create alert"
+#~ msgstr "Erstellt am"
+
+#, fuzzy
+#~ msgid "Name the alert and select services"
+#~ msgstr "Alle Hosts und Services sehen"
+
+#, fuzzy
+#~ msgid "In service period"
+#~ msgstr "Host in Serviceperiode"
+
+#, fuzzy
+#~ msgid "In check period"
+#~ msgstr "Check-Periode"
+
+#, fuzzy
+#~ msgid "Focus search"
+#~ msgstr "Host-Suche"
+
+#, fuzzy
+#~ msgid "Internal error. Please try again or contact Checkmk support."
+#~ msgstr ""
+#~ "Wenn dieser Fehler weiter besteht, wenden Sie sich bitte an das Checkmk "
+#~ "Support-Team."
+
+#, fuzzy
+#~ msgid "Apply filter"
+#~ msgstr "Filter anwenden"
+
+#, fuzzy
+#~ msgid "Run search"
+#~ msgstr "Regelsuche"
+
+#, fuzzy
+#~ msgid "Insert operator"
+#~ msgstr "Operator auswählen"
+
+#, fuzzy
+#~ msgid "Open entry"
+#~ msgstr "Pro Eintrag"
+
+#, fuzzy
+#~ msgid "Open result"
+#~ msgstr "Offene Slots"
+
 #, fuzzy
 #~ msgid "AI Assistant"
 #~ msgstr "KI-Unterstützung"
@@ -110055,10 +110286,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "flapping"
 #~ msgstr "Unstetig"
-
-#, fuzzy
-#~ msgid "stale — site unreachable"
-#~ msgstr "Host wird unerreichbar"
 
 #, fuzzy
 #~ msgid "Last state change"

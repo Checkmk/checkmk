@@ -396,7 +396,9 @@ def rrd_column_names(
         )
 
 
-def _converted(time_series: TimeSeries, conversion: Callable[[float], float]) -> TimeSeries:
+def converted_time_series(
+    time_series: TimeSeries, conversion: Callable[[float], float]
+) -> TimeSeries:
     return TimeSeries(
         time_range=time_series.time_range,
         values=[None if value is None else conversion(value) for value in time_series.values],
@@ -449,7 +451,7 @@ def merge_rrd_columns(
         ),
         temperature_unit,
     )
-    return _converted(merge_series(relevant, relevant[0].time_range), unit.conversion)
+    return converted_time_series(merge_series(relevant, relevant[0].time_range), unit.conversion)
 
 
 def rrd_column_name(

@@ -19,9 +19,11 @@ from cmk.graphing_engine import (
     EvaluatedLine,
     EvaluatedRule,
     EvaluatedStack,
+    EvaluatedVerticalRange,
     TimeRange,
     TimeSeries,
     Unit,
+    VerticalRangeKind,
 )
 
 matplotlib.use("Agg")
@@ -43,6 +45,7 @@ from cmk.gui.graphing._graph_png import (
     render_png,
 )
 from cmk.gui.graphing._graph_png_size import MM_PER_INCH, PngOptions
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.unit_formatter import DecimalFormatter
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
@@ -147,7 +150,7 @@ def test_render_png_produces_bytes_for_an_empty_graph() -> None:
     graph = EvaluatedGraph(
         name="g", title="Empty", time_range=_TIME_RANGE, vertical_range=None, stacks=[], lines=[]
     )
-    png_bytes = render_png(graph, _OPTIONS, _TEXTS, None)
+    png_bytes = render_png(graph, _OPTIONS, _TEXTS, None, TemperatureUnit.CELSIUS)
 
     assert png_bytes.startswith(b"\x89PNG")
 
@@ -166,7 +169,7 @@ def test_render_png_with_a_unit_renders_ticks_and_legend_via_the_formatter() -> 
     )
     y_axis_unit = Unit(notation=DecimalNotation("X"), precision=AutoPrecision(2))
 
-    png_bytes = render_png(graph, _OPTIONS, _TEXTS, y_axis_unit)
+    png_bytes = render_png(graph, _OPTIONS, _TEXTS, y_axis_unit, TemperatureUnit.CELSIUS)
 
     assert png_bytes.startswith(b"\x89PNG")
 
@@ -276,7 +279,7 @@ def test_the_image_has_the_size_computed_for_it_without_a_legend() -> None:
     )
     options = _options(show_legend=False)
 
-    png_bytes = render_png(graph, options, _TEXTS, _UNIT)
+    png_bytes = render_png(graph, options, _TEXTS, _UNIT, TemperatureUnit.CELSIUS)
 
     assert _size_in_px(png_bytes) == _px(compute_png_size_mm(graph, options))
 
@@ -300,7 +303,7 @@ def test_the_image_has_the_size_computed_for_it_with_a_legend() -> None:
     )
     options = _options(show_legend=True)
 
-    png_bytes = render_png(graph, options, _TEXTS, _UNIT)
+    png_bytes = render_png(graph, options, _TEXTS, _UNIT, TemperatureUnit.CELSIUS)
 
     assert _size_in_px(png_bytes) == _px(compute_png_size_mm(graph, options))
 
@@ -460,3 +463,82 @@ def test_graph_time_caption_dates_the_range_in_the_given_time_zone() -> None:
 
     assert "2026-09-28" in _graph_time_caption(time_range, _TEXTS, ZoneInfo("UTC"))
     assert "2026-09-29" in _graph_time_caption(time_range, _TEXTS, ZoneInfo("Europe/Berlin"))
+
+
+def _temperature_graph(unit: Unit, values: list[float | None], warning: float) -> EvaluatedGraph:
+    return EvaluatedGraph(
+        name="g",
+        title="Temperature",
+        time_range=_TIME_RANGE,
+        vertical_range=None,
+        stacks=[],
+        lines=[
+            EvaluatedLine(
+                curve=EvaluatedCurve(
+                    id="temp",
+                    attributes=CurveAttributes(title="Temperature", unit=unit, color="#123456"),
+                    value=None,
+                    time_series=TimeSeries(time_range=_TIME_RANGE, values=values),
+                ),
+                inverse=False,
+            )
+        ],
+        rules=[
+            EvaluatedRule(
+                id="warn",
+                attributes=CurveAttributes(title="Warning", unit=unit, color="#ffd000"),
+                value=warning,
+                inverse=False,
+            )
+        ],
+    )
+
+
+def test_a_celsius_graph_renders_like_its_fahrenheit_twin_for_a_fahrenheit_user() -> None:
+    celsius = Unit(notation=DecimalNotation("°C"), precision=AutoPrecision(2))
+    fahrenheit = Unit(notation=DecimalNotation("°F"), precision=AutoPrecision(2))
+
+    assert render_png(
+        _temperature_graph(celsius, [0.0, 50.0, 100.0], 80.0),
+        _OPTIONS,
+        _TEXTS,
+        celsius,
+        TemperatureUnit.FAHRENHEIT,
+    ) == render_png(
+        _temperature_graph(fahrenheit, [32.0, 122.0, 212.0], 176.0),
+        _OPTIONS,
+        _TEXTS,
+        fahrenheit,
+        TemperatureUnit.FAHRENHEIT,
+    )
+
+
+def test_a_requested_vertical_range_is_taken_in_the_users_unit() -> None:
+    celsius = Unit(notation=DecimalNotation("°C"), precision=AutoPrecision(2))
+    fahrenheit = Unit(notation=DecimalNotation("°F"), precision=AutoPrecision(2))
+    requested = EvaluatedVerticalRange(range_kind=VerticalRangeKind.FIXED, lower=50.0, upper=100.0)
+    twin = _temperature_graph(fahrenheit, [32.0, 122.0, 212.0], 176.0)
+
+    assert render_png(
+        _temperature_graph(celsius, [0.0, 50.0, 100.0], 80.0),
+        _OPTIONS,
+        _TEXTS,
+        celsius,
+        TemperatureUnit.FAHRENHEIT,
+        requested_vertical_range=requested,
+    ) == render_png(
+        EvaluatedGraph(
+            name=twin.name,
+            title=twin.title,
+            time_range=twin.time_range,
+            vertical_range=requested,
+            stacks=twin.stacks,
+            lines=twin.lines,
+            rules=twin.rules,
+            regions=twin.regions,
+        ),
+        _OPTIONS,
+        _TEXTS,
+        fahrenheit,
+        TemperatureUnit.FAHRENHEIT,
+    )

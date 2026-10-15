@@ -25,6 +25,7 @@ from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 from . import _plugins as engine_plugins
 from ._graph_dispatch import evaluate_built_graphs
@@ -39,6 +40,7 @@ from ._graph_specification import GraphEnvironment
 from ._graph_templates import build_template_graphs, TemplateGraphSpecification
 from ._png_rendering import png_options, png_texts
 from ._source import RRDFetchMetricNames
+from ._user_specific_unit import get_temperature_unit
 
 
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
@@ -59,12 +61,14 @@ class AjaxGraphImagesForNotifications(AjaxPage):
                 user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
                 debug=ctx.config.debug,
             ),
+            get_temperature_unit(user, ctx.config.default_temperature_unit),
         )
 
 
 def _answer_graph_image_request(
     request: Request,
     env: GraphEnvironment,
+    temperature_unit: TemperatureUnit,
 ) -> list[str]:
     site_id = SiteId(raw_site) if (raw_site := request.var("site")) else None
     host_name = request.get_validated_type_input_mandatory(HostName, "host")
@@ -132,7 +136,9 @@ def _answer_graph_image_request(
     texts = png_texts()
     return [
         base64.b64encode(
-            render_png(evaluated_graph, options, texts, built.resolved_y_axis_unit())
+            render_png(
+                evaluated_graph, options, texts, built.resolved_y_axis_unit(), temperature_unit
+            )
         ).decode("ascii")
         # Assumes evaluate_built_graphs returns exactly one evaluated graph per input graph -
         # true for template graphs (the only kind this notification path builds above), but not

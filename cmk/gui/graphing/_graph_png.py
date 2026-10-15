@@ -7,7 +7,7 @@ This is needed for the graphs sent with mail notifications."""
 
 import datetime
 import io
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 
 import numpy as np
@@ -25,22 +25,25 @@ from cmk.graphing_engine import (
     drawn_curves,
     EvaluatedCurve,
     EvaluatedGraph,
+    EvaluatedLine,
     EvaluatedRegion,
     EvaluatedRule,
     EvaluatedStack,
+    EvaluatedVerticalRange,
     NonConvertibleUnit,
-    notation_name,
-    precision_kind,
     TimeRange,
     TimeSeries,
     timestamps,
     Unit,
     VerticalRangeKind,
 )
-from cmk.web.utils.unit_formatter import Label, notation_formatter, NotationFormatter
+from cmk.gui.utils.temperature_unit import TemperatureUnit
+from cmk.web.utils.unit_formatter import Label, NotationFormatter
 
 from ._graph_png_size import ex_to_inches, legend_height_ex, PngOptions
+from ._metric_data import converted_time_series
 from ._time_axis import compute_time_axis
+from ._user_specific_unit import user_specific_unit
 
 DPI = 96
 TITLE_COLOR = "#1E262E"
@@ -327,7 +330,6 @@ def _apply_render_config(
     graph: EvaluatedGraph,
     options: PngOptions,
     texts: PngTexts,
-    y_axis_unit: Unit | NonConvertibleUnit | None,
     formatter: NotationFormatter | None,
     *,
     is_mirrored: bool,
@@ -349,8 +351,8 @@ def _apply_render_config(
         )
 
     if options.show_vertical_axis:
-        if y_axis_unit is not None and y_axis_unit.notation.symbol:
-            ax.set_ylabel(y_axis_unit.notation.symbol, fontsize=options.font_size)
+        if formatter is not None and formatter.symbol:
+            ax.set_ylabel(formatter.symbol, fontsize=options.font_size)
         if formatter is not None and is_mirrored:
             target_number_of_labels = max(1.0, options.size[1] / 8.0 + 1)
             if labels := _mirrored_y_labels(ax, formatter, target_number_of_labels):
@@ -559,38 +561,19 @@ def _plot_legend_table(
         add_marker(marker_x, marker_y(row), region.attributes.color)
 
 
-def render_png(
+def _render_png(
     graph: EvaluatedGraph,
     options: PngOptions,
     texts: PngTexts,
-    y_axis_unit: Unit | NonConvertibleUnit | None,
-    *,
-    tz: datetime.tzinfo | None = None,
+    formatter: NotationFormatter | None,
+    tz: datetime.tzinfo | None,
 ) -> bytes:
-    """Render a single evaluated graph to PNG bytes.
-
-    ``tz`` is the timezone the time axis and the graph time are rendered in. It defaults to the
-    site's local one; a PNG exported from the browser passes the browser's, the one the Vue
-    graph labels its time axis in.
-
-    Pure function - no registries, no Livestatus, no global state.
-    """
     scalars = _graph_scalars(graph)
     is_mirrored = any(drawn.mirrored for drawn in drawn_curves(graph.stacks, graph.lines))
     lower, upper = _vertical_range_bounds(graph)
     # The legend always lists every rule (e.g. warning/critical), even ones outside the visible
     # Y range; only the drawn horizontal lines are restricted to the in-range subset.
     in_range_rules = _rules_in_range(graph.rules, lower, upper)
-    formatter = (
-        None
-        if y_axis_unit is None
-        else notation_formatter(
-            notation_name(y_axis_unit.notation),
-            y_axis_unit.notation.symbol,
-            precision_kind(y_axis_unit.precision),
-            y_axis_unit.precision.digits,
-        )
-    )
     table_height_ex = legend_height_ex(graph, options)
 
     width_in = ex_to_inches(options.size[0], options.font_size)
@@ -619,7 +602,7 @@ def render_png(
         sign = _mirroring_sign(rule.inverse)
         ax.axhline(sign * rule.value, color=rule.attributes.color)
     title_artist = _apply_render_config(
-        ax, graph, options, texts, y_axis_unit, formatter, is_mirrored=is_mirrored, tz=tz
+        ax, graph, options, texts, formatter, is_mirrored=is_mirrored, tz=tz
     )
     fig.tight_layout()
     _fit_time_axis(ax, options, tz)
@@ -628,3 +611,122 @@ def render_png(
     fig.savefig(buf, format="png")
     buf.seek(0)
     return buf.read()
+
+
+def _converted_curve(curve: EvaluatedCurve, temperature_unit: TemperatureUnit) -> EvaluatedCurve:
+    conversion = user_specific_unit(curve.attributes.unit, temperature_unit).conversion
+    return EvaluatedCurve(
+        id=curve.id,
+        attributes=curve.attributes,
+        value=None if curve.value is None else conversion(curve.value),
+        time_series=converted_time_series(curve.time_series, conversion),
+        source_id=curve.source_id,
+        series_attributes=curve.series_attributes,
+    )
+
+
+def _converted_stack(stack: EvaluatedStack, temperature_unit: TemperatureUnit) -> EvaluatedStack:
+    return EvaluatedStack(
+        members=[_converted_curve(member, temperature_unit) for member in stack.members],
+        inverse=stack.inverse,
+        reference=(
+            None if stack.reference is None else _converted_curve(stack.reference, temperature_unit)
+        ),
+    )
+
+
+def _converted_rule(rule: EvaluatedRule, temperature_unit: TemperatureUnit) -> EvaluatedRule:
+    conversion = user_specific_unit(rule.attributes.unit, temperature_unit).conversion
+    return EvaluatedRule(
+        id=rule.id,
+        attributes=rule.attributes,
+        value=conversion(rule.value),
+        inverse=rule.inverse,
+    )
+
+
+def _converted_region(
+    region: EvaluatedRegion, temperature_unit: TemperatureUnit
+) -> EvaluatedRegion:
+    conversion = user_specific_unit(region.attributes.unit, temperature_unit).conversion
+    return EvaluatedRegion(
+        id=region.id,
+        attributes=region.attributes,
+        lower=None if region.lower is None else converted_time_series(region.lower, conversion),
+        upper=None if region.upper is None else converted_time_series(region.upper, conversion),
+    )
+
+
+def _converted_vertical_range(
+    vertical_range: EvaluatedVerticalRange | None, conversion: Callable[[float], float]
+) -> EvaluatedVerticalRange | None:
+    if vertical_range is None:
+        return None
+    return EvaluatedVerticalRange(
+        range_kind=vertical_range.range_kind,
+        lower=None if vertical_range.lower is None else conversion(vertical_range.lower),
+        upper=None if vertical_range.upper is None else conversion(vertical_range.upper),
+    )
+
+
+def _graph_in_user_unit(
+    graph: EvaluatedGraph,
+    axis_conversion: Callable[[float], float],
+    temperature_unit: TemperatureUnit,
+    requested_vertical_range: EvaluatedVerticalRange | None,
+) -> EvaluatedGraph:
+    return EvaluatedGraph(
+        name=graph.name,
+        title=graph.title,
+        time_range=graph.time_range,
+        vertical_range=(
+            _converted_vertical_range(graph.vertical_range, axis_conversion)
+            if requested_vertical_range is None
+            else requested_vertical_range
+        ),
+        stacks=[_converted_stack(stack, temperature_unit) for stack in graph.stacks],
+        lines=[
+            EvaluatedLine(
+                curve=_converted_curve(line.curve, temperature_unit), inverse=line.inverse
+            )
+            for line in graph.lines
+        ],
+        rules=[_converted_rule(rule, temperature_unit) for rule in graph.rules],
+        regions=[_converted_region(region, temperature_unit) for region in graph.regions],
+    )
+
+
+def render_png(
+    graph: EvaluatedGraph,
+    options: PngOptions,
+    texts: PngTexts,
+    y_axis_unit: Unit | NonConvertibleUnit | None,
+    temperature_unit: TemperatureUnit,
+    *,
+    requested_vertical_range: EvaluatedVerticalRange | None = None,
+    tz: datetime.tzinfo | None = None,
+) -> bytes:
+    """Render a single evaluated graph to PNG bytes.
+
+    ``tz`` is the timezone the time axis and the graph time are rendered in. It defaults to the
+    site's local one; a PNG exported from the browser passes the browser's, the one the Vue
+    graph labels its time axis in.
+    """
+    if y_axis_unit is None:
+        return _render_png(
+            _graph_in_user_unit(
+                graph, lambda value: value, temperature_unit, requested_vertical_range
+            ),
+            options,
+            texts,
+            None,
+            tz,
+        )
+    axis = user_specific_unit(y_axis_unit, temperature_unit)
+    return _render_png(
+        _graph_in_user_unit(graph, axis.conversion, temperature_unit, requested_vertical_range),
+        options,
+        texts,
+        axis.formatter,
+        tz,
+    )

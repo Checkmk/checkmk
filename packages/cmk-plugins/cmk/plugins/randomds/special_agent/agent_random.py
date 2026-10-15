@@ -16,9 +16,27 @@ import sys
 import time
 from collections.abc import Sequence
 
-from cmk.server_side_programs.v1 import Storage
+from cmk.server_side_programs.v1 import AgentMessages, Storage
 
 AGENT = "agent_random"
+
+WARNINGS = [
+    "Could not create section 'gnarz_userdata': permission to endpoint denied",
+    "Fnorz API responded with 418 I'm a teapot, retrying with coffee",
+    "Snarks counter overflowed at 42, wrapping around to the meaning of life",
+    "Gnogomatic Turbler reports a turbulence, but refuses to say where",
+    "Grumblage sampling skipped: the grumbler was in a meeting",
+    "Lost connection to the freibl, it went slisk mid-request",
+    "Endpoint /v2/murbler is deprecated, please use /v3/murbler/murble",
+    "Rate limit reached: 1 request per lunar cycle exceeded",
+    "Garglebox returned a response in Klingon, parsing best-effort",
+    "Certificate of the Gnarz server expires in -3 days",
+    "Timezone of remote system is 'approximately Tuesday'",
+    "Metric 'snark_density' is negative, assuming antisnarks",
+    "Authentication token expired during the handshake, waving instead",
+    "Received 3 of 4 expected sections, the fourth is on strike",
+    "Discovered unexpected entity 'Gnogomatic Wurbler', ignoring it politely",
+]
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -29,6 +47,18 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="Hostname for which to generate random data",
     )
     return parser.parse_args(argv)
+
+
+def _number_of_warnings() -> int:
+    """Roughly every 3rd run has a warning, every 10th two, every 30th three"""
+    roll = random.random()
+    if roll < 1 / 30:
+        return 3
+    if roll < 1 / 10:
+        return 2
+    if roll < 1 / 3:
+        return 1
+    return 0
 
 
 def main(argv: Sequence[str]) -> int:
@@ -77,6 +107,12 @@ def main(argv: Sequence[str]) -> int:
             "%d %s - %s - %s\n"
             % (new_state, service.replace(" ", "_"), state_names[new_state], state_texts[new_state])
         )
+
+    messages = AgentMessages()
+    messages.add_info(f"Generated data for {len(services)} services")
+    for warning in random.sample(WARNINGS, _number_of_warnings()):
+        messages.add_warning(warning)
+    sys.stdout.write(messages.render())
 
     state_storage.write("history", json.dumps(history))
     return 0

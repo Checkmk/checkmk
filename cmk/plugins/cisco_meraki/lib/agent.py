@@ -39,7 +39,7 @@ from .schema import (
     UplinkUsageByInterface,
 )
 
-__version__ = "2.5.0p16"
+__version__ = "2.5.0p17"
 
 
 # .

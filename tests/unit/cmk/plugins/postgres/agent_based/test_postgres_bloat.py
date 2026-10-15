@@ -155,3 +155,28 @@ def test_warn_levels_on_table_bloat_and_wasted_index_bytes() -> None:
 def test_database_without_data_is_ignored() -> None:
     with pytest.raises(IgnoreResultsError):
         list(check_postgres_bloat("FOOBAR/testdb", {}, SECTION))
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=KeyError,
+    reason="Crash report 2faad14c-b024-11f0-ae2a-005056ab0a00: KeyError",
+)
+def test_section_without_header_line_is_reported() -> None:
+    row = ["np", "pg_catalog", "pg_class", "54", "81", "56", "0.7", "25", "458752", "448 kB"]
+    section = parse_dbs(
+        [
+            ["[databases_start]"],
+            ["np"],
+            ["[databases_end]"],
+            row,
+            [*row[:2], "pg_depend", *row[3:]],
+        ]
+    )
+
+    assert list(check_postgres_bloat("np", {}, section)) == [
+        Result(
+            state=State.UNKNOWN,
+            summary="Cannot evaluate bloat data: column 'tbloat' is missing in the agent output",
+        )
+    ]

@@ -19,6 +19,7 @@ import type {
   AverageScatterplotContent,
   CombinedGraphContent,
   CustomGraphContent,
+  EmbeddedCustomGraphContent,
   PerformanceGraphContent,
   ProblemGraphContent,
   SingleTimeseriesContent,
@@ -49,6 +50,7 @@ const props =
       | AverageScatterplotContent
       | ProblemGraphContent
       | CustomGraphContent
+      | EmbeddedCustomGraphContent
     >
   >()
 const emit = defineEmits<WidgetEmitTimeRange>()
@@ -206,6 +208,17 @@ const discoverGraphs = async (): Promise<GraphDiscovery> => {
           }
         })
       )
+    case 'embedded_custom_graph':
+      return unwrap(
+        await client.POST('/domain-types/graph/actions/discover_custom_graphs/invoke', {
+          params: { header: { 'Content-Type': 'application/json' } },
+          body: {
+            type: 'inline',
+            // the widget content keeps the definition untyped; the endpoint validates it
+            definition: content.definition as components['schemas']['CustomGraphDefinition']
+          }
+        })
+      )
     default:
       staticAssertNever(content)
       return { graphs: [] }
@@ -272,6 +285,8 @@ const discoveryKey = computed(() => {
       return { context: props.effective_filter_context.filters }
     case 'custom_graph':
       return { custom_graph: content.custom_graph }
+    case 'embedded_custom_graph':
+      return { definition: content.definition }
     default:
       staticAssertNever(content)
       return {}

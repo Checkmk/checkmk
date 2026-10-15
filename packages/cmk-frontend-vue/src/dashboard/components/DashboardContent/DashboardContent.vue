@@ -88,7 +88,8 @@ function contentToComponent(content: WidgetContent): Component {
       'combined_graph',
       'average_scatterplot',
       'problem_graph',
-      'custom_graph'
+      'custom_graph',
+      'embedded_custom_graph'
     ].includes(contentType):
       return DashboardContentTimeSeriesGraph
     case ['host_stats', 'service_stats', 'event_stats'].includes(contentType):

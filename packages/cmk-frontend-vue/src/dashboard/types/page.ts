@@ -39,6 +39,7 @@ export interface DashboardPermissions {
   publish_to_contact_groups: boolean
   publish_to_foreign_contact_groups: boolean
   publish_to_sites: boolean
+  edit_custom_graph: boolean
 }
 
 export interface DashboardPageProperties {

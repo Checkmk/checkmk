@@ -6,6 +6,7 @@
 import { type DashboardWidgetWorkflowKey } from '@/dashboard/components/WidgetWorkflow/WidgetWorkflowTypes.ts'
 import type { WidgetContentType } from '@/dashboard/types/widget.ts'
 
+// null: the widget has no editor yet
 export function widgetTypeToSelectorMatcher(
   widgetContentType: WidgetContentType
 ): DashboardWidgetWorkflowKey | null {
@@ -23,6 +24,12 @@ export function widgetTypeToSelectorMatcher(
 
     case 'custom_graph': {
       return 'link_custom_graph'
+    }
+
+    // edited in the Clone and Create workflows, which are not implemented yet
+    // Clone: CMK-39219; Create: CMK-39220
+    case 'embedded_custom_graph': {
+      return null
     }
 
     case 'linked_view':

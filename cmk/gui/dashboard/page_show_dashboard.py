@@ -151,14 +151,7 @@ def page_dashboard_app(ctx: PageContext) -> None:
             "ntop_active": ntop_connection().is_active(),
             "network_flow_active": _network_flow_active(config_domain_registry),
         },
-        "permissions": {
-            "publish_to_all": user.may("general.publish_dashboards"),
-            "publish_to_contact_groups": user.may("general.publish_dashboards_to_groups"),
-            "publish_to_foreign_contact_groups": user.may(
-                "general.publish_dashboards_to_foreign_groups"
-            ),
-            "publish_to_sites": user.may("general.publish_dashboards_to_sites"),
-        },
+        "permissions": _dashboard_permissions(),
         "logged_in_user": user.id,
         "global_time_picker": asdict(get_global_time_picker_props(ctx.config)),
     }
@@ -172,6 +165,19 @@ def page_dashboard_app(ctx: PageContext) -> None:
     hooks.call("dashboard-page-rendered")
 
     html.footer()
+
+
+def _dashboard_permissions() -> dict[str, bool]:
+    return {
+        "publish_to_all": user.may("general.publish_dashboards"),
+        "publish_to_contact_groups": user.may("general.publish_dashboards_to_groups"),
+        "publish_to_foreign_contact_groups": user.may(
+            "general.publish_dashboards_to_foreign_groups"
+        ),
+        "publish_to_sites": user.may("general.publish_dashboards_to_sites"),
+        # false on community, which does not register the permission
+        "edit_custom_graph": user.may("general.edit_custom_graph"),
+    }
 
 
 def _network_flow_active(registry: ConfigDomainRegistry) -> bool:

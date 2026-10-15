@@ -28,6 +28,12 @@ describe('widgetTypeToSelectorMatcher', () => {
 
     expect(wizardKey).toBeNull()
   })
+
+  it('has no wizard to edit an embedded custom graph widget in yet', () => {
+    const wizardKey = widgetTypeToSelectorMatcher('embedded_custom_graph')
+
+    expect(wizardKey).toBeNull()
+  })
 })
 
 describe('wizardSlideInSize', () => {

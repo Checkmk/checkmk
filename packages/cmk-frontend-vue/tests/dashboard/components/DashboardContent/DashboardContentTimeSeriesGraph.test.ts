@@ -13,7 +13,7 @@ import { createSharedGraphFetcher } from '@/dashboard/components/DashboardConten
 import { useProvideCmkToken } from '@/dashboard/composables/useCmkToken'
 import { useProvideSharedWidgetGraphs } from '@/dashboard/composables/useSharedWidgetGraphs'
 import type { SharedWidgetGraphs } from '@/dashboard/types/page.ts'
-import type { CustomGraphContent } from '@/dashboard/types/widget.ts'
+import type { CustomGraphContent, EmbeddedCustomGraphContent } from '@/dashboard/types/widget.ts'
 
 import { makeContentProps } from '@tests/dashboard/contentProps'
 
@@ -145,6 +145,51 @@ describe('custom graph widget', () => {
     expect(
       await screen.findByText(/Custom graph not found: No custom graph was found\./)
     ).toBeInTheDocument()
+  })
+})
+
+const DEFINITION = {
+  graph_options: {
+    unit: { type: 'first_entry_with_unit' },
+    explicit_vertical_range: { type: 'auto' },
+    omit_zero_metrics: false
+  },
+  data_sources: [{ type: 'constant', id: 'C', value: 100 }]
+}
+
+const EMBEDDED_CUSTOM_GRAPH_CONTENT: EmbeddedCustomGraphContent = {
+  type: 'embedded_custom_graph',
+  definition: DEFINITION,
+  timerange: { type: 'predefined', value: 'last_25_hours' },
+  graph_render_options: { show_legend: true, show_graph_time: false }
+}
+
+describe('custom graph widget with an embedded definition', () => {
+  test('discovers the graph from its embedded definition', async () => {
+    renderWidget({ content: EMBEDDED_CUSTOM_GRAPH_CONTENT })
+
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+    expect(postSpy.mock.calls[0][0]).toBe(
+      '/domain-types/graph/actions/discover_custom_graphs/invoke'
+    )
+    expect(postSpy.mock.calls[0][1].body).toEqual({ type: 'inline', definition: DEFINITION })
+  })
+
+  test('renders the figure with the discovered definition', async () => {
+    renderWidget({ content: EMBEDDED_CUSTOM_GRAPH_CONTENT })
+
+    expect(await screen.findByTestId('graph-figure')).toHaveTextContent('{"graphs": []}')
+  })
+
+  test('rediscovers when the embedded definition changes', async () => {
+    const { rerender } = renderWidget({ content: EMBEDDED_CUSTOM_GRAPH_CONTENT })
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+
+    const changed = { ...DEFINITION, data_sources: [{ type: 'constant', id: 'C', value: 200 }] }
+    await rerender({ content: { ...EMBEDDED_CUSTOM_GRAPH_CONTENT, definition: changed } } as never)
+
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
+    expect(postSpy.mock.calls[1][1].body).toEqual({ type: 'inline', definition: changed })
   })
 })
 

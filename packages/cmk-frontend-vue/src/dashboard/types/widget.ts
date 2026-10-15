@@ -121,6 +121,7 @@ export type CombinedGraphContent = components['schemas']['CombinedGraphContent']
 export type AverageScatterplotContent = components['schemas']['AverageScatterplotContent']
 export type ProblemGraphContent = components['schemas']['ProblemGraphContent']
 export type CustomGraphContent = components['schemas']['CustomGraphContent']
+export type EmbeddedCustomGraphContent = components['schemas']['EmbeddedCustomGraphContent']
 // Only picks graph_render_options, used to check legend visibility in the scrollable preview
 // as this is used by multiple widget types we extract it only once here
 export type GraphWidgetContent = Pick<

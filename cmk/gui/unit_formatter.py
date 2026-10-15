@@ -5,7 +5,7 @@
 
 import abc
 import math
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from typing import ClassVar, Final, Literal, override
 
@@ -46,13 +46,8 @@ def _join_text_and_unit(formatted_part: FormattedPart) -> str:
     )
 
 
-@dataclass(frozen=True, kw_only=True)
-class Formatted:
-    sign: Literal["", "-"]
-    parts: Sequence[FormattedPart]
-
-    def render(self) -> str:
-        return f"{self.sign}{' '.join(_join_text_and_unit(f).strip() for f in self.parts)}"
+def _joined(sign: Literal["", "-"], parts: Iterable[FormattedPart]) -> str:
+    return f"{sign}{' '.join(_join_text_and_unit(part).strip() for part in parts)}"
 
 
 def _find_prefix_power(use_prefix: str, prefixes: Sequence[tuple[int, int, str]]) -> int:
@@ -184,10 +179,10 @@ class NotationFormatter(abc.ABC):
     def render(self, value: int | float, resolution: float | None = None) -> str:
         """`resolution` is the gap two rendered values must stay apart by, such as a graph's axis
         spacing; None renders at the unit's own precision."""
-        return Formatted(
-            sign="" if value >= 0 else "-",
-            parts=list(self._postformat(self._preformat(abs(value)), abs(value), resolution, True)),
-        ).render()
+        return _joined(
+            "" if value >= 0 else "-",
+            self._postformat(self._preformat(abs(value)), abs(value), resolution, True),
+        )
 
     @abc.abstractmethod
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]: ...
@@ -255,21 +250,19 @@ class NotationFormatter(abc.ABC):
         spacing: float,
         sign_text: Literal["", "-"],
     ) -> str:
-        return Formatted(
-            sign=sign_text,
-            parts=list(
-                self._postformat(
-                    self._preformat(
-                        position,
-                        use_prefix=shared_unit.prefix,
-                        use_symbol=shared_unit.symbol,
-                    ),
+        return _joined(
+            sign_text,
+            self._postformat(
+                self._preformat(
                     position,
-                    spacing,
-                    self._caps_label_digits,
-                )
+                    use_prefix=shared_unit.prefix,
+                    use_symbol=shared_unit.symbol,
+                ),
+                position,
+                spacing,
+                self._caps_label_digits,
             ),
-        ).render()
+        )
 
 
 _BASIC_DECIMAL_ATOMS: Final = [1, 2, 5, 10, 20, 50]

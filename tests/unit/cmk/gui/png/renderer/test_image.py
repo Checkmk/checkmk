@@ -30,7 +30,8 @@ matplotlib.use("Agg")
 from matplotlib.figure import Figure
 
 from cmk.gui.png import compute_png_size_mm
-from cmk.gui.png._size import MM_PER_INCH, PngOptions
+from cmk.gui.png._size import MM_PER_INCH
+from cmk.gui.png._wire import PngGraph, PngOptions, PngTexts, RenderingFailure
 from cmk.gui.png.renderer._image import (
     _fit_time_axis,
     _graph_scalars,
@@ -42,10 +43,7 @@ from cmk.gui.png.renderer._image import (
     _vertical_range_bounds,
     _y_axis_limits,
     DPI,
-    PngGraph,
-    PngTexts,
     render_pngs,
-    RenderingFailure,
 )
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.unit_formatter import DecimalFormatter

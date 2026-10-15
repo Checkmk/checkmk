@@ -3,22 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
-
 from cmk.graphing_engine import drawn_curves, EvaluatedGraph
 
+from ._wire import PngOptions
+
 MM_PER_INCH = 25.4
-
-
-@dataclass(frozen=True, kw_only=True)
-class PngOptions:
-    size: tuple[float, float]
-    font_size: float
-    show_title: bool
-    show_legend: bool
-    show_vertical_axis: bool
-    show_time_axis: bool
-    show_graph_time: bool
 
 
 def ex_to_inches(size_ex: float, font_size_pt: float) -> float:

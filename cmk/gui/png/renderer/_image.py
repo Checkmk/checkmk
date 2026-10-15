@@ -6,7 +6,6 @@ import datetime
 import io
 import traceback
 from collections.abc import Callable, Iterator, Sequence
-from dataclasses import dataclass
 
 import numpy as np
 import numpy.typing as npt
@@ -28,15 +27,14 @@ from cmk.graphing_engine import (
     EvaluatedRule,
     EvaluatedStack,
     EvaluatedVerticalRange,
-    NonConvertibleUnit,
     TimeRange,
     TimeSeries,
     timestamps,
-    Unit,
     VerticalRangeKind,
 )
 from cmk.gui.graphing import converted_time_series, user_specific_unit
-from cmk.gui.png._size import ex_to_inches, legend_height_ex, PngOptions
+from cmk.gui.png._size import ex_to_inches, legend_height_ex
+from cmk.gui.png._wire import PngGraph, PngOptions, PngTexts, RenderingFailure
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.unit_formatter import Label, NotationFormatter
 
@@ -57,16 +55,6 @@ LEGEND_MARKER_RADIUS_PX = 2
 TITLE_Y_OFFSET_PX = 10
 REGION_FILL_ALPHA = 0.15
 _PT_PER_PX = 72 / DPI
-
-
-@dataclass(frozen=True, kw_only=True)
-class PngTexts:
-    minimum: str
-    maximum: str
-    average: str
-    last: str
-    date_format: str
-    caption: str
 
 
 def _mirroring_sign(inverse: bool) -> float:
@@ -603,22 +591,6 @@ def _graph_in_user_unit(
         rules=[_converted_rule(rule, temperature_unit) for rule in graph.rules],
         regions=[_converted_region(region, temperature_unit) for region in graph.regions],
     )
-
-
-@dataclass(frozen=True, kw_only=True)
-class PngGraph:
-    graph: EvaluatedGraph
-    options: PngOptions
-    y_axis_unit: Unit | NonConvertibleUnit | None
-    requested_vertical_range: EvaluatedVerticalRange | None
-    # None: the site's local zone. An export passes the browser's zone, so that its time
-    # axis matches the one of the Vue graph.
-    time_zone: datetime.tzinfo | None
-
-
-@dataclass(frozen=True)
-class RenderingFailure:
-    message: str
 
 
 def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: TemperatureUnit) -> bytes:

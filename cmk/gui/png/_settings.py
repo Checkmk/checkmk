@@ -15,10 +15,9 @@ from cmk.gui.graphing import (
     GraphTitleFormat,
 )
 from cmk.gui.i18n import _
-from cmk.gui.png.renderer import PngTexts
 from cmk.gui.type_defs import SizeMM, SizePT
 
-from ._size import PngOptions
+from ._wire import PngOptions, PngTexts
 
 
 def get_mm_per_ex(font_size: float) -> SizeMM:

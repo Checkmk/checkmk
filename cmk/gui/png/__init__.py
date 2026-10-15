@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.png.renderer import PngGraph, PngTexts, render_pngs, RenderingFailure
+from cmk.gui.png.renderer import render_pngs
 
 from ._notification_images import AjaxGraphImagesForNotifications
 from ._settings import (
@@ -13,7 +13,8 @@ from ._settings import (
     png_options,
     png_texts,
 )
-from ._size import compute_png_size_mm, mm_per_ex, PngOptions
+from ._size import compute_png_size_mm, mm_per_ex
+from ._wire import PngGraph, PngOptions, PngTexts, RenderingFailure
 
 __all__ = [
     "GraphDisplayConfigImage",

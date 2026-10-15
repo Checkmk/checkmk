@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import base64
-import dataclasses
+import datetime
 import json
 from collections.abc import Mapping, Sequence
+from dataclasses import asdict, dataclass
 from typing import assert_never
 from zoneinfo import ZoneInfo
 
@@ -19,16 +20,51 @@ from cmk.graphing_engine import (
     EvaluatedRule,
     EvaluatedStack,
     EvaluatedVerticalRange,
+    NonConvertibleUnit,
     TimeRange,
     TimeSeries,
     Unit,
     VerticalRangeKind,
 )
 from cmk.gui.graphing import ensure_type, unit_from_specification, unit_to_specification
-from cmk.gui.png.renderer import PngGraph, PngTexts, RenderingFailure
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
-from ._size import PngOptions
+
+@dataclass(frozen=True, kw_only=True)
+class PngOptions:
+    size: tuple[float, float]
+    font_size: float
+    show_title: bool
+    show_legend: bool
+    show_vertical_axis: bool
+    show_time_axis: bool
+    show_graph_time: bool
+
+
+@dataclass(frozen=True, kw_only=True)
+class PngTexts:
+    minimum: str
+    maximum: str
+    average: str
+    last: str
+    date_format: str
+    caption: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class PngGraph:
+    graph: EvaluatedGraph
+    options: PngOptions
+    y_axis_unit: Unit | NonConvertibleUnit | None
+    requested_vertical_range: EvaluatedVerticalRange | None
+    # None: the site's local zone. An export passes the browser's zone, so that its time
+    # axis matches the one of the Vue graph.
+    time_zone: datetime.tzinfo | None
+
+
+@dataclass(frozen=True)
+class RenderingFailure:
+    message: str
 
 
 def _attributes_to_json(attributes: CurveAttributes) -> Mapping[str, object]:
@@ -43,7 +79,7 @@ def _time_series_to_json(time_series: TimeSeries | None) -> Mapping[str, object]
     if time_series is None:
         return None
     return {
-        "time_range": dataclasses.asdict(time_series.time_range),
+        "time_range": asdict(time_series.time_range),
         "values": list(time_series.values),
     }
 
@@ -67,10 +103,8 @@ def _graph_to_json(graph: EvaluatedGraph) -> Mapping[str, object]:
     return {
         "name": graph.name,
         "title": graph.title,
-        "time_range": dataclasses.asdict(graph.time_range),
-        "vertical_range": (
-            None if graph.vertical_range is None else dataclasses.asdict(graph.vertical_range)
-        ),
+        "time_range": asdict(graph.time_range),
+        "vertical_range": (None if graph.vertical_range is None else asdict(graph.vertical_range)),
         "stacks": [
             {
                 "members": [_curve_to_json(member) for member in stack.members],
@@ -106,14 +140,14 @@ def _graph_to_json(graph: EvaluatedGraph) -> Mapping[str, object]:
 def _png_graph_to_json(graph: PngGraph) -> Mapping[str, object]:
     return {
         "graph": _graph_to_json(graph.graph),
-        "options": dataclasses.asdict(graph.options),
+        "options": asdict(graph.options),
         "y_axis_unit": None
         if graph.y_axis_unit is None
         else unit_to_specification(graph.y_axis_unit),
         "requested_vertical_range": (
             None
             if graph.requested_vertical_range is None
-            else dataclasses.asdict(graph.requested_vertical_range)
+            else asdict(graph.requested_vertical_range)
         ),
         "time_zone": (
             None if graph.time_zone is None else ensure_type(graph.time_zone, ZoneInfo).key
@@ -126,7 +160,7 @@ def request_to_json(
 ) -> str:
     return json.dumps(
         {
-            "texts": dataclasses.asdict(texts),
+            "texts": asdict(texts),
             "temperature_unit": temperature_unit.value,
             "graphs": [_png_graph_to_json(graph) for graph in graphs],
         }

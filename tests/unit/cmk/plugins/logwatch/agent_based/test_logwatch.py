@@ -478,3 +478,24 @@ def test_reclassify_overwrites_state_to_ok_not_delete_summary() -> None:
     ) == [
         Result(state=State.OK, summary='2 OK messages (Last worst: "Second critical error")'),
     ]
+
+
+@pytest.mark.usefixtures("logmsg_file_path")
+@pytest.mark.xfail(
+    strict=True,
+    raises=ValueError,
+    reason="Crash report e20e07c2-b3bd-11f0-a350-b75ee652f8bc: ValueError",
+)
+def test_check_logwatch_generic_empty_worst_line() -> None:
+    assert list(
+        logwatch.check_logwatch_generic(
+            item="/tmp/app.log",
+            reclassify_parameters=logwatch_.ReclassifyParameters((), {}),
+            loglines=["W"],
+            found=True,
+            max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
+            host_name="test-host",
+        )
+    ) == [
+        Result(state=State.WARN, summary="1 WARN messages"),
+    ]

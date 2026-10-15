@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import abc
 import operator
+import re
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from logging import Logger
@@ -148,7 +149,7 @@ _filter_operators: dict[str, tuple[OperatorName, Callable[[Any, Any], bool]]] = 
     "=": ("=", operator.eq),
     "~": ("~", lambda a, b: bool(cmk.utils.regex.regex(b).search(a))),
     "=~": ("=~", lambda a, b: a.lower() == b.lower()),
-    "~~": ("~~", lambda a, b: bool(cmk.utils.regex.regex(b.lower()).search(a.lower()))),
+    "~~": ("~~", lambda a, b: bool(cmk.utils.regex.regex(b, re.IGNORECASE).search(a))),
     "<": ("<", operator.lt),
     ">=": (">=", operator.ge),
     ">": (">", operator.gt),

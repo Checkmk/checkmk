@@ -8,6 +8,7 @@ This is needed for the graphs sent with mail notifications."""
 import datetime
 import io
 from collections.abc import Iterator, Sequence
+from dataclasses import dataclass
 
 import numpy as np
 import numpy.typing as npt
@@ -33,7 +34,6 @@ from cmk.graphing_engine import (
     Unit,
     VerticalRangeKind,
 )
-from cmk.gui.i18n import _
 from cmk.web.utils.unit_formatter import Label, NotationFormatter
 
 from ._drawn_curves import drawn_curves
@@ -57,6 +57,16 @@ LEGEND_MARKER_RADIUS_PX = 2
 TITLE_Y_OFFSET_PX = 10
 REGION_FILL_ALPHA = 0.15
 _PT_PER_PX = 72 / DPI
+
+
+@dataclass(frozen=True, kw_only=True)
+class PngTexts:
+    minimum: str
+    maximum: str
+    average: str
+    last: str
+    date_format: str
+    caption: str
 
 
 def _mirroring_sign(inverse: bool) -> float:
@@ -285,21 +295,12 @@ def _resolution_label(step: int) -> str:
     return f"{fmt(step / 86400)} d"
 
 
-def _render_date(timestamp: int, tz: datetime.tzinfo | None) -> str:
-    """cmk.utils.render.date(), but in the given timezone (None: the local one)."""
-    return datetime.datetime.fromtimestamp(timestamp, tz).strftime(
-        # xgettext: no-python-format
-        # astrein: disable=localization-named-placeholder
-        _("%Y-%m-%d")
-    )
-
-
-def _graph_time_caption(time_range: TimeRange, tz: datetime.tzinfo | None) -> str:
-    start_date = _render_date(time_range.start, tz)
-    end_date = _render_date(time_range.end, tz)
+def _graph_time_caption(time_range: TimeRange, texts: PngTexts, tz: datetime.tzinfo | None) -> str:
+    start_date = datetime.datetime.fromtimestamp(time_range.start, tz).strftime(texts.date_format)
+    end_date = datetime.datetime.fromtimestamp(time_range.end, tz).strftime(texts.date_format)
     date_range = start_date if start_date == end_date else f"{start_date} — {end_date}"
 
-    return _("for %(date_range)s, resolution: %(resolution)s") % {
+    return texts.caption % {
         "date_range": date_range,
         "resolution": _resolution_label(time_range.step),
     }
@@ -325,6 +326,7 @@ def _apply_render_config(
     ax: Axes,
     graph: EvaluatedGraph,
     config: GraphDisplayConfigImage,
+    texts: PngTexts,
     y_axis_unit: Unit | NonConvertibleUnit | None,
     formatter: NotationFormatter | None,
     *,
@@ -374,7 +376,7 @@ def _apply_render_config(
 
     if config.show_graph_time:
         ax.set_title(
-            _graph_time_caption(graph.time_range, tz),
+            _graph_time_caption(graph.time_range, texts, tz),
             fontsize=config.font_size * X_AXIS_TITLE_FONT_SCALE,
             loc="right",
         )
@@ -445,6 +447,7 @@ def _plot_legend_table(
     rules: Sequence[EvaluatedRule],
     regions: Sequence[EvaluatedRegion],
     config: GraphDisplayConfigImage,
+    texts: PngTexts,
     formatter: NotationFormatter | None,
 ) -> None:
     """Render the legend as a table (color swatch, name, min, max, average, last) onto ax.
@@ -456,7 +459,7 @@ def _plot_legend_table(
     """
     ax.axis("off")
     ax.set_in_layout(False)
-    col_labels = ["", "", _("Min"), _("Max"), _("Average"), _("Last")]
+    col_labels = ["", "", texts.minimum, texts.maximum, texts.average, texts.last]
     cell_text = (
         [
             [
@@ -559,6 +562,7 @@ def _plot_legend_table(
 def render_png(
     graph: EvaluatedGraph,
     config: GraphDisplayConfigImage,
+    texts: PngTexts,
     y_axis_unit: Unit | NonConvertibleUnit | None,
     *,
     tz: datetime.tzinfo | None = None,
@@ -590,7 +594,7 @@ def render_png(
         ax = fig.add_subplot(gs[0])
         legend_ax = fig.add_subplot(gs[1])
         legend_ax.set_facecolor(BACKGROUND_COLOR)
-        _plot_legend_table(legend_ax, scalars, graph.rules, graph.regions, config, formatter)
+        _plot_legend_table(legend_ax, scalars, graph.rules, graph.regions, config, texts, formatter)
     else:
         ax = fig.add_subplot(1, 1, 1)
     ax.set_facecolor(BACKGROUND_COLOR)
@@ -604,7 +608,7 @@ def render_png(
         sign = _mirroring_sign(rule.inverse)
         ax.axhline(sign * rule.value, color=rule.attributes.color)
     title_artist = _apply_render_config(
-        ax, graph, config, y_axis_unit, formatter, is_mirrored=is_mirrored, tz=tz
+        ax, graph, config, texts, y_axis_unit, formatter, is_mirrored=is_mirrored, tz=tz
     )
     fig.tight_layout()
     _fit_time_axis(ax, config, tz)

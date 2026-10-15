@@ -27,7 +27,7 @@ from cmk.graphing_engine import (
 matplotlib.use("Agg")
 from matplotlib.figure import Figure
 
-from cmk.gui.graphing import compute_png_size_mm, GraphDisplayConfigImage, render_png
+from cmk.gui.graphing import compute_png_size_mm, GraphDisplayConfigImage
 from cmk.gui.graphing._graph_png import (
     _fit_time_axis,
     _graph_scalars,
@@ -39,12 +39,22 @@ from cmk.gui.graphing._graph_png import (
     _vertical_range_bounds,
     _y_axis_limits,
     DPI,
+    PngTexts,
+    render_png,
 )
 from cmk.gui.graphing._graph_png_size import MM_PER_INCH
 from cmk.gui.graphing._user_specific_unit import formatter_from_unit
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TIME_RANGE = TimeRange(start=0, end=180, step=60)
+_TEXTS = PngTexts(
+    minimum="Min",
+    maximum="Max",
+    average="Average",
+    last="Last",
+    date_format="%Y-%m-%d",
+    caption="for %(date_range)s, resolution: %(resolution)s",
+)
 
 
 def _size_in_px(png: bytes) -> tuple[int, int]:
@@ -122,7 +132,7 @@ def test_render_png_produces_bytes_for_an_empty_graph() -> None:
     graph = EvaluatedGraph(
         name="g", title="Empty", time_range=_TIME_RANGE, vertical_range=None, stacks=[], lines=[]
     )
-    png_bytes = render_png(graph, GraphDisplayConfigImage(), None)
+    png_bytes = render_png(graph, GraphDisplayConfigImage(), _TEXTS, None)
 
     assert png_bytes.startswith(b"\x89PNG")
 
@@ -141,7 +151,7 @@ def test_render_png_with_a_unit_renders_ticks_and_legend_via_the_formatter() -> 
     )
     y_axis_unit = Unit(notation=DecimalNotation("X"), precision=AutoPrecision(2))
 
-    png_bytes = render_png(graph, GraphDisplayConfigImage(), y_axis_unit)
+    png_bytes = render_png(graph, GraphDisplayConfigImage(), _TEXTS, y_axis_unit)
 
     assert png_bytes.startswith(b"\x89PNG")
 
@@ -251,7 +261,7 @@ def test_the_image_has_the_size_computed_for_it_without_a_legend() -> None:
     )
     config = GraphDisplayConfigImage(show_legend=False)
 
-    png_bytes = render_png(graph, config, _UNIT)
+    png_bytes = render_png(graph, config, _TEXTS, _UNIT)
 
     assert _size_in_px(png_bytes) == _px(compute_png_size_mm(graph, config))
 
@@ -275,7 +285,7 @@ def test_the_image_has_the_size_computed_for_it_with_a_legend() -> None:
     )
     config = GraphDisplayConfigImage(show_legend=True)
 
-    png_bytes = render_png(graph, config, _UNIT)
+    png_bytes = render_png(graph, config, _TEXTS, _UNIT)
 
     assert _size_in_px(png_bytes) == _px(compute_png_size_mm(graph, config))
 
@@ -433,5 +443,5 @@ def test_graph_time_caption_dates_the_range_in_the_given_time_zone() -> None:
     # 2026-09-28 23:00 UTC is already 2026-09-29 in Berlin.
     time_range = TimeRange(start=1790636400, end=1790640000, step=60)
 
-    assert "2026-09-28" in _graph_time_caption(time_range, ZoneInfo("UTC"))
-    assert "2026-09-29" in _graph_time_caption(time_range, ZoneInfo("Europe/Berlin"))
+    assert "2026-09-28" in _graph_time_caption(time_range, _TEXTS, ZoneInfo("UTC"))
+    assert "2026-09-29" in _graph_time_caption(time_range, _TEXTS, ZoneInfo("Europe/Berlin"))

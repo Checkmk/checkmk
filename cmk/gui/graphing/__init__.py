@@ -66,7 +66,7 @@ from ._graph_display_config import (
     HTML_SIZE_PER_EX,
     resolve_size,
 )
-from ._graph_png import render_png
+from ._graph_png import PngTexts, render_png
 from ._graph_png_size import compute_png_size_mm, mm_per_ex
 from ._graph_ranges import compute_graph_ranges_for_width, GraphRanges
 from ._graph_specification import (
@@ -158,6 +158,7 @@ from ._plugins import (
     registered_metrics,
     registered_translations,
 )
+from ._png_rendering import png_texts
 from ._popup import PageHostServiceGraphPopup
 from ._prediction_graphs import prediction_graph_dispatcher
 from ._settings import ConfigVariableGraphTimeranges
@@ -334,6 +335,8 @@ __all__ = [
     "registered_translations",
     "RegisteredMetric",
     "render_engine_graph_group",
+    "png_texts",
+    "PngTexts",
     "render_global_time_picker",
     "resolve_default_time_range_seconds",
     "render_graph_error_html",

@@ -16,6 +16,7 @@ from cmk.utils.paths import (
     data_source_push_agent_dir,
     r4r_discoverable_dir,
     received_outputs_dir,
+    registrations_dir,
     uuid_lookup_dir,
 )
 from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
@@ -31,6 +32,7 @@ def _uuid_link_manager() -> UUIDLinkManager:
         data_source_dir=data_source_push_agent_dir,
         r4r_discoverable_dir=r4r_discoverable_dir,
         uuid_lookup_dir=uuid_lookup_dir,
+        registrations_dir=registrations_dir,
     )
 
 
@@ -50,15 +52,7 @@ def test_openapi_host_register_ok(aut_user_auth_wsgi_app: WebTestAppForCMK) -> N
         content_type="application/json; charset=utf-8",
     )
     assert set(response.json) == {"connection_mode"}
-    assert (
-        UUIDLinkManager(
-            received_outputs_dir=received_outputs_dir,
-            data_source_dir=data_source_push_agent_dir,
-            r4r_discoverable_dir=r4r_discoverable_dir,
-            uuid_lookup_dir=uuid_lookup_dir,
-        ).uuid_store.get(HostName("example.com"))
-        == uuid
-    )
+    assert _uuid_link_manager().uuid_store.get(HostName("example.com")) == uuid
 
 
 @pytest.mark.usefixtures("with_host")

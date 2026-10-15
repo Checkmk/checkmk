@@ -13,6 +13,7 @@ from cmk.gui.watolib.agent_registration import (
     link_uuid_of_registration,
     UUIDAlreadyLinkedError,
 )
+from cmk.utils.agent_registration import RegistrationRoute, UUIDRegistration
 from tests.testlib.unit.fake_site import LoggedSecurityEvent
 
 
@@ -21,10 +22,19 @@ def test_a_refused_registration_of_a_linked_uuid_writes_a_security_event(
 ) -> None:
     """CMK-40803 AC-2"""
     uuid = UUID("1409ac78-6548-4138-9285-12484409ddf2")
-    link_uuid_of_registration(HostName("heute"), uuid, push_configured=False)
+    registration = UUIDRegistration(
+        agent_updates_permitted=None,
+        subject="my-user",
+        registration_route=RegistrationRoute.REGISTER,
+    )
+    link_uuid_of_registration(
+        HostName("heute"), uuid, push_configured=False, registration=registration
+    )
 
     with pytest.raises(UUIDAlreadyLinkedError):
-        link_uuid_of_existing_host(HostName("my-host"), uuid, push_configured=False)
+        link_uuid_of_existing_host(
+            HostName("my-host"), uuid, push_configured=False, registration=registration
+        )
 
     assert [
         event.details

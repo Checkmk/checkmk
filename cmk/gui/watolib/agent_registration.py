@@ -19,7 +19,7 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
     do_remote_automation,
 )
-from cmk.utils.agent_registration import get_r4r_filepath, UUIDLinkManager
+from cmk.utils.agent_registration import get_r4r_filepath, UUIDLinkManager, UUIDRegistration
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.security_event import log_security_event, SecurityEvent
 
@@ -109,7 +109,9 @@ class UUIDOfOpenRequestRefusedEvent(SecurityEvent):
         )
 
 
-def link_uuid_of_existing_host(host_name: HostName, uuid: UUID, *, push_configured: bool) -> None:
+def link_uuid_of_existing_host(
+    host_name: HostName, uuid: UUID, *, push_configured: bool, registration: UUIDRegistration
+) -> None:
     """Called by the REST endpoints of the registration of an existing host. The REST framework
     holds the configuration lock of the site while the checks read the UUID links of the site and
     the requests in requests-for-registration/NEW and PENDING."""
@@ -122,11 +124,17 @@ def link_uuid_of_existing_host(host_name: HostName, uuid: UUID, *, push_configur
         raise UUIDOfOpenRequestError(
             f"The UUID {uuid} belongs to an open request of the automatic registration."
         )
-    link_uuid_of_registration(host_name, uuid, push_configured=push_configured)
+    link_uuid_of_registration(
+        host_name, uuid, push_configured=push_configured, registration=registration
+    )
 
 
-def link_uuid_of_registration(host_name: HostName, uuid: UUID, *, push_configured: bool) -> None:
-    _uuid_link_manager().create_link(host_name, uuid, push_configured=push_configured)
+def link_uuid_of_registration(
+    host_name: HostName, uuid: UUID, *, push_configured: bool, registration: UUIDRegistration
+) -> None:
+    _uuid_link_manager().link_registration(
+        host_name, uuid, push_configured=push_configured, registration=registration
+    )
 
 
 def verify_uuid_is_not_linked(uuid: UUID, *, host_name: HostName | None) -> None:
@@ -145,6 +153,7 @@ def _uuid_link_manager() -> UUIDLinkManager:
         data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
         r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
         uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
+        registrations_dir=cmk.utils.paths.registrations_dir,
     )
 
 

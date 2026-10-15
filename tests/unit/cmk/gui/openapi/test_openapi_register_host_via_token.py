@@ -53,6 +53,7 @@ def _links() -> dict[UUID, HostName]:
             data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
             r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
             uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
+            registrations_dir=cmk.utils.paths.registrations_dir,
         )
     }
 

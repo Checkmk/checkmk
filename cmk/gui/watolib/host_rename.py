@@ -637,6 +637,7 @@ def _rename_host_in_uuid_link_manager(
                     data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
                     r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
                     uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
+                    registrations_dir=cmk.utils.paths.registrations_dir,
                 ).rename(renamings)
             )
         else:
@@ -675,6 +676,7 @@ class AutomationRenameHostsUUIDLink(AutomationCommand[_RenameHostsUUIDLinkReques
                 data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
                 r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
                 uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
+                registrations_dir=cmk.utils.paths.registrations_dir,
             ).rename(api_request.renamings)
         )
 

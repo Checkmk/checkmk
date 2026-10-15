@@ -39,6 +39,8 @@ from cmk.gui.watolib.hosts_and_folders import FolderTree, Host, make_folder_tree
 from cmk.utils.agent_registration import (
     connection_mode_from_host_config,
     HostAgentConnectionMode,
+    RegistrationRoute,
+    UUIDRegistration,
 )
 from cmk.web.utils import permission_verification as permissions
 
@@ -132,7 +134,14 @@ def register_host(params: Mapping[str, Any]) -> Response:
 def _link_registration(host: Host, uuid: UUID, connection_mode: HostAgentConnectionMode) -> None:
     try:
         link_uuid_of_existing_host(
-            host.name(), uuid, push_configured=connection_mode is HostAgentConnectionMode.PUSH
+            host.name(),
+            uuid,
+            push_configured=connection_mode is HostAgentConnectionMode.PUSH,
+            registration=UUIDRegistration(
+                agent_updates_permitted=None,
+                subject=user.ident,
+                registration_route=RegistrationRoute.REGISTER,
+            ),
         )
     except (UUIDAlreadyLinkedError, UUIDOfOpenRequestError) as exc:
         raise ProblemException(

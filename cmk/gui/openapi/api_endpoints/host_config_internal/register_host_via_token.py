@@ -35,7 +35,11 @@ from cmk.gui.watolib.agent_registration import (
     UUIDAlreadyLinkedError,
     UUIDOfOpenRequestError,
 )
-from cmk.utils.agent_registration import HostAgentConnectionMode
+from cmk.utils.agent_registration import (
+    HostAgentConnectionMode,
+    RegistrationRoute,
+    UUIDRegistration,
+)
 
 from .models.request_models import RegisterHost
 from .models.response_models import ConnectionMode
@@ -87,6 +91,11 @@ def register_host_via_token_v1(
                 host_name,
                 body.uuid,
                 push_configured=connection_mode is HostAgentConnectionMode.PUSH,
+                registration=UUIDRegistration(
+                    agent_updates_permitted=None,
+                    subject=api_context.token.issuer,
+                    registration_route=RegistrationRoute.REGISTER_VIA_TOKEN,
+                ),
             )
     except (UUIDAlreadyLinkedError, UUIDOfOpenRequestError) as exc:
         raise ProblemException(

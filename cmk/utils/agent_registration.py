@@ -5,11 +5,14 @@
 
 
 import enum
+import time
 from collections.abc import Collection, Generator, Iterable, Mapping
 from os.path import relpath
 from pathlib import Path
 from typing import Final
 from uuid import UUID
+
+from pydantic import BaseModel, Field
 
 from cmk.ccc.hostaddress import HostName
 
@@ -30,6 +33,21 @@ def connection_mode_from_host_config(host_config: Mapping[str, object]) -> HostA
             HostAgentConnectionMode.PULL.value,
         )
     )
+
+
+class RegistrationRoute(enum.StrEnum):
+    REGISTER = "register"
+    REGISTER_VIA_TOKEN = "register_via_token"
+    REGISTER_NEW = "register_new"
+
+
+class UUIDRegistration(BaseModel, frozen=True):
+    """The registration that linked a UUID, as the agent receiver reads it"""
+
+    agent_updates_permitted: bool | None
+    subject: str
+    registration_route: RegistrationRoute
+    registered_at: float = Field(default_factory=time.time)
 
 
 class UUIDStore:
@@ -65,11 +83,13 @@ class UUIDLinkManager:
         data_source_dir: Path,
         r4r_discoverable_dir: Path,
         uuid_lookup_dir: Path,
+        registrations_dir: Path,
     ) -> None:
         self.received_outputs_dir: Final = received_outputs_dir
         self.data_source_dir: Final = data_source_dir
         self.r4r_discoverable_dir: Final = r4r_discoverable_dir
         self.uuid_store = UUIDStore(uuid_lookup_dir)
+        self.registrations_dir: Final = registrations_dir
 
     def __iter__(self) -> Generator[_UUIDLink]:
         if not self.received_outputs_dir.exists():
@@ -87,11 +107,38 @@ class UUIDLinkManager:
         except FileNotFoundError:
             return None
 
+    def registration(self, uuid: UUID) -> UUIDRegistration | None:
+        try:
+            raw = self._registration_file(uuid).read_bytes()
+        except FileNotFoundError:
+            return None
+        return UUIDRegistration.model_validate_json(raw)
+
     def unlink(self, host_names: Collection[HostName]) -> None:
         for link in self:
             if link.hostname in host_names:
-                link.unlink()
+                self._remove(link)
                 self.uuid_store.delete(link.hostname)
+
+    def link_registration(
+        self,
+        hostname: HostName,
+        uuid: UUID,
+        *,
+        push_configured: bool,
+        registration: UUIDRegistration,
+    ) -> None:
+        """Record the registration of a UUID and link the UUID to the host
+
+        The record lasts as long as the link of the UUID. A rename of the host and a change of
+        the link target keep it.
+        """
+        self.registrations_dir.mkdir(parents=True, exist_ok=True)
+        path = self._registration_file(uuid)
+        new_path = path.with_name(f".{path.name}.new")
+        new_path.write_text(registration.model_dump_json())
+        new_path.rename(path)
+        self.create_link(hostname, uuid, push_configured=push_configured)
 
     def create_link(self, hostname: HostName, uuid: UUID, *, push_configured: bool) -> None:
         """Create a link for encryption or push agent
@@ -114,7 +161,7 @@ class UUIDLinkManager:
                 if self._is_discoverable(link.uuid):
                     # Host may not be synced yet, thus we check if UUID is in DISCOVERABLE folder.
                     continue
-                link.unlink()
+                self._remove(link)
                 self.uuid_store.delete(link.hostname)
             else:
                 self._update_link_target_if_necessary(
@@ -146,7 +193,7 @@ class UUIDLinkManager:
             if link.hostname != hostname:
                 continue
             if link.uuid != uuid:
-                link.unlink()
+                self._remove(link)
                 continue
             found = link
         return found
@@ -171,6 +218,13 @@ class UUIDLinkManager:
 
     def _is_discoverable(self, uuid: UUID) -> bool:
         return get_r4r_filepath(self.r4r_discoverable_dir, uuid).exists()
+
+    def _registration_file(self, uuid: UUID) -> Path:
+        return self.registrations_dir / f"{uuid}.json"
+
+    def _remove(self, link: _UUIDLink) -> None:
+        link.unlink()
+        self._registration_file(link.uuid).unlink(missing_ok=True)
 
 
 class _UUIDLink:

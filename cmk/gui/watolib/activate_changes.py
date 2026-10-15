@@ -3401,6 +3401,7 @@ def _update_links_for_agent_receiver(tree: FolderTree) -> None:
         data_source_dir=paths.data_source_push_agent_dir,
         r4r_discoverable_dir=paths.r4r_discoverable_dir,
         uuid_lookup_dir=paths.uuid_lookup_dir,
+        registrations_dir=paths.registrations_dir,
     )
 
     uuid_link_manager.update_links(collect_all_hosts(tree))

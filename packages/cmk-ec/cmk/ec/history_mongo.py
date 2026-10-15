@@ -92,7 +92,7 @@ class MongoDBHistory(History):
         # open('/tmp/ec_history_debug.log', 'a').write(
         #    pprint.pformat(filters) + '\n' + pprint.pformat(result.explain()) + '\n')
 
-        if query.limit:
+        if query.limit is not None:
             result = result.limit(query.limit + 1)
 
         # now convert the MongoDB data structure to the eventd internal one

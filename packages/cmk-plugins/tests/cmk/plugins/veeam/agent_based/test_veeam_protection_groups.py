@@ -9,11 +9,12 @@ from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.veeam.agent_based.veeam_protection_groups import (
     check_veeam_protection_groups,
     CheckParameters,
+    DEFAULT_PARAMETERS,
     discovery_veeam_protection_groups,
     parse_veeam_protection_groups,
 )
 
-PARAMS = CheckParameters(disabled_state=1)
+PARAMS = DEFAULT_PARAMETERS
 
 
 def _group(name: str = "group-1", **overrides: object) -> str:
@@ -73,11 +74,11 @@ def test_check_veeam_protection_groups_unknown_type_shows_raw_value() -> None:
     assert results[0] == Result(state=State.OK, summary="SomeFutureType, 2 configured computers")
 
 
-def test_check_veeam_protection_groups_disabled_is_warn_by_default() -> None:
+def test_check_veeam_protection_groups_disabled_is_ok_by_default() -> None:
     section = parse_veeam_protection_groups([[_group(isDisabled=True)]])
     results = list(check_veeam_protection_groups("group-1", PARAMS, section))
     assert results[0] == Result(
-        state=State.WARN, summary="Individual computers, 2 configured computers, Disabled"
+        state=State.OK, summary="Individual computers, 2 configured computers, Disabled"
     )
 
 

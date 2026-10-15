@@ -9,12 +9,13 @@ from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.veeam.agent_based.veeam_proxies import (
     check_veeam_proxies,
     CheckParameters,
+    DEFAULT_PARAMETERS,
     discovery_veeam_proxies,
     parse_veeam_proxies,
     VeeamProxy,
 )
 
-PARAMS = CheckParameters(disabled_state=1)
+PARAMS = DEFAULT_PARAMETERS
 
 
 def _proxy(name: str = "proxy-1", **overrides: object) -> str:
@@ -79,17 +80,17 @@ def test_check_veeam_proxies_out_of_date_is_warn() -> None:
     assert results[0] == Result(state=State.WARN, summary="VMware, Online, Out of date")
 
 
-def test_check_veeam_proxies_disabled_is_warn_by_default() -> None:
+def test_check_veeam_proxies_disabled_is_ok_by_default() -> None:
     section = parse_veeam_proxies([[_proxy(isDisabled=True)]])
     results = list(check_veeam_proxies("proxy-1", PARAMS, section))
-    assert results[0] == Result(state=State.WARN, summary="VMware, Online, Disabled")
+    assert results[0] == Result(state=State.OK, summary="VMware, Online, Disabled")
 
 
 def test_check_veeam_proxies_disabled_state_is_configurable() -> None:
-    params = CheckParameters(disabled_state=0)
+    params = CheckParameters(disabled_state=1)
     section = parse_veeam_proxies([[_proxy(isDisabled=True)]])
     results = list(check_veeam_proxies("proxy-1", params, section))
-    assert results[0] == Result(state=State.OK, summary="VMware, Online, Disabled")
+    assert results[0] == Result(state=State.WARN, summary="VMware, Online, Disabled")
 
 
 def test_check_veeam_proxies_disabled_and_offline_uses_disabled_state_not_crit() -> None:
@@ -97,14 +98,14 @@ def test_check_veeam_proxies_disabled_and_offline_uses_disabled_state_not_crit()
     results = list(check_veeam_proxies("proxy-1", PARAMS, section))
     # A deliberately disabled proxy is normally also offline; the offline check
     # must not force CRIT regardless of the configured disabled_state.
-    assert results[0] == Result(state=State.WARN, summary="VMware, Offline, Disabled")
+    assert results[0] == Result(state=State.OK, summary="VMware, Offline, Disabled")
 
 
-def test_check_veeam_proxies_disabled_and_offline_can_be_silenced() -> None:
-    params = CheckParameters(disabled_state=0)
+def test_check_veeam_proxies_disabled_and_offline_can_be_raised() -> None:
+    params = CheckParameters(disabled_state=1)
     section = parse_veeam_proxies([[_proxy(isOnline=False, isDisabled=True)]])
     results = list(check_veeam_proxies("proxy-1", params, section))
-    assert results[0] == Result(state=State.OK, summary="VMware, Offline, Disabled")
+    assert results[0] == Result(state=State.WARN, summary="VMware, Offline, Disabled")
 
 
 def test_check_veeam_proxies_offline_and_enabled_is_still_crit() -> None:

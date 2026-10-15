@@ -14,7 +14,7 @@ def _parameter_form_veeam_proxies() -> Dictionary:
             "disabled_state": DictElement(
                 parameter_form=ServiceState(
                     title=Title("State when the proxy is disabled"),
-                    prefill=DefaultValue(ServiceState.WARN),
+                    prefill=DefaultValue(ServiceState.OK),
                 ),
             ),
         },

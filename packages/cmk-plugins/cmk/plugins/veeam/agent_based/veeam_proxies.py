@@ -40,6 +40,9 @@ class CheckParameters(TypedDict):
     disabled_state: int
 
 
+DEFAULT_PARAMETERS = CheckParameters(disabled_state=State.OK.value)
+
+
 def parse_veeam_proxies(string_table: StringTable) -> Section:
     section: dict[str, VeeamProxy] = {}
     for line in string_table:
@@ -119,5 +122,5 @@ check_plugin_veeam_proxies = CheckPlugin(
     discovery_function=discovery_veeam_proxies,
     check_function=check_veeam_proxies,
     check_ruleset_name="veeam_proxies",
-    check_default_parameters=CheckParameters(disabled_state=1),
+    check_default_parameters=DEFAULT_PARAMETERS,
 )

@@ -10,7 +10,7 @@ description:
 
  This check is {CRIT} if the proxy is offline, since an unreachable proxy
  cannot run a backup. It is {WARN} if the proxy's components are out of
- date. It is {WARN} by default if the proxy is disabled; the state is
+ date. It is {OK} by default if the proxy is disabled; the state is
  configurable, since a deliberately disabled proxy is normal in some
  estates. These three states are evaluated independently: a proxy can be
  online and disabled, or offline and enabled, at the same time.

@@ -156,7 +156,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     ACTIVATION_FOLDER_TREE,
     collect_all_hosts,
     collect_hosts,
-    folder_preserving_link,
     FolderTree,
     HostsAndFoldersConfig,
     make_folder_tree,
@@ -2111,11 +2110,7 @@ class ActivateChangesManager:
                 _("You cannot activate changes while some hosts have an invalid configuration: ")
                 + ", ".join(
                     [
-                        '<a href="%s">%s</a>'
-                        % (
-                            folder_preserving_link(_request, [("mode", "edit_host"), ("host", hn)]),
-                            hn,
-                        )
+                        '<a href="%s">%s</a>' % (tree.load_host(hn).edit_url(), hn)
                         for hn in defective_hosts
                     ]
                 ),

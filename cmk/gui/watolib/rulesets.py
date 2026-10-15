@@ -137,7 +137,6 @@ from cmk.web.utils.urls import makeuri_contextless
 from .check_mk_automations import get_services_labels, update_merged_password_file
 from .hosts_and_folders import (
     Folder,
-    folder_preserving_link,
     FolderTree,
     Host,
     make_folder_tree,
@@ -2055,8 +2054,10 @@ def _timeperiod_usage_in_host_and_service_rules(
                 used_in.append(
                     (
                         "{}: {}".format(_("Rule set"), ruleset.title()),
-                        folder_preserving_link(
-                            request, [("mode", "edit_ruleset"), ("varname", varname)]
+                        makeuri_contextless(
+                            request,
+                            [("mode", "edit_ruleset"), ("varname", varname)],
+                            filename="wato.py",
                         ),
                     )
                 )
@@ -2085,7 +2086,7 @@ def _timeperiod_usage_in_time_specific_parameters(
             for index, rule_tp_name in enumerate(_get_used_timeperiods(rule.value)):
                 if rule_tp_name != time_period_name:
                     continue
-                edit_url = folder_preserving_link(
+                edit_url = makeuri_contextless(
                     request,
                     [
                         ("mode", "edit_rule"),
@@ -2095,6 +2096,7 @@ def _timeperiod_usage_in_time_specific_parameters(
                         ("rule_folder", rule_folder.path()),
                         ("rule_id", rule.id),
                     ],
+                    filename="wato.py",
                 )
                 used_in.append(
                     (_("Time-specific check parameter #%(nr)d") % {"nr": index + 1}, edit_url)

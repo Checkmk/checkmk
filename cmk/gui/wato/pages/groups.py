@@ -54,7 +54,7 @@ from cmk.gui.watolib.groups_io import (
     load_host_group_information,
     load_service_group_information,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
@@ -117,9 +117,10 @@ class ModeGroups(WatoMode, abc.ABC):
                                     title=_("Add group"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
                                             [("mode", "edit_%s_group" % self.type_name)],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -216,9 +217,10 @@ class ModeGroups(WatoMode, abc.ABC):
         html.write_text_permissive(nr)
 
         table.cell(_("Actions"), css=["buttons"])
-        edit_url = folder_preserving_link(
+        edit_url = makeuri_contextless(
             request,
             [("mode", "edit_%s_group" % self.type_name), ("edit", name)],
+            filename="wato.py",
         )
         delete_url = make_confirm_delete_link(
             i18n=_,
@@ -227,9 +229,10 @@ class ModeGroups(WatoMode, abc.ABC):
             suffix=group["alias"],
             message=_("Name: %(name)s") % {"name": name},
         )
-        clone_url = folder_preserving_link(
+        clone_url = makeuri_contextless(
             request,
             [("mode", "edit_%s_group" % self.type_name), ("clone", name)],
+            filename="wato.py",
         )
         html.icon_button(edit_url, _("Properties"), StaticIcon(IconNames.edit))
         html.icon_button(clone_url, _("Create a copy of this group"), StaticIcon(IconNames.clone))
@@ -416,8 +419,8 @@ class ModeHostgroups(ModeGroups):
 
     @override
     def _rules_url(self) -> str:
-        return folder_preserving_link(
-            request, [("mode", "edit_ruleset"), ("varname", "host_groups")]
+        return makeuri_contextless(
+            request, [("mode", "edit_ruleset"), ("varname", "host_groups")], filename="wato.py"
         )
 
 
@@ -457,8 +460,8 @@ class ModeServicegroups(ModeGroups):
 
     @override
     def _rules_url(self) -> str:
-        return folder_preserving_link(
-            request, [("mode", "edit_ruleset"), ("varname", "service_groups")]
+        return makeuri_contextless(
+            request, [("mode", "edit_ruleset"), ("varname", "service_groups")], filename="wato.py"
         )
 
 
@@ -500,9 +503,10 @@ class ModeContactgroups(ModeGroups):
 
     @override
     def _rules_url(self) -> str:
-        return folder_preserving_link(
+        return makeuri_contextless(
             request,
             [("mode", "rule_search"), ("filled_in", "search"), ("search", "contactgroups")],
+            filename="wato.py",
         )
 
     @override

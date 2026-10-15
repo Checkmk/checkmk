@@ -61,7 +61,6 @@ from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.host_attributes import all_host_attributes
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
-    folder_preserving_link,
     FolderTree,
     Host,
     make_folder_tree,
@@ -1323,8 +1322,8 @@ def _show_affected_rulesets(affected_rulesets: list[Ruleset]) -> None:
         html.open_li()
         html.a(
             ruleset.title(),
-            href=folder_preserving_link(
-                request, [("mode", "edit_ruleset"), ("varname", ruleset.name)]
+            href=makeuri_contextless(
+                request, [("mode", "edit_ruleset"), ("varname", ruleset.name)], filename="wato.py"
             ),
         )
         html.close_li()

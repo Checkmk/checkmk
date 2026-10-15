@@ -134,11 +134,6 @@ def test_check(item: str, params: Mapping[str, object], result: CheckResult) -> 
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=KeyError,
-    reason="Crash report 5bfb157a-5284-11f0-9e38-005056a34f46: KeyError",
-)
 def test_check_enforced_service_without_offset() -> None:
     assert list(
         winperf_msx_queues.check_winperf_msx_queues(

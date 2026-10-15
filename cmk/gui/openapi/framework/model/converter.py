@@ -105,7 +105,7 @@ def _folder_tree_of_request(api_context: ApiContext) -> FolderTree:
 
 def folder_tree_of(info: ValidationInfo[object]) -> FolderTree:
     """The folder tree of the request a value is validated for."""
-    return validation_context_of(info).shared(_folder_tree_of_request)
+    return validation_context_of(info).api_context.shared(_folder_tree_of_request)
 
 
 @dataclass(slots=True)
@@ -159,9 +159,9 @@ class HostConverter:
         return HostName.parse(value)
 
     def host(self, value: str, info: ValidationInfo[object]) -> Host:
-        context = validation_context_of(info)
+        api_context = validation_context_of(info).api_context
         return self.host_in_tree(
-            value, context.shared(_folder_tree_of_request), context.api_context.user
+            value, api_context.shared(_folder_tree_of_request), api_context.user
         )
 
     def host_in_tree(self, value: str, tree: FolderTree, acting_user: LoggedInUser) -> Host:
@@ -173,9 +173,9 @@ class HostConverter:
         raise ValueError(f"Host not found: {value!r}")
 
     def host_name(self, value: str, info: ValidationInfo[object]) -> HostName:
-        context = validation_context_of(info)
+        api_context = validation_context_of(info).api_context
         return self.host_name_in_tree(
-            value, context.shared(_folder_tree_of_request), context.api_context.user
+            value, api_context.shared(_folder_tree_of_request), api_context.user
         )
 
     def host_name_in_tree(

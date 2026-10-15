@@ -2,10 +2,10 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, field
 from http import HTTPStatus
-from typing import Self
+from typing import cast, Self
 
 from werkzeug.datastructures import ETags
 
@@ -159,6 +159,22 @@ class ApiContext:
     # user id - a None user id maps to several identities with opposite permissions.
     user: LoggedInUser
     token: AuthToken | None
+    _shared: dict[Callable[[ApiContext], object], object] = field(
+        default_factory=dict, init=False, repr=False, compare=False
+    )
+
+    def shared[T](self, build: Callable[[ApiContext], T]) -> T:
+        """The request's instance of the value the build function creates.
+
+        It is built on first use and shared by everything handling the request that passes the
+        same function: the validators of the request and the endpoint handler. The framework is
+        meant to be decoupled from watolib and the other application packages, so a per-request
+        application object, like the Setup folder tree, is provided this way instead of as a
+        field of the context.
+        """
+        if build not in self._shared:
+            self._shared[build] = build(self)
+        return cast(T, self._shared[build])
 
     @classmethod
     def new(

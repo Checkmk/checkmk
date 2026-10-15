@@ -160,11 +160,11 @@ def map_metadata_spec(
                 parameter_form=SingleChoice(
                     title=Title("Rendering style"),
                     help_text=Help(
-                        "Maps renders objects centered on their coordinates "
-                        "with the modern glass look. NagVis-classic anchors "
-                        "objects top-left, draws flat textboxes on a light "
-                        "canvas and is auto-selected when importing a legacy "
-                        "NagVis .cfg map for a 1:1 result."
+                        "Maps renders objects centered on their coordinates. "
+                        "NagVis-classic places them as NagVis does, anchored "
+                        "top-left, with labels at their own offset and the "
+                        "background at its own size, in the same look. It is "
+                        "selected automatically for an imported NagVis .cfg map."
                     ),
                     elements=[
                         SingleChoiceElement(name="default", title=Title("Maps (default)")),

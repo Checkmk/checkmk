@@ -1061,9 +1061,6 @@ function closeBulkAckModal(sent: boolean): void {
   --maps-map-view-label-ink: var(--white);
   --maps-map-view-text-halo: 0 1px 3px rgb(0 0 0 / 90%);
 
-  /* NagVis rendered on white, so an imported map's own text is black. */
-  --maps-map-view-classic-ink: rgb(0 0 0);
-
   /* An object whose image the site does not have. */
   --maps-map-view-missing-ink: var(--status-color-missing);
   --maps-map-view-missing-bg: color-mix(in srgb, var(--color-state-warning) 25%, transparent);

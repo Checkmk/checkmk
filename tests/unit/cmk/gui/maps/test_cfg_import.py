@@ -224,9 +224,9 @@ def test_cfg_to_map_global_background_color() -> None:
     assert cfg_to_map(content, "x")["background_color"] == "#202020"
 
 
-def test_cfg_to_map_global_background_color_invalid_falls_back() -> None:
+def test_cfg_to_map_global_background_color_invalid_is_dropped() -> None:
     content = "define global {\n    background_color = expression(alert(1))\n}\n"
-    assert cfg_to_map(content, "x")["background_color"] == "#ffffff"
+    assert "background_color" not in cfg_to_map(content, "x")
 
 
 @pytest.mark.parametrize(
@@ -371,16 +371,14 @@ def test_cfg_to_map_line_width_stays_within_the_daemons_range(
     assert _first_obj(cfg_to_map(content, "test"))["line_width"] == expected
 
 
-@pytest.mark.parametrize(
-    "setting, expected",
-    [
-        ("", "#ffffff"),  # NagVis' default for a line without state
-        ("    line_color = #ff0000\n", "#ff0000"),
-    ],
-)
-def test_cfg_to_map_line_without_state_keeps_its_color(setting: str, expected: str) -> None:
-    content = f"define line {{\n    x = 0,10\n    y = 0,10\n{setting}}}\n"
-    assert _first_obj(cfg_to_map(content, "test"))["line_color"] == expected
+def test_cfg_to_map_line_without_state_keeps_its_color() -> None:
+    content = "define line {\n    x = 0,10\n    y = 0,10\n    line_color = #ff0000\n}\n"
+    assert _first_obj(cfg_to_map(content, "test"))["line_color"] == "#ff0000"
+
+
+def test_cfg_to_map_line_without_state_or_color_takes_the_maps_color() -> None:
+    content = "define line {\n    x = 0,10\n    y = 0,10\n}\n"
+    assert "line_color" not in _first_obj(cfg_to_map(content, "test"))
 
 
 def test_cfg_to_map_line_with_state_is_colored_by_it() -> None:
@@ -482,9 +480,9 @@ def test_cfg_to_map_labels_a_map_by_its_title() -> None:
     )
 
 
-def test_cfg_to_map_line_color_border_invalid_falls_back() -> None:
+def test_cfg_to_map_line_color_border_invalid_is_dropped() -> None:
     content = "define line {\n    x = 0,10\n    y = 0,10\n    line_color_border = expression(alert(1))\n}\n"
-    assert _first_obj(cfg_to_map(content, "test"))["line_color_border"] == "#000000"
+    assert "line_color_border" not in _first_obj(cfg_to_map(content, "test"))
 
 
 def test_cfg_to_map_line_default_type_is_arrow_end() -> None:
@@ -623,6 +621,34 @@ def test_cfg_to_map_shape_keeps_its_links() -> None:
     obj = _first_obj(cfg_to_map(content, "test"))
     assert obj["url"] == "https://example.com"
     assert obj["hover_url"] == "https://example.com/hover"
+
+
+@pytest.mark.parametrize(
+    "setting, expected",
+    [
+        pytest.param("", {"color": "#ffffff"}, id="maps-label"),
+        pytest.param(
+            "    label_background = #ffffff\n",
+            {"color": "#000000", "background": "#ffffff"},
+            id="light-background-keeps-nagvis-black",
+        ),
+        pytest.param(
+            "    label_color = #ff0000\n    label_border = #00ff00\n",
+            {"color": "#ff0000", "border": "#00ff00"},
+            id="explicit",
+        ),
+    ],
+)
+def test_cfg_to_map_keeps_only_the_label_colors_a_map_sets(
+    setting: str, expected: dict[str, str]
+) -> None:
+    obj = _first_obj(cfg_to_map(f"define host {{\n    host_name = web\n{setting}}}\n", "test"))
+    colors = {
+        "color": obj["label"]["color"],
+        "background": obj["label"]["background"],
+        "border": obj.get("label_border"),
+    }
+    assert colors == {"background": "transparent", "border": None, **expected}
 
 
 def test_cfg_to_map_object_keeps_its_label_length() -> None:
@@ -818,7 +844,22 @@ def test_cfg_to_map_textbox_background_color_is_not_text_color() -> None:
         '    text = <span style="background-color:#222222">Hi</span>\n}\n'
     )
     obj = _first_obj(cfg_to_map(content, "test"))
-    assert obj["label"]["color"] == "#000000"
+    assert obj["label"]["color"] == "#ffffff"
+
+
+@pytest.mark.parametrize(
+    "background, expected",
+    [
+        pytest.param("", "#ffffff", id="maps-surface"),
+        pytest.param("    background_color = #ffff99\n", "#000000", id="light-keeps-nagvis-black"),
+        pytest.param("    background_color = #222222\n", "#ffffff", id="dark"),
+    ],
+)
+def test_cfg_to_map_textbox_text_color_follows_its_background(
+    background: str, expected: str
+) -> None:
+    content = f"define textbox {{\n    x = 0\n    y = 0\n    text = Hi\n{background}}}\n"
+    assert _first_obj(cfg_to_map(content, "test"))["label"]["color"] == expected
 
 
 def test_cfg_to_map_textbox_explicit_color_after_background() -> None:
@@ -1025,9 +1066,9 @@ def test_fixture_global_settings(all_objects_map: MapPayload) -> None:
     assert all_objects_map["connection_id"] == "ZWEIFUENF"
     assert all_objects_map["icon_size"] == 32  # iconset=std_big
     assert all_objects_map["view"] == {"type": "static"}
-    # cfg-import maps opt into the NagVis-classic renderer with a white canvas
+    # cfg-import maps opt into the NagVis-classic renderer, in Maps' own colors
     assert all_objects_map["render_mode"] == "nagvis_classic"
-    assert all_objects_map["background_color"] == "#ffffff"
+    assert "background_color" not in all_objects_map
 
 
 def test_fixture_object_count(all_objects_map: MapPayload) -> None:

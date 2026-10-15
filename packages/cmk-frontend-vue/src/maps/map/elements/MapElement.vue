@@ -150,7 +150,6 @@ const showsCaption = computed(
       :icon-size="iconSize"
       :selected="selected"
       :connection-id="connectionId"
-      :classic="classic"
       @subtree-enter="(node, nodeState, event) => emit('subtree-enter', node, nodeState, event)"
       @subtree-leave="emit('subtree-leave')"
     />

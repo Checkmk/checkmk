@@ -369,7 +369,8 @@ class MapConfig(BaseModel):
     background_image: _AssetRef = None
     background_color: str | None = None
     # Default keeps existing maps on the Maps renderer; "nagvis_classic"
-    # opts an imported map into top-left anchoring + flat styling.
+    # opts an imported map into NagVis' geometry (top-left anchoring, labels at
+    # their own offset, the background at its own size).
     render_mode: RenderMode = "default"
     # Map-wide fallback z for objects that carry no explicit ``z`` (mirrors
     # NagVis' global default). Default 1 preserves the historic per-object

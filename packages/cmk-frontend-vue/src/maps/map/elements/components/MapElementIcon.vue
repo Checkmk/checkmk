@@ -37,8 +37,6 @@ const props = defineProps<{
   iconSize: number
   selected?: boolean
   connectionId?: string | undefined
-  /** The NagVis-compatible renderer. */
-  classic?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -54,8 +52,7 @@ const imageSize = computed(() => props.object.display?.image_size ?? props.iconS
 const ring = useUtilizationRing({
   object: () => props.object,
   state: () => props.state,
-  connectionId: () => props.connectionId,
-  classic: () => props.classic === true
+  connectionId: () => props.connectionId
 })
 
 /**
@@ -66,13 +63,9 @@ const stateful = computed(
   () => props.object.type !== 'image' && !UNLIT_STATES.has(props.state?.state ?? 'PENDING')
 )
 
-/**
- * The NagVis-compatible renderer stays still, as NagVis did. A handled problem
- * stays still too: its badge already says someone is on it.
- */
+/** A handled problem stays still: its badge already says someone is on it. */
 const pulsing = computed(
   () =>
-    !props.classic &&
     stateful.value &&
     isProblemState(props.state?.state, 'critical') &&
     !props.state?.acknowledged &&
@@ -107,14 +100,12 @@ const imageStyle = computed(() => ({
       @error="imageLoadFailed = true"
     />
     <MapElementBrokenImage
-      v-else-if="object.type === 'image' && imageLoadFailed && classic"
+      v-else-if="object.type === 'image' && imageLoadFailed"
       :size="imageSize"
       :source="object.image_src ?? object.display?.image ?? ''"
     />
-    <!-- An image object whose file is missing simply disappears outside the
-         classic renderer: there is no status to fall back to. -->
     <MapElementStateIcon
-      v-else-if="object.type !== 'image' || !imageLoadFailed"
+      v-else
       :object="object"
       :state="state"
       :icon-size="iconSize"
@@ -125,7 +116,7 @@ const imageStyle = computed(() => ({
 
     <MapElementPulse v-if="pulsing" :icon-size="iconSize" :color="stateColor" />
 
-    <MapElementStateBadges v-if="!classic" :state="state" />
+    <MapElementStateBadges :state="state" />
 
     <AggregationSubtree
       v-if="object.type === 'aggregation' && (object.expand_depth ?? 0) > 0 && state?.tree"

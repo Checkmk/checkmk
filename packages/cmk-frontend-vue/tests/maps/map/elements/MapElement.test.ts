@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
 import MapElement from '@/maps/map/elements/MapElement.vue'
@@ -99,9 +99,40 @@ describe('MapElement problem pulse', () => {
     }
   )
 
-  it('keeps the NagVis-compatible renderer still', () => {
+  it('pulses in the NagVis-compatible renderer too', () => {
     const container = renderElement(aHost(), 'DOWN', { renderMode: 'nagvis_classic' })
 
-    expect(container.querySelector(PULSE)).toBeNull()
+    expect(container.querySelector(PULSE)).not.toBeNull()
+  })
+})
+
+describe('MapElement image', () => {
+  it('keeps the place of an image whose file is missing', async () => {
+    const image = anObject({ id: 'shape', type: 'image', image_src: 'gone.png' })
+    const container = renderElement(image, 'PENDING')
+
+    await fireEvent.error(container.querySelector('img')!)
+
+    expect(screen.getByTitle('Asset missing: gone.png')).toBeInTheDocument()
+  })
+})
+
+describe('MapElement textbox', () => {
+  const CLASSIC_TEXTBOX = '.maps-map-element-textbox--classic'
+
+  function aTextbox(): MapObject {
+    return anObject({ id: 'note', type: 'textbox', textbox_width: 150, textbox_height: 20 })
+  }
+
+  it('keeps NagVis box metrics in the NagVis-compatible renderer', () => {
+    const container = renderElement(aTextbox(), 'PENDING', { renderMode: 'nagvis_classic' })
+
+    expect(container.querySelector(CLASSIC_TEXTBOX)).not.toBeNull()
+  })
+
+  it('keeps Maps box metrics in the default renderer', () => {
+    const container = renderElement(aTextbox(), 'PENDING')
+
+    expect(container.querySelector(CLASSIC_TEXTBOX)).toBeNull()
   })
 })

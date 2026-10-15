@@ -173,9 +173,9 @@ def map_defaults_spec(
                     title=Title("Rendering style"),
                     help_text=Help(
                         "Pre-selected rendering style for new maps. NagVis-classic "
-                        "anchors objects top-left with flat textboxes on a light "
-                        "canvas; imported NagVis maps switch to it automatically "
-                        "regardless of this default."
+                        "places objects as NagVis does, anchored top-left; imported "
+                        "NagVis maps switch to it automatically regardless of this "
+                        "default."
                     ),
                     elements=[
                         SingleChoiceElement(name="default", title=Title("Maps (default)")),

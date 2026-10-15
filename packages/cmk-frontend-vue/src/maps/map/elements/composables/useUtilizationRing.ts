@@ -43,15 +43,12 @@ export function useUtilizationRing(source: {
   object: () => MapElement
   state: () => ObjectState | undefined
   connectionId: () => string | undefined
-  /** The NagVis-compatible renderer draws no rings. */
-  classic: () => boolean
 }): UtilizationRing {
   const palette = useMapPalette()
   const stateName = computed(() => source.state()?.state ?? 'PENDING')
 
   const visible = computed(
     () =>
-      !source.classic() &&
       !RINGLESS_TYPES.has(source.object().type) &&
       source.object().display?.mode !== 'gadget' &&
       !RINGLESS_STATES.has(stateName.value)

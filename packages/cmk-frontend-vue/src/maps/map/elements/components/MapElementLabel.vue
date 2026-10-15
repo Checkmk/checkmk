@@ -41,30 +41,10 @@ const position = computed(() => {
   const y = props.object.label?.y ?? 0
   if (props.classic) {
     return props.object.label?.align === 'left'
-      ? { position: 'absolute' as const, left: `${x}px`, top: `${y}px` }
-      : {
-          position: 'absolute' as const,
-          left: '50%',
-          top: `${y}px`,
-          transform: `translateX(calc(-50% + ${x}px))`
-        }
+      ? { left: `${x}px`, top: `${y}px` }
+      : { left: '50%', top: `${y}px`, transform: `translateX(calc(-50% + ${x}px))` }
   }
   return { transform: x || y ? `translate(${x}px, ${y}px)` : undefined }
-})
-
-/**
- * The classic renderer mirrors NagVis' ``.box`` border, which is an actual
- * element border so the rendered line lands where NagVis draws it; the default
- * renderer uses an outline, which does not grow the flex layout it lives in.
- */
-const border = computed(() => {
-  const configured = props.object.label_border
-  if (!configured) {
-    return {}
-  }
-  return props.classic
-    ? { border: `1px solid ${configured}`, padding: '0 2px' }
-    : { outline: `1px solid ${configured}` }
 })
 
 const configuredStyle = computed(() => {
@@ -75,12 +55,11 @@ const configuredStyle = computed(() => {
     fontSize: `${label?.size ?? 11}px`,
     color: label?.color ?? undefined,
     background: background && background !== 'transparent' ? background : undefined,
-    // NagVis' label_width caps the width but only wraps on whitespace, so a
-    // single token ("SW01") overflows rather than splitting mid-word.
     width: width ? `${width}px` : undefined,
-    whiteSpace: width ? (props.classic ? 'nowrap' : 'normal') : undefined,
-    wordBreak: width && !props.classic ? ('break-word' as const) : undefined,
-    ...border.value,
+    whiteSpace: width ? 'normal' : undefined,
+    wordBreak: width ? ('break-word' as const) : undefined,
+    // An outline, so a border does not grow the layout the label sits in.
+    outline: props.object.label_border ? `1px solid ${props.object.label_border}` : undefined,
     ...position.value
   }
 })
@@ -89,10 +68,7 @@ const configuredStyle = computed(() => {
 <template>
   <div
     class="maps-map-element-label"
-    :class="[
-      `maps-map-element-label--${placement}`,
-      classic ? 'maps-map-element-label--classic' : 'maps-map-element-label--boxed'
-    ]"
+    :class="[`maps-map-element-label--${placement}`, { 'maps-map-element-label--pinned': classic }]"
     :style="configuredStyle"
   >
     {{ text }}
@@ -102,34 +78,28 @@ const configuredStyle = computed(() => {
 <style scoped>
 .maps-map-element-label {
   font-weight: var(--font-weight-medium);
+  color: var(--maps-map-view-label-ink);
   white-space: nowrap;
   pointer-events: none;
-}
-
-.maps-map-element-label--boxed {
-  color: var(--maps-map-view-label-ink);
   background: var(--maps-map-view-label-bg);
   outline: 1px solid var(--border-color-hairline);
   text-shadow: var(--maps-map-view-text-halo);
 }
 
-/* Classic tightens the line box to NagVis' span so the label keeps the same
-   height and does not overhang its container. */
-.maps-map-element-label--classic {
-  line-height: 1.2;
-  color: var(--maps-map-view-classic-ink);
-  background: transparent;
-  text-shadow: none;
-}
-
-.maps-map-element-label--stacked.maps-map-element-label--boxed,
-.maps-map-element-label--plain.maps-map-element-label--boxed {
+.maps-map-element-label--stacked,
+.maps-map-element-label--plain {
   padding: var(--dimension-2) var(--dimension-4);
   border-radius: var(--border-radius);
 }
 
-.maps-map-element-label--stacked.maps-map-element-label--boxed {
+.maps-map-element-label--stacked {
   margin-top: var(--dimension-4);
+}
+
+/* Placed at the label's own offset from the object, not after the icon. */
+.maps-map-element-label--pinned {
+  position: absolute;
+  margin-top: 0;
 }
 
 .maps-map-element-label--caption {

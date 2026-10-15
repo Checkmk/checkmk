@@ -437,15 +437,22 @@ def _hidden_label() -> MapLabel:
     ``background`` — a bare ``{"show": False}`` is rejected on save. Emit a full,
     hidden config so the import round-trips through the Maps REST API.
     """
-    return {**LABEL_FIELD_DEFAULTS, "show": False, "color": "#000000"}
+    return {**LABEL_FIELD_DEFAULTS, "show": False}
+
+
+def _text_color_on(raw_bg: str | None) -> str:
+    # Text NagVis draws in its black stays black on a light background of the
+    # object's own; on Maps' own surface it takes the Maps color.
+    if _color(raw_bg, "transparent") != "transparent" and not _bg_is_opaque_dark(raw_bg):
+        return "#000000"
+    return LABEL_FIELD_DEFAULTS["color"]
 
 
 def _label(
     p: dict[str, str], object_x: int, object_y: int, icon_size: int, *, show_default: bool = True
 ) -> MapLabel:
     raw_bg = p.get("label_background", "transparent")
-    # NagVis canvas is light, so default to black; flip only for opaque-dark bg.
-    default_color = "#ffffff" if _bg_is_opaque_dark(raw_bg) else "#000000"
+    background = _color(raw_bg, "transparent")
     left = _label_x(p.get("label_x"), object_x)
     label: MapLabel = {
         "show": _bool(p.get("label_show"), show_default),
@@ -453,8 +460,8 @@ def _label(
         "x": left or 0,
         "y": _label_y(p.get("label_y"), object_y, icon_size),
         "size": _int(p.get("label_size"), 11),
-        "color": _color(p.get("label_color"), default_color),
-        "background": _color(raw_bg, "transparent"),
+        "color": _color(p.get("label_color"), _text_color_on(raw_bg)),
+        "background": background,
         "width": _int(p.get("label_width")) or None,
     }
     if left is not None:
@@ -555,8 +562,8 @@ def _apply_global(map_cfg: MapPayload, p: dict[str, str]) -> None:
         map_cfg["alias"] = p["alias"]
     if p.get("map_image", "").lower() not in ("", "none"):
         map_cfg["background_image"] = p["map_image"]
-    if "background_color" in p:
-        map_cfg["background_color"] = _color(p["background_color"], "#ffffff")
+    if background := _color(p.get("background_color"), ""):
+        map_cfg["background_color"] = background
     # NagVis cfg uses the legacy "backend_id" parameter name on disk; map to our
     # canonical "connection_id" while reading.
     if "backend_id" in p:
@@ -592,9 +599,6 @@ def _line_obj_common(p: dict[str, str], raw_id: str) -> _ImportObject:
         "x2": x2.value,
         "y2": y2.value,
         "label": _hidden_label(),
-        # NagVis default line_color_border = #000000; renders the colored fill
-        # over a black outline.
-        "line_color_border": _color(p.get("line_color_border"), "#000000"),
         "line_style": _LINE_STYLES.get(line_type, _DEFAULT_LINE_STYLE),
         # NagVis line_width is the polygon half-width (-w to +w); Maps renders
         # it as full stroke width. Double on import. The daemon's range starts at
@@ -606,6 +610,8 @@ def _line_obj_common(p: dict[str, str], raw_id: str) -> _ImportObject:
     if (perfdata_label := _LINE_PERFDATA_LABELS.get(line_type)) is not None:
         payload["line_perfdata_label"] = perfdata_label
         payload["line_weather_color"] = True
+    if border := _color(p.get("line_color_border"), ""):
+        payload["line_color_border"] = border
     _set_explicit_z(payload, p)
     refs: dict[_Axis, _Coord] = {"x": x, "y": y, "x2": x2, "y2": y2}
     # Explicit bend/meeting point (NagVis stored the middle of a 3-coord line).
@@ -682,9 +688,9 @@ def _handle_line_block(p: dict[str, str], raw_id: str) -> _ImportObject:
         if "weathermap_metric_out" in p:
             obj.payload["weathermap_metric_out"] = p["weathermap_metric_out"]
     _apply_line_perfdata(obj.payload)
-    if not obj.payload.get("host_name"):
+    if not obj.payload.get("host_name") and (color := _color(p.get("line_color"), "")):
         # A line without state has nothing else to colour it.
-        obj.payload["line_color"] = _color(p.get("line_color"), "#ffffff")
+        obj.payload["line_color"] = color
     return obj
 
 
@@ -796,11 +802,13 @@ def _handle_textbox(p: dict[str, str], raw_id: str) -> _ImportObject:
     # nagvis_classic anchors top-left; keep raw NagVis coords for 1:1 layout.
     tx = _parse_coord(p.get("x", "0"), "x")
     ty = _parse_coord(p.get("y", "0"), "y")
+    raw_bg = p.get("background_color")
+    background = _color(raw_bg, "transparent")
     label: MapLabel = {
         **LABEL_FIELD_DEFAULTS,
         "text": raw_text,
         "size": html_style.get("size", LABEL_FIELD_DEFAULTS["size"]),
-        "color": _color(html_style.get("color"), "#000000"),
+        "color": _color(html_style.get("color"), _text_color_on(raw_bg)),
     }
     if (weight := html_style.get("weight")) is not None:
         label["weight"] = weight
@@ -812,18 +820,15 @@ def _handle_textbox(p: dict[str, str], raw_id: str) -> _ImportObject:
         "x": tx.value,
         "y": ty.value,
         "label": label,
-        # NagVis default is transparent; lets lines drawn under the textbox
-        # stay visible on the white canvas.
-        "textbox_background": _color(p.get("background_color"), "transparent"),
+        "textbox_background": background,
     }
     _set_explicit_z(payload, p)
     if width is not None:
         payload["textbox_width"] = width
     if height is not None:
         payload["textbox_height"] = height
-    # NagVis textbox border_color default is #e5e5e5 (light gray); explicit
-    # #000000 in cfg renders prominent black, unset stays subtle.
-    payload["textbox_border"] = _color(p.get("border_color"), "#e5e5e5")
+    if border := _color(p.get("border_color"), ""):
+        payload["textbox_border"] = border
     return _ImportObject(payload, _pending({"x": tx, "y": ty}))
 
 
@@ -896,9 +901,9 @@ def _handle_monitor_block(
         "y": y.value,
         "label": _label(p, x.value, y.value, icon_size),
         "display": display,
-        # NagVis .box CSS draws every label with a 1px solid border (#e5e5e5).
-        "label_border": _color(p.get("label_border"), "#e5e5e5"),
     }
+    if border := _color(p.get("label_border"), ""):
+        payload["label_border"] = border
     _set_explicit_z(payload, p)
     _apply_type_specific(payload, block_type, p)
     _apply_links(payload, p)
@@ -983,13 +988,11 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
         # NagVis has no equivalent knobs.
         "sort_order": MAP_FIELD_DEFAULTS["sort_order"],
         "click_action": MAP_FIELD_DEFAULTS["click_action"],
-        # cfg-imports render with NagVis-classic top-left anchoring + flat look.
+        # cfg-imports keep NagVis' geometry: top-left anchoring, native background.
         "render_mode": "nagvis_classic",
         # NagVis' global default z is 10 for every object type and is never
         # written per-object; objects without an explicit z inherit this.
         "default_z": 10,
-        # NagVis falls back to a white canvas when map_image is missing.
-        "background_color": "#ffffff",
         "view": {"type": "static"},
         "objects": [],
     }

@@ -8,8 +8,7 @@ A free-standing block of text on a map — a legend, a note, a heading.
 
 It monitors nothing, so it takes its whole appearance from what the operator
 configured, and only falls back to the app's own styling where they configured
-nothing. The classic branch mirrors NagVis' ``.box`` so an imported map keeps
-the text sitting where it sat there.
+nothing.
 -->
 <script setup lang="ts">
 import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
@@ -78,9 +77,9 @@ const configuredStyle = computed(() => {
   <div
     class="maps-map-element-textbox"
     :class="[
-      classic ? 'maps-map-element-textbox--classic' : 'maps-map-element-textbox--boxed',
-      !classic && !background ? 'maps-map-element-textbox--surface' : '',
-      !classic && !object.textbox_border
+      classic ? 'maps-map-element-textbox--classic' : '',
+      !background ? 'maps-map-element-textbox--surface' : '',
+      !object.textbox_border
         ? selected
           ? 'maps-map-element-textbox--ring-selected'
           : 'maps-map-element-textbox--ring'
@@ -96,32 +95,24 @@ const configuredStyle = computed(() => {
 <style scoped>
 .maps-map-element-textbox {
   position: relative;
+  overflow: auto;
+  padding: var(--dimension-4) var(--dimension-5);
   font-size: var(--font-size-large);
   line-height: 20px;
   font-weight: var(--font-weight-medium);
+  color: var(--font-color);
   white-space: pre-wrap;
   pointer-events: none;
+  border-radius: var(--border-radius);
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* NagVis' .box: content-box sizing, 2px of side padding and a natural line
-   height, so the text fills the box and sits as centred as it does there
-   instead of being pushed down by a tall leading. */
+/* NagVis' .box metrics, so the text fits the width and height NagVis gave the
+   box instead of being clipped by Maps' padding and leading. */
 .maps-map-element-textbox--classic {
   overflow: visible;
-  box-sizing: content-box;
   padding: 0 var(--dimension-2);
   line-height: normal;
-  color: var(--maps-map-view-classic-ink);
-  background: transparent;
-  border-radius: 0;
-}
-
-.maps-map-element-textbox--boxed {
-  overflow: auto;
-  padding: var(--dimension-4) var(--dimension-5);
-  color: var(--font-color);
-  border-radius: var(--border-radius);
 }
 
 .maps-map-element-textbox--surface {

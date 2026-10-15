@@ -38,6 +38,7 @@ from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.watolib.agent_registration import link_uuid_of_registration
 from cmk.gui.watolib.hosts_and_folders import FolderTree, Host, make_folder_tree
 from cmk.utils.agent_registration import (
     connection_mode_from_host_config,
@@ -126,12 +127,14 @@ def register_host(params: Mapping[str, Any]) -> Response:
     host_name = params["host_name"]
     host = _verified_host(make_folder_tree(active_config), host_name)
     connection_mode = connection_mode_from_host_config(host.effective_attributes())
-    _link_with_uuid(
-        host_name,
-        params["body"]["uuid"],
-        connection_mode,
-    )
+    _link_registration(host, params["body"]["uuid"], connection_mode)
     return serve_json({"connection_mode": connection_mode.value})
+
+
+def _link_registration(host: Host, uuid: UUID, connection_mode: HostAgentConnectionMode) -> None:
+    link_uuid_of_registration(
+        host.name(), uuid, push_configured=connection_mode is HostAgentConnectionMode.PUSH
+    )
 
 
 def _verified_host(tree: FolderTree, host_name: HostName) -> Host:

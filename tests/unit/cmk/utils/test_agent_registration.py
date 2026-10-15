@@ -316,3 +316,33 @@ def test_uuid_link_manager_unlink_remove_lookup() -> None:
 
     assert uuid_link_manager.uuid_store.get(hostname_1) is None
     assert uuid_link_manager.uuid_store.get(hostname_2) == uuid_2
+
+
+def test_uuid_link_manager_names_the_host_that_a_uuid_is_linked_to() -> None:
+    uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
+    uuid_link_manager = UUIDLinkManager(
+        received_outputs_dir=received_outputs_dir,
+        data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
+    )
+
+    uuid_link_manager.create_link(HostName("my-hostname"), uuid, push_configured=False)
+
+    assert uuid_link_manager.linked_host_name(uuid) == HostName("my-hostname")
+
+
+def test_uuid_link_manager_names_no_host_after_unlink() -> None:
+    hostname = HostName("my-hostname")
+    uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
+    uuid_link_manager = UUIDLinkManager(
+        received_outputs_dir=received_outputs_dir,
+        data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
+    )
+    uuid_link_manager.create_link(hostname, uuid, push_configured=False)
+
+    uuid_link_manager.unlink([hostname])
+
+    assert uuid_link_manager.linked_host_name(uuid) is None

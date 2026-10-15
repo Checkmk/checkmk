@@ -6,6 +6,7 @@
 import json
 from collections.abc import Sequence
 from typing import override
+from uuid import UUID
 
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
@@ -72,10 +73,18 @@ class AutomationRemoveTLSRegistration(AutomationCommand[Sequence[HostName]]):
         _remove_tls_registration(api_request)
 
 
-def _remove_tls_registration(host_names: Sequence[HostName]) -> None:
-    UUIDLinkManager(
+def link_uuid_of_registration(host_name: HostName, uuid: UUID, *, push_configured: bool) -> None:
+    _uuid_link_manager().create_link(host_name, uuid, push_configured=push_configured)
+
+
+def _uuid_link_manager() -> UUIDLinkManager:
+    return UUIDLinkManager(
         received_outputs_dir=cmk.utils.paths.received_outputs_dir,
         data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
         r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
         uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
-    ).unlink(host_names)
+    )
+
+
+def _remove_tls_registration(host_names: Sequence[HostName]) -> None:
+    _uuid_link_manager().unlink(host_names)

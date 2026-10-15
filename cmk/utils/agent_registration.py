@@ -81,6 +81,12 @@ class UUIDLinkManager:
             except FileNotFoundError:
                 continue
 
+    def linked_host_name(self, uuid: UUID) -> HostName | None:
+        try:
+            return HostName((self.received_outputs_dir / f"{uuid}").readlink().name)
+        except FileNotFoundError:
+            return None
+
     def unlink(self, host_names: Collection[HostName]) -> None:
         for link in self:
             if link.hostname in host_names:

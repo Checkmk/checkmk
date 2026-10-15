@@ -6,6 +6,17 @@ set -e
 # script from everywhere.
 cd -- "${BASH_SOURCE%/*}"/..
 
+# Our C++ packages, keep this in sync with //:refresh_compile_commands. A GPL-only
+# checkout doesn't contain the non-free ones.
+packages=()
+targets=()
+for package in non-free/packages/cmc packages/{livestatus,neb,unixcat}; do
+    if [ -d "$package" ]; then
+        packages+=("$package")
+        targets+=("//$package:all")
+    fi
+done
+
 most_recent_timestamp() {
     du --summarize --time --time-style=+%s "$@" |
         awk 'NR==1 || $2 > max {max=$2} END {print max}'
@@ -13,13 +24,27 @@ most_recent_timestamp() {
 
 # Fragile, but extremely fast performance hack: Generate the compilation DB only
 # when it is not there or older than any file in one of our C++ subdirectories.
-# The timestamp comparison takes only ≈ 10 ms, while the generation takes ≈ 4 s.
+# The timestamp comparison takes only ≈ 10 ms, while the generation takes ≈ 7 s.
 if [ ! -e compile_commands.json ] ||
     [ "$(most_recent_timestamp compile_commands.json)" -lt \
-        "$(most_recent_timestamp non-free/packages/cmc packages/{livestatus,neb,unixcat})" ]; then
+        "$(most_recent_timestamp "${packages[@]}")" ]; then
+    # The compilation DB refers to generated headers (protobuf, OpenSSL, virtual
+    # includes), so they have to be on disk. Building only the compilation
+    # prerequisites makes them toplevel outputs, so Bazel downloads them from the
+    # cache, without compiling or linking anything. Do this first: If it fails,
+    # the compilation DB stays outdated, so we retry next time.
+    bazel build --output_groups=compilation_prerequisites_INTERNAL_ "${targets[@]}"
     bazel run //:refresh_compile_commands
     scripts/prune_compilation_db.py
 fi
+
+# Our code is compiled with a hermetic GCC whose libstdc++ lives outside of its
+# sysroot and whose target triple is unknown to Clang, so IWYU can't find the
+# standard headers on its own. Point it to the GCC installation, just like our
+# clang-tidy aspect does. Note that a failing command substitution is only fatal
+# when it is the whole command, so don't nest it into the dirname call.
+libgcc=$(external/gcc_toolchain+/bin/x86_64-checkmk-linux-gnu-g++ -print-libgcc-file-name)
+gcc_install_dir=$(dirname "$libgcc")
 
 # Now run include-what-you-use in parallel, using the up-to-date compilation DB
 iwyu_tool \
@@ -28,5 +53,6 @@ iwyu_tool \
     --output-format=clang \
     "$@" \
     -- \
+    --gcc-install-dir="$gcc_install_dir" \
     -Xiwyu --error \
     -Xiwyu --mapping_file=.iwyu_mappings/check_mk.imp

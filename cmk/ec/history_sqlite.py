@@ -333,7 +333,7 @@ class SQLiteHistory(History):
         sqlite_query, sqlite_arguments = filters_to_sqlite_query(query.filters)
         # Newest entries first, just like the other history backends
         sqlite_query += " ORDER BY line DESC"
-        if query.limit:
+        if query.limit is not None:
             sqlite_query += " LIMIT ?"
             sqlite_arguments.append(query.limit + 1)
         with self.conn as connection:

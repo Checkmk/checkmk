@@ -16,14 +16,16 @@ from cmk.ec.history_mongo import filters_to_mongo_query, MongoDBHistory
 from cmk.ec.main import StatusTableHistory
 from cmk.ec.query import QueryFilter, QueryGET, StatusTable
 
-
-@pytest.mark.skipif(
+requires_mongodb = pytest.mark.skipif(
     os.getenv("MONGODB_CONNECTION_STRING") is None,
     reason="""MONGODB_CONNECTION_STRING env var is not set.
     Set it to any value(1 or True) to use the default host: "localhost", port: 27017.
     Or use real mongodb connection string. E.g.:
     MONGODB_CONNECTION_STRING="mongodb://<some_host>:<some_port>" """,
 )
+
+
+@requires_mongodb
 def test_pymongo_add_get(history_mongo: MongoDBHistory) -> None:
     """Add 2 documents to history, get filtered result with 1 document."""
 
@@ -51,6 +53,22 @@ def test_pymongo_add_get(history_mongo: MongoDBHistory) -> None:
     column_index = get_table("history").column_names.index
     assert row[column_index("history_what")] == "NEW"
     assert row[column_index("event_host")] == "ABC1"
+
+
+@requires_mongodb
+def test_get_with_zero_limit_does_not_fetch_the_whole_history(
+    history_mongo: MongoDBHistory,
+) -> None:
+    for text in ("one", "two", "three"):
+        history_mongo.add(event=ec.Event(text=text), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    query = QueryGET(
+        lambda _name: StatusTableHistory(logger, history_mongo), ["GET history", "Limit: 0"], logger
+    )
+
+    rows = history_mongo.get(query)
+
+    assert len(list(rows)) <= 1
 
 
 def test_filters_to_mongo_query() -> None:

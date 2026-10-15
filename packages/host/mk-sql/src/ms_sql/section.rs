@@ -137,7 +137,7 @@ impl Section {
         self.find_provided_query(sql_dir, instance_version)
             .or_else(|| {
                 get_sql_id(&self.name)
-                    .and_then(|x| Self::find_known_query(x, edition))
+                    .and_then(|x| Self::find_known_query(x, edition, instance_version))
                     .map(|s| s.to_owned())
             })
     }
@@ -164,8 +164,12 @@ impl Section {
         }
         None
     }
-    fn find_known_query(id: sqls::Id, edition: &Edition) -> Option<&'static str> {
-        sqls::find_known_query(id, edition)
+    fn find_known_query(
+        id: sqls::Id,
+        edition: &Edition,
+        version_major: u32,
+    ) -> Option<&'static str> {
+        sqls::find_known_query_for_version(id, edition, version_major)
             .map_err(|e| {
                 log::error!("{e}");
                 e
@@ -343,6 +347,25 @@ mod tests {
             make_section("no_name").select_query(custom::get_sql_dir(), 0, &Edition::Normal),
             None
         )
+    }
+
+    #[test]
+    fn test_section_select_query_version() {
+        const SQL_SERVER_2008_R2: u32 = 10;
+        const SQL_SERVER_2012: u32 = 11;
+        let section = Section::new(
+            &config::section::SectionBuilder::new(names::CONNECTIONS).build(),
+            Some(100),
+        );
+        // No sql dir: the instance version alone selects the built-in query.
+        assert_eq!(
+            section.select_query(None, SQL_SERVER_2008_R2, &Edition::Normal),
+            Some(sqls::query::CONNECTIONS_PRE_2012.to_string())
+        );
+        assert_eq!(
+            section.select_query(None, SQL_SERVER_2012, &Edition::Normal),
+            Some(sqls::query::CONNECTIONS.to_string())
+        );
     }
 
     #[test]

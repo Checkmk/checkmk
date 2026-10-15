@@ -330,12 +330,43 @@ FROM master.dbo.sysdatabases";
     pub const CLUSTER_ACTIVE_NODES: &str =
         "SELECT CAST(SERVERPROPERTY('ComputerNamePhysicalNetBIOS') AS NVARCHAR(MAX)) AS active_node";
 
+    /// Number of sessions per database, zero for a database without sessions.
+    ///
+    /// The sessions are counted first, inside the subquery, and only the
+    /// result - one row per database id - is joined to `sys.databases`.
+    /// Counting after the join is what made this query slow: SQL Server has
+    /// no statistics about `sys.dm_exec_sessions`, so it may read the whole
+    /// session list once per database instead of once in total. In that shape,
+    /// over `sys.sysprocesses`, one reported instance with 61 databases needed
+    /// five minutes instead of five seconds.
+    ///
+    /// `sys.dm_exec_sessions.database_id` exists since SQL Server 2012 only,
+    /// older instances get [`CONNECTIONS_PRE_2012`].
     pub const CONNECTIONS: &str = r"SELECT d.name AS DbName,
-            CAST(COUNT(p.spid) AS bigint) AS NumberOfConnections
+       CAST(ISNULL(s.cnt, 0) AS bigint) AS NumberOfConnections
 FROM sys.databases AS d
-LEFT JOIN sys.sysprocesses AS p
+LEFT JOIN (SELECT database_id, COUNT(*) AS cnt
+           FROM sys.dm_exec_sessions
+           GROUP BY database_id) AS s
+       ON s.database_id = d.database_id
+ORDER BY d.name";
+
+    /// [`CONNECTIONS`] for SQL Server 2008 R2 and older.
+    ///
+    /// These instances have no `sys.dm_exec_sessions.database_id` and keep the
+    /// deprecated compatibility view. The counts are higher than the ones from
+    /// [`CONNECTIONS`]: `sys.sysprocesses` holds one row per execution context
+    /// (`ecid`), so a request running in parallel contributes one row per
+    /// worker thread. The counting happens inside the subquery here as well,
+    /// for the same reason.
+    pub const CONNECTIONS_PRE_2012: &str = r"SELECT d.name AS DbName,
+       CAST(ISNULL(p.cnt, 0) AS bigint) AS NumberOfConnections
+FROM sys.databases AS d
+LEFT JOIN (SELECT dbid, COUNT(*) AS cnt
+           FROM sys.sysprocesses
+           WHERE dbid > 0
+           GROUP BY dbid) AS p
        ON p.dbid = d.database_id
-GROUP BY d.name
 ORDER BY d.name";
 
     // TODO: check use msdb.dbo instead of dbo
@@ -460,17 +491,55 @@ pub fn _get_blocking_sessions_query() -> String {
     format!("{} WHERE blocking_session_id <> 0 ", query::WAITING_TASKS).to_string()
 }
 
+/// Major version of SQL Server 2012, the first release exposing
+/// `sys.dm_exec_sessions.database_id`.
+const SQL_SERVER_2012: u32 = 11;
+
+/// Major version of an instance whose version could not be determined.
+const UNKNOWN_VERSION: u32 = 0;
+
+/// Query for instances older than `before_major`.
+#[derive(Debug, Clone, Copy)]
+struct OlderThan<'a> {
+    before_major: u32,
+    query: &'a str,
+}
+
 #[derive(Debug, Clone, Copy)]
 struct QueryMap<'a> {
     normal: &'a str,
     azure: Option<&'a str>,
+    older: Option<OlderThan<'a>>,
 }
 
 impl<'a> QueryMap<'a> {
     pub fn new(normal: &'a str, azure: Option<&'a str>) -> Self {
-        QueryMap { normal, azure }
+        QueryMap {
+            normal,
+            azure,
+            older: None,
+        }
     }
-    fn get_query(&self, edition: &Edition) -> &'a str {
+
+    /// Adds the query to use when the instance is older than `before_major`,
+    /// for a normal query relying on a feature such instances lack.
+    pub fn older_than(mut self, before_major: u32, query: &'a str) -> Self {
+        self.older = Some(OlderThan {
+            before_major,
+            query,
+        });
+        self
+    }
+
+    fn get_query(&self, edition: &Edition, version_major: u32) -> &'a str {
+        // Version wins over edition: an instance lacking the feature cannot
+        // run the Azure variant either. An unknown version counts as modern,
+        // the fallback is meant for instances positively identified as old.
+        if let Some(older) = self.older {
+            if version_major != UNKNOWN_VERSION && version_major < older.before_major {
+                return older.query;
+            }
+        }
         if edition == &Edition::Azure {
             self.azure.unwrap_or(self.normal)
         } else {
@@ -502,7 +571,7 @@ lazy_static::lazy_static! {
         (Id::Backup, QueryMap::new(query::BACKUP, None)),
         (Id::TableSpaces, QueryMap::new(query::SPACE_USED, None)),
         (Id::CounterEntries, QueryMap::new(query::COUNTERS_ENTRIES_NORMAL, Some(query::COUNTERS_ENTRIES_AZURE))),
-        (Id::Connections, QueryMap::new(query::CONNECTIONS, None)),
+        (Id::Connections, QueryMap::new(query::CONNECTIONS, None).older_than(SQL_SERVER_2012, query::CONNECTIONS_PRE_2012)),
         (Id::TransactionLogs, QueryMap::new(query::TRANSACTION_LOGS, None)),
         (Id::BadQuery, QueryMap::new(query::BAD_QUERY, None)),
         (Id::WaitingTasks, QueryMap::new(query::WAITING_TASKS, None)), // used only in tests no None))w
@@ -512,13 +581,66 @@ lazy_static::lazy_static! {
     ]);
 }
 
+/// Query for `query_id`, for an instance of unknown version.
 pub fn find_known_query<T: Borrow<Id>>(query_id: T, edition: &Edition) -> Result<&'static str> {
+    find_known_query_for_version(query_id, edition, UNKNOWN_VERSION)
+}
+
+/// Query for `query_id`, for an instance with the given major version.
+///
+/// A query relying on a feature that older instances lack has a fallback
+/// registered with [`QueryMap::older_than`]; `version_major` selects it.
+pub fn find_known_query_for_version<T: Borrow<Id>>(
+    query_id: T,
+    edition: &Edition,
+    version_major: u32,
+) -> Result<&'static str> {
     QUERY_MAP
         .get(query_id.borrow())
         .copied()
-        .map(|x| x.get_query(edition))
+        .map(|x| x.get_query(edition, version_major))
         .ok_or(anyhow::anyhow!(
             "Query for {:?} not found",
             query_id.borrow()
         ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_find_known_query_version_override() {
+        const SQL_SERVER_2008_R2: u32 = 10;
+        for edition in [Edition::Azure, Edition::Normal, Edition::Undefined] {
+            assert_eq!(
+                find_known_query_for_version(Id::Connections, &edition, SQL_SERVER_2008_R2)
+                    .unwrap(),
+                query::CONNECTIONS_PRE_2012
+            );
+            assert_eq!(
+                find_known_query_for_version(Id::Connections, &edition, SQL_SERVER_2012).unwrap(),
+                query::CONNECTIONS
+            );
+            // An instance of unknown version gets the query for modern ones.
+            assert_eq!(
+                find_known_query_for_version(Id::Connections, &edition, UNKNOWN_VERSION).unwrap(),
+                query::CONNECTIONS
+            );
+            assert_eq!(
+                find_known_query(Id::Connections, &edition).unwrap(),
+                query::CONNECTIONS
+            );
+        }
+    }
+
+    #[test]
+    fn test_find_known_query_without_version_override() {
+        for version_major in [UNKNOWN_VERSION, 10, 11, 16] {
+            assert_eq!(
+                find_known_query_for_version(Id::Jobs, &Edition::Normal, version_major).unwrap(),
+                query::JOBS
+            );
+        }
+    }
 }

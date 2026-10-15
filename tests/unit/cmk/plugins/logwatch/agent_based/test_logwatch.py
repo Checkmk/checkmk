@@ -524,11 +524,6 @@ def test_check_logwatch_generic_multiline_logline_to_summary_details() -> None:
 
 
 @pytest.mark.usefixtures("logmsg_file_path")
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report e20e07c2-b3bd-11f0-a350-b75ee652f8bc: ValueError",
-)
 def test_check_logwatch_generic_empty_worst_line() -> None:
     assert list(
         logwatch.check_logwatch_generic(

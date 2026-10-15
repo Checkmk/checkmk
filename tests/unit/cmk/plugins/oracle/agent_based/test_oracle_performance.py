@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Mapping, Sequence
 
 import pytest
@@ -398,3 +399,24 @@ def test_check_oracle_performance_waitclasses(
     empty_value_store: None,
 ) -> None:
     assert list(opc.check_oracle_performance_waitclasses(item, params, section)) == expected_result
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=TypeError,
+    reason="Crash report aef7c99c-9327-11f0-b51f-a088c23ac8b1: TypeError",
+)
+def test_check_iostat_bytes_reports_non_integer_counter(monkeypatch: pytest.MonkeyPatch) -> None:
+    store: dict[str, object] = {
+        f"DB.iostat_file.oracle_ios_f_temp_file_{suffix}": (0.0, 0)
+        for suffix in ("s_rb", "l_rb", "s_wb", "l_wb")
+    }
+    monkeypatch.setattr(oracle_performance_check, "get_value_store", lambda: store)
+    monkeypatch.setattr(time, "time", lambda: 100.0)
+    section: SectionPerformance = {
+        "DB": {"iostat_file": {"Temp File": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, None]}}
+    }
+
+    assert Result(
+        state=State.UNKNOWN, summary="Temp File Large Write: counter value is not an integer"
+    ) in list(opc.check_oracle_performance_iostat_bytes("DB", {}, section))

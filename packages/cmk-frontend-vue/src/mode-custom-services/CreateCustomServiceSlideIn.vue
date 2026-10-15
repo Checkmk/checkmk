@@ -75,7 +75,13 @@ async function save(): Promise<void> {
           stacked
         />
       </div>
-      <AssignHostStep v-model:service-name="model.serviceName" v-model:host-name="model.hostName" />
+      <AssignHostStep
+        v-model:service-name="model.serviceName"
+        v-model:host-name="model.hostName"
+        :consolidation="model.consolidation"
+        :aggregator="model.aggregator"
+        :append-series-attributes="model.appendSeriesAttributes"
+      />
       <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
       <div class="mode-custom-services-create-custom-service-slide-in__actions">
         <CmkButton variant="primary" :disabled="!canSave || saving" @click="save">

@@ -9,6 +9,7 @@ import { describe, expect, test } from 'vitest'
 
 import {
   aggregationProblem,
+  appendedAttributeNames,
   buildCustomServiceDefinition,
   buildCustomServiceUpdate,
   serviceModelFrom
@@ -320,6 +321,90 @@ describe('serviceModelFrom', () => {
     })
 
     expect(restored.hostName).toBeNull()
+  })
+})
+
+describe('appendedAttributeNames', () => {
+  const avg = { type: 'scalar' as const, name: 'avg' as const }
+  const gauge: ConsolidationFunction = {
+    type: 'gauge',
+    function: 'gauge_last',
+    lookback_seconds: 120
+  }
+
+  test('appends all attributes without any grouping', () => {
+    expect(appendedAttributeNames(gauge, undefined)).toBeNull()
+  })
+
+  test('appends the group-by keys in the order the check plugin renders them', () => {
+    expect(
+      appendedAttributeNames(gauge, {
+        stages: [
+          {
+            aggregate_by: [
+              { kind: 'data_point', name: 'http.method' },
+              { kind: 'resource', name: 'service.name' },
+              { kind: 'resource', name: 'k8s.pod.name' }
+            ],
+            aggregation_fn: avg
+          }
+        ]
+      })
+    ).toEqual(['k8s.pod.name', 'service.name', 'http.method'])
+  })
+
+  test('orders the group-by keys case-sensitively, like the check plugin', () => {
+    expect(
+      appendedAttributeNames(gauge, {
+        stages: [
+          {
+            aggregate_by: [
+              { kind: 'resource', name: 'app' },
+              { kind: 'resource', name: 'Zone' }
+            ],
+            aggregation_fn: avg
+          }
+        ]
+      })
+    ).toEqual(['Zone', 'app'])
+  })
+
+  test('appends only the keys every stage groups by', () => {
+    expect(
+      appendedAttributeNames(gauge, {
+        stages: [
+          {
+            aggregate_by: [
+              { kind: 'resource', name: 'service.name' },
+              { kind: 'resource', name: 'k8s.pod.name' }
+            ],
+            aggregation_fn: avg
+          },
+          { aggregate_by: [{ kind: 'resource', name: 'service.name' }], aggregation_fn: avg }
+        ]
+      })
+    ).toEqual(['service.name'])
+  })
+
+  test('appends the keys a preserving consolidation keeps', () => {
+    expect(
+      appendedAttributeNames(
+        {
+          type: 'histogram',
+          function: 'histogram_preserve_quantile',
+          lookback_seconds: 120,
+          percentile: 95,
+          group_by: [{ kind: 'resource', key: 'k8s.pod.name' }]
+        },
+        undefined
+      )
+    ).toEqual(['k8s.pod.name'])
+  })
+
+  test('appends nothing when all series are merged', () => {
+    expect(
+      appendedAttributeNames(gauge, { stages: [{ aggregate_by: [], aggregation_fn: avg }] })
+    ).toEqual([])
   })
 })
 

@@ -170,6 +170,9 @@ async function saveService(): Promise<void> {
           <AssignHostStep
             v-model:service-name="model.serviceName"
             v-model:host-name="model.hostName"
+            :consolidation="model.consolidation"
+            :aggregator="model.aggregator"
+            :append-series-attributes="model.appendSeriesAttributes"
           />
           <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
         </template>

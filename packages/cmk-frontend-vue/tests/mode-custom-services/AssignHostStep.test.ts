@@ -5,6 +5,8 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
+import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
+import type { ConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
 import { afterEach, expect, test } from 'vitest'
@@ -33,15 +35,34 @@ afterEach(() => {
   cleanup()
 })
 
-function renderStep(serviceName = '', hostName: string | null = null) {
+const GAUGE: ConsolidationFunction = {
+  type: 'gauge',
+  function: 'gauge_last',
+  lookback_seconds: 120
+}
+
+function renderStep(
+  serviceName = '',
+  hostName: string | null = null,
+  {
+    aggregator = undefined,
+    appendSeriesAttributes = true
+  }: { aggregator?: Aggregator | undefined; appendSeriesAttributes?: boolean } = {}
+) {
   const service = ref(serviceName)
   const host = ref<string | null>(hostName)
   const wrapper = defineComponent({
     components: { AssignHostStep },
     setup() {
-      return { service, host }
+      return { service, host, consolidation: GAUGE, aggregator, appendSeriesAttributes }
     },
-    template: `<AssignHostStep v-model:service-name="service" v-model:host-name="host" />`
+    template: `<AssignHostStep
+      v-model:service-name="service"
+      v-model:host-name="host"
+      :consolidation="consolidation"
+      :aggregator="aggregator"
+      :append-series-attributes="appendSeriesAttributes"
+    />`
   })
   render(wrapper)
   return { service, host }
@@ -70,4 +91,37 @@ test('summarizes the service to be created once a host is chosen', () => {
   renderStep('HTTP duration', 'web01')
   expect(screen.getByText(/Services to be created/)).toHaveTextContent('(1)')
   expect(screen.getByText('web01')).toBeTruthy()
+})
+
+test('tells that all attribute values are appended to the service name', () => {
+  renderStep('HTTP duration')
+  expect(screen.getByText('+ all attributes')).toBeTruthy()
+})
+
+test('tells which group-by attribute values are appended to the service name', () => {
+  renderStep('HTTP duration', null, {
+    aggregator: {
+      stages: [
+        {
+          aggregate_by: [
+            { kind: 'data_point', name: 'http.status_code' },
+            { kind: 'data_point', name: 'http.method' }
+          ],
+          aggregation_fn: { type: 'scalar', name: 'avg' }
+        }
+      ]
+    }
+  })
+  expect(screen.getByText('+ http.method + http.status_code')).toBeTruthy()
+})
+
+test('explains that very long service names are shortened', () => {
+  renderStep('HTTP duration')
+  expect(screen.getByText(/shortened and end in a short hash/)).toBeTruthy()
+})
+
+test('a service name without appended attributes shows neither indicator nor explanation', () => {
+  renderStep('Pod CPU usage', null, { appendSeriesAttributes: false })
+  expect(screen.queryByText('+ all attributes')).toBeNull()
+  expect(screen.queryByText(/short hash/)).toBeNull()
 })

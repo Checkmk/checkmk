@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import type { paths } from 'cmk-shared-typing/typescript/openapi_internal'
 
@@ -26,6 +27,47 @@ export type CustomServiceExtensions =
 const SERIES_ATTRIBUTES_MACRO = '$SERIES_ATTRIBUTES$'
 
 const SERIES_ATTRIBUTES_SUFFIX = ` ${SERIES_ATTRIBUTES_MACRO}`
+
+const ATTRIBUTE_KIND_ORDER = ['resource', 'scope', 'data_point'] as const
+
+type AttributeKey = Aggregator['stages'][number]['aggregate_by'][number]
+
+function preservedKeys(consolidation: WireConsolidationFunction): AttributeKey[] | null {
+  switch (consolidation.function) {
+    case 'histogram_preserve_quantile':
+    case 'histogram_preserve_fraction_below':
+    case 'histogram_preserve_fraction_between':
+      return consolidation.group_by.map(({ kind, key }) => ({ kind, name: key }))
+    default:
+      return null
+  }
+}
+
+// Mirrors template_attribute_scope: only the keys every grouping step groups by survive
+export function appendedAttributeNames(
+  consolidation: WireConsolidationFunction,
+  aggregator: Aggregator | undefined
+): string[] | null {
+  let keys = preservedKeys(consolidation)
+  for (const stage of aggregator?.stages ?? []) {
+    const kept = keys
+    keys =
+      kept === null
+        ? [...stage.aggregate_by]
+        : stage.aggregate_by.filter((a) => kept.some((b) => a.kind === b.kind && a.name === b.name))
+  }
+  if (keys === null) {
+    return null
+  }
+  return keys
+    .sort(
+      (a, b) =>
+        ATTRIBUTE_KIND_ORDER.indexOf(a.kind) - ATTRIBUTE_KIND_ORDER.indexOf(b.kind) ||
+        // By code unit like the check plugin, not locale-aware like localeCompare
+        (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
+    )
+    .map((key) => key.name)
+}
 
 function serviceNameTemplate(model: ServiceModel): string {
   return model.appendSeriesAttributes

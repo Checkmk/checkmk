@@ -103,8 +103,8 @@ class NotationFormatter(abc.ABC):
     ) -> Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]: ...
 
     @property
-    @abc.abstractmethod
-    def js_formatter_name(self) -> str: ...
+    def js_formatter_name(self) -> str:
+        return f"{self.ident()}Formatter"
 
     @abc.abstractmethod
     def _preformat_small_number(
@@ -297,11 +297,6 @@ class DecimalFormatter(NotationFormatter):
     def ident(self) -> Literal["Decimal"]:
         return "Decimal"
 
-    @property
-    @override
-    def js_formatter_name(self) -> Literal["DecimalFormatter"]:
-        return "DecimalFormatter"
-
     @override
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
@@ -363,11 +358,6 @@ class SIFormatter(NotationFormatter):
     def ident(self) -> Literal["SI"]:
         return "SI"
 
-    @property
-    @override
-    def js_formatter_name(self) -> Literal["SIFormatter"]:
-        return "SIFormatter"
-
     @override
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
@@ -420,11 +410,6 @@ class IECFormatter(NotationFormatter):
     def ident(self) -> Literal["IEC"]:
         return "IEC"
 
-    @property
-    @override
-    def js_formatter_name(self) -> Literal["IECFormatter"]:
-        return "IECFormatter"
-
     @override
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
@@ -459,11 +444,6 @@ class StandardScientificFormatter(NotationFormatter):
     def ident(self) -> Literal["StandardScientific"]:
         return "StandardScientific"
 
-    @property
-    @override
-    def js_formatter_name(self) -> Literal["StandardScientificFormatter"]:
-        return "StandardScientificFormatter"
-
     @override
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
@@ -491,11 +471,6 @@ class EngineeringScientificFormatter(NotationFormatter):
     @override
     def ident(self) -> Literal["EngineeringScientific"]:
         return "EngineeringScientific"
-
-    @property
-    @override
-    def js_formatter_name(self) -> Literal["EngineeringScientificFormatter"]:
-        return "EngineeringScientificFormatter"
 
     @override
     def _preformat_small_number(
@@ -574,11 +549,6 @@ class TimeFormatter(NotationFormatter):
     @override
     def ident(self) -> Literal["Time"]:
         return "Time"
-
-    @property
-    @override
-    def js_formatter_name(self) -> Literal["TimeFormatter"]:
-        return "TimeFormatter"
 
     @override
     def _preformat_small_number(

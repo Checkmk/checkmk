@@ -212,6 +212,94 @@ def test_case_in_operator_with_some_matching_data_returns_matching_text(
     assert result.fetchall() == expected_results
 
 
+# fmt: off
+@pytest.mark.parametrize(
+    "operator_name, argument, expected_texts",
+    [
+        pytest.param("=",   "disk full", {"disk full"},                  id="equal"),
+        pytest.param("!=",  "disk full", {"Disk full", "CPU load high"}, id="not equal"),
+        pytest.param("!=~", "disk full", {"CPU load high"},              id="not equal ignoring case"),
+        pytest.param("~",   "^disk",     {"disk full"},                  id="regex matches"),
+        pytest.param("!~",  "^disk",     {"Disk full", "CPU load high"}, id="regex does not match"),
+        pytest.param("~~",  "^disk",     {"Disk full", "disk full"},     id="regex matches ignoring case"),
+        pytest.param("!~~", "^disk",     {"CPU load high"},              id="regex does not match ignoring case"),
+    ],
+)
+# fmt: on
+def test_filter_operator_selects_only_the_history_entries_satisfying_it(
+    history_sqlite: SQLiteHistory, operator_name: str, argument: str, expected_texts: set[str]
+) -> None:
+    for text in ("Disk full", "disk full", "CPU load high"):
+        history_sqlite.add(event=ec.Event(text=text), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history_sqlite)
+    query = QueryGET(
+        lambda _name: table,
+        ["GET history", "Columns: event_text", f"Filter: event_text {operator_name} {argument}"],
+        logger,
+    )
+
+    _header, *rows = table.query(query)
+
+    assert {text for (text,) in rows} == expected_texts
+
+
+@pytest.mark.parametrize(
+    "operator_name",
+    [
+        pytest.param("=", id="equal"),
+        pytest.param("=~", id="equal ignoring case"),
+        pytest.param("~", id="regex matches"),
+        pytest.param("~~", id="regex matches ignoring case"),
+    ],
+)
+def test_filter_does_not_select_history_entries_without_a_value(
+    history_sqlite: SQLiteHistory, operator_name: str
+) -> None:
+    history_sqlite.add(event=ec.Event(text="unknown", core_host=None), what="NEW")
+    history_sqlite.add(event=ec.Event(text="mine", core_host=HostName("myhost")), what="NEW")
+    history_sqlite.add(event=ec.Event(text="other", core_host=HostName("otherhost")), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history_sqlite)
+    query = QueryGET(
+        lambda _name: table,
+        ["GET history", "Columns: event_text", f"Filter: event_core_host {operator_name} myhost"],
+        logger,
+    )
+
+    _header, *rows = table.query(query)
+
+    assert {text for (text,) in rows} == {"mine"}
+
+
+@pytest.mark.parametrize(
+    "operator_name",
+    [
+        pytest.param("!=", id="not equal"),
+        pytest.param("!=~", id="not equal ignoring case"),
+        pytest.param("!~", id="regex does not match"),
+        pytest.param("!~~", id="regex does not match ignoring case"),
+    ],
+)
+def test_negated_filter_selects_history_entries_without_a_value(
+    history_sqlite: SQLiteHistory, operator_name: str
+) -> None:
+    history_sqlite.add(event=ec.Event(text="unknown", core_host=None), what="NEW")
+    history_sqlite.add(event=ec.Event(text="mine", core_host=HostName("myhost")), what="NEW")
+    history_sqlite.add(event=ec.Event(text="other", core_host=HostName("otherhost")), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history_sqlite)
+    query = QueryGET(
+        lambda _name: table,
+        ["GET history", "Columns: event_text", f"Filter: event_core_host {operator_name} myhost"],
+        logger,
+    )
+
+    _header, *rows = table.query(query)
+
+    assert {text for (text,) in rows} == {"unknown", "other"}
+
+
 def test_filtered_history_query_with_limit_returns_only_that_many_newest_entries(
     history_sqlite: SQLiteHistory,
 ) -> None:

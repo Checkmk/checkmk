@@ -131,21 +131,30 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[o
 def query_filter_to_sqlite_filter(f: QueryFilter, adjusted_column_name: str) -> str:
     match f.operator_name:
         case "=":
-            return f"{adjusted_column_name} {f.operator_name} ?"
+            return f"{adjusted_column_name} = ?"
+        # IS NOT instead of <> to keep NULLs, just like Python's != keeps None
+        case "!=":
+            return f"{adjusted_column_name} IS NOT ?"
         case "~":
             return f"{adjusted_column_name} REGEXP ?"
+        case "!~":
+            return f"{adjusted_column_name} NOT REGEXP ?"
         case "=~":
             return f"{adjusted_column_name} = ? COLLATE NOCASE"
+        case "!=~":
+            return f"{adjusted_column_name} IS NOT ? COLLATE NOCASE"
         case "~~":
             return f"regexp_nocase(?, {adjusted_column_name})"
+        case "!~~":
+            return f"NOT regexp_nocase(?, {adjusted_column_name})"
         case "<":
-            return f"{adjusted_column_name} {f.operator_name} ?"
+            return f"{adjusted_column_name} < ?"
         case ">=":
-            return f"{adjusted_column_name} {f.operator_name} ?"
+            return f"{adjusted_column_name} >= ?"
         case ">":
-            return f"{adjusted_column_name} {f.operator_name} ?"
+            return f"{adjusted_column_name} > ?"
         case "<=":
-            return f"{adjusted_column_name} {f.operator_name} ?"
+            return f"{adjusted_column_name} <= ?"
         case "in":
             return f"{adjusted_column_name} in ({','.join(['?'] * len(f.argument))})"
 
@@ -222,16 +231,17 @@ class SQLiteHistory(History):
             self._settings.database, check_same_thread=False, detect_types=sqlite3.PARSE_DECLTYPES
         )
 
+        # NULL matches nothing, so NOT REGEXP selects it, just like !~ selects None
         self.conn.create_function(
             "regexp",
             2,
-            lambda p, s: 1 if re.search(p, s) else 0,
+            lambda p, s: 1 if s is not None and re.search(p, s) else 0,
             deterministic=True,
         )
         self.conn.create_function(
             "regexp_nocase",
             2,
-            lambda p, s: 1 if re.search(p, s, re.IGNORECASE) else 0,
+            lambda p, s: 1 if s is not None and re.search(p, s, re.IGNORECASE) else 0,
             deterministic=True,
         )
 

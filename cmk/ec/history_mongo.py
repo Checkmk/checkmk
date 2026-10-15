@@ -158,12 +158,20 @@ def query_filter_to_mongo_filter(f: QueryFilter) -> str | dict[str, object]:
         case "=":
             argument: str = f.argument
             return argument
+        case "!=":
+            return {"$ne": f.argument}
         case "~":
             return {"$regex": f.argument, "$options": ""}
+        case "!~":
+            return {"$not": re.compile(f.argument)}
         case "=~":
             return {"$regex": _case_insensitive_equality(f.argument)}
+        case "!=~":
+            return {"$not": _case_insensitive_equality(f.argument)}
         case "~~":
             return {"$regex": f.argument, "$options": "i"}
+        case "!~~":
+            return {"$not": re.compile(f.argument, re.IGNORECASE)}
         case "<":
             return {"$lt": f.argument}
         case ">=":

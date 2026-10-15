@@ -62,6 +62,36 @@ def test_file_add_get(history: FileHistory) -> None:
 @pytest.mark.parametrize(
     "operator_name, argument, expected_texts",
     [
+        pytest.param("!=",  "disk full", {"Disk full", "CPU load high"}, id="not equal"),
+        pytest.param("!=~", "disk full", {"CPU load high"},              id="not equal ignoring case"),
+        pytest.param("!~",  "disk",      {"Disk full", "CPU load high"}, id="regex does not match"),
+        pytest.param("!~~", "disk",      {"CPU load high"},              id="regex does not match ignoring case"),
+    ],
+)
+# fmt: on
+def test_negated_filter_ignores_matches_in_other_columns(
+    history: FileHistory, operator_name: str, argument: str, expected_texts: set[str]
+) -> None:
+    history.add(event=ec.Event(text="Disk full"), what="NEW")
+    history.add(event=ec.Event(text="disk full"), what="NEW")
+    history.add(event=ec.Event(text="CPU load high", comment="disk full"), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history)
+    query = QueryGET(
+        lambda _name: table,
+        ["GET history", "Columns: event_text", f"Filter: event_text {operator_name} {argument}"],
+        logger,
+    )
+
+    _header, *rows = table.query(query)
+
+    assert {text for (text,) in rows} == expected_texts
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "operator_name, argument, expected_texts",
+    [
         pytest.param("~",  "load",          {"CPU load high"},   id="plain string"),
         pytest.param("~~", "LOAD",          {"CPU load high"},   id="plain string, ignoring case"),
         pytest.param("~",  "Event.17",      {"Event 17"},        id="dot"),

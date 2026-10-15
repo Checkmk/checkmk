@@ -164,7 +164,7 @@ check_plugin_hr_ps = CheckPlugin(
     service_name="Process %s",
     discovery_function=discover_hr_ps,
     discovery_default_parameters={
-        "descr": "%s",
+        "descr": "Example service - unused",
         "default_params": {},
     },
     discovery_ruleset_name="discovery_hr_processes_rules",

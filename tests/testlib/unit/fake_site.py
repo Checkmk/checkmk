@@ -13,7 +13,8 @@ import pprint
 import queue
 import shutil
 import tempfile
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 from unittest.mock import patch
@@ -370,6 +371,14 @@ def reduce_password_hashing_rounds() -> Iterator[None]:
     """Reduce the number of rounds for hashing with bcrypt to the allowed minimum"""
     with patch.object(cmk.crypto.password_hashing, "BCRYPT_ROUNDS", 4):
         yield
+
+
+@dataclass(frozen=True, slots=True)
+class LoggedSecurityEvent:
+    """One event from the security log, as the security_events fixture records it"""
+
+    summary: str
+    details: Mapping[str, object]
 
 
 def prevent_security_event_file_logging() -> Iterator[queue.Queue[logging.LogRecord]]:

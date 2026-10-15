@@ -6,10 +6,12 @@
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
 
+import json
 import logging
 import os
 import queue
 from collections.abc import Generator, Iterator
+from typing import override
 
 import pytest
 
@@ -197,6 +199,32 @@ def prevent_security_event_file_logging() -> Iterator[queue.Queue[logging.LogRec
     """cmk.utils.log.security_event.log_security_event implicitly opens a file logger upon it's
     first call which we want to avoid in the unit test context."""
     yield from fake_site.prevent_security_event_file_logging()
+
+
+class _SecurityEventCollector(logging.Handler):
+    def __init__(self) -> None:
+        super().__init__()
+        self.events: list[fake_site.LoggedSecurityEvent] = []
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        logged = json.loads(record.getMessage())
+        self.events.append(fake_site.LoggedSecurityEvent(logged["summary"], logged["details"]))
+
+
+@pytest.fixture(name="security_events")
+def fixture_security_events() -> Iterator[list[fake_site.LoggedSecurityEvent]]:
+    """The events written to the security log while the test runs"""
+    collector = _SecurityEventCollector()
+    security_logger = logging.getLogger("cmk_security")
+    previous_level = security_logger.level
+    security_logger.addHandler(collector)
+    security_logger.setLevel(logging.INFO)
+    try:
+        yield collector.events
+    finally:
+        security_logger.removeHandler(collector)
+        security_logger.setLevel(previous_level)
 
 
 @pytest.fixture(name="monkeypatch_module", scope="module")

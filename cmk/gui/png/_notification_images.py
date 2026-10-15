@@ -33,10 +33,10 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.permissions import permission_registry
-from cmk.gui.png.renderer import render_pngs
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
+from ._client import render_pngs
 from ._settings import (
     compute_image_graph_ranges,
     graph_image_render_options,

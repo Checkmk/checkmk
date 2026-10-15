@@ -20,8 +20,5 @@ py_library(
         "//packages/cmk-graphing-engine",
         "//packages/cmk-livestatus-client",
         requirement("pydantic"),
-        "//packages/cmk-web/cmk/web/utils",
-        requirement("matplotlib"),
-        requirement("numpy"),
     ],
 )

@@ -96,6 +96,7 @@ py_wheel(
             "cmk-piggyback-hub = cmk.piggyback.hub.cli:main",
             "cmk-product-usage = cmk.product_usage.cli:main",
             "cmk-pwstore = cmk.utils.password_store.cli:main",
+            "cmk-render-png-graphs = cmk.gui.png.renderer.__main__:main",
             "cmk-ui-job-scheduler = cmk.gui.job_scheduler.main:main",
             "cmk-validate-config = cmk.validate_config.__main__:main",
             "cmk-validate-plugins = cmk.validate_plugins:main",

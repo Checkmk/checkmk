@@ -3,8 +3,4 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._image import render_pngs
-
-__all__ = [
-    "render_pngs",
-]
+# Empty on purpose: the GUI must not import the renderer, which loads matplotlib.

@@ -28,6 +28,7 @@ py_library(
         "//cmk/gui/plugins/bi",
         "//cmk/gui/plugins/legacy_bakery_rulesets",
         "//cmk/gui/plugins/wato/check_parameters",
+        "//cmk/gui/png/renderer",
         "//cmk/gui_plugins/internal",
         "//cmk/mkp:cli",
         "//cmk/piggyback:backend",

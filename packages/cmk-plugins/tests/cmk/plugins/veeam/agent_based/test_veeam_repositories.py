@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Mapping
 
 import pytest
 
@@ -11,6 +12,7 @@ from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 from cmk.plugins.veeam.agent_based import veeam_repositories
 from cmk.plugins.veeam.agent_based.veeam_repositories import (
+    check_plugin_veeam_repositories,
     check_veeam_repositories,
     discovery_veeam_repositories,
     parse_veeam_repositories,
@@ -164,3 +166,72 @@ def test_check_veeam_repositories_details(_value_store: None) -> None:
 def test_check_veeam_repositories_vanished_item_yields_nothing(_value_store: None) -> None:
     section = parse_veeam_repositories([[_repository("repo-1")]])
     assert list(check_veeam_repositories("WinLocal - repo-2", PARAMS, section)) == []
+
+
+_EXTENT_DETAILS = {
+    "scaleOutRepositoryId": "so-id-1",
+    "membership": "Performance",
+    "extentType": "WinLocal",
+}
+
+
+def test_repository_and_extent_with_the_same_name_get_separate_services() -> None:
+    section = parse_veeam_repositories(
+        [
+            [_repository("repo-1")],
+            [_repository("repo-1", scaleOutRepositoryDetails=_EXTENT_DETAILS)],
+        ]
+    )
+    assert list(discovery_veeam_repositories(section)) == [
+        Service(item="WinLocal - repo-1"),
+        Service(item="WinLocal Extent - repo-1"),
+    ]
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="The item is '<category> - <name>', so repositories of one type and name merge",
+)
+def test_repositories_with_the_same_type_and_name_get_separate_services() -> None:
+    section = parse_veeam_repositories(
+        [[_repository("repo-1", id="id-1")], [_repository("repo-1", id="id-2")]]
+    )
+    assert len(list(discovery_veeam_repositories(section))) == 2
+
+
+def _used_space_state(params: Mapping[str, object], free_gb: float) -> State:
+    section = parse_veeam_repositories([[_repository(capacityGB=1000.0, freeGB=free_gb)]])
+    (result,) = [
+        r
+        for r in check_veeam_repositories("WinLocal - repo-1", params, section)
+        if isinstance(r, Result) and r.summary.startswith("Used:")
+    ]
+    return result.state
+
+
+@pytest.mark.usefixtures("_value_store")
+@pytest.mark.parametrize(
+    "free_gb, expected",
+    [
+        pytest.param(210.0, State.OK, id="below 80 percent"),
+        pytest.param(150.0, State.WARN, id="80 percent or more"),
+        pytest.param(90.0, State.CRIT, id="90 percent or more"),
+    ],
+)
+def test_used_space_default_levels(free_gb: float, expected: State) -> None:
+    assert (params := check_plugin_veeam_repositories.check_default_parameters) is not None
+    assert _used_space_state(params, free_gb) is expected
+
+
+@pytest.mark.usefixtures("_value_store")
+def test_changed_used_space_levels_are_applied() -> None:
+    assert _used_space_state({"levels": (50.0, 60.0)}, 450.0) is State.WARN
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Backup repositories still use the global filesystem ruleset; "
+    "a dedicated veeam_vbr_repository ruleset does not exist yet",
+)
+def test_repositories_have_their_own_ruleset() -> None:
+    assert check_plugin_veeam_repositories.check_ruleset_name != "filesystem"

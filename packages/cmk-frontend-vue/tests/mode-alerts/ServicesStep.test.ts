@@ -14,7 +14,7 @@ import { HttpResponse, http } from 'msw'
 import { afterEach, expect, test, vi } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
-import NameAndServicesStep from '@/mode-alerts/steps/NameAndServicesStep.vue'
+import ServicesStep from '@/mode-alerts/steps/ServicesStep.vue'
 import { type AlertModel, emptyAlert } from '@/mode-alerts/types'
 
 import { CONDITIONS_SPEC, FOLDER_PATHS, MAIN_FOLDER } from './conditions-spec'
@@ -64,11 +64,11 @@ function renderStep(alert: Partial<AlertModel> = {}) {
     navigation
   }
   const wrapper = defineComponent({
-    components: { NameAndServicesStep },
+    components: { ServicesStep },
     setup() {
       return { model, spec: CONDITIONS_SPEC, folderPaths: FOLDER_PATHS }
     },
-    template: `<NameAndServicesStep v-model="model" :conditions-spec="spec" :folder-paths="folderPaths" :index="1" :is-completed="() => false" />`
+    template: `<ServicesStep v-model="model" :conditions-spec="spec" :folder-paths="folderPaths" :index="1" :is-completed="() => false" />`
   })
   render(wrapper, {
     global: { provide: { [wizardContextProvider as symbol]: context } }
@@ -140,7 +140,7 @@ test('choosing a service name lists the custom services it matches', async () =>
     ['web01', 'HTTP request duration'],
     ['web02', 'HTTP request duration']
   ]
-  renderStep({ name: 'Latency too high' })
+  renderStep()
 
   await pickServiceName('HTTP request duration')
 
@@ -156,7 +156,7 @@ test('the discovered service names are offered as choices', async () => {
     ['web02', 'HTTP request duration'],
     ['db01', 'Query duration']
   ]
-  renderStep({ name: 'Latency too high' })
+  renderStep()
 
   await open('Service name')
 
@@ -166,7 +166,7 @@ test('the discovered service names are offered as choices', async () => {
 
 test('the number of matching services is reported', async () => {
   matching = [['web01', 'HTTP request duration']]
-  renderStep({ name: 'Latency too high' })
+  renderStep()
 
   await pickServiceName('HTTP request duration')
 
@@ -176,19 +176,13 @@ test('the number of matching services is reported', async () => {
 })
 
 test('no results are shown before a search has run', () => {
-  renderStep({ name: 'Latency too high', servicePattern: 'HTTP request duration' })
+  renderStep({ servicePattern: 'HTTP request duration' })
 
   expect(screen.queryByText(/Matching services/)).not.toBeInTheDocument()
 })
 
-test('errors are not shown before the first attempt to continue', () => {
-  renderStep()
-
-  expect(screen.queryByText('An alert name is required')).not.toBeInTheDocument()
-})
-
 test('a service name matching nothing says so without waiting for the next step', async () => {
-  renderStep({ name: 'Latency too high' })
+  renderStep()
 
   await typeServiceName('nonexistent')
 
@@ -198,20 +192,8 @@ test('a service name matching nothing says so without waiting for the next step'
   expect(screen.queryByText(/Matching services/)).not.toBeInTheDocument()
 })
 
-test('a missing alert name blocks navigation with a required error', async () => {
-  matching = [['web01', 'HTTP request duration']]
-  const { navigation } = renderStep({ servicePattern: 'HTTP request duration' })
-
-  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
-
-  await waitFor(() => {
-    expect(screen.getByText('An alert name is required')).toBeInTheDocument()
-  })
-  expect(navigation.next).not.toHaveBeenCalled()
-})
-
 test('a missing service name blocks navigation with a required error', async () => {
-  const { navigation } = renderStep({ name: 'Latency too high' })
+  const { navigation } = renderStep()
 
   await userEvent.click(screen.getByRole('button', { name: /next step/i }))
 
@@ -222,7 +204,7 @@ test('a missing service name blocks navigation with a required error', async () 
 })
 
 test('a service name matching nothing blocks navigation', async () => {
-  const { navigation } = renderStep({ name: 'Latency too high', servicePattern: 'nonexistent' })
+  const { navigation } = renderStep({ servicePattern: 'nonexistent' })
 
   await userEvent.click(screen.getByRole('button', { name: /next step/i }))
 
@@ -234,7 +216,6 @@ test('a service name matching nothing blocks navigation', async () => {
 
 test('an unparsable regular expression blocks navigation before any search', async () => {
   const { navigation } = renderStep({
-    name: 'Latency too high',
     matchType: 'regex',
     servicePattern: '['
   })
@@ -253,7 +234,7 @@ test.each([
 ] as const)(
   'a %s search matching nothing points at the discovery requirement',
   async (matchType, servicePattern) => {
-    renderStep({ name: 'Latency too high', matchType, servicePattern })
+    renderStep({ matchType, servicePattern })
 
     await userEvent.click(screen.getByRole('button', { name: /next step/i }))
 
@@ -275,10 +256,9 @@ test('the service name help explains both match types', async () => {
   expect(help).toHaveTextContent(/matches from the start of the service name/)
 })
 
-test('a named alert with at least one matching service continues to the next step', async () => {
+test('at least one matching service continues to the next step', async () => {
   matching = [['web01', 'HTTP request duration']]
   const { navigation } = renderStep({
-    name: 'Latency too high',
     servicePattern: 'HTTP request duration'
   })
 
@@ -291,7 +271,7 @@ test('a named alert with at least one matching service continues to the next ste
 
 test('changing the match type discards the results of the previous search', async () => {
   matching = [['web01', 'HTTP request duration']]
-  renderStep({ name: 'Latency too high' })
+  renderStep()
 
   await pickServiceName('HTTP request duration')
   await waitFor(() => {
@@ -315,7 +295,6 @@ test('a slow search cannot overwrite the result of a later one', async () => {
     })
   )
   renderStep({
-    name: 'Latency too high',
     matchType: 'regex',
     servicePattern: 'HTTP request duration'
   })
@@ -335,7 +314,7 @@ test('a slow search cannot overwrite the result of a later one', async () => {
 test('a search still in flight is discarded once the service name is cleared', async () => {
   matching = [['stale-host', 'HTTP request duration']]
   const search = heldExactSearch()
-  const { model } = renderStep({ name: 'Latency too high' })
+  const { model } = renderStep()
 
   model.value.servicePattern = 'HTTP request duration'
   await waitFor(() => expect(search.started()).toBe(true))
@@ -367,7 +346,6 @@ test('choosing a folder narrows the conditions to it', async () => {
 test('a condition the form rejects blocks navigation and says why', async () => {
   matching = [['web01', 'HTTP request duration']]
   const { navigation } = renderStep({
-    name: 'Latency too high',
     servicePattern: 'HTTP request duration',
     conditions: { folder_path: MAIN_FOLDER, explicit_hosts: { value: [], negate: false } }
   })
@@ -381,7 +359,6 @@ test('a condition the form rejects blocks navigation and says why', async () => 
 test('a host label group without labels blocks navigation like in the rule editor', async () => {
   matching = [['web01', 'HTTP request duration']]
   const { navigation } = renderStep({
-    name: 'Latency too high',
     servicePattern: 'HTTP request duration',
     conditions: {
       folder_path: MAIN_FOLDER,
@@ -398,7 +375,6 @@ test('a host label group without labels blocks navigation like in the rule edito
 test('valid conditions let the step continue', async () => {
   matching = [['web01', 'HTTP request duration']]
   const { navigation } = renderStep({
-    name: 'Latency too high',
     servicePattern: 'HTTP request duration',
     conditions: { folder_path: MAIN_FOLDER, explicit_hosts: { value: ['web01'], negate: false } }
   })
@@ -410,7 +386,7 @@ test('valid conditions let the step continue', async () => {
 
 test('choosing a folder searches the matching services again, in that folder', async () => {
   matching = [['web01', 'HTTP request duration']]
-  renderStep({ name: 'Latency too high' })
+  renderStep()
   await pickServiceName('HTTP request duration')
   await waitFor(() => expect(screen.getByText('web01')).toBeInTheDocument())
   matching = []

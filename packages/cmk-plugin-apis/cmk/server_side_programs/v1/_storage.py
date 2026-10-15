@@ -71,14 +71,15 @@ class Storage:
             A RuntimeError is raised if SERVER_SIDE_PROGRAM_STORAGE_PATH environment variable is not set.
         """
         path = self._get_path(key)
+        bytes_to_write = content.encode("utf-8")
         path.parent.mkdir(parents=True, exist_ok=True)
         # The "%t" prefix can never be the result of URL quoting, so the temporary
         # file never collides with a key. The replace stays inside the with, so any
         # exception deletes the temp file instead.
         with tempfile.NamedTemporaryFile(
-            "w", dir=path.parent, prefix="%tmp", delete_on_close=False
+            "wb", dir=path.parent, prefix="%tmp", delete_on_close=False
         ) as tmp:
-            tmp.write(content)
+            tmp.write(bytes_to_write)
             tmp.close()
             os.replace(tmp.name, path)
 
@@ -108,6 +109,6 @@ class Storage:
         """
         path = self._get_path(key)
         try:
-            return path.read_text()
+            return path.read_bytes().decode("utf-8")
         except OSError, ValueError:
             return default

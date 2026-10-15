@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="explicit-any"
 
+import re
 import shlex
 import subprocess
 import threading
@@ -195,6 +196,12 @@ def _grep_pipeline(filters: Iterable[QueryFilter]) -> list[str]:
     >>> _grep_pipeline([QueryFilter("event_core_host", '=', lambda x: True, '|| ping')])
     ["grep -F -e '|| ping'"]
 
+    >>> _grep_pipeline([QueryFilter("event_host", '~~', lambda x: True, 'www.example.com')])
+    ['grep -E -i -e www.example.com']
+
+    >>> _grep_pipeline([QueryFilter("event_text", '~', lambda x: True, '^disk')])
+    []
+
     """
     return [
         command
@@ -206,17 +213,29 @@ def _grep_pipeline(filters: Iterable[QueryFilter]) -> list[str]:
 
 
 def _grep_command(operator_name: OperatorName, argument: str) -> str | None:
+    # Prefiltering must never drop a line the filter would keep. But grep sees
+    # the whole line, so regex anchors would refer to the line instead of the
+    # column. Furthermore, grep doesn't understand all of Python's regex syntax,
+    # so we only prefilter regexes which mean the same for both.
     match operator_name:
         case "=":
             return f"grep -F {_grep_pattern(argument)}"
-        case "~":
+        case "~" if _is_grep_compatible(argument):
             return f"grep -E {_grep_pattern(argument)}"
         case "=~":
             return f"grep -F -i {_grep_pattern(argument)}"
-        case "~~":
+        case "~~" if _is_grep_compatible(argument):
             return f"grep -E -i {_grep_pattern(argument)}"
-        case "<" | ">=" | ">" | "<=" | "in":
+        case "~" | "~~" | "<" | ">=" | ">" | "<=" | "in":
             return None
+
+
+# Literal characters and dots, escaped or not, like in host names or IP addresses
+_GREP_COMPATIBLE_REGEX = re.compile(r"(?:[^.^$*+?{}\[\]\\|()]|\\?\.)*")
+
+
+def _is_grep_compatible(regex: str) -> bool:
+    return _GREP_COMPATIBLE_REGEX.fullmatch(regex) is not None
 
 
 def _grep_pattern(argument: str) -> str:

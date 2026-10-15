@@ -25,6 +25,7 @@ from cmk.maps.shared.map_payload import (
     DataElement,
     LabelAlign,
     LabelWeight,
+    MAP_FIELD_DEFAULTS,
     MapPayload,
     MapView,
     PresentationObjectType,
@@ -45,15 +46,15 @@ def _builtin_map(name: MapName, alias: str, view: MapView, sort_order: int) -> M
         # The local-site default connection (the daemon falls
         # back to the local site for any connection id it cannot resolve).
         "connection_id": f"cmk_{omd_site()}",
-        "icon_size": None,
+        "icon_size": MAP_FIELD_DEFAULTS["icon_size"],
         "view": view,
         "objects": [],
         "sort_order": sort_order,
         "version": 1,
-        "render_mode": "default",
-        "default_z": 1,
-        "click_action": "link",
-        "rotation_interval": 0,
+        "render_mode": MAP_FIELD_DEFAULTS["render_mode"],
+        "default_z": MAP_FIELD_DEFAULTS["default_z"],
+        "click_action": MAP_FIELD_DEFAULTS["click_action"],
+        "rotation_interval": MAP_FIELD_DEFAULTS["rotation_interval"],
     }
     # Built-in pagetypes are published to everyone (owner stays UserId.builtin()).
     # They are starting points, not something every user wants in the Monitor

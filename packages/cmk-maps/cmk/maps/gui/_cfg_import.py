@@ -26,10 +26,12 @@ from cmk.maps.shared.geo import bounded_view, parse_degrees
 from cmk.maps.shared.map_payload import (
     FlowView,
     GadgetType,
+    LABEL_FIELD_DEFAULTS,
     LabelAlign,
     LabelWeight,
     LinePerfdataLabel,
     LineStyle,
+    MAP_FIELD_DEFAULTS,
     MapDisplay,
     MapLabel,
     MapObject,
@@ -413,14 +415,7 @@ def _hidden_label() -> MapLabel:
     ``background`` — a bare ``{"show": False}`` is rejected on save. Emit a full,
     hidden config so the import round-trips through the Maps REST API.
     """
-    return {
-        "show": False,
-        "x": 0,
-        "y": 0,
-        "size": 11,
-        "color": "#000000",
-        "background": "transparent",
-    }
+    return {**LABEL_FIELD_DEFAULTS, "show": False, "color": "#000000"}
 
 
 def _label(p: dict[str, str], *, show_default: bool = True) -> MapLabel:
@@ -752,13 +747,10 @@ def _handle_textbox(p: dict[str, str], raw_id: str) -> _ImportObject:
     tx = _parse_coord(p.get("x", "0"), "x")
     ty = _parse_coord(p.get("y", "0"), "y")
     label: MapLabel = {
-        "show": True,
+        **LABEL_FIELD_DEFAULTS,
         "text": raw_text,
-        "x": 0,
-        "y": 0,
-        "size": html_style.get("size", 11),
+        "size": html_style.get("size", LABEL_FIELD_DEFAULTS["size"]),
         "color": _color(html_style.get("color"), "#000000"),
-        "background": "transparent",
     }
     if (weight := html_style.get("weight")) is not None:
         label["weight"] = weight
@@ -876,14 +868,13 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
         "alias": map_name,
         "connection_id": "live_1",
         "icon_size": 22,
-        "rotation_interval": 0,
+        "rotation_interval": MAP_FIELD_DEFAULTS["rotation_interval"],
         "hover_template": None,
         "context_template": None,
         "background_image": None,
-        # Map-level defaults required by the Maps map schema (the SPA sets the
-        # same on dialog-created maps); NagVis has no equivalent knobs.
-        "sort_order": 0,
-        "click_action": "link",
+        # NagVis has no equivalent knobs.
+        "sort_order": MAP_FIELD_DEFAULTS["sort_order"],
+        "click_action": MAP_FIELD_DEFAULTS["click_action"],
         # cfg-imports render with NagVis-classic top-left anchoring + flat look.
         "render_mode": "nagvis_classic",
         # NagVis' global default z is 10 for every object type and is never

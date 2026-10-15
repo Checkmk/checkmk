@@ -32,6 +32,18 @@ from cmk.maps.gui._image_security import (
 )
 from cmk.maps.gui._images import delete_background_files, import_icon, store_background
 from cmk.maps.shared.geo import bounded_view
+from cmk.maps.shared.map_compat import (
+    accept_legacy_backend_id,
+    coerce_graph_metric,
+    migrate_weathermap,
+)
+from cmk.maps.shared.map_payload import (
+    DISPLAY_FIELD_DEFAULTS,
+    LABEL_FIELD_DEFAULTS,
+    MAP_FIELD_DEFAULTS,
+    OBJECT_FIELD_DEFAULTS,
+    RADAR_VIEW_FIELD_DEFAULTS,
+)
 from cmk.maps.shared.validators import rgb_to_hex
 
 
@@ -141,44 +153,22 @@ def _retarget_connections(spec: dict[str, object], foreign: frozenset[str]) -> N
             obj["connection_id"] = site_connection
 
 
-# The board model defaults these fields, the REST model requires them. Kept in sync
-# with ``MapConfig``, ``RadarView``, ``MapElement``, ``LabelConfig`` and
-# ``DisplayConfig`` in ``cmk.maps.backend.schemas.map``.
-_MAP_FIELD_DEFAULTS: dict[str, object] = {
-    "alias": "",
-    "icon_size": None,
-    "rotation_interval": 0,
-    "sort_order": 0,
-    "click_action": "link",
-    "objects": [],
-}
-_RADAR_VIEW_DEFAULTS: dict[str, object] = {"filter": "hostgroup", "filter_value": ""}
-_OBJECT_FIELD_DEFAULTS: dict[str, object] = {"x": 0, "y": 0, "url_target": "_blank"}
-_DISPLAY_DEFAULTS: dict[str, object] = {"mode": "icon"}
-_LABEL_DEFAULTS: dict[str, object] = {
-    "show": True,
-    "x": 0,
-    "y": 0,
-    "size": 11,
-    "color": "#ffffff",
-    "background": "transparent",
-}
-
-
 def _fill_map_defaults(spec: dict[str, object]) -> None:
-    for key, default in _MAP_FIELD_DEFAULTS.items():
+    # The board model defaults these fields, the REST model requires them.
+    for key, default in MAP_FIELD_DEFAULTS.items():
         spec.setdefault(key, default)
+    spec.setdefault("objects", [])
     view = spec.setdefault("view", {"type": "static"})
     if isinstance(view, dict) and view.get("type") == "radar":
-        for key, default in _RADAR_VIEW_DEFAULTS.items():
+        for key, default in RADAR_VIEW_FIELD_DEFAULTS.items():
             view.setdefault(key, default)
     for obj in _dict_objects(spec):
-        for key, default in _OBJECT_FIELD_DEFAULTS.items():
+        for key, default in OBJECT_FIELD_DEFAULTS.items():
             obj.setdefault(key, default)
         if isinstance(label := obj.get("label"), dict):
-            obj["label"] = _LABEL_DEFAULTS | label
+            obj["label"] = {**LABEL_FIELD_DEFAULTS, **label}
         if isinstance(display := obj.get("display"), dict):
-            obj["display"] = _DISPLAY_DEFAULTS | display
+            obj["display"] = {**DISPLAY_FIELD_DEFAULTS, **display}
 
 
 def _bound_geo_view(spec: dict[str, object]) -> None:
@@ -215,35 +205,19 @@ def _caption_geo_objects(spec: dict[str, object]) -> None:
         return
     for obj in _dict_objects(spec):
         if obj.get("label") is None:
-            obj["label"] = dict(_LABEL_DEFAULTS)
+            obj["label"] = dict(LABEL_FIELD_DEFAULTS)
 
 
 def _translate_legacy_keys(spec: dict[str, object]) -> None:
-    """Mirror the board model's ``mode='before'`` compat shims in place.
-
-    Kept in sync with ``cmk.maps.backend.schemas.map`` (``_accept_legacy_backend_id``,
-    ``_migrate_weathermap``, ``_coerce_graph_metric``).
-    """
-    if "backend_id" in spec and "connection_id" not in spec:
-        spec["connection_id"] = spec.pop("backend_id")
+    accept_legacy_backend_id(spec)
     # The pagetype holds ``show_in_lists`` as its ``hidden``; ``readonly`` only
     # marked the demo boards.
     spec.pop("show_in_lists", None)
     spec.pop("readonly", None)
     for obj in _dict_objects(spec):
-        if obj.get("line_style") == "weathermap":
-            obj["line_style"] = "arrow_inward"
-            obj.setdefault("line_perfdata_label", "bandwidth")
-            obj.setdefault("line_weather_color", True)
-        # The REST model does not coerce, so this mirrors the daemon's coercion.
+        migrate_weathermap(obj)
         if "graph_metric" in obj:
-            metric = obj["graph_metric"]
-            if isinstance(metric, str):
-                obj["graph_metric"] = [metric] if metric else None
-            elif isinstance(metric, list):
-                obj["graph_metric"] = [s for s in metric if isinstance(s, str)]
-            elif metric is not None:
-                obj["graph_metric"] = None
+            obj["graph_metric"] = coerce_graph_metric(obj["graph_metric"])
 
 
 # The keys that hold a color, at any depth of a board.

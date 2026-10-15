@@ -26,7 +26,7 @@ types and the daemon's numeric constraints are not pinned — a producer that ca
 emit an out-of-range number has to clamp it itself.
 """
 
-from typing import Literal, NotRequired, TypedDict
+from typing import Final, Literal, NotRequired, TypedDict
 
 # Stable wire tokens — kept in English, never localised.
 ObjectType = Literal[
@@ -265,3 +265,58 @@ class MapPayload(TypedDict):
     background_image: NotRequired[str | None]
     background_color: NotRequired[str]
     version: NotRequired[int]
+
+
+class _MapFieldDefaults(TypedDict):
+    """The map-level keys the daemon defaults; see :data:`MAP_FIELD_DEFAULTS`."""
+
+    alias: str
+    icon_size: int | None
+    rotation_interval: int
+    sort_order: int
+    click_action: ClickAction
+    render_mode: RenderMode
+    default_z: int
+
+
+class _ObjectFieldDefaults(TypedDict):
+    """The object keys the daemon defaults; see :data:`OBJECT_FIELD_DEFAULTS`."""
+
+    x: int
+    y: int
+    url_target: str
+
+
+class _RadarViewFieldDefaults(TypedDict):
+    """The radar view keys the daemon defaults; see :data:`RADAR_VIEW_FIELD_DEFAULTS`."""
+
+    filter: RadarFilter
+    filter_value: str
+
+
+# What the daemon assumes for a key left out. A producer that does not go
+# through the SPA completes a map with these, as the REST API requires most of
+# them; ``test_map_payload_contract`` pins them against the daemon model.
+MAP_FIELD_DEFAULTS: Final[_MapFieldDefaults] = {
+    "alias": "",
+    "icon_size": None,
+    "rotation_interval": 0,
+    "sort_order": 0,
+    "click_action": "link",
+    "render_mode": "default",
+    "default_z": 1,
+}
+OBJECT_FIELD_DEFAULTS: Final[_ObjectFieldDefaults] = {"x": 0, "y": 0, "url_target": "_blank"}
+LABEL_FIELD_DEFAULTS: Final[MapLabel] = {
+    "show": True,
+    "x": 0,
+    "y": 0,
+    "size": 11,
+    "color": "#ffffff",
+    "background": "transparent",
+}
+DISPLAY_FIELD_DEFAULTS: Final[MapDisplay] = {"mode": "icon"}
+RADAR_VIEW_FIELD_DEFAULTS: Final[_RadarViewFieldDefaults] = {
+    "filter": "hostgroup",
+    "filter_value": "",
+}

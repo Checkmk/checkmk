@@ -10,12 +10,14 @@ real types instead of ``dict[str, object]``. It is a hand-written subset of what
 the daemon validates, so without these tests a rename on either side would only
 surface as a map the daemon rejects at runtime.
 
-Pinned here: key names, which keys are mandatory, and the ``Literal`` domain of
-every key that has one. Value types and numeric constraints are not.
+Pinned here: key names, which keys are mandatory, the ``Literal`` domain of
+every key that has one, and the defaults the module spells out. Value types and
+numeric constraints are not.
 """
 
 import types
 import typing
+from collections.abc import Mapping
 
 import pytest
 from pydantic import BaseModel
@@ -39,6 +41,14 @@ _TYPED_DICT_TO_MODEL: list[tuple[type, type[BaseModel]]] = [
     (wire.DataElement, daemon_presentation.DataElement),
     (wire.ElementDisplay, daemon_presentation.ElementDisplay),
     (wire.ElementLabel, daemon_presentation.ElementLabel),
+]
+
+_DEFAULTS_TO_MODEL: list[tuple[Mapping[str, object], type[BaseModel]]] = [
+    (wire.MAP_FIELD_DEFAULTS, daemon.MapConfig),
+    (wire.OBJECT_FIELD_DEFAULTS, daemon.MapElement),
+    (wire.LABEL_FIELD_DEFAULTS, daemon.LabelConfig),
+    (wire.DISPLAY_FIELD_DEFAULTS, daemon.DisplayConfig),
+    (wire.RADAR_VIEW_FIELD_DEFAULTS, daemon.RadarView),
 ]
 
 
@@ -110,6 +120,13 @@ def test_view_types_cover_every_daemon_view() -> None:
     }
     assert discriminators
     assert _literal_values(wire.MapViewType) == discriminators
+
+
+@pytest.mark.parametrize(
+    "defaults, model", _DEFAULTS_TO_MODEL, ids=[model.__name__ for _, model in _DEFAULTS_TO_MODEL]
+)
+def test_defaults_are_the_daemons(defaults: Mapping[str, object], model: type[BaseModel]) -> None:
+    assert defaults == {key: model.model_fields[key].default for key in defaults}
 
 
 def test_every_wire_typed_dict_is_pinned() -> None:

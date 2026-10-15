@@ -41,9 +41,10 @@ Maps is split into five parts. The Python code lives in one package,
        write access to monitoring and imports no GUI code.
    * - **Shared layer** (``cmk.maps.shared``)
      - Plain Python both the GUI and the daemon import: the ticket protocol,
-       config-variable names, URL/colour/asset validators, the map vocabulary,
-       row extractors, state and severity tables, the geo resolver, the
-       Livestatus filter allow-list and the perf-data parser.
+       config-variable names, URL/colour/asset validators, the map vocabulary
+       with its defaults and the shims for earlier spellings, row extractors,
+       state and severity tables, the geo resolver, the Livestatus filter
+       allow-list and the perf-data parser.
 
 Who should read what
 --------------------

@@ -11,6 +11,11 @@ from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_v
 from cmk.maps.backend.schemas.presentation import PresentationView
 from cmk.maps.shared.filters import normalize_object_filter
 from cmk.maps.shared.geo import LAT_LIMIT, LNG_LIMIT, MAX_ZOOM
+from cmk.maps.shared.map_compat import (
+    accept_legacy_backend_id,
+    coerce_graph_metric,
+    migrate_weathermap,
+)
 from cmk.maps.shared.map_payload import (
     ClickAction,
     LinePerfdataLabel,
@@ -28,19 +33,6 @@ from cmk.maps.shared.validators import (
 # Uploaded icon / background references are bare filenames the SPA expands into an
 # asset URL; drop anything that could climb out of the asset directory.
 _AssetRef = Annotated[str | None, BeforeValidator(coerce_asset_ref)]
-
-
-def _accept_legacy_backend_id(data: object) -> object:
-    """Translate the pre-rename ``backend_id`` key to ``connection_id`` on input.
-
-    Older map JSON files (written before the rename) carry ``backend_id``;
-    the field name on the model is ``connection_id``. Run as a ``mode='before'``
-    validator so the value reaches the canonical field, but never serialises
-    back under the legacy name.
-    """
-    if isinstance(data, dict) and "backend_id" in data and "connection_id" not in data:
-        data["connection_id"] = data.pop("backend_id")
-    return data
 
 
 class AggregationInfo(BaseModel):
@@ -77,21 +69,6 @@ class AggregationNode(BaseModel):
     # without a second per-leaf fetch.
     output: str = ""
     children: list[AggregationNode] = []
-
-
-def _migrate_weathermap(data: object) -> object:
-    """Translate legacy ``line_style: weathermap`` to the new orthogonal model.
-
-    The old monolithic style bundled three orthogonal aspects (bidirectional
-    shape, bandwidth labels, utilization gradient). Stored maps using it
-    are rewritten transparently during validation so old JSON keeps loading.
-    """
-    if isinstance(data, dict) and data.get("line_style") == "weathermap":
-        migrated = {**data, "line_style": "arrow_inward"}
-        migrated.setdefault("line_perfdata_label", "bandwidth")
-        migrated.setdefault("line_weather_color", True)
-        return migrated
-    return data
 
 
 class LabelConfig(BaseModel):
@@ -300,21 +277,9 @@ class MapElement(BaseModel):
     graph_width: int = 400
     graph_height: int = 200
     graph_refresh_interval: int = 0
-    graph_metric: list[str] | None = None
+    graph_metric: Annotated[list[str] | None, BeforeValidator(coerce_graph_metric)] = None
     graph_id: str | None = None
     graph_time_window: int | None = None  # minutes; None = all stored history
-
-    @field_validator("graph_metric", mode="before")
-    @classmethod
-    def _coerce_graph_metric(cls, v: object) -> list[str] | None:
-        # Backward compat: old saved configs may have a plain string value
-        if isinstance(v, str):
-            return [v] if v else None
-        if v is None:
-            return None
-        if isinstance(v, list):
-            return [s for s in v if isinstance(s, str)]
-        return None
 
     @field_validator("url", "hover_url", "graph_url")
     @classmethod
@@ -340,10 +305,7 @@ class MapElement(BaseModel):
             return None
         return normalize_object_filter(v)
 
-    @model_validator(mode="before")
-    @classmethod
-    def _legacy_weathermap(cls, data: object) -> object:
-        return _migrate_weathermap(data)
+    _migrate_weathermap = model_validator(mode="before")(migrate_weathermap)
 
     line_color: str | None = None
     line_color_border: str | None = None
@@ -355,7 +317,7 @@ class MapElement(BaseModel):
 
 
 class MapConfig(BaseModel):
-    _migrate_legacy_keys = model_validator(mode="before")(_accept_legacy_backend_id)
+    _migrate_legacy_keys = model_validator(mode="before")(accept_legacy_backend_id)
 
     # Constrained like MapRead.name: the name keys the in-memory cache and the
     # on-disk path, so an unvalidated value would allow cache poisoning / path
@@ -397,7 +359,7 @@ class MapConfig(BaseModel):
 
 
 class MapCreate(BaseModel):
-    _migrate_legacy_keys = model_validator(mode="before")(_accept_legacy_backend_id)
+    _migrate_legacy_keys = model_validator(mode="before")(accept_legacy_backend_id)
 
     name: str = Field(..., min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_\-]+$")
     alias: str = ""
@@ -411,7 +373,7 @@ class MapCreate(BaseModel):
 
 
 class MapUpdate(BaseModel):
-    _migrate_legacy_keys = model_validator(mode="before")(_accept_legacy_backend_id)
+    _migrate_legacy_keys = model_validator(mode="before")(accept_legacy_backend_id)
 
     alias: str | None = None
     background_image: _AssetRef = None
@@ -436,7 +398,7 @@ class MapOrderItem(BaseModel):
 
 
 class MapRead(BaseModel):
-    _migrate_legacy_keys = model_validator(mode="before")(_accept_legacy_backend_id)
+    _migrate_legacy_keys = model_validator(mode="before")(accept_legacy_backend_id)
 
     name: str
     alias: str
@@ -550,10 +512,7 @@ class MapElementUpdate(BaseModel):
             return None
         return normalize_object_filter(v)
 
-    @model_validator(mode="before")
-    @classmethod
-    def _legacy_weathermap(cls, data: object) -> object:
-        return _migrate_weathermap(data)
+    _migrate_weathermap = model_validator(mode="before")(migrate_weathermap)
 
 
 class MapClone(BaseModel):

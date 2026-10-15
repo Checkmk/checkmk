@@ -433,6 +433,44 @@ def validate_process_discovery_descr_option(description, varprefix):
         )
 
 
+def _required_groups(description: str) -> int:
+    if numbered := re.findall(r"%(\d+)", description):
+        return max(int(number) for number in numbered)
+    return description.count("%s")
+
+
+def _available_groups(pattern: object) -> int:
+    if isinstance(pattern, str) and pattern.startswith("~"):
+        return re.compile(pattern[1:]).groups
+    return 0
+
+
+def _validate_process_discovery_groups(description: str, pattern: object, varprefix: str) -> None:
+    required_groups = _required_groups(description)
+    available_groups = _available_groups(pattern)
+    if required_groups > available_groups:
+        raise MKUserError(
+            f"{varprefix}_p_descr",
+            _(
+                "The process name refers to %(required)d group(s) of the regular expression, "
+                "but the process matching provides only %(available)d. Match the command line "
+                "with a regular expression that contains enough groups, or remove the "
+                "replacements from the process name."
+            )
+            % {"required": required_groups, "available": available_groups},
+        )
+
+
+def validate_process_discovery_rule(value: Mapping[str, object], varprefix: str) -> None:
+    _validate_process_discovery_groups(str(value["descr"]), value.get("match"), varprefix)
+
+
+def validate_hr_process_discovery_rule(value: Mapping[str, object], varprefix: str) -> None:
+    match_name_or_path = value.get("match_name_or_path")
+    pattern = match_name_or_path[1] if isinstance(match_name_or_path, tuple) else None
+    _validate_process_discovery_groups(str(value["descr"]), pattern, varprefix)
+
+
 def process_discovery_descr_option():
     return TextInput(
         title=_("Process name"),
@@ -739,6 +777,7 @@ def _valuespec_inventory_processes_rules() -> Dictionary:
             ),
         ],
         required_keys=["descr", "default_params"],
+        validate=validate_process_discovery_rule,
     )
 
 
@@ -968,6 +1007,7 @@ def _valuespec_discovery_hr_processes_rules():
         ],
         required_keys=["descr", "default_params"],
         ignored_keys=["match_groups"],
+        validate=validate_hr_process_discovery_rule,
     )
 
 

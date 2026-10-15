@@ -41,8 +41,8 @@ def check_fireeye_bypass(params: Mapping[str, Any], section: StringTable) -> Che
         yield Result(state=State.CRIT, summary=f" (was {expected_value} before)")
 
 
-def parse_fireeye_bypass(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_fireeye_bypass(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 snmp_section_fireeye_bypass = SimpleSNMPSection(

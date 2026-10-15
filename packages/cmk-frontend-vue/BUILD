@@ -15,6 +15,7 @@ load("//bazel/rules:link_shared_typing.bzl", "link_shared_typing")
 load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:vitest_test.bzl", "vitest_test")
+load("//bazel/rules:vue_library.bzl", "vue_library")
 
 exports_files([
     "package.json",
@@ -294,20 +295,7 @@ TOOLING = TEST_TOOLING + [
     "//:node_modules/vue3-gettext",
 ]
 
-VITE_SRCS = [
-    ":node_modules/cmk-ui-library",
-    "//packages/cmk-ui-library:vitest_shared",
-    "package.json",
-    "vite.config.ts",
-    ":vitest_isolated",
-    ":demo_ts",
-    ":demo_vue",
-    ":demo_css",
-    ":src_ts",
-    ":src_vue",
-    ":src_css",
-    ":nav_sidebar_elements",
-    ":main_elements",
+NPM_LINKS = [
     ":node_modules/@tanstack",
     ":node_modules/@testing-library",
     ":node_modules/@tsconfig",
@@ -346,14 +334,33 @@ VITE_SRCS = [
     ":node_modules/typescript",
     ":node_modules/vue-component-type-helpers",
     ":node_modules/vue-router",
+]
+
+VITE_SRCS = NPM_LINKS + [
+    ":node_modules/cmk-ui-library",
+    "//packages/cmk-ui-library:vitest_shared",
+    "package.json",
+    "vite.config.ts",
+    ":vitest_isolated",
+    ":demo_ts",
+    ":demo_vue",
+    ":demo_css",
+    ":src_ts",
+    ":src_vue",
+    ":src_css",
+    ":nav_sidebar_elements",
+    ":main_elements",
 ] + glob([
     "ui-component-library/**/*.png",
     "ui-component-library/**/*.svg",
 ])
 
-TYPE_CHECK_SRCS = VITE_SRCS + [
+# The dev server serves no translations and falls back to English: compiling the
+# catalogs re-extracts them from all sources, which takes seconds per rebuild.
+DEV_SERVER_SRCS = VITE_SRCS + [
     ":node_modules/cmk-profiling",
     "//:eslintrc",
+    "//packages/cmk-frontend:dist",
     "env.d.ts",
     "weaki18nString.d.ts",
     "scripts/stylelint-vue-bem-naming-convention.js",
@@ -363,10 +370,6 @@ TYPE_CHECK_SRCS = VITE_SRCS + [
     "vite.config.ucl.ts",
     "ui-component-library/index.html",
 ] + glob(["ui-component-library/public/*"])
-
-# The dev server serves no translations and falls back to English: compiling the
-# catalogs re-extracts them from all sources, which takes seconds per rebuild.
-DEV_SERVER_SRCS = TYPE_CHECK_SRCS + ["//packages/cmk-frontend:dist"]
 
 SRCS = DEV_SERVER_SRCS + LOCALE_OUTS
 
@@ -394,7 +397,75 @@ js_library(
     deps = ["//packages/cmk-ui-library:vitest_msw"],
 )
 
-TYPE_CHECK_DATA = TOOLING + TYPE_CHECK_SRCS + [":src_nonfree"]
+TYPE_CHECK_DEPS = TEST_TOOLING + NPM_LINKS + [
+    ":node_modules/cmk-profiling",
+    ":node_modules/cmk-ui-library",
+]
+
+# Code outside nonfree/ calls non-free REST endpoints, whose types a checkout
+# without the non-free sources does not generate (CMK-41449).
+TYPE_CHECK_COMPATIBLE_WITH = select({
+    "@//:gpl+nonfree_repo": [],
+    "@//:gpl_repo": ["@platforms//:incompatible"],
+})
+
+vue_library(
+    name = "app",
+    srcs = [
+        "env.d.ts",
+        ":main_elements",
+        ":nav_sidebar_elements",
+    ],
+    target_compatible_with = TYPE_CHECK_COMPATIBLE_WITH,
+    tsconfig = "tsconfig.app.json",
+    deps = TYPE_CHECK_DEPS + [
+        ":src_nonfree",
+        ":src_ts",
+        ":src_vue",
+    ],
+)
+
+# Covers the same files as tsconfig.test.json but without the vitest and jest-dom
+# ambient types, so a test global leaking into the demo app is still an error.
+vue_library(
+    name = "ucl",
+    srcs = [
+        "env.d.ts",
+        "weaki18nString.d.ts",
+        ":main_elements",
+        ":nav_sidebar_elements",
+    ],
+    target_compatible_with = TYPE_CHECK_COMPATIBLE_WITH,
+    tsconfig = "tsconfig.ucl.json",
+    deps = TYPE_CHECK_DEPS + [
+        ":demo_ts",
+        ":demo_vue",
+        ":src_nonfree",
+        ":src_ts",
+        ":src_vue",
+    ],
+)
+
+vue_library(
+    name = "tests",
+    srcs = [
+        "env.d.ts",
+        "weaki18nString.d.ts",
+        ":main_elements",
+        ":nav_sidebar_elements",
+    ],
+    target_compatible_with = TYPE_CHECK_COMPATIBLE_WITH,
+    tsconfig = "tsconfig.test.json",
+    deps = TYPE_CHECK_DEPS + [
+        ":demo_ts",
+        ":demo_vue",
+        ":src_nonfree",
+        ":src_ts",
+        ":src_vue",
+        ":test_ts",
+        ":test_vue",
+    ],
+)
 
 TEST_DATA = TEST_TOOLING + VITE_SRCS + [
     ":src_nonfree",
@@ -489,21 +560,6 @@ vitest_test(
     shard_count = 8,
 )
 
-# One target per tsconfig project: they have no cross-references, so a single
-# `--build` only ran them serially. Mirrors //packages/cmk-ui-library. Only
-# the tests project needs tests/ in its sandbox.
-vue_tsc_bin.vue_tsc_test(
-    name = "type-check",
-    timeout = "moderate",
-    args = [
-        "-p",
-        "tsconfig.app.json",
-    ],
-    chdir = package_name(),
-    data = TYPE_CHECK_DATA,
-    include_types = True,
-)
-
 vue_tsc_bin.vue_tsc_test(
     name = "type-check-node",
     timeout = "short",
@@ -512,36 +568,23 @@ vue_tsc_bin.vue_tsc_test(
         "tsconfig.node.json",
     ],
     chdir = package_name(),
-    data = TYPE_CHECK_DATA,
-    include_types = True,
-)
-
-# Covers the same files as tsconfig.test.json but without the vitest and jest-dom
-# ambient types, so a test global leaking into the demo app is still an error.
-vue_tsc_bin.vue_tsc_test(
-    name = "type-check-ucl",
-    timeout = "moderate",
-    args = [
-        "-p",
-        "tsconfig.ucl.json",
-    ],
-    chdir = package_name(),
-    data = TYPE_CHECK_DATA,
-    include_types = True,
-)
-
-vue_tsc_bin.vue_tsc_test(
-    name = "type-check-tests",
-    timeout = "moderate",
-    args = [
-        "-p",
-        "tsconfig.test.json",
-    ],
-    chdir = package_name(),
-    data = TYPE_CHECK_DATA + [
-        ":test_ts",
-        ":test_vue",
-    ],
+    data = TOOLING + NPM_LINKS + [
+        "package.json",
+        "ui-component-library/_ucl/types/prop-def.ts",
+        "ui-component-library/_ucl/vite-plugin-ucl-mcp.ts",
+        ":tsconfig",
+        ":vitest_isolated",
+        "//packages/cmk-ui-library:vitest_shared",
+    ] + glob(
+        [
+            "vite.config.*",
+            "vitest.config.*",
+            "cypress.config.*",
+            "nightwatch.conf.*",
+            "playwright.config.*",
+        ],
+        allow_empty = True,
+    ),
     include_types = True,
 )
 

@@ -21,6 +21,7 @@
 #include <unordered_set>
 #include <utility>
 
+#include "livestatus/Column.h"
 #include "livestatus/ColumnFilter.h"
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/EventConsoleConnection.h"
@@ -54,24 +55,23 @@ const std::vector<std::string> grepping_filters = {
 // types: Livestatus uses the regex operators as bit mask operators for int
 // columns, and the EC can't compare a missing string (None) via an ordering
 // operator.
-bool isUnderstoodByEC(const std::string &column_name, RelationalOperator op) {
-    const bool is_int_column = column_name == "event_id";
+bool isUnderstoodByEC(ColumnType type, RelationalOperator op) {
     switch (op) {
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
-            return true;
+            return type == ColumnType::int_ || type == ColumnType::string;
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
         case RelationalOperator::equal_icase:
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            return !is_int_column;
+            return type == ColumnType::string;
         case RelationalOperator::less:
         case RelationalOperator::greater_or_equal:
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
-            return is_int_column;
+            return type == ColumnType::int_;
     }
     return false;  // unreachable
 }
@@ -187,10 +187,13 @@ private:
                 });
             for (const auto &conjunct : filter->conjuncts()) {
                 if (const auto *column_filter = conjunct->as_column_filter()) {
+                    // Not all EC tables have the grepping columns, but a filter
+                    // on one of them implies that our table has it.
+                    const auto type = table_->column(column_name)->type();
                     const auto op = column_filter->oper();
                     const auto &value = column_filter->value();
                     const bool forward =
-                        isUnderstoodByEC(column_name, op) && isSafeForEC(value);
+                        isUnderstoodByEC(type, op) && isSafeForEC(value);
                     Debug(mc_->loggerLivestatus())
                         << "column " << table_->name() << "." << column_name
                         << " is restricted by " << op << " " << value

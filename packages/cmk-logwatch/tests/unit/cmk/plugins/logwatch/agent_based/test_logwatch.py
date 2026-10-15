@@ -620,3 +620,26 @@ def test_check_logwatch_generic_preview_existing_file_unchanged(tmp_path: Path) 
         )
         assert result  # results are still yielded
         assert file_path.read_text() == original_content
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=ValueError,
+    reason="Crash report e20e07c2-b3bd-11f0-a350-b75ee652f8bc: ValueError",
+)
+@pytest.mark.usefixtures("logmsg_file_path")
+def test_check_logwatch_generic_empty_worst_line(tmp_path: Path) -> None:
+    with _logwatch_state(_LogwatchConfigDummy(msg_dir=tmp_path)):
+        assert list(
+            logwatch.check_logwatch_generic(
+                item="/tmp/app.log",
+                reclassify_parameters=logwatch_.ReclassifyParameters((), {}),
+                loglines=["W"],
+                found=True,
+                max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,  # noqa: SLF001
+                host_name="test-host",
+                is_preview=False,
+            )
+        ) == [
+            Result(state=State.WARN, summary="1 WARN messages"),
+        ]

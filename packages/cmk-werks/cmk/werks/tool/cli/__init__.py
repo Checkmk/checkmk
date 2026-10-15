@@ -16,6 +16,7 @@ import sys
 import traceback
 from collections.abc import Iterator, Sequence
 from contextlib import suppress
+from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
 from typing import Literal, NamedTuple
@@ -27,6 +28,7 @@ from cmk.werks.flavor.cmk import CmkFlavor
 from .. import load_werk as cmk_werks_load_werk
 from .. import parse_werk
 from ..config import Config, load_config
+from ..flavor import Flavor
 from ..format import format_as_markdown_werk
 from ..models import EditionV2, EditionV3
 from ..parse import WerkMetadata, WerkV2ParseResult, WerkV3ParseResult
@@ -63,10 +65,17 @@ from .werk import Werk, WerkId
 
 WerkVersion = Literal["v1", "markdown"]
 
+
+@dataclass(frozen=True)
+class Context:
+    config: Config
+    flavor: Flavor
+
+
 _REDIRECTED_WIDTH = 200
 
 
-def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
+def parse_arguments(argv: Sequence[str], ctx: Context) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = True
@@ -76,7 +85,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         "init",
         help="Initialize secret for reserving werk ids and migrate the legacy stash file.",
     )
-    parser_init.set_defaults(func=lambda *_args, **_kwargs: main_init())
+    parser_init.set_defaults(func=lambda ctx, _args: main_init(ctx))
 
     # BLAME
     parser_blame = subparsers.add_parser("blame", help="Show who worked on a Werk")
@@ -122,7 +131,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         nargs="*",
         help="filter for edition, component, state, class, or target version",
     )
-    parser_export.set_defaults(func=lambda args: main_list(args, "csv"))
+    parser_export.set_defaults(func=lambda ctx, args: main_list(ctx, args, "csv"))
 
     # GREP
     parser_grep = subparsers.add_parser(
@@ -159,7 +168,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         nargs="*",
         help="filter for edition, component, state, class, or target version",
     )
-    parser_list.set_defaults(func=lambda args: main_list(args, "console"))
+    parser_list.set_defaults(func=lambda ctx, args: main_list(ctx, args, "console"))
 
     # NEW
     parser_new = subparsers.add_parser("new", help="Create a new Werk")
@@ -175,29 +184,29 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser_new.add_argument(
         "--class",
         dest="class_",
-        choices=[item[0] for item in get_config().classes],
+        choices=[item[0] for item in ctx.config.classes],
         help="Werk class",
     )
     parser_new.add_argument(
         "--edition",
-        choices=[item[0] for item in get_config().editions],
+        choices=[item[0] for item in ctx.config.editions],
         help="Checkmk edition",
     )
     parser_new.add_argument(
         "--component",
         # Can't use get_edition_components here, because it needs the edition which is an argument itself
         # But will be validated in main_create before creating the Werk
-        choices=[item[0] for item in get_config().all_components()],
+        choices=[item[0] for item in ctx.config.all_components()],
         help="Component name (see .werks/config)",
     )
     parser_new.add_argument(
         "--level",
-        choices=[item[0] for item in get_config().levels],
+        choices=[item[0] for item in ctx.config.levels],
         help="Werk level",
     )
     parser_new.add_argument(
         "--compatible",
-        choices=[item[0] for item in get_config().compatible],
+        choices=[item[0] for item in ctx.config.compatible],
         help="Compatibility",
     )
     parser_new.add_argument(
@@ -313,18 +322,18 @@ def get_last_werk() -> WerkId:
         raise RuntimeError("No last Werk known. Please specify id.") from e
 
 
-@cache
-def get_config() -> Config:
-    current_version = CmkFlavor().read_current_version(Path(".."))
-    return load_config(Path("config"), current_version=current_version)
+def load_context() -> Context:
+    flavor = CmkFlavor()
+    config = load_config(Path("config"), current_version=flavor.read_current_version(Path("..")))
+    return Context(config=config, flavor=flavor)
 
 
-def load_werks() -> dict[WerkId, Werk]:
+def load_werks(ctx: Context) -> dict[WerkId, Werk]:
     werks = {}
     for entry in Path(".").iterdir():
         if (werk_id := entry.name.removesuffix(".md")).isdigit():
             try:
-                werks[WerkId(int(werk_id))] = load_werk(entry)
+                werks[WerkId(int(werk_id))] = load_werk(ctx, entry)
             except Exception as e:
                 sys.stderr.write(f"ERROR: Skipping invalid Werk {werk_id}: {e}\n")
     return werks
@@ -361,7 +370,7 @@ def werk_exists(werkid: WerkId) -> bool:
     return os.path.exists(str(werkid)) or os.path.exists(f"{werkid}.md")
 
 
-def load_werk(werk_path: Path) -> Werk:
+def load_werk(ctx: Context, werk_path: Path) -> Werk:
     parsed = parse_werk(
         file_content=werk_path.read_text(encoding="utf-8"), file_name=werk_path.name
     )
@@ -369,7 +378,7 @@ def load_werk(werk_path: Path) -> Werk:
     if "version" not in parsed.metadata:
         metadata: WerkMetadata = {
             **parsed.metadata,
-            "version": get_config().current_version,
+            "version": ctx.config.current_version,
         }
         if isinstance(parsed, WerkV2ParseResult):
             parsed = WerkV2ParseResult(metadata, parsed.description)
@@ -399,8 +408,10 @@ def save_werk(werk: Werk, werk_version: WerkVersion, destination: Path | None = 
     save_last_werkid(werk.id)
 
 
-def change_werk_version(werk_path: Path, new_version: str, werk_version: WerkVersion) -> None:
-    werk = load_werk(werk_path)
+def change_werk_version(
+    ctx: Context, werk_path: Path, new_version: str, werk_version: WerkVersion
+) -> None:
+    werk = load_werk(ctx, werk_path)
     werk.content.metadata["version"] = new_version
     save_werk(werk, werk_version)
     _git_add(werk_path)
@@ -414,9 +425,9 @@ def git_move(source: Path, destination: Path) -> None:
     subprocess.check_call(["git", "mv", str(source), str(destination)])
 
 
-def git_commit(werk: Werk, custom_files: Sequence[str]) -> None:
+def git_commit(ctx: Context, werk: Werk, custom_files: Sequence[str]) -> None:
     title = werk.content.metadata["title"]
-    for classid, _classname, prefix in get_config().classes:
+    for classid, _classname, prefix in ctx.config.classes:
         if werk.content.metadata["class"] == classid and prefix:
             title = f"{prefix} {title}"
 
@@ -495,31 +506,31 @@ def show_werk(werk: Werk) -> None:
 _FilterKey = Literal["edition", "component", "level", "class", "version", "compatible"]
 
 
-def main_list(args: argparse.Namespace, fmt: str) -> None:
+def main_list(ctx: Context, args: argparse.Namespace, fmt: str) -> None:
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
 
-    werks: list[Werk] = list(load_werks().values())
+    werks: list[Werk] = list(load_werks(ctx).values())
     versions = sorted(
         {
-            resolve_version(get_config().current_version, werk.content.metadata["version"])
+            resolve_version(ctx.config.current_version, werk.content.metadata["version"])
             for werk in werks
         }
     )
 
     filters: dict[_FilterKey, list[str]] = {}
     candidates: Sequence[tuple[_FilterKey, Sequence[str]]] = [
-        ("edition", [name for name, _title in get_config().editions]),
-        ("component", [name for name, _title in get_config().all_components()]),
-        ("level", [name for name, _title in get_config().levels]),
-        ("class", [name for name, _title, _prefix in get_config().classes]),
+        ("edition", [name for name, _title in ctx.config.editions]),
+        ("component", [name for name, _title in ctx.config.all_components()]),
+        ("level", [name for name, _title in ctx.config.levels]),
+        ("class", [name for name, _title, _prefix in ctx.config.classes]),
         ("version", versions),
-        ("compatible", [name for name, _title in get_config().compatible]),
+        ("compatible", [name for name, _title in ctx.config.compatible]),
     ]
 
     for a in args.filter:
         if a == "current":
-            a = get_config().current_version
+            a = ctx.config.current_version
 
         hit = False
         for tp, values in candidates:
@@ -560,16 +571,16 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:
         for werk in werks:
             list_werk(werk)
     else:
-        output_csv(werks)
+        output_csv(ctx, werks)
 
 
 # CSV Table has the following columns:
 # Component;ID;Title;Class;Effort
-def output_csv(werks: list[Werk]) -> None:
+def output_csv(ctx: Context, werks: list[Werk]) -> None:
     def line(*parts: int | str) -> None:
         sys.stdout.write('"' + '";"'.join(map(str, parts)) + '"\n')
 
-    for nr, entry in enumerate(get_config().components, start=1):
+    for nr, entry in enumerate(ctx.config.components, start=1):
         if len(entry) != 2:
             bail_out(f"invalid component {entry!r}")
         name, alias = entry
@@ -587,7 +598,7 @@ def output_csv(werks: list[Werk]) -> None:
                 line(
                     werk.content.metadata["id"],
                     werk.content.metadata["title"],
-                    werk_class(werk),
+                    werk_class(ctx, werk),
                     werk_effort(werk),
                 )
                 line(
@@ -598,9 +609,9 @@ def output_csv(werks: list[Werk]) -> None:
                 )
 
 
-def werk_class(werk: Werk) -> str:
+def werk_class(ctx: Context, werk: Werk) -> str:
     cl = werk.content.metadata["class"]
-    for class_id, class_name, _prefix in get_config().classes:
+    for class_id, class_name, _prefix in ctx.config.classes:
         if class_id == cl:
             return class_name
     return cl
@@ -610,9 +621,9 @@ def werk_effort(werk: Werk) -> int:
     return int(werk.content.metadata.get("effort", "0"))
 
 
-def main_show(args: argparse.Namespace) -> None:
+def main_show(ctx: Context, args: argparse.Namespace) -> None:
     if "all" in args.ids:
-        ids = list(load_werks().keys())
+        ids = list(load_werks(ctx).keys())
     else:
         ids = [WerkId(i) for i in args.ids] or [get_last_werk()]
 
@@ -621,12 +632,12 @@ def main_show(args: argparse.Namespace) -> None:
             sys.stdout.write(
                 "-------------------------------------------------------------------------------\n"
             )
-        show_werk(load_werk(werk_path_by_id(wid)))
+        show_werk(load_werk(ctx, werk_path_by_id(wid)))
     save_last_werkid(ids[-1])
 
 
-def get_edition_components(edition: str) -> list[tuple[str, str]]:
-    return get_config().components + get_config().edition_components.get(edition, [])
+def get_edition_components(ctx: Context, edition: str) -> list[tuple[str, str]]:
+    return ctx.config.components + ctx.config.edition_components.get(edition, [])
 
 
 _SECURITY_WERK_DESCRIPTION_TEMPLATE = """\
@@ -699,7 +710,7 @@ WERK_NOTES = """
 """
 
 
-def main_new(args: argparse.Namespace) -> None:
+def main_new(ctx: Context, args: argparse.Namespace) -> None:
     if args.non_interactive:
         if not all(
             [
@@ -722,29 +733,29 @@ def main_new(args: argparse.Namespace) -> None:
     paths = make_paths_object(Path.home())
     log = get_werk_id_logger(paths.log_file)
     stash = load_or_update_stash(
-        paths, WerkIDsClient(get_config().werk_ids_server_url), log, _launcher()
+        paths, WerkIDsClient(ctx.config.werk_ids_server_url), log, _launcher()
     )
     werk_id = stash.pick_id()
 
     metadata: WerkMetadata = {}
     metadata["id"] = str(werk_id)
     metadata["date"] = datetime.datetime.now(datetime.UTC).isoformat()
-    metadata["version"] = get_config().current_version
+    metadata["version"] = ctx.config.current_version
     metadata["title"] = args.title or get_input("Title")
     if metadata["title"] == "":
         sys.stderr.write("Cancelled.\n")
         sys.exit(0)
-    metadata["class"] = ask_user_if_not_provided("Class", get_config().classes, args.class_)
-    metadata["edition"] = ask_user_if_not_provided("Edition", get_config().editions, args.edition)
+    metadata["class"] = ask_user_if_not_provided("Class", ctx.config.classes, args.class_)
+    metadata["edition"] = ask_user_if_not_provided("Edition", ctx.config.editions, args.edition)
     metadata["component"] = ask_user_if_not_provided(
-        "Component", get_edition_components(metadata["edition"]), args.component
+        "Component", get_edition_components(ctx, metadata["edition"]), args.component
     )
-    metadata["level"] = ask_user_if_not_provided("Level", get_config().levels, args.level)
+    metadata["level"] = ask_user_if_not_provided("Level", ctx.config.levels, args.level)
     # For now, we want to display the legacy values "compat" and "incomp" in the choice, to not
     # break existing workflows of users, but we keep the impact minimal by only translating them
     # back and forth locally here.
-    yes = get_config().compatible[0][0]
-    no = get_config().compatible[1][0]
+    yes = ctx.config.compatible[0][0]
+    no = ctx.config.compatible[1][0]
     metadata["compatible"] = {"compat": yes, "incomp": no}[
         ask_user_if_not_provided(
             "Compatible",
@@ -770,11 +781,11 @@ def main_new(args: argparse.Namespace) -> None:
     save_werk(werk, get_werk_file_version())
 
     if args.non_interactive:
-        if get_config().create_commit and not args.no_commit:
+        if ctx.config.create_commit and not args.no_commit:
             _git_add(werk_path)
-            git_commit(werk, args.custom_files)
+            git_commit(ctx, werk, args.custom_files)
     else:
-        edit_werk(werk_path, args.custom_files, commit=not args.no_commit)
+        edit_werk(ctx, werk_path, args.custom_files, commit=not args.no_commit)
 
     stash.free_id(werk_id)
     dump_stash_to_file(paths, stash)
@@ -794,7 +805,7 @@ def main_new(args: argparse.Namespace) -> None:
     )
 
 
-def main_meisterwerk_removed(_args: argparse.Namespace) -> None:
+def main_meisterwerk_removed(_ctx: Context, _args: argparse.Namespace) -> None:
     sys.stderr.write(
         "ERROR: The 'meisterwerk' service has been shut down and this subcommand has been removed.\n"
         "Please use the '/werk' skill in Claude Code instead.\n"
@@ -802,16 +813,16 @@ def main_meisterwerk_removed(_args: argparse.Namespace) -> None:
     sys.exit(1)
 
 
-def get_werk_arg(arg: WerkId | None) -> WerkId:
+def get_werk_arg(ctx: Context, arg: WerkId | None) -> WerkId:
     wid = get_last_werk() if arg is None else arg
 
-    load_werk(werk_path_by_id(wid))
+    load_werk(ctx, werk_path_by_id(wid))
     save_last_werkid(wid)
     return wid
 
 
-def main_init() -> None:
-    werk_ids_client = WerkIDsClient(get_config().werk_ids_server_url)
+def main_init(ctx: Context) -> None:
+    werk_ids_client = WerkIDsClient(ctx.config.werk_ids_server_url)
 
     if not werk_ids_client.ensure_connection():
         return
@@ -843,8 +854,8 @@ def main_init() -> None:
     )
 
 
-def main_status(args: argparse.Namespace) -> None:
-    config = get_config()
+def main_status(ctx: Context, args: argparse.Namespace) -> None:
+    config = ctx.config
     home = Path.home()
     paths = make_paths_object(home)
     status = collect_status(
@@ -869,17 +880,17 @@ def main_status(args: argparse.Namespace) -> None:
         sys.exit(1)
 
 
-def main_blame(args: argparse.Namespace) -> None:
-    wid = get_werk_arg(None if args.id is None else WerkId(args.id))
+def main_blame(ctx: Context, args: argparse.Namespace) -> None:
+    wid = get_werk_arg(ctx, None if args.id is None else WerkId(args.id))
     os.system(f"git blame {werk_path_by_id(wid)}")  # nosec B605 # BNS:a52d7f
 
 
-def main_url(args: argparse.Namespace) -> None:
-    wid = get_werk_arg(WerkId(args.id))
-    sys.stdout.write(get_config().online_url % wid.id + "\n")
+def main_url(ctx: Context, args: argparse.Namespace) -> None:
+    wid = get_werk_arg(ctx, WerkId(args.id))
+    sys.stdout.write(ctx.config.online_url % wid.id + "\n")
 
 
-def main_delete(args: argparse.Namespace) -> None:
+def main_delete(ctx: Context, args: argparse.Namespace) -> None:
     paths = make_paths_object(Path.home())
     log = get_werk_id_logger(paths.log_file)
     for werk_id in [WerkId(i) for i in args.id]:
@@ -887,7 +898,7 @@ def main_delete(args: argparse.Namespace) -> None:
             bail_out(f"There is no Werk {format_werk_id(werk_id)}.")
 
         werk_path = werk_path_by_id(werk_id)
-        werk_to_be_removed_title = load_werk(werk_path).content.metadata["title"]
+        werk_to_be_removed_title = load_werk(ctx, werk_path).content.metadata["title"]
         try:
             subprocess.check_call(["git", "rm", "-f", f"{werk_path}"])
         except subprocess.CalledProcessError as exc:
@@ -916,8 +927,8 @@ def grep(line: str, kw: str, n: int) -> str | None:
     return line[0:i] + col + line[i : i + len(kw)] + TTY_NORMAL + line[i + len(kw) :]
 
 
-def main_grep(args: argparse.Namespace) -> None:
-    for werk in load_werks().values():
+def main_grep(ctx: Context, args: argparse.Namespace) -> None:
+    for werk in load_werks(ctx).values():
         one_kw_didnt_match = False
         title = werk.content.metadata["title"]
         lines = werk.content.description.split("\n")
@@ -953,15 +964,15 @@ def main_grep(args: argparse.Namespace) -> None:
                     sys.stdout.write(f"  {lines[x]}\n")
 
 
-def main_edit(args: argparse.Namespace) -> None:
+def main_edit(ctx: Context, args: argparse.Namespace) -> None:
     werkid = WerkId(args.id) if args.id is not None else get_last_werk()
     edit_werk(
-        werk_path_by_id(werkid), None, commit=False
+        ctx, werk_path_by_id(werkid), None, commit=False
     )  # custom files are pointless if commit=False
     save_last_werkid(werkid)
 
 
-def _edit_until_loadable(editor: str, werk_path: Path) -> Werk:
+def _edit_until_loadable(ctx: Context, editor: str, werk_path: Path) -> Werk:
     initial_werk_text = werk_path.read_text(encoding="utf-8")
     number_of_lines_in_werk = initial_werk_text.count("\n")
 
@@ -970,7 +981,7 @@ def _edit_until_loadable(editor: str, werk_path: Path) -> Werk:
             bail_out("Editor returned error, something is very wrong!")
 
         try:
-            werk = load_werk(werk_path)
+            werk = load_werk(ctx, werk_path)
             cmk_werks_load_werk(file_content=werk.path.read_text(), file_name=werk.path.name)
             return werk
         except Exception:
@@ -984,7 +995,9 @@ def _edit_until_loadable(editor: str, werk_path: Path) -> Werk:
             input()
 
 
-def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bool = True) -> None:
+def edit_werk(
+    ctx: Context, werk_path: Path, custom_files: list[str] | None = None, commit: bool = True
+) -> None:
     if custom_files is None:
         custom_files = []
     if not werk_path.exists():
@@ -998,18 +1011,18 @@ def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bo
     if not editor:
         bail_out("No editor available (please set EDITOR).\n")
 
-    werk = _edit_until_loadable(editor, werk_path)
+    werk = _edit_until_loadable(ctx, editor, werk_path)
 
     _git_add(werk_path)
-    if commit and get_config().create_commit:
-        git_commit(werk, custom_files)
+    if commit and ctx.config.create_commit:
+        git_commit(ctx, werk, custom_files)
 
 
-def main_pick(args: argparse.Namespace) -> None:
+def main_pick(ctx: Context, args: argparse.Namespace) -> None:
     paths = make_paths_object(Path.home())
     log = get_werk_id_logger(paths.log_file)
     for commit_id in args.commit:
-        werk_cherry_pick(commit_id, args.no_commit, get_werk_file_version(), log)
+        werk_cherry_pick(ctx, commit_id, args.no_commit, get_werk_file_version(), log)
 
 
 class WerkToPick(NamedTuple):
@@ -1019,6 +1032,7 @@ class WerkToPick(NamedTuple):
 
 
 def werk_cherry_pick(
+    ctx: Context,
     commit_id: str,
     no_commit: bool,
     werk_version: WerkVersion,
@@ -1068,14 +1082,16 @@ def werk_cherry_pick(
         # maybe we need to adapt the filename:
         if found_werk_path.source.suffix != found_werk_path.destination.suffix:
             # but this also means we need to change the content
-            werk = load_werk(found_werk_path.source)
+            werk = load_werk(ctx, found_werk_path.source)
             git_move(found_werk_path.source, found_werk_path.destination)
             save_werk(werk, werk_version, found_werk_path.destination)
             # git add will be executed by change_werk_version
 
         # Change the werk's version before checking the pick return code.
         # Otherwise the dev may forget to change the version
-        change_werk_version(found_werk_path.destination, get_config().current_version, werk_version)
+        change_werk_version(
+            ctx, found_werk_path.destination, ctx.config.current_version, werk_version
+        )
         log.info(
             "launcher:%(launcher)s, action:pick, werk ID:%(werk_id)s, werk file:%(werk_file)s",
             {
@@ -1086,7 +1102,7 @@ def werk_cherry_pick(
         )
         sys.stdout.write(
             f"Changed version of Werk {found_werk_path.destination} "
-            f"to {get_config().current_version}.\n"
+            f"to {ctx.config.current_version}.\n"
         )
 
     if pick.returncode:
@@ -1106,7 +1122,7 @@ def werk_cherry_pick(
             subprocess.run(["git", "status"], check=True)
 
 
-def main_preview(args: argparse.Namespace) -> None:
+def main_preview(_ctx: Context, args: argparse.Namespace) -> None:
     werk_path = werk_path_by_id(WerkId(args.id))
     werk = cmk_werks_load_werk(
         file_content=Path(werk_path).read_text(encoding="utf-8"),
@@ -1163,8 +1179,9 @@ def get_werk_filename(werk_id: WerkId, werk_version: WerkVersion) -> Path:
 def main(argv: Sequence[str] | None = None) -> None:
     try:
         goto_werksdir()
-        main_args = parse_arguments(argv or sys.argv[1:])
-        main_args.func(main_args)
+        ctx = load_context()
+        main_args = parse_arguments(argv or sys.argv[1:], ctx)
+        main_args.func(ctx, main_args)
     except OSError as e:
         # ignore BrokenPipeError: [Errno 32] Broken pipe
         if e.errno != errno.EPIPE:

@@ -875,7 +875,7 @@ class DiscoveryPageRenderer:
                         save_host=False,
                         host_exists=True,
                         all_agents_url=self._host.folder().url(
-                            request, [("mode", "agent_of_host"), ("host", hostname)]
+                            [("mode", "agent_of_host"), ("host", hostname)]
                         ),
                         user_settings_url=makeuri_contextless(
                             request=request,
@@ -1206,9 +1206,7 @@ class DiscoveryPageRenderer:
 
     def _show_empty_cluster_hint(self) -> None:
         html.br()
-        url = self._host.folder().url(
-            request, [("mode", "edit_ruleset"), ("varname", "clustered_services")]
-        )
+        url = self._host.folder().url([("mode", "edit_ruleset"), ("varname", "clustered_services")])
         html.show_message(
             _(
                 "Could not find any service for your cluster. You first need to "
@@ -1960,7 +1958,6 @@ class DiscoveryPageRenderer:
     @classmethod
     def rulesets_button_link(cls, folder: Folder, descr: str, hostname: str) -> str:
         return folder.url(
-            request,
             [
                 ("mode", "object_parameters"),
                 ("host", hostname),
@@ -1990,7 +1987,6 @@ class DiscoveryPageRenderer:
     ) -> str | None:
         if entry.check_source == DiscoveryState.MANUAL:
             return folder.url(
-                request,
                 [
                     ("mode", "edit_ruleset"),
                     ("varname", RuleGroup.StaticChecks(entry.ruleset_name)),
@@ -2002,7 +1998,6 @@ class DiscoveryPageRenderer:
             return None
 
         return folder.url(
-            request,
             [
                 ("mode", "edit_ruleset"),
                 ("varname", ruleset_name),
@@ -2021,7 +2016,6 @@ class DiscoveryPageRenderer:
     def _disabled_services_button(self, descr: str) -> Literal[1]:
         html.icon_button(
             self._host.folder().url(
-                request,
                 [
                     ("mode", "edit_ruleset"),
                     ("varname", "ignored_services"),
@@ -2311,9 +2305,7 @@ def _page_menu_host_entries(host: Host) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Properties"),
         icon_name=StaticIcon(IconNames.edit),
-        item=make_simple_link(
-            host.folder().url(request, [("mode", "edit_host"), ("host", host.name())])
-        ),
+        item=make_simple_link(host.folder().url([("mode", "edit_host"), ("host", host.name())])),
     )
 
     if not host.is_cluster():
@@ -2321,7 +2313,7 @@ def _page_menu_host_entries(host: Host) -> Iterator[PageMenuEntry]:
             title=_("Test connection"),
             icon_name=StaticIcon(IconNames.analysis),
             item=make_simple_link(
-                host.folder().url(request, [("mode", "diag_host"), ("host", host.name())])
+                host.folder().url([("mode", "diag_host"), ("host", host.name())])
             ),
         )
 
@@ -2330,7 +2322,7 @@ def _page_menu_host_entries(host: Host) -> Iterator[PageMenuEntry]:
             title=_("Effective parameters"),
             icon_name=StaticIcon(IconNames.rulesets),
             item=make_simple_link(
-                host.folder().url(request, [("mode", "object_parameters"), ("host", host.name())]),
+                host.folder().url([("mode", "object_parameters"), ("host", host.name())]),
                 transition=LoadingTransition.catalog,
             ),
         )
@@ -2354,9 +2346,7 @@ def _page_menu_settings_entries(host: Host) -> Iterator[PageMenuEntry]:
             title=_("Clustered services"),
             icon_name=StaticIcon(IconNames.rulesets),
             item=make_simple_link(
-                host.folder().url(
-                    request, [("mode", "edit_ruleset"), ("varname", "clustered_services")]
-                )
+                host.folder().url([("mode", "edit_ruleset"), ("varname", "clustered_services")])
             ),
         )
 
@@ -2367,7 +2357,7 @@ def _page_menu_settings_entries(host: Host) -> Iterator[PageMenuEntry]:
             emblem="disable",
         ),
         item=make_simple_link(
-            host.folder().url(request, [("mode", "edit_ruleset"), ("varname", "ignored_services")])
+            host.folder().url([("mode", "edit_ruleset"), ("varname", "ignored_services")])
         ),
     )
 
@@ -2378,7 +2368,7 @@ def _page_menu_settings_entries(host: Host) -> Iterator[PageMenuEntry]:
             emblem="disable",
         ),
         item=make_simple_link(
-            host.folder().url(request, [("mode", "edit_ruleset"), ("varname", "ignored_checks")])
+            host.folder().url([("mode", "edit_ruleset"), ("varname", "ignored_checks")])
         ),
     )
 

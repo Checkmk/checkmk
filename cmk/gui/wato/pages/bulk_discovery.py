@@ -87,7 +87,7 @@ class ModeBulkDiscovery(WatoMode):
             acting_user=user,
             request=request,
         )
-        self._job = BulkDiscoveryBackgroundJob(back_url=self._folder.url(request))
+        self._job = BulkDiscoveryBackgroundJob(back_url=self._folder.url())
 
     def _get_bulk_discovery_params(self) -> None:
         self._bulk_discovery_params = copy.deepcopy(active_config.bulk_discovery_default_settings)

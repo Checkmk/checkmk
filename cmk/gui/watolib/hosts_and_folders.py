@@ -1165,14 +1165,14 @@ def _normalize_folder_name(name: str) -> str:
     return converted
 
 
-def _folder_breadcrumb(folder: Folder | SearchFolder, request: Request) -> Breadcrumb:
+def _folder_breadcrumb(folder: Folder | SearchFolder) -> Breadcrumb:
     breadcrumb = Breadcrumb()
 
     for this_folder in parent_folder_chain(folder) + [folder]:
         breadcrumb.append(
             BreadcrumbItem(
                 title=this_folder.title(),
-                url=this_folder.url(request),
+                url=this_folder.url(),
                 id=this_folder.id() if isinstance(this_folder, Folder) else None,
             )
         )
@@ -2246,8 +2246,8 @@ class Folder:
     def __repr__(self) -> str:
         return f"Folder({self.path()!r}, {self._title!r})"
 
-    def breadcrumb(self, request: Request) -> Breadcrumb:
-        return _folder_breadcrumb(self, request)
+    def breadcrumb(self) -> Breadcrumb:
+        return _folder_breadcrumb(self)
 
     def parent(self) -> Folder | None:
         return self._parent
@@ -3076,7 +3076,7 @@ class Folder:
                 % {"folder": self.title()}
             )
 
-    def url(self, _request: Request, add_vars: Sequence[HTTPVariable] | None = None) -> str:
+    def url(self, add_vars: Sequence[HTTPVariable] | None = None) -> str:
         if add_vars is None:
             add_vars = []
 
@@ -4212,8 +4212,8 @@ class SearchFolder:
     def title(self) -> str:
         return _("Search results for folder %(folder)s") % {"folder": self._base_folder.title()}
 
-    def breadcrumb(self, request: Request) -> Breadcrumb:
-        return _folder_breadcrumb(self, request)
+    def breadcrumb(self) -> Breadcrumb:
+        return _folder_breadcrumb(self)
 
     def hosts(self) -> Mapping[HostName, Host]:
         if self._found_hosts is None:
@@ -4258,11 +4258,11 @@ class SearchFolder:
             return self._base_folder.path() + "//search:" + self._name  # type: ignore[unreachable]
         return self._base_folder.path() + "//search"
 
-    def url(self, request: Request, add_vars: Sequence[HTTPVariable] | None = None) -> str:
+    def url(self, add_vars: Sequence[HTTPVariable] | None = None) -> str:
         if add_vars is None:
             add_vars = []
 
-        return self.parent().url(request, [("host_search", "1"), *add_vars, *self._search_vars])
+        return self.parent().url([("host_search", "1"), *add_vars, *self._search_vars])
 
     def delete_hosts(
         self,

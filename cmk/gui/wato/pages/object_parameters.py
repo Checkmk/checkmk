@@ -344,7 +344,6 @@ class ModeObjectParameters(WatoMode):
 
         rulespec = rulespec_registry[RuleGroup.StaticChecks(checkgroup)]
         url = self._host.folder().url(
-            request,
             [
                 ("mode", "edit_ruleset"),
                 ("varname", RuleGroup.StaticChecks(checkgroup)),
@@ -460,12 +459,10 @@ class ModeObjectParameters(WatoMode):
         rule_folder, rule_index, rule = origin_rule_result
 
         url = self._host.folder().url(
-            request,
             [("mode", "edit_ruleset"), ("varname", "custom_checks"), ("host", self._hostname)],
         )
         forms.section(HTMLWriter.render_a(_("Command line"), href=url))
         url = self._host.folder().url(
-            request,
             [
                 ("mode", "edit_rule"),
                 ("varname", "custom_checks"),
@@ -582,7 +579,6 @@ class ModeObjectParameters(WatoMode):
 
         def rule_url(rule: Rule) -> str:
             return self._host.folder().url(
-                request,
                 [
                     ("mode", "edit_rule"),
                     ("varname", varname),
@@ -601,7 +597,6 @@ class ModeObjectParameters(WatoMode):
         value_model = rulespec.value_model
 
         url = self._host.folder().url(
-            request,
             [
                 ("mode", "edit_ruleset"),
                 ("varname", varname),

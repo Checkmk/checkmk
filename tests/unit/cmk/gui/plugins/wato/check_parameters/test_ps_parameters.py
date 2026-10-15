@@ -9,6 +9,7 @@ import pytest
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.wato.check_parameters.ps import (
+    _valuespec_inventory_processes_rules,
     forbid_re_delimiters_inside_groups,
     validate_process_discovery_descr_option,
 )
@@ -31,3 +32,14 @@ def test_validate_process_discovery_descr_option(
 ) -> None:
     with pytest.raises(MKUserError):
         validate_process_discovery_descr_option(description, "")
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash report fcc420ba-60a1-11f1-b75b-92896c16dd6b: ValueError",
+)
+def test_process_discovery_rule_rejects_placeholder_without_regex_group() -> None:
+    with pytest.raises(MKUserError):
+        _valuespec_inventory_processes_rules().validate_value(
+            {"descr": "%s", "match": None, "default_params": {"cpu_rescale_max": True}}, ""
+        )

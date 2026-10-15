@@ -1655,6 +1655,30 @@ def test_config_cache_exit_code_spec_individual(
     assert config_cache.exit_code_spec(hostname, data_source_id="snmp") == result
 
 
+@pytest.mark.parametrize("data_source_id", ["special_aws", "special_aws_1"])
+def test_config_cache_exit_code_spec_special_agent_uses_special_entry(
+    monkeypatch: MonkeyPatch, data_source_id: str
+) -> None:
+    hostname = HostName("testhost")
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_ruleset(
+        "check_mk_exit_status",
+        [
+            {
+                "id": "01",
+                "condition": {},
+                "value": {
+                    "overall": {"connection": 1},
+                    "individual": {"special": {"connection": 4}},
+                },
+            },
+        ],
+    )
+    config_cache = ts.apply(monkeypatch).config_cache
+    assert config_cache.exit_code_spec(hostname, data_source_id=data_source_id) == {"connection": 4}
+
+
 @pytest.mark.parametrize(
     "ruleset",
     [

@@ -29,7 +29,16 @@ from cmk.astrein.registry import all_checkers, all_summaries
 def main() -> int:
     checkers = all_checkers()
 
-    parser = argparse.ArgumentParser(description="Run on python files")
+    id_width = max(map(len, checkers))
+    checker_summaries = "\n".join(
+        f"  {checker_id:<{id_width}}  {checkers[checker_id].summary}"
+        for checker_id in sorted(checkers)
+    )
+    parser = argparse.ArgumentParser(
+        description="Run on python files",
+        epilog=f"checkers:\n{checker_summaries}",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument(
         "--repo-root",
         type=Path,
@@ -39,7 +48,8 @@ def main() -> int:
         "--checker",
         choices=sorted(["all", *checkers.keys()]),
         default="all",
-        help="Which checker(s) to run (default: all)",
+        metavar="CHECKER",
+        help="Which checker(s) to run, see below (default: all)",
     )
     parser.add_argument(
         "--format",

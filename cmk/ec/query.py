@@ -252,6 +252,10 @@ class QueryGET(Query):
             if op_name == "in"
             else convert(raw_argument)  # type: ignore[call-arg]
         )
+        # Fail now instead of in the middle of the reply, where the client
+        # can't tell a failure from the end of the reply.
+        if op_name in {"~", "!~", "~~", "!~~"} and isinstance(argument, str):
+            re.compile(argument)
 
         return QueryFilter(
             column_name=column,

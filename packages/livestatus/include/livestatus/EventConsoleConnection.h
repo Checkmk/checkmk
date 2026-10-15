@@ -19,11 +19,13 @@ public:
     virtual ~EventConsoleConnection();
     void run();
 
+protected:
+    [[nodiscard]] std::string prefix(const std::string &message) const;
+
 private:
     virtual void sendRequest(std::ostream &os) = 0;
     virtual void receiveReply(std::istream &is) = 0;
 
-    [[nodiscard]] std::string prefix(const std::string &message) const;
     void check(asio::local::stream_protocol::iostream &stream,
                const std::string &what) const;
 

@@ -21,6 +21,12 @@ cc_library(
 cc_library(
     name = "livestatus_headers",
     hdrs = glob(["include/livestatus/*.h"]),
+    # Our headers include Asio, so everybody including them must configure
+    # Asio the same way, otherwise we violate the one definition rule.
+    defines = [
+        "ASIO_DISABLE_CONCEPTS",
+        "ASIO_NO_DEPRECATED",
+    ],
     strip_include_prefix = "include/",
     visibility = ["//visibility:public"],
     deps = ["@asio"],
@@ -36,11 +42,7 @@ cc_library(
         ],
     ),
     copts = ["-O3"],
-    local_defines = [
-        "HAVE_RE2",
-        "ASIO_DISABLE_CONCEPTS",
-        "ASIO_NO_DEPRECATED",
-    ],
+    local_defines = ["HAVE_RE2"],
     visibility = ["//visibility:public"],
     deps = [
         ":livestatus_headers",

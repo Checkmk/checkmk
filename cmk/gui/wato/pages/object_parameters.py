@@ -29,7 +29,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuEntry, PageMenuTopic
-from cmk.gui.valuespec import Tuple, ValueSpecText
+from cmk.gui.valuespec import ValueSpecText
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.automations import (
     make_automation_config,
@@ -47,6 +47,7 @@ from cmk.gui.watolib.rulespecs import (
     AllowAll,
     get_rulegroup,
     get_rulespec_allow_list,
+    ManualCheckParameterRulespec,
     Rulespec,
     rulespec_group_registry,
     rulespec_registry,
@@ -350,14 +351,14 @@ class ModeObjectParameters(WatoMode):
                 ("host", self._hostname),
             ],
         )
-        assert isinstance(rulespec.valuespec, Tuple)
+        assert isinstance(rulespec, ManualCheckParameterRulespec)
         self._render_rule_reason(
             _("Parameters"),
             url,
             _("Determined by discovery"),
             "",
             False,
-            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"]),  # noqa: SLF001
+            render_value_model_readonly(rulespec.parameter_value_model, serviceinfo["parameters"]),
         )
         render_labels()
 
@@ -396,9 +397,9 @@ class ModeObjectParameters(WatoMode):
             service_result=service_result,
             debug=debug,
         )
-        assert isinstance(rulespec.valuespec, Tuple)
+        assert isinstance(rulespec, ManualCheckParameterRulespec)
         html.write_text_permissive(
-            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"])  # noqa: SLF001
+            render_value_model_readonly(rulespec.parameter_value_model, serviceinfo["parameters"])
         )
         html.close_td()
         html.close_tr()

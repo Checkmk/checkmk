@@ -472,8 +472,11 @@ class Rulespec:
 
     @property
     def has_valuespec(self) -> bool:
-        # Right now, a Valuespec is always present
-        # Will be refactored later on
+        # Some form specs cannot be converted to a valuespec
+        try:
+            self.valuespec
+        except NotImplementedError:
+            return False
         return True
 
     @property
@@ -1134,11 +1137,19 @@ class ManualCheckParameterRulespec(HostRulespec):
 
         # Optional keys
         self._parameter_valuespec = parameter_valuespec
+        self._parameter_form_spec_definition = form_spec_definition
         self._rule_value_item_valuespec = item_spec
 
     @property
     def check_group_name(self) -> str:
         return self._check_group_name
+
+    @property
+    def parameter_value_model(self) -> ValueSpec | FormSpec[Any]:
+        if self._parameter_form_spec_definition is not None:
+            return self._parameter_form_spec_definition.value()
+        assert self._parameter_valuespec is not None
+        return _wrap_valuespec_in_timeperiod_valuespec(self._parameter_valuespec())
 
     def _rulespec_valuespec(self) -> ValueSpec:
         """Wraps the parameter together with the other needed valuespecs

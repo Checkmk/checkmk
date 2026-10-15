@@ -2105,7 +2105,7 @@ def _get_render_mode(rulespec: Rulespec) -> tuple[RenderMode, FormSpec | None]:
         return RenderMode.BACKEND, None
 
     # BACKEND RENDERING of legacy valuespec
-    if not rulespec.has_form_spec and rulespec.has_valuespec:
+    if not rulespec.has_form_spec:
         return RenderMode.BACKEND, None
 
     # FRONTEND rendering of form_spec

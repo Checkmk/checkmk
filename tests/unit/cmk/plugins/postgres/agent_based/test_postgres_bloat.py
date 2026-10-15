@@ -157,11 +157,6 @@ def test_database_without_data_is_ignored() -> None:
         list(check_postgres_bloat("FOOBAR/testdb", {}, SECTION))
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=KeyError,
-    reason="Crash report 2faad14c-b024-11f0-ae2a-005056ab0a00: KeyError",
-)
 def test_section_without_header_line_is_reported() -> None:
     row = ["np", "pg_catalog", "pg_class", "54", "81", "56", "0.7", "25", "458752", "448 kB"]
     section = parse_dbs(

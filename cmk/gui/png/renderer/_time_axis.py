@@ -27,13 +27,6 @@ class TimeAxisTick:
     line_width: int
 
 
-@dataclass(frozen=True)
-class _Labelling:
-    format: _Format
-    label_shift: int = 0
-    label_distance_at_least: int = 0
-
-
 # Every label of a given format has the same digit count, so one sample stands in for all of them.
 _WIDEST_LABEL_SAMPLE: dict[_Format, str] = {
     "%H:%M": "00:00",
@@ -41,6 +34,24 @@ _WIDEST_LABEL_SAMPLE: dict[_Format, str] = {
     "%m-%d": "00-00",
     "%Y-%m-%d": "0000-00-00",
 }
+
+
+@dataclass(frozen=True)
+class _Labelling:
+    format: _Format
+    label_shift: int = 0
+    label_distance_at_least: int = 0
+
+    def label(self, dt: datetime.datetime) -> str:
+        return dt.strftime(self.format)
+
+    def widest_label_width(self, start: datetime.datetime, measure_label: MeasureLabel) -> float:
+        if self.format == "%a %H:%M":
+            return max(
+                measure_label(self.label(_add_days(start, day_offset)))
+                for day_offset in range(_DAYS_PER_WEEK)
+            )
+        return measure_label(_WIDEST_LABEL_SAMPLE[self.format])
 
 
 def _pick_labelling(
@@ -63,21 +74,6 @@ def _pick_labelling(
     if same_year:
         return _Labelling("%m-%d")
     return _Labelling("%Y-%m-%d")
-
-
-def _widest_label_width(
-    labelling: _Labelling, start: datetime.datetime, measure_label: MeasureLabel
-) -> float:
-    if labelling.format == "%a %H:%M":
-        return max(
-            measure_label(_format_label(labelling.format, _add_days(start, day_offset)))
-            for day_offset in range(_DAYS_PER_WEEK)
-        )
-    return measure_label(_WIDEST_LABEL_SAMPLE[labelling.format])
-
-
-def _format_label(label_format: _Format, dt: datetime.datetime) -> str:
-    return dt.strftime(label_format)
 
 
 def _from_timestamp(timestamp: float, tz: datetime.tzinfo | None) -> datetime.datetime:
@@ -192,7 +188,7 @@ def compute_time_axis(
 
     labelling = _pick_labelling(start, end, time_range / _SECONDS_PER_DAY)
     required_distance = (
-        _widest_label_width(labelling, start, measure_label) + _MIN_LABEL_GAP_PX
+        labelling.widest_label_width(start, measure_label) + _MIN_LABEL_GAP_PX
     ) * seconds_per_pixel
     producer = _select_tick_producer(
         # Half the range is the floor, so even a plot too narrow for a single label still gets
@@ -206,7 +202,7 @@ def compute_time_axis(
     for position_dt in producer(start, end):
         line_width = 2
         position = round(position_dt.timestamp())
-        label: str | None = _format_label(labelling.format, position_dt)
+        label: str | None = labelling.label(position_dt)
 
         if labelling.label_shift:
             ticks.append(TimeAxisTick(position=position, text=None, line_width=line_width))

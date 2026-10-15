@@ -687,21 +687,7 @@ async def _get_map_states_batched(
 
 async def _get_object_state(connection: ConnectionBase, obj: MapElement) -> ObjectState:
     try:
-        if obj.type == "host" and obj.host_name:
-            if obj.only_hard_states:
-                state = await connection.get_host_hard_state(obj.host_name)
-            else:
-                state = await connection.get_host_state(obj.host_name)
-            if obj.recognize_services:
-                state = await _aggregate_host_with_services(connection, state, obj.host_name)
-        elif obj.type == "service" and obj.host_name and obj.service_description:
-            if obj.only_hard_states:
-                state = await connection.get_service_hard_state(
-                    obj.host_name, obj.service_description
-                )
-            else:
-                state = await connection.get_service_state(obj.host_name, obj.service_description)
-        elif obj.type == "hostgroup" and obj.group_name:
+        if obj.type == "hostgroup" and obj.group_name:
             state = await connection.get_hostgroup_states(
                 obj.group_name,
                 only_hard=obj.only_hard_states,
@@ -733,19 +719,6 @@ async def _get_object_state(connection: ConnectionBase, obj: MapElement) -> Obje
             {"object_id": obj.id, "error": exc},
         )
         return ObjectState(object_id=obj.id, type=obj.type, state="PENDING", stale=True)
-
-
-async def _aggregate_host_with_services(
-    connection: ConnectionBase, host_state: ObjectState, hostname: str
-) -> ObjectState:
-    """Aggregate host state with the worst state of all its services."""
-    try:
-        summary = (await connection.get_services_summary([hostname])).get(hostname)
-    except Exception:
-        return host_state
-    return host_state.model_copy(
-        update={"state": _combined_state_from_summary(host_state.state, summary)}
-    )
 
 
 async def _resolve_primary_host(connection: ConnectionBase) -> str | None:

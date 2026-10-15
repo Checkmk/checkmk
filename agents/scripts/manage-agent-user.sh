@@ -48,6 +48,8 @@ _set_agent_controller_user_permissions() {
     chown :"${GROUP_REF}" "${MK_INSTALLDIR}/package/config"
     agent_controller_config="${MK_INSTALLDIR}/package/config/cmk-agent-ctl.toml"
     [ -e "${agent_controller_config}" ] && chown :"${GROUP_REF}" "${agent_controller_config}"
+    agent_updater_config="${MK_INSTALLDIR}/package/config/cmk-agent-ctl-update.toml"
+    [ -e "${agent_updater_config}" ] && chown :"${GROUP_REF}" "${agent_updater_config}"
     pre_configured_connections="${MK_INSTALLDIR}/package/config/pre_configured_connections.json"
     [ -e "${pre_configured_connections}" ] && chown :"${GROUP_REF}" "${pre_configured_connections}"
     agent_info="${MK_INSTALLDIR}/package/agent/agent_info.json"

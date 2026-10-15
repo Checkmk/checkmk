@@ -49,7 +49,6 @@ from cmk.gui.watolib.custom_attributes import (
 )
 from cmk.gui.watolib.host_attributes import host_attribute_topic_registry
 from cmk.gui.watolib.hosts_and_folders import (
-    folder_preserving_link,
     FolderTree,
     make_folder_tree,
 )
@@ -558,9 +557,10 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
                                     title=_("Add attribute"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
                                             [("mode", "edit_%s_attr" % self._type)],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -645,9 +645,10 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
                 html.write_text_permissive(nr)
 
                 table.cell(_("Actions"), css=["buttons"])
-                edit_url = folder_preserving_link(
+                edit_url = makeuri_contextless(
                     request,
                     [("mode", "edit_%s_attr" % self._type), ("edit", custom_attr["name"])],
+                    filename="wato.py",
                 )
                 delete_url = make_confirm_delete_link(
                     i18n=_,

@@ -201,7 +201,8 @@ const discoverGraphs = async (): Promise<GraphDiscovery> => {
         await client.POST('/domain-types/graph/actions/discover_custom_graphs/invoke', {
           params: { header: { 'Content-Type': 'application/json' } },
           body: {
-            custom_graph: content.custom_graph
+            type: 'saved',
+            name: content.custom_graph
           }
         })
       )

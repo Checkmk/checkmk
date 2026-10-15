@@ -97,7 +97,7 @@ describe('custom graph widget', () => {
     expect(postSpy.mock.calls[0][0]).toBe(
       '/domain-types/graph/actions/discover_custom_graphs/invoke'
     )
-    expect(postSpy.mock.calls[0][1].body).toEqual({ custom_graph: 'my_graph' })
+    expect(postSpy.mock.calls[0][1].body).toEqual({ type: 'saved', name: 'my_graph' })
   })
 
   test('renders the figure with the discovered definition', async () => {
@@ -130,7 +130,7 @@ describe('custom graph widget', () => {
     } as never)
 
     await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
-    expect(postSpy.mock.calls[1][1].body).toEqual({ custom_graph: 'other_graph' })
+    expect(postSpy.mock.calls[1][1].body).toEqual({ type: 'saved', name: 'other_graph' })
   })
 
   test('shows the error message when the graph cannot be discovered', async () => {

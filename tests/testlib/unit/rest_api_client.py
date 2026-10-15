@@ -1490,16 +1490,32 @@ class GraphClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def discover_custom_graphs(
+    def discover_saved_custom_graph(
         self,
-        custom_graph: str,
+        name: str,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/actions/discover_custom_graphs/invoke",
             body={
-                "custom_graph": custom_graph,
+                "type": "saved",
+                "name": name,
+            },
+            expect_ok=expect_ok,
+        )
+
+    def discover_inline_custom_graph(
+        self,
+        definition: Mapping[str, object],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/discover_custom_graphs/invoke",
+            body={
+                "type": "inline",
+                "definition": definition,
             },
             expect_ok=expect_ok,
         )

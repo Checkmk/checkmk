@@ -16,6 +16,7 @@ import type { CmkWizardStepProps } from 'cmk-ui-library/components/CmkWizard'
 import { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
+import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
@@ -35,6 +36,7 @@ import {
   type AlertModel,
   type FolderPaths,
   alertConditions,
+  alertName,
   hasUnparsableRegex,
   servicePattern
 } from '@/mode-alerts/types'
@@ -50,6 +52,7 @@ const { conditionsSpec, folderPaths } = defineProps<
 
 const model = defineModel<AlertModel>({ required: true })
 
+const nameFieldId = useId()
 const patternFieldId = useId()
 
 const matchTypeOptions = computed(() => ({
@@ -87,6 +90,10 @@ const showAllMatches = ref(false)
 let searchToken = 0
 let debounceTimer: ReturnType<typeof setTimeout> | undefined
 
+function getNameErrors(): string[] {
+  return alertName(model.value) === '' ? [_t('An alert name is required')] : []
+}
+
 function getPatternErrors(): string[] {
   if (servicePattern(model.value) === '') {
     return [_t('A service name is required')]
@@ -97,6 +104,7 @@ function getPatternErrors(): string[] {
   return []
 }
 
+const nameErrors = computed(() => (displayErrors.value ? getNameErrors() : []))
 const patternErrors = computed(() => (displayErrors.value ? getPatternErrors() : []))
 
 const noMatches = computed(() => matches.value !== null && matches.value.services.length === 0)
@@ -172,7 +180,11 @@ async function validate(): Promise<boolean> {
   displayErrors.value = true
   cancelPendingSearch()
   conditionsValidation.value = formSpecErrors(conditionsSpec, model.value.conditions)
-  if (getPatternErrors().length > 0 || conditionsValidation.value.length > 0) {
+  if (
+    getNameErrors().length > 0 ||
+    getPatternErrors().length > 0 ||
+    conditionsValidation.value.length > 0
+  ) {
     return false
   }
   if (matches.value === null) {
@@ -185,16 +197,34 @@ async function validate(): Promise<boolean> {
 <template>
   <CmkWizardStep :index="index" :is-completed="isCompleted">
     <template #header>
-      <CmkHeading type="h3">{{ _t('Select services') }}</CmkHeading>
+      <CmkHeading type="h3">{{ _t('Name the alert and select services') }}</CmkHeading>
     </template>
 
     <template #content>
-      <div class="mode-alerts-services-step">
+      <div class="mode-alerts-name-and-services-step">
         <CmkParagraph>
-          {{ _t('Select the custom services the alert applies to by their service name.') }}
+          {{
+            _t(
+              'Name the alert, then select the custom services it applies to by their service name.'
+            )
+          }}
         </CmkParagraph>
 
-        <div class="mode-alerts-services-step__field">
+        <div class="mode-alerts-name-and-services-step__field">
+          <CmkLabel :for="nameFieldId">
+            {{ _t('Alert name') }}
+            <CmkLabelRequired />
+          </CmkLabel>
+          <CmkInput
+            :id="nameFieldId"
+            v-model="model.name"
+            type="text"
+            field-size="large"
+            :external-errors="nameErrors"
+          />
+        </div>
+
+        <div class="mode-alerts-name-and-services-step__field">
           <CmkLabel :for="patternFieldId">
             {{ _t('Service name') }}
             <CmkLabelRequired />
@@ -207,7 +237,7 @@ async function validate(): Promise<boolean> {
               "
             />
           </CmkLabel>
-          <div class="mode-alerts-services-step__service-row">
+          <div class="mode-alerts-name-and-services-step__service-row">
             <CmkDropdown
               v-model="selectedMatchType"
               :options="matchTypeOptions"
@@ -229,7 +259,7 @@ async function validate(): Promise<boolean> {
           />
         </div>
 
-        <div class="mode-alerts-services-step__field">
+        <div class="mode-alerts-name-and-services-step__field">
           <CmkHeading type="h4">{{ _t('Conditions') }}</CmkHeading>
           <FormEdit
             v-model:data="model.conditions"
@@ -254,8 +284,8 @@ async function validate(): Promise<boolean> {
           :text="_t('No matching services. Only discovered services can be selected.')"
         />
 
-        <div v-else-if="matches" class="mode-alerts-services-step__results">
-          <div class="mode-alerts-services-step__results-header">
+        <div v-else-if="matches" class="mode-alerts-name-and-services-step__results">
+          <div class="mode-alerts-name-and-services-step__results-header">
             <CmkLabel variant="subtitle">
               {{ _t('Matching services') }} ({{ matches.services.length
               }}{{ matches.truncated ? '+' : '' }})
@@ -281,13 +311,13 @@ async function validate(): Promise<boolean> {
             "
           />
           <CmkScrollContainer max-height="240px">
-            <ul class="mode-alerts-services-step__list">
+            <ul class="mode-alerts-name-and-services-step__list">
               <li
                 v-for="service in visibleMatches"
                 :key="`${service.hostName}:${service.serviceName}`"
               >
                 <span>{{ service.serviceName }}</span>
-                <span class="mode-alerts-services-step__host">{{ service.hostName }}</span>
+                <span class="mode-alerts-name-and-services-step__host">{{ service.hostName }}</span>
               </li>
             </ul>
           </CmkScrollContainer>
@@ -297,37 +327,36 @@ async function validate(): Promise<boolean> {
 
     <template #actions>
       <CmkWizardButton type="next" :validation-cb="validate" />
-      <CmkWizardButton type="previous" />
     </template>
   </CmkWizardStep>
 </template>
 
 <style scoped>
-.mode-alerts-services-step {
+.mode-alerts-name-and-services-step {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-5);
   max-width: 620px;
 }
 
-.mode-alerts-services-step__field {
+.mode-alerts-name-and-services-step__field {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-2);
 }
 
-.mode-alerts-services-step__service-row {
+.mode-alerts-name-and-services-step__service-row {
   display: flex;
   align-items: center;
   gap: var(--dimension-4);
 }
 
-.mode-alerts-services-step__service-row > :last-child {
+.mode-alerts-name-and-services-step__service-row > :last-child {
   flex: 1;
   min-width: 0;
 }
 
-.mode-alerts-services-step__results {
+.mode-alerts-name-and-services-step__results {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-2);
@@ -335,28 +364,28 @@ async function validate(): Promise<boolean> {
   border-top: 1px solid var(--ux-theme-6);
 }
 
-.mode-alerts-services-step__results-header {
+.mode-alerts-name-and-services-step__results-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--dimension-4);
 }
 
-.mode-alerts-services-step__list {
+.mode-alerts-name-and-services-step__list {
   margin: 0;
   padding: 0;
   list-style: none;
   font-size: var(--font-size-small);
 }
 
-.mode-alerts-services-step__list li {
+.mode-alerts-name-and-services-step__list li {
   display: flex;
   justify-content: space-between;
   gap: var(--dimension-4);
   padding: var(--dimension-2) 0;
 }
 
-.mode-alerts-services-step__host {
+.mode-alerts-name-and-services-step__host {
   color: var(--font-color-dimmed);
 }
 </style>

@@ -44,22 +44,20 @@ function renderApp() {
   })
 }
 
-test('the wizard opens on naming the alert', () => {
+test('the wizard opens on naming the alert and selecting its services', () => {
   renderApp()
 
-  expect(screen.getByRole('textbox', { name: /Alert name/ })).toBeVisible()
+  expect(screen.getByRole('heading', { name: 'Name the alert and select services' })).toBeVisible()
 })
 
-test('the service and threshold steps are offered alongside it', () => {
+test('the threshold step is offered alongside it', () => {
   renderApp()
 
-  expect(screen.getByRole('heading', { name: 'Select services' })).toBeVisible()
   expect(screen.getByRole('heading', { name: 'Define threshold' })).toBeVisible()
 })
 
-async function completeNameAndServiceSteps(beforeNext: () => Promise<void> = async () => {}) {
+async function completeFirstStep(beforeNext: () => Promise<void> = async () => {}) {
   await userEvent.type(screen.getByRole('textbox', { name: /Alert name/ }), 'Latency too high')
-  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
 
   const serviceName = screen.getByRole('combobox', { name: 'Service name' })
   await waitFor(() => expect(serviceName).toBeEnabled())
@@ -74,10 +72,10 @@ async function completeNameAndServiceSteps(beforeNext: () => Promise<void> = asy
   await userEvent.click(screen.getByRole('button', { name: /next step/i }))
 }
 
-test('completing the name and service steps advances to the threshold step', async () => {
+test('a completed first step advances to the threshold step', async () => {
   renderApp()
 
-  await completeNameAndServiceSteps()
+  await completeFirstStep()
 
   await waitFor(() => {
     expect(screen.getByRole('checkbox', { name: 'Upper levels' })).toBeVisible()
@@ -108,7 +106,7 @@ function captureCreateRequests(): unknown[] {
 test('creating the alert sends its name, service match, conditions and thresholds', async () => {
   const sentBodies = captureCreateRequests()
   renderApp()
-  await completeNameAndServiceSteps()
+  await completeFirstStep()
   await defineUpperLevels('80', '90')
 
   await userEvent.click(screen.getByRole('button', { name: 'Create & activate changes' }))
@@ -127,7 +125,7 @@ test('creating the alert sends its name, service match, conditions and threshold
 
 test('an alert cannot be created without thresholds, and the step says why', async () => {
   renderApp()
-  await completeNameAndServiceSteps()
+  await completeFirstStep()
 
   expect(await screen.findByRole('button', { name: 'Create & activate changes' })).toBeDisabled()
   expect(
@@ -137,7 +135,7 @@ test('an alert cannot be created without thresholds, and the step says why', asy
 
 test('defining a threshold allows creating the alert', async () => {
   renderApp()
-  await completeNameAndServiceSteps()
+  await completeFirstStep()
 
   await defineUpperLevels('80', '90')
 
@@ -149,7 +147,7 @@ test('defining a threshold allows creating the alert', async () => {
 
 test('an alert with incomplete levels cannot be created, and the step says why', async () => {
   renderApp()
-  await completeNameAndServiceSteps()
+  await completeFirstStep()
 
   await defineUpperLevels('80', '')
 
@@ -166,7 +164,7 @@ test('creating the alert sends the chosen folder', async () => {
     })
   )
   renderApp()
-  await completeNameAndServiceSteps(async () => {
+  await completeFirstStep(async () => {
     void userEvent.click(screen.getByRole('combobox', { name: 'Folder' }))
     await userEvent.click(await screen.findByRole('option', { name: 'Main/Linux' }))
   })
@@ -192,7 +190,7 @@ test('a rejected alert shows the reason', async () => {
     )
   )
   renderApp()
-  await completeNameAndServiceSteps()
+  await completeFirstStep()
   await defineUpperLevels('80', '90')
 
   await userEvent.click(await screen.findByRole('button', { name: 'Create & activate changes' }))

@@ -10,8 +10,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { ref } from 'vue'
 
 import { createAlert } from '@/mode-alerts/alert-client'
-import NameStep from '@/mode-alerts/steps/NameStep.vue'
-import ServicesStep from '@/mode-alerts/steps/ServicesStep.vue'
+import NameAndServicesStep from '@/mode-alerts/steps/NameAndServicesStep.vue'
 import ThresholdsStep from '@/mode-alerts/steps/ThresholdsStep.vue'
 import {
   type AlertModel,
@@ -64,14 +63,12 @@ async function saveAlert(): Promise<void> {
 <template>
   <div class="mode-alerts-alert-wizard-app">
     <CmkWizard v-model="currentStep" mode="guided">
-      <NameStep v-model="model" :index="1" :is-completed="() => currentStep > 1" />
-
-      <ServicesStep
+      <NameAndServicesStep
         v-model="model"
         :conditions-spec="conditions_form.spec"
         :folder-paths="folder_paths"
-        :index="2"
-        :is-completed="() => currentStep > 2"
+        :index="1"
+        :is-completed="() => currentStep > 1"
       />
 
       <ThresholdsStep
@@ -79,7 +76,7 @@ async function saveAlert(): Promise<void> {
         :thresholds-spec="thresholds_form.spec"
         :saving="saving"
         :save-error="saveError"
-        :index="3"
+        :index="2"
         :is-completed="() => false"
         @create="saveAlert"
       />

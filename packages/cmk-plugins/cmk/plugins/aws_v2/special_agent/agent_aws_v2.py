@@ -617,7 +617,7 @@ def _spoke_accounts_from_args(args: argparse.Namespace) -> SpokeAccounts | None:
 
 def _test_connection(credentials: AwsCredentials) -> int:
     try:
-        for account_id in credentials.account_ids():
+        for account_id in credentials.monitored_account_ids():
             credentials.open_account(account_id)
     except AwsAccessError as ae:
         sys.stderr.write(f"Connection failed with: {ae}\n")
@@ -743,7 +743,7 @@ def agent_aws_main(args: argparse.Namespace) -> int:
         return _test_connection(credentials)
 
     try:
-        account_ids = credentials.account_ids()
+        account_ids = credentials.monitored_account_ids()
     except AwsAccessError as ae:
         _write_access_error(ae)
         write_agent_info([AgentInfoRow("error", reason=str(ae))])

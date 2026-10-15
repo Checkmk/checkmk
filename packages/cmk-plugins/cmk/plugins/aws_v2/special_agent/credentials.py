@@ -182,8 +182,11 @@ class AwsCredentials:
             )
         return self._session
 
-    def account_id(self) -> str:
-        """The account the credentials belong to. At most one STS call per run."""
+    def session_account_id(self) -> str:
+        """The account of session(): the login's account, or the role's with an assumed role.
+
+        At most one STS call per run.
+        """
         try:
             # The session is built inside the try on purpose. It does not resolve
             # credentials, but it does read the shared config, so a missing AWS_PROFILE or
@@ -201,15 +204,16 @@ class AwsCredentials:
             raise AwsAccessError(describe_credential_failure(e))
         return account_id
 
-    def account_ids(self) -> Sequence[str]:
+    def monitored_account_ids(self) -> Sequence[str]:
         """The accounts this run monitors. Raises AwsAccessError if the hub login fails."""
-        hub_account_id = self.account_id()
+        # Called also for spoke accounts, so that a broken login fails here, once.
+        session_account_id = self.session_account_id()
         if self._spokes is None:
-            return [hub_account_id]
+            return [session_account_id]
         return self._spokes.account_ids
 
     def open_account(self, account_id: str) -> AwsAccount:
-        """One account of account_ids(), with the session to use for all its regions.
+        """One account of monitored_account_ids(), with the session to use for all its regions.
 
         A spoke role is assumed here, right before its account is monitored. Its
         credentials last one hour, which a long list of accounts could outlast if every

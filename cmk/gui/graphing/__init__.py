@@ -81,9 +81,9 @@ from ._graphs_order import sort_registered_graph_plugins
 from ._legacy_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
 from ._line_types import line_type_with_mirroring, LineType
 from ._metric_data import (
-    converted_time_series,
     evaluated_metrics,
     EvaluatedMetric,
+    mapped_series,
     merge_rrd_columns,
     reverse_translated_names,
     rrd_column_names,
@@ -180,7 +180,7 @@ from ._valuespecs import (
 )
 
 __all__ = [
-    "converted_time_series",
+    "mapped_series",
     "GraphDisplayConfigBase",
     "AnnotatedHostName",
     "assemble_fetched_data",

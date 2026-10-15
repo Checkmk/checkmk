@@ -33,7 +33,7 @@ from cmk.graphing_engine import (
     timestamps,
     VerticalRangeKind,
 )
-from cmk.gui.graphing import converted_time_series, user_specific_unit
+from cmk.gui.graphing import mapped_series, user_specific_unit
 from cmk.gui.png._size import ex_to_inches, legend_height_ex
 from cmk.gui.png._wire import PngGraph, PngOptions, PngTexts, RenderingFailure
 from cmk.gui.utils.temperature_unit import TemperatureUnit
@@ -509,7 +509,7 @@ def _converted_curve(curve: EvaluatedCurve, temperature_unit: TemperatureUnit) -
         id=curve.id,
         attributes=curve.attributes,
         value=None if curve.value is None else conversion(curve.value),
-        time_series=converted_time_series(curve.time_series, conversion),
+        time_series=mapped_series(curve.time_series, conversion),
         source_id=curve.source_id,
         series_attributes=curve.series_attributes,
     )
@@ -542,8 +542,8 @@ def _converted_region(
     return EvaluatedRegion(
         id=region.id,
         attributes=region.attributes,
-        lower=None if region.lower is None else converted_time_series(region.lower, conversion),
-        upper=None if region.upper is None else converted_time_series(region.upper, conversion),
+        lower=None if region.lower is None else mapped_series(region.lower, conversion),
+        upper=None if region.upper is None else mapped_series(region.upper, conversion),
     )
 
 

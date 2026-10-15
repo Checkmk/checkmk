@@ -253,22 +253,26 @@ def translate_metric_names(
     )
 
 
-def _scaled(value: float | None, scale: float) -> float | None:
-    return None if value is None else value * scale
+def _mapped(
+    values: RawPerformanceValue | PerformanceData, transform: Callable[[float], float]
+) -> PerformanceData:
+    def _mapped_value(value: float | None) -> float | None:
+        return None if value is None else transform(value)
+
+    return PerformanceData(
+        value=_mapped_value(values.value),
+        lower_warning=_mapped_value(values.lower_warning),
+        lower_critical=_mapped_value(values.lower_critical),
+        warning=_mapped_value(values.warning),
+        critical=_mapped_value(values.critical),
+        minimum=_mapped_value(values.minimum),
+        maximum=_mapped_value(values.maximum),
+    )
 
 
 def _performance_data(column: _TranslatedColumn) -> PerformanceData:
-    raw_value = column.raw_value
     scale = column.original.scale
-    return PerformanceData(
-        value=_scaled(raw_value.value, scale),
-        lower_warning=_scaled(raw_value.lower_warning, scale),
-        lower_critical=_scaled(raw_value.lower_critical, scale),
-        warning=_scaled(raw_value.warning, scale),
-        critical=_scaled(raw_value.critical, scale),
-        minimum=_scaled(raw_value.minimum, scale),
-        maximum=_scaled(raw_value.maximum, scale),
-    )
+    return _mapped(column.raw_value, lambda value: value * scale)
 
 
 def translate_performance_data(
@@ -345,13 +349,17 @@ def resample(
     return TimeSeries(time_range=time_range, values=values)
 
 
+def mapped_series(time_series: TimeSeries, transform: Callable[[float], float]) -> TimeSeries:
+    return TimeSeries(
+        time_range=time_series.time_range,
+        values=[None if value is None else transform(value) for value in time_series.values],
+    )
+
+
 def scaled_series(time_series: TimeSeries, scale: float) -> TimeSeries:
     if scale == 1.0:
         return time_series
-    return TimeSeries(
-        time_range=time_series.time_range,
-        values=[None if value is None else value * scale for value in time_series.values],
-    )
+    return mapped_series(time_series, lambda value: value * scale)
 
 
 def merge_series(time_series: Sequence[TimeSeries], time_range: TimeRange) -> TimeSeries:
@@ -385,15 +393,6 @@ def rrd_column_names(
                 name, consolidation_function=consolidation_function, time_range=time_range
             )
         )
-
-
-def converted_time_series(
-    time_series: TimeSeries, conversion: Callable[[float], float]
-) -> TimeSeries:
-    return TimeSeries(
-        time_range=time_series.time_range,
-        values=[None if value is None else conversion(value) for value in time_series.values],
-    )
 
 
 def _series_of_column(data: Sequence[float | None] | None) -> TimeSeries | None:
@@ -440,7 +439,7 @@ def merge_rrd_columns(
         ).unit,
         temperature_unit,
     )
-    return converted_time_series(merge_series(relevant, relevant[0].time_range), unit.conversion)
+    return mapped_series(merge_series(relevant, relevant[0].time_range), unit.conversion)
 
 
 def rrd_column_name(
@@ -469,23 +468,6 @@ class EvaluatedMetric:
     formatter: NotationFormatter
     unit_format: UnitFormat
     performance_data: PerformanceData
-
-
-def _in_user_unit(
-    performance_data: PerformanceData, conversion: Callable[[float], float]
-) -> PerformanceData:
-    def _converted(value: float | None) -> float | None:
-        return None if value is None else conversion(value)
-
-    return PerformanceData(
-        value=_converted(performance_data.value),
-        lower_warning=_converted(performance_data.lower_warning),
-        lower_critical=_converted(performance_data.lower_critical),
-        warning=_converted(performance_data.warning),
-        critical=_converted(performance_data.critical),
-        minimum=_converted(performance_data.minimum),
-        maximum=_converted(performance_data.maximum),
-    )
 
 
 def evaluated_metrics(
@@ -517,6 +499,6 @@ def evaluated_metrics(
                 unit_format.precision.digits,
             ),
             unit_format=unit_format,
-            performance_data=_in_user_unit(performance_data, conversion),
+            performance_data=_mapped(performance_data, conversion),
         )
     return evaluated

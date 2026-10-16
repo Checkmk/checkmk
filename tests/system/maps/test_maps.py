@@ -65,9 +65,9 @@ def fixture_temporary_map(
     regardless of the cleanup policy.
     """
     # The map-name field caps at 64 chars (CreateMapModal._MAX_NAME_LEN);
-    # verbose parametrize ids (e.g. "Radar (dynamic filter)") push the sanitized
-    # node name past that, which keeps the Create button disabled. Cap it so the
-    # generated name is always a valid map id.
+    # verbose parametrize ids can push the sanitized node name past that, which
+    # keeps the Create button disabled. Cap it so the generated name is always a
+    # valid map id.
     name = ("e2e_" + re.sub(r"[^a-zA-Z0-9]", "_", request.node.name))[:64]
     if maps_home_page.map_card(name).count():
         maps_home_page.delete_map(name)

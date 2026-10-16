@@ -104,11 +104,48 @@ describe('HomeView', () => {
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
   })
 
-  it("puts the cursor in the new map's ID field, so it can be typed right away", async () => {
+  it("puts the cursor in the new map's name, so it can be typed right away", async () => {
     await renderHome([listed('prod')])
 
     await userEvent.click(screen.getByRole('button', { name: 'Add map' }))
-    await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText('Map ID')))
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText('Display name')))
+  })
+
+  it('fills the map ID in from the display name', async () => {
+    await renderHome([listed('prod')])
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add map' }))
+    await userEvent.type(await screen.findByLabelText('Display name'), 'Büro – Straße')
+    expect(screen.getByLabelText('Map ID')).toHaveValue('buro-strasse')
+  })
+
+  it('says so when a display name leaves nothing to fill an ID in from', async () => {
+    await renderHome([listed('prod')])
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add map' }))
+    await userEvent.type(await screen.findByLabelText('Display name'), '東京')
+    expect(screen.getByText(/no letters or digits to fill in an ID from/)).toBeInTheDocument()
+  })
+
+  it('fills the map ID in again from the display name once it is emptied', async () => {
+    await renderHome([listed('prod')])
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add map' }))
+    await userEvent.type(await screen.findByLabelText('Display name'), 'My map')
+    const mapId = screen.getByLabelText('Map ID')
+    await userEvent.type(mapId, '-x')
+    await userEvent.clear(mapId)
+    expect(mapId).toHaveValue('my-map')
+    expect(screen.queryByText(/no letters or digits to fill in an ID from/)).toBeNull()
+  })
+
+  it('cuts an ID filled in from a long display name to fit', async () => {
+    await renderHome([listed('prod')])
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add map' }))
+    await userEvent.type(await screen.findByLabelText('Display name'), 'x'.repeat(70))
+    expect(screen.getByLabelText('Map ID')).toHaveValue('x'.repeat(64))
+    expect(screen.queryByText(/too long/)).toBeNull()
   })
 
   it('switches the list to the table on the view switch', async () => {

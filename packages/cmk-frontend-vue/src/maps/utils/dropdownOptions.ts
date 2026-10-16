@@ -129,7 +129,7 @@ export function mapTypeOptions(_t: TranslateFn) {
     { name: 'static', title: _t('Static map') },
     { name: 'worldmap', title: _t('Geo map') },
     { name: 'flow', title: _t('Flow map') },
-    { name: 'radar', title: _t('Radar (dynamic filter)') },
+    { name: 'radar', title: _t('Radar map') },
     { name: 'foldertree', title: _t('Folder tree') },
     { name: 'presentation', title: _t('Presentation') }
   ]

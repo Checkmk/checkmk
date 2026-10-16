@@ -35,7 +35,7 @@ class MapType(StrEnum):
     STATIC = "Static map"
     GEO = "Geo map"
     FLOW = "Flow map"
-    RADAR = "Radar (dynamic filter)"
+    RADAR = "Radar map"
     FOLDER_TREE = "Folder tree"
     PRESENTATION = "Presentation"
 

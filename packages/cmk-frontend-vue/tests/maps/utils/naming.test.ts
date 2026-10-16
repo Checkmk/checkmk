@@ -6,7 +6,12 @@
 import { describe, expect, it } from 'vitest'
 
 import { newMapElement } from '@/maps/utils/model'
-import { mapElementCaption, sanitizeMapName, slugToTitleCase } from '@/maps/utils/naming'
+import {
+  mapElementCaption,
+  mapIdFromName,
+  sanitizeMapName,
+  slugToTitleCase
+} from '@/maps/utils/naming'
 
 describe('sanitizeMapName', () => {
   it('replaces spaces with hyphens', () => {
@@ -117,5 +122,22 @@ describe('mapElementCaption', () => {
   it('leaves a name that already fits alone', () => {
     const object = newMapElement({ id: '1', type: 'host', host_name: 'db01', label_maxlen: 8 })
     expect(mapElementCaption(object)).toBe('db01')
+  })
+})
+
+describe('mapIdFromName', () => {
+  it.each([
+    ['Rechenzentrum Süd – Etage 2', 'rechenzentrum-sud-etage-2'],
+    ['Größe', 'grosse'],
+    ['Søborg', 'soborg'],
+    ['İstanbul', 'istanbul'],
+    ['  -- Lab --  ', 'lab'],
+    ['東京', '']
+  ])('fills %j in as %j', (name, id) => {
+    expect(mapIdFromName(name, 64)).toBe(id)
+  })
+
+  it('does not end on a hyphen where it is cut', () => {
+    expect(mapIdFromName('ab cd', 3)).toBe('ab')
   })
 })

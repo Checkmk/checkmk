@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <!--
 A map that is nothing but the current state of whatever an operator's filter
-matches -- a host group, a service group, a tag -- laid out worst first.
+matches -- all hosts or services, or those of one group -- laid out worst first.
 
 Nothing is placed on a radar map, so there is no drawing of its own: the map is
 the state stream, so this view reads it directly rather than being handed the

@@ -108,6 +108,34 @@ export function sanitizeStrippedChars(raw: string): boolean {
   return withoutSpaces.replace(/[^a-zA-Z0-9_-]/g, '') !== withoutSpaces
 }
 
+// Letters that have no base letter to fall back to once their accent is gone.
+const _SPELLED_OUT: Record<string, string> = {
+  ß: 'ss',
+  æ: 'ae',
+  œ: 'oe',
+  ø: 'o',
+  ł: 'l',
+  đ: 'd'
+}
+
+/**
+ * A map ID filled in from a display name. It is the user's to change, not to
+ * fix: letters lose their accents rather than vanish, and it is cut to fit
+ * rather than flagged.
+ */
+export function mapIdFromName(name: string, maxLength: number): string {
+  return name
+    .toLowerCase()
+    .replace(/[ßæœøłđ]/g, (c) => _SPELLED_OUT[c] ?? '')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/[^\p{L}\p{N}_]+/gu, '-')
+    .replace(/[^a-z0-9_-]/g, '')
+    .replace(/-+/g, '-')
+    .slice(0, maxLength)
+    .replace(/^-+|-+$/g, '')
+}
+
 /** Convert a hyphen/underscore-separated slug to Title Case display name. */
 export function slugToTitleCase(slug: string): string {
   return slug.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())

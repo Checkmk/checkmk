@@ -150,7 +150,7 @@ def map_defaults_spec(
                         ),
                         CascadingSingleChoiceElement(
                             name="radar",
-                            title=Title("Radar (dynamic filter)"),
+                            title=Title("Radar map"),
                             parameter_form=FixedValue(value=None),
                         ),
                         CascadingSingleChoiceElement(

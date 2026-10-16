@@ -115,11 +115,9 @@ function onResizeStart(event: PointerEvent): void {
 </template>
 
 <style scoped>
-/* Two-tone, so the ring reads on light and dark tiles alike. */
 .maps-world-map-marker:focus-visible {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: 2px;
-  box-shadow: 0 0 0 2px var(--white);
 }
 
 /* The static map's dashed selection outline, plus a white ring and a dark glow

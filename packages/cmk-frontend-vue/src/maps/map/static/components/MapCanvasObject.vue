@@ -119,11 +119,9 @@ function onKeydown(event: KeyboardEvent): void {
   position: absolute;
 }
 
-/* Two-tone, so the ring reads on any background. */
 .maps-map-canvas-object:focus-visible {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: 2px;
-  box-shadow: 0 0 0 2px var(--white);
 }
 
 /* The object a line being dragged would bind to on release. */

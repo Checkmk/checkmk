@@ -51,6 +51,10 @@ const { _t } = usei18n()
   background: var(--input-hover-bg-color);
 }
 
+.maps-problems-only-toggle:focus-visible {
+  outline: revert;
+}
+
 .maps-problems-only-toggle--active {
   border-color: var(--color-state-warning);
   background: color-mix(in srgb, var(--color-state-warning) 12%, transparent);

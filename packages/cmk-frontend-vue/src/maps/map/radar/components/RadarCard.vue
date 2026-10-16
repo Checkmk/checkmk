@@ -105,7 +105,7 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 .maps-radar-card:focus-visible {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: 2px;
 }
 

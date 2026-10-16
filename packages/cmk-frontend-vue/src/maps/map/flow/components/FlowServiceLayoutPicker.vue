@@ -155,6 +155,10 @@ function pick(layout: ServiceLayout): void {
   background: var(--ux-theme-3);
 }
 
+.maps-flow-service-layout-picker__button:focus-visible {
+  outline: revert;
+}
+
 .maps-flow-service-layout-picker__caret {
   width: 10px;
   height: 10px;

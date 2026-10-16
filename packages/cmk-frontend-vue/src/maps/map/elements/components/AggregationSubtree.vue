@@ -371,7 +371,7 @@ const size = computed(() => {
 }
 
 .maps-aggregation-subtree__node:focus-visible {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: 2px;
 }
 </style>

@@ -47,8 +47,7 @@ const model = defineModel<string>({ required: true })
 }
 
 .maps-text-area:focus-visible {
-  outline: none;
-  border-color: var(--interactive-accent);
+  outline: revert;
 }
 
 .maps-text-area--monospace {

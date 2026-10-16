@@ -213,7 +213,6 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   min-width: 0;
   background: transparent;
   border: none;
-  outline: none;
   color: var(--font-color);
   font-size: var(--font-size-normal);
 }
@@ -241,6 +240,11 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
 .maps-map-search__icon-btn:hover {
   color: var(--font-color);
   background: rgb(255 255 255 / 8%);
+}
+
+.maps-map-search__input:focus-visible,
+.maps-map-search__icon-btn:focus-visible {
+  outline: revert;
 }
 
 .maps-map-search__help {

@@ -80,7 +80,7 @@ defineProps<{
 }
 
 .maps-menu-item:focus-visible {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: 2px;
 }
 

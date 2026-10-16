@@ -243,7 +243,7 @@ const summaryChips = computed<DetailChip[]>(() =>
 }
 
 .maps-detail-aggregation-section__row--clickable:focus-visible {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: 2px;
 }
 

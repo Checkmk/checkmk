@@ -115,7 +115,7 @@ function onKeydown(e: KeyboardEvent): void {
 }
 
 .maps-menu:focus-visible {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: 2px;
 }
 

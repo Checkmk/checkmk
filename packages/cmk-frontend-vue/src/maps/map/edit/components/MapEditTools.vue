@@ -265,6 +265,10 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
   transition: all 0.2s;
 }
 
+.maps-map-edit-tools__button:focus-visible {
+  outline: revert;
+}
+
 .maps-map-edit-tools__button:active {
   transform: scale(0.95);
 }

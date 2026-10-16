@@ -340,7 +340,7 @@ useD3Cleanup(svgEl)
 /* stylelint-disable selector-pseudo-class-no-unknown -- d3 owns the tiles, so
    their styles have to reach past this component's own markup. */
 .maps-folder-treemap__stage :deep(.maps-folder-treemap__cell:focus-visible) {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: -2px;
 }
 

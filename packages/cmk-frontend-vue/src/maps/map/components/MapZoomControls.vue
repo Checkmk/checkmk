@@ -110,6 +110,11 @@ defineEmits<{ 'zoom-in': []; 'zoom-out': []; fit: [] }>()
   color: var(--interactive-accent);
 }
 
+.maps-map-zoom-controls__button:focus-visible {
+  outline: revert;
+  outline-offset: -2px;
+}
+
 .maps-map-zoom-controls__icon {
   width: var(--dimension-5);
   height: var(--dimension-5);

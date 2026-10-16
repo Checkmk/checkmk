@@ -518,8 +518,7 @@ const slidePresets = SLIDE_PRESETS
 }
 
 .maps-presentation-inspector-panel__name:focus {
-  outline: none;
-  border-color: var(--interactive-accent);
+  outline: revert;
   background: var(--default-form-element-bg-color);
 }
 

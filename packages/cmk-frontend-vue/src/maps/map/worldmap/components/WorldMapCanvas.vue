@@ -636,10 +636,8 @@ defineExpose({
   isolation: isolate;
 }
 
-/* Two-tone, so the ring reads on light and dark tiles alike. */
 .maps-world-map-canvas__map:focus-visible {
-  outline: 2px solid var(--color-corporate-green-50);
+  outline: revert;
   outline-offset: -2px;
-  box-shadow: inset 0 0 0 4px var(--white);
 }
 </style>

@@ -42,7 +42,6 @@ void main() {
     def toolchain_test_targets = [
         "//bazel/toolchains/cc/clang/xwin/tests:tests",
     ];
-    def target_args = targets.join(" ");
     def crt_test_args = exe_targets.collect { it + "-static-crt" }.join(" ");
     // Fail the build but keep going, so the test results below still get
     // collected and published.
@@ -56,18 +55,7 @@ void main() {
             }
 
             stage("Build windows binaries") {
-                sh(
-                    """
-                    set -euo pipefail
-                    bazel build --cmk_version=${cmk_version} ${target_args}
-                    mkdir -p artefacts
-                    """
-                );
-                // The outputs already carry the Windows-node job's artifact
-                // names (binary_name on the targets).
-                targets.each { target ->
-                    sh("cp -f \$(bazel cquery --cmk_version=${cmk_version} --output=files ${target}) artefacts/");
-                }
+                build_windows_binaries(safe_branch_name, cmk_version, targets, "artefacts");
             }
 
             stage("Check toolchain argument contract") {
@@ -149,6 +137,32 @@ void main() {
                 )
             ]
         );
+    }
+}
+
+void build_windows_binaries(String branch_name, String cmk_version, List targets, String binary_directory) {
+    def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
+
+    // The MSI embeds the PowerShell scripts signed during the build,
+    // like the MSI winagt-build builds with --sign-azure. CMK-39886
+    windows.with_azure_signing_flag(
+        branch_name, "${WORKSPACE}/.azure_signing_credentials"
+    ) { signing_flag ->
+        sh(
+            """
+            set -euo pipefail
+            bazel build --cmk_version=${cmk_version} ${signing_flag} ${targets.join(" ")}
+            mkdir -p ${binary_directory}
+            """
+        );
+        // The outputs already carry the Windows-node job's artifact
+        // names (binary_name on the targets).
+        targets.each { target ->
+            sh(
+                "cp -f \$(bazel cquery --cmk_version=${cmk_version} ${signing_flag} " +
+                "--output=files ${target}) ${binary_directory}/"
+            );
+        }
     }
 }
 

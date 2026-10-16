@@ -345,7 +345,7 @@ package_msi(
     script = "install/build_msi.sh",
     # Where Product.wxs expects them.
     stage_files = {
-        "//agents/windows/plugins:unsigned_plugins": "agents/wnx/install/plugins.tar",
+        "//agents/windows/plugins:msi_plugins": "agents/wnx/install/plugins.tar",
         "//packages/cmk-agent-ctl:cmk-agent-ctl-windows": "artefacts/cmk-agent-ctl.exe",
         ":check_mk_service-windows": "agents/wnx/build/check_mk_service/x64/Release/check_mk_service.exe",
     },

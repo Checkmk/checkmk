@@ -14,6 +14,7 @@ Standard library only: the container image has nothing else.
 
 import argparse
 import base64
+from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import override
@@ -41,11 +42,11 @@ def _make_handler(expected: str, log: Path) -> type[BaseHTTPRequestHandler]:
             with log.open("a") as stream:
                 stream.write(f"{self.client_address[0]} auth={outcome} {self.requestline}\n")
             if outcome == "ok":
-                self.send_response(200)  # astrein: disable=http-status-literal
+                self.send_response(HTTPStatus.OK)
                 self.end_headers()
                 self.wfile.write(b"authenticated")
                 return
-            self.send_response(401)  # astrein: disable=http-status-literal
+            self.send_response(HTTPStatus.UNAUTHORIZED)
             self.send_header("WWW-Authenticate", 'Basic realm="relay-e2e"')
             self.end_headers()
 

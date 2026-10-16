@@ -555,15 +555,17 @@ def hostname_translation_of_site(
     if site_id == omd_site():
         return ec.load_config_to_activate(ec.mkp_rule_pack_dir())["hostname_translation"]
     site_globals = site_configs[site_id].get("globals", {})
-    # Without a site-specific setting, the site inherits the global one, which in turn falls back to
-    # the built-in default.
     if "hostname_translation" in site_globals:
-        translation = site_globals["hostname_translation"]
-    elif "hostname_translation" in (global_settings := load_configuration_settings()):
-        translation = global_settings["hostname_translation"]
-    else:
-        translation = ABCConfigDomain.get_all_default_globals()["hostname_translation"]
-    return cast(cmk.utils.translations.TranslationOptions, translation)
+        return cast(cmk.utils.translations.TranslationOptions, site_globals["hostname_translation"])
+    # Without a site-specific setting, the site inherits the global one, which in turn falls back to
+    # the built-in default. The host name translation is a global setting of the Event Console only,
+    # so don't determine the defaults of all configuration domains, which would e.g. run an
+    # automation of the core.
+    ec_domain = config_domain_registry[EVENT_CONSOLE]
+    return cast(
+        cmk.utils.translations.TranslationOptions,
+        {**ec_domain.default_globals(), **ec_domain.load()}["hostname_translation"],
+    )
 
 
 def message_match_groups_text(result: ec.MatchSuccess) -> str:

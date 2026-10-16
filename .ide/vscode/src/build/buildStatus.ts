@@ -221,7 +221,7 @@ export function createStatusBar(
         ? () =>
             setTimeout(() => {
               refresh()
-              if (branchSwitch) void notifyBranchSwitch()
+              if (branchSwitch) void notifyBranchSwitch(wsPath)
             }, delay)
         : () => refresh()
       if (events.includes('change')) watcher.onDidChange(handler)
@@ -230,8 +230,8 @@ export function createStatusBar(
       context.subscriptions.push(watcher)
     }
 
-    async function notifyBranchSwitch(): Promise<void> {
-      const newBranch = await gitAsync(wsPath, ['rev-parse', '--abbrev-ref', 'HEAD'])
+    async function notifyBranchSwitch(root: string): Promise<void> {
+      const newBranch = await gitAsync(root, ['rev-parse', '--abbrev-ref', 'HEAD'])
       if (newBranch === null) return
       if (newBranch === _lastBranch) return
       _lastBranch = newBranch

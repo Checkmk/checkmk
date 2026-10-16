@@ -1,25 +1,36 @@
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
-load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library", "js_run_binary")
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_run_binary")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//.ide/vscode:@vscode/vsce/package_json.bzl", vsce_bin = "bin")
 load("@rules_python//python:defs.bzl", "py_binary", "py_library")
 load("//bazel/rules:vitest_test.bzl", "vitest_test")
+load("//bazel/rules:vue_library.bzl", "vue_library")
 
 npm_link_all_packages(name = "node_modules")
 
-js_library(
-    name = "src_ts",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.css",
-    ]) + ["tsconfig.json"],
+# Webview CSS follows VS Code's theme variables, not the Vue stylelint rules.
+filegroup(
+    name = "src_css",
+    srcs = glob(["src/**/*.css"]),
 )
 
-js_library(
-    name = "test_ts",
-    srcs = glob(["tests/**/*.ts"]) + [
+vue_library(
+    name = "src_ts",
+    srcs = glob(["src/**/*.ts"]) + [
         "tsconfig.json",
-        "vitest.config.ts",
+        ":src_css",
+    ],
+    tsconfig = "tsconfig.json",
+    deps = [":node_modules/@types"],
+)
+
+vue_library(
+    name = "tests",
+    srcs = glob(["tests/**/*.ts"]) + ["vitest.config.ts"],
+    tsconfig = "tsconfig.test.json",
+    deps = [
+        ":src_ts",
+        "//:node_modules/vitest",
     ],
 )
 
@@ -28,8 +39,7 @@ vitest_test(
     data = [
         "package.json",
         ":node_modules/@types",
-        ":src_ts",
-        ":test_ts",
+        ":tests",
         "//:node_modules/vitest",
     ] + glob(["config/**"]) + glob(
         ["changelog/**"],

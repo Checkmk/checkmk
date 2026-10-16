@@ -12,15 +12,13 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
-    OIDEnd,
     render,
     Service,
     SNMPSection,
-    SNMPTree,
     StringTable,
 )
 from cmk.plugins.huawei.lib import (
-    DETECT_HUAWEI_SWITCH,
+    HUAWEI_ENTERPRISE,
     parse_huawei_physical_entity_values,
     Section,
 )
@@ -62,17 +60,8 @@ def discover_huawei_switch_mem(section: Section) -> DiscoveryResult:
 
 snmp_section_huawei_switch_mem = SNMPSection(
     name="huawei_switch_mem",
-    detect=DETECT_HUAWEI_SWITCH,
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.2.1.47.1.1.1.1",
-            oids=[OIDEnd(), "7"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.2011.5.25.31.1.1.1.1",
-            oids=[OIDEnd(), "7"],
-        ),
-    ],
+    detect=HUAWEI_ENTERPRISE.switch_detect,
+    fetch=HUAWEI_ENTERPRISE.entity_state_trees("7"),
     parse_function=parse_huawei_switch_mem,
 )
 

@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.huawei.lib import DETECT_HUAWEI_SWITCH
+from cmk.plugins.huawei.lib import HUAWEI_ENTERPRISE
 
 _UNKNOWN_ROLE = "unknown"
 
@@ -68,14 +68,14 @@ def check_huawei_switch_stack(
 
 snmp_section_huawei_switch_stack = SNMPSection(
     name="huawei_switch_stack",
-    detect=DETECT_HUAWEI_SWITCH,
+    detect=HUAWEI_ENTERPRISE.switch_detect,
     fetch=[
         SNMPTree(
-            base=".1.3.6.1.4.1.2011.5.25.183.1",
+            base=HUAWEI_ENTERPRISE.subtree("5.25.183.1"),
             oids=["5"],
         ),
         SNMPTree(
-            base=".1.3.6.1.4.1.2011.5.25.183.1.20.1",
+            base=HUAWEI_ENTERPRISE.subtree("5.25.183.1.20.1"),
             oids=[OIDEnd(), "3"],
         ),
     ],

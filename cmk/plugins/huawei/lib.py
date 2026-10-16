@@ -5,10 +5,30 @@
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from functools import cached_property
 
-from cmk.agent_based.v2 import contains, StringTable
+from cmk.agent_based.v2 import contains, OIDEnd, SNMPDetectSpecification, SNMPTree, StringTable
 
-DETECT_HUAWEI_SWITCH = contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2011.2.23")
+
+@dataclass(frozen=True)
+class HuaweiEnterprise:
+    oid: str
+
+    @cached_property
+    def switch_detect(self) -> SNMPDetectSpecification:
+        return contains(".1.3.6.1.2.1.1.2.0", self.subtree("2.23"))
+
+    def subtree(self, suffix: str) -> str:
+        return f"{self.oid}.{suffix}"
+
+    def entity_state_trees(self, column: str) -> list[SNMPTree]:
+        return [
+            SNMPTree(base=".1.3.6.1.2.1.47.1.1.1.1", oids=[OIDEnd(), "7"]),
+            SNMPTree(base=self.subtree("5.25.31.1.1.1.1"), oids=[OIDEnd(), column]),
+        ]
+
+
+HUAWEI_ENTERPRISE = HuaweiEnterprise(".1.3.6.1.4.1.2011")
 
 DETECT_HUAWEI_OSN = contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2011.2.25.1")
 

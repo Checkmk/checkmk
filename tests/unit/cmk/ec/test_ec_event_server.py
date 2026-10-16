@@ -88,23 +88,10 @@ def _make_rule(state: ec.State) -> ec.Rule:
     ],
 )
 def test_rewrite_event_state(
-    event_server: EventServer,
-    settings: ec.Settings,
-    config: Config,
-    state: ec.State,
-    priority: ec.SyslogPriority,
-    expected: int,
+    event_server: EventServer, state: ec.State, priority: ec.SyslogPriority, expected: int
 ) -> None:
     rule = _make_rule(state)
-    config_rule_packs = config | {"rule_packs": [ec.default_rule_pack([rule])]}
-    history = create_history(
-        settings,
-        config_rule_packs,
-        logging.getLogger("cmk.mkeventd"),
-        StatusTableEvents.columns,
-        StatusTableHistory.columns,
-    )
-    event_server.reload_configuration(config_rule_packs, history=history)
+    ec.compile_rule(rule)
     event = new_event(
         ec.Event(
             host=HostName("heute"),
@@ -118,6 +105,16 @@ def test_rewrite_event_state(
     event_server.rewrite_event(rule=rule, event=event, match_groups=MatchGroups())
 
     assert event["state"] == expected
+
+
+def test_compiling_the_rules_keeps_the_rule_packs_for_replication_intact(
+    event_server: EventServer,
+) -> None:
+    rule_packs = [ec.default_rule_pack([_make_rule(("text_pattern", {"2": "ERR.*"}))])]
+
+    event_server.compile_rules(rule_packs)
+
+    assert rule_packs == [ec.default_rule_pack([_make_rule(("text_pattern", {"2": "ERR.*"}))])]
 
 
 def test_rule_which_cannot_be_compiled_does_not_match(

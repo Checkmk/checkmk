@@ -607,6 +607,14 @@ def test_request_timeout_while_looking_up_time_periods_aborts_the_request(
         )
 
 
+def test_simulator_leaves_the_rule_unchanged() -> None:
+    rule = ec.Rule(id="rule", state=("text_pattern", {"2": "ERROR"}))
+
+    _simulate(rule, simulated_site=SiteId("remote"))
+
+    assert rule == ec.Rule(id="rule", state=("text_pattern", {"2": "ERROR"}))
+
+
 def test_disabled_rules_do_not_match_in_a_rule_pack() -> None:
     disabled_rule = ec.Rule(id="disabled", match="nothing", disabled=True)
 

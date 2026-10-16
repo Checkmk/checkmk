@@ -89,10 +89,12 @@ from cmk.gui.watolib.hosts_and_folders import (
     find_available_folder_name,
     Folder,
     folder_from_request,
+    folder_preserving_link,
     FolderTree,
     Host,
     host_action_menu_registry,
     host_url_resolver,
+    make_action_link,
     make_folder_tree,
     SearchFolder,
 )
@@ -118,13 +120,7 @@ from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import (
-    HTTPVariable,
-    makeactionuri,
-    makeactionuri_contextless,
-    makeuri,
-    makeuri_contextless,
-)
+from cmk.web.utils.urls import HTTPVariable, makeactionuri, makeuri, makeuri_contextless
 
 from ._bulk_actions import get_hostnames_from_checkboxes
 from ._host_attributes import configure_attributes
@@ -604,11 +600,12 @@ class ModeFolder(WatoMode):
                 title=_("Rules"),
                 icon_name=StaticIcon(IconNames.rulesets),
                 item=make_simple_link(
-                    self._folder.url(
+                    folder_preserving_link(
                         request,
                         [
                             ("mode", "rule_search"),
                             ("filled_in", "rule_search"),
+                            ("folder", self._folder.path()),
                             ("search_p_ruleset_used", DropdownChoice.option_id(True)),
                             ("search_p_ruleset_used_USE", "on"),
                         ],
@@ -656,7 +653,7 @@ class ModeFolder(WatoMode):
         yield PageMenuEntry(
             title=_("Search hosts"),
             icon_name=StaticIcon(IconNames.search),  # TODO: new icon!
-            item=make_simple_link(self._folder.url(request, [("mode", "search")])),
+            item=make_simple_link(folder_preserving_link(request, [("mode", "search")])),
         )
 
     def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
@@ -1056,15 +1053,8 @@ class ModeFolder(WatoMode):
         html.icon_button(
             make_confirm_delete_link(
                 i18n=_,
-                url=makeactionuri_contextless(
-                    request,
-                    transactions.get(),
-                    [
-                        ("folder", self._folder.path()),
-                        ("mode", "folder"),
-                        ("_delete_folder", subfolder.name()),
-                    ],
-                    filename="wato.py",
+                url=make_action_link(
+                    request, [("mode", "folder"), ("_delete_folder", subfolder.name())]
                 ),
                 title=_("Delete folder"),
                 suffix=subfolder.title(),

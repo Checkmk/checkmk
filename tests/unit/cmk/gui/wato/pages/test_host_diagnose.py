@@ -19,13 +19,11 @@ import pytest
 from bs4 import BeautifulSoup
 
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.wato.pages.host_diagnose import _vs_host, _vs_rules
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 
 
 def _auth_no_priv_vars(
@@ -162,7 +160,7 @@ def test_vs_rules_parses_rule_vars() -> None:
         }
     )
 
-    result = _vs_rules(make_folder_tree(Config()).root_folder()).from_html_vars("vs_rules")
+    result = _vs_rules().from_html_vars("vs_rules")
 
     assert result == {
         "agent_port": 6557,

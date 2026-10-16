@@ -122,8 +122,10 @@ from cmk.gui.watolib.host_label_sync import execute_host_label_sync
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
+    folder_preserving_link,
     FolderTree,
     Host,
+    make_action_link,
     make_folder_tree,
     strip_hostname_whitespace_chars,
 )
@@ -294,9 +296,6 @@ class ABCRulesetMode(WatoMode):
     @override
     def _from_vars(self) -> None:
         self._tree = make_folder_tree(self._ctx.config)
-        self._folder = folder_from_request(
-            self._tree, request.var("folder"), request.get_ascii_input("host")
-        )
 
         #  Explicitly hide deprecated rulesets by default
         if not request.has_var("search_p_ruleset_deprecated"):
@@ -537,7 +536,6 @@ class ModeRuleSearch(ABCRulesetMode):
                             title=_("Predefined searches"),
                             entries=list(
                                 _page_menu_entries_predefined_searches(
-                                    self._folder,
                                     self._group_name,
                                     self._page_type,
                                 )
@@ -634,7 +632,7 @@ def _is_var_to_delete(form_prefix: str, varname: str, value: str) -> bool:
 
 
 def _page_menu_entries_predefined_searches(
-    folder: Folder, group: str | None, page_type: PageType
+    group: str | None, page_type: PageType
 ) -> Iterable[PageMenuEntry]:
     for search_title, search_emblem, search_term, search_type in [
         ("Used rulesets", "enable", "ruleset_used", PageType.UsedRulesets),
@@ -667,7 +665,7 @@ def _page_menu_entries_predefined_searches(
                 emblem=search_emblem,
             ),
             is_shortcut=search_type != page_type,
-            item=make_simple_link(folder.url(request, uri_params)),
+            item=make_simple_link(folder_preserving_link(request, uri_params)),
         )
 
     yield PageMenuEntry(
@@ -782,10 +780,13 @@ class ModeRulesetGroup(ABCRulesetMode):
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         if user.may("wato.hosts") or user.may("wato.seeall"):
+            current_folder = folder_from_request(
+                self._tree, request.var("folder"), request.get_ascii_input("host")
+            )
             yield PageMenuEntry(
-                title=_("Hosts in folder: %(folder)s") % {"folder": self._folder.title()},
+                title=_("Hosts in folder: %(folder)s") % {"folder": current_folder.title()},
                 icon_name=StaticIcon(IconNames.folder),
-                item=make_simple_link(self._folder.url(request)),
+                item=make_simple_link(current_folder.url(request)),
             )
 
             if request.get_ascii_input("host"):
@@ -794,7 +795,9 @@ class ModeRulesetGroup(ABCRulesetMode):
                     title=_("Host properties of: %(host_name)s") % {"host_name": host_name},
                     icon_name=StaticIcon(IconNames.folder),
                     item=make_simple_link(
-                        self._folder.url(request, [("mode", "edit_host"), ("host", host_name)])
+                        folder_preserving_link(
+                            request, [("mode", "edit_host"), ("host", host_name)]
+                        )
                     ),
                 )
 
@@ -806,9 +809,7 @@ class ModeRulesetGroup(ABCRulesetMode):
             self._page_type,
         )
 
-        yield from _page_menu_entries_predefined_searches(
-            self._folder, self._group_name, self._page_type
-        )
+        yield from _page_menu_entries_predefined_searches(self._group_name, self._page_type)
 
 
 def _page_menu_entry_predefined_conditions() -> PageMenuEntry:
@@ -893,7 +894,7 @@ class RuleMatchResult(NamedTuple):
 
 
 class ModeEditRuleset(WatoMode):
-    related_page_menu_hooks: list[Callable[[Folder, str], Iterator[PageMenuEntry]]] = []
+    related_page_menu_hooks: list[Callable[[str], Iterator[PageMenuEntry]]] = []
 
     @classmethod
     @override
@@ -1122,7 +1123,9 @@ class ModeEditRuleset(WatoMode):
                 title=_("Services"),
                 icon_name=StaticIcon(IconNames.services),
                 item=make_simple_link(
-                    self._folder.url(request, [("mode", "inventory"), ("host", self._hostname)])
+                    folder_preserving_link(
+                        request, [("mode", "inventory"), ("host", self._hostname)]
+                    )
                 ),
             )
 
@@ -1131,7 +1134,7 @@ class ModeEditRuleset(WatoMode):
                     title=_("Parameters"),
                     icon_name=StaticIcon(IconNames.rulesets),
                     item=make_simple_link(
-                        self._folder.url(
+                        folder_preserving_link(
                             request,
                             [
                                 ("mode", "object_parameters"),
@@ -1143,14 +1146,14 @@ class ModeEditRuleset(WatoMode):
                 )
 
         for related_hook in ModeEditRuleset.related_page_menu_hooks:
-            yield from related_hook(self._folder, self._name)
+            yield from related_hook(self._name)
 
         if self._name == "logwatch_rules":
             yield PageMenuEntry(
                 title=_("Pattern analyzer"),
                 icon_name=StaticIcon(IconNames.logwatch),
                 item=make_simple_link(
-                    self._folder.url(
+                    folder_preserving_link(
                         request,
                         [
                             ("mode", "pattern_editor"),
@@ -1448,13 +1451,17 @@ class ModeEditRuleset(WatoMode):
         ]
 
         table.cell(_("Actions"), css=["buttons rulebuttons"])
-        edit_url = self._folder.url(request, [("mode", "edit_rule"), *folder_preserving_vars])
+        edit_url = folder_preserving_link(request, [("mode", "edit_rule"), *folder_preserving_vars])
         html.icon_button(edit_url, _("Edit this rule"), StaticIcon(IconNames.edit))
 
-        clone_url = self._folder.url(request, [("mode", "clone_rule"), *folder_preserving_vars])
+        clone_url = folder_preserving_link(
+            request, [("mode", "clone_rule"), *folder_preserving_vars]
+        )
         html.icon_button(clone_url, _("Create a copy of this rule"), StaticIcon(IconNames.clone))
 
-        export_url = self._folder.url(request, [("mode", "export_rule"), *folder_preserving_vars])
+        export_url = folder_preserving_link(
+            request, [("mode", "export_rule"), *folder_preserving_vars]
+        )
         html.icon_button(
             export_url, _("Export this rule for API"), StaticIcon(IconNames.export_rule)
         )
@@ -1658,12 +1665,7 @@ class ModeEditRuleset(WatoMode):
         if self._service:
             vars_.append(("service", mk_repr(self._service).decode()))
 
-        return makeactionuri_contextless(
-            request,
-            transactions.get(),
-            [("folder", self._folder.path()), *vars_],
-            filename="wato.py",
-        )
+        return make_action_link(request, vars_)
 
     # TODO: Refactor this whole method
     def _rule_cells(
@@ -2253,10 +2255,6 @@ class ABCEditRuleMode(WatoMode):
             )
 
         self._back_mode = request.get_ascii_input_mandatory("back_mode", "edit_ruleset")
-        # The folder the rule editor was opened from, not the folder of the rule
-        self._back_folder = folder_from_request(
-            self._tree, request.var("folder"), request.get_ascii_input("host")
-        )
 
         self._set_folder(self._tree)
 
@@ -2375,9 +2373,9 @@ class ABCEditRuleMode(WatoMode):
                 var_list.append(("item", request.get_str_input_mandatory("item")))
             if request.has_var("service"):
                 var_list.append(("service", request.get_str_input_mandatory("service")))
-            return self._back_folder.url(request, var_list)
+            return folder_preserving_link(request, var_list)
 
-        return self._back_folder.url(
+        return folder_preserving_link(
             request,
             [("mode", self._back_mode), ("host", request.get_ascii_input_mandatory("host", ""))],
         )

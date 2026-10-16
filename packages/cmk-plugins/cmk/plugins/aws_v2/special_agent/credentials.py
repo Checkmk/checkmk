@@ -14,9 +14,14 @@ account is then monitored.
 To monitor several accounts, the hub assumes a "spoke" role of the same name in each of
 them. Every spoke is exactly one AssumeRole away from the login identity: an assumed role
 cannot be combined with spokes, because that would chain roles.
+
+The spoke accounts are either listed in the rule or, for an organization, found by
+ListAccounts on every run. The hub calls ListAccounts itself, or it assumes an account list
+role in the management account for that one call. That role is also one AssumeRole away
+from the login identity, and the spokes are not assumed through it.
 """
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 import boto3
@@ -56,9 +61,18 @@ class HubCredentials:
 
 
 @dataclass(frozen=True)
+class Organization:
+    """Every active account of the organization, except the excluded ones."""
+
+    excluded_ids: Sequence[str] = ()
+    list_role_arn: str | None = None
+
+
+@dataclass(frozen=True)
 class SpokeAccounts:
-    account_ids: Sequence[str]
+    accounts: Sequence[str] | Organization
     role_name: str
+    # Sent to every role this rule assumes, the account list role included.
     external_id: str | None = None
 
 
@@ -126,6 +140,11 @@ def _create_hub_session(
         )
     except Exception as e:
         raise AwsAccessError(describe_credential_failure(e))
+
+
+def _is_active(account: Mapping[str, str]) -> bool:
+    # AWS replaces Status with State, which also knows PENDING_ACTIVATION and CLOSED.
+    return account.get("State", account.get("Status")) == "ACTIVE"
 
 
 @dataclass(frozen=True)
@@ -210,7 +229,39 @@ class AwsCredentials:
         session_account_id = self.session_account_id()
         if self._spokes is None:
             return [session_account_id]
-        return self._spokes.account_ids
+        if isinstance(accounts := self._spokes.accounts, Organization):
+            return self._organization_account_ids(accounts, self._spokes.external_id)
+        return accounts
+
+    def _organization_account_ids(
+        self, organization: Organization, external_id: str | None
+    ) -> Sequence[str]:
+        try:
+            session = self.session()
+            if organization.list_role_arn is not None:
+                session, _ = _assume_role(
+                    session,
+                    organization.list_role_arn,
+                    external_id,
+                    self._hub.session_name,
+                    self._global_service_region,
+                    self._proxy_config,
+                )
+            client = session.client("organizations", config=self._proxy_config)
+            accounts = [
+                account
+                for page in client.get_paginator("list_accounts").paginate()
+                for account in page["Accounts"]
+            ]
+        except Exception as e:
+            raise AwsAccessError(
+                f"Cannot list the accounts of the organization: {describe_credential_failure(e)}"
+            )
+        return [
+            account["Id"]
+            for account in accounts
+            if _is_active(account) and account["Id"] not in organization.excluded_ids
+        ]
 
     def open_account(self, account_id: str) -> AwsAccount:
         """One account of monitored_account_ids(), with the session to use for all its regions.

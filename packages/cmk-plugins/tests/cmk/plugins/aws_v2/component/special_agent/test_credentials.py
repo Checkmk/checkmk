@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from cmk.plugins.aws_v2.special_agent.config import AwsAccessError
@@ -12,9 +14,21 @@ from cmk.plugins.aws_v2.special_agent.credentials import (
     AwsCredentials,
     DefaultCredentials,
     HubCredentials,
+    Organization,
     SpokeAccounts,
 )
-from cmk.testlib.aws_v2.fake_sts import DENIED_ACCOUNT, FakeSts, HUB_ACCOUNT, ROLE, ROLE_ACCOUNT
+from cmk.testlib.aws_v2.fake_sts import (
+    ACTIVE_ORGANIZATION_ACCOUNTS,
+    DENIED_ACCOUNT,
+    FakeSts,
+    HUB_ACCOUNT,
+    LIST_ROLE,
+    MANAGEMENT_ACCOUNT,
+    NO_LIST_KEY_ID,
+    ROLE,
+    ROLE_ACCOUNT,
+    temporary_key_id,
+)
 
 
 def _session_account_id(hub: HubCredentials) -> str:
@@ -158,3 +172,73 @@ def test_spoke_without_external_id_omits_it(fake_sts: FakeSts) -> None:
 
     [call] = fake_sts.assume_role_calls
     assert "ExternalId" not in call.params
+
+
+def _organization(organization: Organization, key_id: str = "AKIAHUB") -> AwsCredentials:
+    return AwsCredentials(
+        HubCredentials(AccessKey(key_id, "secret")),
+        "us-east-1",
+        None,
+        SpokeAccounts(organization, "CheckmkMonitoring", "tenant-42"),
+    )
+
+
+def _organization_account_ids(organization: Organization) -> Sequence[str]:
+    return _organization(organization).monitored_account_ids()
+
+
+@pytest.mark.usefixtures("fake_sts")
+def test_organization_mode_reads_every_page_of_the_account_list() -> None:
+    # 444444444444 is on the second page.
+    assert "444444444444" in _organization_account_ids(Organization())
+
+
+@pytest.mark.usefixtures("fake_sts")
+def test_organization_mode_monitors_only_the_active_accounts() -> None:
+    assert _organization_account_ids(Organization()) == ACTIVE_ORGANIZATION_ACCOUNTS
+
+
+@pytest.mark.usefixtures("fake_sts")
+def test_excluded_accounts_are_not_monitored() -> None:
+    assert _organization_account_ids(Organization(excluded_ids=[MANAGEMENT_ACCOUNT])) == [
+        "333333333333",
+        "444444444444",
+    ]
+
+
+def test_hub_lists_the_accounts_itself_without_a_list_role(fake_sts: FakeSts) -> None:
+    _organization_account_ids(Organization())
+
+    assert (
+        {call.key_id for call in fake_sts.list_accounts_calls},
+        fake_sts.assume_role_calls,
+    ) == ({"AKIAHUB"}, [])
+
+
+def test_account_list_role_is_assumed_only_to_list_the_accounts(fake_sts: FakeSts) -> None:
+    credentials = _organization(Organization(list_role_arn=LIST_ROLE))
+    credentials.open_account(credentials.monitored_account_ids()[1])
+
+    assert (
+        {call.key_id for call in fake_sts.list_accounts_calls},
+        [(call.caller_key_id, call.params["RoleArn"]) for call in fake_sts.assume_role_calls],
+    ) == (
+        {temporary_key_id(MANAGEMENT_ACCOUNT)},
+        [
+            ("AKIAHUB", LIST_ROLE),
+            ("AKIAHUB", "arn:aws:iam::333333333333:role/CheckmkMonitoring"),
+        ],
+    )
+
+
+def test_account_list_role_is_assumed_with_the_external_id(fake_sts: FakeSts) -> None:
+    _organization_account_ids(Organization(list_role_arn=LIST_ROLE))
+
+    [call] = fake_sts.assume_role_calls
+    assert call.params["ExternalId"] == "tenant-42"
+
+
+@pytest.mark.usefixtures("fake_sts")
+def test_failed_listing_is_an_access_error() -> None:
+    with pytest.raises(AwsAccessError, match="Cannot list the accounts of the organization"):
+        _organization(Organization(), key_id=NO_LIST_KEY_ID).monitored_account_ids()

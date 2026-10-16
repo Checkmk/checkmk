@@ -13,6 +13,9 @@ key. Roles in DENIED_ACCOUNT cannot be assumed.
 DescribeRegions names NOT_ENABLED_REGION as an opt-in region the account has not enabled.
 Every other call of SCP_DENIED_ACCOUNT is denied by a service control policy.
 
+ListAccounts answers with ORGANIZATION_PAGES, one page per call, active and inactive
+accounts mixed. It denies callers that log in with NO_LIST_KEY_ID.
+
 Tests that also set AWS_ENDPOINT_URL send every other service here, too. The fake
 records who signed such a request and for which region, then answers with an error.
 
@@ -20,6 +23,7 @@ The fake logs every request it gets to stderr, and pytest shows these lines for 
 failing test. If a new boto3 breaks the tests, they show what reached the fake.
 """
 
+import json
 import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -33,6 +37,24 @@ ROLE = "arn:aws:iam::222222222222:role/CheckmkMonitoring"
 DENIED_ACCOUNT = "999999999999"
 SCP_DENIED_ACCOUNT = "555555555555"
 NOT_ENABLED_REGION = "me-central-1"
+MANAGEMENT_ACCOUNT = "888888888888"
+LIST_ROLE = f"arn:aws:iam::{MANAGEMENT_ACCOUNT}:role/CheckmkAccountList"
+NO_LIST_KEY_ID = "AKIANOLIST"
+
+ORGANIZATION_PAGES = [
+    [
+        {"Id": MANAGEMENT_ACCOUNT, "State": "ACTIVE", "Status": "ACTIVE"},
+        {"Id": "333333333333", "State": "ACTIVE", "Status": "ACTIVE"},
+        {"Id": "666666666666", "State": "SUSPENDED", "Status": "SUSPENDED"},
+    ],
+    [
+        # An answer from before AWS added State.
+        {"Id": "444444444444", "Status": "ACTIVE"},
+        # State wins over the deprecated Status.
+        {"Id": "777777777777", "State": "CLOSED", "Status": "ACTIVE"},
+    ],
+]
+ACTIVE_ORGANIZATION_ACCOUNTS = [MANAGEMENT_ACCOUNT, "333333333333", "444444444444"]
 
 _ACCESS_DENIED_RESPONSE = """\
 <ErrorResponse xmlns="https://sts.amazonaws.com/doc/2011-06-15/">
@@ -131,6 +153,7 @@ class FakeSts:
     url: str = ""
     assume_role_calls: list[AssumeRoleCall] = field(default_factory=list)
     service_requests: list[SignedRequest] = field(default_factory=list)
+    list_accounts_calls: list[SignedRequest] = field(default_factory=list)
     # Both kinds of calls, in the order they arrived.
     calls: list[AssumeRoleCall | SignedRequest] = field(default_factory=list)
 
@@ -154,6 +177,9 @@ def _handler(sts: FakeSts) -> type[BaseHTTPRequestHandler]:
                 params.get("Action", self.path),
                 _signed_request(self.headers["Authorization"]),
             )
+            if self.headers.get("X-Amz-Target", "").endswith(".ListAccounts"):
+                self._list_accounts(json.loads(body or "{}"))
+                return
             match params.get("Action"):
                 case "AssumeRole":
                     caller = _signed_request(self.headers["Authorization"]).key_id
@@ -185,9 +211,22 @@ def _handler(sts: FakeSts) -> type[BaseHTTPRequestHandler]:
 
         do_GET = do_HEAD = do_PUT = do_DELETE = do_POST
 
-        def _answer(self, status: int, response: str) -> None:
+        def _list_accounts(self, request: dict[str, str]) -> None:
+            caller = _signed_request(self.headers["Authorization"])
+            sts.list_accounts_calls.append(caller)
+            if caller.key_id == NO_LIST_KEY_ID:
+                denied = {"__type": "AccessDeniedException", "Message": "Not allowed to list"}
+                self._answer(400, json.dumps(denied), "application/x-amz-json-1.1")
+                return
+            page = int(request.get("NextToken", "0"))
+            answer: dict[str, object] = {"Accounts": ORGANIZATION_PAGES[page]}
+            if page + 1 < len(ORGANIZATION_PAGES):
+                answer["NextToken"] = str(page + 1)
+            self._answer(200, json.dumps(answer), "application/x-amz-json-1.1")
+
+        def _answer(self, status: int, response: str, content_type: str = "text/xml") -> None:
             self.send_response(status)
-            self.send_header("Content-Type", "text/xml")
+            self.send_header("Content-Type", content_type)
             self.end_headers()
             self.wfile.write(response.encode())
 

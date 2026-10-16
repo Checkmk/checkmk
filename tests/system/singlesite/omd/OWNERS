@@ -1,9 +1,15 @@
+per-file test_apache.py=file:/component_owners/site_management_omd/OWNERS_DEFINITION
+per-file test_apache.py=set noparent
 per-file test_erlang.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
 per-file test_erlang.py=set noparent
+per-file test_init_scripts.py=file:/component_owners/site_management_omd/OWNERS_DEFINITION
+per-file test_init_scripts.py=set noparent
 per-file test_linked_libraries.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
 per-file test_linked_libraries.py=set noparent
 per-file test_net_snmp.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
 per-file test_net_snmp.py=set noparent
+per-file test_omd.py=file:/component_owners/site_management_omd/OWNERS_DEFINITION
+per-file test_omd.py=set noparent
 per-file test_openssl_using_cmds.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
 per-file test_openssl_using_cmds.py=set noparent
 per-file test_perl.py=file:/component_owners/ci_platform/OWNERS_DEFINITION

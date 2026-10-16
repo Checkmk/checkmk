@@ -201,9 +201,9 @@ annotated-types==0.8.0 \
     #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-network-flow/requirements.in
     #   pydantic
-anthropic==1.14.0 \
-    --hash=sha256:abd787048378abfabeebbad917ae0f9eae1eb4dfaa0a754096b5eea02dcf8c12 \
-    --hash=sha256:d9284895864a8457ed87f0accc51fd488ad9743952e597c814e7dc9d78ac8e38
+anthropic==1.15.0 \
+    --hash=sha256:10189a7993c5c71a0a2d4bb80020ca6a2fd27679f51e627405da37251d15ff49 \
+    --hash=sha256:90caa9df83e2fc8bddb4ddeb83b7191bce255f635c03eae055deec521741df08
     # via
     #   -c requirements.txt
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
@@ -938,9 +938,9 @@ cycler==0.12.1 \
     # via
     #   -c requirements.txt
     #   matplotlib
-datamodel-code-generator==0.83.0 \
-    --hash=sha256:30d841e31b82095c4ef11f3dbfc99525f559a146250b9e685e2a2e4a196ca0a1 \
-    --hash=sha256:371d80be360b2a57bc48462169553af57fa30225c0264ad85ae5f0d59b9d143a
+datamodel-code-generator==0.84.0 \
+    --hash=sha256:b887be83ad9c810fbaca642622724eb02d0a4f0c857e0fc57829dbec53460adf \
+    --hash=sha256:bb3d44d8e4d89f2fc17c5af3f5b64eb662f46bdb10e4f126e62bd44e67d0d4bc
     # via
     #   -c requirements.txt
     #   -r packages/cmk-shared-typing/requirements.in
@@ -992,9 +992,9 @@ exchangelib==5.6.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-fastapi==0.143.1 \
-    --hash=sha256:4cafaab64df8534758bf0fce61947f5e27e6cd512798ccbbaad5425086c3b664 \
-    --hash=sha256:687beb445804e4c4dbe2a76fd83c25e9b973ac48c267defb86f791e099baecc4
+fastapi==0.143.2 \
+    --hash=sha256:da2fe9893b7392ebce76d8c8511e3fa43e5a25f5852103aa2eee7cff3ab80b75 \
+    --hash=sha256:e9e6d97018dcfd748da7d9e7c61cedefbe9eb91b1a3288e45b13fbae76df2d54
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -1221,9 +1221,9 @@ frozenlist==1.8.0 \
     #   -c requirements.txt
     #   aiohttp
     #   aiosignal
-genai-prices==0.1.12 \
-    --hash=sha256:89d98303c5b7a366a05136ba03884c5951ec9a9ceb28fef62c7fa719f2828182 \
-    --hash=sha256:d1493977cb7f61bc436516a166f644f5bbb01e1a83365e2914c99c6298f77ca4
+genai-prices==0.1.13 \
+    --hash=sha256:6d2b40760a2f7f5e207bac9b98de0af80e60c58ead497872a5331a7cee610477 \
+    --hash=sha256:76c9e2dd3917fdacdf3bc562297c4591384142ea2283c477e1512fafa4e3a384
     # via
     #   -c requirements.txt
     #   pydantic-ai-slim
@@ -3163,9 +3163,9 @@ pillow==12.3.0 \
     #   -r cmk/requirements.in
     #   matplotlib
     #   reportlab
-platformdirs==4.13.0 \
-    --hash=sha256:1aa0b0d3f224c1f07c295121e312a5a24a180d6ae5a8425ea1784b3e3863e9c0 \
-    --hash=sha256:3dbcf4cd708f21cf876c4eaa90e58412bc4f033d87143f41b1493ff77c25b7e1
+platformdirs==4.13.3 \
+    --hash=sha256:5e567f664eb087ab8521c0179cd8d1bd60857d271136567a39719e28e2d383ce \
+    --hash=sha256:f6ad7f447f24f8a3b82cce5976387428bff894a0eca6c3488f4a17f153c130c4
     # via
     #   -c requirements.txt
     #   black
@@ -3523,9 +3523,9 @@ pydantic==2.14.1 \
     #   pydantic-ai-slim
     #   pydantic-graph
     #   pydantic-settings
-pydantic-ai-slim[anthropic, google, openai]==2.56.0 \
-    --hash=sha256:58e8a3381749d448a7409f6cbf7acd13fa0549fa6668aa06a13e89695fe5f6a6 \
-    --hash=sha256:e257196b6b6d6919e8c2d9fd02365e8ded873e99ff0d283d41c3739b0f47de99
+pydantic-ai-slim[anthropic, google, openai]==2.57.0 \
+    --hash=sha256:2c5c150bcd097e6a1e267ea13e7f279a0b504d46b346a4e00b61e1996ad05372 \
+    --hash=sha256:a07d732e09df8d51f22bd3be2ad45ab644721a904809a2481146bf5d7bb47c67
     # via
     #   -c requirements.txt
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
@@ -3674,9 +3674,9 @@ pydantic-core==2.50.1 \
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   pydantic
-pydantic-graph==2.56.0 \
-    --hash=sha256:69f38003ecd20c8048d0327ee2cf5d27185eb887bb0d752e1cbed718d9836db7 \
-    --hash=sha256:d740518239671dcc1a160a73116ca16795889b54ae5e7d6c3e98e899881fb2bf
+pydantic-graph==2.57.0 \
+    --hash=sha256:4c65193a1d8b58e3c6f29a15cbe7b96e1e255a1670a5bcb9a323b8600fc1686a \
+    --hash=sha256:f848857baab4030c44b30de0c3ba650749d60f2295a0723645fb325f92191cf1
     # via
     #   -c requirements.txt
     #   pydantic-ai-slim

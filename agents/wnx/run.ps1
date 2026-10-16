@@ -252,8 +252,12 @@ function Build-MSI {
     }
     Write-Host "Building MSI..." -ForegroundColor White
     Remove-Item "$build_dir/install/Release/check_mk_service.msi" -Force -ErrorAction SilentlyContinue
+    # The .wixobj files bake $env:SignedPluginsFolder in at compile time, and MSBuild
+    # would reuse those of Start-MsiControlBuild (or of a previous run), which embed
+    # the scripts before signing. CMK-39886
+    Remove-Item "install\obj\Release" -Recurse -Force -ErrorAction SilentlyContinue
 
-    & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x64" "/p:EncryptedPluginsFolder=..\..\windows\plugins"
+    & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x64"
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Error building MSI, error code is $LASTEXITCODE" -ErrorAction Stop
     }
@@ -421,6 +425,32 @@ function Invoke-TestSigning($usbip) {
 
 }
 
+# Every .ps1 of the MSI comes from $env:SignedPluginsFolder (see Product.wxs). Stage them
+# unsigned and flat there; Start-BazelSigning signs them in place or points the folder at
+# signed copies.
+function Initialize-MsiScripts {
+    if (-not ($argMsi -or $argSign -or $argSignAzure)) {
+        return
+    }
+
+    Write-Host "Staging MSI scripts..." -ForegroundColor White
+    $unsigned_tar = "$repo_root/bazel-bin/agents/windows/plugins/unsigned_plugins.tar"
+    &bazel build //agents/windows/plugins:unsigned_plugins
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to build unsigned_plugins, error code is $LASTEXITCODE" -ErrorAction Stop
+    }
+    $plugins_dir = "$build_dir\plugins_signed"
+    Remove-Item $plugins_dir -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Path $plugins_dir -Force | Out-Null
+    # Use .NET's tar support (System.Formats.Tar, part of the .NET runtime PowerShell 7
+    # runs on) rather than a `tar` executable: tar is not always on PATH on the build
+    # nodes, and Git's GNU tar mis-parses the drive-letter colon in Windows paths as a
+    # remote host. The tar is flat, matching the layout the signed_plugins pkg_tar produces.
+    [System.Formats.Tar.TarFile]::ExtractToDirectory($unsigned_tar, $plugins_dir, $true)
+    $env:SignedPluginsFolder = $plugins_dir
+    Write-Host "MSI scripts staged in $plugins_dir" -ForegroundColor Green
+}
+
 function Start-MsiControlBuild {
     if (-not ($argSign -or $argSignAzure)) {
         Write-Host "Skipping MSI Control Build..." -ForegroundColor Yellow
@@ -488,27 +518,14 @@ function Start-BazelSigning {
         return
     }
 
-    $env:BAZELISK_BASE_URL = "https://github.com/aspect-build/aspect-cli/releases/download"
-    $env:USE_BAZEL_VERSION = "aspect/2025.11.0"
-
     if ($argSignAzure) {
         # Azure signing runs in this process, where the full environment and credentials are
-        # available. Bazel is only used to gather the plugin files (including the cross-package
-        # bakery-migrated ones) into an unsigned tar; signing must NOT run inside a Bazel action
-        # because strict action env scrubs the credentials and runtime the ArtifactSigning
-        # module needs. See Invoke-SignFile, which already signs the binaries this way.
+        # available. It signs the scripts Initialize-MsiScripts staged; signing must NOT run
+        # inside a Bazel action because strict action env scrubs the credentials and runtime
+        # the ArtifactSigning module needs. See Invoke-SignFile, which already signs the
+        # binaries this way.
         Write-Host "Azure plugin signing (in-process)..." -ForegroundColor White
-        $unsigned_tar = "$repo_root/bazel-bin/agents/windows/plugins/unsigned_plugins.tar"
-        &bazel build //agents/windows/plugins:unsigned_plugins
-        $sign_dir = "$build_dir\plugins_signed"
-        Remove-Item $sign_dir -Recurse -Force -ErrorAction SilentlyContinue
-        New-Item -ItemType Directory -Path $sign_dir -Force | Out-Null
-        # Use .NET's tar support (System.Formats.Tar, part of the .NET runtime PowerShell 7
-        # runs on) rather than a `tar` executable: tar is not always on PATH on the build
-        # nodes, and Git's GNU tar mis-parses the drive-letter colon in Windows paths as a
-        # remote host. Extracting to / creating from a directory flattens to basenames,
-        # matching the layout the signed_plugins pkg_tar produced.
-        [System.Formats.Tar.TarFile]::ExtractToDirectory($unsigned_tar, $sign_dir, $true)
+        $sign_dir = $env:SignedPluginsFolder
         Get-ChildItem -Path $sign_dir -Filter *.ps1 -Recurse | ForEach-Object {
             Write-Host "Signing plugin $($_.Name)" -ForegroundColor White
             Invoke-SignFile $_.FullName
@@ -520,44 +537,29 @@ function Start-BazelSigning {
         New-Item -Path (Split-Path $signed_plugins_tar) -ItemType Directory -Force | Out-Null
         Remove-Item $signed_plugins_tar -Force -ErrorAction SilentlyContinue
         [System.Formats.Tar.TarFile]::CreateFromDirectory($sign_dir, $signed_plugins_tar, $false)
-        $env:SignedPluginsFolder = $sign_dir
         Write-Host "Signed plugins packed into $signed_plugins_tar" -ForegroundColor Green
     }
     else {
         # YubiKey signing runs inside Bazel genrules (scsigntool.exe via signer.bat).
         Write-Host "Bazel signing..." -ForegroundColor White
-        try {
-            &bazel build //agents/windows/plugins:all --action_env=SECTIGO_2023_PIN
-            if ($LASTEXITCODE -eq 0) {
-                $env:SignedPluginsFolder = Join-Path (Get-Item -Force ..\..\bazel-bin).Target "\agents\windows\plugins\signed"
-                Write-Host "Signed files are located in $env:SignedPluginsFolder"
-            }
-            else {
-                Write-Host "Error during signing $LASTEXITCODE"
-            }
-            Write-Host "Success Bazel signing" -foreground Green
+        # Fail hard: $env:SignedPluginsFolder still points at the unsigned scripts
+        # Initialize-MsiScripts staged, which the MSI would then embed.
+        &bazel build //agents/windows/plugins:all --action_env=SECTIGO_2023_PIN
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Bazel signing failed, error code is $LASTEXITCODE" -ErrorAction Stop
         }
-        catch {
-            Write-Host "Exception during Bazel signing: $_" -ForegroundColor Red
-        }
+        $env:SignedPluginsFolder = Join-Path (Get-Item -Force ..\..\bazel-bin).Target "\agents\windows\plugins\signed"
+        Write-Host "Signed files are located in $env:SignedPluginsFolder"
+        Write-Host "Success Bazel signing" -foreground Green
         # Must pass the same --action_env as the :all build above; otherwise Bazel
         # sees a changed action env, discards the analysis cache, and re-runs the
         # sign genrules without %SECTIGO_2023_PIN% in the environment.
         &bazel build //agents/windows/plugins:signed_plugins --action_env=SECTIGO_2023_PIN
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to build signed_plugins, error code is $LASTEXITCODE" -ErrorAction Stop
+        }
     }
-
-    # Invalidate the MSI object cache when the signed-files folder changed since the
-    # previous build (stamp comparison).
     Write-Host "$env:SignedPluginsFolder is used to store the signed files"
-    $stamp_file = "install\obj\Release\.epf_stamp"
-    $current_val = $env:SignedPluginsFolder ?? ""
-    $previous_val = if (Test-Path $stamp_file) { Get-Content $stamp_file } else { "" }
-
-    if ($current_val -ne $previous_val) {
-        Remove-Item "install\obj\Release" -Recurse -Force -ErrorAction SilentlyContinue
-        New-Item -Path (Split-Path $stamp_file) -ItemType Directory -Force | Out-Null
-        Set-Content $stamp_file $current_val
-    }
 }
 
 
@@ -736,7 +738,8 @@ $argAttached = $false
 $result = 1
 try {
     # SETTING UP
-    $env:SignedPluginsFolder = "..\..\windows\plugins"
+    $env:BAZELISK_BASE_URL = "https://github.com/aspect-build/aspect-cli/releases/download"
+    $env:USE_BAZEL_VERSION = "aspect/2025.11.0"
     $mainStartTime = Get-Date
     Invoke-Detach $argDetach
     Update-ArtefactDirs
@@ -782,6 +785,7 @@ try {
 
     # SIGNING
     Invoke-TestSigning $usbip_exe
+    Initialize-MsiScripts
     Start-MsiControlBuild
     Invoke-Attach $usbip_exe "yubi-usbserver.lan.checkmk.net" "1-1.2"
     if ($argSign -eq $true) {

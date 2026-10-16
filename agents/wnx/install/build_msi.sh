@@ -13,10 +13,12 @@ shift
 package_msi_init "$@"
 
 link_msi() {
-    export EncryptedPluginsFolder="Z:${STAGE//\//\\}\\agents\\windows\\plugins" # See Product.wxs.
+    # See Product.wxs. Unsigned: the scripts are not signed on Linux yet.
+    export SignedPluginsFolder='plugins'
 
     cd "$STAGE/agents/wnx/install"
-    mkdir -p obj bin
+    mkdir -p obj bin plugins
+    tar xf plugins.tar -C plugins
     wix "$CANDLE" -ext WixUtilExtension -out 'obj\InstallMainDialog.wixobj' InstallMainDialog.wxs
     wix "$CANDLE" -ext WixUtilExtension -out 'obj\InstallFolderDialog.wixobj' InstallFolderDialog.wxs
     # -sw1091: Package/@Id is pinned on purpose, patch_msi() replaces the package code after linking.

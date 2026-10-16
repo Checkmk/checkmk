@@ -30,6 +30,8 @@ filegroup(
     srcs = glob(
         [".signed/*.ps1"],
         allow_empty = True,
+        # Signed along with the plugins for the MSI (see TO_SIGN_SCRIPTS), but not a plugin.
+        exclude = [".signed/configure_and_exec.ps1"],
     ),
     visibility = ["//visibility:public"],
 )
@@ -41,6 +43,11 @@ filegroup(
     visibility = ["//agents/wnx:__pkg__"],
 )
 
+# Every PowerShell script embedded in the MSI (agents/wnx/install/Product.wxs takes
+# them all from the signed folder), plus the ones the bakery ships.
+# May contain local file target labels, or cross package labels
+# from migrated bakery plugins under cmk/plugins/<family>/
+# In the latter case, the file target must be exposed to this package.
 TO_SIGN_SCRIPTS = [
     "arcserve_backup.ps1",
     "citrix_farm.ps1",
@@ -67,20 +74,26 @@ TO_SIGN_SCRIPTS = [
     "windows_tasks.ps1",
     "windows_updates.ps1",
     "hyperv_host.ps1",
+    # Not a plugin: the agent runs every PowerShell plugin through it.
+    "//agents/wnx:install/resources/configure_and_exec.ps1",
 ]
+
+# Signed copies are flat, keyed by basename: cross-package labels may carry a
+# path below their package (e.g. agents/veeam_backup_status.ps1).
+SIGNED_NAMES = {n: n.split(":")[-1].split("/")[-1] for n in TO_SIGN_SCRIPTS}
 
 [
     genrule(
-        name = "sign_" + n,
+        name = "sign_" + name,
         srcs = [n],
-        outs = ["signed/" + n],
+        outs = ["signed/" + name],
         cmd_bat = "$(execpath scripts/signer.bat) $< $@",
         executable = True,
         target_compatible_with = ["@platforms//os:windows"],
         tools = ["scripts/signer.bat"],
         visibility = ["//visibility:public"],
     )
-    for n in TO_SIGN_SCRIPTS
+    for n, name in SIGNED_NAMES.items()
 ]
 
 # Signatures of non-ASCII scripts break on Windows, see the script header.
@@ -96,7 +109,7 @@ sh_test(
 
 pkg_tar(
     name = "signed_plugins",
-    srcs = [":sign_" + n.split(":")[-1] for n in TO_SIGN_SCRIPTS],
+    srcs = [":sign_" + name for name in SIGNED_NAMES.values()],
     strip_prefix = "signed",
     tags = ["manual"],
     target_compatible_with = ["@platforms//os:windows"],
@@ -107,6 +120,8 @@ pkg_tar(
 # signing path, which signs in the run.ps1 process (full environment + credentials)
 # instead of inside Bazel actions. Bazel only gathers the files here - including the
 # cross-package bakery-migrated plugins - and run.ps1 signs them and repacks the tar.
+# Unsigned MSI builds (run.ps1 without signing, //agents/wnx:check_mk_agent_msi) take
+# their scripts from it too.
 pkg_files(
     name = "unsigned_plugin_files",
     srcs = TO_SIGN_SCRIPTS,
@@ -117,7 +132,6 @@ pkg_tar(
     name = "unsigned_plugins",
     srcs = [":unsigned_plugin_files"],
     tags = ["manual"],
-    target_compatible_with = ["@platforms//os:windows"],
     visibility = ["//visibility:public"],
 )
 

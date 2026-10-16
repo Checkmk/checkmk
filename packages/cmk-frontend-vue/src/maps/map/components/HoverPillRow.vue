@@ -58,7 +58,7 @@ defineProps<{
 }
 
 .maps-hover-pill-row__label {
-  font-size: 11px;
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
   text-transform: uppercase;
   letter-spacing: 0.04em;

@@ -98,7 +98,7 @@ const configuredStyle = computed(() => {
   position: relative;
   font-size: var(--font-size-large);
   line-height: 20px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   white-space: pre-wrap;
   pointer-events: none;
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);

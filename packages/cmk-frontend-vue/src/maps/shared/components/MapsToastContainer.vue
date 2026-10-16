@@ -61,9 +61,9 @@ const { toasts } = useToast()
   gap: var(--spacing);
   max-width: 384px;
   padding: 12px 16px;
-  font-size: var(--font-size-large);
-  line-height: 20px;
-  font-weight: 500;
+  font-size: var(--font-size-normal);
+  line-height: 16px;
+  font-weight: var(--font-weight-medium);
   background: var(--ux-theme-3);
   border-radius: var(--border-radius);
   pointer-events: auto;

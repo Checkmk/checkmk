@@ -345,7 +345,6 @@ const size = computed(() => {
         :y="nodeRadius + fontSize + 2"
         text-anchor="middle"
         fill="var(--maps-map-view-label-ink)"
-        font-family="system-ui,-apple-system,sans-serif"
         :style="{
           fontSize: `${fontSize}px`,
           paintOrder: 'stroke',

@@ -506,7 +506,7 @@ const slidePresets = SLIDE_PRESETS
   min-width: 0;
   padding: 4px 6px;
   font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-large);
+  font-size: var(--font-size-normal);
   color: var(--font-color);
   background: transparent;
   border: 1px solid transparent;

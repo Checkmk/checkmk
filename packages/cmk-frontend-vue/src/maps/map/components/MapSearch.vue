@@ -247,7 +247,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
 
 .maps-map-search__help {
   font-weight: var(--font-weight-bold);
-  font-size: 11px;
+  font-size: var(--font-size-normal);
 }
 
 .maps-map-search__help--active {
@@ -270,7 +270,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
 
 .maps-map-search__dropdown-title {
   padding: 6px 10px;
-  font-size: 11px;
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
   color: var(--font-color-dimmed);
   border-bottom: 1px solid var(--default-border-color);
@@ -307,7 +307,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
   font-family: var(--font-monospace, ui-monospace, monospace);
-  font-size: 11px;
+  font-size: var(--font-size-small);
   color: var(--font-color);
   background: var(--background-muted);
 }
@@ -323,7 +323,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   padding: 8px 10px;
   border-top: 1px solid var(--default-border-color);
   background: var(--background-muted);
-  font-size: 11px;
+  font-size: var(--font-size-normal);
   line-height: 1.4;
   color: var(--font-color-dimmed);
 }

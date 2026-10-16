@@ -38,8 +38,8 @@ const model = defineModel<string>({ required: true })
   width: 100%;
   padding: var(--dimension-3) var(--dimension-4);
   font-family: inherit;
-  font-size: var(--font-size-large);
-  line-height: 20px;
+  font-size: var(--font-size-normal);
+  line-height: 16px;
   color: var(--font-color);
   background: var(--default-form-element-bg-color);
   border: 1px solid var(--default-form-element-border-color);

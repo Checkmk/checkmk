@@ -568,8 +568,8 @@ function fmtMetricValue(m: PerfMetric): string {
 }
 
 .maps-hover-menu__empty {
-  font-size: var(--font-size-large);
-  line-height: 20px;
+  font-size: var(--font-size-normal);
+  line-height: 16px;
   font-style: italic;
   color: var(--font-color-dimmed);
 }
@@ -590,14 +590,14 @@ function fmtMetricValue(m: PerfMetric): string {
   contain: paint;
   max-height: 40vh;
   overflow: auto;
-  font-size: var(--font-size-large);
-  line-height: 20px;
+  font-size: var(--font-size-normal);
+  line-height: 16px;
   color: var(--font-color);
 }
 
 .maps-hover-menu__state {
   flex-shrink: 0;
-  font-size: var(--font-size-large);
+  font-size: var(--font-size-normal);
   line-height: 1.25;
   font-weight: var(--font-weight-bold);
 }
@@ -705,7 +705,7 @@ function fmtMetricValue(m: PerfMetric): string {
 .maps-hover-menu__perfometer-label {
   margin-bottom: var(--dimension-3);
   font-size: var(--font-size-small);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--font-color);
 }
 
@@ -747,7 +747,7 @@ function fmtMetricValue(m: PerfMetric): string {
 
 .maps-hover-menu__metric-value {
   flex-shrink: 0;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--font-color);
 }
 

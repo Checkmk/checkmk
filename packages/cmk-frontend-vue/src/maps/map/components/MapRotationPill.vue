@@ -58,7 +58,7 @@ defineEmits<{ toggle: [] }>()
   padding: var(--dimension-2) 7px;
   font-size: var(--font-size-normal);
   line-height: 16px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-state-ok);
   background: color-mix(in srgb, var(--color-state-ok) 8%, transparent);
   border: 0;

@@ -125,8 +125,8 @@ watch(
   display: flex;
   flex-direction: column;
   min-height: 0;
-  font-size: var(--font-size-large);
-  line-height: 20px;
+  font-size: var(--font-size-normal);
+  line-height: 16px;
 }
 
 .maps-edit-panel__header {

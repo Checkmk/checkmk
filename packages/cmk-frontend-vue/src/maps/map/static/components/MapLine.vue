@@ -613,7 +613,7 @@ const wmLabelSingle = computed(() => {
         text-anchor="middle"
         dominant-baseline="middle"
         font-weight="700"
-        :style="{ fill: 'var(--default-tooltip-text-color)', fontSize: '11px' }"
+        style="fill: var(--default-tooltip-text-color); font-size: var(--font-size-small)"
         >{{ wmLabelIn }}</text
       >
     </g>
@@ -634,7 +634,7 @@ const wmLabelSingle = computed(() => {
         text-anchor="middle"
         dominant-baseline="middle"
         font-weight="700"
-        :style="{ fill: 'var(--default-tooltip-text-color)', fontSize: '11px' }"
+        style="fill: var(--default-tooltip-text-color); font-size: var(--font-size-small)"
         >{{ wmLabelOut }}</text
       >
     </g>
@@ -646,7 +646,7 @@ const wmLabelSingle = computed(() => {
       text-anchor="middle"
       font-weight="700"
       :style="{
-        fontSize: '13px',
+        fontSize: 'var(--font-size-normal)',
         fill: effectiveLineColor,
         paintOrder: 'stroke',
         stroke: 'var(--ux-theme-1)',

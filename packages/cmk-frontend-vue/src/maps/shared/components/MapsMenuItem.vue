@@ -50,8 +50,8 @@ defineProps<{
   width: 100%;
   margin: 0;
   padding: var(--dimension-4) 14px;
-  font-size: var(--font-size-large);
-  line-height: 20px;
+  font-size: var(--font-size-normal);
+  line-height: 16px;
   font-weight: inherit;
   letter-spacing: inherit;
 

@@ -162,7 +162,7 @@ const statePillStyle = computed(() => {
 
 .maps-detail-header__type-pill {
   color: var(--font-color-dimmed);
-  font-size: 9px;
+  font-size: var(--font-size-small);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   background: var(--input-hover-bg-color);
@@ -181,7 +181,7 @@ const statePillStyle = computed(() => {
 }
 
 .maps-detail-header__state-pill {
-  font-size: 11px;
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
   letter-spacing: 0.04em;
   padding: 2px 10px;

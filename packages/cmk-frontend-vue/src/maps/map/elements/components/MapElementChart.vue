@@ -145,7 +145,7 @@ const readingColor = computed(() => {
 
 .maps-map-element-chart__title {
   overflow: hidden;
-  font-size: 9px;
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
   letter-spacing: 0.025em;
   color: var(--font-color-dimmed);
@@ -163,7 +163,7 @@ const readingColor = computed(() => {
 .maps-map-element-chart__live {
   flex-shrink: 0;
   margin-left: var(--dimension-3);
-  font-size: 9px;
+  font-size: var(--font-size-small);
   letter-spacing: 0.025em;
   color: var(--font-color-dimmed);
   text-transform: uppercase;

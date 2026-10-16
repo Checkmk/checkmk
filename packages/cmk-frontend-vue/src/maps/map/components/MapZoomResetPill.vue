@@ -45,8 +45,8 @@ defineEmits<{ reset: [] }>()
   background: var(--default-tooltip-background-color);
   border: 1px solid var(--default-border-color);
   color: var(--font-color);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
 }
 

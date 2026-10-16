@@ -107,7 +107,7 @@ const comments = computed(() => commentRows(props.details, props.nowMs, _t))
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
   padding: 6px 8px;
-  font-size: 11px;
+  font-size: var(--font-size-normal);
 }
 
 .maps-detail-activity-tab__row--downtime {

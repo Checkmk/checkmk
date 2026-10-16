@@ -128,7 +128,7 @@ function pick(layout: ServiceLayout): void {
   gap: var(--spacing-half);
   padding: var(--spacing-half) var(--spacing);
   font-size: var(--font-size-normal);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   line-height: 16px;
   border-radius: var(--border-radius);
   transition: all 0.2s;

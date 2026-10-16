@@ -154,7 +154,7 @@ const { _t } = usei18n()
   grid-template-columns: minmax(80px, max-content) 1fr;
   gap: 3px 12px;
   margin: 0;
-  font-size: 11px;
+  font-size: var(--font-size-normal);
 }
 
 .maps-detail-performance-tab__output-rows dt {
@@ -203,13 +203,13 @@ const { _t } = usei18n()
   grid-template-columns: 80px 1fr 90px;
   gap: var(--dimension-4);
   align-items: center;
-  font-size: 11px;
+  font-size: var(--font-size-normal);
 }
 
 .maps-detail-performance-tab__row-label {
   color: var(--font-color-dimmed);
   text-transform: uppercase;
-  font-size: 9px;
+  font-size: var(--font-size-small);
   letter-spacing: 0.04em;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -60,7 +60,7 @@ const props = defineProps<{ problems: ProblemCounts }>()
   gap: var(--dimension-3);
   padding: var(--dimension-2) 7px;
   font-size: var(--font-size-normal);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   line-height: 16px;
   border-radius: 9999px;
   transition: all 0.15s;

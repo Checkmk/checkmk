@@ -508,7 +508,7 @@ const accentStyle = computed(() => ({
 .maps-detail-drawer__tab-count {
   background: color-mix(in srgb, var(--color-state-warning) 20%, transparent);
   color: var(--font-color);
-  font-size: 9px;
+  font-size: var(--font-size-small);
   line-height: 14px;
   min-width: 16px;
   padding: 0 4px;

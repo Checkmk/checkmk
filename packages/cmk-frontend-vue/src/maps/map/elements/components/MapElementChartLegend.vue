@@ -80,7 +80,7 @@ const hiddenLabels = computed(() => hidden.value.map((entry) => entry.label).joi
 
 .maps-map-element-chart-legend__label {
   overflow: hidden;
-  font-size: 9px;
+  font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -88,7 +88,7 @@ const hiddenLabels = computed(() => hidden.value.map((entry) => entry.label).joi
 
 .maps-map-element-chart-legend__value {
   flex-shrink: 0;
-  font-size: 9px;
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -96,7 +96,7 @@ const hiddenLabels = computed(() => hidden.value.map((entry) => entry.label).joi
 
 .maps-map-element-chart-legend__more {
   align-self: center;
-  font-size: 9px;
+  font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
   cursor: default;
 }

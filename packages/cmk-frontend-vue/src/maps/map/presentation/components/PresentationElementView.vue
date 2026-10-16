@@ -475,7 +475,7 @@ function onTextBlur(): void {
   justify-content: center;
   border: 1px dashed var(--pres-muted);
   color: var(--pres-muted);
-  font-size: 13px;
+  font-size: var(--font-size-normal);
 }
 
 .maps-presentation-element-view__group {

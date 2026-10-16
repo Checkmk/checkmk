@@ -120,8 +120,8 @@ async function remove(dt: DowntimeEntry) {
 }
 
 .maps-remove-downtime-modal__author {
-  font-size: var(--font-size-large);
-  font-weight: 500;
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-medium);
   color: var(--font-color);
   overflow: hidden;
   text-overflow: ellipsis;

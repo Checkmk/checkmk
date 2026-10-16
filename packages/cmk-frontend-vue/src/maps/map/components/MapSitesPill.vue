@@ -43,7 +43,7 @@ const message = computed(() => deadSitesMessage(_t, props.deadSites, props.deadS
   gap: var(--dimension-3);
   padding: var(--dimension-2) 7px;
   font-size: var(--font-size-normal);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   line-height: 16px;
   color: var(--color-yellow-50);
   background: color-mix(in srgb, var(--color-warning) 10%, transparent);

@@ -122,7 +122,7 @@ const selectable = computed(() => new Set(props.selectableHosts))
   grid-template-columns: 1fr;
   gap: 6px;
   margin: 0;
-  font-size: 11px;
+  font-size: var(--font-size-normal);
 }
 
 .maps-detail-context-tab__topology dt {

@@ -616,7 +616,7 @@ defineExpose({
    rule outweighs Leaflet's own white-on-white one. */
 .maps-world-map-canvas :deep(.maps-world-map-canvas__attribution) {
   padding: 1px var(--dimension-3);
-  font-size: 11px;
+  font-size: var(--font-size-small);
   line-height: 1.4;
   color: var(--font-color);
   background: var(--maps-map-view-overlay-bg);

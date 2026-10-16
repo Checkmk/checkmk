@@ -219,10 +219,6 @@ const valArc = computed(() => {
       />
       <span
         class="maps-gadget-renderer__pct"
-        style="
-          color: var(--maps-map-view-gadget-ink);
-          text-shadow: var(--maps-map-view-text-outline);
-        "
         :style="{ fontSize: `${Math.max(8, Math.round(size * 0.13 * readoutScale))}px` }"
         >{{ readout }}</span
       >
@@ -345,30 +341,38 @@ const valArc = computed(() => {
   align-items: center;
   justify-content: center;
   font-weight: var(--font-weight-bold);
+  color: var(--maps-map-view-gadget-ink);
+  text-shadow: var(--maps-map-view-text-halo);
 }
 
 .maps-gadget-renderer__raw {
   font-weight: var(--font-weight-bold);
   line-height: 1.1;
   white-space: nowrap;
-  text-shadow: var(--maps-map-view-text-outline);
+  text-shadow: var(--maps-map-view-text-halo);
 }
 
+/* On the label plate, so the light ink reads on a light map too. */
 .maps-gadget-renderer__value {
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: 9px;
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 0 var(--dimension-2);
+  font-size: var(--font-size-small);
   line-height: 1.2;
+  background: var(--maps-map-view-label-bg);
+  border-radius: var(--border-radius-half);
 }
 
 /* A gadget is narrower than its caption ("RAM usage 48.91 %"); on lines of
    their own the title can be shortened and the value still shows. Colour and
-   outline sit on each line because the theme resets text-shadow everywhere. */
+   halo sit on each line because the theme resets text-shadow everywhere. */
 .maps-gadget-renderer__caption-line {
   overflow: hidden;
   color: var(--maps-map-view-gadget-ink-dim);
-  text-shadow: var(--maps-map-view-text-outline);
+  text-shadow: var(--maps-map-view-text-halo);
   max-width: 100%;
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -349,8 +349,8 @@ defineExpose({
 }
 
 .maps-world-map-view__picker-text {
-  font-size: var(--font-size-large);
-  line-height: 20px;
+  font-size: var(--font-size-normal);
+  line-height: 16px;
   color: var(--font-color);
 }
 </style>

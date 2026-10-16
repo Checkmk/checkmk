@@ -121,7 +121,7 @@ const framed = computed(() => !nav.state.kiosk && !nav.state.preview)
   display: flex;
   height: 100vh;
   overflow: hidden;
-  font-size: var(--font-size-large);
+  font-size: var(--font-size-normal);
   color: var(--font-color);
   background: var(--ux-theme-1);
 }

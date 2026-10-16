@@ -229,7 +229,7 @@ function onContextMenu(event: MouseEvent): void {
   /* Must match the list's row height, which drives the windowing. */
   height: var(--maps-folder-tree-row-height, 28px);
   padding-left: 6px;
-  font-size: 13px;
+  font-size: var(--font-size-normal);
   color: var(--font-color);
   border-radius: var(--border-radius);
   cursor: pointer;
@@ -247,7 +247,7 @@ function onContextMenu(event: MouseEvent): void {
 }
 
 .maps-folder-tree-row--folder {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .maps-folder-tree-row:hover {
@@ -263,7 +263,7 @@ function onContextMenu(event: MouseEvent): void {
   width: 16px;
   flex-shrink: 0;
   padding: 0;
-  font-size: 11px;
+  font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
   background: transparent;
   border: none;
@@ -297,12 +297,12 @@ function onContextMenu(event: MouseEvent): void {
    hover card -- but still ellipsizes when very long. */
 .maps-folder-tree-row__title--service {
   flex-shrink: 1;
-  font-weight: 400;
+  font-weight: var(--font-weight-default);
 }
 
 .maps-folder-tree-row__title--empty {
   font-style: italic;
-  font-weight: 400;
+  font-weight: var(--font-weight-default);
   color: var(--font-color-dimmed);
 }
 
@@ -313,7 +313,7 @@ function onContextMenu(event: MouseEvent): void {
 }
 
 .maps-folder-tree-row__meta {
-  font-size: 11px;
+  font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
 }
 

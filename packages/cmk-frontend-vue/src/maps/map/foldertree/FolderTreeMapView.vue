@@ -420,7 +420,7 @@ function closeBulkModal(): void {
   justify-content: center;
   gap: var(--dimension-5);
   padding: var(--dimension-8);
-  font-size: 13px;
+  font-size: var(--font-size-normal);
   color: var(--font-color-dimmed);
   text-align: center;
 }

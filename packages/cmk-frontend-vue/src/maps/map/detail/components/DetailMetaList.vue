@@ -50,7 +50,7 @@ defineProps<{
   grid-template-columns: 90px 1fr;
   gap: 6px 12px;
   margin: 0;
-  font-size: 11px;
+  font-size: var(--font-size-normal);
 }
 
 .maps-detail-meta-list dt {

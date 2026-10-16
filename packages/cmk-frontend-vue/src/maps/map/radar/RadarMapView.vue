@@ -214,7 +214,7 @@ const counts = computed(() => radarStateCounts(matching.value))
 .maps-radar-map-view__empty-title {
   font-size: var(--font-size-large);
   line-height: 20px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .maps-radar-map-view__empty-hint {
@@ -253,7 +253,7 @@ const counts = computed(() => radarStateCounts(matching.value))
      OK are unreadable as ink in the light theme, so the tally mixes far towards
      the theme's font colour and leaves the hue to the dot beside it. */
   color: color-mix(in srgb, var(--maps-radar-tally-color) 40%, var(--font-color));
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .maps-radar-map-view__dot {

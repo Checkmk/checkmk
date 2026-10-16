@@ -160,6 +160,6 @@ function onSubmit(): void {
   margin-bottom: var(--dimension-3);
   color: var(--font-color-dimmed);
   font-size: var(--font-size-normal);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 </style>

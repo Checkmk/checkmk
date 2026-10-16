@@ -115,7 +115,7 @@ function onSubmit(): void {
 
 .maps-comment-modal__label {
   font-size: var(--font-size-normal);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--font-color-dimmed);
 }
 </style>

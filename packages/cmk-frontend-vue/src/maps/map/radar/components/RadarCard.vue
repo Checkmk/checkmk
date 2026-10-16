@@ -157,7 +157,7 @@ function onKeydown(event: KeyboardEvent): void {
   /* Dimming the state's own ink far enough to read as secondary would leave it
      illegible on the tinted card. */
   color: var(--font-color-dimmed);
-  font-size: 11px;
+  font-size: var(--font-size-normal);
   line-height: 1.375;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;

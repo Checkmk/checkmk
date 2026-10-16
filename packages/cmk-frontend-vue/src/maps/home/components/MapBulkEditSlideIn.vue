@@ -155,12 +155,12 @@ defineExpose({
 
 .maps-map-bulk-edit-slide-in__intro {
   color: var(--font-color);
-  font-size: var(--font-size-large);
+  font-size: var(--font-size-normal);
 }
 
 .maps-map-bulk-edit-slide-in__preview {
   color: var(--font-color-dimmed);
-  font-size: 0.9em;
+  font-size: var(--font-size-normal);
   font-style: italic;
 }
 

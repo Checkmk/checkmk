@@ -188,19 +188,19 @@ const summaryChips = computed<DetailChip[]>(() =>
 
 .maps-detail-aggregation-section__intro {
   color: var(--font-color-dimmed);
-  font-size: 11px;
+  font-size: var(--font-size-normal);
 }
 
 .maps-detail-aggregation-section__stale {
   color: var(--color-state-warning);
   font-style: italic;
-  font-size: 11px;
+  font-size: var(--font-size-normal);
 }
 
 .maps-detail-aggregation-section__bulk {
   align-self: flex-start;
   font: inherit;
-  font-size: 11px;
+  font-size: var(--font-size-normal);
   cursor: pointer;
   color: var(--font-color);
   background: var(--ux-theme-1);
@@ -231,7 +231,7 @@ const summaryChips = computed<DetailChip[]>(() =>
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
   padding: 6px 8px;
-  font-size: 11px;
+  font-size: var(--font-size-normal);
 }
 
 .maps-detail-aggregation-section__row--clickable {

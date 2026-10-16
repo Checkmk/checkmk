@@ -109,13 +109,13 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
 
 .maps-presentation-template-gallery__title {
   margin: 0;
-  font-size: 20px;
+  font-size: var(--font-size-xlarge);
   font-weight: var(--font-weight-bold);
 }
 
 .maps-presentation-template-gallery__sub {
   margin: 4px 0 0;
-  font-size: var(--font-size-large);
+  font-size: var(--font-size-normal);
   color: var(--font-color-dimmed);
 }
 
@@ -123,7 +123,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   border: none;
   background: transparent;
   color: var(--font-color-dimmed);
-  font-size: 22px;
+  font-size: var(--font-size-xxlarge);
   cursor: pointer;
 }
 

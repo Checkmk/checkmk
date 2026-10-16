@@ -37,7 +37,7 @@ defineProps<{ connected: boolean }>()
   padding: var(--dimension-2) 7px;
   font-size: var(--font-size-normal);
   line-height: 16px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   border-radius: 9999px;
 }
 

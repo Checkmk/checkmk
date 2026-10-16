@@ -134,7 +134,7 @@ button.maps-detail-chip-grid__chip:hover {
 }
 
 .maps-detail-chip-grid__chip-label {
-  font-size: 9px;
+  font-size: var(--font-size-small);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--font-color-dimmed);

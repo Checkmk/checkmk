@@ -185,7 +185,7 @@ function removeOrCancel() {
   align-items: center;
   gap: var(--dimension-3);
   padding: var(--dimension-3) var(--dimension-4);
-  font-size: 11px;
+  font-size: var(--font-size-normal);
   color: var(--font-color-dimmed);
   cursor: pointer;
   border-radius: var(--border-radius);
@@ -219,8 +219,8 @@ function removeOrCancel() {
   gap: var(--dimension-4);
   width: 100%;
   padding: var(--dimension-4) var(--dimension-5);
-  font-size: var(--font-size-large);
-  line-height: 20px;
+  font-size: var(--font-size-normal);
+  line-height: 16px;
   color: var(--font-color-dimmed);
   cursor: pointer;
   background: var(--default-form-element-bg-color);

@@ -106,7 +106,7 @@ const ariaLabel = computed(() =>
   align-items: center;
   gap: var(--dimension-2);
   color: var(--font-color-dimmed);
-  font-size: 0.9em;
+  font-size: var(--font-size-normal);
   cursor: pointer;
   user-select: none;
   white-space: nowrap;

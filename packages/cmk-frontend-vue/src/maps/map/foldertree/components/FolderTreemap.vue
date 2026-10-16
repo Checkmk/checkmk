@@ -355,7 +355,7 @@ useD3Cleanup(svgEl)
 }
 
 .maps-folder-treemap__stage :deep(.maps-folder-treemap__mark) {
-  font-size: 11px;
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-default);
 }
 
@@ -380,7 +380,7 @@ useD3Cleanup(svgEl)
   align-items: center;
   justify-content: center;
   padding: var(--dimension-8);
-  font-size: 13px;
+  font-size: var(--font-size-normal);
   color: var(--font-color-dimmed);
   text-align: center;
 

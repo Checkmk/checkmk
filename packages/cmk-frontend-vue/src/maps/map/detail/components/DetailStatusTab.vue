@@ -84,7 +84,7 @@ function asChips(chips: SummaryChip[]): DetailChip[] {
 
 .maps-detail-status-tab__output {
   font-family: monospace;
-  font-size: 11px;
+  font-size: var(--font-size-normal);
   background: var(--ux-theme-1);
   color: var(--font-color);
   border: 1px solid var(--default-border-color);

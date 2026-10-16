@@ -105,7 +105,7 @@ function submit() {
 
 .maps-bundle-dialog__label {
   font-size: var(--font-size-normal);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--font-color-dimmed);
 }
 
@@ -150,7 +150,7 @@ function submit() {
 }
 
 .maps-bundle-dialog__type-card-desc {
-  font-size: 11px;
+  font-size: var(--font-size-normal);
   color: var(--font-color-dimmed);
   line-height: 1.35;
 }

@@ -233,7 +233,7 @@ function selectMode(value: string): void {
 
 .maps-folder-tree-toolbar__pill {
   padding: 2px 7px;
-  font-size: 11px;
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
   line-height: 1;
   border-radius: 9999px;

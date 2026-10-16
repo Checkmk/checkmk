@@ -1082,16 +1082,13 @@ function closeBulkAckModal(sent: boolean): void {
   --maps-map-view-grid: color-mix(in srgb, var(--interactive-accent) 60%, transparent);
 
   /* Gadgets keep a dark "instrument" look in either theme: their value text is
-     always light, and has to stay legible even sitting directly on a light map
-     background — hence the outline below and a neutral track above. */
+     always light, and the label halo keeps it legible on a light map
+     background, with a neutral track above. */
   --maps-map-view-gadget-bg: rgb(0 0 0 / 55%);
   --maps-map-view-gadget-bar-bg: rgb(0 0 0 / 50%);
   --maps-map-view-gadget-ring: rgb(255 255 255 / 15%);
   --maps-map-view-gadget-ink: var(--white);
   --maps-map-view-gadget-ink-dim: rgb(255 255 255 / 80%);
-  --maps-map-view-text-outline:
-    1px 1px 0 rgb(0 0 0 / 90%), -1px 1px 0 rgb(0 0 0 / 90%), 1px -1px 0 rgb(0 0 0 / 90%),
-    -1px -1px 0 rgb(0 0 0 / 90%), 0 0 3px rgb(0 0 0 / 70%);
 }
 
 .maps-map-view__shell {
@@ -1120,8 +1117,8 @@ function closeBulkAckModal(sent: boolean): void {
   align-items: center;
   justify-content: center;
   gap: var(--dimension-5);
-  font-size: var(--font-size-large);
-  line-height: 20px;
+  font-size: var(--font-size-normal);
+  line-height: 16px;
   color: var(--font-color-dimmed);
   background: var(--ux-theme-1);
 }

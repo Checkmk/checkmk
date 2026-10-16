@@ -233,7 +233,7 @@ function formatExact(seconds: number | null | undefined): string {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  font-size: 11px;
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
   color: var(--white);
 }
@@ -280,7 +280,7 @@ function formatExact(seconds: number | null | undefined): string {
 }
 
 .maps-detail-members-tab__flag {
-  font-size: 9px;
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
   padding: 1px 5px;
   border-radius: var(--border-radius-half);
@@ -306,7 +306,7 @@ function formatExact(seconds: number | null | undefined): string {
 
 .maps-detail-members-tab__output {
   color: var(--font-color-dimmed);
-  font-size: 11px;
+  font-size: var(--font-size-normal);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -323,7 +323,7 @@ function formatExact(seconds: number | null | undefined): string {
 
 .maps-detail-members-tab__truncated {
   color: var(--font-color-dimmed);
-  font-size: 11px;
+  font-size: var(--font-size-normal);
   text-align: center;
   margin: var(--dimension-4) 0 0;
   font-style: italic;

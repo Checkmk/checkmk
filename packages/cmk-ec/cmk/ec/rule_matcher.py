@@ -108,17 +108,22 @@ def compile_state_pattern(state_patterns: StatePatterns, key: Literal["0", "1", 
 
 
 def compile_rule(rule: Rule) -> None:
-    """Tries to convert strings to compiled regex patterns."""
+    """Tries to convert strings to compiled regex patterns.
+
+    Only top-level values of the rule are replaced, so compiling a shallow copy of a rule keeps
+    the original rule intact.
+    """
     compile_rule_attribute(rule, "match")
     compile_rule_attribute(rule, "match_ok")
     compile_rule_attribute(rule, "match_host")
     compile_rule_attribute(rule, "match_application")
     compile_rule_attribute(rule, "cancel_application")
     if "state" in rule and isinstance(rule["state"], tuple) and rule["state"][0] == "text_pattern":
-        state_patterns: StatePatterns = rule["state"][1]
+        state_patterns = rule["state"][1].copy()
         compile_state_pattern(state_patterns, "2")
         compile_state_pattern(state_patterns, "1")
         compile_state_pattern(state_patterns, "0")
+        rule["state"] = ("text_pattern", state_patterns)
 
 
 def match(pattern: TextPattern | None, text: str, complete: bool) -> TextMatchResult:

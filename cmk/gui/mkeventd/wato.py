@@ -10,7 +10,6 @@
 import abc
 import ast
 import contextlib
-import copy
 import enum
 import io
 import logging
@@ -475,8 +474,7 @@ class EventSimulator:
             if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
                 return ec.MatchFailure(reason=_("Wrong customer"))
 
-        # Compiling changes nested parts of the rule, too, so keep the caller's rule intact.
-        rule = copy.deepcopy(rule)
+        rule = rule.copy()
         rule["pack"] = rule_pack["id"]
         # The Event Console ignores rules it can't compile, and errors while matching mean no match.
         # A request timeout must still abort the page, though.

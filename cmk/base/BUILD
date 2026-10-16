@@ -295,7 +295,6 @@ py_library(
         "//cmk/base/configlib",
         "//cmk/base/core",
         "//cmk/base/core:host-check-template",
-        "//cmk/base/default_config:default-config",
         "//cmk/base/errorhandling",
         "//cmk/base/modes",
         "//cmk/base/plugins:plugins-bakery",

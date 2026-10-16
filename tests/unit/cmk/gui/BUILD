@@ -43,7 +43,7 @@ py_library(
         "//tests/unit/cmk/update_config:__subpackages__",  # FIXME
     ],
     deps = [
-        "//cmk/base/config",
+        "//cmk/config",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//cmk/gui/dashboard",

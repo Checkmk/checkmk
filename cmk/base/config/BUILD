@@ -13,7 +13,7 @@ py_library(
     deps = [
         "//cmk/base:parent-scan",
         "//cmk/base/configlib",
-        "//cmk/base/default_config:default-config",
+        "//cmk/config",
         "//cmk/piggyback:backend",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",

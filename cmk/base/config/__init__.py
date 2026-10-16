@@ -40,5 +40,4 @@ from ._impl import SMARTPING_CHECK_INTERVAL as SMARTPING_CHECK_INTERVAL
 from ._load_raw import ConfigFileLoadError as ConfigFileLoadError
 from ._load_raw import exit_on_config_file_load_error as exit_on_config_file_load_error
 from ._load_raw import get_config_file_paths as get_config_file_paths
-from ._load_raw import get_default_config as get_default_config
 from ._load_raw import load_raw_config as load_raw_config

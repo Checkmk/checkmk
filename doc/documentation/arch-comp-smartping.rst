@@ -117,7 +117,7 @@ Interfaces
 Configuration
 ~~~~~~~~~~~~~
 
-Smart Ping is configured globally via ``cmk/base/default_config/cmc.py`` and per-host via
+Smart Ping is configured globally via ``cmk/base/configlib/loaded_config.py`` and per-host via
 rulesets. Configuration includes check intervals, timeout thresholds, and tuning parameters
 for the sender and receiver processes.
 

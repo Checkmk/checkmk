@@ -53,7 +53,7 @@ class CustomCheck(TypedDict):
     freshness: NotRequired[ReadOnly[CustomCheckFreshness]]
 
 
-# The mixins below mirror the split of the cmk.base.default_config
+# The mixins below mirror the split of the former cmk.base.default_config
 # package. One day, the consumers should only parse what they actually
 # need, rather than all of BaseConfig.
 
@@ -255,7 +255,6 @@ class BaseConfig(  # type: ignore[explicit-any]
 
     # TODO: get `HostAddress` VS. `str` right! Which is it at what point?!
     # NOTE: all of the below is wishful typing, no parsing is done yet.
-    # for now we just copy what we find in default_config
     folder_attributes: Mapping[str, FolderAttributesForBase] = dataclasses.field(
         default_factory=dict
     )

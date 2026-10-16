@@ -39,6 +39,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//cmk/base/config",
+        "//cmk/config",
         "//cmk/gui:app",
         "//cmk/gui:auth_core",
         "//cmk/gui:config",

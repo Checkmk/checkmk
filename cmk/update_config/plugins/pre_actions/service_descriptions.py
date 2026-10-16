@@ -8,7 +8,8 @@ from logging import Logger
 from pathlib import Path
 from typing import override
 
-from cmk.base.config import get_config_file_paths, get_default_config
+from cmk.base.config import get_config_file_paths
+from cmk.config import get_legacy_default_base_config
 from cmk.gui.exceptions import MKUserError
 from cmk.update_config.internal import (
     ConflictMode,
@@ -38,7 +39,7 @@ def find_outdated_entries(config_file_paths: Sequence[Path]) -> Sequence[str]:
         if _VARNAME not in text:
             continue
 
-        context: dict[str, object] = {**get_default_config(), "FOLDER_PATH": None}
+        context: dict[str, object] = {**get_legacy_default_base_config(), "FOLDER_PATH": None}
         try:
             exec(compile(text, path, "exec"), context, context)  # nosec B102 # BNS:aee528
         except Exception as e:

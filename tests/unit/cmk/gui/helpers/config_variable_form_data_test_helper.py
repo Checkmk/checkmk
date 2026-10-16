@@ -25,11 +25,11 @@ from typing import Any, ClassVar
 import pytest
 
 import cmk.utils.paths
-from cmk.base.config import get_default_config
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
+from cmk.config import get_legacy_default_base_config
 from cmk.gui import login, valuespec
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKConfigError, MKUserError
@@ -138,19 +138,18 @@ ENVIRONMENT_DERIVED_DEFAULT_DOMAINS = frozenset({"apache", "rrdcached", "omd"})
 
 @functools.cache
 def _core_default_config() -> Mapping[str, object]:
-    return get_default_config()
+    return get_legacy_default_base_config()
 
 
 def factory_default_disk_value(config_variable: ConfigVariable) -> object:
     """The value the GUI shows for a variable nobody has ever saved: the
     factory default of the variable's primary config domain. ConfigDomainCore
     asks the site via the get-configuration automation, whose result is the
-    default config of cmk.base (see _automation_get_configuration in
+    legacy default config of cmk.config (see _automation_get_configuration in
     cmk.plugins.checkmk.automations.checkmk); the unit test reads it directly."""
     domain = config_variable.primary_domain()
     if isinstance(domain, ConfigDomainCore):
-        value = _core_default_config().get(config_variable.ident(), NoFactoryDefault())
-        return NoFactoryDefault() if callable(value) else value
+        return _core_default_config().get(config_variable.ident(), NoFactoryDefault())
     if domain.ident() in ENVIRONMENT_DERIVED_DEFAULT_DOMAINS:
         return NoFactoryDefault()
     return domain.default_globals().get(config_variable.ident(), NoFactoryDefault())

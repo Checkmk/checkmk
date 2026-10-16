@@ -47,7 +47,7 @@ def check_cpu_threads(params: Params, section: Section) -> CheckResult:
             levels_upper=_get_levels(params, "levels"),
             render_func="{:}".format,
         )
-    if threads.max is not None and threads.count is not None:
+    if threads.max and threads.count is not None:
         thread_usage = 100.0 * threads.count / threads.max
         yield from check_levels_v1(
             thread_usage,

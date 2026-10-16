@@ -513,6 +513,12 @@ def hostname_translation_of_site(
     site_id: SiteId, site_configs: SiteConfigurations
 ) -> cmk.ccc.translations.TranslationOptions:
     """Returns the host name translation the Event Console of the given site uses"""
+    # Only the configuration of the local Event Console is available with all its files, including
+    # the ones written by hand, which override the ones of Setup.
+    if site_id == omd_site():
+        return ec.load_config_to_activate(ec.create_paths(cmk.utils.paths.omd_root))[
+            "hostname_translation"
+        ]
     translation, _origin = effective_site_value(
         load_site_globals(site_configs, site_id),
         "hostname_translation",

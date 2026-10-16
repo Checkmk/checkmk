@@ -6,6 +6,7 @@
 from pathlib import Path
 
 import cmk.ec.export as ec
+from cmk.ec.rule_packs import load_active_config
 
 
 def test_save_active_config(tmp_path: Path) -> None:
@@ -39,6 +40,22 @@ def test_save_active_config(tmp_path: Path) -> None:
             active_config_dir / "conf.d/wato/rules.mk",
         ]
     )
+
+
+def test_config_to_activate_is_the_one_the_ec_loads_after_activating_it(
+    tmp_path: Path, settings: ec.Settings
+) -> None:
+    paths = ec.create_paths(tmp_path)
+    (paths.config_dir.value / "wato").mkdir(parents=True)
+    (paths.config_dir.value / "wato/global.mk").write_text(
+        'hostname_translation = {"case": "lower"}\n'
+    )
+    paths.main_config_file.value.write_text('hostname_translation = {"case": "upper"}\n')
+    config_to_activate = ec.load_config_to_activate(paths)
+
+    ec.save_active_config([], tmp_path)
+
+    assert load_active_config(settings) == config_to_activate
 
 
 def test_save_active_config_no_active_config_dir(tmp_path: Path) -> None:

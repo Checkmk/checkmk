@@ -16,14 +16,6 @@ from typing import (
 )
 
 import cmk.ruleset_matcher.tags
-from cmk.base.default_config.cmc import (
-    CMCAuthorization,
-    CMCGraphiteConnection,
-    CMCInitialScheduling,
-    LogCmkHelpers,
-    RealTimeChecks,
-    SmartPingTuning,
-)
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetchers.ipmi import IPMICredentials
 from cmk.checkengine.snmplib import SNMPCredentials, SNMPTiming
@@ -74,6 +66,44 @@ class _AlertHandlingConfig:
     alert_logging: int = 20
     alert_handler_timeout: int = 60
     alert_handler_rules: Sequence[EventRule] = dataclasses.field(default_factory=list)
+
+
+class CMCInitialScheduling(TypedDict):
+    burst: int
+    spread_cmk: int
+    spread_generic: int
+
+
+class SmartPingTuningBase(TypedDict):
+    omit_payload: bool
+    num_sockets: int
+    ignore_rst: bool
+
+
+class SmartPingTuning(SmartPingTuningBase, total=False):
+    throttling: tuple
+
+
+class RealTimeChecks(TypedDict):
+    port: int
+    secret: str
+
+
+class LogCmkHelpers(TypedDict):
+    log_level: int
+    debug: bool
+
+
+class CMCAuthorization(TypedDict):
+    host: Literal[0, 1]
+    group: Literal[0, 1]
+
+
+class CMCGraphiteConnection(TypedDict):
+    host: HostName
+    port: int
+    prefix: str
+    mangling: bool
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)

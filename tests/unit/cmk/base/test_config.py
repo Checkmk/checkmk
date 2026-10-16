@@ -34,7 +34,6 @@ from cmk.base.configlib.servicename import (
     make_final_service_name_config,
     PassiveServiceNameConfig,
 )
-from cmk.base.default_config.base import _PeriodicDiscovery
 from cmk.base.notify import make_notification_parameters_config
 from cmk.ccc import store
 from cmk.ccc.config_path import VersionedConfigPath
@@ -2597,16 +2596,16 @@ def test_host_config_service_level(
     assert config_cache.service_level_config.of_host(hostname) == result
 
 
-def _rule_val(check_interval: int) -> _PeriodicDiscovery:
-    return _PeriodicDiscovery(
-        severity_unmonitored=0,
-        severity_vanished=0,
-        severity_changed_service_labels=0,
-        severity_changed_service_params=0,
-        severity_new_host_label=0,
-        check_interval=check_interval,
-        inventory_rediscovery=RediscoveryParameters(),
-    )
+def _rule_val(check_interval: int) -> Mapping[str, object]:
+    return {
+        "severity_unmonitored": 0,
+        "severity_vanished": 0,
+        "severity_changed_service_labels": 0,
+        "severity_changed_service_params": 0,
+        "severity_new_host_label": 0,
+        "check_interval": check_interval,
+        "inventory_rediscovery": RediscoveryParameters(),
+    }
 
 
 @pytest.mark.parametrize(
@@ -2622,7 +2621,7 @@ def _rule_val(check_interval: int) -> _PeriodicDiscovery:
 )
 def test_host_config_add_discovery_check(
     monkeypatch: MonkeyPatch,
-    rule_entries: Sequence[_PeriodicDiscovery | None],
+    rule_entries: Sequence[Mapping[str, object] | None],
     ignored: bool,
     ping: bool,
     result: bool,

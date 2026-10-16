@@ -8,8 +8,16 @@
 # Defaults settings for global configuration
 
 from collections.abc import Mapping, Sequence
-from typing import Any, Literal, TypedDict
+from typing import Any, TypedDict
 
+from cmk.base.configlib.loaded_config import (
+    CMCAuthorization,
+    CMCGraphiteConnection,
+    CMCInitialScheduling,
+    LogCmkHelpers,
+    RealTimeChecks,
+    SmartPingTuning,
+)
 from cmk.ccc.hostaddress import HostName
 from cmk.ruleset_matcher.matcher import RuleSpec
 
@@ -43,12 +51,6 @@ cmc_service_flap_settings: Sequence[RuleSpec[tuple[float, float, float]]] = []
 cmc_host_flap_settings: Sequence[RuleSpec[tuple[float, float, float]]] = []
 
 
-class CMCInitialScheduling(TypedDict):
-    burst: int
-    spread_cmk: int
-    spread_generic: int
-
-
 cmc_initial_scheduling: CMCInitialScheduling = {
     "burst": 10,
     "spread_cmk": 1200,
@@ -58,21 +60,6 @@ cmc_housekeeping_interval = 1000  # ms
 cmc_smartping_check_interval = 500  # ms
 # This is a ruleset for hosts
 cmc_smartping_settings: Sequence[RuleSpec[Mapping[str, float]]] = []
-
-
-class SmartPingTuningBase(TypedDict):
-    omit_payload: bool
-    num_sockets: int
-    ignore_rst: bool
-
-
-class RealTimeChecks(TypedDict):
-    port: int
-    secret: str
-
-
-class SmartPingTuning(SmartPingTuningBase, total=False):
-    throttling: tuple
 
 
 cmc_smartping_tuning: SmartPingTuning = {
@@ -96,11 +83,6 @@ cmc_log_levels: dict[str, int] = {
 }
 
 
-class LogCmkHelpers(TypedDict):
-    log_level: int
-    debug: bool
-
-
 cmc_log_cmk_helpers: LogCmkHelpers = {"log_level": 0, "debug": False}
 cmc_log_microtime = False
 cmc_livestatus_threads = 20
@@ -114,21 +96,9 @@ cmc_debug_notifications = False
 max_long_output_size: int = 2000
 
 
-class CMCAuthorization(TypedDict):
-    host: Literal[0, 1]
-    group: Literal[0, 1]
-
-
 cmc_authorization: CMCAuthorization = {"host": 0, "group": 0}
 cmc_timeperiod_horizon = 2 * 365
 cmc_import_nagios_state = True
-
-
-class CMCGraphiteConnection(TypedDict):
-    host: HostName
-    port: int
-    prefix: str
-    mangling: bool
 
 
 # was previously None or a single dict

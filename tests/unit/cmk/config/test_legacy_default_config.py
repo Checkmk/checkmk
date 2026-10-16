@@ -46,7 +46,6 @@ def test_legacy_default_config_only_drops_types() -> None:
         "Sequence",
         "ServiceName",
         "SmartPingTuning",
-        "SmartPingTuningBase",
         "SNMPCredentials",
         "SNMPTiming",
         "SSCConfigSet",

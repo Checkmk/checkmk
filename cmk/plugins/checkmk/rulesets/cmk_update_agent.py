@@ -49,10 +49,12 @@ def _migrate(obj: object) -> Mapping[str, object]:
 
 
 def _migrate_activated(value: object) -> str:
-    if isinstance(value, bool):
-        return "enabled" if value else "disabled"
-    if isinstance(value, str) and value in ("enabled", "disabled"):
-        return value
+    match value:
+        # Up to Checkmk 2.5, the only updater was the legacy one. The compatible entry keeps it.
+        case "enabled":
+            return "compatible"
+        case str() if value in ("disabled", "integrated_only", "compatible", "legacy"):
+            return value
     raise ValueError(value)
 
 
@@ -360,21 +362,50 @@ def _valuespec_activation() -> SingleChoice:
     return SingleChoice(
         title=Title("Activation"),
         help_text=Help(
-            "Do not forget to activate the plug-in in at least one of your rules. "
+            "Choose which updater keeps the agents up to date.<br>"
+            "<b>Enable agent updates using the Agent Controller</b>: The Agent Controller "
+            "updates the agents for Linux and Windows. On Linux, it needs the Agent Controller "
+            "and the single directory deployment of the rule set <i>Customize agent package</i>. "
+            "Baking fails for Linux agents without them. Solaris agents get the legacy "
+            "updater.<br>"
+            "<b>Enable agent updates using the Agent Controller (fallback to legacy updater in "
+            "case of problems)</b>: The agents get both updaters, and both run side by side, "
+            "independently of each other. Both install the agent package that is baked for the "
+            "host, so it does not matter which of them updates an agent first. If the Agent "
+            "Controller fails to update an agent, the legacy updater still keeps it up to date. "
+            "Agents that cannot use the Agent Controller get the legacy updater only: Solaris "
+            "agents, and Linux agents without the Agent Controller or without the single "
+            "directory deployment. Rules that enabled agent updates before Checkmk 3.0 use this "
+            "entry after the update.<br>"
+            "<b>Enable agent updates using the legacy updater (deprecated)</b>: Only the legacy "
+            "updater updates the agents.<br>"
+            "<br>"
+            "Do not forget to enable agent updates in at least one of your rules. "
             "It can be useful to create rules that are only partially filled out. "
             "Since the rule execution is done on a <i>per parameter</i> base "
             "you can for example create one rule at the top of your list that "
-            "just sets the activation to <i>no</i> for just some of your hosts without "
-            "setting any of the other parameters."
+            "just sets the activation to <i>Do not enable agent updates</i> for just some of "
+            "your hosts without setting any of the other parameters."
         ),
         elements=[
             SingleChoiceElement(
                 name="disabled",
-                title=Title("Do not deploy automatic agent update plug-in"),
+                title=Title("Do not enable agent updates"),
             ),
             SingleChoiceElement(
-                name="enabled",
-                title=Title("Deploy plug-in that updates agent automatically"),
+                name="integrated_only",
+                title=Title("Enable agent updates using the Agent Controller"),
+            ),
+            SingleChoiceElement(
+                name="compatible",
+                title=Title(
+                    "Enable agent updates using the Agent Controller"
+                    " (fallback to legacy updater in case of problems)"
+                ),
+            ),
+            SingleChoiceElement(
+                name="legacy",
+                title=Title("Enable agent updates using the legacy updater (deprecated)"),
             ),
         ],
         prefill=DefaultValue("disabled"),
@@ -548,18 +579,18 @@ def _valuespec_agent_config_cmk_update_agent() -> Dictionary:
     return Dictionary(
         title=Title("Agent updater (Linux, Windows, Solaris)"),
         help_text=Help(
-            "This rule set allows to deploy an agent plug-in that updates "
-            "the Checkmk agent for Linux, Solaris and Windows on a regular base. "
+            "This rule set enables automatic updates "
+            "of the Checkmk agent for Linux, Solaris and Windows. "
             "The agent will look for new updates on a regular base and update "
             "itself, when a newly baked agent is available, released and signed. "
             "<br><b>Note<sup>1</sup>:</b> This update mechanism is baked into the agent itself. "
             "So after activating this feature you need at least one more manual "
             "update of the agent, of course."
-            "<br><b>Note<sup>2</sup>:</b> After deploying this new plug-in "
-            "it must be registered at your Checkmk server. This can be done either by registering "
+            "<br><b>Note<sup>2</sup>:</b> After installing such an agent, its updater "
+            "must be registered at your Checkmk server. This can be done either by registering "
             "the Agent Controller, or by manual agent updater registration call. "
             "Customizable in _Registration_ option below. See there for details."
-            "<br><b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
+            "<br><b>Note<sup>3</sup>:</b> In order to deploy the legacy updater to Solaris, a "
             'Python 3.7 installation (or newer) with installed python packages "cryptography", '
             '"requests" and "PySocks" is required on the target hosts.'
         ),

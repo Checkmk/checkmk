@@ -30,7 +30,7 @@ from pysmi.searcher.pypackage import PyPackageSearcher  # type: ignore[import-un
 from pysmi.searcher.stub import StubSearcher  # type: ignore[import-untyped]
 from pysmi.writer.pyfile import PyFileWriter  # type: ignore[import-untyped]
 
-from livestatus import LocalConnection, MKLivestatusSocketError, SiteId
+from livestatus import LocalConnection, MKLivestatusSocketError, SiteConfigurations, SiteId
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -322,19 +322,22 @@ def mib_dirs() -> list[tuple[Path, str]]:
     ]
 
 
-def match_event_rule(rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event) -> ec.MatchResult:
+def match_event_rule(
+    rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event, site_configs: SiteConfigurations
+) -> ec.MatchResult:
     if edition(cmk.utils.paths.omd_root) is Edition.CME:
         rule_customer_id = (
             rule_pack["customer"] if "customer" in rule_pack else rule.get("customer", SCOPE_GLOBAL)
         )
-        site_customer_id = customer_api().get_customer_id(active_config.sites[event["site"]])
+        site_customer_id = customer_api().get_customer_id(site_configs[event["site"]])
         if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
             return ec.MatchFailure(reason=_("Wrong customer"))
 
     time_period = ec.TimePeriods(log.logger)
     rule_matcher = ec.RuleMatcher(
         logger=None,
-        omd_site_id=omd_site(),
+        # Match against the site the event is simulated for, not the one running the GUI.
+        omd_site_id=event["site"],
         is_active_time_period=time_period.active,
     )
     rule = rule.copy()
@@ -2121,7 +2124,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     skips = 0
 
                     for rule in rule_pack["rules"]:
-                        result = match_event_rule(rule_pack, rule, event)
+                        result = match_event_rule(rule_pack, rule, event, active_config.sites)
                         if isinstance(result, ec.MatchSuccess):
                             cancelling, groups = result.cancelling, result.match_groups
 
@@ -2478,7 +2481,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     event["host"] = cmk.utils.translations.translate_hostname(
                         eventd_configuration()["hostname_translation"], event["host"]
                     )
-                    result = match_event_rule(self._rule_pack, rule, event)
+                    result = match_event_rule(self._rule_pack, rule, event, active_config.sites)
                     if not isinstance(result, ec.MatchSuccess):
                         html.icon("hyphen", _("Rule does not match: %s") % result.reason)
                     else:

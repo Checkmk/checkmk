@@ -105,6 +105,11 @@ agent_section_aws_v2_glacier = AgentSection(
     parse_function=parse_aws_glacier,
 )
 
+agent_section_aws_v2_glacier_summary = AgentSection(
+    name="aws_v2_glacier_summary",
+    parse_function=parse_aws_glacier,
+)
+
 
 check_plugin_aws_v2_glacier = CheckPlugin(
     name="aws_v2_glacier",
@@ -165,7 +170,7 @@ def check_aws_glacier_summary(params: Params, section: Section) -> CheckResult:
 check_plugin_aws_v2_glacier_summary = CheckPlugin(
     name="aws_v2_glacier_summary",
     service_name="AWS/Glacier Summary",
-    sections=["aws_v2_glacier"],
+    sections=["aws_v2_glacier_summary"],
     discovery_function=discover_aws_glacier_summary,
     check_function=check_aws_glacier_summary,
     check_ruleset_name="aws_v2_glacier_vaults",

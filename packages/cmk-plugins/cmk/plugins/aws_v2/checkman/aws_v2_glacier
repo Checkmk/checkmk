@@ -20,4 +20,5 @@ item:
  Name of the vault.
 
 discovery:
- One service is created for each vault.
+ Each vault is a piggyback host with the name {<vault name>_<region>}.
+ One service is created on this host.

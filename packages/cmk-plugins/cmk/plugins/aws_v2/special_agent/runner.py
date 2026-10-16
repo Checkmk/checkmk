@@ -58,7 +58,7 @@ from .sections.elbv2 import (
     ELBv2Network,
     ELBv2TargetGroups,
 )
-from .sections.glacier import Glacier, GlacierLimits
+from .sections.glacier import Glacier, GlacierLimits, GlacierSummary
 from .sections.rds import RDS, RDSLimits, RDSSummary
 from .sections.route53 import Route53Cloudwatch, Route53HealthChecks
 from .sections.s3 import ResultDistributorS3Limits, S3, S3Limits, S3Requests, S3Summary
@@ -108,7 +108,9 @@ def datetime_serializer(obj):
 
 # GlacierLimits
 # |
-# '-- Glacier
+# '-- GlacierSummary
+#     |
+#     '-- Glacier
 
 # ELBLimits
 # |
@@ -649,11 +651,14 @@ class AWSSectionsGeneric(AWSSections):
         if "glacier" in services:
             glacier_client = self._init_client("glacier")
             glacier_limits = GlacierLimits(glacier_client, region, config, distributor)
-            glacier_summary = Glacier(glacier_client, region, config)
+            glacier_summary = GlacierSummary(glacier_client, region, config, distributor)
+            glacier = Glacier(glacier_client, region, config)
             distributor.add(glacier_limits.name, glacier_summary)
+            distributor.add(glacier_summary.name, glacier)
             if config.service_config.get("glacier_limits"):
                 self._sections.append(glacier_limits)
             self._sections.append(glacier_summary)
+            self._sections.append(glacier)
 
         if "rds" in services:
             rds_client = self._init_client("rds")

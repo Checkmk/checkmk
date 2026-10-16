@@ -433,6 +433,18 @@ def hostname_translation_of_site(
     return cast(cmk.utils.translations.TranslationOptions, translation)
 
 
+def message_match_groups_text(result: ec.MatchSuccess) -> str:
+    """Returns the groups of the message text pattern which decided the match as text"""
+    groups = (
+        result.match_groups.get("match_groups_message_ok", ())
+        if result.cancelling
+        else result.match_groups.get("match_groups_message", ())
+    )
+    # The pattern of a match can't have failed, which the Event Console relies on, too.
+    assert groups is not False
+    return ",".join(g or _("(none)") for g in groups)
+
+
 # .
 #   .--ValueSpecs----------------------------------------------------------.
 #   |        __     __    _            ____                                |
@@ -2214,7 +2226,10 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     for rule in rule_pack["rules"]:
                         result = simulator.match_rule(rule_pack, rule)
                         if isinstance(result, ec.MatchSuccess):
-                            cancelling, groups = result.cancelling, result.match_groups
+                            cancelling, groups = (
+                                result.cancelling,
+                                message_match_groups_text(result),
+                            )
 
                             if not cancelling and rule.get("drop") == "skip_pack":
                                 matches += 1
@@ -2238,9 +2253,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                             if cancelling:
                                 msg += _(", first match is a cancelling match")
                             if groups:
-                                msg += _(", match groups of decisive match: %s") % ",".join(
-                                    [g or _("&lt;None&gt;") for g in groups]
-                                )
+                                msg += _(", match groups of decisive match: %s") % groups
                             if have_match:
                                 msg += _(
                                     ", but it is overruled by a match in a previous rule pack."
@@ -2571,7 +2584,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     if not isinstance(result, ec.MatchSuccess):
                         html.icon("hyphen", _("Rule does not match: %s") % result.reason)
                     else:
-                        cancelling, groups = result.cancelling, result.match_groups
+                        cancelling, groups = result.cancelling, message_match_groups_text(result)
                         if have_match:
                             msg = _("This rule matches, but is overruled by a previous match.")
                             icon = "checkmark_plus"
@@ -2583,9 +2596,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                             icon = "checkmark"
                             have_match = True
                         if groups:
-                            msg += _(" Match groups: %s") % ",".join(
-                                [g or _("&lt;None&gt;") for g in groups]
-                            )
+                            msg += _(" Match groups: %s") % groups
                         html.icon(icon, msg)
 
                 if rule.get("invert_matching"):

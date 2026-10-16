@@ -7,20 +7,26 @@ import pytest
 
 from cmk.gui.bi._autocompleters import matching_aggregation_groups
 
-GROUPS = [("Hosts", "Hosts"), ("Hosts/Linux", "Hosts/Linux"), ("Network", "Network")]
-
 
 @pytest.mark.parametrize(
-    "value, strict, expected",
+    "value, strict, expected_group_ids",
     [
-        ("", False, ["Hosts", "Hosts/Linux", "Network"]),
-        ("host", False, ["host", "Hosts", "Hosts/Linux"]),
-        ("Hosts", False, ["Hosts", "Hosts/Linux"]),
-        ("UNKNOWN", False, ["UNKNOWN"]),
-        ("UNKNOWN", True, []),
+        pytest.param("", False, ["Hosts", "Hosts/Linux", "Network"], id="empty query matches all"),
+        pytest.param("hosts", False, ["hosts", "Hosts", "Hosts/Linux"], id="case insensitive"),
+        pytest.param("hosts", True, ["Hosts", "Hosts/Linux"], id="case insensitive (strict)"),
+        pytest.param("Hosts", False, ["Hosts", "Hosts/Linux"], id="exact match"),
+        pytest.param("UNKNOWN", False, ["UNKNOWN"], id="no match"),
+        pytest.param("UNKNOWN", True, [], id="no match (strict)"),
     ],
 )
-def test_matching_aggregation_groups(value: str, strict: bool, expected: list[str]) -> None:
-    assert [
-        ident for ident, _title in matching_aggregation_groups(GROUPS, value, strict=strict)
-    ] == expected
+def test_matching_aggregation_groups(
+    value: str, strict: bool, expected_group_ids: list[str]
+) -> None:
+    all_groups = [
+        ("Hosts", "Hosts"),
+        ("Hosts/Linux", "Hosts/Linux"),
+        ("Network", "Network"),
+    ]
+    matching_groups = matching_aggregation_groups(all_groups, value, strict=strict)
+    matching_group_ids = [ident for ident, _ in matching_groups]
+    assert matching_group_ids == expected_group_ids

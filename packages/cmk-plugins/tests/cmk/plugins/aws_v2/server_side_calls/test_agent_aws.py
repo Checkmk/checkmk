@@ -333,3 +333,54 @@ def test_access_key_carries_the_account_list() -> None:
         "CheckmkMonitoring",
         "tenant-42",
     )
+
+
+_ORGANIZATION = (
+    "organization",
+    {
+        "role_name": "CheckmkMonitoring",
+        "external_id": "tenant-42",
+        "excluded_account_ids": ["333333333333", "444444444444"],
+        "account_list_role_arn": "arn:aws:iam::888888888888:role/CheckmkAccountList",
+    },
+)
+
+
+def test_organization_is_passed_with_its_options() -> None:
+    assert _arguments(auth=("none", {"accounts": _ORGANIZATION})) == [
+        "--organization",
+        "--exclude-account",
+        "333333333333",
+        "--exclude-account",
+        "444444444444",
+        "--account-list-role-arn",
+        "arn:aws:iam::888888888888:role/CheckmkAccountList",
+        "--spoke-role-name",
+        "CheckmkMonitoring",
+        "--spoke-external-id",
+        "tenant-42",
+        *_HOST_ARGS,
+    ]
+
+
+def test_organization_without_options_passes_only_the_role_name() -> None:
+    accounts = ("organization", {"role_name": "CheckmkMonitoring"})
+
+    assert _arguments(auth=("none", {"accounts": accounts})) == [
+        "--organization",
+        "--spoke-role-name",
+        "CheckmkMonitoring",
+        *_HOST_ARGS,
+    ]
+
+
+def test_agent_accepts_the_organization_options() -> None:
+    parsed = parse_arguments(
+        [str(arg) for arg in _arguments(auth=("none", {"accounts": _ORGANIZATION}))]
+    )
+
+    assert (parsed.organization, parsed.excluded_accounts, parsed.account_list_role_arn) == (
+        True,
+        ["333333333333", "444444444444"],
+        "arn:aws:iam::888888888888:role/CheckmkAccountList",
+    )

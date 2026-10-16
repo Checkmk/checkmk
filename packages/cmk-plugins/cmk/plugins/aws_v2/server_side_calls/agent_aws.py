@@ -30,7 +30,18 @@ class AccountList(BaseModel):
     external_id: str | None = None
 
 
-Accounts = tuple[Literal["single"], None] | tuple[Literal["list"], AccountList]
+class OrganizationAccounts(BaseModel):
+    role_name: str
+    external_id: str | None = None
+    excluded_account_ids: list[str] = []
+    account_list_role_arn: str | None = None
+
+
+Accounts = (
+    tuple[Literal["single"], None]
+    | tuple[Literal["list"], AccountList]
+    | tuple[Literal["organization"], OrganizationAccounts]
+)
 
 
 class AccessKeyLogin(AccessKey):
@@ -115,12 +126,23 @@ def _auth_args(auth: AccessKey | AssumeRole | DefaultCredentials | None) -> list
 
 
 def _account_args(login: AccessKey | AssumeRole | DefaultCredentials | None) -> list[str]:
-    # Only the logins without a role can monitor a list of accounts.
+    # Only the logins without a role can monitor several accounts.
     if not isinstance(login, AccessKeyLogin | DefaultCredentials):
         return []
-    if (accounts := login.accounts[1]) is None:
+    accounts = login.accounts[1]
+    if isinstance(accounts, AccountList):
+        args = [arg for account_id in accounts.account_ids for arg in ("--account", account_id)]
+    elif isinstance(accounts, OrganizationAccounts):
+        args = ["--organization"]
+        args += [
+            arg
+            for account_id in accounts.excluded_account_ids
+            for arg in ("--exclude-account", account_id)
+        ]
+        if accounts.account_list_role_arn:
+            args += ["--account-list-role-arn", accounts.account_list_role_arn]
+    else:
         return []
-    args = [arg for account_id in accounts.account_ids for arg in ("--account", account_id)]
     args += ["--spoke-role-name", accounts.role_name]
     if accounts.external_id:
         args += ["--spoke-external-id", accounts.external_id]

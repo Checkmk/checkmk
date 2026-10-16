@@ -71,6 +71,16 @@ def get_agent_controller_arch(agconf: AgentConfig) -> AgentControllerTargetArch:
     return CustomizeAgentPackageConfig.model_validate(customize_agent_package).agent_controller_arch
 
 
+def is_agent_controller_deployed(agconf: AgentConfig) -> bool:
+    """Whether the Linux package ships the agent controller and its systemd units"""
+    agent_ctl_enabled, _runtime_opts = agconf.get("agent_controller", {}).get(
+        "agent_ctl_enabled", (True, {})
+    )
+    return bool(
+        agconf["super_server"]["deployment_mode"] in ("auto", "systemd") and agent_ctl_enabled
+    )
+
+
 class AgentPathsConfig(BaseModel, frozen=True):
     bin: str
     config: str

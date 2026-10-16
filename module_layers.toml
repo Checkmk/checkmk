@@ -2151,6 +2151,7 @@ allows = [
   "cmk.shared_typing.vue_formspec_components",
   "cmk.telemetry.custom_query_rule_value",
   "cmk.telemetry.host_name_template",
+  "cmk.telemetry.host_name_template_resolution",
   "cmk.telemetry.host_name_template_validation",
   "cmk.utils.global_ident_type",
   "cmk.utils.paths",

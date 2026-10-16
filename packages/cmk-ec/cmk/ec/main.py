@@ -1160,27 +1160,27 @@ class EventServer(ECServerThread):
                 if rule.get("disabled"):
                     count_disabled += 1
                 else:
-                    count_rules += 1
                     rule = rule.copy()  # keep original intact because of slave replication
 
                     # Store information about rule pack right within the rule. This is needed
                     # for debug output and also for skipping rule packs
                     rule["pack"] = rule_pack["id"]
-                    self._rules.append(rule)
-                    self._rule_by_id[rule["id"]] = rule
                     try:
                         compile_rule(rule)
                     except Exception:
                         if self.settings.options.debug:
                             raise
-                        rule["disabled"] = True
                         count_disabled += 1
                         self._logger.exception(
                             "Ignoring rule '%s/%s' because of an invalid regex.",
                             rule["pack"],
                             rule["id"],
                         )
+                        continue
 
+                    count_rules += 1
+                    self._rules.append(rule)
+                    self._rule_by_id[rule["id"]] = rule
                     if self._config["rule_optimizer"]:
                         self.hash_rule(rule)
                         if (

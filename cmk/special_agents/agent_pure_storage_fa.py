@@ -292,6 +292,7 @@ def agent_pure_storage_fa(args: Args) -> int:
         except SectionError:
             if args.debug:
                 return 1
+            continue
 
         with SectionWriter(f"pure_storage_fa_{spec.name}") as writer:
             writer.append_json(data)

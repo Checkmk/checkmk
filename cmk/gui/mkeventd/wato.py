@@ -358,6 +358,14 @@ class _SiteLivestatus:
         return connection.query(query)
 
 
+@dataclass(frozen=True)
+class RulePackMatch:
+    matching_rules: int
+    # Like in the Event Console, the first matching rule decides what happens.
+    first_match: ec.MatchSuccess | None
+    first_match_skips_pack: bool
+
+
 class EventSimulator:
     """Matches a simulated event against rules like the Event Console of the simulated site"""
 
@@ -405,6 +413,21 @@ class EventSimulator:
         rule["pack"] = rule_pack["id"]
         ec.compile_rule(rule)
         return self._rule_matcher.event_rule_matches(rule, self._event)
+
+    def match_rule_pack(self, rule_pack: ec.ECRulePack) -> RulePackMatch:
+        matching_rules = 0
+        first_match: ec.MatchSuccess | None = None
+        first_match_skips_pack = False
+        for rule in rule_pack["rules"]:
+            result = self.match_rule(rule_pack, rule)
+            if isinstance(result, ec.MatchSuccess):
+                matching_rules += 1
+                if first_match is None:
+                    first_match = result
+                    first_match_skips_pack = (
+                        not result.cancelling and rule.get("drop") == "skip_pack"
+                    )
+        return RulePackMatch(matching_rules, first_match, first_match_skips_pack)
 
 
 def hostname_translation_of_site(
@@ -2254,40 +2277,22 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
                 # Simulation of all rules in this pack
                 elif simulator:
-                    matches = 0
-                    cancelling_matches = 0
-                    skips = 0
-
-                    for rule in rule_pack["rules"]:
-                        result = simulator.match_rule(rule_pack, rule)
-                        if isinstance(result, ec.MatchSuccess):
-                            cancelling, groups = (
-                                result.cancelling,
-                                message_match_groups_text(result),
-                            )
-
-                            if not cancelling and rule.get("drop") == "skip_pack":
-                                matches += 1
-                                skips = 1
-                                break
-
-                            if cancelling and matches == 0:
-                                cancelling_matches += 1
-
-                            matches += 1
-
-                    if matches == 0:
+                    pack_match = simulator.match_rule_pack(rule_pack)
+                    if pack_match.first_match is None:
                         msg = _("None of the rules in this pack matches")
                         icon = StaticIcon(IconNames.hyphen)
                     else:
-                        msg = _("Number of matching rules in this pack: %d") % matches
-                        if skips:
+                        msg = (
+                            _("Number of matching rules in this pack: %d")
+                            % pack_match.matching_rules
+                        )
+                        if pack_match.first_match_skips_pack:
                             msg += _(", the first match skips this rule pack")
                             icon = StaticIcon(IconNames.hyphen)
                         else:
-                            if cancelling:
+                            if pack_match.first_match.cancelling:
                                 msg += _(", first match is a cancelling match")
-                            if groups:
+                            if groups := message_match_groups_text(pack_match.first_match):
                                 msg += _(", match groups of decisive match: %s") % groups
                             if have_match:
                                 msg += _(

@@ -330,3 +330,41 @@ def test_an_inverted_match_has_no_match_groups() -> None:
 
     assert isinstance(result, ec.MatchSuccess)
     assert mkeventd_wato.message_match_groups_text(result) == ""
+
+
+_MATCHING_RULE = ec.Rule(id="matching", match="nothing")
+_NON_MATCHING_RULE = ec.Rule(id="non_matching", match="no such text")
+_CANCELLING_RULE = ec.Rule(id="cancelling", match="no such text", match_ok="nothing")
+_SKIPPING_RULE = ec.Rule(id="skipping", match="nothing", drop="skip_pack")
+
+
+def test_first_matching_rule_decides_the_match_of_a_rule_pack() -> None:
+    simulator = _simulator(simulated_site=SiteId("remote"))
+    rule_pack = _rule_pack(_NON_MATCHING_RULE, _MATCHING_RULE, _CANCELLING_RULE)
+
+    pack_match = simulator.match_rule_pack(rule_pack)
+
+    assert pack_match.first_match == simulator.match_rule(rule_pack, _MATCHING_RULE)
+
+
+@pytest.mark.parametrize(
+    "rules, skips_pack",
+    [
+        pytest.param([_SKIPPING_RULE, _MATCHING_RULE], True, id="first match skips"),
+        pytest.param([_MATCHING_RULE, _SKIPPING_RULE], False, id="later match skips"),
+    ],
+)
+def test_rule_pack_is_skipped_only_if_its_first_match_skips_it(
+    rules: list[ec.Rule], skips_pack: bool
+) -> None:
+    pack_match = _simulator(simulated_site=SiteId("remote")).match_rule_pack(_rule_pack(*rules))
+
+    assert pack_match.first_match_skips_pack is skips_pack
+
+
+def test_rule_pack_match_counts_all_matching_rules() -> None:
+    pack_match = _simulator(simulated_site=SiteId("remote")).match_rule_pack(
+        _rule_pack(_SKIPPING_RULE, _NON_MATCHING_RULE, _MATCHING_RULE)
+    )
+
+    assert pack_match.matching_rules == 2

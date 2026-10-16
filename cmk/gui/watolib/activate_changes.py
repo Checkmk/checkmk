@@ -429,13 +429,20 @@ def sync_changes_from_active_config_before_remote_automation(site_id: SiteId, de
     """Sync for callers that hold no folder tree, such as the automation wrappers.
 
     The sync takes the sites and the snapshot settings from the active config
-    anyway, so the tree comes from the active config as well.
+    anyway, so the tree comes from the active config as well. It is only built
+    when the site needs a sync, which most remote automation calls do not.
     """
-    sync_changes_before_remote_automation(make_folder_tree(active_config), site_id, debug)
+    _sync_changes_before_remote_automation(lambda: make_folder_tree(active_config), site_id, debug)
 
 
 # If the site is not up-to-date, synchronize it first.
 def sync_changes_before_remote_automation(tree: FolderTree, site_id: SiteId, debug: bool) -> None:
+    _sync_changes_before_remote_automation(lambda: tree, site_id, debug)
+
+
+def _sync_changes_before_remote_automation(
+    make_tree: Callable[[], FolderTree], site_id: SiteId, debug: bool
+) -> None:
     manager = ActivateChangesManager()
     # TODO: So far we used active_config.sites. Would it be enough to use [site_id]?
     manager.changes.load(list(active_config.sites))
@@ -447,7 +454,7 @@ def sync_changes_before_remote_automation(tree: FolderTree, site_id: SiteId, deb
 
     manager.start(
         sites=[site_id],
-        tree=tree,
+        tree=make_tree(),
         activate_foreign=True,
         prevent_activate=True,
         source="INTERNAL",

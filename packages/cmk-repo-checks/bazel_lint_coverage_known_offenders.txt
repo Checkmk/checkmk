@@ -48,9 +48,6 @@ packages/check-http/src/pwstore.rs
 packages/cmk-agent-ctl/src/main.rs
 packages/cmk-ec/src/mkevent.cc
 packages/cmk-ec/src/mkeventd_open514.cc
-packages/cmk-frontend/babel.config.js
-packages/cmk-frontend/postcss.config.js
-packages/cmk-frontend/resources/license-header.js
 packages/mk-oracle/deploy-docker
 packages/mk-oracle/deploy-run
 packages/mk-oracle/run_legacy.sh

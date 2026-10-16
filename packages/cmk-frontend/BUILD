@@ -5,6 +5,7 @@ load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@aspect_rules_webpack//webpack:defs.bzl", "webpack_bundle")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//packages/cmk-frontend:jest-cli/package_json.bzl", jest_cli_bin = "bin")
 load("@npm//packages/cmk-frontend:webpack-cli/package_json.bzl", webpack_cli_bin = "bin")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_python//python:py_test.bzl", "py_test")
@@ -120,7 +121,6 @@ BUILD_DEPS = [
     ":node_modules/file-loader",
     ":node_modules/filemanager-webpack-plugin",
     ":node_modules/jquery",
-    ":node_modules/postcss-loader",
     ":node_modules/qrcode",
     ":node_modules/sass-loader",
     ":node_modules/script-loader",
@@ -190,6 +190,28 @@ ts_project(
     # the previous "node10" resolution silently ignored. Only the tests import
     # this one, hence the addition here rather than in BUILD_DEPS.
     deps = BUILD_DEPS + [":node_modules/fake-indexeddb"],
+)
+
+jest_cli_bin.jest_test(
+    name = "jest",
+    timeout = "short",
+    args = [
+        "--ci",
+        "--config=jest.config.json",
+    ],
+    chdir = package_name(),
+    data = glob([
+        "src/js/**/*.js",
+        "src/js/**/*.ts",
+    ]) + BUILD_DEPS + [
+        "jest.config.json",
+        "tsconfig.json",
+        ":node_modules/fake-indexeddb",
+        ":node_modules/jest-environment-jsdom",
+        ":node_modules/mutation-observer",
+        ":node_modules/ts-jest",
+        ":node_modules/typescript",
+    ],
 )
 
 build_test(

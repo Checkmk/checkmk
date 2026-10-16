@@ -15,7 +15,7 @@ usage() {
     echo "Run the CI pipeline or parts of it."
     echo
     echo "  -b, --build                build webpack bundle"
-    echo "  -t, --tests                run scss_content tests"
+    echo "  -t, --tests                run scss_content and jest tests"
     echo "  -F, --check-format         check for correct formatting"
     echo "  -T, --tsc                  run tsc"
     echo "  -a, --all                  shortcut for -b -t -F -T"
@@ -106,7 +106,7 @@ run_format() {
 }
 
 run_tests() {
-    bazel test :scss_content
+    bazel test :scss_content :jest
 }
 
 main() {

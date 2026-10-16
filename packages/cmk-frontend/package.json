@@ -26,17 +26,6 @@
     "url": "https://github.com/Checkmk/checkmk"
   },
   "license": "GPL-2.0",
-  "jest": {
-    "testEnvironment": "jsdom",
-    "modulePaths": [
-      "<rootDir>/src/js/modules"
-    ],
-    "setupFiles": [
-      "<rootDir>/src/js/tests/globals.mock.js",
-      "fake-indexeddb/auto"
-    ],
-    "verbose": true
-  },
   "devDependencies": {
     "@babel/core": "^7.29.0",
     "@babel/eslint-parser": "^7.28.6",

@@ -1,0 +1,20 @@
+{
+  "testEnvironment": "jsdom",
+  "modulePaths": ["<rootDir>/src/js/modules"],
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/src/js/$1"
+  },
+  "setupFiles": ["<rootDir>/src/js/tests/globals.mock.js", "fake-indexeddb/auto"],
+  "transform": {
+    "^.+\\.[jt]s$": [
+      "ts-jest",
+      {
+        "diagnostics": false,
+        "tsconfig": {
+          "allowJs": true
+        }
+      }
+    ]
+  },
+  "verbose": true
+}

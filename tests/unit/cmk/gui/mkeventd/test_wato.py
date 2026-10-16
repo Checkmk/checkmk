@@ -345,13 +345,13 @@ def test_match_groups_of_a_cancelling_match_come_from_the_cancelling_text() -> N
     assert mkeventd_wato.message_match_groups_text(result) == "sda"
 
 
-def test_match_groups_which_did_not_participate_in_a_match_show_up_as_none() -> None:
+def test_match_groups_which_did_not_participate_in_a_match_show_up_as_empty() -> None:
     result = _simulator(simulated_site=SiteId("remote"), text="disk sda").match_rule(
         _RULE_PACK, ec.Rule(id="rule", match="disk (\\S+)( failed)?")
     )
 
     assert isinstance(result, ec.MatchSuccess)
-    assert mkeventd_wato.message_match_groups_text(result) == "sda,(none)"
+    assert mkeventd_wato.message_match_groups_text(result) == "sda,(empty)"
 
 
 _MATCHING_RULE = ec.Rule(id="matching", match="nothing")

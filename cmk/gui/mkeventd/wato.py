@@ -529,12 +529,13 @@ def hostname_translation_of_site(
 
 def message_match_groups_text(result: ec.MatchSuccess) -> str:
     """Returns the groups of the message text pattern which decided the match as text"""
+    # Like the Event Console, treat groups which didn't take part in the match as empty.
     groups = (
         result.match_groups.get("match_groups_message_ok", ())
         if result.cancelling
         else result.match_groups.get("match_groups_message", ())
     )
-    return ",".join(g or _("(none)") for g in groups) if groups is not False else ""
+    return ",".join(g or _("(empty)") for g in groups) if groups is not False else ""
 
 
 # .

@@ -101,10 +101,12 @@ def test_send_event(monkeypatch: MonkeyPatch) -> None:
     )
 
 
-def _simulate(rule: ec.Rule, *, simulated_site: SiteId) -> ec.MatchResult:
-    return mkeventd_wato.match_event_rule(
-        ec.ECRulePackSpec(id="pack", title="Pack", disabled=False, rules=[]),
-        rule,
+def _rule_pack(*rules: ec.Rule, disabled: bool = False) -> ec.ECRulePackSpec:
+    return ec.ECRulePackSpec(id="pack", title="Pack", disabled=disabled, rules=list(rules))
+
+
+def _simulator(*, simulated_site: SiteId) -> mkeventd_wato.EventSimulator:
+    return mkeventd_wato.EventSimulator(
         ec.Event(
             text="Still nothing happened.",
             application="Foobar-Daemon",
@@ -117,6 +119,10 @@ def _simulate(rule: ec.Rule, *, simulated_site: SiteId) -> ec.MatchResult:
         ),
         SiteConfigurations({simulated_site: _site_configuration(simulated_site)}),
     )
+
+
+def _simulate(rule: ec.Rule, *, simulated_site: SiteId) -> ec.MatchResult:
+    return _simulator(simulated_site=simulated_site).match_rule(_rule_pack(), rule)
 
 
 def _site_configuration(site_id: SiteId) -> SiteConfiguration:
@@ -230,3 +236,20 @@ def test_simulator_fails_without_a_connection_to_the_simulated_site(
             ec.Rule(id="rule", match_timeperiod=TimeperiodName("workhours")),
             simulated_site=SiteId("unconnected"),
         )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_simulator_queries_time_periods_once_for_all_rules(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table("timeperiods", [{"name": "workhours", "in": 1}], site="remote")
+    mock_livestatus.expect_query("GET timeperiods\nColumns: name in", sites=["remote"])
+    simulator = _simulator(simulated_site=SiteId("remote"))
+    rules = [
+        ec.Rule(id=f"rule{nr}", match_timeperiod=TimeperiodName("workhours")) for nr in range(2)
+    ]
+
+    with mock_livestatus(expect_status_query=True):
+        results = [simulator.match_rule(_rule_pack(), rule) for rule in rules]
+
+    assert all(isinstance(result, ec.MatchSuccess) for result in results)

@@ -16,6 +16,7 @@ import time_machine
 from pytest import MonkeyPatch
 
 import cmk.ec.export as ec
+import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.translations import TranslationOptions
@@ -312,6 +313,21 @@ def test_simulator_matches_like_an_empty_host_name_if_the_translation_fails() ->
     result = simulator.match_rule(_rule_pack(), ec.Rule(id="rule", match_host="^$"))
 
     assert isinstance(result, ec.MatchSuccess)
+
+
+def test_hand_written_hostname_translation_of_the_local_site_overrides_the_one_of_setup() -> None:
+    paths = ec.create_paths(cmk.utils.paths.omd_root)
+    (paths.config_dir.value / "wato").mkdir(parents=True, exist_ok=True)
+    (paths.config_dir.value / "wato/global.mk").write_text(
+        'hostname_translation = {"case": "lower"}\n'
+    )
+    paths.main_config_file.value.write_text('hostname_translation = {"case": "upper"}\n')
+
+    translation = mkeventd_wato.hostname_translation_of_site(
+        omd_site(), SiteConfigurations({omd_site(): _site_configuration(omd_site())})
+    )
+
+    assert translation == TranslationOptions(case="upper")
 
 
 @pytest.mark.usefixtures("request_context")

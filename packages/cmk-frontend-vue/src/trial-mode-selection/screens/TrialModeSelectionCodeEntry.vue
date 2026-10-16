@@ -5,7 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type TrialModeVerificationRequest } from 'cmk-shared-typing/typescript/trial_mode_verification_request'
-import { type TrialModeVerificationResponse } from 'cmk-shared-typing/typescript/trial_mode_verification_response'
+import {
+  type ErrorCode,
+  type TrialModeVerificationResponse
+} from 'cmk-shared-typing/typescript/trial_mode_verification_response'
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
@@ -74,7 +77,11 @@ const canVerify = computed(() => isComplete.value && emailSalt !== '')
 const canResend = computed(() => resendCooldown <= 0)
 const verifyRequestInFlight = ref(false)
 const verifyErrorMessage = ref(untranslated(''))
+const verifyErrorCode = ref<ErrorCode>()
 const errorMessage = computed(() => verifyErrorMessage.value || sendCodeErrorMessage)
+const canContinueUnverified = computed(
+  () => errorMessage.value !== '' && verifyErrorCode.value !== 'invalid_code'
+)
 
 // No countdown at the limit: the button stays disabled until midnight, not for 60 s.
 const resendLabel = computed(() =>
@@ -88,6 +95,11 @@ function formatCountdown(seconds: number): string {
   return `${minutes}:${String(seconds % 60).padStart(2, '0')}`
 }
 
+function clearVerifyError(): void {
+  verifyErrorMessage.value = untranslated('')
+  verifyErrorCode.value = undefined
+}
+
 /**
  * Verify the one time code.
  */
@@ -98,7 +110,7 @@ async function verify(): Promise<void> {
   if (verifyRequestInFlight.value) {
     return
   }
-  verifyErrorMessage.value = untranslated('')
+  clearVerifyError()
   verifyRequestInFlight.value = true
   const request: TrialModeVerificationRequest = {
     step: 'verify',
@@ -115,6 +127,7 @@ async function verify(): Promise<void> {
       verifyErrorMessage.value = response.errorMessage
         ? untranslated(response.errorMessage)
         : _t('Internal error. Please try again.')
+      verifyErrorCode.value = response.errorCode
       return
     }
     emit('verified')
@@ -139,7 +152,7 @@ async function verify(): Promise<void> {
  */
 async function resend(): Promise<void> {
   code.value = ''
-  verifyErrorMessage.value = untranslated('')
+  clearVerifyError()
   emit('resend')
   await nextTick()
   codeInput.value?.focus()
@@ -200,7 +213,7 @@ onMounted(() => codeInput.value?.focus())
       @back="emit('back')"
     >
       <CmkButton
-        v-if="errorMessage"
+        v-if="canContinueUnverified"
         variant="secondary"
         :running="saving"
         @click="emit('continueUnverified')"

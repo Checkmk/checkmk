@@ -986,6 +986,39 @@ describe('TrialModeSelectionApp', () => {
       ])
     })
 
+    it('offers no way around the verification for a wrong or expired code', async () => {
+      renderApp()
+      await reachCodeStep()
+      answerVerificationWith({
+        status: 'error',
+        errorCode: 'invalid_code',
+        errorMessage: 'The verification code is incorrect.'
+      })
+
+      await user.type(codeDigits()[0]!, '424242')
+
+      expect(await screen.findByText('The verification code is incorrect.')).toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: 'Continue without verification' })
+      ).not.toBeInTheDocument()
+    })
+
+    it('offers continuing without verification when the code was refused otherwise', async () => {
+      renderApp()
+      await reachCodeStep()
+      answerVerificationWith({
+        status: 'error',
+        errorCode: 'rejected',
+        errorMessage: 'You have exceeded the maximum number of attempts.'
+      })
+
+      await user.type(codeDigits()[0]!, '424242')
+
+      expect(
+        await screen.findByRole('button', { name: 'Continue without verification' })
+      ).toBeInTheDocument()
+    })
+
     it('keeps the code for another try when it could not be checked', async () => {
       renderApp()
       await reachCodeStep()
@@ -1260,6 +1293,30 @@ describe('TrialModeSelectionApp', () => {
         await screen.findByText('Too many verification codes have been requested.')
       ).toBeInTheDocument()
       expect(screen.queryByText('Your verification code has expired.')).not.toBeInTheDocument()
+    })
+
+    it('offers continuing without verification once a resend fails after a wrong code', async () => {
+      renderApp()
+      await reachCodeStep()
+      answerVerificationWith({
+        status: 'error',
+        errorCode: 'invalid_code',
+        errorMessage: 'Your verification code has expired.'
+      })
+      await user.type(codeDigits()[0]!, '424242')
+      await screen.findByText('Your verification code has expired.')
+      await vi.advanceTimersByTimeAsync(60_000)
+      answerVerificationWith({
+        status: 'error',
+        errorCode: 'rate_limited',
+        errorMessage: 'Too many verification codes have been requested.'
+      })
+
+      await user.click(resendButton())
+
+      expect(
+        await screen.findByRole('button', { name: 'Continue without verification' })
+      ).toBeInTheDocument()
     })
   })
 

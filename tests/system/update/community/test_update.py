@@ -12,8 +12,11 @@ from cmk.licensing.handler import LicenseState
 from tests.system.update.helpers import (
     bulk_discover_and_schedule,
     check_errors_in_log_files,
+    check_generated_files_present,
     check_services,
+    check_unseeded_config_warning,
     get_target_package,
+    plant_legacy_conf_d_file,
     update_site,
 )
 from tests.testlib.common.utils2 import get_services_with_status
@@ -35,6 +38,9 @@ def test_update(test_setup: tuple[Site, TypeCMKEdition, bool, str]) -> None:
     # get baseline monitoring data for each host
     base_data = base_site.get_host_services(hostname)
     assert len(get_services_with_status(base_data, 0)) > 0
+
+    check_generated_files_present(base_site)
+    planted = plant_legacy_conf_d_file(base_site)
 
     if target_edition.is_community_edition():
         target_site = update_site(base_site, get_target_package(target_edition), interactive_mode)
@@ -67,3 +73,4 @@ def test_update(test_setup: tuple[Site, TypeCMKEdition, bool, str]) -> None:
     check_services(target_site, hostname, base_data)
 
     check_errors_in_log_files(target_site)
+    check_unseeded_config_warning(target_site, planted)

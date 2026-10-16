@@ -7,6 +7,8 @@ import type { PresentationTheme } from '@/maps/types/api'
 
 // A theme is a CSS-variable token set applied inline on the slide root, so
 // shapes and text default to a coherent palette without per-element styling.
+// The colours are Checkmk palette colours, spelled out as hex because the
+// inspector's native colour picker takes its default from them.
 // Element insert-defaults pull from the active theme (see elementDefaults).
 // The index signature lets the tokens spread directly into a CSS-var style
 // object without casting.
@@ -18,8 +20,6 @@ export interface PresentationThemeTokens extends Record<string, string> {
   '--pres-panel': string
   '--pres-shape-fill': string
   '--pres-shape-stroke': string
-  '--pres-font': string
-  '--pres-font-display': string
 }
 
 export interface PresentationThemeMeta {
@@ -33,60 +33,52 @@ export const PRESENTATION_THEMES: Record<PresentationTheme, PresentationThemeMet
     id: 'midnight',
     title: 'Midnight',
     tokens: {
-      '--pres-bg': '#0b1020',
-      '--pres-fg': '#e5e7eb',
-      '--pres-muted': '#7c89a8',
-      '--pres-accent': '#38bdf8',
-      '--pres-panel': '#151c30',
-      '--pres-shape-fill': '#1e2a44',
-      '--pres-shape-stroke': '#38bdf8',
-      '--pres-font': 'ui-sans-serif, system-ui, sans-serif',
-      '--pres-font-display': "'Trebuchet MS', ui-sans-serif, system-ui, sans-serif"
+      '--pres-bg': '#0f1215',
+      '--pres-fg': '#ffffff',
+      '--pres-muted': '#99a5ac',
+      '--pres-accent': '#28a2f3',
+      '--pres-panel': '#262e36',
+      '--pres-shape-fill': '#303946',
+      '--pres-shape-stroke': '#28a2f3'
     }
   },
   paper: {
     id: 'paper',
     title: 'Paper',
     tokens: {
-      '--pres-bg': '#f4efe3',
-      '--pres-fg': '#23201a',
-      '--pres-muted': '#8a8170',
-      '--pres-accent': '#b45309',
-      '--pres-panel': '#ece4d3',
-      '--pres-shape-fill': '#e2d8c2',
-      '--pres-shape-stroke': '#b45309',
-      '--pres-font': "'Iowan Old Style', Georgia, ui-serif, serif",
-      '--pres-font-display': "'Iowan Old Style', Georgia, ui-serif, serif"
+      '--pres-bg': '#fbfbfe',
+      '--pres-fg': '#1e262e',
+      '--pres-muted': '#677883',
+      '--pres-accent': '#0667c1',
+      '--pres-panel': '#f0f0f4',
+      '--pres-shape-fill': '#e0e0e4',
+      '--pres-shape-stroke': '#0667c1'
     }
   },
   ops: {
     id: 'ops',
     title: 'Ops',
     tokens: {
-      '--pres-bg': '#050607',
-      '--pres-fg': '#f8fafc',
-      '--pres-muted': '#5b7060',
-      '--pres-accent': '#22c55e',
-      '--pres-panel': '#0d1410',
-      '--pres-shape-fill': '#0f1c14',
-      '--pres-shape-stroke': '#22c55e',
-      '--pres-font': "ui-monospace, 'Cascadia Code', Menlo, monospace",
-      '--pres-font-display': "ui-monospace, 'Cascadia Code', Menlo, monospace"
+      '--pres-bg': '#1c2228',
+      '--pres-fg': '#ffffff',
+      '--pres-muted': '#85939c',
+      '--pres-accent': '#15d1a0',
+      '--pres-panel': '#20272e',
+      '--pres-shape-fill': '#252c36',
+      '--pres-shape-stroke': '#15d1a0'
     }
   },
   aurora: {
     id: 'aurora',
     title: 'Aurora',
     tokens: {
-      '--pres-bg': '#191033',
-      '--pres-fg': '#f0e9ff',
-      '--pres-muted': '#9d8fc4',
-      '--pres-accent': '#c084fc',
-      '--pres-panel': '#241647',
-      '--pres-shape-fill': '#2e1d5c',
-      '--pres-shape-stroke': '#c084fc',
-      '--pres-font': 'ui-sans-serif, system-ui, sans-serif',
-      '--pres-font-display': "'Trebuchet MS', ui-sans-serif, system-ui, sans-serif"
+      '--pres-bg': '#021f3b',
+      '--pres-fg': '#ffffff',
+      '--pres-muted': '#8cb9e2',
+      '--pres-accent': '#53b5f5',
+      '--pres-panel': '#032b51',
+      '--pres-shape-fill': '#03396a',
+      '--pres-shape-stroke': '#53b5f5'
     }
   }
 }

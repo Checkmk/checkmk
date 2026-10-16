@@ -737,7 +737,6 @@ function patchCurrentSlot(patch: Record<string, unknown>): void {
   align-items: center;
   justify-content: center;
   color: var(--pres-muted);
-  font-family: var(--pres-font);
   font-size: 28px;
   letter-spacing: 0.02em;
   pointer-events: none;

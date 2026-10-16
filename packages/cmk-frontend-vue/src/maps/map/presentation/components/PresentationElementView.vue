@@ -152,7 +152,7 @@ const textStyle = computed(() => {
   return {
     color: resolve(el.color, '--pres-fg'),
     background: el.background ?? 'transparent',
-    fontFamily: el.font_family ?? 'var(--pres-font)',
+    fontFamily: el.font_family ?? undefined,
     fontSize: `${el.font_size}px`,
     fontWeight: el.font_weight,
     fontStyle: el.font_style,
@@ -548,7 +548,6 @@ function onTextBlur(): void {
   border: 1px dashed var(--pres-muted);
   border-radius: var(--border-radius);
   font-size: var(--font-size-small);
-  font-family: var(--pres-font, sans-serif);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--pres-muted);

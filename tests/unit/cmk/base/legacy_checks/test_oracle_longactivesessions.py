@@ -5,19 +5,12 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-import pytest
-
 from cmk.base.legacy_checks.oracle_longactivesessions import (
     check_oracle_longactivesessions,
     parse_oracle_longactivesessions,
 )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report 2e48e266-d1c2-11f0-9c9f-00155d017705: ValueError",
-)
 def test_check_session_row_with_extra_field() -> None:
     # Crash group 4502: a non-ASCII OS user name was split into two fields, so
     # the session row has ten fields instead of nine.

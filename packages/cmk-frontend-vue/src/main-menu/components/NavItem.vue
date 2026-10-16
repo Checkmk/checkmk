@@ -16,6 +16,8 @@ import { computed } from 'vue'
 
 import { getInjectedMainMenu } from '@/main-menu/provider/main-menu'
 
+import MnemonicTitle from './MnemonicTitle.vue'
+
 const mainMenu = getInjectedMainMenu()
 
 const props = defineProps<{
@@ -30,6 +32,8 @@ const combo = computed(() =>
 const highlighted = computed(
   () => combo.value !== null && highlightedCombo.value === comboKey(combo.value)
 )
+
+const altHint = computed(() => mainMenu.isAltHinted(props.item.shortcut))
 
 const color = computed<CmkMultitoneIconColor>(() => {
   return (props.active ? 'success' : 'font') as CmkMultitoneIconColor
@@ -52,7 +56,11 @@ const target = computed<string | undefined>(() => {
   <li
     :id="`nav-item-${item.id}`"
     class="mm-nav-item__li"
-    :class="{ 'mm-nav-item__li--active': active, 'mm-nav-item__li--small': hideItemTitle }"
+    :class="{
+      'mm-nav-item__li--active': active,
+      'mm-nav-item__li--small': hideItemTitle,
+      'mm-nav-item__li--alt-hint': altHint
+    }"
     :title="hideItemTitle ? item.title : item.hint"
     @mouseenter="highlightCombo(combo)"
     @mouseleave="highlightCombo(null)"
@@ -90,7 +98,11 @@ const target = computed<string | undefined>(() => {
         :color="mainMenu.getNavItemBadge(item.id)?.color"
         >{{ mainMenu.getNavItemBadge(item.id)?.content }}</CmkBadge
       >
-      <span v-if="!hideItemTitle">{{ item.title }}</span>
+      <MnemonicTitle
+        v-if="!hideItemTitle"
+        :title="item.title"
+        :mnemonic="altHint ? (item.shortcut?.key ?? null) : null"
+      />
     </a>
   </li>
 </template>
@@ -156,6 +168,13 @@ const target = computed<string | undefined>(() => {
 
     a {
       color: var(--success);
+    }
+  }
+
+  &.mm-nav-item__li--alt-hint {
+    a {
+      filter: brightness(1.3) drop-shadow(0 0 2px rgb(255 255 255 / 80%))
+        drop-shadow(0 0 6px rgb(255 255 255 / 50%));
     }
   }
 }

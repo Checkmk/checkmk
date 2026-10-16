@@ -71,7 +71,6 @@ const configuredStyle = computed(() => {
   background: var(--maps-map-view-label-bg);
   outline: 1px solid var(--border-color-hairline);
   border-radius: var(--border-radius);
-  backdrop-filter: blur(4px);
   text-shadow: var(--maps-map-view-text-halo);
   pointer-events: none;
 }

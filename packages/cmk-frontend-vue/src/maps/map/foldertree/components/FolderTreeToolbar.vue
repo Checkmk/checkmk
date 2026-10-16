@@ -236,7 +236,7 @@ function selectMode(value: string): void {
   font-size: 11px;
   font-weight: var(--font-weight-bold);
   line-height: 1;
-  border-radius: 9px;
+  border-radius: 9999px;
 }
 
 .maps-folder-tree-toolbar__truncated {

@@ -185,13 +185,12 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   gap: 6px;
   padding: 4px 8px;
   border-radius: var(--border-radius);
-  background: var(--maps-map-view-glass);
+  background: var(--maps-map-view-overlay-bg);
   border: 1px solid var(--default-border-color);
-  backdrop-filter: blur(6px);
   min-width: 300px;
 }
 
-/* Embedded in a toolbar: sit in the normal flow, no float/glass, so it never
+/* Embedded in a toolbar: sit in the normal flow, so it never
    covers map content. */
 .maps-map-search--inline {
   position: relative;
@@ -200,7 +199,6 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   z-index: auto;
   min-width: 0;
   width: 260px;
-  backdrop-filter: none;
   background: var(--ux-theme-1);
 }
 
@@ -234,12 +232,12 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   font-size: var(--font-size-large);
   line-height: 1;
   padding: 0 4px;
-  border-radius: 3px;
+  border-radius: var(--border-radius-half);
 }
 
 .maps-map-search__icon-btn:hover {
   color: var(--font-color);
-  background: rgb(255 255 255 / 8%);
+  background: var(--input-hover-bg-color);
 }
 
 .maps-map-search__input:focus-visible,
@@ -254,7 +252,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
 
 .maps-map-search__help--active {
   color: var(--font-color);
-  background: rgb(255 255 255 / 10%);
+  background: var(--input-hover-bg-color);
 }
 
 .maps-map-search__dropdown {
@@ -297,7 +295,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
 }
 
 .maps-map-search__operator:hover {
-  background: rgb(255 255 255 / 6%);
+  background: var(--input-hover-bg-color);
 }
 
 .maps-map-search__operator-tag {
@@ -311,7 +309,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   font-family: var(--font-monospace, ui-monospace, monospace);
   font-size: 11px;
   color: var(--font-color);
-  background: rgb(255 255 255 / 4%);
+  background: var(--background-muted);
 }
 
 .maps-map-search__operator-label {
@@ -324,7 +322,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   gap: var(--dimension-4);
   padding: 8px 10px;
   border-top: 1px solid var(--default-border-color);
-  background: rgb(255 255 255 / 3%);
+  background: var(--background-muted);
   font-size: 11px;
   line-height: 1.4;
   color: var(--font-color-dimmed);

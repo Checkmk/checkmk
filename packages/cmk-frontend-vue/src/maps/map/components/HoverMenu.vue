@@ -714,7 +714,7 @@ function fmtMetricValue(m: PerfMetric): string {
   overflow: hidden;
   height: 12px;
   border-radius: var(--border-radius);
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 10%);
+  box-shadow: 0 0 0 1px var(--default-border-color);
 }
 
 .maps-hover-menu__perfometer-seg {

@@ -1049,14 +1049,9 @@ function closeBulkAckModal(sent: boolean): void {
      one set. Only values Checkmk has no token for live here — a map does not
      get its own idea of a radius, a font size or a state colour. */
 
-  /* A near-opaque surface for the controls that float over a map: readable on
-     any background, without hiding what is behind them entirely. Checkmk's
-     tooltip surface rather than the map's own, so a card stands off the map. */
-  --maps-map-view-glass: color-mix(
-    in srgb,
-    var(--default-tooltip-background-color) 92%,
-    transparent
-  );
+  /* The surface of controls floating over a map. Checkmk's tooltip surface
+     rather than the map's own, so a card stands off the map. */
+  --maps-map-view-overlay-bg: var(--default-tooltip-background-color);
 
   /* Keeps an icon legible on any backdrop in either theme, where the
      theme-coupled invert it replaces left dark-map icons invisible in the

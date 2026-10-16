@@ -210,7 +210,7 @@ const alignLines: Record<string, [number, number][]> = {
   width: 30px;
   height: 30px;
   border: 1px solid var(--default-form-element-border-color);
-  border-radius: 6px;
+  border-radius: var(--border-radius);
   background: transparent;
   color: var(--font-color);
   cursor: pointer;

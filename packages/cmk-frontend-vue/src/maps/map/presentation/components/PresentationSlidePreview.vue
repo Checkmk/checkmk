@@ -129,7 +129,7 @@ function sampleFor(el: PresentationElement): ObjectState | undefined {
 .maps-presentation-slide-preview {
   position: relative;
   overflow: hidden;
-  border-radius: var(--dimension-4);
+  border-radius: var(--border-radius);
   pointer-events: none;
 }
 

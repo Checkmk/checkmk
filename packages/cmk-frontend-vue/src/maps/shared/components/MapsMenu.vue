@@ -106,9 +106,8 @@ function onKeydown(e: KeyboardEvent): void {
   min-width: 192px;
   max-width: calc(100% - 16px);
   padding: 6px 0;
-  background: var(--maps-map-view-glass);
-  backdrop-filter: blur(12px);
-  border-radius: var(--dimension-5);
+  background: var(--maps-map-view-overlay-bg);
+  border-radius: var(--border-radius);
   box-shadow:
     0 0 0 1px var(--default-border-color),
     var(--maps-shadow-canvas-overlay-high);

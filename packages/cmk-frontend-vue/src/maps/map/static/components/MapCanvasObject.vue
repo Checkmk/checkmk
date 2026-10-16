@@ -128,12 +128,12 @@ function onKeydown(event: KeyboardEvent): void {
 .maps-map-canvas-object--bind-target {
   outline: 3px solid var(--interactive-accent);
   outline-offset: 3px;
-  border-radius: var(--dimension-4);
+  border-radius: var(--border-radius);
 }
 
 .maps-map-canvas-object--selected {
   outline: 2px dashed var(--interactive-accent);
   outline-offset: 4px;
-  border-radius: 6px;
+  border-radius: var(--border-radius);
 }
 </style>

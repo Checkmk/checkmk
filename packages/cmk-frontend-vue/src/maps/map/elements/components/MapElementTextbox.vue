@@ -79,8 +79,7 @@ const configuredStyle = computed(() => {
     class="maps-map-element-textbox"
     :class="[
       classic ? 'maps-map-element-textbox--classic' : 'maps-map-element-textbox--boxed',
-      // Blurring an opaque imported background turns it into a frosted smear.
-      !classic && !background ? 'maps-map-element-textbox--glass' : '',
+      !classic && !background ? 'maps-map-element-textbox--surface' : '',
       !classic && !object.textbox_border
         ? selected
           ? 'maps-map-element-textbox--ring-selected'
@@ -122,12 +121,11 @@ const configuredStyle = computed(() => {
   overflow: auto;
   padding: 6px 10px;
   color: var(--font-color);
-  border-radius: var(--dimension-4);
+  border-radius: var(--border-radius);
 }
 
-.maps-map-element-textbox--glass {
-  background: var(--maps-map-view-glass);
-  backdrop-filter: blur(4px);
+.maps-map-element-textbox--surface {
+  background: var(--maps-map-view-overlay-bg);
 }
 
 .maps-map-element-textbox--ring {

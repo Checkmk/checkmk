@@ -130,7 +130,7 @@ function pick(layout: ServiceLayout): void {
   font-size: var(--font-size-normal);
   font-weight: 500;
   line-height: 16px;
-  border-radius: var(--dimension-5);
+  border-radius: var(--border-radius);
   transition: all 0.2s;
 }
 
@@ -144,7 +144,7 @@ function pick(layout: ServiceLayout): void {
 
 .maps-flow-service-layout-picker__button--off {
   color: var(--font-color-dimmed);
-  background: color-mix(in srgb, var(--ux-theme-3) 80%, transparent);
+  background: var(--ux-theme-3);
   box-shadow:
     0 0 0 1px var(--default-border-color),
     var(--maps-shadow-canvas-overlay-high);
@@ -178,7 +178,7 @@ function pick(layout: ServiceLayout): void {
   margin-bottom: 6px;
   overflow: hidden;
   background: var(--ux-theme-3);
-  border-radius: var(--dimension-5);
+  border-radius: var(--border-radius);
   box-shadow:
     0 0 0 1px var(--default-border-color),
     var(--maps-shadow-canvas-overlay-high);

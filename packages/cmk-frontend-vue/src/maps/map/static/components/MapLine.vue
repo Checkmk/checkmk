@@ -602,8 +602,8 @@ const wmLabelSingle = computed(() => {
         :y="wmLabelAnchors.inY - 10"
         :width="_labelBoxWidth(wmLabelIn)"
         height="20"
-        rx="3"
-        fill="white"
+        rx="2"
+        style="fill: var(--maps-map-view-overlay-bg)"
         :stroke="effectiveLineColor"
         stroke-width="1.5"
       />
@@ -613,7 +613,7 @@ const wmLabelSingle = computed(() => {
         text-anchor="middle"
         dominant-baseline="middle"
         font-weight="700"
-        :style="{ fill: '#000', fontSize: '11px' }"
+        :style="{ fill: 'var(--default-tooltip-text-color)', fontSize: '11px' }"
         >{{ wmLabelIn }}</text
       >
     </g>
@@ -623,8 +623,8 @@ const wmLabelSingle = computed(() => {
         :y="wmLabelAnchors.outY - 10"
         :width="_labelBoxWidth(wmLabelOut)"
         height="20"
-        rx="3"
-        fill="white"
+        rx="2"
+        style="fill: var(--maps-map-view-overlay-bg)"
         :stroke="effectiveLineColor"
         stroke-width="1.5"
       />
@@ -634,7 +634,7 @@ const wmLabelSingle = computed(() => {
         text-anchor="middle"
         dominant-baseline="middle"
         font-weight="700"
-        :style="{ fill: '#000', fontSize: '11px' }"
+        :style="{ fill: 'var(--default-tooltip-text-color)', fontSize: '11px' }"
         >{{ wmLabelOut }}</text
       >
     </g>

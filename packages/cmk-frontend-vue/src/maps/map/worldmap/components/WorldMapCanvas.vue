@@ -619,7 +619,7 @@ defineExpose({
   font-size: 11px;
   line-height: 1.4;
   color: var(--font-color);
-  background: var(--maps-map-view-glass);
+  background: var(--maps-map-view-overlay-bg);
 }
 
 .maps-world-map-canvas :deep(.maps-world-map-canvas__attribution a) {

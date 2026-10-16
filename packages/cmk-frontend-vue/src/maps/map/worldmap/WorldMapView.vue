@@ -304,7 +304,7 @@ defineExpose({
   font-size: var(--font-size-normal);
   text-align: center;
   color: var(--font-color);
-  background: var(--maps-map-view-glass);
+  background: var(--maps-map-view-overlay-bg);
   border-radius: var(--border-radius);
 }
 
@@ -319,7 +319,7 @@ defineExpose({
   gap: var(--dimension-4);
   padding: var(--dimension-3) var(--dimension-5);
   color: var(--font-color);
-  background: var(--maps-map-view-glass);
+  background: var(--maps-map-view-overlay-bg);
   border-radius: 9999px;
   transform: translateX(-50%);
 }
@@ -340,12 +340,11 @@ defineExpose({
   align-items: center;
   gap: var(--dimension-5);
   padding: var(--dimension-4) var(--dimension-6);
-  background: var(--maps-map-view-glass);
-  border-radius: var(--dimension-4);
+  background: var(--maps-map-view-overlay-bg);
+  border-radius: var(--border-radius);
   box-shadow:
     0 0 0 1px var(--default-border-color),
     var(--maps-shadow-canvas-overlay-high);
-  backdrop-filter: blur(12px);
   transform: translateX(-50%);
 }
 

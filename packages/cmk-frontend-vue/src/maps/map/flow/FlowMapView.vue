@@ -647,10 +647,9 @@ watch(serviceLayout, () => {
   color: var(--font-color);
   font-size: var(--font-size-normal);
   text-align: left;
-  background: var(--maps-map-view-glass);
+  background: var(--maps-map-view-overlay-bg);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
-  backdrop-filter: blur(6px);
   pointer-events: none;
 }
 

@@ -95,7 +95,7 @@ defineProps<{ label: TranslatedString }>()
   color: inherit;
   text-decoration: none;
   white-space: nowrap;
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius-half);
   cursor: pointer;
   user-select: none;
 

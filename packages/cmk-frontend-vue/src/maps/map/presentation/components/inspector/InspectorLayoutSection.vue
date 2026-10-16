@@ -174,7 +174,7 @@ function setOpacity(e: Event): void {
   height: 28px;
   margin-top: 14px;
   border: 1px solid var(--default-form-element-border-color);
-  border-radius: 6px;
+  border-radius: var(--border-radius);
   background: transparent;
   color: var(--font-color-dimmed);
   cursor: pointer;

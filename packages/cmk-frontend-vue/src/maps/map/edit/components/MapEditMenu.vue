@@ -106,7 +106,7 @@ function onKeydown(event: KeyboardEvent, index: number): void {
   margin-bottom: var(--dimension-4);
   overflow: hidden;
   background: var(--ux-theme-3);
-  border-radius: var(--dimension-5);
+  border-radius: var(--border-radius);
   box-shadow:
     0 0 0 1px var(--default-border-color),
     var(--maps-shadow-canvas-overlay-high);

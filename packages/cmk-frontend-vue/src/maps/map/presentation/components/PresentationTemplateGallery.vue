@@ -85,7 +85,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgb(0 0 0 / 45%);
+  background: var(--color-popup-backdrop);
 }
 
 .maps-presentation-template-gallery__card {
@@ -93,7 +93,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   flex-direction: column;
   width: min(920px, calc(100% - 64px));
   max-height: calc(100% - 64px);
-  border-radius: 14px;
+  border-radius: var(--border-radius);
   background: var(--ux-theme-3);
   border: 1px solid var(--default-border-color, rgb(255 255 255 / 8%));
   color: var(--font-color);
@@ -150,7 +150,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   gap: var(--dimension-3);
   padding: var(--dimension-4);
   border: 1px solid var(--default-border-color, rgb(255 255 255 / 10%));
-  border-radius: var(--dimension-5);
+  border-radius: var(--border-radius);
   background: transparent;
   color: inherit;
   cursor: pointer;
@@ -171,7 +171,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   justify-content: center;
   height: 139px;
   border: 1px dashed var(--default-border-color, rgb(255 255 255 / 18%));
-  border-radius: var(--dimension-4);
+  border-radius: var(--border-radius);
   color: var(--font-color-dimmed);
 }
 

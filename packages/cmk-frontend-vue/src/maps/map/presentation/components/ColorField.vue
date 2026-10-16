@@ -79,7 +79,7 @@ function onChange(e: Event): void {
   position: relative;
   width: 28px;
   height: 28px;
-  border-radius: 5px;
+  border-radius: var(--border-radius);
   border: 1px solid var(--default-border-color, rgb(255 255 255 / 20%));
   overflow: hidden;
   cursor: pointer;

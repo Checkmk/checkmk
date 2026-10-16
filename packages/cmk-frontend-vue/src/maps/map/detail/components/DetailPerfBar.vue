@@ -59,7 +59,7 @@ defineProps<{
 
 .maps-detail-perf-bar--large {
   height: 14px;
-  border-radius: 6px;
+  border-radius: var(--border-radius);
 }
 
 .maps-detail-perf-bar__fill {

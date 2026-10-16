@@ -197,7 +197,7 @@ function onRowClick(id: string, e: MouseEvent): void {
   width: 24px;
   height: 24px;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--border-radius);
   background: transparent;
   color: var(--font-color-dimmed);
   cursor: pointer;

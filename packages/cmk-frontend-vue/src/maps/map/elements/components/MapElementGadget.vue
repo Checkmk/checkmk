@@ -91,7 +91,7 @@ const metricUnits = useMetricUnits({ ...binding, enabled: readsMetrics })
 }
 
 .maps-map-element-gadget__frame--selected {
-  border-radius: var(--dimension-5);
+  border-radius: var(--border-radius);
   box-shadow:
     0 0 0 2px var(--ux-theme-1),
     0 0 0 4px var(--interactive-accent);

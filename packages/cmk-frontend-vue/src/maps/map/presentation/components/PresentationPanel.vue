@@ -20,7 +20,7 @@ through Vue's attribute fallthrough).
 
 <style scoped>
 .maps-presentation-panel {
-  border-radius: 10px;
+  border-radius: var(--border-radius);
   background: var(--ux-theme-3);
   border: 1px solid var(--default-border-color);
   box-shadow: var(--maps-shadow-canvas-overlay-high);

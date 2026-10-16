@@ -60,7 +60,7 @@ defineProps<{
   position: absolute;
   inset: 0;
   z-index: 5;
-  background: var(--maps-map-view-glass);
+  background: var(--maps-map-view-overlay-bg);
 }
 
 .maps-map-placeholder--error .maps-map-placeholder__message {

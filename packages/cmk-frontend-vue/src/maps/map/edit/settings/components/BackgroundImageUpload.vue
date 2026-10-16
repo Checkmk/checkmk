@@ -137,7 +137,7 @@ function removeOrCancel() {
   gap: var(--dimension-5);
   padding: var(--dimension-4) var(--dimension-5);
   background: var(--default-form-element-bg-color);
-  border-radius: var(--dimension-4);
+  border-radius: var(--border-radius);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--interactive-accent) 50%, transparent);
 }
 
@@ -188,7 +188,7 @@ function removeOrCancel() {
   font-size: 11px;
   color: var(--font-color-dimmed);
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: var(--border-radius);
   transition:
     color 0.15s,
     background-color 0.15s;
@@ -224,7 +224,7 @@ function removeOrCancel() {
   color: var(--font-color-dimmed);
   cursor: pointer;
   background: var(--default-form-element-bg-color);
-  border-radius: var(--dimension-4);
+  border-radius: var(--border-radius);
   box-shadow: 0 0 0 1px var(--default-form-element-border-color);
   transition: all 0.15s;
 }

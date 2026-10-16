@@ -261,7 +261,7 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
   margin: 0;
   padding: 0;
   border: none;
-  border-radius: var(--dimension-5);
+  border-radius: var(--border-radius);
   transition: all 0.2s;
 }
 
@@ -303,7 +303,7 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
 }
 
 .maps-map-edit-tools__pop-enter-active {
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.3s cubic-bezier(0, 0, 0.2, 1);
   transform-origin: bottom right;
 }
 

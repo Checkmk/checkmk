@@ -330,8 +330,7 @@ function onConfirmDelete(): void {
 }
 
 .maps-object-properties-modal__backdrop--dim {
-  background: rgb(0 0 0 / 60%);
-  backdrop-filter: blur(4px);
+  background: var(--color-popup-backdrop);
 }
 
 .maps-object-properties-modal__card {

@@ -162,7 +162,7 @@ const imageStyle = computed(() => ({
 
 .maps-map-element-icon__image--stateful {
   background: color-mix(in srgb, var(--maps-map-element-icon-state) 18%, transparent);
-  border-radius: 5px;
+  border-radius: var(--border-radius);
   box-shadow:
     0 0 0 2.5px var(--maps-map-element-icon-state),
     0 0 7px 1px var(--maps-map-element-icon-state);

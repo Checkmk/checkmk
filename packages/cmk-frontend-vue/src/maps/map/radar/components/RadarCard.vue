@@ -98,7 +98,7 @@ function onKeydown(event: KeyboardEvent): void {
      hue and stay legible in both themes. */
   color: color-mix(in srgb, var(--maps-radar-card-color) 65%, var(--font-color));
   background: color-mix(in srgb, var(--maps-radar-card-color) 8%, transparent);
-  border-radius: var(--dimension-5);
+  border-radius: var(--border-radius);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--maps-radar-card-color) 20%, transparent);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);

@@ -80,10 +80,7 @@ onUnmounted(() => {
 .maps-world-map-thumbnail :deep(.maps-world-map-thumbnail__attribution) {
   font-size: 11px;
   color: var(--font-color);
-  background: var(
-    --maps-map-view-glass,
-    color-mix(in srgb, var(--default-tooltip-background-color) 92%, transparent)
-  );
+  background: var(--default-tooltip-background-color);
 }
 
 .maps-world-map-thumbnail :deep(.maps-world-map-thumbnail__attribution a) {

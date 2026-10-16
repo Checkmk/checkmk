@@ -40,7 +40,7 @@ const { _t } = usei18n()
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: var(--border-radius);
   background: transparent;
   border: 1px solid transparent;
   cursor: pointer;

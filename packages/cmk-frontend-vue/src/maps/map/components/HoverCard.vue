@@ -24,9 +24,8 @@ const emit = defineEmits<{
   min-width: 208px;
   max-width: 288px;
   padding: 14px;
-  background: var(--maps-map-view-glass);
-  backdrop-filter: blur(12px);
-  border-radius: var(--dimension-5);
+  background: var(--maps-map-view-overlay-bg);
+  border-radius: var(--border-radius);
   box-shadow:
     0 0 0 1px var(--default-border-color),
     var(--maps-shadow-canvas-overlay-high);

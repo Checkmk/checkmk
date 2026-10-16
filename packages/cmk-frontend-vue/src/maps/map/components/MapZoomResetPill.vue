@@ -40,15 +40,14 @@ defineEmits<{ reset: [] }>()
   padding: 6px 14px;
   border-radius: var(--border-radius);
 
-  /* Teleported out of the map view, so the token it declares cannot be
-     inherited — the fallback keeps the pill readable either way. */
-  background: var(--maps-map-view-glass, color-mix(in srgb, var(--ux-theme-1) 92%, transparent));
+  /* Teleported out of the map view, so it cannot inherit the map's overlay
+     surface and names the tooltip surface that one stands for. */
+  background: var(--default-tooltip-background-color);
   border: 1px solid var(--default-border-color);
   color: var(--font-color);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  backdrop-filter: blur(6px);
 }
 
 .maps-map-zoom-reset-pill:hover {

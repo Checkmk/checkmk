@@ -53,11 +53,10 @@ defineEmits<{ exit: [] }>()
   width: var(--dimension-9);
   height: var(--dimension-9);
   color: var(--font-color);
-  background: var(--maps-map-view-glass, color-mix(in srgb, var(--ux-theme-1) 92%, transparent));
+  background: var(--maps-map-view-overlay-bg);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
   cursor: pointer;
-  backdrop-filter: blur(6px);
 }
 
 .maps-map-kiosk-exit:hover {

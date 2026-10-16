@@ -321,7 +321,7 @@ function onContextMenu(event: MouseEvent): void {
   flex-shrink: 0;
   padding: 1px 6px;
   font-size: var(--font-size-small);
-  border-radius: 9px;
+  border-radius: 9999px;
 }
 
 .maps-folder-tree-row__badge--empty {
@@ -352,7 +352,7 @@ function onContextMenu(event: MouseEvent): void {
   font-weight: var(--font-weight-bold);
   line-height: 1;
   text-align: center;
-  border-radius: 9px;
+  border-radius: 9999px;
 }
 
 .maps-folder-tree-row__site {

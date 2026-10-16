@@ -432,14 +432,14 @@ const slidePresets = SLIDE_PRESETS
   display: flex;
   gap: var(--dimension-2);
   padding: var(--dimension-2);
-  border-radius: 7px;
+  border-radius: var(--border-radius);
   background: var(--ux-theme-1, rgb(0 0 0 / 20%));
 }
 
 .maps-presentation-inspector-panel__tab {
   padding: 4px 12px;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--border-radius);
   background: transparent;
   color: var(--font-color-dimmed);
   font-size: var(--font-size-normal);
@@ -510,7 +510,7 @@ const slidePresets = SLIDE_PRESETS
   color: var(--font-color);
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--border-radius);
 }
 
 .maps-presentation-inspector-panel__name:hover {
@@ -534,7 +534,7 @@ const slidePresets = SLIDE_PRESETS
   width: 28px;
   height: 28px;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--border-radius);
   background: transparent;
   color: var(--font-color-dimmed);
   cursor: pointer;
@@ -596,7 +596,7 @@ const slidePresets = SLIDE_PRESETS
 .maps-presentation-inspector-panel__preset {
   padding: 6px 4px;
   border: 1px solid var(--default-form-element-border-color);
-  border-radius: 6px;
+  border-radius: var(--border-radius);
   background: transparent;
   color: inherit;
   cursor: pointer;

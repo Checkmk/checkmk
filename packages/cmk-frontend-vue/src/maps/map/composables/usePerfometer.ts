@@ -23,7 +23,7 @@ export function usePerfometer(binding: MetricInfoBinding): Ref<PerfometerResult 
 
 /**
  * The GUI paints a Perf-O-Meter's unfilled remainder with its own theme filler,
- * which glares on the glass cards a map draws on. Maps swaps it for the same
+ * which glares on the cards a map draws on. Maps swaps it for the same
  * track colour its gauges use — a token reference, so it follows the theme
  * wherever CSS resolves it.
  */

@@ -435,7 +435,7 @@ function onTextBlur(): void {
   top: 50%;
   transform: translate(-50%, -50%);
   padding: 1px 6px;
-  border-radius: 6px;
+  border-radius: var(--border-radius);
   line-height: 1.2;
   white-space: nowrap;
   pointer-events: none;
@@ -486,7 +486,7 @@ function onTextBlur(): void {
 .maps-presentation-element-view__data {
   width: 100%;
   height: 100%;
-  border-radius: 14px;
+  border-radius: var(--border-radius);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -546,7 +546,7 @@ function onTextBlur(): void {
   right: 6px;
   padding: 0 5px;
   border: 1px dashed var(--pres-muted);
-  border-radius: 5px;
+  border-radius: var(--border-radius);
   font-size: var(--font-size-small);
   font-family: var(--pres-font, sans-serif);
   letter-spacing: 0.04em;

@@ -111,7 +111,7 @@ const source = computed(() => {
   width: 100%;
   height: 100%;
   object-fit: fill;
-  border-radius: var(--dimension-4);
+  border-radius: var(--border-radius);
 }
 
 .maps-map-element-embedded-graph__frame {
@@ -119,6 +119,6 @@ const source = computed(() => {
   width: 100%;
   height: 100%;
   border: 0;
-  border-radius: var(--dimension-4);
+  border-radius: var(--border-radius);
 }
 </style>

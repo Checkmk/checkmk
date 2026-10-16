@@ -124,7 +124,7 @@ function onResizeStart(event: PointerEvent): void {
    between marker and dashes: a marker is state-coloured, often in the same
    green as the dashes, and sits on map tiles of any colour. */
 .maps-world-map-marker--selected {
-  border-radius: 9px;
+  border-radius: var(--border-radius);
   outline: 3px dashed var(--interactive-accent);
   outline-offset: 5px;
   box-shadow:

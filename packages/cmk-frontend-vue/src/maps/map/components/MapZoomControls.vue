@@ -95,11 +95,10 @@ defineEmits<{ 'zoom-in': []; 'zoom-out': []; fit: [] }>()
   font-size: var(--font-size-large);
   line-height: 1;
   color: var(--font-color);
-  background: var(--maps-map-view-glass);
+  background: var(--maps-map-view-overlay-bg);
   border: 0;
   border-radius: 0;
   cursor: pointer;
-  backdrop-filter: blur(6px);
 }
 
 .maps-map-zoom-controls__button + .maps-map-zoom-controls__button {

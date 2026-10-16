@@ -283,7 +283,7 @@ function formatExact(seconds: number | null | undefined): string {
   font-size: 9px;
   font-weight: var(--font-weight-bold);
   padding: 1px 5px;
-  border-radius: 3px;
+  border-radius: var(--border-radius-half);
   text-transform: uppercase;
 }
 

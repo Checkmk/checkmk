@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import pytest
 
 from livestatus import SiteConfigurations
@@ -53,7 +55,8 @@ def test_the_sites_list_counts_the_registered_variables_pushed_to_a_remote_site(
 ) -> None:
     ConfigDomainGUI().save_site_globals({"start_url": "dashboard.py", "wato_enabled": True})
 
-    # astrein: disable=http-status-literal
-    response = logged_in_admin_wsgi_app.get("/NO_SITE/check_mk/wato.py?mode=sites", status=200)
+    response = logged_in_admin_wsgi_app.get(
+        "/NO_SITE/check_mk/wato.py?mode=sites", status=HTTPStatus.OK
+    )
 
     assert "1 specific settings" in response.text

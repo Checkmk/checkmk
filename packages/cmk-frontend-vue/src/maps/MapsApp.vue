@@ -158,6 +158,15 @@ maps.py emits, so they match nothing on the other pages sharing this bundle.
    pill), which would otherwise anchor to the viewport — and to the corner
    behind the Checkmk sidebar. */
 .maps-app--embed {
+  /* Shadows only for UI over map content, where the surface below is an
+     arbitrary image or tile that a tone step or border does not separate;
+     elsewhere Maps stays flat like the rest of the GUI. Declared on the
+     wrapper rather than the app, so the overlays teleported to ``#app``
+     inherit them too. */
+  --maps-shadow-canvas-overlay-low: 0 1px 3px rgb(0 0 0 / 50%);
+  --maps-shadow-canvas-overlay-high:
+    0 10px 15px -3px rgb(0 0 0 / 30%), 0 4px 6px -4px rgb(0 0 0 / 30%);
+
   height: 100%;
   contain: layout;
 }

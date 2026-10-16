@@ -71,7 +71,7 @@ const emit = defineEmits<{
   background: var(--ux-theme-3);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
-  box-shadow: 0 6px 24px rgb(0 0 0 / 40%);
+  box-shadow: var(--maps-shadow-canvas-overlay-high);
   transform: translateX(-50%);
 }
 

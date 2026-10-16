@@ -142,7 +142,7 @@ const buttons = computed<ActionButton[]>(() => {
   border-radius: var(--dimension-5);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 25px 50px -12px rgb(0 0 0 / 40%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-map-object-action-bar__label {

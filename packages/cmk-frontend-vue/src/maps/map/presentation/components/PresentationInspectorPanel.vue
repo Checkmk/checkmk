@@ -450,7 +450,6 @@ const slidePresets = SLIDE_PRESETS
 .maps-presentation-inspector-panel__tab--on {
   background: var(--ux-theme-3);
   color: var(--font-color);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
 }
 
 .maps-presentation-inspector-panel__tab:disabled {

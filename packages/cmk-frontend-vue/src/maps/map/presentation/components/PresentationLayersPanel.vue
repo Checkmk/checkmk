@@ -52,7 +52,7 @@ function onRowClick(id: string, e: MouseEvent): void {
 </script>
 
 <template>
-  <PresentationPanel raised class="maps-presentation-layers-panel" @pointerdown.stop>
+  <PresentationPanel class="maps-presentation-layers-panel" @pointerdown.stop>
     <div class="maps-presentation-layers-panel__head">
       <span>{{ _t('Layers') }}</span>
       <CmkIconButton

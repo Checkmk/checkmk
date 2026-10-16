@@ -73,24 +73,21 @@ const { toasts } = useToast()
   color: var(--success);
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--success) 30%, transparent),
-    0 20px 25px -5px rgb(0 0 0 / 40%),
-    0 8px 10px -6px rgb(0 0 0 / 40%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-toast-container__toast--error {
   color: var(--status-text-color-error-pale);
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--status-color-error-bright) 30%, transparent),
-    0 20px 25px -5px rgb(0 0 0 / 40%),
-    0 8px 10px -6px rgb(0 0 0 / 40%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-toast-container__toast--warning {
   color: var(--color-warning);
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--color-warning) 30%, transparent),
-    0 20px 25px -5px rgb(0 0 0 / 40%),
-    0 8px 10px -6px rgb(0 0 0 / 40%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-toast-container__toast-icon {

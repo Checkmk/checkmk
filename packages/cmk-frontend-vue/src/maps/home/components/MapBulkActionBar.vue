@@ -79,7 +79,6 @@ const ariaLabel = computed(() =>
   background: var(--ux-theme-3);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 25%);
   max-width: calc(100vw - 24px);
 }
 

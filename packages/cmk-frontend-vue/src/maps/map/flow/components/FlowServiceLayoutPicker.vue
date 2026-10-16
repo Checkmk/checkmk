@@ -139,8 +139,7 @@ function pick(layout: ServiceLayout): void {
   background: color-mix(in srgb, var(--interactive-accent) 15%, transparent);
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--interactive-accent) 40%, transparent),
-    0 10px 15px -3px rgb(0 0 0 / 30%),
-    0 4px 6px -4px rgb(0 0 0 / 30%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-flow-service-layout-picker__button--off {
@@ -148,8 +147,7 @@ function pick(layout: ServiceLayout): void {
   background: color-mix(in srgb, var(--ux-theme-3) 80%, transparent);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 10px 15px -3px rgb(0 0 0 / 30%),
-    0 4px 6px -4px rgb(0 0 0 / 30%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-flow-service-layout-picker__button--off:hover {
@@ -179,7 +177,7 @@ function pick(layout: ServiceLayout): void {
   border-radius: var(--dimension-5);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 25px 50px -12px rgb(0 0 0 / 50%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-flow-service-layout-picker__item {

@@ -344,7 +344,7 @@ defineExpose({
   border-radius: var(--dimension-4);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 25px 50px -12px rgb(0 0 0 / 25%);
+    var(--maps-shadow-canvas-overlay-high);
   backdrop-filter: blur(12px);
   transform: translateX(-50%);
 }

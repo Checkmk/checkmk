@@ -76,7 +76,7 @@ defineProps<{ state: ObjectState | undefined }>()
 
   /* A shadow rather than a ring in the page colour, which reads as a dark blot
      on the light tiles of a geo map. */
-  box-shadow: 0 1px 3px rgb(0 0 0 / 50%);
+  box-shadow: var(--maps-shadow-canvas-overlay-low);
 }
 
 .maps-map-element-state-badges__badge--stale {

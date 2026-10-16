@@ -50,7 +50,6 @@ const emit = defineEmits<{
   <!-- Hidden rather than absent until measured: the form's height decides where
        it can sit, and a flash at the top-left corner would be worse. -->
   <PresentationPanel
-    raised
     class="maps-presentation-connect-popover"
     :style="position ?? { visibility: 'hidden', left: '0px', top: '0px' }"
     @pointerdown.stop

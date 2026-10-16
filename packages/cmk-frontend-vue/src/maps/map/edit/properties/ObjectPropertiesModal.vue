@@ -342,16 +342,13 @@ function onConfirmDelete(): void {
   background: var(--ux-theme-3);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
-
-  /* No elevation token exists in the design system, and this card has to lift
-     off the map behind it — so the shadow stays a literal. */
-  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 60%);
 }
 
 .maps-object-properties-modal__card--popover {
   position: absolute;
   width: 400px;
   max-height: 75%;
+  box-shadow: var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-object-properties-modal__card--modal {

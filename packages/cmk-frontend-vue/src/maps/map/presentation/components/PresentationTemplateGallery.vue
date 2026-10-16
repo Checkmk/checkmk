@@ -96,7 +96,6 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   border-radius: 14px;
   background: var(--ux-theme-3);
   border: 1px solid var(--default-border-color, rgb(255 255 255 / 8%));
-  box-shadow: 0 24px 64px rgb(0 0 0 / 50%);
   color: var(--font-color);
 }
 

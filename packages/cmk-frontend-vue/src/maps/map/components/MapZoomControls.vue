@@ -82,7 +82,7 @@ defineEmits<{ 'zoom-in': []; 'zoom-out': []; fit: [] }>()
   overflow: hidden;
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
-  box-shadow: var(--maps-map-view-badge-shadow);
+  box-shadow: var(--maps-shadow-canvas-overlay-low);
 }
 
 .maps-map-zoom-controls__button {

@@ -33,7 +33,7 @@ defineProps<{
   height: 10px;
   border: 2px solid var(--white);
   border-radius: 9999px;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 50%);
+  box-shadow: var(--maps-shadow-canvas-overlay-low);
   cursor: move;
 }
 

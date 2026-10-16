@@ -29,7 +29,7 @@ const emit = defineEmits<{
   border-radius: var(--dimension-5);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 25px 50px -12px rgb(0 0 0 / 60%);
+    var(--maps-shadow-canvas-overlay-high);
 
   /* Hoverable for its links; leaving it re-schedules the close. */
   pointer-events: auto;

@@ -1084,7 +1084,6 @@ function closeBulkAckModal(sent: boolean): void {
 
   /* An object monitoring does not know: a dimmed disc behind its dashed edge. */
   --maps-map-view-missing-fill: rgb(63 63 70 / 40%);
-  --maps-map-view-badge-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 4px -2px rgb(0 0 0 / 10%);
   --maps-map-view-grid: color-mix(in srgb, var(--interactive-accent) 60%, transparent);
 
   /* Gadgets keep a dark "instrument" look in either theme: their value text is

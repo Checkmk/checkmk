@@ -111,9 +111,6 @@ function onKeydown(event: KeyboardEvent): void {
 
 .maps-radar-card:not(.maps-radar-card--compact):hover {
   transform: translateY(-2px);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--maps-radar-card-color) 20%, transparent),
-    var(--maps-map-view-badge-shadow);
 }
 
 .maps-radar-card--compact {

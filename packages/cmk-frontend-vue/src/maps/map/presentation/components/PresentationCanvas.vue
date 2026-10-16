@@ -721,7 +721,7 @@ function patchCurrentSlot(patch: Record<string, unknown>): void {
 }
 
 .maps-presentation-canvas__stage {
-  box-shadow: 0 12px 48px rgb(0 0 0 / 50%);
+  box-shadow: 0 0 0 1px var(--border-color-hairline);
   user-select: none;
 }
 

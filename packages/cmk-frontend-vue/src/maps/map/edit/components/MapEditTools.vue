@@ -247,7 +247,7 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
   border-radius: var(--border-radius);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 25px 50px -12px rgb(0 0 0 / 60%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 /* Checkmk styles every button of the page; these are plain tiles. The radius
@@ -271,25 +271,21 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
 
 .maps-map-edit-tools__button--primary {
   background: var(--interactive-accent);
-  box-shadow:
-    0 10px 15px -3px rgb(0 0 0 / 30%),
-    0 4px 6px -4px rgb(0 0 0 / 30%);
+  box-shadow: var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-map-edit-tools__button--active {
   background: var(--default-form-element-bg-color);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 10px 15px -3px rgb(0 0 0 / 30%),
-    0 4px 6px -4px rgb(0 0 0 / 30%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-map-edit-tools__button--idle {
   background: var(--ux-theme-3);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 10px 15px -3px rgb(0 0 0 / 30%),
-    0 4px 6px -4px rgb(0 0 0 / 30%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-map-edit-tools__button--idle:hover {

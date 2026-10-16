@@ -39,9 +39,16 @@ from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
 from cmk.graphing_engine import (
     build_matched_graphs,
+    ConsolidationFunction,
+    evaluate_graphs,
+    FetchedData,
+    Graph,
     MetricName,
+    MetricProtocol,
+    RRDMetric,
     Service,
     SiteID,
+    TimeRange,
 )
 from cmk.graphing_engine import (
     HostName as EngineHostName,
@@ -321,14 +328,14 @@ def _metrics_payload(
     return out
 
 
-def _evaluated_metric_names(
+def _matched_graphs(
     plugin: GraphFromAPI,
     metrics: Mapping[MetricName, EvaluatedMetric],
     engine: _EngineInputs,
     object_context: tuple[SiteId, HostName, ServiceName],
-) -> list[MetricName]:
-    """Canonical names of the metrics a graph plugin would actually draw;
-    empty when the plugin doesn't apply to these metrics.
+) -> Sequence[Graph]:
+    """The graphs a graph plugin would draw; empty when the plugin doesn't
+    apply to these metrics.
 
     The engine does the matching, against exactly the metrics this perfdata
     resolved to: the SPA already sent us the object's ``perf_data``, so the
@@ -341,7 +348,7 @@ def _evaluated_metric_names(
         service_name=EngineServiceName(service_name),
     )
     available = frozenset(metrics)
-    graphs = build_matched_graphs(
+    return build_matched_graphs(
         localizer=translate_to_current_language,
         fetch_metric_names=lambda: {service: available},
         kind=_GRAPH_KIND,
@@ -349,7 +356,38 @@ def _evaluated_metric_names(
         registered_metrics=engine.registered_metric_plugins,
         graph_name=plugin.name,
     )
+
+
+def _metric_names(graphs: Sequence[Graph]) -> list[MetricName]:
     return sorted({metric.metric_name for graph in graphs for metric in graph.metrics()})
+
+
+def _graph_title(graph: Graph, evaluated: Mapping[MetricName, EvaluatedMetric]) -> str:
+    """The graph's title with the values it quotes filled in, such as the
+    core count in "CPU load - 4 CPU cores".
+
+    The engine fills them in from the perfdata the SPA sent rather than from
+    RRD, so no curve is fetched for a title.
+    """
+
+    def _readings(
+        metrics: Sequence[MetricProtocol],
+        *,
+        consolidation_function: ConsolidationFunction,  # noqa: ARG001
+        time_range: TimeRange,  # noqa: ARG001
+    ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
+        return {
+            metric: [FetchedData(performance_data=reading.performance_data, time_series=None)]
+            for metric in metrics
+            if isinstance(metric, RRDMetric) and (reading := evaluated.get(metric.metric_name))
+        }
+
+    return evaluate_graphs(
+        consolidation_function=ConsolidationFunction.MAX,
+        time_range=TimeRange(start=0, end=0, step=0),
+        graphs=[graph],
+        fetch_data=_readings,
+    )[0].title
 
 
 def _graphs_payload(
@@ -377,20 +415,23 @@ def _graphs_payload(
     groups: list[GraphGroup] = []
     for _name, plugin in sort_registered_graph_plugins(registered_graphs):
         if isinstance(plugin, graphs_v1.Bidirectional | graphs_v2_unstable.Bidirectional):
-            upper = _evaluated_metric_names(plugin.upper, metrics, engine, object_context)
-            lower = _evaluated_metric_names(plugin.lower, metrics, engine, object_context)
+            upper = _metric_names(_matched_graphs(plugin.upper, metrics, engine, object_context))
+            lower = _metric_names(_matched_graphs(plugin.lower, metrics, engine, object_context))
             names = upper + [n for n in lower if n not in upper]
             mirrored = lower
+            # The title belongs to the whole plugin, not to its halves.
+            matched = _matched_graphs(plugin, metrics, engine, object_context)
         else:
-            names = _evaluated_metric_names(plugin, metrics, engine, object_context)
+            matched = _matched_graphs(plugin, metrics, engine, object_context)
+            names = _metric_names(matched)
             mirrored = []
         raw_labels = _raw_labels(names)
-        if not raw_labels:
+        if not raw_labels or not matched:
             continue
         groups.append(
             GraphGroup(
                 graph_id=plugin.name,
-                title=plugin.title.localize(translate_to_current_language),
+                title=_graph_title(matched[0], metrics),
                 metrics=raw_labels,
                 mirrored=_raw_labels(mirrored),
             )

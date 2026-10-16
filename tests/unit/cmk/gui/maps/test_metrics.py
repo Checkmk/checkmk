@@ -57,6 +57,7 @@ def _metric(name: str, title: Title, unit: metrics_api.Unit) -> metrics_api.Metr
 
 _PERCENT = metrics_api.Unit(metrics_api.DecimalNotation("%"), metrics_api.AutoPrecision(2))
 _BYTES = metrics_api.Unit(metrics_api.IECNotation("B"), metrics_api.StrictPrecision(1))
+_COUNT = metrics_api.Unit(metrics_api.DecimalNotation(""), metrics_api.StrictPrecision(2))
 
 # Two views of the same registry, as ``metric_info`` takes them: the plug-in
 # objects the evaluation engine builds quantities from, and the parsed display
@@ -66,6 +67,7 @@ _METRIC_PLUGINS: Mapping[str, metrics_api.Metric] = {
     "mem_used": _metric("mem_used", Title("RAM used"), _BYTES),
     "if_in_bps": _metric("if_in_bps", Title("Input bandwidth"), _PERCENT),
     "if_out_bps": _metric("if_out_bps", Title("Output bandwidth"), _PERCENT),
+    "load1": _metric("load1", Title("CPU load average of last minute"), _COUNT),
 }
 
 _REGISTERED_METRICS: Mapping[str, RegisteredMetric] = {
@@ -115,6 +117,11 @@ _REGISTERED_GRAPHS: Mapping[str, GraphFromAPI] = {
         lower=graphs_api.Graph(
             name="bandwidth_down", title=Title("In"), compound_lines=["if_in_bps"]
         ),
+    ),
+    "cpu_load": graphs_api.Graph(
+        name="cpu_load",
+        title=Title('CPU load - _EXPRESSION:{"metric":"load1","scalar":"max"} CPU cores'),
+        compound_lines=["load1"],
     ),
 }
 
@@ -280,6 +287,22 @@ def test_graphs_bidirectional_reports_lower_half_as_mirrored(request_context: No
             mirrored=["if_in_bps"],
         )
     ]
+
+
+def test_graphs_title_quotes_the_perfdata_value(request_context: None) -> None:
+    graphs = _info_with_graphs("load1=1.09;;;0;4").graphs
+
+    assert graphs is not None
+    assert [group.title for group in graphs] == ["CPU load - 4 CPU cores"]
+
+
+def test_graphs_title_without_the_quoted_value_keeps_its_plain_part(
+    request_context: None,
+) -> None:
+    graphs = _info_with_graphs("load1=1.09;;;0;").graphs
+
+    assert graphs is not None
+    assert [group.title for group in graphs] == ["CPU load"]
 
 
 def test_graphs_empty_when_nothing_applies(request_context: None) -> None:

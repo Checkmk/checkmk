@@ -64,7 +64,6 @@ scripts/run-in-docker2.sh
 tests/packaging/package_validator/src/main.rs
 tests/run_tests.sh
 tests/unit-shell/agents/plugins/test_ibm_mq.sh
-tests/unit-shell/agents/plugins/test_kaspersky_av.sh
 tests/unit-shell/agents/plugins/test_mk_inventory.sh
 tests/unit-shell/agents/plugins/test_mk_redis.sh
 tests/unit-shell/agents/plugins/test_mk_tsm.sh

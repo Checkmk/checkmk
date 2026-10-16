@@ -20,6 +20,12 @@ shunit2_test(
 )
 
 shunit2_test(
+    name = "test_kaspersky_av",
+    src = "plugins/test_kaspersky_av.sh",
+    deps = [":test_kaspersky_av_shell_script"],
+)
+
+shunit2_test(
     name = "test_mk_redis",
     src = "plugins/test_mk_redis.sh",
     env = {
@@ -46,5 +52,13 @@ sh_library(
         "test_korn_shell_93.sh",
         "test_manage_binaries.sh",
         "test_z_shell.sh",
+    ],
+)
+
+sh_library(
+    name = "test_kaspersky_av_shell_script",
+    srcs = [
+        "plugins/test_kaspersky_av.sh",
+        "//cmk/plugins/collection/agents:kaspersky_av",
     ],
 )

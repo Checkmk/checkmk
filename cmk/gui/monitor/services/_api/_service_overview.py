@@ -128,8 +128,11 @@ class ServiceOverviewResponse:
         ),
         example=1752405510,
     )
-    last_state_change: UnixTimestamp = api_field(
-        description="Unix timestamp of the service's last state change",
+    last_state_change: UnixTimestamp | None = api_field(
+        description=(
+            "Unix timestamp of the service's last state change. Null for services that have "
+            "never been checked, i.e. those still pending their first check."
+        ),
         example=1752405540,
     )
     current_attempt: int = api_field(description="The current check attempt", example=2)

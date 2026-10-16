@@ -496,6 +496,57 @@ def test_fetch_counts_a_service_as_checked_only_inside_both_check_periods(
     assert [service.in_check_period for service in services] == [expected]
 
 
+@pytest.mark.parametrize(
+    "last_state_change, expected",
+    [
+        pytest.param(0, None, id="pending, so it never changed state"),
+        pytest.param(1752405540, 1752405540, id="changed state before"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_fetch_reports_no_state_change_for_a_pending_service(
+    last_state_change: int, expected: int | None
+) -> None:
+    row = {
+        "description": "CPU load",
+        "host_name": _UNKNOWN_HOSTNAME,
+        "state": 0,
+        "has_been_checked": 0,
+        "plugin_output": "",
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "in_passive_check_period": 1,
+        "is_flapping": 0,
+        "staleness": 0.0,
+        "last_check": 0,
+        "last_state_change": last_state_change,
+        "perf_data": "",
+        "check_command": "check_cpu",
+        "check_type": 0,
+        "cached_at": 0,
+        "cache_interval": 0,
+    }
+    with expect_single_query("GET services", tables={"services": [row]}) as live:
+        services = LiveStatusHostServicesRepository(connection=live).fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=None,
+            query="",
+            sorters=[],
+            filters=ServiceFilter(""),
+            fields=frozenset(),
+        )
+
+    assert [service.last_state_change for service in services] == [expected]
+
+
 @pytest.mark.usefixtures("request_context")
 def test_get_overview_puts_each_detail_of_the_long_output_on_its_own_line(
     mock_livestatus: MockLiveStatusConnection,

@@ -94,7 +94,7 @@ class Service:
     stale: bool
     summary: str
     last_check: UnixTimestamp | None
-    last_state_change: UnixTimestamp
+    last_state_change: UnixTimestamp | None
     perf_data: str
     check_command: str
     # The raw livestatus column, unlike ``active_checks_manually_disabled`` above, which says only

@@ -91,7 +91,7 @@ test('renders last state change before last check, matching the legacy view', ()
 
   const tds = Array.from(container.querySelectorAll('td'))
   const lastStateChangeIndex = tds.findIndex(
-    (td) => td.querySelector(`[title="${renderDateAndTime(service.last_state_change)}"]`) !== null
+    (td) => td.querySelector(`[title="${renderDateAndTime(service.last_state_change!)}"]`) !== null
   )
   const lastCheckIndex = tds.findIndex(
     (td) => td.querySelector(`[title="${renderDateAndTime(service.last_check!)}"]`) !== null
@@ -335,6 +335,14 @@ test('renders the two timestamps as formatted date-time strings', () => {
   const tds = Array.from(container.querySelectorAll('td'))
   expect(cellText(tds[5]!)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
   expect(cellText(tds[6]!)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
+})
+
+test('dashes out the state age of a service that has never been checked', () => {
+  const { container } = mountRow(makeService({ last_state_change: null }))
+
+  const cellText = (td: Element): string => (td.textContent ?? '').trim()
+  const tds = Array.from(container.querySelectorAll('td'))
+  expect(cellText(tds[5]!)).toBe('–')
 })
 
 test('dashes out the last check of a service that has never been checked', () => {

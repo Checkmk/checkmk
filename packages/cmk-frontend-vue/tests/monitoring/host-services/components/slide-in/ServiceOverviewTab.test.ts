@@ -105,6 +105,14 @@ describe('ServiceOverviewTab', () => {
     expect(screen.getByText('–')).toBeInTheDocument()
   })
 
+  it('dashes out the state age of a service that has never been checked', () => {
+    render(ServiceOverviewTab, {
+      props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview({ last_state_change: null }) }
+    })
+
+    expect(screen.getByText('–')).toBeInTheDocument()
+  })
+
   it('dashes out the last check of a service that has never been checked', () => {
     render(ServiceOverviewTab, {
       props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview({ last_check: null }) }

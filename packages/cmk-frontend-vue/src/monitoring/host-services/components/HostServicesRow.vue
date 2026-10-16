@@ -115,7 +115,9 @@ const lastCheck = computed(() =>
     : formatDisplayTimestamp(props.row.last_check, props.displayOptions)
 )
 const lastStateChange = computed(() =>
-  formatDisplayTimestamp(props.row.last_state_change, props.displayOptions)
+  props.row.last_state_change === null
+    ? '–'
+    : formatDisplayTimestamp(props.row.last_state_change, props.displayOptions)
 )
 const labels = computed(() => toLabelItems(props.row.labels ?? {}))
 const tags = computed(() => toTagItems(props.row.tags ?? {}))

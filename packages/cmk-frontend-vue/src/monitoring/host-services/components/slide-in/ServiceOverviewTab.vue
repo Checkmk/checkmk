@@ -40,7 +40,9 @@ const lastCheck = computed(() =>
 )
 
 const stateAge = computed(() =>
-  formatDisplayTimestamp(props.data.last_state_change, props.displayOptions)
+  props.data.last_state_change === null
+    ? '–'
+    : formatDisplayTimestamp(props.data.last_state_change, props.displayOptions)
 )
 
 const nextCheck = computed(() =>

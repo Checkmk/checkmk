@@ -332,6 +332,8 @@ class NotificationRuleLinks(NamedTuple):
 
 class ABCNotificationsMode(ABCEventsMode[EventRule]):
     def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        # Set before the base class reads the request vars, so _from_vars can use it.
+        self._tree = make_folder_tree(ctx.config)
         super().__init__(edition, ctx)
 
         declare_notification_plugin_permissions()
@@ -539,7 +541,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             elements=self._rule_match_conditions(
                 self._edition,
                 config.sites,
-                make_folder_tree(config),
+                self._tree,
                 config.mkeventd_service_levels,
             )
         )
@@ -1139,7 +1141,7 @@ class ModeNotifications(ABCNotificationsMode):
 
     @override
     def page(self, config: Config) -> None:
-        self._show_overview(make_folder_tree(config))
+        self._show_overview(self._tree)
         self._show_rules(analyse=None, config=config)
 
     def _show_overview(self, tree: FolderTree) -> None:
@@ -3206,7 +3208,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         return self._vs_notification_rule(
             self._user_id(),
             config.sites,
-            make_folder_tree(config),
+            self._tree,
             config.mkeventd_service_levels,
         )
 

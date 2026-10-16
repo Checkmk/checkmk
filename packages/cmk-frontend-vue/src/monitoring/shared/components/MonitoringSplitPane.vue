@@ -277,7 +277,7 @@ function onRightPaneCollapse(collapsed: boolean): void {
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  padding: 0 var(--dimension-5);
+  padding: 0 var(--spacing) 0 0;
 
   /* The panel is resized by dragging the split handle or opening the right pane, so the
      responsive layout of the toolbar below must follow this element, not the viewport. */

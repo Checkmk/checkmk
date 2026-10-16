@@ -90,7 +90,7 @@ defineExpose({
   flex: 0 0 auto;
   flex-direction: column;
   gap: var(--spacing);
-  padding: var(--dimension-4) var(--dimension-5);
+  padding: var(--spacing) var(--spacing) var(--spacing) 0;
   background: var(--ux-theme-2);
   border-bottom: 1px solid var(--sticky-header-border-color);
 

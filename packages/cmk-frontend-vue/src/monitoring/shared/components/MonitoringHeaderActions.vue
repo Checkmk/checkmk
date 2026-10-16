@@ -71,6 +71,8 @@ onBeforeUnmount(() => setTitlebarHost(false))
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
+    /* Rows packed at the top keep breadcrumb and title where the legacy title bar has them. */
+    align-content: start;
     column-gap: var(--dimension-6);
     min-width: 0;
 
@@ -86,6 +88,8 @@ onBeforeUnmount(() => setTitlebarHost(false))
 
   a.title {
     max-width: 100%;
+    /* The taller actions must not push the title below its legacy position. */
+    align-self: start;
   }
 }
 </style>

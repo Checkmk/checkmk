@@ -153,10 +153,16 @@ body.side.main {
   padding-left: 0;
 }
 
-#content_area:has(cmk-monitoring-all-hosts),
-#content_area:has(cmk-monitoring-host-services),
 #content_area:has(cmk-global-settings) {
   padding-left: 0;
+}
+
+// The toolbar band directly below the menu bar takes over its bottom spacing.
+#content_area:has(cmk-monitoring-all-hosts),
+#content_area:has(cmk-monitoring-host-services) {
+  > #top_heading table.menubar {
+    padding-bottom: 0;
+  }
 }
 
 /* Top logo part */

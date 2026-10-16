@@ -368,3 +368,23 @@ def test_rule_pack_match_counts_all_matching_rules() -> None:
     )
 
     assert pack_match.matching_rules == 2
+
+
+def test_disabled_rules_do_not_match_in_a_rule_pack() -> None:
+    disabled_rule = ec.Rule(id="disabled", match="nothing", disabled=True)
+
+    pack_match = _simulator(simulated_site=SiteId("remote")).match_rule_pack(
+        _rule_pack(disabled_rule)
+    )
+
+    assert pack_match == mkeventd_wato.RulePackMatch(
+        matching_rules=0, first_match=None, first_match_skips_pack=False
+    )
+
+
+def test_rules_of_a_disabled_rule_pack_do_not_match() -> None:
+    result = _simulator(simulated_site=SiteId("remote")).match_rule(
+        _rule_pack(disabled=True), ec.Rule(id="rule", match="nothing")
+    )
+
+    assert result == ec.MatchFailure(reason="The rule pack is disabled.")

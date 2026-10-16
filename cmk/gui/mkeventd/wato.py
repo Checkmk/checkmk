@@ -399,6 +399,12 @@ class EventSimulator:
         return cls(event, site_configs, hostname_translation_of_site(event["site"], site_configs))
 
     def match_rule(self, rule_pack: ec.ECRulePack, rule: ec.Rule) -> ec.MatchResult:
+        # The Event Console ignores disabled rule packs and disabled rules.
+        if rule_pack["disabled"]:
+            return ec.MatchFailure(reason=_("The rule pack is disabled."))
+        if rule.get("disabled"):
+            return ec.MatchFailure(reason=_("The rule is disabled."))
+
         if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT:
             rule_customer_id = (
                 rule_pack["customer"]

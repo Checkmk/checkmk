@@ -21,8 +21,16 @@ def inventory_fast_lta_silent_cubes_status(info):
 def check_fast_lta_silent_cubes_status(item, params, info):
     fslist = []
     for total, used in info:
-        size_mb = int(total) / 1048576.0
-        avail_mb = (int(total) - int(used)) / 1048576.0
+        try:
+            total_bytes = int(total)
+            used_bytes = int(used)
+        except ValueError:
+            return (
+                3,
+                f"Cannot parse capacity: got total {total!r}, used {used!r} (expected integers)",
+            )
+        size_mb = total_bytes / 1048576.0
+        avail_mb = (total_bytes - used_bytes) / 1048576.0
         fslist.append((item, size_mb, avail_mb, 0))
 
     return df_check_filesystem_list(item, params, fslist)

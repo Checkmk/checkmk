@@ -68,11 +68,6 @@ def test_check_fast_lta_silent_cube_capacity(
             assert actual_metric.levels[1] == pytest.approx(expected_metric.levels[1])
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report 8aca83da-fb3b-11f0-ace5-2a2e0f3d4944: ValueError",
-)
 def test_check_fast_lta_silent_cube_capacity_empty_used_value(
     check_fast_lta_silent_cubes_capacity: CheckFunction,
 ) -> None:

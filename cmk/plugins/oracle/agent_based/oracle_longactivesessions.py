@@ -82,6 +82,9 @@ def _check_longactivesessions(params: Mapping[str, Any], rows: _SessionRows) -> 
     for line in rows:
         if line[1] != "":
             sessioncount += 1
+            if len(line) != 9:
+                longoutput = f"Session {line[1]}: cannot parse session details, got {len(line)} fields (expected 9)"
+                continue
             _sid, sidnr, serial, machine, process, osuser, program, last_call_el, sql_id = line
 
             longoutput = f"Session (sid,serial,proc) {sidnr} {serial} {process} active for {render.timespan(int(last_call_el))} from {machine} osuser {osuser} program {program} sql_id {sql_id} "

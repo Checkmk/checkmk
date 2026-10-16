@@ -438,7 +438,7 @@ sap_hana_instance_status() {
     if [ -n "$instance_user" ] && su - "${instance_user}" -c 'command -v sapcontrol >/dev/null 2>&1'; then
         result="$(su - "${instance_user}" -c "sapcontrol -nr \"${instance}\" -function GetProcessList" 2>&1)"
     else
-        result="$(/usr/sap/hostctrl/exe/sapcontrol -nr \"${instance}\" -function GetProcessList 2>&1)"
+        result="$(/usr/sap/hostctrl/exe/sapcontrol -nr \""${instance}\"" -function GetProcessList 2>&1)"
     fi
     rc=$?
 

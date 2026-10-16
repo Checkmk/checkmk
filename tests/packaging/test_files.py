@@ -1138,6 +1138,18 @@ def test_windows_artifacts_are_signed(
                     "File table of check_mk_agent.msi does not match the extracted "
                     f"files - signable entries were collapsed or lost: {msi_table_names}"
                 )
+                # The PowerShell scripts are signed too, so that they run under the
+                # AllSigned execution policy. Only inside the MSI: the package also ships
+                # the unsigned plugin sources. CMK-39886
+                extracted_scripts = sorted(Path(msi_content).rglob("*.ps1"))
+                assert extracted_scripts, "No PowerShell scripts found in check_mk_agent.msi"
+                for extracted_script in extracted_scripts:
+                    signing_failures.append(
+                        _verify_signature(
+                            extracted_script,
+                            f"check_mk_agent.msi/{extracted_script.relative_to(msi_content)}",
+                        )
+                    )
 
         # check the embedded relay MSI - shipped only for cloud/ultimate/ultimatemt and
         # signed by default in the distro build (relay-msi.groovy: should_sign). CMK-34188

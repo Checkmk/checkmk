@@ -6,10 +6,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 <!--
 A map object shown as an instrument — a gauge, a bar, a traffic light.
 
-The reading behind a gauge or a bar is Checkmk's own Perf-O-Meter, not the raw
-perfdata: the Perf-O-Meter knows the plug-in's focus range, so a gauge can fill
-even for a metric that reports no maximum, and it supplies the value label
-already formatted the way Checkmk formats it.
+The reading behind a gadget without a configured metric is Checkmk's own
+Perf-O-Meter, not the raw perfdata: the Perf-O-Meter knows the plug-in's focus
+range, so a gauge can fill even for a metric that reports no maximum, and it
+supplies the value label already formatted the way Checkmk formats it.
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -24,9 +24,6 @@ import { objectCaption } from '@/maps/utils/dropdownOptions'
 import MapElementLabel from './MapElementLabel.vue'
 
 const { _t } = usei18n()
-
-/** Gadgets that fill against a reading, as opposed to just showing a state. */
-const FILLING_GADGETS = new Set(['gauge', 'bar'])
 
 /**
  * Object kinds with a state but no metrics of their own. A gauge or a bar would
@@ -57,16 +54,11 @@ const binding = {
   checkCommand: () => props.state?.check_command
 }
 
-const perfometer = usePerfometer({
-  ...binding,
-  enabled: () => FILLING_GADGETS.has(configuredType.value)
-})
-// The raw-value gadget needs the display units too, but has no fill to scale
-// and therefore no use for a Perf-O-Meter.
-const metricUnits = useMetricUnits({
-  ...binding,
-  enabled: () => configuredType.value !== 'trafficlight'
-})
+// Both come from one lookup. The raw-value gadget needs the Perf-O-Meter too:
+// it is the reading of any gadget without a configured metric.
+const readsMetrics = () => gadgetType.value !== 'trafficlight'
+const perfometer = usePerfometer({ ...binding, enabled: readsMetrics })
+const metricUnits = useMetricUnits({ ...binding, enabled: readsMetrics })
 </script>
 
 <template>

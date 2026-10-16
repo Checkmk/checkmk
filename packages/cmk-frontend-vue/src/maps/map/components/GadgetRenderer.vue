@@ -17,9 +17,9 @@ const props = defineProps<{
   metric?: string | null
   state: ObjectState | undefined
   size: number
-  // CMK perfometer for the bound service. Supplies the fill percentage when
-  // the raw perf_data carries no scale (no max/crit and not a % unit) and the
-  // CMK-formatted value for the caption.
+  // CMK perfometer for the bound service: the reading while `metric` is unset,
+  // the fill where the raw perf_data carries no scale (no max/crit, no % unit),
+  // and the caption.
   perfometer?: PerfometerResult | null
   // Registered display units per raw perfdata label (CMK metric registry) —
   // the readout then matches the Checkmk GUI exactly.
@@ -28,11 +28,22 @@ const props = defineProps<{
 
 const metrics = computed(() => parsePerfData(props.state?.perf_data ?? ''))
 const m = computed(() => getMetric(metrics.value, props.metric))
+// Unconfigured, a gadget shows what Checkmk's Perf-O-Meter shows. The first
+// perfdata label would be arbitrary (CPU load lists load15 before load1), and
+// a multi-segment Perf-O-Meter reads the sum of its metrics, not any one of
+// them. A two-sided one (in/out, upper/lower) shows the side it fills; the
+// caption names both.
+const perfometerReading = computed(() =>
+  props.metric ? null : (props.perfometer?.sides.find((s) => s !== null) ?? null)
+)
 const pct = computed(() => (m.value ? utilPercent(m.value) : 0))
 // Fill is proportional (NagVis scales to crit when there's no max). Metrics
 // without any client-side scale fall back to the CMK perfometer percentage,
 // which is computed from the plugin's focus_range.
 const fillPct = computed(() => {
+  if (perfometerReading.value) {
+    return perfometerReading.value.pct
+  }
   if (m.value && !hasFillScale(m.value)) {
     return props.perfometer?.sides[0]?.pct ?? 0
   }
@@ -45,16 +56,29 @@ const color = computed(() =>
   hasScale.value ? utilColor(fillPct.value) : stateColor(props.state?.state)
 )
 
-const valueLabel = computed(() =>
-  m.value ? renderMetricValue(m.value.value, props.metricUnits?.[m.value.label], m.value.unit) : '—'
-)
+const valueLabel = computed(() => {
+  if (perfometerReading.value) {
+    return perfometerReading.value.label
+  }
+  return m.value
+    ? renderMetricValue(m.value.value, props.metricUnits?.[m.value.label], m.value.unit)
+    : '—'
+})
 
-// Primary readout inside the gauge/bar: the metric value rendered exactly like
-// Checkmk (vendored CMK formatter via the registry unit). A percent shows only
-// when the unit genuinely is % — never faked from a bare `max` such as CPU
-// load's core count. The CMK perfometer caption carries the titled context below.
+// Primary readout inside the gauge/bar, formatted as Checkmk formats it: the
+// Perf-O-Meter's label, or a configured metric through the registry unit. A
+// percent shows only when the unit genuinely is % — never faked from a bare
+// `max` such as CPU load's core count. The caption carries the titled context.
 const readout = computed(() => valueLabel.value)
-const caption = computed(() => (props.perfometer ? perfometerCaptionLines(props.perfometer) : null))
+// The caption's value line goes where the readout already says the same.
+const caption = computed(() => {
+  if (!props.perfometer) {
+    return null
+  }
+  const { title, value } = perfometerCaptionLines(props.perfometer)
+  const shownValue = value === readout.value ? '' : value
+  return title || shownValue ? { title, value: shownValue } : null
+})
 
 // The raw-value gadget scales on its own label since it never shows a percentage.
 const rawScale = computed(() => {
@@ -210,7 +234,9 @@ const valArc = computed(() => {
       <span v-if="caption.title" class="maps-gadget-renderer__caption-line">{{
         caption.title
       }}</span>
-      <span class="maps-gadget-renderer__caption-line">{{ caption.value }}</span>
+      <span v-if="caption.value" class="maps-gadget-renderer__caption-line">{{
+        caption.value
+      }}</span>
     </div>
   </div>
 
@@ -266,7 +292,9 @@ const valArc = computed(() => {
       <span v-if="caption.title" class="maps-gadget-renderer__caption-line">{{
         caption.title
       }}</span>
-      <span class="maps-gadget-renderer__caption-line">{{ caption.value }}</span>
+      <span v-if="caption.value" class="maps-gadget-renderer__caption-line">{{
+        caption.value
+      }}</span>
     </div>
   </div>
 </template>

@@ -48,8 +48,8 @@ const effectiveGadgetType = computed(() => {
   return isMetriclessBinding(el) ? 'trafficlight' : (el.display.gadget_type ?? 'gauge')
 })
 
-// The perfometer fills the dial where the raw perf_data has no max, and
-// supplies the CMK-formatted caption.
+// The perfometer is the reading of a gadget without a configured metric, fills
+// the dial where the raw perf_data has no max and supplies the caption.
 const gadgetBinding = {
   connectionId: () => props.connectionId,
   hostName: () => (props.element.kind === 'data' ? props.element.host_name : null),
@@ -60,17 +60,11 @@ const gadgetBinding = {
   enabled: () =>
     props.element.kind === 'data' &&
     props.element.display.mode === 'gadget' &&
-    ['gauge', 'bar'].includes(effectiveGadgetType.value)
+    effectiveGadgetType.value !== 'trafficlight'
 }
 const perfometer = usePerfometer(gadgetBinding)
 // Registered display units, so the readout matches the Checkmk GUI.
-const metricUnits = useMetricUnits({
-  ...gadgetBinding,
-  enabled: () =>
-    props.element.kind === 'data' &&
-    props.element.display.mode === 'gadget' &&
-    effectiveGadgetType.value !== 'trafficlight'
-})
+const metricUnits = useMetricUnits(gadgetBinding)
 // The sample perf_data carries exactly one metric; the gadget needs its name
 // to render a value rather than an empty dial.
 const sampleMetric = computed(() => {

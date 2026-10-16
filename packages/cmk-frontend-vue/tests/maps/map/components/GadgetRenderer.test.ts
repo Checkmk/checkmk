@@ -121,6 +121,63 @@ describe('GadgetRenderer gauge readout', () => {
   })
 })
 
+describe('GadgetRenderer unconfigured metric', () => {
+  // CPU load lists load15 first, but its Perf-O-Meter reads load1; a gadget
+  // without a configured metric must show what its caption shows.
+  it.each(['gauge', 'bar', 'value'])('shows the Perf-O-Meter reading on a %s', (type) => {
+    render(GadgetRenderer, {
+      props: {
+        type,
+        state: makeState({ perf_data: 'load15=6.79;60;120;; load1=3.63;;;0;12' }),
+        size: 120,
+        perfometer: {
+          label: '3.63',
+          rows: [],
+          sides: [{ title: null, label: '3.63', pct: 51.42 }],
+          bg_color: '#000'
+        }
+      }
+    })
+
+    expect(screen.queryByText('6.79')).toBeNull()
+    expect(screen.getByText('3.63')).toBeInTheDocument()
+  })
+})
+
+describe('GadgetRenderer two-sided Perf-O-Meter', () => {
+  function renderSides(sides: PerfometerResult['sides']) {
+    return render(GadgetRenderer, {
+      props: {
+        type: 'bar',
+        state: makeState({ perf_data: 'if_in_bps=244;;;; if_out_bps=131;;;;' }),
+        size: 120,
+        perfometer: { label: '244 bit/s / 131 bit/s', rows: [], sides, bg_color: '#000' }
+      }
+    })
+  }
+  const fill = (container: Element) =>
+    container.querySelector<HTMLElement>('.maps-gadget-renderer__fill')?.style.width
+
+  it('shows the side it fills and names both in the caption', () => {
+    const { container } = renderSides([
+      { title: 'In', label: '244 bit/s', pct: 60 },
+      { title: 'Out', label: '131 bit/s', pct: 30 }
+    ])
+
+    expect(screen.getByText('244 bit/s')).toBeInTheDocument()
+    expect(screen.getByText('In / Out')).toBeInTheDocument()
+    expect(screen.getByText('244 bit/s / 131 bit/s')).toBeInTheDocument()
+    expect(fill(container)).toBe('60%')
+  })
+
+  it('fills from the first side that is drawn', () => {
+    const { container } = renderSides([null, { title: 'Out', label: '131 bit/s', pct: 30 }])
+
+    expect(screen.getByText('131 bit/s')).toBeInTheDocument()
+    expect(fill(container)).toBe('30%')
+  })
+})
+
 describe('GadgetRenderer caption', () => {
   const perfometer: PerfometerResult = {
     label: '48.91 %',
@@ -132,10 +189,26 @@ describe('GadgetRenderer caption', () => {
   // A gadget is narrower than "RAM usage 48.91 %"; on its own line the value
   // survives when the title has to be shortened.
   it.each(['bar', 'gauge'])('puts the %s value on a line of its own', (type) => {
-    render(GadgetRenderer, { props: { type, state: makeState(), size: 60, perfometer } })
+    render(GadgetRenderer, {
+      props: {
+        type,
+        metric: 'mem_used',
+        state: makeState(),
+        size: 60,
+        perfometer,
+        metricUnits: units
+      }
+    })
 
     expect(screen.getByText('RAM usage')).toBeInTheDocument()
     expect(screen.getByText('48.91 %')).toBeInTheDocument()
+  })
+
+  it.each(['bar', 'gauge'])('leaves out a %s value the readout already shows', (type) => {
+    render(GadgetRenderer, { props: { type, state: makeState(), size: 60, perfometer } })
+
+    expect(screen.getByText('RAM usage')).toBeInTheDocument()
+    expect(screen.getAllByText('48.91 %')).toHaveLength(1)
   })
 })
 

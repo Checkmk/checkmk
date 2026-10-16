@@ -173,7 +173,7 @@ def test_simulator_queries_time_periods_of_the_local_site_without_the_gui_connec
         )
 
     assert result == ec.MatchFailure(
-        reason="The time period workhours is not is not known or is currently not active"
+        reason="The time period workhours is not known or is currently not active"
     )
 
 
@@ -210,7 +210,7 @@ def test_simulated_event_uses_time_periods_of_the_simulated_site(
         )
 
     assert result == ec.MatchFailure(
-        reason="The time period workhours is not is not known or is currently not active"
+        reason="The time period workhours is not known or is currently not active"
     )
 
 

@@ -3,5 +3,5 @@
 filegroup(
     name = "signing_roots",
     srcs = glob(["certs/*.pem"]),
-    visibility = ["//agents/wnx/scripts:__pkg__"],
+    visibility = ["//bazel/rules:__pkg__"],
 )

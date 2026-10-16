@@ -13,7 +13,7 @@ shift
 package_msi_init "$@"
 
 link_msi() {
-    # See Product.wxs. Unsigned: the scripts are not signed on Linux yet.
+    # See Product.wxs. Signed with --//bazel/rules:azure_signing_credentials_file.
     export SignedPluginsFolder='plugins'
 
     cd "$STAGE/agents/wnx/install"

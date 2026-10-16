@@ -14,12 +14,11 @@ needs adjusting, the BI pack is where that happens.
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkIconLink from 'cmk-ui-library/components/CmkIconLink.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed } from 'vue'
 
+import MapStateTag from '@/maps/map/radar/components/MapStateTag.vue'
 import type { ObjectState } from '@/maps/types/api'
-import { stateColorVar } from '@/maps/utils/stateColors'
 
-const props = defineProps<{
+defineProps<{
   name: string
   /** The object's kind, spelled out ("Service", "Host group"). */
   typeLabel: string
@@ -35,13 +34,6 @@ const props = defineProps<{
 const emit = defineEmits<{ close: [] }>()
 
 const { _t } = usei18n()
-
-const statePillStyle = computed(() => {
-  const color = stateColorVar(props.state?.state)
-  // The border follows the text through `currentcolor`; only the tint has to
-  // be mixed here, since CSS cannot tint a colour it is only given at runtime.
-  return { color, background: `color-mix(in srgb, ${color} 12%, transparent)` }
-})
 </script>
 
 <template>
@@ -65,13 +57,12 @@ const statePillStyle = computed(() => {
       </h2>
       <div v-if="state" class="maps-detail-header__state-line">
         <!-- Live: the state changes under the reader while the drawer is open. -->
-        <span
-          class="maps-detail-header__state-pill"
-          role="status"
-          :aria-label="_t('Current state')"
-          :style="statePillStyle"
-        >
-          {{ state.state }}
+        <span role="status" :aria-label="_t('Current state')">
+          <MapStateTag
+            :state="state.state"
+            :kind="state.type === 'service' ? 'service' : 'host'"
+            :stale="state.stale"
+          />
         </span>
         <span v-if="since" class="maps-detail-header__since">{{ since }}</span>
       </div>
@@ -178,15 +169,6 @@ const statePillStyle = computed(() => {
   align-items: center;
   gap: var(--dimension-4);
   flex-wrap: wrap;
-}
-
-.maps-detail-header__state-pill {
-  font-size: var(--font-size-small);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: 0.04em;
-  padding: 2px 10px;
-  border: 1px solid currentcolor;
-  border-radius: 999px;
 }
 
 .maps-detail-header__since {

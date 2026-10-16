@@ -34,23 +34,25 @@ defineProps<{ connected: boolean }>()
   display: flex;
   align-items: center;
   gap: var(--dimension-3);
-  padding: var(--dimension-2) 7px;
+  padding: var(--dimension-2) var(--dimension-4);
   font-size: var(--font-size-normal);
   line-height: 16px;
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-bold);
   border-radius: 9999px;
 }
 
+/* A working stream is no state of the monitored objects, so only its dot
+   takes the OK colour; a lost connection is a problem and stays tinted. */
 .maps-map-live-indicator--live {
-  color: var(--color-state-ok);
-  background: color-mix(in srgb, var(--color-state-ok) 8%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-state-ok) 20%, transparent);
+  color: var(--font-color);
+  box-shadow: 0 0 0 1px var(--default-border-color);
 }
 
 .maps-map-live-indicator--offline {
-  color: var(--color-state-critical);
-  background: color-mix(in srgb, var(--color-state-critical) 8%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-state-critical) 20%, transparent);
+  color: var(--status-text-color-error-on-tint);
+  background: color-mix(in srgb, var(--color-state-critical) var(--status-tint-mix), transparent);
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--color-state-critical) var(--status-tint-border-mix), transparent);
 }
 
 .maps-map-live-indicator__dot {
@@ -64,6 +66,7 @@ defineProps<{ connected: boolean }>()
 /* The pulse is what says "still arriving"; a static dot would look the same
    whether the stream is alive or wedged. */
 .maps-map-live-indicator--live .maps-map-live-indicator__dot {
+  background: var(--color-state-ok);
   animation: maps-map-live-indicator__pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 

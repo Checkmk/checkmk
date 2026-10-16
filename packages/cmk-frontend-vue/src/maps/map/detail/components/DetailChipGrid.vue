@@ -141,56 +141,76 @@ button.maps-detail-chip-grid__chip:hover {
   font-weight: var(--font-weight-medium);
 }
 
-/* The tint tracks Checkmk's own state colours, so a chip and the object it
-   counts read as the same state. */
+/* Tinted like Checkmk's own status surfaces, with the matching text ink, so a
+   chip and the object it counts read as the same state. */
 .maps-detail-chip-grid__chip--crit {
-  background: color-mix(in srgb, var(--color-state-critical) 12%, transparent);
-  border-color: color-mix(in srgb, var(--color-state-critical) 35%, transparent);
+  background: color-mix(in srgb, var(--color-state-critical) var(--status-tint-mix), transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--color-state-critical) var(--status-tint-border-mix),
+    transparent
+  );
 }
 
 .maps-detail-chip-grid__chip--crit .maps-detail-chip-grid__count,
 .maps-detail-chip-grid__chip--crit .maps-detail-chip-grid__chip-label {
-  color: var(--color-state-critical);
+  color: var(--status-text-color-error-on-tint);
 }
 
 .maps-detail-chip-grid__chip--warn {
-  background: color-mix(in srgb, var(--color-state-warning) 12%, transparent);
-  border-color: color-mix(in srgb, var(--color-state-warning) 35%, transparent);
+  background: color-mix(in srgb, var(--color-state-warning) var(--status-tint-mix), transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--color-state-warning) var(--status-tint-border-mix),
+    transparent
+  );
 }
 
 .maps-detail-chip-grid__chip--warn .maps-detail-chip-grid__count,
 .maps-detail-chip-grid__chip--warn .maps-detail-chip-grid__chip-label {
-  color: var(--color-state-warning);
+  color: var(--status-text-color-warning-strong);
 }
 
 .maps-detail-chip-grid__chip--unknown {
-  background: color-mix(in srgb, var(--color-state-unknown) 12%, transparent);
-  border-color: color-mix(in srgb, var(--color-state-unknown) 35%, transparent);
+  background: color-mix(in srgb, var(--color-state-unknown) var(--status-tint-mix), transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--color-state-unknown) var(--status-tint-border-mix),
+    transparent
+  );
 }
 
 .maps-detail-chip-grid__chip--unknown .maps-detail-chip-grid__count,
 .maps-detail-chip-grid__chip--unknown .maps-detail-chip-grid__chip-label {
-  color: var(--color-state-unknown);
+  color: var(--status-text-color-unknown-on-tint);
 }
 
 .maps-detail-chip-grid__chip--pending {
-  background: color-mix(in srgb, var(--color-state-pending) 12%, transparent);
-  border-color: color-mix(in srgb, var(--color-state-pending) 35%, transparent);
+  background: color-mix(in srgb, var(--color-state-pending) var(--status-tint-mix), transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--color-state-pending) var(--status-tint-border-mix),
+    transparent
+  );
 }
 
 .maps-detail-chip-grid__chip--pending .maps-detail-chip-grid__count,
 .maps-detail-chip-grid__chip--pending .maps-detail-chip-grid__chip-label {
-  color: var(--color-state-pending);
+  color: var(--status-text-color-pending);
 }
 
 .maps-detail-chip-grid__chip--ok {
-  background: color-mix(in srgb, var(--color-state-ok) 8%, transparent);
-  border-color: color-mix(in srgb, var(--color-state-ok) 25%, transparent);
+  background: color-mix(in srgb, var(--color-state-ok) var(--status-tint-mix), transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--color-state-ok) var(--status-tint-border-mix),
+    transparent
+  );
 }
 
 .maps-detail-chip-grid__chip--ok .maps-detail-chip-grid__count,
 .maps-detail-chip-grid__chip--ok .maps-detail-chip-grid__chip-label {
-  color: var(--color-state-ok);
+  color: var(--status-text-color-success-on-tint);
 }
 
 .maps-detail-chip-grid__chip--zero {

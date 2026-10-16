@@ -457,7 +457,7 @@ const accentStyle = computed(() => ({
   flex-direction: column;
   width: min(360px, 100%);
   box-sizing: border-box;
-  border-left: 4px solid var(--maps-detail-drawer-accent);
+  border-left: 4px solid var(--default-border-color-green);
   background: var(--default-bg-color);
 
   &:focus {

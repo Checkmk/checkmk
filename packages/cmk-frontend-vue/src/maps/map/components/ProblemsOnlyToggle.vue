@@ -57,6 +57,6 @@ const { _t } = usei18n()
 
 .maps-problems-only-toggle--active {
   border-color: var(--color-state-warning);
-  background: color-mix(in srgb, var(--color-state-warning) 12%, transparent);
+  background: color-mix(in srgb, var(--color-state-warning) var(--status-tint-mix), transparent);
 }
 </style>

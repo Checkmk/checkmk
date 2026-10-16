@@ -41,13 +41,14 @@ const message = computed(() => deadSitesMessage(_t, props.deadSites, props.deadS
   display: flex;
   align-items: center;
   gap: var(--dimension-3);
-  padding: var(--dimension-2) 7px;
+  padding: var(--dimension-2) var(--dimension-4);
   font-size: var(--font-size-normal);
-  font-weight: var(--font-weight-medium);
   line-height: 16px;
-  color: var(--color-yellow-50);
-  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  font-weight: var(--font-weight-bold);
+  color: var(--status-text-color-warning-strong);
+  background: color-mix(in srgb, var(--color-state-warning) var(--status-tint-mix), transparent);
   border-radius: 9999px;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-warning) 30%, transparent);
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--color-state-warning) var(--status-tint-border-mix), transparent);
 }
 </style>

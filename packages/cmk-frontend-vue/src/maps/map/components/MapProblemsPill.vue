@@ -58,23 +58,25 @@ const props = defineProps<{ problems: ProblemCounts }>()
   display: flex;
   align-items: center;
   gap: var(--dimension-3);
-  padding: var(--dimension-2) 7px;
+  padding: var(--dimension-2) var(--dimension-4);
   font-size: var(--font-size-normal);
-  font-weight: var(--font-weight-medium);
   line-height: 16px;
+  font-weight: var(--font-weight-bold);
   border-radius: 9999px;
   transition: all 0.15s;
 }
 
 .maps-map-problems-pill--critical {
-  color: var(--status-text-color-error-pale);
-  background: color-mix(in srgb, var(--status-color-error-bright) 10%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--status-color-error-bright) 30%, transparent);
+  color: var(--status-text-color-error-on-tint);
+  background: color-mix(in srgb, var(--color-state-critical) var(--status-tint-mix), transparent);
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--color-state-critical) var(--status-tint-border-mix), transparent);
 }
 
 .maps-map-problems-pill--warning {
-  color: var(--color-state-warning);
-  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-warning) 30%, transparent);
+  color: var(--status-text-color-warning-strong);
+  background: color-mix(in srgb, var(--color-state-warning) var(--status-tint-mix), transparent);
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--color-state-warning) var(--status-tint-border-mix), transparent);
 }
 </style>

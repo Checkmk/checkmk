@@ -11,7 +11,8 @@ Always with the way back to the overview: a map opened by link has no other
 navigation around it.
 -->
 <script setup lang="ts">
-import usei18n from 'cmk-ui-library/lib/i18n'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 
 import MapsLink from '@/maps/shared/components/MapsLink.vue'
 
@@ -29,12 +30,10 @@ defineProps<{
 <template>
   <div
     class="maps-map-placeholder"
-    :class="[
-      `maps-map-placeholder--${variant}`,
-      overlay ? 'maps-map-placeholder--overlay' : 'maps-map-placeholder--fill'
-    ]"
+    :class="overlay ? 'maps-map-placeholder--overlay' : 'maps-map-placeholder--fill'"
   >
-    <span class="maps-map-placeholder__message">{{ message }}</span>
+    <CmkAlert v-if="variant === 'error'" variant="error" :text="untranslated(message)" />
+    <span v-else class="maps-map-placeholder__message">{{ message }}</span>
     <MapsLink :to="{ view: 'home' }" class="maps-map-placeholder__back">
       {{ _t('← Back to overview') }}
     </MapsLink>
@@ -63,11 +62,7 @@ defineProps<{
   background: var(--maps-map-view-overlay-bg);
 }
 
-.maps-map-placeholder--error .maps-map-placeholder__message {
-  color: var(--color-state-critical);
-}
-
-.maps-map-placeholder--empty .maps-map-placeholder__message {
+.maps-map-placeholder__message {
   color: var(--font-color-dimmed);
 }
 

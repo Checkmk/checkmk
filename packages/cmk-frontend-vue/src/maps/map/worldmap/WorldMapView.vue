@@ -306,6 +306,9 @@ defineExpose({
   color: var(--font-color);
   background: var(--maps-map-view-overlay-bg);
   border-radius: var(--border-radius);
+  box-shadow:
+    0 0 0 1px var(--default-border-color),
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 /* Bottom centre: the top centre is where an unreachable site is announced. */

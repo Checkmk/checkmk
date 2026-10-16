@@ -29,17 +29,17 @@ defineProps<{
 .maps-map-mode-badges__badge {
   display: flex;
   align-items: center;
-  gap: 3px;
-  padding: var(--dimension-2) 6px;
+  gap: var(--dimension-3);
+  padding: var(--dimension-2) var(--dimension-4);
   font-size: var(--font-size-normal);
   line-height: 16px;
   font-weight: var(--font-weight-bold);
-  border-radius: var(--dimension-4);
+  border-radius: 9999px;
 }
 
+/* Neutral: editing is a mode, not a state, and must not read as a warning. */
 .maps-map-mode-badges__badge--editing {
-  color: var(--color-state-warning);
-  background: color-mix(in srgb, var(--color-state-warning) 10%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-state-warning) 30%, transparent);
+  color: var(--font-color);
+  box-shadow: 0 0 0 1px var(--default-border-color);
 }
 </style>

@@ -1771,7 +1771,7 @@ class Site:
         if self.path("junit.xml").exists():
             run(["cp", self.path("junit.xml").as_posix(), self.result_dir.as_posix()], sudo=True)
 
-        run(["cp", "-rL", self.path("var/log").as_posix(), self.result_dir.as_posix()], sudo=True)
+        self._copy_live_tree(["-rL"], self.path("var/log"), self.result_dir)
 
         # Rename apache logs to get better handling by the browser when opening a log file
         for log_name in ("access_log", "error_log"):
@@ -1811,20 +1811,8 @@ class Site:
                 sudo=True,
             )
 
-        run(
-            ["cp", "-r", self.crash_report_dir.as_posix(), self.crash_archive_dir.as_posix()],
-            sudo=True,
-        )
-
-        run(
-            [
-                "cp",
-                "-r",
-                self.path("var/check_mk/background_jobs").as_posix(),
-                self.result_dir.as_posix(),
-            ],
-            sudo=True,
-        )
+        self._copy_live_tree(["-r"], self.crash_report_dir, self.crash_archive_dir)
+        self._copy_live_tree(["-r"], self.path("var/check_mk/background_jobs"), self.result_dir)
 
         # Change ownership of all copied files to the user that executes the test
         run(["chown", "-R", f"{os.getuid()}:{os.getgid()}", self.result_dir.as_posix()], sudo=True)
@@ -1833,6 +1821,31 @@ class Site:
         for crash_info in self.crash_archive_dir.glob("**/crash.info"):
             crash_json = crash_info.parent / (crash_info.stem + ".json")
             crash_info.rename(crash_json)
+
+    def _copy_live_tree(self, cp_options: Sequence[str], source: Path, target: Path) -> None:
+        """Copy a directory tree the running site may modify while it is being copied.
+
+        Files can vanish during the copy (e.g. finished background jobs being cleaned up).
+        Only these "No such file or directory" errors are tolerated and logged as a warning,
+        any other failure (including a missing source directory) raises.
+        """
+        result = run(
+            ["cp", *cp_options, source.as_posix(), target.as_posix()], check=False, sudo=True
+        )
+        if result.returncode == 0:
+            return
+        if not self.is_dir(source) or any(
+            "No such file or directory" not in line for line in result.stderr.splitlines()
+        ):
+            raise subprocess.CalledProcessError(
+                result.returncode, result.args, result.stdout, result.stderr
+            )
+        logger.warning(
+            "Copying %s to %s was incomplete, files vanished during the copy:\n%s",
+            source,
+            target,
+            result.stderr,
+        )
 
     def crash_reports_dirs(self) -> list[Path]:
         return [

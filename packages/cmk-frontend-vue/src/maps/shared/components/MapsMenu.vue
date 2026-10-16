@@ -9,9 +9,10 @@ the entries the caller puts in the ``default`` slot as MapsMenuItems.
 
 What is clicked is drawn on a canvas, so there is no element for the focus to
 come back to: it moves into the menu when the menu opens, and the arrow keys walk
-the entries from there. Escape closes it.
+the entries from there. Escape or a click outside closes it.
 -->
 <script setup lang="ts">
+import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { useTemplateRef, watch } from 'vue'
 
 import { usePointerOverlayStyle } from '@/maps/utils/overlayFrame'
@@ -29,6 +30,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{ close: [] }>()
+
+const vClickOutside = useClickOutside()
 
 const menuEl = useTemplateRef('menuEl')
 const menuStyle = usePointerOverlayStyle(menuEl, () => ({ x: props.x, y: props.y }))
@@ -79,6 +82,7 @@ function onKeydown(e: KeyboardEvent): void {
 <template>
   <div
     ref="menuEl"
+    v-click-outside="() => emit('close')"
     class="maps-menu"
     role="menu"
     :aria-label="label"

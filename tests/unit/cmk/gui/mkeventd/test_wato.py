@@ -7,16 +7,19 @@ from collections.abc import Iterable
 from datetime import datetime, UTC
 from unittest.mock import Mock  # Import Mock
 
+import pytest
 import time_machine
 from pytest import MonkeyPatch
 
 import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.config import Config
 from cmk.gui.mkeventd import wato as mkeventd_wato
 from cmk.gui.search.matchers import MatchItem, MatchItemConfig
 from cmk.gui.utils.roles import UserPermissions
+from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
+from tests.testlib.unit.fake_site import no_site_configuration
 
 
 def test_match_item_generator_ec_rule_packs_and_rules() -> None:
@@ -94,3 +97,41 @@ def test_send_event(monkeypatch: MonkeyPatch) -> None:
         )
         == '<137>1 2021-06-02T12:47:01+00:00 horst - - - [Checkmk@18662 ipaddress="127.0.0.1" sl="20" application="Barz App"] I am a unit test'
     )
+
+
+def _simulate_event_for_site(*, match_site: SiteId, simulated_site: SiteId) -> ec.MatchResult:
+    return mkeventd_wato.match_event_rule(
+        ec.ECRulePackSpec(id="pack", title="Pack", disabled=False, rules=[]),
+        ec.Rule(id="rule", match_site=[match_site]),
+        ec.Event(
+            text="Still nothing happened.",
+            application="Foobar-Daemon",
+            host=HostName("myhost089"),
+            ipaddress="1.2.3.4",
+            priority=5,
+            facility=1,
+            sl=0,
+            site=simulated_site,
+        ),
+        SiteConfigurations({simulated_site: _site_configuration(simulated_site)}),
+    )
+
+
+def _site_configuration(site_id: SiteId) -> SiteConfiguration:
+    site_config = no_site_configuration()
+    site_config["id"] = site_id
+    return site_config
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_simulated_event_matches_rule_for_the_simulated_site() -> None:
+    result = _simulate_event_for_site(match_site=SiteId("remote"), simulated_site=SiteId("remote"))
+
+    assert isinstance(result, ec.MatchSuccess)
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_simulated_event_does_not_match_rule_for_the_gui_site() -> None:
+    result = _simulate_event_for_site(match_site=omd_site(), simulated_site=SiteId("remote"))
+
+    assert result == ec.MatchFailure(reason="The site does not match.")

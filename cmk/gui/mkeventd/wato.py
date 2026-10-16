@@ -175,7 +175,6 @@ from cmk.livestatus_client import (
     LivestatusClient,
     LocalConnection,
     MKLivestatusSocketError,
-    SiteConfiguration,
     SiteConfigurations,
 )
 from cmk.ruleset_matcher.definition import RuleGroup
@@ -335,20 +334,21 @@ def register_permissions(permission_registry: PermissionRegistry) -> None:
 
 
 def match_event_rule(
-    rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event, site_config: SiteConfiguration
+    rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event, site_configs: SiteConfigurations
 ) -> ec.MatchResult:
     if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT:
         rule_customer_id = (
             rule_pack["customer"] if "customer" in rule_pack else rule.get("customer", SCOPE_GLOBAL)
         )
-        site_customer_id = customer_api().get_customer_id(site_config)
+        site_customer_id = customer_api().get_customer_id(site_configs[event["site"]])
         if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
             return ec.MatchFailure(reason=_("Wrong customer"))
 
     time_period = ec.TimePeriods(log.logger, LocalConnection())
     rule_matcher = ec.RuleMatcher(
         logger=None,
-        omd_site_id=omd_site(),
+        # Match against the site the event is simulated for, not the one running the GUI.
+        omd_site_id=event["site"],
         is_active_time_period=time_period.active,
     )
     rule = rule.copy()
@@ -2237,9 +2237,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     skips = 0
 
                     for rule in rule_pack["rules"]:
-                        result = match_event_rule(
-                            rule_pack, rule, event, config.sites[event["site"]]
-                        )
+                        result = match_event_rule(rule_pack, rule, event, config.sites)
                         if isinstance(result, ec.MatchSuccess):
                             cancelling, groups = result.cancelling, result.match_groups
 
@@ -2631,9 +2629,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                             eventd_configuration()["hostname_translation"], event["host"]
                         )
                     )
-                    result = match_event_rule(
-                        self._rule_pack, rule, event, site_configs[event["site"]]
-                    )
+                    result = match_event_rule(self._rule_pack, rule, event, site_configs)
                     if not isinstance(result, ec.MatchSuccess):
                         html.static_icon(
                             StaticIcon(IconNames.hyphen),

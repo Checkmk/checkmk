@@ -8,6 +8,8 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
+import pytest
+
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.memory.agent_based.mem_linux import (
     check_mem_linux,
@@ -162,3 +164,25 @@ def test_check_mem_linux_empty_section() -> None:
         )
         == []
     )
+
+
+@pytest.mark.xfail(
+    strict=True, reason="Crash report 50996b48-0b05-11f1-a88a-005056ac1569: KeyError"
+)
+def test_check_mem_linux_without_linux_memory_fields() -> None:
+    # Crash group 4589: after discovery the agent delivered a memory section
+    # without the Linux specific fields (only totals and free values).
+    section = {
+        "MemFree": 2363887616,
+        "MemTotal": 8588939264,
+        "PageFree": 2578345984,
+        "PageTotal": 9931116544,
+        "SwapFree": 214458368,
+        "SwapTotal": 1342177280,
+    }
+
+    assert list(check_mem_linux({}, section)) == [
+        Result(
+            state=State.UNKNOWN, summary="Memory information is missing: Buffers, Cached, Dirty"
+        ),
+    ]

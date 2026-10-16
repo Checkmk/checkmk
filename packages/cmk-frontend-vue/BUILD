@@ -1,6 +1,7 @@
 load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library", "js_run_binary", "js_run_devserver")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package", "npm_package")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:vitest/package_json.bzl", vitest_bin = "bin")
@@ -165,6 +166,16 @@ BUNDLED_NONFREE = select({
     "//conditions:default": [":src_nonfree"],
 })
 
+copy_file(
+    name = "nav_sidebar_elements",
+    src = select({
+        "@cmk//edition:community": "src/navSidebarElements.community.ts",
+        "//conditions:default": "src/nonfree/navSidebarElements.ts",
+    }),
+    out = "src/navSidebarElements.ts",
+    allow_symlink = False,
+)
+
 vue_library(
     name = "demo_vue",
     srcs = glob(["ui-component-library/**/*.vue"]),
@@ -266,6 +277,7 @@ VITE_SRCS = [
     ":src_ts",
     ":src_vue",
     ":src_css",
+    ":nav_sidebar_elements",
     ":node_modules/@tanstack",
     ":node_modules/@testing-library",
     ":node_modules/@tsconfig",

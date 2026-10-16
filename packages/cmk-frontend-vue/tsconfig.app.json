@@ -2,11 +2,17 @@
   // Compiler options shared by all Checkmk Vue packages live in cmk-ui-library's base
   // config; this file only owns this package's project shape.
   "extends": "cmk-ui-library/tsconfig.vue-base.json",
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "include": [
+    "env.d.ts",
+    "src/**/*",
+    "src/**/*.vue",
+    "../../bazel-bin/packages/cmk-frontend-vue/src/navSidebarElements.ts"
+  ],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "rootDirs": ["./src", "../../bazel-bin/packages/cmk-frontend-vue/src"],
     "paths": {
       "@/*": ["./src/*"],
       "@ucl/*": ["./ui-component-library/*"],

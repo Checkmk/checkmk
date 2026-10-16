@@ -103,11 +103,6 @@ def test_check_db2_connections_without_port() -> None:
     assert [(state, text) for state, text, *_ in results] == [(0, "Connections: 40.00")]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report 4a74cce8-34c3-11f1-b8fd-0050569bb2ad: ValueError",
-)
 def test_check_db2_connections_reports_db2_error_message() -> None:
     # Crash group 4695: DB2 answered the connection query with an error
     # message, which the agent printed in place of the connection count.

@@ -21,6 +21,7 @@ from .config import SNMPCredential as SNMPCredential
 from .config import SNMPTrapTranslation as SNMPTrapTranslation
 from .config import State as State
 from .config import TextPattern as TextPattern
+from .config import TimeperiodName as TimeperiodName
 from .defaults import default_config as default_config
 from .defaults import default_rule_pack as default_rule_pack
 from .event import Event as Event

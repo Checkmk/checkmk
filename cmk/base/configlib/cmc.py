@@ -6,9 +6,10 @@
 
 import dataclasses
 from collections.abc import Mapping, Sequence
-from typing import Literal, TypedDict
+from typing import Any, Literal, TypedDict
 
 from cmk.ccc.hostaddress import HostName
+from cmk.rrd import RRDObjectConfig
 from cmk.ruleset_matcher.matcher import RuleSpec
 
 
@@ -149,5 +150,10 @@ class CMCConfigFields:
         default_factory=list
     )
     service_recurring_downtimes: Sequence[RuleSpec[Mapping[str, int | str]]] = dataclasses.field(
+        default_factory=list
+    )
+    cmc_log_rrdcreation: Literal["terse", "full"] | None = None
+    cmc_host_rrd_config: Sequence[RuleSpec[Any]] = dataclasses.field(default_factory=list)
+    cmc_service_rrd_config: Sequence[RuleSpec[RRDObjectConfig]] = dataclasses.field(
         default_factory=list
     )

@@ -5,7 +5,7 @@
 """The configuration of notifications and alert handling"""
 
 import dataclasses
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Literal
 
 from cmk.events.notify_types import (
@@ -14,6 +14,7 @@ from cmk.events.notify_types import (
     NotificationPluginNameStr,
     NotifyPluginParamsDict,
 )
+from cmk.ruleset_matcher.matcher import RuleSpec
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -42,3 +43,6 @@ class NotifyConfigFields:
     notification_plugin_timeout: int = 60
     notification_spooling: bool | Literal["local", "remote", "both", "off"] | None = None
     notification_spool_to: object = None
+    notification_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]] = (
+        dataclasses.field(default_factory=dict)
+    )

@@ -27,7 +27,6 @@ from cmk.events.notify_types import (
 )
 from cmk.inventory.label_picker import LabelPickerRuleValue
 from cmk.inventory.trees import RawIntervalFromConfig
-from cmk.rrd import RRDObjectConfig
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.utils.host_storage import FolderAttributesForBase
@@ -157,11 +156,6 @@ class BaseConfig(  # type: ignore[explicit-any]
         default_factory=lambda: cmk.ruleset_matcher.tags.TagConfigSpec(tag_groups=[], aux_tags=[])
     )
     host_tags: object = dataclasses.field(default_factory=dict)
-    cmc_log_rrdcreation: Literal["terse", "full"] | None = None
-    cmc_host_rrd_config: Sequence[RuleSpec[Any]] = dataclasses.field(default_factory=list)
-    cmc_service_rrd_config: Sequence[RuleSpec[RRDObjectConfig]] = dataclasses.field(
-        default_factory=list
-    )
     cluster_max_cachefile_age: int = 90
     http_proxies: Mapping[str, HTTPProxySpec] = dataclasses.field(default_factory=dict)
     oauth2_connections: Mapping[str, OAuth2Connection] = dataclasses.field(default_factory=dict)
@@ -233,9 +227,6 @@ class BaseConfig(  # type: ignore[explicit-any]
         default_factory=dict
     )
     custom_checks: Sequence[RuleSpec[CustomCheck]] = dataclasses.field(default_factory=list)
-    notification_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]] = (
-        dataclasses.field(default_factory=dict)
-    )
     inv_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]] = dataclasses.field(
         default_factory=dict
     )

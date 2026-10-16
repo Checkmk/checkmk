@@ -29,6 +29,7 @@ flowchart TD
         NM["test-system-multisite"]
         NS["test-system-singlesite"]
         NU["test-system-update"]
+        NAU["test-system-agent-updates<br/>Pro edition only, deb and rpm,<br/>classic Docker node"]
     end
 
     subgraph PKG["Package builds"]
@@ -69,8 +70,8 @@ flowchart TD
 
 ## Post-submit heavy and nightly
 
-The heavy trigger and the nightly build chain of each edition run these suites. All of them run in
-a Kubernetes pod.
+The heavy trigger and the nightly build chain of each edition run these suites in a Kubernetes
+pod:
 
 | Jobs                       | Suites that concern the controller                                                                                                      |
 | :------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
@@ -80,6 +81,12 @@ a Kubernetes pod.
 
 None of these jobs runs with faked artifacts. In the Pro jobs, the cases that need the Ultimate
 edition skip themselves.
+
+The nightly build chain of the Pro edition also runs `test-system-agent-updates`, the suite
+`tests/system/agent_updates/`, twice: on `ubuntu-24.04` for the baked deb and on `almalinux-10`
+for the baked rpm. The baked package is the same in every edition that bakes, so one edition
+suffices. The job runs on a classic Docker node, because its test container boots systemd. The
+heavy trigger does not run it.
 
 ## Package builds
 

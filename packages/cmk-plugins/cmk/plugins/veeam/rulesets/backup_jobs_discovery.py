@@ -18,7 +18,7 @@ def _parameter_form_discovery_veeam_backup_jobs() -> Dictionary:
                     label=Label("Discover disabled backup jobs"),
                     help_text=Help(
                         "By default, a service is also created for a backup job that is disabled "
-                        "in Veeam; it is always OK. Disable this option to create no services "
+                        "in Veeam; it is OK by default. Disable this option to create no services "
                         "for disabled backup jobs."
                     ),
                     prefill=DefaultValue(True),

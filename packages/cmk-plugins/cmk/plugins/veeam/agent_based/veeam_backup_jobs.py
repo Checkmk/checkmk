@@ -50,6 +50,13 @@ class DiscoveryParams(TypedDict):
 DEFAULT_DISCOVERY_PARAMETERS = DiscoveryParams(discover_disabled=True)
 
 
+class CheckParameters(TypedDict):
+    disabled_state: int
+
+
+DEFAULT_PARAMETERS = CheckParameters(disabled_state=State.OK.value)
+
+
 def parse_veeam_backup_jobs(string_table: StringTable) -> Section:
     section: dict[str, BackupJob] = {}
     for line in string_table:
@@ -93,16 +100,30 @@ def monitoring_state(last_result: str) -> State:
             return State.UNKNOWN
 
 
-def check_veeam_backup_jobs(item: str, section: Section, *, now: float) -> CheckResult:
+def check_veeam_backup_jobs(
+    item: str,
+    params: CheckParameters,
+    section: Section,
+    *,
+    now: float,
+) -> CheckResult:
     if (job := section.get(item)) is None:
         return
 
     status = f"Status: {job.status}, " if job.status in ("Running", "Disabled") else ""
+    is_disabled = job.status == "Disabled"
     if job.last_run is None:
-        yield Result(state=State.OK, summary=f"{status}No run has happened yet")
+        yield Result(
+            state=State(params["disabled_state"]) if is_disabled else State.OK,
+            summary=f"{status}No run has happened yet",
+        )
     else:
         yield Result(
-            state=State.OK if job.status == "Disabled" else monitoring_state(job.last_result),
+            state=(
+                State(params["disabled_state"])
+                if is_disabled
+                else monitoring_state(job.last_result)
+            ),
             summary=f"{status}Result: {job.last_result}",
         )
         if (age := now - job.last_run) < 0:
@@ -134,8 +155,12 @@ def check_veeam_backup_jobs(item: str, section: Section, *, now: float) -> Check
     yield Result(state=State.OK, notice=f"Type: {job.job_type}")
 
 
-def check_veeam_backup_jobs_now(item: str, section: Section) -> CheckResult:
-    yield from check_veeam_backup_jobs(item, section, now=time.time())
+def check_veeam_backup_jobs_now(
+    item: str,
+    params: CheckParameters,
+    section: Section,
+) -> CheckResult:
+    yield from check_veeam_backup_jobs(item, params, section, now=time.time())
 
 
 agent_section_veeam_backup_jobs = AgentSection(
@@ -151,4 +176,6 @@ check_plugin_veeam_backup_jobs = CheckPlugin(
     discovery_ruleset_name="discovery_veeam_backup_jobs",
     discovery_default_parameters=DEFAULT_DISCOVERY_PARAMETERS,
     check_function=check_veeam_backup_jobs_now,
+    check_ruleset_name="veeam_backup_jobs",
+    check_default_parameters=DEFAULT_PARAMETERS,
 )

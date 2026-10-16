@@ -1,5 +1,6 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("//bazel/rules:pkg.bzl", "pkg_tar")
+load("//bazel/rules:sign_azure.bzl", "sign_tar_azure")
 
 # Sign all PowerShell scripts in the current directory.
 # `build bazel //agents/windows/plugins:all`
@@ -124,8 +125,8 @@ pkg_tar(
 # signing path, which signs in the run.ps1 process (full environment + credentials)
 # instead of inside Bazel actions. Bazel only gathers the files here - including the
 # cross-package bakery-migrated plugins - and run.ps1 signs them and repacks the tar.
-# Unsigned MSI builds (run.ps1 without signing, //agents/wnx:check_mk_agent_msi) take
-# their scripts from it too.
+# Unsigned MSI builds (run.ps1 without signing, :msi_plugins without credentials)
+# take their scripts from it too.
 pkg_files(
     name = "unsigned_plugin_files",
     srcs = TO_SIGN_SCRIPTS,
@@ -137,4 +138,23 @@ pkg_tar(
     srcs = [":unsigned_plugin_files"],
     tags = ["manual"],
     visibility = ["//visibility:public"],
+)
+
+# Signed in the build via Azure Artifact Signing, for the MSI built on Linux.
+# Needs --//bazel/rules:azure_signing_credentials_file, see sign_azure.bzl.
+sign_tar_azure(
+    name = "azure_signed_plugins",
+    src = ":unsigned_plugins",
+    tags = ["manual"],
+)
+
+# The scripts //agents/wnx:check_mk_agent_msi embeds: signed whenever signing
+# credentials are given, like the MSI run.ps1 builds with --sign-azure.
+alias(
+    name = "msi_plugins",
+    actual = select({
+        "//bazel/rules:azure_signing_credentials_file_unset": ":unsigned_plugins",
+        "//conditions:default": ":azure_signed_plugins",
+    }),
+    visibility = ["//agents/wnx:__pkg__"],
 )

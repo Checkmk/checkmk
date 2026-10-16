@@ -25,13 +25,9 @@ String azure_signing_correlation_id(String branch_name) {
     ).replaceAll("['\"\\s]", "");
 }
 
-/// Authenticode-sign files in place on a Linux node via Azure Artifact Signing.
-///
-/// Runs //agents/wnx/scripts:sign_azure, which also verifies each signature and its timestamp.
-/// Call it inside the checkout, in a container with bazel. bazel_args should match the build's
-/// (e.g. --cmk_version) to keep the analysis cache. No catchError around it on purpose: a failed
-/// signing must fail the job before anything unsigned or partially signed gets archived.
-void sign_with_azure(String branch_name, String bazel_args, List<String> files) {
+/// Run body with the AZURE_ARTIFACT_SIGNING_* settings in the environment (see
+/// bazel/rules/azure_signing.sh), the client secret included.
+void with_azure_signing_env(String branch_name, Closure body) {
     withCredentials([
         string(credentialsId: "azure_artifact_signing_client_secret", variable: "AZURE_ARTIFACT_SIGNING_CLIENT_SECRET"),
         string(credentialsId: "azure_artifact_signing_correlation_suffix", variable: "AZURE_ARTIFACT_SIGNING_CORRELATION_SUFFIX"),
@@ -46,7 +42,51 @@ void sign_with_azure(String branch_name, String bazel_args, List<String> files) 
             "AZURE_ARTIFACT_SIGNING_CLIENT_ID=${env.AZURE_ARTIFACT_SIGNING_CLIENT_ID}",
             "AZURE_ARTIFACT_SIGNING_CORRELATION_ID=${correlation_id}",
         ]) {
-            sh("bazel run ${bazel_args} //agents/wnx/scripts:sign_azure -- ${files.join(' ')}");
+            body();
+        }
+    }
+}
+
+/// Authenticode-sign files in place on a Linux node via Azure Artifact Signing.
+///
+/// Runs //bazel/rules:sign_azure, which also verifies each signature and its timestamp.
+/// Call it inside the checkout, in a container with bazel. bazel_args should match the build's
+/// (e.g. --cmk_version) to keep the analysis cache. No catchError around it on purpose: a failed
+/// signing must fail the job before anything unsigned or partially signed gets archived.
+void sign_with_azure(String branch_name, String bazel_args, List<String> files) {
+    with_azure_signing_env(branch_name) {
+        sh("bazel run ${bazel_args} //bazel/rules:sign_azure -- ${files.join(' ')}");
+    }
+}
+
+/// Run body with the Bazel flag that lets build actions sign via Azure Artifact Signing
+/// (bazel/rules/sign_azure.bzl), e.g. the scripts the MSI embeds.
+///
+/// The settings go into a 0600 file at credentials_file, which only reaches Bazel as a path,
+/// like --//bazel/rules:signing_key_passphrase_file. The file is removed afterwards. Pass the
+/// flag to every bazel call of the build (including cquery) to keep the analysis cache.
+void with_azure_signing_flag(String branch_name, String credentials_file, Closure body) {
+    with_azure_signing_env(branch_name) {
+        withEnv(["AZURE_SIGNING_CREDENTIALS_FILE=${credentials_file}"]) {
+            try {
+                // Single quotes: the secrets are expanded by the shell, not interpolated here.
+                sh('''
+                    set -eu
+                    umask 077
+                    {
+                        printf 'AZURE_ARTIFACT_SIGNING_ENDPOINT=%s\\n' "$AZURE_ARTIFACT_SIGNING_ENDPOINT"
+                        printf 'AZURE_ARTIFACT_SIGNING_ACCOUNT=%s\\n' "$AZURE_ARTIFACT_SIGNING_ACCOUNT"
+                        printf 'AZURE_ARTIFACT_SIGNING_PROFILE=%s\\n' "$AZURE_ARTIFACT_SIGNING_PROFILE"
+                        printf 'AZURE_ARTIFACT_SIGNING_TENANT_ID=%s\\n' "$AZURE_ARTIFACT_SIGNING_TENANT_ID"
+                        printf 'AZURE_ARTIFACT_SIGNING_CLIENT_ID=%s\\n' "$AZURE_ARTIFACT_SIGNING_CLIENT_ID"
+                        printf 'AZURE_ARTIFACT_SIGNING_CLIENT_SECRET=%s\\n' "$AZURE_ARTIFACT_SIGNING_CLIENT_SECRET"
+                        printf 'AZURE_ARTIFACT_SIGNING_CORRELATION_ID=%s\\n' "$AZURE_ARTIFACT_SIGNING_CORRELATION_ID"
+                    } >"$AZURE_SIGNING_CREDENTIALS_FILE"
+                    ''');
+                body("--//bazel/rules:azure_signing_credentials_file=${credentials_file}");
+            } finally {
+                sh('rm -f "$AZURE_SIGNING_CREDENTIALS_FILE"');
+            }
         }
     }
 }

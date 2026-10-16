@@ -16,10 +16,12 @@ from cmk.agent_based.v2 import (
     DiscoveryResult,
     exists,
     get_value_store,
+    Result,
     Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
+    State,
     StringTable,
 )
 from cmk.plugins.lib.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS, FSBlock
@@ -39,8 +41,15 @@ def check_fast_lta_silent_cubes_capacity(
 ) -> CheckResult:
     fslist: list[FSBlock] = []
     for total, used in section:
-        total_bytes = int(total)
-        used_bytes = int(used)
+        try:
+            total_bytes = int(total)
+            used_bytes = int(used)
+        except ValueError:
+            yield Result(
+                state=State.UNKNOWN,
+                summary=f"Cannot parse capacity: got total {total!r}, used {used!r} (expected integers)",
+            )
+            return
         fslist.append((item, total_bytes / 1048576.0, (total_bytes - used_bytes) / 1048576.0, 0))
 
     yield from df_check_filesystem_list(

@@ -41,11 +41,6 @@ def test_check_fast_lta_silent_cube_capacity() -> None:
     assert metrics[0].value == 3695972.90234375
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report 8aca83da-fb3b-11f0-ace5-2a2e0f3d4944: ValueError",
-)
 def test_check_fast_lta_silent_cube_capacity_empty_used_value() -> None:
     # Crash group 4562: the device reported its total capacity but an empty
     # value for the used capacity.

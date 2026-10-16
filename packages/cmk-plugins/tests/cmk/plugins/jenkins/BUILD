@@ -7,6 +7,8 @@ py_cmk_test(
     srcs = glob(["**/*.py"]),
     deps = [
         "//packages/cmk-plugins/cmk/plugins/jenkins",
+        requirement("requests"),
+        requirement("responses"),
         requirement("time-machine"),
     ],
 )

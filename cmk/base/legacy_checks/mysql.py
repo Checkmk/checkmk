@@ -249,8 +249,10 @@ def check_mysql_connections(item, params, parsed):
     if not (data := parsed.get(item)):
         return
 
-    if "Max_used_connections" not in data:
-        yield 3, "Connection information is missing"
+    if missing := sorted(
+        {"Max_used_connections", "Threads_connected", "max_connections"} - data.keys()
+    ):
+        yield 3, f"Connection information is missing: {', '.join(missing)}"
         return
 
     # The maximum number of connections that have been in use simultaneously

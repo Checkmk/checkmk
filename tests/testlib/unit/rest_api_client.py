@@ -5135,6 +5135,16 @@ class CustomServiceClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def resolve_host_name_template(
+        self, body: Mapping[str, object], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/resolve_host_name_template/invoke",
+            body=dict(body),
+            expect_ok=expect_ok,
+        )
+
     def get(self, configuration_name: str, expect_ok: bool = True) -> Response:
         return self.request(
             "get",

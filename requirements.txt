@@ -198,6 +198,7 @@ annotated-types==0.8.0 \
     # via
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-data-backend/requirements.in
+    #   -r non-free/packages/cmk-telemetry/requirements.in
     #   pydantic
 anthropic==1.15.0 \
     --hash=sha256:10189a7993c5c71a0a2d4bb80020ca6a2fd27679f51e627405da37251d15ff49 \

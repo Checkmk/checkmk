@@ -1236,6 +1236,31 @@ describe('TrialModeSelectionApp', () => {
 
       expect(verifyButton()).toBeDisabled()
     })
+
+    it('says why a resend failed, not why the previous code was rejected', async () => {
+      renderApp()
+      await reachCodeStep()
+      answerVerificationWith({
+        status: 'error',
+        errorCode: 'rejected',
+        errorMessage: 'Your verification code has expired.'
+      })
+      await user.type(codeDigits()[0]!, '424242')
+      await screen.findByText('Your verification code has expired.')
+      await vi.advanceTimersByTimeAsync(60_000)
+      answerVerificationWith({
+        status: 'error',
+        errorCode: 'rate_limited',
+        errorMessage: 'Too many verification codes have been requested.'
+      })
+
+      await user.click(resendButton())
+
+      expect(
+        await screen.findByText('Too many verification codes have been requested.')
+      ).toBeInTheDocument()
+      expect(screen.queryByText('Your verification code has expired.')).not.toBeInTheDocument()
+    })
   })
 
   describe('success step', () => {

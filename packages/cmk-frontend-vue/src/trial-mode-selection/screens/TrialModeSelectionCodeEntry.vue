@@ -139,6 +139,7 @@ async function verify(): Promise<void> {
  */
 async function resend(): Promise<void> {
   code.value = ''
+  verifyErrorMessage.value = untranslated('')
   emit('resend')
   await nextTick()
   codeInput.value?.focus()

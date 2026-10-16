@@ -7,8 +7,8 @@
     "errorMessage": { "title": "ErrorMessage", "type": "string" },
     "errorCode": {
       "title": "ErrorCode",
-      "enum": ["rate_limited", "unavailable", "rejected"],
-      "description": "What the user may do after an error: wait before requesting another code (rate_limited), try again right away (unavailable), or follow the error message (rejected)."
+      "enum": ["rate_limited", "unavailable", "rejected", "invalid_code"],
+      "description": "What the user may do after an error: wait before requesting another code (rate_limited), try again right away (unavailable), follow the error message (rejected), or enter the code again or request a new one (invalid_code)."
     },
     "salt": { "title": "Salt", "type": "string" }
   },

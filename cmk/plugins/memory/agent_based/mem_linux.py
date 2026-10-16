@@ -16,6 +16,7 @@ from cmk.agent_based.v2 import (
     Metric,
     Result,
     Service,
+    State,
 )
 from cmk.plugins.lib import memory
 from cmk.plugins.lib.memory import check_element
@@ -190,6 +191,13 @@ def _as_notice(items: Iterable[IgnoreResults | Metric | Result]) -> CheckResult:
 
 def check_mem_linux(params: Mapping[str, Any], section: memory.SectionMem) -> CheckResult:
     if not section:
+        return
+
+    if missing := sorted(memory.LINUX_REQUIRED_KEYS - section.keys()):
+        yield Result(
+            state=State.UNKNOWN,
+            summary=f"Memory information is missing: {', '.join(missing)}",
+        )
         return
 
     augmented = dict(section)

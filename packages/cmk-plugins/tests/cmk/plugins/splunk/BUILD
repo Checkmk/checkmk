@@ -8,5 +8,7 @@ py_cmk_test(
     deps = [
         "//packages/cmk-plugins/cmk/plugins/splunk",
         requirement("polyfactory"),
+        requirement("requests"),
+        requirement("responses"),
     ],
 )

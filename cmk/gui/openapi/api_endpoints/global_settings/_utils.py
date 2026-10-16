@@ -17,7 +17,11 @@ from cmk.gui.form_specs import get_visitor, RawDiskData, RawFrontendData, Visito
 from cmk.gui.global_config import get_global_config
 from cmk.gui.openapi.api_endpoints.models.form_spec import FormSpecValidationErrorsModel
 from cmk.gui.openapi.framework import ApiContext, ETag, PathParam
-from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
+from cmk.gui.openapi.framework.model.converter import (
+    folder_tree_of_request,
+    SiteIdConverter,
+    TypedPlainValidator,
+)
 from cmk.gui.openapi.utils import EXT, ProblemException
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.watolib import read_only
@@ -34,7 +38,6 @@ from cmk.gui.watolib.global_settings import (
 from cmk.gui.watolib.global_settings import (
     make_pending_changes as make_setup_pending_changes,
 )
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.sites import (
     save_site_globals,
@@ -150,7 +153,7 @@ def global_settings_context_of(
         site_id,
         sites=api_context.config.sites,
         graph_timeranges=api_context.config.graph_timeranges,
-        folder_choices=lambda: make_folder_tree(api_context.config).folder_choices_fulltitle(
+        folder_choices=lambda: folder_tree_of_request(api_context).folder_choices_fulltitle(
             api_context.user
         ),
         edits_site_specific_value=edits_site_specific_value,
@@ -222,7 +225,7 @@ def save_site_setting(
         site_id,
         configured_sites,
         site_globals,
-        tree=make_folder_tree(api_context.config),
+        tree=folder_tree_of_request(api_context),
         pprint_value=api_context.config.wato_pprint_config,
         liveproxyd_enabled=api_context.config.liveproxyd_enabled,
         use_git=api_context.config.wato_use_git,

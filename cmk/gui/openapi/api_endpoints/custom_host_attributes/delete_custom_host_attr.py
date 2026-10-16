@@ -17,12 +17,12 @@ from cmk.gui.openapi.framework import (
     PathParam,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.watolib.custom_attributes import (
     save_custom_attrs_to_mk_file,
     update_host_custom_attrs,
 )
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 
 from ._family import CUSTOM_HOST_ATTR_FAMILY
 from ._utils import attr_etag, DOMAIN_TYPE, find_attr_or_raise, RW_PERMISSIONS
@@ -47,7 +47,7 @@ def delete_custom_host_attr_v1(
     all_attrs["host"] = [a for a in all_attrs["host"] if a is not attr]
     save_custom_attrs_to_mk_file(all_attrs)
     update_host_custom_attrs(
-        make_folder_tree(api_context.config),
+        folder_tree_of_request(api_context),
         all_attrs["host"],
         pprint_value=api_context.config.wato_pprint_config,
     )

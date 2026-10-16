@@ -16,10 +16,10 @@ from cmk.gui.openapi.framework import (
     EndpointPermissions,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.utils.misc import gen_id
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.password_store import trusted_explicit_password_ids
 from cmk.gui.watolib.rulesets import FolderRulesets
 
@@ -62,7 +62,7 @@ def create_rule_v1(api_context: ApiContext, body: CreateRuleModel) -> ApiRespons
         index, folder, rule, pending_changes=make_pending_changes(api_context)
     )
 
-    rule_entry = get_rule_by_id(make_folder_tree(api_context.config), rule.id)
+    rule_entry = get_rule_by_id(folder_tree_of_request(api_context), rule.id)
     return ApiResponse(
         body=serialize_rule(rule_entry, api_context),
         status_code=HTTPStatus.OK,

@@ -16,10 +16,10 @@ from cmk.gui.openapi.framework import (
     EndpointPermissions,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 
 from ._family import FOLDER_CONFIG_FAMILY
 from ._utils import (
@@ -67,7 +67,7 @@ def move_folder_v1(
             detail=exc.message,
         )
 
-    moved_folder = make_folder_tree(api_context.config)._by_id(folder_id)  # noqa: SLF001
+    moved_folder = folder_tree_of_request(api_context)._by_id(folder_id)  # noqa: SLF001
     return ApiResponse(
         body=serialize_folder(moved_folder, show_hosts=False, api_context=api_context),
         status_code=HTTPStatus.OK,

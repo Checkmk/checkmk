@@ -22,8 +22,8 @@ from cmk.gui.openapi.framework import (
     QueryParam,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.restful_objects.constructors import collection_href, object_href
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.maps.gui._object_queries import (
     dyngroup_members,
     folder_choices,
@@ -151,7 +151,7 @@ def list_folders_v1(api_context: ApiContext) -> MapsFoldersResponse:
     return MapsFoldersResponse(
         folders=[
             MapsFolder(path=choice.path, title=choice.title)
-            for choice in folder_choices(make_folder_tree(api_context.config))
+            for choice in folder_choices(folder_tree_of_request(api_context))
         ]
     )
 

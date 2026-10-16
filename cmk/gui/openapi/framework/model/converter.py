@@ -99,13 +99,18 @@ def _takes_validation_info[T](
     return len(positional) == 2
 
 
-def _folder_tree_of_request(api_context: ApiContext) -> FolderTree:
+def _build_folder_tree(api_context: ApiContext) -> FolderTree:
     return make_folder_tree(api_context.config)
+
+
+def folder_tree_of_request(api_context: ApiContext) -> FolderTree:
+    """The folder tree of the request, shared by its validators and its endpoint handler."""
+    return api_context.shared(_build_folder_tree)
 
 
 def folder_tree_of(info: ValidationInfo[object]) -> FolderTree:
     """The folder tree of the request a value is validated for."""
-    return validation_context_of(info).api_context.shared(_folder_tree_of_request)
+    return folder_tree_of_request(validation_context_of(info).api_context)
 
 
 @dataclass(slots=True)
@@ -160,9 +165,7 @@ class HostConverter:
 
     def host(self, value: str, info: ValidationInfo[object]) -> Host:
         api_context = validation_context_of(info).api_context
-        return self.host_in_tree(
-            value, api_context.shared(_folder_tree_of_request), api_context.user
-        )
+        return self.host_in_tree(value, folder_tree_of_request(api_context), api_context.user)
 
     def host_in_tree(self, value: str, tree: FolderTree, acting_user: LoggedInUser) -> Host:
         name = HostName(self._parse_host_name(value))
@@ -174,9 +177,7 @@ class HostConverter:
 
     def host_name(self, value: str, info: ValidationInfo[object]) -> HostName:
         api_context = validation_context_of(info).api_context
-        return self.host_name_in_tree(
-            value, api_context.shared(_folder_tree_of_request), api_context.user
-        )
+        return self.host_name_in_tree(value, folder_tree_of_request(api_context), api_context.user)
 
     def host_name_in_tree(
         self, value: str, tree: FolderTree, acting_user: LoggedInUser

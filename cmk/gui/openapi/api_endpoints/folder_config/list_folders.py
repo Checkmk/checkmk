@@ -15,8 +15,8 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedFolder
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 
 from ._family import FOLDER_CONFIG_FAMILY
 from ._utils import READ_PERMISSIONS, serialize_folders_collection
@@ -51,7 +51,7 @@ def list_folders_v1(
     ] = False,
 ) -> FolderCollectionModel:
     """Show all folders"""
-    parent_folder = make_folder_tree(api_context.config).root_folder() if parent is None else parent
+    parent_folder = folder_tree_of_request(api_context).root_folder() if parent is None else parent
     if recursive:
         parent_folder.need_recursive_permission("read", api_context.user)
         folders = parent_folder.subfolders_recursively()

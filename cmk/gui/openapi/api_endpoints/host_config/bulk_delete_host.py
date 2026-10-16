@@ -19,11 +19,14 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.openapi.framework.model.converter import HostConverter, TypedPlainValidator
+from cmk.gui.openapi.framework.model.converter import (
+    folder_tree_of_request,
+    HostConverter,
+    TypedPlainValidator,
+)
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.watolib.check_mk_automations import delete_hosts
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 
 from ._family import HOST_CONFIG_FAMILY
 from ._utils import make_pending_changes, PERMISSIONS_DELETE
@@ -51,7 +54,7 @@ def bulk_delete_host_v1(
     # Ideally, we would not need folder id's. However, folders cannot be sorted.
     folder_by_id = {}
     folder_id_by_hostname = {}
-    tree = make_folder_tree(api_context.config)
+    tree = folder_tree_of_request(api_context)
     for hostname in hostnames:
         folder = tree.load_host(hostname).folder()
         folder_id_by_hostname[hostname] = folder.id()

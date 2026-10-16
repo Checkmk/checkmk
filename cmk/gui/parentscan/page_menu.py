@@ -8,6 +8,7 @@ from collections.abc import Iterator
 
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_form_submit_link, make_simple_link, PageMenuEntry
@@ -30,7 +31,7 @@ def folder_page_menu_entries(folder: Folder | SearchFolder) -> Iterator[PageMenu
         yield PageMenuEntry(
             title=_("Detect network parent hosts"),
             icon_name=StaticIcon(IconNames.parentscan),
-            item=make_simple_link(folder.url([("mode", "parentscan"), ("all", "1")])),
+            item=make_simple_link(folder.url(request, [("mode", "parentscan"), ("all", "1")])),
             disabled_tooltip=_("Add host to use this action"),
             is_enabled=folder_or_subfolder_has_hosts,
         )

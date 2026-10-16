@@ -667,7 +667,7 @@ def _page_menu_entries_predefined_searches(
                 emblem=search_emblem,
             ),
             is_shortcut=search_type != page_type,
-            item=make_simple_link(folder.url(uri_params)),
+            item=make_simple_link(folder.url(request, uri_params)),
         )
 
     yield PageMenuEntry(
@@ -785,7 +785,7 @@ class ModeRulesetGroup(ABCRulesetMode):
             yield PageMenuEntry(
                 title=_("Hosts in folder: %(folder)s") % {"folder": self._folder.title()},
                 icon_name=StaticIcon(IconNames.folder),
-                item=make_simple_link(self._folder.url()),
+                item=make_simple_link(self._folder.url(request)),
             )
 
             if request.get_ascii_input("host"):
@@ -794,7 +794,7 @@ class ModeRulesetGroup(ABCRulesetMode):
                     title=_("Host properties of: %(host_name)s") % {"host_name": host_name},
                     icon_name=StaticIcon(IconNames.folder),
                     item=make_simple_link(
-                        self._folder.url([("mode", "edit_host"), ("host", host_name)])
+                        self._folder.url(request, [("mode", "edit_host"), ("host", host_name)])
                     ),
                 )
 
@@ -1122,7 +1122,7 @@ class ModeEditRuleset(WatoMode):
                 title=_("Services"),
                 icon_name=StaticIcon(IconNames.services),
                 item=make_simple_link(
-                    self._folder.url([("mode", "inventory"), ("host", self._hostname)])
+                    self._folder.url(request, [("mode", "inventory"), ("host", self._hostname)])
                 ),
             )
 
@@ -1132,6 +1132,7 @@ class ModeEditRuleset(WatoMode):
                     icon_name=StaticIcon(IconNames.rulesets),
                     item=make_simple_link(
                         self._folder.url(
+                            request,
                             [
                                 ("mode", "object_parameters"),
                                 ("host", self._hostname),
@@ -1150,6 +1151,7 @@ class ModeEditRuleset(WatoMode):
                 icon_name=StaticIcon(IconNames.logwatch),
                 item=make_simple_link(
                     self._folder.url(
+                        request,
                         [
                             ("mode", "pattern_editor"),
                             ("host", self._hostname),
@@ -1446,13 +1448,13 @@ class ModeEditRuleset(WatoMode):
         ]
 
         table.cell(_("Actions"), css=["buttons rulebuttons"])
-        edit_url = self._folder.url([("mode", "edit_rule"), *folder_preserving_vars])
+        edit_url = self._folder.url(request, [("mode", "edit_rule"), *folder_preserving_vars])
         html.icon_button(edit_url, _("Edit this rule"), StaticIcon(IconNames.edit))
 
-        clone_url = self._folder.url([("mode", "clone_rule"), *folder_preserving_vars])
+        clone_url = self._folder.url(request, [("mode", "clone_rule"), *folder_preserving_vars])
         html.icon_button(clone_url, _("Create a copy of this rule"), StaticIcon(IconNames.clone))
 
-        export_url = self._folder.url([("mode", "export_rule"), *folder_preserving_vars])
+        export_url = self._folder.url(request, [("mode", "export_rule"), *folder_preserving_vars])
         html.icon_button(
             export_url, _("Export this rule for API"), StaticIcon(IconNames.export_rule)
         )
@@ -2373,9 +2375,10 @@ class ABCEditRuleMode(WatoMode):
                 var_list.append(("item", request.get_str_input_mandatory("item")))
             if request.has_var("service"):
                 var_list.append(("service", request.get_str_input_mandatory("service")))
-            return self._back_folder.url(var_list)
+            return self._back_folder.url(request, var_list)
 
         return self._back_folder.url(
+            request,
             [("mode", self._back_mode), ("host", request.get_ascii_input_mandatory("host", ""))],
         )
 

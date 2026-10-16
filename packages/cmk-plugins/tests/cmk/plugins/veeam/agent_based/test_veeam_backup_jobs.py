@@ -12,7 +12,9 @@ from cmk.agent_based.v2 import Metric, render, Result, Service, State
 from cmk.plugins.veeam.agent_based.veeam_backup_jobs import (
     BackupJob,
     check_veeam_backup_jobs,
+    DEFAULT_DISCOVERY_PARAMETERS,
     discovery_veeam_backup_jobs,
+    DiscoveryParams,
     monitoring_state,
     parse_veeam_backup_jobs,
 )
@@ -65,7 +67,7 @@ STRING_TABLE = [
 
 def test_discovery_veeam_backup_jobs() -> None:
     section = parse_veeam_backup_jobs(STRING_TABLE)
-    assert list(discovery_veeam_backup_jobs(section)) == [
+    assert list(discovery_veeam_backup_jobs(DEFAULT_DISCOVERY_PARAMETERS, section)) == [
         Service(item="VMware_Server"),
         Service(item="warning_backup"),
         Service(item="backup_sync_job"),
@@ -75,10 +77,27 @@ def test_discovery_veeam_backup_jobs() -> None:
     ]
 
 
+def test_disabled_backup_jobs_are_not_discovered_when_configured() -> None:
+    section = parse_veeam_backup_jobs([[_job("enabled")], [_job("disabled", status="Disabled")]])
+    params = DiscoveryParams(discover_disabled=False)
+
+    assert list(discovery_veeam_backup_jobs(params, section)) == [Service(item="enabled")]
+
+
+def test_disabled_backup_jobs_are_discovered_by_default() -> None:
+    section = parse_veeam_backup_jobs([[_job("disabled", status="Disabled")]])
+
+    assert list(discovery_veeam_backup_jobs(DEFAULT_DISCOVERY_PARAMETERS, section)) == [
+        Service(item="disabled")
+    ]
+
+
 def test_discovered_item_is_the_sanitized_job_name() -> None:
     section = parse_veeam_backup_jobs([[_job("Bob's nightly VMs")]])
 
-    assert list(discovery_veeam_backup_jobs(section)) == [Service(item="Bob_s_nightly_VMs")]
+    assert list(discovery_veeam_backup_jobs(DEFAULT_DISCOVERY_PARAMETERS, section)) == [
+        Service(item="Bob_s_nightly_VMs")
+    ]
 
 
 def test_check_veeam_backup_jobs_success() -> None:

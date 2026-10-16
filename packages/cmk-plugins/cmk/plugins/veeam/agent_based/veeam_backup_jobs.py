@@ -7,6 +7,7 @@ import json
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -42,6 +43,13 @@ class BackupJob:
 Section = Mapping[str, BackupJob]
 
 
+class DiscoveryParams(TypedDict):
+    discover_disabled: bool
+
+
+DEFAULT_DISCOVERY_PARAMETERS = DiscoveryParams(discover_disabled=True)
+
+
 def parse_veeam_backup_jobs(string_table: StringTable) -> Section:
     section: dict[str, BackupJob] = {}
     for line in string_table:
@@ -64,8 +72,10 @@ def parse_veeam_backup_jobs(string_table: StringTable) -> Section:
     return section
 
 
-def discovery_veeam_backup_jobs(section: Section) -> DiscoveryResult:
-    yield from (Service(item=item) for item in section)
+def discovery_veeam_backup_jobs(params: DiscoveryParams, section: Section) -> DiscoveryResult:
+    for item, job in section.items():
+        if params["discover_disabled"] or job.status != "Disabled":
+            yield Service(item=item)
 
 
 def monitoring_state(last_result: str) -> State:
@@ -138,5 +148,7 @@ check_plugin_veeam_backup_jobs = CheckPlugin(
     name="veeam_backup_jobs",
     service_name="Backup job %s",
     discovery_function=discovery_veeam_backup_jobs,
+    discovery_ruleset_name="discovery_veeam_backup_jobs",
+    discovery_default_parameters=DEFAULT_DISCOVERY_PARAMETERS,
     check_function=check_veeam_backup_jobs_now,
 )

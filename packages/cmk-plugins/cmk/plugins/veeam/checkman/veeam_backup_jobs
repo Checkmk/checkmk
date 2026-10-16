@@ -21,7 +21,9 @@ description:
  A job that disappears from the API output makes the service {UNKNOWN}.
 
 discovery:
- One service is created for each backup job reported by the API.
+ One service is created for each backup job reported by the API, including
+ disabled ones. To leave out disabled jobs, disable this in the rule "Veeam:
+ Backup job discovery".
 
 item:
  The name of the backup job, sanitized: spaces and apostrophes are replaced

@@ -483,6 +483,7 @@ class RelativeGridDashboardRequest(BaseDashboardRequest):
                 ("body", "widgets", widget_id),
                 context=context,
                 embedded_views=embedded_views,
+                stored_widget=stored_widgets.get(widget_id),
             )
         ]
         errors.extend(self._iter_contextual_link_errors(context, stored_widgets))

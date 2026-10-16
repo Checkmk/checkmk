@@ -12,6 +12,7 @@ from pydantic_core import ErrorDetails
 from cmk.gui.dashboard.event_bar_chart_window import exceeds_event_bar_chart_span
 from cmk.gui.dashboard.type_defs import (
     DashboardWindow,
+    DashletConfig,
     EventBarChartDashletConfig,
     EventBarChartRenderBarChart,
     EventBarChartRenderMode,
@@ -132,6 +133,7 @@ class _BaseTimelineContent(BaseWidgetContent, ABC):
         context: ApiContext,
         *,
         embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
+        stored_widget: DashletConfig | None,
     ) -> Iterable[ErrorDetails]:
         window = self.render_mode.time_range
         if window == "dashboard":

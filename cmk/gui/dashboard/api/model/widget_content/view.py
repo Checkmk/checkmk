@@ -9,7 +9,11 @@ from typing import Annotated, Literal, override, Self
 from pydantic import AfterValidator
 from pydantic_core import ErrorDetails
 
-from cmk.gui.dashboard.type_defs import EmbeddedViewDashletConfig, LinkedViewDashletConfig
+from cmk.gui.dashboard.type_defs import (
+    DashletConfig,
+    EmbeddedViewDashletConfig,
+    LinkedViewDashletConfig,
+)
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model
@@ -106,6 +110,7 @@ class EmbeddedViewContent(BaseWidgetContent):
         context: ApiContext,
         *,
         embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
+        stored_widget: DashletConfig | None,
     ) -> Iterable[ErrorDetails]:
         if self.embedded_id not in embedded_views:
             yield ErrorDetails(

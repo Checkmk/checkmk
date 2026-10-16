@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 from http import HTTPStatus
 from typing import get_args, get_type_hints
 
@@ -26,12 +25,12 @@ from cmk.gui.dashboard.type_defs import (
     NetworkFlowDonutDashletConfig,
 )
 from cmk.gui.openapi.framework.model import ApiOmitted
-from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
 from cmk.gui.views.icon.registry import all_icons
 from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry, Response
 from tests.unit.cmk.gui.helpers.dashboard_api_test_helper import (
+    admin_roles_without,
     check_widget_create,
     create_dashboard_payload,
     create_widget,
@@ -907,17 +906,6 @@ def _payload_with_share(dashboard_id: str, share: object) -> dict[str, object]:
     return payload
 
 
-def _admin_roles_without(
-    config: Config, *permissions: str
-) -> dict[str, BuiltInUserRole | CustomUserRole]:
-    roles = copy.deepcopy(config.roles)
-    admin_permissions = dict(roles["admin"].get("permissions", {}))
-    for permission in permissions:
-        admin_permissions[permission] = False
-    roles["admin"]["permissions"] = admin_permissions
-    return roles
-
-
 @pytest.fixture(name="contact_groups")
 def _contact_groups(monkeypatch: pytest.MonkeyPatch) -> tuple[str, str]:
     """Make two contact groups exist, with the current user a member of only the first.
@@ -945,7 +933,7 @@ class TestSharePermissionEnforcement:
     def test_share_with_all_users_denied_without_permission(
         self, clients: ClientRegistry, set_config: SetConfig, load_config: Config
     ) -> None:
-        with set_config(roles=_admin_roles_without(load_config, "general.publish_dashboards")):
+        with set_config(roles=admin_roles_without(load_config, "general.publish_dashboards")):
             resp = clients.DashboardClient.create_relative_grid_dashboard(
                 _payload_with_share("shared_with_all_denied", {"type": "with_all_users"}),
                 expect_ok=False,
@@ -968,7 +956,7 @@ class TestSharePermissionEnforcement:
         own, _foreign = contact_groups
         # Without the foreign-groups permission, sharing with an own group still works.
         with set_config(
-            roles=_admin_roles_without(load_config, "general.publish_dashboards_to_foreign_groups")
+            roles=admin_roles_without(load_config, "general.publish_dashboards_to_foreign_groups")
         ):
             resp = clients.DashboardClient.create_relative_grid_dashboard(
                 _payload_with_share(
@@ -989,7 +977,7 @@ class TestSharePermissionEnforcement:
     ) -> None:
         _own, foreign = contact_groups
         with set_config(
-            roles=_admin_roles_without(load_config, "general.publish_dashboards_to_foreign_groups")
+            roles=admin_roles_without(load_config, "general.publish_dashboards_to_foreign_groups")
         ):
             resp = clients.DashboardClient.create_relative_grid_dashboard(
                 _payload_with_share(
@@ -1030,7 +1018,7 @@ class TestSharePermissionEnforcement:
     ) -> None:
         own, _foreign = contact_groups
         with set_config(
-            roles=_admin_roles_without(
+            roles=admin_roles_without(
                 load_config,
                 "general.publish_dashboards_to_groups",
                 "general.publish_dashboards_to_foreign_groups",
@@ -1055,7 +1043,7 @@ class TestSharePermissionEnforcement:
         self, clients: ClientRegistry, set_config: SetConfig, load_config: Config
     ) -> None:
         with set_config(
-            roles=_admin_roles_without(load_config, "general.publish_dashboards_to_sites")
+            roles=admin_roles_without(load_config, "general.publish_dashboards_to_sites")
         ):
             resp = clients.DashboardClient.create_relative_grid_dashboard(
                 _payload_with_share(

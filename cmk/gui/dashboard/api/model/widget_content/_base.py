@@ -62,11 +62,13 @@ class BaseWidgetContent(ABC):
         context: ApiContext,  # noqa: ARG002
         *,
         embedded_views: Mapping[str, DashboardEmbeddedViewSpec],  # noqa: ARG002
+        stored_widget: DashletConfig | None,  # noqa: ARG002
     ) -> Iterable[ErrorDetails]:
         """Run additional validation based on the config.
 
         Specifically, this should be used when they validation requires access to the active config
-        or the existing dashboard configuration (embedded views). The `location` parameter describes
+        or the existing dashboard configuration (embedded views, the stored config of the widget
+        with the same ID, None if there is none). The `location` parameter describes
         the location up to this widget. The errors should include the exact location of the
         erroneous data in the `loc` of the `ErrorDetails`.
         """

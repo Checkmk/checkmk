@@ -5,6 +5,7 @@
 
 """Shared helpers for dashboard API tests across editions."""
 
+import copy
 import datetime as dt
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
@@ -14,7 +15,9 @@ from http import HTTPStatus
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.dashboard.store import DashboardStore, get_all_dashboards, save_all_dashboards
+from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
@@ -51,6 +54,18 @@ def create_dashboard_payload(
         "widgets": widgets,
         "layout": {"type": "relative_grid"},
     }
+
+
+def admin_roles_without(
+    config: Config, *permissions: str
+) -> dict[str, BuiltInUserRole | CustomUserRole]:
+    """The configured roles, with the given permissions revoked from the admin role."""
+    roles = copy.deepcopy(config.roles)
+    admin_permissions = dict(roles["admin"].get("permissions", {}))
+    for permission in permissions:
+        admin_permissions[permission] = False
+    roles["admin"]["permissions"] = admin_permissions
+    return roles
 
 
 def create_widget(content: dict[str, object]) -> dict[str, object]:

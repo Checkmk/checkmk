@@ -5,7 +5,7 @@
 
 from abc import ABC
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Annotated, Literal, override, Protocol, runtime_checkable, Self
+from typing import Annotated, cast, Literal, override, Protocol, runtime_checkable, Self
 
 from annotated_types import Ge, Unit
 from pydantic import GetCoreSchemaHandler, WithJsonSchema
@@ -20,6 +20,7 @@ from cmk.gui.dashboard.type_defs import (
     ABCGraphDashletConfig,
     CombinedGraphDashletConfig,
     CustomGraphDashletConfig,
+    DashletConfig,
     EmbeddedCustomGraphDashletConfig,
     ProblemsGraphDashletConfig,
     SingleTimeseriesDashletConfig,
@@ -367,8 +368,11 @@ class EmbeddedCustomGraphHandler[D](Protocol):
         definition: D,
         location: tuple[str | int, ...],
         context: ApiContext,
+        *,
+        stored_definition: Mapping[str, object] | None,
     ) -> Iterable[ErrorDetails]:
-        """Data source and telemetry errors of the definition, located below `location`."""
+        """Data source errors of the definition, and its telemetry errors unless it is unchanged
+        from `stored_definition`, located below `location`."""
 
 
 def _embedded_custom_graph_handler() -> type[EmbeddedCustomGraphHandler[object]] | None:
@@ -450,11 +454,21 @@ class EmbeddedCustomGraphContent(_BaseGraphContent):
         context: ApiContext,
         *,
         embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
+        stored_widget: DashletConfig | None,
     ) -> Iterable[ErrorDetails]:
         if (handler := _embedded_custom_graph_handler()) is None:
             return
+        # a definition the save leaves as stored was checked for its author, and the writer may
+        # lack the telemetry permission the author had
         yield from handler.iter_definition_errors(
-            self.definition, location + ("definition",), context
+            self.definition,
+            location + ("definition",),
+            context,
+            stored_definition=(
+                cast(EmbeddedCustomGraphDashletConfig, stored_widget)["definition"]
+                if stored_widget is not None and stored_widget["type"] == self.internal_type()
+                else None
+            ),
         )
 
 

@@ -205,12 +205,14 @@ class BaseWidgetRequest(_BaseWidget, ABC):
         context: ApiContext,
         *,
         embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
+        stored_widget: DashletConfig | None,
     ) -> Iterable[ErrorDetails]:
         """Run additional validations that depends on the config."""
         yield from self.content.iter_validation_errors(
             location + ("content", self.content.type),
             context,
             embedded_views=embedded_views,
+            stored_widget=stored_widget,
         )
 
     def _to_internal_without_layout(self) -> DashletConfig:

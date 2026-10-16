@@ -132,6 +132,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
   box-sizing: border-box;
   background-color: var(--ux-theme-5);
   border: 1px solid var(--border-color-subtle);
+  border-radius: var(--border-radius-half);
   color: var(--font-color);
   font-size: var(--font-size-normal);
   font-weight: var(--font-weight-default);
@@ -140,7 +141,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
 .cmk-tooltip-content--variant-text {
   display: inline-flex;
   align-items: center;
-  height: var(--dimension-8);
+  height: var(--dimension-7);
   padding: 0 var(--dimension-4);
   white-space: nowrap;
 }

@@ -354,28 +354,34 @@ class _SiteLivestatus:
         return connection.query(query)
 
 
-def match_event_rule(
-    rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event, site_configs: SiteConfigurations
-) -> ec.MatchResult:
-    if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT:
-        rule_customer_id = (
-            rule_pack["customer"] if "customer" in rule_pack else rule.get("customer", SCOPE_GLOBAL)
-        )
-        site_customer_id = customer_api().get_customer_id(site_configs[event["site"]])
-        if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
-            return ec.MatchFailure(reason=_("Wrong customer"))
+class EventSimulator:
+    """Matches a simulated event against rules like the Event Console of the simulated site"""
 
-    time_period = ec.TimePeriods(log.logger, _SiteLivestatus(event["site"]))
-    rule_matcher = ec.RuleMatcher(
-        logger=None,
-        # Match against the site the event is simulated for, not the one running the GUI.
-        omd_site_id=event["site"],
-        is_active_time_period=time_period.active,
-    )
-    rule = rule.copy()
-    rule["pack"] = rule_pack["id"]
-    ec.compile_rule(rule)
-    return rule_matcher.event_rule_matches(rule, event)
+    def __init__(self, event: ec.Event, site_configs: SiteConfigurations) -> None:
+        self._event = event
+        self._site_config = site_configs[event["site"]]
+        self._rule_matcher = ec.RuleMatcher(
+            logger=None,
+            # Match against the site the event is simulated for, not the one running the GUI.
+            omd_site_id=event["site"],
+            is_active_time_period=ec.TimePeriods(log.logger, _SiteLivestatus(event["site"])).active,
+        )
+
+    def match_rule(self, rule_pack: ec.ECRulePack, rule: ec.Rule) -> ec.MatchResult:
+        if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT:
+            rule_customer_id = (
+                rule_pack["customer"]
+                if "customer" in rule_pack
+                else rule.get("customer", SCOPE_GLOBAL)
+            )
+            site_customer_id = customer_api().get_customer_id(self._site_config)
+            if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
+                return ec.MatchFailure(reason=_("Wrong customer"))
+
+        rule = rule.copy()
+        rule["pack"] = rule_pack["id"]
+        ec.compile_rule(rule)
+        return self._rule_matcher.event_rule_matches(rule, self._event)
 
 
 # .
@@ -2047,6 +2053,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         id_to_mkp = self._get_rule_pack_to_mkp_map()
 
+        simulator = EventSimulator(event, config.sites) if event else None
         have_match = False
 
         rule_stats = _get_rule_stats_from_ec()
@@ -2191,13 +2198,13 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     )
 
                 # Simulation of all rules in this pack
-                elif event:
+                elif simulator:
                     matches = 0
                     cancelling_matches = 0
                     skips = 0
 
                     for rule in rule_pack["rules"]:
-                        result = match_event_rule(rule_pack, rule, event, config.sites)
+                        result = simulator.match_rule(rule_pack, rule)
                         if isinstance(result, ec.MatchSuccess):
                             cancelling, groups = result.cancelling, result.match_groups
 
@@ -2521,6 +2528,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         with table_element(title=_("Rules"), css="ruleset", limit=None) as table:
             have_match = False
             hits = _get_rule_stats_from_ec()
+            simulator = EventSimulator(event, site_configs) if event else None
             for nr, rule in enumerate(rules):
                 table.row(css=["matches_search"] if rule in found_rules else [])
                 delete_url = make_confirm_delete_link(
@@ -2564,13 +2572,14 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         StaticIcon(IconNames.disabled),
                         title=_("This rule is currently disabled and will not be applied"),
                     )
-                elif event:
+                elif event and simulator:
+                    # The simulator sees this, too.
                     event["host"] = HostName(
                         cmk.ccc.translations.translate(
                             eventd_configuration()["hostname_translation"], event["host"]
                         )
                     )
-                    result = match_event_rule(self._rule_pack, rule, event, site_configs)
+                    result = simulator.match_rule(self._rule_pack, rule)
                     if not isinstance(result, ec.MatchSuccess):
                         html.static_icon(
                             StaticIcon(IconNames.hyphen),

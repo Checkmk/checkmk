@@ -95,6 +95,19 @@ def test_connection_usage_is_checked_against_levels() -> None:
     ]
 
 
+@pytest.mark.xfail(
+    strict=True, reason="Crash report cd895460-6159-11f1-8ed5-005056a8b5b9: KeyError"
+)
+def test_connections_without_max_connections_are_unknown() -> None:
+    # Crash group 4823: the service was discovered, but a later agent output
+    # lacked the server variable max_connections.
+    section = parse_mysql([["Max_used_connections", "80"], ["Threads_connected", "10"]])
+
+    assert list(check_mysql_connections("mysql", {}, section)) == [
+        Result(state=State.UNKNOWN, summary="Connection information is missing: max_connections"),
+    ]
+
+
 # Instances without a wsrep provider ("none") are no Galera cluster members.
 @pytest.mark.parametrize(
     "discover, expected",

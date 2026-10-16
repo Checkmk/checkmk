@@ -151,14 +151,31 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
         return self.locator().locator("ul.cmk-suggestions").get_by_role("textbox")
 
     @property
-    def _host_selection_add_filter_button(self) -> Locator:
-        """Locator property of the button to 'Add filter' to the 'Host selection' region."""
-        return self._host_selection_region.get_by_role("button", name="Add filter")
+    def single_metric_toggle(self) -> Locator:
+        """Locator property of the toggle to select a single metric in 'Metric selection'."""
+        return self._metric_selection_region.get_by_role("button", name="Toggle Metric (single)")
+
+    @property
+    def combined_graph_toggle(self) -> Locator:
+        """Locator property of the toggle to select a combined graph in 'Metric selection'."""
+        return self._metric_selection_region.get_by_role("button", name="Toggle Graph (combined)")
+
+    @property
+    def metric_selection_comboboxes(self) -> Locator:
+        """Locator property of every combobox offered in the 'Metric selection' region."""
+        return self._metric_selection_region.get_by_role("combobox")
 
     @property
     def service_metric_combobox(self) -> Locator:
         """Locator property of combobox to select the service metric of the widget."""
         return self._metric_selection_region.get_by_role("combobox", name="Select service metric")
+
+    @property
+    def service_graph_combobox(self) -> Locator:
+        """Locator property of combobox to select the service graph of the widget."""
+        # The field carries no accessible name; it is the only one the region offers while a
+        # combined graph is selected.
+        return self.metric_selection_comboboxes
 
     @property
     def next_step_visualization_button(self) -> Locator:
@@ -280,6 +297,29 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
             self._combobox_text_input if search else None,
         )
 
+    def open_service_metric_dropdown(self) -> Locator:
+        """Open the dropdown to select the service metric of the widget.
+
+        Returns:
+            The locator of the options the dropdown offers.
+        """
+        return self._open_dropdown("service metric", self.service_metric_combobox)
+
+    def open_service_graph_dropdown(self) -> Locator:
+        """Open the dropdown to select the service graph of the widget.
+
+        Returns:
+            The locator of the options the dropdown offers.
+        """
+        return self._open_dropdown("service graph", self.service_graph_combobox)
+
+    def _open_dropdown(self, dropdown_name: str, combobox: Locator) -> Locator:
+        """Open a dropdown of the wizard and return the locator of the options it offers."""
+        combobox.click()
+        suggestions = self.locator().locator(_SUGGESTIONS_SELECTOR)
+        expect(suggestions, message=f"The {dropdown_name} dropdown did not open").to_be_visible()
+        return suggestions.get_by_role("option")
+
     def select_single_host(self, host_name: str) -> None:
         """Restrict the widget to one host, in a region offering a single host.
 
@@ -303,6 +343,40 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
         region.get_by_role("button", name=f"Add {object_type} name").click()
         field = region.locator(_SINGLE_FILTER_SELECTOR).get_by_role("combobox")
         expect(field, message=f"No field to name a single {object_type} appeared").to_be_visible()
+        self._pick_suggestion(field, object_type, value)
+
+    def select_multiple_hosts_by_regex(self, host_regex: str) -> None:
+        """Select every host matching a regular expression, in a region offering multiple hosts.
+
+        Args:
+            host_regex: the regular expression the names of the hosts have to match.
+        """
+        self._select_multiple_objects_by_regex(self._host_selection_region, "host", host_regex)
+
+    def select_multiple_services_by_regex(self, service_regex: str) -> None:
+        """Select every service matching a regular expression, in a region offering multiple
+        services.
+
+        Args:
+            service_regex: the regular expression the names of the services have to match.
+        """
+        self._select_multiple_objects_by_regex(
+            self._service_selection_region, "service", service_regex
+        )
+
+    def _select_multiple_objects_by_regex(
+        self, region: Locator, object_type: str, regex: str
+    ) -> None:
+        """Switch a region to multiple objects and filter them by `regex` on their name."""
+        region.get_by_role("button", name=f"Toggle Multiple {object_type}s").click()
+        filter_name = f"{object_type.capitalize()} name (regex)"
+        self._add_filter(region, filter_name, sub_menu=f"{object_type.capitalize()} name")
+        field = region.get_by_role("group", name=filter_name).get_by_role("combobox")
+        expect(field, message=f"No field to filter {object_type}s by name appeared").to_be_visible()
+        self._pick_suggestion(field, object_type, regex)
+
+    def _pick_suggestion(self, field: Locator, object_type: str, value: str) -> None:
+        """Open the suggestions of `field` and pick `value` out of them."""
         field.click()
 
         suggestions = self.locator().locator(_SUGGESTIONS_SELECTOR)
@@ -314,7 +388,7 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
             filter_box, message=f"The field offering {value!r} never showed its filter box"
         ).to_be_visible()
         filter_box.fill(value)
-        option = suggestions.locator(f"[role='option'][aria-label='{value}']")
+        option = suggestions.get_by_role("option", name=value, exact=True)
         expect(option, message=f"No {object_type} named {value!r} was offered").to_be_visible()
         option.click()
         # A region that did not take the value leaves the metric list empty, which reads as a
@@ -330,7 +404,11 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
             filter_name: name of the filter to add.
             exact: whether the name match has to be exact or not.
         """
-        self._host_selection_add_filter_button.click()
+        self._add_filter(self._host_selection_region, filter_name, sub_menu)
+
+    def _add_filter(self, region: Locator, filter_name: str, sub_menu: str | None) -> None:
+        """Add a filter to the widget in a selection region."""
+        region.get_by_role("button", name="Add filter").click()
         expect(
             self._add_filter_section, message="'Add filter' section is not visible"
         ).to_be_visible()

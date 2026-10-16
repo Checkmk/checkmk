@@ -2543,18 +2543,26 @@ class AutocompleteAPI(BaseAPI):
         A dropdown suggestion is labelled with the title, never the metric name, so a test
         driving one has to know both.
         """
+        return self.monitored_metrics(
+            {"host": {"host": host_name}, "service": {"service": service_name}},
+            show_independent_of_context=False,
+        )
+
+    def monitored_metrics(
+        self,
+        context: Mapping[str, Mapping[str, str]],
+        show_independent_of_context: bool = True,
+    ) -> dict[str, str]:
+        """Map each metric the context's objects report to the title the GUI offers it under.
+
+        The defaults are what the dashboard widget wizard sends: an empty context then offers
+        every metric the site knows.
+        """
+        parameters: dict[str, object] = {"strict": True, "context": context}
+        if show_independent_of_context:
+            parameters |= {"show_independent_of_context": True, "escape_regex": False}
         response = self._post_internal_action(
-            "objects/autocomplete/monitored_metrics",
-            {
-                "value": "",
-                "parameters": {
-                    "strict": True,
-                    "context": {
-                        "host": {"host": host_name},
-                        "service": {"service": service_name},
-                    },
-                },
-            },
+            "objects/autocomplete/monitored_metrics", {"value": "", "parameters": parameters}
         )
         return {choice["id"]: choice["value"] for choice in response["choices"]}
 

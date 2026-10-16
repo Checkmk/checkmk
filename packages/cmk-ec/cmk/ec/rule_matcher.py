@@ -372,7 +372,7 @@ class RuleMatcher:
     def event_rule_matches_timeperiod(self, rule: Rule, event: Event) -> MatchResult:
         if "match_timeperiod" in rule and not self._is_active_time_period(rule["match_timeperiod"]):
             return MatchFailure(
-                reason=f"The time period {rule['match_timeperiod']} is not is not known or is currently not active"
+                reason=f"The time period {rule['match_timeperiod']} is currently not active"
             )
         return MatchSuccess(cancelling=False, match_groups=MatchGroups())
 

@@ -189,9 +189,7 @@ def test_simulator_queries_time_periods_of_the_local_site_without_the_gui_connec
             simulated_site=omd_site(),
         )
 
-    assert result == ec.MatchFailure(
-        reason="The time period workhours is not is not known or is currently not active"
-    )
+    assert result == ec.MatchFailure(reason="The time period workhours is currently not active")
 
 
 @pytest.mark.usefixtures("request_context", "with_user_login")
@@ -226,9 +224,7 @@ def test_simulated_event_uses_time_periods_of_the_simulated_site(
             simulated_site=SiteId("remote"),
         )
 
-    assert result == ec.MatchFailure(
-        reason="The time period workhours is not is not known or is currently not active"
-    )
+    assert result == ec.MatchFailure(reason="The time period workhours is currently not active")
 
 
 @pytest.mark.usefixtures("request_context")

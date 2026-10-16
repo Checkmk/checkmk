@@ -11,7 +11,13 @@ from cmk.utils.hostaddress import HostName
 
 import cmk.ec.export as ec
 from cmk.ec.config import Config, MatchGroups
-from cmk.ec.main import create_history, EventServer, StatusTableEvents, StatusTableHistory
+from cmk.ec.main import (
+    create_history,
+    EventServer,
+    EventStatus,
+    StatusTableEvents,
+    StatusTableHistory,
+)
 
 from .helpers import new_event
 
@@ -112,3 +118,23 @@ def test_rewrite_event_state(
     event_server.rewrite_event(rule=rule, event=event, match_groups=MatchGroups())
 
     assert event["state"] == expected
+
+
+def test_rule_which_cannot_be_compiled_does_not_match(
+    event_server: EventServer, event_status: EventStatus, settings: ec.Settings, config: Config
+) -> None:
+    # The rule would match any message, only one of its state patterns is an invalid regex.
+    rule = _make_rule(("text_pattern", {"2": "(("}))
+    config_rule_packs = config | {"rule_packs": [ec.default_rule_pack([rule])]}
+    history = create_history(
+        settings,
+        config_rule_packs,
+        logging.getLogger("cmk.mkeventd"),
+        StatusTableEvents.columns,
+        StatusTableHistory.columns,
+    )
+    event_server.reload_configuration(config_rule_packs, history=history)
+
+    event_server.process_potential_event(new_event(ec.Event(text="Something happened")))
+
+    assert event_status.events() == []

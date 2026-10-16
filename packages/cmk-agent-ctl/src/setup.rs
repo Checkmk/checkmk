@@ -6,9 +6,9 @@ use super::environment::{PathResolver, SetupMode};
 #[cfg(windows)]
 use super::misc;
 use super::{cli, constants, types};
-#[cfg(unix)]
-use anyhow::Context;
 use anyhow::Result as AnyhowResult;
+#[cfg(unix)]
+use anyhow::{bail, Context};
 use clap::Parser;
 #[cfg(windows)]
 use flexi_logger::FileSpec;
@@ -200,6 +200,35 @@ fn detect_home_dir() -> PathBuf {
     PathBuf::from(home_dir)
 }
 
+/// Who a mode runs as.
+///
+/// Every mode of the controller works on files of the agent user and therefore
+/// drops to that user. `install-agent` is the exception: the installer unit
+/// starts it as root, and root is what the step needs.
+#[cfg(unix)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Privileges {
+    /// Become the agent user, whatever the caller was.
+    AgentUser,
+    /// Keep the privileges of the calling process.
+    Keep,
+}
+
+/// Who the requested mode has to run as.
+///
+/// `install-agent` keeps what the installer unit gave it, because it verifies
+/// the package against the root-owned trust anchors of the update
+/// configuration and then calls the package manager. Dropping to the agent
+/// user would put both out of reach and turn the privileged step into a step
+/// the agent user could have taken itself.
+#[cfg(unix)]
+fn privileges_of(mode: &cli::Mode) -> Privileges {
+    match mode {
+        cli::Mode::InstallAgent => Privileges::Keep,
+        _ => Privileges::AgentUser,
+    }
+}
+
 #[cfg(unix)]
 fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
     if let Err(err) = init_logging(&cli.logging_level()) {
@@ -208,7 +237,9 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
             .unwrap_or(());
     }
 
-    if let Some(install_dir) = setup_single_directory()
+    let privileges = privileges_of(&cli.mode);
+
+    if let Some(install_dir) = setup_single_directory(privileges)
         .context("Failed to initialize under single directory deployment")?
     {
         return Ok(PathResolver::new(SetupMode::SingleDir, &install_dir));
@@ -226,6 +257,17 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
         ));
     }
 
+    if let Privileges::Keep = privileges {
+        // The integrated updater, and with it the installer unit, is baked for the
+        // single directory deployment only. Reaching this point means the unit runs
+        // where it was never meant to, so the mode says so instead of looking for
+        // files that the classic layout does not have.
+        bail!(
+            "The agent updater integrated into the controller requires the single directory \
+             deployment of the Checkmk agent"
+        );
+    }
+
     // Normal/prod home dir
     let user = become_user(UserRepr::Name(constants::CMK_AGENT_USER.to_owned())).context(format!(
                 "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
@@ -235,10 +277,18 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
 }
 
 #[cfg(unix)]
-fn setup_single_directory() -> AnyhowResult<Option<PathBuf>> {
+fn setup_single_directory(privileges: Privileges) -> AnyhowResult<Option<PathBuf>> {
     let Some(install_dir) = detect_install_dir() else {
         return Ok(None);
     };
+
+    if let Privileges::Keep = privileges {
+        debug!(
+            "Detected single directory deployment under {:?}. Keeping the privileges of the calling process.",
+            install_dir
+        );
+        return Ok(Some(install_dir));
+    }
 
     debug!(
         "Detected single directory deployment under {:?}. Trying to become the agent user and setting up paths accordingly, and failing otherwise.",
@@ -305,6 +355,29 @@ pub fn init(args: ArgsOs) -> AnyhowResult<(cli::Cli, PathResolver)> {
 
     let paths = setup(&cli)?;
     Ok((cli, paths))
+}
+
+/// Which modes keep the privileges they were started with. The switch itself
+/// cannot be tested here: becoming another user needs root.
+#[cfg(all(test, unix))]
+mod tests {
+    use super::*;
+
+    /// The installer unit runs this mode as root, and the package manager and
+    /// the root-owned trust anchors both need that root.
+    #[test]
+    fn test_install_agent_keeps_its_privileges() {
+        assert_eq!(privileges_of(&cli::Mode::InstallAgent), Privileges::Keep);
+    }
+
+    #[test]
+    fn test_every_other_mode_becomes_the_agent_user() {
+        assert_eq!(privileges_of(&cli::Mode::Dump), Privileges::AgentUser);
+        assert_eq!(
+            privileges_of(&cli::Mode::Daemon(cli::DaemonOpts::parse_from(["daemon"]))),
+            Privileges::AgentUser
+        );
+    }
 }
 
 /// Only the Windows home directory is detected here; the layouts themselves are

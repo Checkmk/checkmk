@@ -95,6 +95,16 @@ pub enum Mode {
     /// --skip-signatures is given, and left in the spool directory for the
     /// installer. Installing it is not implemented yet.
     Update(UpdateOpts),
+
+    /// Install an agent package the `update` mode spooled
+    ///
+    /// The privileged step of an agent update: a socket-activated systemd unit
+    /// runs this command as root for one package, with the request and the
+    /// answer on its standard input and output. Not meant to be called by
+    /// hand. The signature of the package is not verified yet, and the outcome
+    /// is reported through the exit code only.
+    #[cfg(unix)]
+    InstallAgent,
 }
 
 #[derive(Parser)]
@@ -374,6 +384,19 @@ mod tests {
     #[test]
     fn test_update_refuses_to_skip_signatures_of_a_check() {
         assert!(Cli::try_parse_from(["cmk-agent-ctl", "update", "--check-only", "-G"]).is_err());
+    }
+
+    /// The bakery writes `cmk-agent-ctl install-agent` into the installer unit
+    /// it bakes, so the spelling of the mode and its empty argument list are a
+    /// contract with that unit.
+    #[cfg(unix)]
+    #[test]
+    fn test_install_agent_takes_no_arguments() {
+        assert!(matches!(
+            Cli::parse_from(["cmk-agent-ctl", "install-agent"]).mode,
+            Mode::InstallAgent
+        ));
+        assert!(Cli::try_parse_from(["cmk-agent-ctl", "install-agent", "--package"]).is_err());
     }
 
     #[test]

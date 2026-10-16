@@ -28,6 +28,8 @@ use modes::daemon::daemon;
 use modes::delete_connection::{delete, delete_all};
 use modes::dump::dump;
 use modes::import_connection::import;
+#[cfg(unix)]
+use modes::install_agent::install_agent;
 use modes::pull::fn_thread;
 use modes::push::handle_push_cycle as push;
 use modes::registration;
@@ -40,6 +42,13 @@ pub use setup::init;
 pub use misc::validate_elevation;
 
 pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> AnyhowResult<()> {
+    // Dispatched before anything is loaded, because this mode runs as root and
+    // works on the agent package alone.
+    #[cfg(unix)]
+    if let cli::Mode::InstallAgent = cli.mode {
+        return install_agent(&paths.updater_package_dir);
+    }
+
     configuration::migrate::migrate_registered_connections(&paths.registry_path)?;
     agent_socket_operational(&cli.mode)?;
 
@@ -162,6 +171,10 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
                 updater::SignatureCheck::Required
             },
         ),
+        #[cfg(unix)]
+        cli::Mode::InstallAgent => {
+            unreachable!("install-agent returns before the controller's files are loaded")
+        }
         cli::Mode::RenewCertificate(renew_certificate_opts) => renew_certificate(
             registry,
             &renew_certificate_opts.connection_opts.connection,

@@ -19,14 +19,19 @@
 //!
 //! [`Updater`] loads the three of them together and is the entry point of the
 //! updater: [`Updater::handle_update_cycle`].
+//!
+//! [`InstallRequest`] is not one of them: it is what the controller hands to
+//! the privileged install step of Linux, which is a process of its own.
 
 mod backend;
 mod connection;
+mod install;
 mod verification;
 pub use backend::{
     AgentInfo, CheckOutcome, FetchOutcome, SignatureCheck, UpdateSource, UpdateState, Updater,
     UpdaterConfig,
 };
+pub use install::InstallRequest;
 
 #[cfg(windows)]
 mod platform;

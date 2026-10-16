@@ -33,7 +33,7 @@ import cmk.mkp_tool
 import cmk.utils.paths
 import cmk.utils.render
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import RegexFutureWarning
 from cmk.ccc.site import omd_site, SiteId
@@ -373,6 +373,30 @@ class _SiteLivestatus:
         return connection.query(query)
 
 
+class _TimePeriodsUnavailable(MKGeneralException):
+    pass
+
+
+class _SiteTimePeriods:
+    """Tells whether time periods of a site are active, giving up after the first failed query"""
+
+    def __init__(self, site_id: SiteId) -> None:
+        self._time_periods = ec.TimePeriods(log.logger, _SiteLivestatus(site_id))
+        self._error: str | None = None
+
+    def active(self, name: ec.TimeperiodName) -> bool:
+        # Querying again for every rule could mean waiting for a timeout every time.
+        if self._error is not None:
+            raise _TimePeriodsUnavailable(self._error)
+        try:
+            return self._time_periods.active(name)
+        except MKTimeout:
+            raise
+        except Exception as e:
+            self._error = str(e)
+            raise _TimePeriodsUnavailable(self._error) from e
+
+
 class MatchOutcome(enum.Enum):
     """What the Event Console does with a message when a rule matches it"""
 
@@ -426,7 +450,7 @@ class EventSimulator:
             logger=None,
             # Match against the site the event is simulated for, not the one running the GUI.
             omd_site_id=event["site"],
-            is_active_time_period=ec.TimePeriods(log.logger, _SiteLivestatus(event["site"])).active,
+            is_active_time_period=_SiteTimePeriods(event["site"]).active,
         )
 
     @classmethod
@@ -454,8 +478,26 @@ class EventSimulator:
         # Compiling changes nested parts of the rule, too, so keep the caller's rule intact.
         rule = copy.deepcopy(rule)
         rule["pack"] = rule_pack["id"]
-        ec.compile_rule(rule)
-        return self._rule_matcher.event_rule_matches(rule, self._event)
+        # The Event Console ignores rules it can't compile, and errors while matching mean no match.
+        # A request timeout must still abort the page, though.
+        try:
+            ec.compile_rule(rule)
+        except MKTimeout:
+            raise
+        except Exception as e:
+            return ec.MatchFailure(reason=_("Cannot compile the rule: %(error)s") % {"error": e})
+        try:
+            return self._rule_matcher.event_rule_matches(rule, self._event)
+        except MKTimeout:
+            raise
+        except Exception as e:
+            # Failed time period queries are logged already, other errors are unexpected.
+            if not isinstance(e, _TimePeriodsUnavailable):
+                log.logger.exception(
+                    "Cannot match rule %(pack)s/%(rule_id)s against the simulated event",
+                    {"pack": rule["pack"], "rule_id": rule["id"]},
+                )
+            return ec.MatchFailure(reason=_("Cannot match the rule: %(error)s") % {"error": e})
 
     def match_rule_pack(self, rule_pack: ec.ECRulePack) -> RulePackMatch:
         matching_rules = 0

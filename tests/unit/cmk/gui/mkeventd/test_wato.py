@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+import signal
+from collections.abc import Iterable, Iterator
+from contextlib import contextmanager
 from datetime import datetime, UTC
+from types import FrameType
 from typing import cast
 from unittest.mock import Mock  # Import Mock
 
@@ -13,11 +16,11 @@ import time_machine
 from pytest import MonkeyPatch
 
 import cmk.ec.export as ec
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.translations import TranslationOptions
 from cmk.gui.config import Config
+from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.logged_in import user
 from cmk.gui.mkeventd import wato as mkeventd_wato
 from cmk.gui.mkeventd.wato import MatchOutcome
@@ -180,14 +183,16 @@ def test_missing_connection_to_a_site_disabled_in_the_site_status_snapin_is_expl
 ) -> None:
     user.disable_site(SiteId("disabled"))
 
-    with (
-        mock_livestatus(expect_status_query=True),
-        pytest.raises(MKGeneralException, match='disabled in the "Site status" snap-in'),
-    ):
-        _simulate(
+    with mock_livestatus(expect_status_query=True):
+        result = _simulate(
             ec.Rule(id="rule", match_timeperiod=ec.TimeperiodName("workhours")),
             simulated_site=SiteId("disabled"),
         )
+
+    assert result == ec.MatchFailure(
+        reason="Cannot match the rule: The GUI has no Livestatus connection to site disabled, "
+        'because the site is disabled in the "Site status" snap-in.'
+    )
 
 
 @pytest.mark.usefixtures("request_context")
@@ -204,18 +209,24 @@ def test_simulated_event_uses_time_periods_of_the_simulated_site(
             simulated_site=SiteId("remote"),
         )
 
-    assert isinstance(result, ec.MatchFailure)
+    assert result == ec.MatchFailure(
+        reason="The time period workhours is not is not known or is currently not active"
+    )
 
 
 @pytest.mark.usefixtures("request_context")
-def test_simulator_fails_without_a_connection_to_the_simulated_site(
+def test_rule_does_not_match_without_a_connection_to_the_simulated_site(
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
-    with mock_livestatus(expect_status_query=True), pytest.raises(MKGeneralException):
-        _simulate(
+    with mock_livestatus(expect_status_query=True):
+        result = _simulate(
             ec.Rule(id="rule", match_timeperiod=ec.TimeperiodName("workhours")),
             simulated_site=SiteId("unconnected"),
         )
+
+    assert result == ec.MatchFailure(
+        reason="Cannot match the rule: The GUI has no Livestatus connection to site unconnected."
+    )
 
 
 @pytest.mark.usefixtures("request_context")
@@ -233,6 +244,26 @@ def test_simulator_queries_time_periods_once_for_all_rules(
         results = [simulator.match_rule(_RULE_PACK, rule) for rule in rules]
 
     assert all(isinstance(result, ec.MatchSuccess) for result in results)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_simulator_gives_up_on_time_periods_after_the_first_failed_query(
+    mock_livestatus: MockLiveStatusConnection, caplog: pytest.LogCaptureFixture
+) -> None:
+    simulator = _simulator(simulated_site=SiteId("unconnected"))
+    rules = [
+        ec.Rule(id=f"rule{nr}", match_timeperiod=ec.TimeperiodName("workhours")) for nr in range(2)
+    ]
+
+    with mock_livestatus(expect_status_query=True):
+        results = [simulator.match_rule(_RULE_PACK, rule) for rule in rules]
+
+    assert caplog.messages.count("Cannot update time period information.") == 1
+    assert results == 2 * [
+        ec.MatchFailure(
+            reason="Cannot match the rule: The GUI has no Livestatus connection to site unconnected."
+        )
+    ]
 
 
 def test_simulator_translates_the_host_name_once_for_all_rules() -> None:
@@ -392,6 +423,49 @@ def test_rule_pack_match_counts_all_matching_rules() -> None:
     )
 
     assert pack_match.matching_rules == 2
+
+
+def test_rule_with_an_invalid_regular_expression_does_not_match() -> None:
+    result = _simulate(ec.Rule(id="rule", match="disk (("), simulated_site=SiteId("remote"))
+
+    assert isinstance(result, ec.MatchFailure)
+    assert result.reason.startswith("Cannot compile the rule: ")
+
+
+def test_unexpected_errors_while_matching_a_rule_are_logged(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    # Nobody validates rule packs written by hand or shipped in an MKP.
+    rule = ec.Rule(id="rule", match_priority=5)  # type: ignore[typeddict-item]
+
+    _simulate(rule, simulated_site=SiteId("remote"))
+
+    assert "Cannot match rule pack/rule against the simulated event" in caplog.messages
+
+
+@contextmanager
+def _request_timeout_after(seconds: float) -> Iterator[None]:
+    """Times out the request like the GUI does, but after less than a second"""
+
+    def raise_request_timeout(_signum: int, _frame: FrameType | None) -> None:
+        raise RequestTimeout("Your request timed out.")
+
+    previous_handler = signal.signal(signal.SIGALRM, raise_request_timeout)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous_handler)
+
+
+def test_request_timeout_while_matching_a_rule_aborts_the_request() -> None:
+    # Matching this text takes ages because of catastrophic backtracking.
+    simulator = _simulator(simulated_site=SiteId("remote"), text="a" * 40 + "b")
+    rule = ec.Rule(id="rule", match="(a+)+$")
+
+    with _request_timeout_after(0.01), pytest.raises(RequestTimeout):
+        simulator.match_rule(_rule_pack(), rule)
 
 
 def test_simulator_leaves_the_rule_unchanged() -> None:

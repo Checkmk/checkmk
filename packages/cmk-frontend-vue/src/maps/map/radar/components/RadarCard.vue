@@ -91,7 +91,7 @@ function onKeydown(event: KeyboardEvent): void {
 
 <style scoped>
 .maps-radar-card {
-  padding: 14px;
+  padding: var(--dimension-5);
 
   /* The state colours are background colours, too dark to read as ink in the
      dark theme; mixed towards the theme's font colour they keep the state's

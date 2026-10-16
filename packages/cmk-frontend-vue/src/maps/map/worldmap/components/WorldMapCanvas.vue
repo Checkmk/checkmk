@@ -615,7 +615,7 @@ defineExpose({
    attribution, so it carries no scope attribute of its own. Under the root, the
    rule outweighs Leaflet's own white-on-white one. */
 .maps-world-map-canvas :deep(.maps-world-map-canvas__attribution) {
-  padding: 1px var(--dimension-3);
+  padding: var(--dimension-1) var(--dimension-3);
   font-size: var(--font-size-small);
   line-height: 1.4;
   color: var(--font-color);

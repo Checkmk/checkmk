@@ -629,7 +629,7 @@ function fmtMetricValue(m: PerfMetric): string {
 }
 
 .maps-hover-menu__attempts {
-  margin-top: 6px;
+  margin-top: var(--dimension-4);
   font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
 }
@@ -642,15 +642,15 @@ function fmtMetricValue(m: PerfMetric): string {
 .maps-hover-menu__badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
+  gap: var(--dimension-4);
+  margin-top: var(--dimension-4);
 }
 
 .maps-hover-menu__badge {
   display: inline-flex;
   align-items: center;
   gap: var(--dimension-3);
-  padding: var(--dimension-2) 6px;
+  padding: var(--dimension-2) var(--dimension-4);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
   border-radius: 9999px;
@@ -687,7 +687,7 @@ function fmtMetricValue(m: PerfMetric): string {
   -webkit-line-clamp: 3;
   line-clamp: 3;
   overflow: hidden;
-  margin-top: var(--spacing);
+  margin-top: var(--dimension-5);
   font-size: var(--font-size-normal);
   line-height: 1.375;
   color: var(--font-color-dimmed);
@@ -695,7 +695,7 @@ function fmtMetricValue(m: PerfMetric): string {
 }
 
 .maps-hover-menu__perfometer {
-  margin-top: var(--spacing);
+  margin-top: var(--dimension-5);
 }
 
 .maps-hover-menu__perfometer > * + * {
@@ -723,11 +723,11 @@ function fmtMetricValue(m: PerfMetric): string {
 }
 
 .maps-hover-menu__metrics {
-  margin-top: var(--spacing);
+  margin-top: var(--dimension-5);
 }
 
 .maps-hover-menu__metrics > * + * {
-  margin-top: 6px;
+  margin-top: var(--dimension-4);
 }
 
 .maps-hover-menu__metric-head {
@@ -765,7 +765,7 @@ function fmtMetricValue(m: PerfMetric): string {
 }
 
 .maps-hover-menu__next-check {
-  margin-top: var(--spacing);
+  margin-top: var(--dimension-5);
   font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
 }

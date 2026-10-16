@@ -117,7 +117,7 @@ function onKeydown(event: KeyboardEvent, index: number): void {
 .maps-map-edit-menu__item {
   display: flex;
   align-items: center;
-  gap: var(--spacing);
+  gap: var(--dimension-5);
   box-sizing: border-box;
   width: 100%;
   margin: 0;

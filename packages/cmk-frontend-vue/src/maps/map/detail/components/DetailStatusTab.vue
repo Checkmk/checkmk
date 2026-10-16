@@ -78,8 +78,8 @@ function asChips(chips: SummaryChip[]): DetailChip[] {
 .maps-detail-status-tab {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing);
-  padding: 12px 16px;
+  gap: var(--dimension-5);
+  padding: var(--dimension-5) var(--dimension-6);
 }
 
 .maps-detail-status-tab__output {
@@ -89,8 +89,8 @@ function asChips(chips: SummaryChip[]): DetailChip[] {
   color: var(--font-color);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
-  padding: 8px 10px;
-  margin: 4px 0 0;
+  padding: var(--dimension-4) var(--dimension-5);
+  margin: var(--dimension-3) 0 0;
   overflow: auto;
   white-space: pre-wrap;
   max-height: 180px;

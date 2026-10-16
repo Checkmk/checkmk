@@ -163,8 +163,8 @@ function formatExact(seconds: number | null | undefined): string {
 .maps-detail-members-tab {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing);
-  padding: 12px 16px;
+  gap: var(--dimension-5);
+  padding: var(--dimension-5) var(--dimension-6);
 }
 
 .maps-detail-members-tab__controls {
@@ -205,7 +205,7 @@ function formatExact(seconds: number | null | undefined): string {
   grid-template-columns: 24px 1fr auto;
   gap: var(--dimension-4);
   align-items: start;
-  padding: 6px 8px;
+  padding: var(--dimension-4);
   border-radius: var(--border-radius);
   background: var(--ux-theme-1);
   border: none;
@@ -269,7 +269,7 @@ function formatExact(seconds: number | null | undefined): string {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: var(--dimension-4);
   font-size: var(--font-size-normal);
   color: var(--font-color);
 }
@@ -282,7 +282,7 @@ function formatExact(seconds: number | null | undefined): string {
 .maps-detail-members-tab__flag {
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
-  padding: 1px 5px;
+  padding: var(--dimension-1) var(--dimension-3);
   border-radius: var(--border-radius-half);
   text-transform: uppercase;
 }

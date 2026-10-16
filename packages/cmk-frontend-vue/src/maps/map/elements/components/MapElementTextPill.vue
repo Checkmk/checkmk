@@ -65,7 +65,7 @@ const configuredStyle = computed(() => {
 }
 
 .maps-map-element-text-pill__body {
-  padding: var(--dimension-2) 6px;
+  padding: var(--dimension-2) var(--dimension-4);
   font-weight: var(--font-weight-bold);
   white-space: nowrap;
   background: var(--maps-map-view-label-bg);

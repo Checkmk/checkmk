@@ -195,7 +195,7 @@ function selectMode(value: string): void {
   align-items: center;
   gap: var(--dimension-4);
   min-height: 44px;
-  padding: 6px 12px;
+  padding: var(--dimension-4) var(--dimension-5);
   background: var(--ux-theme-3);
   border-bottom: 1px solid var(--default-border-color);
 }
@@ -222,7 +222,7 @@ function selectMode(value: string): void {
 .maps-folder-tree-toolbar__summary {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--dimension-4);
   font-size: var(--font-size-normal);
   color: var(--font-color-dimmed);
 }
@@ -232,7 +232,7 @@ function selectMode(value: string): void {
 }
 
 .maps-folder-tree-toolbar__pill {
-  padding: 2px 7px;
+  padding: var(--dimension-2) var(--dimension-4);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
   line-height: 1;

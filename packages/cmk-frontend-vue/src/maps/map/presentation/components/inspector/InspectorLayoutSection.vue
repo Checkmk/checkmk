@@ -142,7 +142,7 @@ function setOpacity(e: Event): void {
 .maps-inspector-layout-section__grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  gap: var(--dimension-4);
 }
 
 .maps-inspector-layout-section__row {
@@ -172,7 +172,7 @@ function setOpacity(e: Event): void {
   justify-content: center;
   width: 28px;
   height: 28px;
-  margin-top: 14px;
+  margin-top: var(--dimension-5);
   border: 1px solid var(--default-form-element-border-color);
   border-radius: var(--border-radius);
   background: transparent;

@@ -102,8 +102,8 @@ const { _t } = usei18n()
 .maps-detail-performance-tab {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing);
-  padding: 12px 16px;
+  gap: var(--dimension-5);
+  padding: var(--dimension-5) var(--dimension-6);
 }
 
 /* The status-driving value, anchored at the top so it is read without
@@ -111,8 +111,8 @@ const { _t } = usei18n()
 .maps-detail-performance-tab__headline {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 4px 0 6px;
+  gap: var(--dimension-4);
+  padding: var(--dimension-3) 0 var(--dimension-4);
 }
 
 .maps-detail-performance-tab__headline-label {
@@ -135,7 +135,7 @@ const { _t } = usei18n()
 
 .maps-detail-performance-tab__chart {
   height: 120px;
-  margin: 4px 0;
+  margin: var(--dimension-3) 0;
 }
 
 .maps-detail-performance-tab__heading {
@@ -144,7 +144,7 @@ const { _t } = usei18n()
   color: var(--font-color-dimmed);
   letter-spacing: 0.04em;
   font-weight: var(--font-weight-medium);
-  margin: 4px 0 6px;
+  margin: var(--dimension-3) 0 var(--dimension-4);
 }
 
 /* The plugin's own breakdown, as a label/value table. Treated as the primary
@@ -152,7 +152,7 @@ const { _t } = usei18n()
 .maps-detail-performance-tab__output-rows {
   display: grid;
   grid-template-columns: minmax(80px, max-content) 1fr;
-  gap: 3px 12px;
+  gap: var(--dimension-3) var(--dimension-5);
   margin: 0;
   font-size: var(--font-size-normal);
 }
@@ -173,7 +173,7 @@ const { _t } = usei18n()
 
 .maps-detail-performance-tab__raw {
   border-top: 1px solid var(--default-border-color);
-  padding-top: 6px;
+  padding-top: var(--dimension-4);
 }
 
 .maps-detail-performance-tab__raw > summary {
@@ -183,7 +183,7 @@ const { _t } = usei18n()
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-weight: var(--font-weight-medium);
-  padding: 4px 0;
+  padding: var(--dimension-3) 0;
   user-select: none;
 }
 
@@ -195,7 +195,7 @@ const { _t } = usei18n()
   display: flex;
   flex-direction: column;
   gap: var(--dimension-3);
-  margin-top: 6px;
+  margin-top: var(--dimension-4);
 }
 
 .maps-detail-performance-tab__row {

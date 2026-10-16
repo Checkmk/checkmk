@@ -424,7 +424,7 @@ const slidePresets = SLIDE_PRESETS
   align-items: center;
   justify-content: space-between;
   gap: var(--dimension-4);
-  padding: 8px 12px;
+  padding: var(--dimension-4) var(--dimension-5);
   border-bottom: 1px solid var(--default-border-color, rgb(255 255 255 / 8%));
 }
 
@@ -437,7 +437,7 @@ const slidePresets = SLIDE_PRESETS
 }
 
 .maps-presentation-inspector-panel__tab {
-  padding: 4px 12px;
+  padding: var(--dimension-3) var(--dimension-5);
   border: none;
   border-radius: var(--border-radius);
   background: transparent;
@@ -490,7 +490,7 @@ const slidePresets = SLIDE_PRESETS
   align-items: center;
   justify-content: space-between;
   gap: var(--dimension-4);
-  padding: 8px 12px;
+  padding: var(--dimension-4) var(--dimension-5);
   border-bottom: 1px solid var(--default-border-color, rgb(255 255 255 / 8%));
   min-height: 44px;
   box-sizing: border-box;
@@ -504,7 +504,7 @@ const slidePresets = SLIDE_PRESETS
 .maps-presentation-inspector-panel__name {
   flex: 1;
   min-width: 0;
-  padding: 4px 6px;
+  padding: var(--dimension-3) var(--dimension-4);
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-normal);
   color: var(--font-color);
@@ -590,11 +590,11 @@ const slidePresets = SLIDE_PRESETS
 .maps-presentation-inspector-panel__presets {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  gap: var(--dimension-4);
 }
 
 .maps-presentation-inspector-panel__preset {
-  padding: 6px 4px;
+  padding: var(--dimension-4) var(--dimension-3);
   border: 1px solid var(--default-form-element-border-color);
   border-radius: var(--border-radius);
   background: transparent;

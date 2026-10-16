@@ -105,7 +105,7 @@ function onKeydown(e: KeyboardEvent): void {
   width: max-content;
   min-width: 192px;
   max-width: calc(100% - 16px);
-  padding: 6px 0;
+  padding: var(--dimension-4) 0;
   background: var(--maps-map-view-overlay-bg);
   border-radius: var(--border-radius);
   box-shadow:
@@ -120,7 +120,7 @@ function onKeydown(e: KeyboardEvent): void {
 
 .maps-menu__header {
   margin-bottom: var(--dimension-3);
-  padding: var(--dimension-4) 14px;
+  padding: var(--dimension-4) var(--dimension-5);
   border-bottom: 1px solid var(--default-border-color);
 }
 

@@ -511,7 +511,7 @@ const accentStyle = computed(() => ({
   font-size: var(--font-size-small);
   line-height: 14px;
   min-width: 16px;
-  padding: 0 4px;
+  padding: 0 var(--dimension-3);
   border-radius: 999px;
   text-align: center;
   font-weight: var(--font-weight-bold);
@@ -519,7 +519,7 @@ const accentStyle = computed(() => ({
 
 .maps-detail-drawer__site-actions {
   border-top: 1px solid var(--default-border-color);
-  padding: 12px 16px;
+  padding: var(--dimension-5) var(--dimension-6);
   flex-shrink: 0;
   background: var(--ux-theme-3);
 }

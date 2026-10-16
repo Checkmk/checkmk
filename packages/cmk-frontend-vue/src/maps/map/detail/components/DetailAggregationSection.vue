@@ -206,7 +206,7 @@ const summaryChips = computed<DetailChip[]>(() =>
   background: var(--ux-theme-1);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
-  padding: 4px 8px;
+  padding: var(--dimension-3) var(--dimension-4);
 }
 
 .maps-detail-aggregation-section__bulk:hover {
@@ -230,7 +230,7 @@ const summaryChips = computed<DetailChip[]>(() =>
   background: var(--ux-theme-1);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
-  padding: 6px 8px;
+  padding: var(--dimension-4);
   font-size: var(--font-size-normal);
 }
 

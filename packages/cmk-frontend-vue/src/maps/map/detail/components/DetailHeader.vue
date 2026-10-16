@@ -104,8 +104,8 @@ const { _t } = usei18n()
 .maps-detail-header {
   display: flex;
   align-items: flex-start;
-  gap: var(--spacing);
-  padding: 12px 16px;
+  gap: var(--dimension-5);
+  padding: var(--dimension-5) var(--dimension-6);
   border-bottom: 1px solid var(--default-border-color);
   flex-shrink: 0;
 }
@@ -115,7 +115,7 @@ const { _t } = usei18n()
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--dimension-4);
 }
 
 .maps-detail-header__title-row {
@@ -159,7 +159,7 @@ const { _t } = usei18n()
   background: var(--input-hover-bg-color);
   border: 1px solid var(--default-border-color);
   border-radius: 999px;
-  padding: 1px 6px;
+  padding: var(--dimension-1) var(--dimension-4);
   flex-shrink: 0;
   font-weight: var(--font-weight-medium);
 }

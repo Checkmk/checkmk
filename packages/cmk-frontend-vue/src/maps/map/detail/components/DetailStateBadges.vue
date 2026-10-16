@@ -33,13 +33,13 @@ defineProps<{ modifiers: StateModifier[] }>()
 .maps-detail-state-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--dimension-4);
 }
 
 .maps-detail-state-badges__badge {
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
-  padding: 2px 8px;
+  padding: var(--dimension-2) var(--dimension-4);
   border-radius: 999px;
   border: 1px solid;
 }

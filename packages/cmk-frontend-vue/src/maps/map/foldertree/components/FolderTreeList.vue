@@ -248,7 +248,7 @@ watch(scrollEl, (element) => {
   overflow-y: auto;
 
   /* No vertical padding: the scroll offset has to map straight onto a row index. */
-  padding: 0 8px;
+  padding: 0 var(--dimension-4);
 }
 
 .maps-folder-tree-list__spacer {

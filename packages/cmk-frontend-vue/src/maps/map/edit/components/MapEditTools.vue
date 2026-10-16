@@ -217,7 +217,7 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
   flex-direction: column;
   align-items: flex-end;
   justify-content: flex-end;
-  gap: var(--spacing);
+  gap: var(--dimension-5);
   pointer-events: none;
 }
 

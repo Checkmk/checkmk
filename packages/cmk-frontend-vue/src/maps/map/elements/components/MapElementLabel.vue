@@ -120,12 +120,12 @@ const configuredStyle = computed(() => {
 
 .maps-map-element-label--stacked.maps-map-element-label--boxed,
 .maps-map-element-label--plain.maps-map-element-label--boxed {
-  padding: var(--dimension-2) 6px;
+  padding: var(--dimension-2) var(--dimension-4);
   border-radius: var(--border-radius);
 }
 
 .maps-map-element-label--stacked.maps-map-element-label--boxed {
-  margin-top: 6px;
+  margin-top: var(--dimension-4);
 }
 
 .maps-map-element-label--caption {
@@ -133,7 +133,7 @@ const configuredStyle = computed(() => {
   right: 0;
   bottom: -20px;
   left: 0;
-  padding: var(--dimension-2) 6px;
+  padding: var(--dimension-2) var(--dimension-4);
   font-size: var(--font-size-normal);
   line-height: 16px;
   text-align: center;

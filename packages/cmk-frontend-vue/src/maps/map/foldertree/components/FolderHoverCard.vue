@@ -117,7 +117,7 @@ const positionStyle = usePointerOverlayStyle(rootEl, () => ({
 }
 
 .maps-folder-hover-card__hint {
-  margin-top: var(--spacing);
+  margin-top: var(--dimension-5);
   font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
 }

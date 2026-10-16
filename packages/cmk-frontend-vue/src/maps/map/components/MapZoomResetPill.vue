@@ -37,7 +37,7 @@ defineEmits<{ reset: [] }>()
   bottom: var(--dimension-5);
   left: var(--dimension-5);
   z-index: 6;
-  padding: 6px 14px;
+  padding: var(--dimension-4) var(--dimension-5);
   border-radius: var(--border-radius);
 
   /* Teleported out of the map view, so it cannot inherit the map's overlay

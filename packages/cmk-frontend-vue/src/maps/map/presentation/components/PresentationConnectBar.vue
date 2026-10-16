@@ -56,7 +56,7 @@ const emit = defineEmits<{ previous: []; next: []; done: [] }>()
   display: flex;
   align-items: center;
   gap: var(--dimension-4);
-  padding: 6px 10px;
+  padding: var(--dimension-4) var(--dimension-5);
   color: var(--font-color);
   z-index: 6;
 }

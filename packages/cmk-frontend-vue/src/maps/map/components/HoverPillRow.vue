@@ -54,7 +54,7 @@ defineProps<{
   flex-wrap: wrap;
   align-items: center;
   gap: var(--dimension-3);
-  margin-top: var(--spacing);
+  margin-top: var(--dimension-5);
 }
 
 .maps-hover-pill-row__label {
@@ -70,7 +70,7 @@ defineProps<{
   display: inline-flex;
   align-items: center;
   gap: var(--dimension-3);
-  padding: var(--dimension-2) 6px;
+  padding: var(--dimension-2) var(--dimension-4);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
   border-radius: 9999px;

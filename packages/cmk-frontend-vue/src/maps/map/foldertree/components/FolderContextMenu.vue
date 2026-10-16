@@ -97,7 +97,7 @@ const setupUrl = computed(() => {
 }
 
 .maps-folder-context-menu__empty {
-  padding: var(--dimension-4) 14px;
+  padding: var(--dimension-4) var(--dimension-5);
   font-size: var(--font-size-normal);
   line-height: 16px;
   font-style: italic;

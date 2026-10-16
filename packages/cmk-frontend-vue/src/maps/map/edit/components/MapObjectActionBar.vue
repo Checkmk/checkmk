@@ -136,8 +136,8 @@ const buttons = computed<ActionButton[]>(() => {
   z-index: 40;
   display: flex;
   align-items: center;
-  gap: 3px;
-  padding: var(--dimension-3) 6px;
+  gap: var(--dimension-3);
+  padding: var(--dimension-3) var(--dimension-4);
   background: var(--ux-theme-3);
   border-radius: var(--border-radius);
   box-shadow:
@@ -155,13 +155,13 @@ const buttons = computed<ActionButton[]>(() => {
 .maps-map-object-action-bar__divider {
   width: 1px;
   height: 14px;
-  margin: 0 1px;
+  margin: 0 var(--dimension-1);
   background: var(--ux-theme-5);
 }
 
 /* Doubled to outweigh CmkIconButton's own padding reset. */
 .maps-map-object-action-bar__button.maps-map-object-action-bar__button {
-  padding: 7px;
+  padding: var(--dimension-4);
   border-radius: var(--border-radius);
   transition: background-color 0.15s;
 }

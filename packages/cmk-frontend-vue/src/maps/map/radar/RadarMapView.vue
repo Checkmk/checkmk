@@ -247,7 +247,7 @@ const counts = computed(() => radarStateCounts(matching.value))
 .maps-radar-map-view__tally {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--dimension-4);
 
   /* The state colours are background colours: on the neutral stage WARNING and
      OK are unreadable as ink in the light theme, so the tally mixes far towards
@@ -265,7 +265,7 @@ const counts = computed(() => radarStateCounts(matching.value))
 
 .maps-radar-map-view__grid {
   display: grid;
-  gap: var(--spacing);
+  gap: var(--dimension-5);
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
 

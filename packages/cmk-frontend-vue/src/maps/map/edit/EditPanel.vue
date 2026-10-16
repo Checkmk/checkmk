@@ -134,7 +134,7 @@ watch(
   flex-shrink: 0;
   align-items: center;
   gap: var(--dimension-4);
-  padding: var(--spacing) var(--dimension-6);
+  padding: var(--dimension-5) var(--dimension-6);
   border-bottom: 1px solid var(--default-border-color);
 }
 

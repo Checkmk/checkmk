@@ -182,8 +182,8 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   z-index: 6;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
+  gap: var(--dimension-4);
+  padding: var(--dimension-3) var(--dimension-4);
   border-radius: var(--border-radius);
   background: var(--maps-map-view-overlay-bg);
   border: 1px solid var(--default-border-color);
@@ -231,7 +231,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   cursor: pointer;
   font-size: var(--font-size-large);
   line-height: 1;
-  padding: 0 4px;
+  padding: 0 var(--dimension-3);
   border-radius: var(--border-radius-half);
 }
 
@@ -269,7 +269,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
 }
 
 .maps-map-search__dropdown-title {
-  padding: 6px 10px;
+  padding: var(--dimension-4) var(--dimension-5);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
   color: var(--font-color-dimmed);
@@ -279,7 +279,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
 .maps-map-search__operator-list {
   list-style: none;
   margin: 0;
-  padding: 4px 0;
+  padding: var(--dimension-3) 0;
   max-height: 320px;
   overflow-y: auto;
 }
@@ -287,8 +287,8 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
 .maps-map-search__operator {
   display: flex;
   align-items: center;
-  gap: var(--spacing);
-  padding: 6px 10px;
+  gap: var(--dimension-5);
+  padding: var(--dimension-4) var(--dimension-5);
   cursor: pointer;
   font-size: var(--font-size-normal);
   color: var(--font-color);
@@ -303,7 +303,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   align-items: center;
   justify-content: center;
   min-width: 28px;
-  padding: 1px 6px;
+  padding: var(--dimension-1) var(--dimension-4);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
   font-family: var(--font-monospace, ui-monospace, monospace);
@@ -320,7 +320,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   display: flex;
   align-items: flex-start;
   gap: var(--dimension-4);
-  padding: 8px 10px;
+  padding: var(--dimension-4) var(--dimension-5);
   border-top: 1px solid var(--default-border-color);
   background: var(--background-muted);
   font-size: var(--font-size-normal);

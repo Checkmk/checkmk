@@ -104,7 +104,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--dimension-5);
-  padding: 20px 24px 12px;
+  padding: var(--dimension-7) var(--dimension-8) var(--dimension-5);
 }
 
 .maps-presentation-template-gallery__title {
@@ -114,7 +114,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
 }
 
 .maps-presentation-template-gallery__sub {
-  margin: 4px 0 0;
+  margin: var(--dimension-3) 0 0;
   font-size: var(--font-size-normal);
   color: var(--font-color-dimmed);
 }
@@ -140,7 +140,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(264px, 1fr));
   gap: var(--dimension-6);
-  padding: 12px 24px 24px;
+  padding: var(--dimension-5) var(--dimension-8) var(--dimension-8);
 }
 
 .maps-presentation-template-gallery__item {
@@ -181,7 +181,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
 }
 
 .maps-presentation-template-gallery__item-title {
-  margin-top: 6px;
+  margin-top: var(--dimension-4);
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-large);
 }

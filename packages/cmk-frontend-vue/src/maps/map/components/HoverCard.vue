@@ -23,7 +23,7 @@ const emit = defineEmits<{
 .maps-hover-card {
   min-width: 208px;
   max-width: 288px;
-  padding: 14px;
+  padding: var(--dimension-5);
   background: var(--maps-map-view-overlay-bg);
   border-radius: var(--border-radius);
   box-shadow:

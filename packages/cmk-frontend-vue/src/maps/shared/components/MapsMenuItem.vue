@@ -49,7 +49,7 @@ defineProps<{
   box-sizing: border-box;
   width: 100%;
   margin: 0;
-  padding: var(--dimension-4) 14px;
+  padding: var(--dimension-4) var(--dimension-5);
   font-size: var(--font-size-normal);
   line-height: 16px;
   font-weight: inherit;

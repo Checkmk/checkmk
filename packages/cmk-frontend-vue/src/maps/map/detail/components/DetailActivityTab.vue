@@ -80,8 +80,8 @@ const comments = computed(() => commentRows(props.details, props.nowMs, _t))
 .maps-detail-activity-tab {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing);
-  padding: 12px 16px;
+  gap: var(--dimension-5);
+  padding: var(--dimension-5) var(--dimension-6);
 }
 
 .maps-detail-activity-tab__heading {
@@ -90,7 +90,7 @@ const comments = computed(() => commentRows(props.details, props.nowMs, _t))
   color: var(--font-color-dimmed);
   letter-spacing: 0.04em;
   font-weight: var(--font-weight-medium);
-  margin: 4px 0 6px;
+  margin: var(--dimension-3) 0 var(--dimension-4);
 }
 
 .maps-detail-activity-tab__list {
@@ -99,14 +99,14 @@ const comments = computed(() => commentRows(props.details, props.nowMs, _t))
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--dimension-4);
 }
 
 .maps-detail-activity-tab__row {
   background: var(--ux-theme-1);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
-  padding: 6px 8px;
+  padding: var(--dimension-4);
   font-size: var(--font-size-normal);
 }
 
@@ -118,7 +118,7 @@ const comments = computed(() => commentRows(props.details, props.nowMs, _t))
 .maps-detail-activity-tab__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--dimension-4);
   color: var(--font-color-dimmed);
   font-size: var(--font-size-small);
   margin-bottom: var(--dimension-2);
@@ -135,7 +135,7 @@ const comments = computed(() => commentRows(props.details, props.nowMs, _t))
   background: color-mix(in srgb, var(--status-color-downtime) 18%, transparent);
   border: 1px solid color-mix(in srgb, var(--status-color-downtime) 40%, transparent);
   border-radius: 999px;
-  padding: 0 6px;
+  padding: 0 var(--dimension-4);
   font-weight: var(--font-weight-bold);
   letter-spacing: 0.04em;
 }

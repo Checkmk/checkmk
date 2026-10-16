@@ -106,7 +106,7 @@ defineEmits<{
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: var(--spacing-half);
+  gap: var(--dimension-3);
   transition: opacity 0.15s;
 }
 
@@ -120,7 +120,7 @@ defineEmits<{
 
 /* Nested under the block to outweigh CmkIconButton's own padding reset. */
 .maps-map-view-topbar .maps-map-view-topbar__button {
-  padding: var(--spacing-half);
+  padding: var(--dimension-3);
   border-radius: var(--border-radius);
   transition: background-color 0.15s;
 }

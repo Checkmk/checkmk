@@ -339,7 +339,7 @@ watch(
 .maps-inspector-data-section {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing);
+  gap: var(--dimension-5);
 }
 
 .maps-inspector-data-section__row {
@@ -359,7 +359,7 @@ watch(
 
 .maps-inspector-data-section__sep {
   height: 1px;
-  margin: 2px 0;
+  margin: var(--dimension-2) 0;
   background: var(--default-form-element-border-color);
 }
 

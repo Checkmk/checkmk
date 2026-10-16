@@ -87,7 +87,7 @@ function elementOf(chip: DetailChip): 'a' | 'button' | 'span' {
 .maps-detail-chip-grid {
   /* Column count comes from the chip count: the row always fills its width. */
   display: grid;
-  gap: 6px;
+  gap: var(--dimension-4);
 }
 
 .maps-detail-chip-grid__label {
@@ -105,7 +105,7 @@ function elementOf(chip: DetailChip): 'a' | 'button' | 'span' {
   align-items: center;
   justify-content: center;
   gap: var(--dimension-1);
-  padding: 6px 4px;
+  padding: var(--dimension-4) var(--dimension-3);
   border-radius: var(--border-radius);
   border: 1px solid var(--default-border-color);
   background: var(--ux-theme-1);

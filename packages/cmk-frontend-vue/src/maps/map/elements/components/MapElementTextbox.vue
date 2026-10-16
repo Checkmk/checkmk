@@ -110,7 +110,7 @@ const configuredStyle = computed(() => {
 .maps-map-element-textbox--classic {
   overflow: visible;
   box-sizing: content-box;
-  padding: 0 2px;
+  padding: 0 var(--dimension-2);
   line-height: normal;
   color: var(--maps-map-view-classic-ink);
   background: transparent;
@@ -119,7 +119,7 @@ const configuredStyle = computed(() => {
 
 .maps-map-element-textbox--boxed {
   overflow: auto;
-  padding: 6px 10px;
+  padding: var(--dimension-4) var(--dimension-5);
   color: var(--font-color);
   border-radius: var(--border-radius);
 }

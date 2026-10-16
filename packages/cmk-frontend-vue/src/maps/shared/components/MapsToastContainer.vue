@@ -58,9 +58,9 @@ const { toasts } = useToast()
 .maps-toast-container__toast {
   display: flex;
   align-items: flex-start;
-  gap: var(--spacing);
+  gap: var(--dimension-5);
   max-width: 384px;
-  padding: 12px 16px;
+  padding: var(--dimension-5) var(--dimension-6);
   font-size: var(--font-size-normal);
   line-height: 16px;
   font-weight: var(--font-weight-medium);

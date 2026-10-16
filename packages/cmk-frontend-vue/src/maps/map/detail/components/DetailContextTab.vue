@@ -102,8 +102,8 @@ const selectable = computed(() => new Set(props.selectableHosts))
 .maps-detail-context-tab {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing);
-  padding: 12px 16px;
+  gap: var(--dimension-5);
+  padding: var(--dimension-5) var(--dimension-6);
 }
 
 .maps-detail-context-tab__heading {
@@ -112,7 +112,7 @@ const selectable = computed(() => new Set(props.selectableHosts))
   color: var(--font-color-dimmed);
   letter-spacing: 0.04em;
   font-weight: var(--font-weight-medium);
-  margin: 4px 0 6px;
+  margin: var(--dimension-3) 0 var(--dimension-4);
 }
 
 /* Topology labels ("Contact groups") are long and their values are rows of
@@ -120,7 +120,7 @@ const selectable = computed(() => new Set(props.selectableHosts))
 .maps-detail-context-tab__topology {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 6px;
+  gap: var(--dimension-4);
   margin: 0;
   font-size: var(--font-size-normal);
 }

@@ -176,7 +176,7 @@ const imageStyle = computed(() => ({
 // gap above it. Leaving the gap out made the gadget exactly one gap too tall,
 // so a traffic light came to rest on top of its own caption.
 const DATA_PADDING = 24
-const DATA_GAP = 6
+const DATA_GAP = 8
 const LABEL_HEIGHT = 30
 
 function chromeHeight(el: DataElement): number {
@@ -434,7 +434,7 @@ function onTextBlur(): void {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  padding: 1px 6px;
+  padding: var(--dimension-1) var(--dimension-4);
   border-radius: var(--border-radius);
   line-height: 1.2;
   white-space: nowrap;
@@ -491,7 +491,7 @@ function onTextBlur(): void {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--dimension-4);
   padding: var(--dimension-4);
   box-sizing: border-box;
   overflow: hidden;
@@ -544,7 +544,7 @@ function onTextBlur(): void {
   position: absolute;
   top: 4px;
   right: 6px;
-  padding: 0 5px;
+  padding: 0 var(--dimension-3);
   border: 1px dashed var(--pres-muted);
   border-radius: var(--border-radius);
   font-size: var(--font-size-small);

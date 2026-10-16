@@ -643,7 +643,7 @@ watch(serviceLayout, () => {
   align-items: center;
   gap: var(--dimension-3);
   max-width: min(60%, 520px);
-  padding: 4px 4px 4px 10px;
+  padding: var(--dimension-3) var(--dimension-3) var(--dimension-3) var(--dimension-5);
   color: var(--font-color);
   font-size: var(--font-size-normal);
   text-align: left;

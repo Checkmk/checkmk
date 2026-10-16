@@ -369,7 +369,7 @@ const hostServicesUrl = computed(() => {
   max-height: 40vh;
   overflow: auto;
   margin-bottom: var(--dimension-3);
-  padding: var(--dimension-4) 14px;
+  padding: var(--dimension-4) var(--dimension-5);
   font-size: var(--font-size-normal);
   line-height: 16px;
   color: var(--font-color);
@@ -383,7 +383,7 @@ const hostServicesUrl = computed(() => {
 }
 
 .maps-context-menu__empty {
-  padding: var(--dimension-4) 14px;
+  padding: var(--dimension-4) var(--dimension-5);
   font-size: var(--font-size-normal);
   line-height: 16px;
   font-style: italic;

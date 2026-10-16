@@ -103,13 +103,13 @@ const SHAPE_TOOLS: { kind: InsertKind; icon: string }[] = [
   transform: translateX(-50%);
   display: flex;
   gap: var(--dimension-3);
-  padding: var(--spacing-half);
+  padding: var(--dimension-3);
   z-index: 5;
 }
 
 .maps-presentation-palette__separator {
   width: 1px;
-  margin: 4px 2px;
+  margin: var(--dimension-3) var(--dimension-2);
   background: var(--default-border-color);
 }
 

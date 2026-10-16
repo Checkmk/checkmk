@@ -131,7 +131,7 @@ function groupHint(one: string): string {
 <style scoped>
 .maps-detail-actions {
   border-top: 1px solid var(--default-border-color);
-  padding: 12px 16px;
+  padding: var(--dimension-5) var(--dimension-6);
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
@@ -151,7 +151,7 @@ function groupHint(one: string): string {
 .maps-detail-actions__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
+  gap: var(--dimension-4);
   align-items: stretch;
 }
 

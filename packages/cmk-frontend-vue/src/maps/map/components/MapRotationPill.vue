@@ -54,8 +54,8 @@ defineEmits<{ toggle: [] }>()
 .maps-map-rotation-pill {
   display: flex;
   align-items: center;
-  gap: 3px;
-  padding: var(--dimension-2) 7px;
+  gap: var(--dimension-3);
+  padding: var(--dimension-2) var(--dimension-4);
   font-size: var(--font-size-normal);
   line-height: 16px;
   font-weight: var(--font-weight-medium);

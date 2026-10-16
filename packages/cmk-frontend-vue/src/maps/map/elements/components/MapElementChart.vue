@@ -129,7 +129,7 @@ const readingColor = computed(() => {
   flex-direction: column;
   width: 100%;
   height: 100%;
-  padding: 6px 8px 5px;
+  padding: var(--dimension-4) var(--dimension-4) var(--dimension-3);
   background: var(--ux-theme-3);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);

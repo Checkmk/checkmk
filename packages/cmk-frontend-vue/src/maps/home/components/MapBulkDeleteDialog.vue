@@ -66,7 +66,7 @@ const overflow = computed(() => Math.max(0, props.names.length - MAX_VISIBLE))
 }
 
 .maps-map-bulk-delete-dialog__list li {
-  padding: 1px 0;
+  padding: var(--dimension-1) 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

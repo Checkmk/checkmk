@@ -58,7 +58,7 @@ const hiddenLabels = computed(() => hidden.value.map((entry) => entry.label).joi
   display: flex;
   flex-wrap: wrap;
   flex-shrink: 0;
-  gap: var(--dimension-2) 10px;
+  gap: var(--dimension-2) var(--dimension-5);
   margin-bottom: var(--dimension-3);
 }
 

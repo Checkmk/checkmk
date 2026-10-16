@@ -254,7 +254,7 @@ function onAggregationChange(v: string): void {
 .maps-presentation-binding-form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing);
+  gap: var(--dimension-5);
 }
 
 .maps-presentation-binding-form__field {

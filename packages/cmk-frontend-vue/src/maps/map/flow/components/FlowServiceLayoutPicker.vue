@@ -125,8 +125,8 @@ function pick(layout: ServiceLayout): void {
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: var(--spacing-half);
-  padding: var(--spacing-half) var(--spacing);
+  gap: var(--dimension-3);
+  padding: var(--dimension-3) var(--dimension-5);
   font-size: var(--font-size-normal);
   font-weight: var(--font-weight-medium);
   line-height: 16px;
@@ -175,7 +175,7 @@ function pick(layout: ServiceLayout): void {
   bottom: 100%;
   z-index: 10;
   width: 120px;
-  margin-bottom: 6px;
+  margin-bottom: var(--dimension-4);
   overflow: hidden;
   background: var(--ux-theme-3);
   border-radius: var(--border-radius);
@@ -189,7 +189,7 @@ function pick(layout: ServiceLayout): void {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: var(--spacing-half) var(--spacing);
+  padding: var(--dimension-3) var(--dimension-5);
   color: var(--font-color-dimmed);
   font-size: var(--font-size-normal);
   line-height: 16px;

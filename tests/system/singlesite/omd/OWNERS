@@ -1,5 +1,21 @@
+per-file test_erlang.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_erlang.py=set noparent
 per-file test_linked_libraries.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
 per-file test_linked_libraries.py=set noparent
+per-file test_net_snmp.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_net_snmp.py=set noparent
+per-file test_openssl_using_cmds.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_openssl_using_cmds.py=set noparent
+per-file test_perl.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_perl.py=set noparent
+per-file test_python.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_python.py=set noparent
+per-file test_python_protobuf.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_python_protobuf.py=set noparent
+per-file test_redis_client.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_redis_client.py=set noparent
+per-file test_rrdtool.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_rrdtool.py=set noparent
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

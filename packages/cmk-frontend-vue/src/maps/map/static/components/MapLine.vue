@@ -12,7 +12,7 @@ import { CANVAS_SCALE } from '@/maps/map/static/composables/useCanvasViewport'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 import { renderMetricValue } from '@/maps/utils/metricFormat'
 import { getMetric, parsePerfData, utilColor, utilPercent } from '@/maps/utils/perf'
-import { stateColor } from '@/maps/utils/stateColors'
+import { stateColorVar } from '@/maps/utils/stateColors'
 
 const props = defineProps<{
   object: MapElement
@@ -134,7 +134,7 @@ const handle2 = computed(() =>
   )
 )
 
-const lineColor = computed(() => props.object.line_color ?? stateColor(props.state?.state))
+const lineColor = computed(() => props.object.line_color ?? stateColorVar(props.state?.state))
 const lineColorBorder = computed(() => props.object.line_color_border ?? null)
 
 const isDashed = computed(() => props.object.line_style === 'dashed')
@@ -665,7 +665,7 @@ const wmLabelSingle = computed(() => {
       font-weight="500"
       :style="{
         fontSize: `${props.object.label?.size ?? 11}px`,
-        fill: props.object.label?.color ?? '#e4e4e7',
+        fill: props.object.label?.color ?? 'var(--maps-map-view-label-ink)',
         paintOrder: 'stroke',
         stroke: 'rgb(0 0 0 / 80%)',
         strokeWidth: '3px',
@@ -683,9 +683,9 @@ const wmLabelSingle = computed(() => {
         :cx="handle1.x"
         :cy="handle1.y"
         r="7"
-        :fill="startBound ? '#22c55e' : '#3b82f6'"
+        :fill="startBound ? 'var(--interactive-accent)' : 'var(--interactive-focus)'"
         fill-opacity="0.85"
-        stroke="white"
+        stroke="var(--white)"
         stroke-width="1.5"
         style="cursor: grab"
         @mousedown.prevent.stop="$emit('line-drag-start', $event, 'start')"
@@ -694,9 +694,9 @@ const wmLabelSingle = computed(() => {
         :cx="handle2.x"
         :cy="handle2.y"
         r="7"
-        :fill="endBound ? '#22c55e' : '#3b82f6'"
+        :fill="endBound ? 'var(--interactive-accent)' : 'var(--interactive-focus)'"
         fill-opacity="0.85"
-        stroke="white"
+        stroke="var(--white)"
         stroke-width="1.5"
         style="cursor: grab"
         @mousedown.prevent.stop="$emit('line-drag-start', $event, 'end')"
@@ -706,9 +706,9 @@ const wmLabelSingle = computed(() => {
         :cx="midX"
         :cy="midY"
         r="6"
-        :fill="hasMid ? '#3b82f6' : 'white'"
+        :fill="hasMid ? 'var(--interactive-focus)' : 'var(--white)'"
         fill-opacity="0.85"
-        stroke="#3b82f6"
+        stroke="var(--interactive-focus)"
         stroke-width="1.5"
         style="cursor: grab"
         @mousedown.prevent.stop="$emit('line-drag-start', $event, 'mid')"

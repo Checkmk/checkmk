@@ -259,7 +259,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   left: 0;
   right: 0;
   z-index: 20;
-  background: var(--ux-theme-1, rgb(24 24 27 / 98%));
+  background: var(--ux-theme-1);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
   box-shadow: var(--maps-shadow-canvas-overlay-high);

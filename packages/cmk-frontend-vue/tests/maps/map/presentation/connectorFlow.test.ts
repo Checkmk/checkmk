@@ -52,7 +52,7 @@ describe('flowVisual', () => {
   it('colours group-bound connectors by state (not only host bindings)', () => {
     const el = link({ object_type: 'hostgroup', group_name: 'linux' })
     const vis = flowVisual(el, { ...state(''), state: 'CRITICAL' })
-    expect(vis.color).not.toBe('var(--pres-shape-stroke)')
+    expect(vis.color).toBe('var(--color-state-critical)')
     expect(vis.valueText).toBe('CRITICAL')
   })
 

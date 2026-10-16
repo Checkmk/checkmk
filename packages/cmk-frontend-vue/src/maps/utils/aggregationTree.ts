@@ -13,7 +13,7 @@ export const BI_STATE_LABEL: Record<number, string> = {
 }
 
 // Same codes mapped to MonitoringState names — used where BI nodes mix with
-// host/service state-color lookups (stateColor() expects "OK"/"WARNING"/...).
+// host/service state-color lookups (stateColorVar() expects "OK"/"WARNING"/...).
 export const BI_STATE_FULL_LABEL: Record<number, MonitoringState> = {
   0: 'OK',
   1: 'WARNING',

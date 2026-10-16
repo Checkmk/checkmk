@@ -12,7 +12,7 @@ import { BI_STATE_FULL_LABEL } from '@/maps/utils/aggregationTree'
 import { resolveCheckmkUrl } from '@/maps/utils/deploymentBase'
 import { buildCheckmkUrl, openUrl } from '@/maps/utils/mapNavigation'
 import { newMapElement, newObjectState } from '@/maps/utils/model'
-import { ACKNOWLEDGED_COLOR, DOWNTIME_COLOR, stateColor } from '@/maps/utils/stateColors'
+import { ACKNOWLEDGED_COLOR, DOWNTIME_COLOR, stateColorVar } from '@/maps/utils/stateColors'
 
 const props = defineProps<{
   tree: AggregationNode
@@ -22,10 +22,8 @@ const props = defineProps<{
   lineWidth?: number | null
 }>()
 
-// Default subtree line: zinc-400 at full alpha (1.5px) reads on both light and
-// dark map tiles. The legacy "zinc-500 @ 50% alpha, 1px" washed out anywhere
-// the map background was busy.
-const DEFAULT_LINE_COLOR = 'rgb(161 161 170)'
+// A mid grey at full alpha (1.5px) reads on both light and dark map tiles.
+const DEFAULT_LINE_COLOR = 'var(--interactive-neutral)'
 const DEFAULT_LINE_WIDTH = 1.5
 const resolvedLineColor = computed(() => props.lineColor || DEFAULT_LINE_COLOR)
 const resolvedLineWidth = computed(() => props.lineWidth ?? DEFAULT_LINE_WIDTH)
@@ -61,14 +59,12 @@ const BADGE_OFFSET_F = 0.7 // badge center offset from node center (× nodeRadiu
 const BADGE_RADIUS_F = 0.55 // badge circle radius (× nodeRadius)
 const TOP_PAD = 20 // top inset before the root row
 const LABEL_PAD = 60 // extra horizontal padding for label overflow
-// Highlight colour for the path from the root to the worst leaf.
-// Stays distinct from the state-fill colours (which use saturated
-// reds/yellows for actual leaf state) so the path stands out as a
-// trace rather than another state colour.
-const WORST_PATH_COLOR = 'rgb(244 114 182)'
+// The path from the root to the worst leaf is a guide, not another state
+// colour, so it stands out as a trace.
+const WORST_PATH_COLOR = 'var(--interactive-guide)'
 
 function stateColorFor(node: AggregationNode): string {
-  return stateColor(BI_STATE_FULL_LABEL[node.state] ?? 'PENDING')
+  return stateColorVar(BI_STATE_FULL_LABEL[node.state])
 }
 
 function strokeFor(node: AggregationNode): string {
@@ -78,7 +74,7 @@ function strokeFor(node: AggregationNode): string {
   if (node.acknowledged) {
     return ACKNOWLEDGED_COLOR
   }
-  return 'rgb(24 24 27)'
+  return 'var(--black)'
 }
 
 function truncate(s: string): string {
@@ -316,7 +312,7 @@ const size = computed(() => {
         <circle
           :r="nodeRadius * BADGE_RADIUS_F"
           :fill="DOWNTIME_COLOR"
-          stroke="rgb(24 24 27)"
+          stroke="var(--black)"
           stroke-width="1"
         />
         <path
@@ -332,13 +328,13 @@ const size = computed(() => {
         <circle
           :r="nodeRadius * BADGE_RADIUS_F"
           :fill="ACKNOWLEDGED_COLOR"
-          stroke="rgb(24 24 27)"
+          stroke="var(--black)"
           stroke-width="1"
         />
         <path
           transform="translate(-6, -6) scale(0.5)"
           fill="none"
-          stroke="rgb(24 24 27)"
+          stroke="var(--black)"
           stroke-width="3.5"
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -348,7 +344,7 @@ const size = computed(() => {
       <text
         :y="nodeRadius + fontSize + 2"
         text-anchor="middle"
-        fill="rgb(212 212 216)"
+        fill="var(--maps-map-view-label-ink)"
         font-family="system-ui,-apple-system,sans-serif"
         :style="{
           fontSize: `${fontSize}px`,

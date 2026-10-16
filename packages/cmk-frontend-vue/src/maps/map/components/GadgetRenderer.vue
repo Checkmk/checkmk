@@ -10,7 +10,7 @@ import { perfometerCaptionLines } from '@/maps/map/composables/usePerfometer'
 import type { MetricUnitMap, ObjectState, PerfometerResult } from '@/maps/types/api'
 import { renderMetricValue } from '@/maps/utils/metricFormat'
 import { getMetric, hasFillScale, parsePerfData, utilColor, utilPercent } from '@/maps/utils/perf'
-import { stateColor } from '@/maps/utils/stateColors'
+import { stateColorVar } from '@/maps/utils/stateColors'
 
 const props = defineProps<{
   type: string // 'gauge' | 'bar' | 'trafficlight' | 'value'
@@ -53,7 +53,7 @@ const fillPct = computed(() => {
 // CMK perfometer); otherwise fall back to the monitoring state colour.
 const hasScale = computed(() => (m.value ? hasFillScale(m.value) : false) || !!props.perfometer)
 const color = computed(() =>
-  hasScale.value ? utilColor(fillPct.value) : stateColor(props.state?.state)
+  hasScale.value ? utilColor(fillPct.value) : stateColorVar(props.state?.state)
 )
 
 const valueLabel = computed(() => {
@@ -118,16 +118,17 @@ const isGreen = computed(() => ['UP', 'OK'].includes(monState.value))
 // Bulb style: lit = solid colored glow; unlit = slightly lighter than the dark housing + colored ring
 // The bulbs always sit inside the dark housing (rgba(0,0,0,0.55)), so contrast against
 // the housing — not the map background — is what matters here.
-function bulbStyle(active: boolean, rgb: string): Record<string, string> {
+function bulbStyle(active: boolean, state: string): Record<string, string> {
+  const color = stateColorVar(state)
   if (active) {
     return {
-      background: `rgb(${rgb})`,
-      boxShadow: `0 0 10px 2px rgba(${rgb},0.7)`
+      background: color,
+      boxShadow: `0 0 10px 2px color-mix(in srgb, ${color} 70%, transparent)`
     }
   }
   return {
     background: 'rgba(255,255,255,0.07)',
-    boxShadow: `inset 0 0 0 1.5px rgba(${rgb},0.55), inset 0 0 6px rgba(${rgb},0.2)`
+    boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, ${color} 55%, transparent), inset 0 0 6px color-mix(in srgb, ${color} 20%, transparent)`
   }
 }
 
@@ -176,7 +177,7 @@ const valArc = computed(() => {
     <div
       class="maps-gadget-renderer__bulb"
       :style="{
-        ...bulbStyle(isRed, '239,68,68'),
+        ...bulbStyle(isRed, 'CRITICAL'),
         width: `${size * 0.55}px`,
         height: `${size * 0.55}px`
       }"
@@ -184,7 +185,7 @@ const valArc = computed(() => {
     <div
       class="maps-gadget-renderer__bulb"
       :style="{
-        ...bulbStyle(isAmber, '255,208,0'),
+        ...bulbStyle(isAmber, 'WARNING'),
         width: `${size * 0.55}px`,
         height: `${size * 0.55}px`
       }"
@@ -192,7 +193,7 @@ const valArc = computed(() => {
     <div
       class="maps-gadget-renderer__bulb"
       :style="{
-        ...bulbStyle(isGreen, '34,197,94'),
+        ...bulbStyle(isGreen, 'OK'),
         width: `${size * 0.55}px`,
         height: `${size * 0.55}px`
       }"
@@ -245,7 +246,7 @@ const valArc = computed(() => {
     <span
       class="maps-gadget-renderer__raw"
       :style="{
-        color: stateColor(state?.state),
+        color: stateColorVar(state?.state),
         fontSize: `${Math.max(11, Math.round(size * 0.32 * rawScale))}px`
       }"
       >{{ valueLabel }}</span
@@ -254,8 +255,6 @@ const valArc = computed(() => {
 
   <div v-else class="maps-gadget-renderer__stack">
     <svg :width="size" :height="size * 0.65" :viewBox="`0 0 ${size} ${size * 0.65}`">
-      <!-- The track colour is a token, so it is styled rather than set as a
-           presentation attribute, which cannot resolve var(). -->
       <path
         class="maps-gadget-renderer__gauge-track"
         :d="bgArc"

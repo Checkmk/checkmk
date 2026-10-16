@@ -6,35 +6,13 @@
 /**
  * Monitoring state to colour, and to state ordering.
  *
- * Prefer ``stateColorVar`` (or ``stateColorProperty``, where a colour has to be
- * resolved): those name the shared ``--color-state-*`` tokens and therefore
- * follow the theme. ``STATE_COLORS`` is the literal fallback still used by the
- * map types that have not moved onto the tokens yet.
+ * Colours are references to the shared ``--color-state-*`` tokens, so they
+ * follow the theme. Resolve one with ``stateColorProperty`` where a literal
+ * value is needed.
  */
-const PENDING_COLOR = '#9ca3af'
 
-export const STATE_COLORS: Record<string, string> = {
-  UP: '#4ade80',
-  OK: '#4ade80',
-  DOWN: '#f87171',
-  CRITICAL: '#f87171',
-  UNREACHABLE: '#fb923c',
-  UNKNOWN: '#fb923c',
-  WARNING: '#ffd000',
-  PENDING: PENDING_COLOR,
-  // Object referenced on the map doesn't exist in monitoring data — neutral
-  // dim grey, paired with a dashed outline + "?" badge for clear differentiation.
-  NOT_FOUND: '#71717a'
-}
-
-// Tailwind blue-500 / amber-400 — kept in sync with the badges rendered
-// directly via Tailwind classes in MapElement.vue (downtime/ack indicators).
-export const DOWNTIME_COLOR = '#3b82f6'
-export const ACKNOWLEDGED_COLOR = '#fbbf24'
-
-export function stateColor(state: string | undefined): string {
-  return STATE_COLORS[state ?? 'PENDING'] ?? PENDING_COLOR
-}
+export const DOWNTIME_COLOR = 'var(--status-color-downtime)'
+export const ACKNOWLEDGED_COLOR = 'var(--status-color-acknowledged)'
 
 // The shared token carrying each state's colour.
 const STATE_PROPERTY: Record<string, string> = {
@@ -57,9 +35,9 @@ export function stateColorProperty(state: string | undefined): string {
 }
 
 /**
- * A state's colour as a token reference. Usable wherever CSS resolves — an
- * HTML ``style``, an SVG ``style`` binding, ``.style('fill', …)`` in D3 — but
- * NOT in an SVG presentation attribute, which cannot resolve ``var()``.
+ * A state's colour as a token reference, for a style, an SVG presentation
+ * attribute or ``.style('fill', …)`` in D3. String arithmetic on it, such as
+ * appending a hex alpha, does not work; use ``color-mix()`` instead.
  */
 export function stateColorVar(state: string | undefined): string {
   return `var(${stateColorProperty(state)})`

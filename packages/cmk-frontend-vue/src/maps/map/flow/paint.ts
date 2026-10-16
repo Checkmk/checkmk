@@ -16,10 +16,6 @@
  * per-frame tick writes nothing but positions: fills and strokes only change on
  * a topology push, and rewriting them every frame would be thousands of style
  * writes per frame on a few hundred hosts.
- *
- * Colours go through ``style``, not through a presentation attribute, because
- * only the former resolves ``var()`` — that is what keeps the state colours on
- * the shared tokens and following the operator's theme.
  */
 import type { Selection } from 'd3-selection'
 import { select } from 'd3-selection'

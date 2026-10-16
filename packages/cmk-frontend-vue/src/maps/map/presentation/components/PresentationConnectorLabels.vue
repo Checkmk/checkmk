@@ -36,7 +36,7 @@ const twoWay = computed(() => !!props.element.flow && !!props.element.flow_metri
 
 const labelShow = computed(() => connectorLabelVisible(props.element))
 const pillFontSize = computed(() => props.element.label?.size ?? 11)
-const pillColor = computed(() => props.element.label?.color || '#fff')
+const pillColor = computed(() => props.element.label?.color || 'var(--white)')
 const pillBg = computed(() => props.element.label?.background || 'rgb(0 0 0 / 65%)')
 
 // CMK perfometer for the bound service: supplies properly formatted values

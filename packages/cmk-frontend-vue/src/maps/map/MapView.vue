@@ -1067,7 +1067,7 @@ function closeBulkAckModal(sent: boolean): void {
   /* The unfilled remainder of a gauge, and of a utilisation ring. A neutral
      grey rather than a theme surface, because it has to read on a light and a
      dark map background alike. */
-  --maps-map-view-gauge-track: rgb(120 120 130 / 50%);
+  --maps-map-view-gauge-track: color-mix(in srgb, var(--interactive-neutral) 50%, transparent);
 
   /* Label plates: light text on a dark plate whatever the theme, since the
      plate sits on the operator's own background image. */
@@ -1083,7 +1083,7 @@ function closeBulkAckModal(sent: boolean): void {
   --maps-map-view-missing-bg: color-mix(in srgb, var(--color-state-warning) 25%, transparent);
 
   /* An object monitoring does not know: a dimmed disc behind its dashed edge. */
-  --maps-map-view-missing-fill: rgb(63 63 70 / 40%);
+  --maps-map-view-missing-fill: color-mix(in srgb, var(--interactive-neutral) 40%, transparent);
   --maps-map-view-grid: color-mix(in srgb, var(--interactive-accent) 60%, transparent);
 
   /* Gadgets keep a dark "instrument" look in either theme: their value text is
@@ -1092,7 +1092,7 @@ function closeBulkAckModal(sent: boolean): void {
   --maps-map-view-gadget-bg: rgb(0 0 0 / 55%);
   --maps-map-view-gadget-bar-bg: rgb(0 0 0 / 50%);
   --maps-map-view-gadget-ring: rgb(255 255 255 / 15%);
-  --maps-map-view-gadget-ink: rgb(244 244 245);
+  --maps-map-view-gadget-ink: var(--white);
   --maps-map-view-gadget-ink-dim: rgb(255 255 255 / 80%);
   --maps-map-view-text-outline:
     1px 1px 0 rgb(0 0 0 / 90%), -1px 1px 0 rgb(0 0 0 / 90%), 1px -1px 0 rgb(0 0 0 / 90%),

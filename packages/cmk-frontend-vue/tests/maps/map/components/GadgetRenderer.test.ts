@@ -41,8 +41,7 @@ describe('GadgetRenderer value gadget', () => {
     })
 
     const raw = screen.getByText('8.31 GiB')
-    // CRITICAL red from the canonical state palette.
-    expect(raw).toHaveStyle({ color: 'rgb(248, 113, 113)' })
+    expect(raw.style.color).toBe('var(--color-state-critical)')
   })
 
   it('falls back to the SI heuristic without a registry entry', () => {

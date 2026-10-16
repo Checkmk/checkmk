@@ -23,7 +23,7 @@ import { serviceNameOf } from '@/maps/map/flow/nodeIds'
 import type { CmdMarker, FNode } from '@/maps/map/flow/nodes'
 import type { MapElement, ObjectState, TopologyNode } from '@/maps/types/api'
 import { newObjectState } from '@/maps/utils/model'
-import { stateColorVar } from '@/maps/utils/stateColors'
+import { ACKNOWLEDGED_COLOR, DOWNTIME_COLOR, stateColorVar } from '@/maps/utils/stateColors'
 
 /**
  * The ``_t`` a component hands to a helper. Gettext extraction only sees literal
@@ -90,8 +90,8 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
       out.push({
         key: 'ack',
         glyph: '✓',
-        fill: 'var(--color-warning)',
-        fg: '#18181b',
+        fill: ACKNOWLEDGED_COLOR,
+        fg: 'var(--black)',
         title: _t('Acknowledged'),
         corner: 'tr'
       })
@@ -100,8 +100,8 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
       out.push({
         key: 'dt',
         glyph: '‖',
-        fill: 'var(--status-color-downtime)',
-        fg: '#ffffff',
+        fill: DOWNTIME_COLOR,
+        fg: 'var(--white)',
         title: _t('In downtime'),
         corner: 'tl'
       })
@@ -111,7 +111,7 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
         key: 'notif',
         glyph: '∅',
         fill: 'var(--font-color-dimmed)',
-        fg: '#ffffff',
+        fg: 'var(--white)',
         title: _t('Notifications disabled'),
         corner: 'br'
       })

@@ -17,7 +17,7 @@ import { anAggregationNode } from '../../../support/fixtures'
 // missing keyboard path), so all structural assertions stay container-scoped
 // DOM queries.
 
-const WORST_PATH_COLOR = 'rgb(244 114 182)'
+const WORST_PATH_COLOR = 'var(--interactive-guide)'
 
 function leaf(name: string, state: number, extra: Partial<AggregationNode> = {}): AggregationNode {
   return anAggregationNode({

@@ -106,8 +106,6 @@ function paintCells(
 ): void {
   const body = cells
     .select(`rect.${treemapClass.body}`)
-    // Fill and stroke go through `style` so the shared `var(--color-state-*)`
-    // tokens resolve; an SVG presentation attribute cannot resolve them.
     .style('fill', tileFill)
     .style('stroke', tileStroke)
     .transition(transition)

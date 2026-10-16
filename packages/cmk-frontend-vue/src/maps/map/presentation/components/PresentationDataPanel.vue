@@ -18,7 +18,7 @@ import {
   searchMonitoringObjects
 } from '@/maps/shared/monitoringAutocompleters'
 import type { ObjectState, PresentationElement } from '@/maps/types/api'
-import { stateColor } from '@/maps/utils/stateColors'
+import { stateColorVar } from '@/maps/utils/stateColors'
 
 import { isBindable } from '../binding'
 import { BINDING_DROP_MIME, type BindingDropKind, type BindingDropPayload } from '../bindingDrop'
@@ -185,7 +185,7 @@ function stateDotFor(p: {
   service?: string | null
 }): string | null {
   const st = boundStates.value.get(bindingKey(p.kind, p.name, p.service))
-  return st ? stateColor(st) : null
+  return st ? stateColorVar(st) : null
 }
 
 function onDragStart(e: DragEvent, payload: BindingDropPayload): void {

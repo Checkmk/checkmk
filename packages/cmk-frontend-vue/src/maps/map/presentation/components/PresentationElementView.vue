@@ -11,7 +11,7 @@ import GadgetRenderer from '@/maps/map/components/GadgetRenderer.vue'
 import { useMetricUnits } from '@/maps/map/composables/useMetricUnits'
 import { usePerfometer } from '@/maps/map/composables/usePerfometer'
 import type { DataElement, ObjectState, PresentationElement } from '@/maps/types/api'
-import { stateColor } from '@/maps/utils/stateColors'
+import { stateColorVar } from '@/maps/utils/stateColors'
 
 import { bindingLabel, isBoundElement, isMetriclessBinding } from '../binding'
 import { resolveImageRef } from '../elements'
@@ -76,7 +76,7 @@ const sampleMetric = computed(() => {
 // manual colour.
 const shapeStateColor = computed(() =>
   props.element.kind === 'shape' && (isBoundElement(props.element) || props.sampleState)
-    ? stateColor(effectiveState.value?.state)
+    ? stateColorVar(effectiveState.value?.state)
     : null
 )
 
@@ -206,7 +206,7 @@ const iconSize = computed(() => {
   return Math.max(20, Math.min(96, Math.min(el.w - 28, el.h - chromeHeight(el)) * 0.55))
 })
 
-const stateClr = computed(() => stateColor(effectiveState.value?.state))
+const stateClr = computed(() => stateColorVar(effectiveState.value?.state))
 const stateText = computed(() => effectiveState.value?.state ?? _t('PENDING'))
 
 const dataBoxStyle = computed(() => {
@@ -403,7 +403,7 @@ function onTextBlur(): void {
           width: `${iconSize}px`,
           height: `${iconSize}px`,
           background: stateClr,
-          boxShadow: `0 0 ${iconSize * 0.5}px 1px ${stateClr}66`
+          boxShadow: `0 0 ${iconSize * 0.5}px 1px color-mix(in srgb, ${stateClr} 40%, transparent)`
         }"
       />
     </div>

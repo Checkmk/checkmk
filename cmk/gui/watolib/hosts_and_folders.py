@@ -2095,17 +2095,7 @@ def _search_folder_from_request(
                 varprefix="host_search_",
             ),
         }
-        return SearchFolder(
-            tree,
-            base_folder,
-            search_criteria,
-            acting_user,
-            search_vars=[
-                (varname, value)
-                for varname, value in request.itervars()
-                if varname.startswith(("host_search_", "_change"))
-            ],
-        )
+        return SearchFolder(tree, base_folder, search_criteria, acting_user)
     return None
 
 
@@ -4188,7 +4178,6 @@ class SearchFolder:
         base_folder: Folder,
         criteria: SearchCriteria,
         acting_user: LoggedInUser,
-        search_vars: Sequence[HTTPVariable],
     ) -> None:
         super().__init__()
         self.attributes: dict[str, Any] = {"meta_data": {}}
@@ -4198,7 +4187,6 @@ class SearchFolder:
         self._criteria = criteria
         self._base_folder = base_folder
         self._acting_user = acting_user
-        self._search_vars = search_vars
         self._found_hosts: dict[HostName, Host] | None = None
         self._name = None
 
@@ -4262,7 +4250,12 @@ class SearchFolder:
         if add_vars is None:
             add_vars = []
 
-        return self.parent().url(request, [("host_search", "1"), *add_vars, *self._search_vars])
+        url_vars: list[HTTPVariable] = [("host_search", "1"), *add_vars]
+
+        for varname, value in request.itervars():
+            if varname.startswith(("host_search_", "_change")):
+                url_vars.append((varname, value))
+        return self.parent().url(request, url_vars)
 
     def delete_hosts(
         self,

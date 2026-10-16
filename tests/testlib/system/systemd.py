@@ -28,6 +28,17 @@ def unit_is_active(host: HostUnderTest, unit: str) -> bool:
     return host.run(["systemctl", "is-active", unit], check=False).returncode == 0
 
 
+def unit_is_enabled(host: HostUnderTest, unit: str) -> bool:
+    return host.run(["systemctl", "is-enabled", unit], check=False).returncode == 0
+
+
+def failed_units(host: HostUnderTest) -> list[str]:
+    output = host.run(
+        ["systemctl", "list-units", "--failed", "--no-legend", "--plain"], check=False
+    ).stdout
+    return [line.split()[0] for line in output.splitlines() if line.strip()]
+
+
 def unit_journal(host: HostUnderTest, unit: str) -> str:
     return host.run(
         ["journalctl", "--no-pager", "-o", "cat", "-u", unit], sudo=True, check=False
@@ -51,6 +62,25 @@ def wait_for_unit_active(host: HostUnderTest, unit: str, timeout: float = 30.0) 
         raise TimeoutError(
             f"{unit} did not become active within {timeout}s.\n{unit_diagnostics(host, unit)}"
         ) from excp
+
+
+def require_systemd(host: HostUnderTest) -> None:
+    """Raise unless systemd runs on the host and systemctl talks to it.
+
+    A systemctl binary alone proves nothing, because the test images ship one that is a symlink
+    to /bin/true. The directory checked first is the one sd_booted(3) checks.
+    """
+    if host.run(["test", "-d", "/run/systemd/system"], check=False).returncode != 0:
+        raise RuntimeError(
+            "systemd is not running on the host under test. These tests need a container that "
+            "boots systemd as PID 1, see packages/cmk-agent-ctl/tests/docs/test-systems.md."
+        )
+    version = host.run(["systemctl", "--version"], check=False).stdout
+    if not version.startswith("systemd "):
+        raise RuntimeError(
+            "'systemctl --version' did not report a systemd version, so systemctl on the host "
+            f"under test is most likely still the symlink to /bin/true. Output was {version!r}."
+        )
 
 
 def _clear_controller_connections(host: HostUnderTest, ctl: PurePath) -> None:

@@ -12,14 +12,22 @@ developer machine that host is the machine itself, so run them with
 
 import os
 from collections.abc import Iterator
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pytest
 
 from tests.testlib.common.utils2 import is_containerized
-from tests.testlib.system.agent import bake_agents, download_agent_package, get_package_type
+from tests.testlib.system.agent import (
+    AGENT_CTL,
+    bake_agents,
+    download_agent_package,
+    get_package_type,
+    install_agent_package,
+    purge_agent_package,
+)
 from tests.testlib.system.host_under_test import HostUnderTest, LocalHost
 from tests.testlib.system.site import get_site_factory, Site, tracing_config_from_env
+from tests.testlib.system.systemd import require_systemd, systemd_managed_agent_controller
 
 _ALLOW_LOCAL_HOST = "CMK_ALLOW_AGENT_ON_LOCAL_HOST"
 
@@ -58,3 +66,37 @@ def _agent_package(
     return download_agent_package(
         site, get_package_type(host), tmp_path_factory.mktemp("agent_package")
     )
+
+
+@pytest.fixture(name="systemd", scope="session")
+def _systemd(host: HostUnderTest) -> None:
+    # Fail rather than skip, for the same reason the host fixture exits.
+    try:
+        require_systemd(host)
+    except RuntimeError as excp:
+        pytest.fail(str(excp))
+
+
+@pytest.fixture(name="installed_agent_ctl", scope="session")
+def _installed_agent_ctl(
+    systemd: None,  # noqa: ARG001
+    host: HostUnderTest,
+    agent_package: Path,
+) -> PurePosixPath:
+    """The package is installed when the first case needs it.
+
+    Every case that reinstalls or removes the package has to leave it installed again.
+    """
+    install_agent_package(agent_package, host)
+    return AGENT_CTL
+
+
+@pytest.fixture(name="agent_not_installed")
+def _agent_not_installed(host: HostUnderTest) -> None:
+    purge_agent_package(host=host)
+
+
+@pytest.fixture(name="agent_ctl")
+def _agent_ctl(host: HostUnderTest, installed_agent_ctl: PurePosixPath) -> Iterator[PurePosixPath]:
+    with systemd_managed_agent_controller(host, installed_agent_ctl):
+        yield installed_agent_ctl

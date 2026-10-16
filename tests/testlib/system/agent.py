@@ -18,7 +18,7 @@ import subprocess
 import sys
 import time
 from collections.abc import Iterator, Mapping
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePath, PurePosixPath
 from typing import Any, assert_never, Literal
 
 from cmk.ccc.hostaddress import HostName
@@ -122,6 +122,24 @@ def uninstall_agent_package(
             assert_never(package_type)
 
 
+def purge_agent_package(
+    package_name: str = "check-mk-agent", host: HostUnderTest = _LOCAL_HOST
+) -> None:
+    """Remove the package and its configuration files, if it is there at all.
+
+    After a plain dpkg --remove, the next installation runs postinst as an upgrade from the
+    version whose configuration files are left behind.
+    """
+    match package_type := get_package_type(host):
+        case "linux_deb":
+            host.run(["dpkg", "--purge", package_name], sudo=True)
+        case "linux_rpm":
+            if host.run(["rpm", "-q", package_name], check=False).returncode == 0:
+                host.run(["rpm", "--erase", package_name], sudo=True)
+        case _:
+            assert_never(package_type)
+
+
 def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
     # Some smoke test to ensure the cmk-agent-ctl is executable in the current environment before
     # trying to install and use it in the following steps.
@@ -221,11 +239,15 @@ def _shimmed_agent_controller(ctl_path: Path) -> Iterator[None]:
 
 
 def register_controller(
-    ctl_path: Path, site: Site, hostname: HostName, site_address: str | None = None
+    ctl_path: PurePath,
+    site: Site,
+    hostname: HostName,
+    site_address: str | None = None,
+    host: HostUnderTest = _LOCAL_HOST,
 ) -> None:
     # Register the agent controller with the site
     # (previously ran delete-all. Now part of _clean_agent_controller)
-    run(
+    host.run(
         [
             ctl_path.as_posix(),
             "--verbose",
@@ -272,9 +294,11 @@ def wait_until_host_receives_data(
             raise excp from e
 
 
-def controller_status_json(controller_path: Path) -> Mapping[str, Any]:
+def controller_status_json(
+    controller_path: PurePath, host: HostUnderTest = _LOCAL_HOST
+) -> Mapping[str, Any]:
     json_data: Mapping[str, Any] = json.loads(
-        run([controller_path.as_posix(), "status", "--json"], sudo=True).stdout
+        host.run([controller_path.as_posix(), "status", "--json"], sudo=True).stdout
     )
     return json_data
 

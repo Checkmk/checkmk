@@ -21,8 +21,15 @@ from tests.testlib.common.utils2 import run
 
 class HostUnderTest(Protocol):
     def run(
-        self, args: Sequence[str], *, sudo: bool = False, check: bool = True
-    ) -> subprocess.CompletedProcess[str]: ...
+        self,
+        args: Sequence[str],
+        *,
+        sudo: bool = False,
+        user: str | None = None,
+        check: bool = True,
+    ) -> subprocess.CompletedProcess[str]:
+        """Run args on the host. A user runs them as that user, which implies sudo."""
+        ...
 
     def copy_to(self, source: Path, target: PurePosixPath) -> None: ...
 
@@ -33,8 +40,17 @@ class LocalHost:
     """The machine pytest runs on is the host under test."""
 
     def run(
-        self, args: Sequence[str], *, sudo: bool = False, check: bool = True
+        self,
+        args: Sequence[str],
+        *,
+        sudo: bool = False,
+        user: str | None = None,
+        check: bool = True,
     ) -> subprocess.CompletedProcess[str]:
+        if user is not None:
+            # Not the substitute_user of run(), which uses su -l and fails for a user with a
+            # nologin shell, such as cmk-agent.
+            return run(["sudo", "-u", user, *args], check=check)
         return run(list(args), sudo=sudo, check=check)
 
     def copy_to(self, source: Path, target: PurePosixPath) -> None:

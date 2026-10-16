@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Protocol
 
 from livestatus import LocalConnection
 
@@ -14,6 +14,10 @@ from cmk.utils.user import UserId
 
 _ContactgroupName = str
 _HostGroupName = str
+
+
+class Connection(Protocol):
+    def query(self, query: str) -> Sequence[Sequence[Any]]: ...
 
 
 # NOTE: This function is a polished copy of cmk/base/notify.py. :-/
@@ -75,8 +79,10 @@ def query_status_enable_notifications() -> bool:
     return bool(LocalConnection().query_value("GET status\nColumns: enable_notifications"))
 
 
-def query_timeperiods_in() -> Mapping[TimeperiodName, bool]:
+def query_timeperiods_in(connection: Connection | None = None) -> Mapping[TimeperiodName, bool]:
     return {
         name: bool(in_)
-        for name, in_ in LocalConnection().query("GET timeperiods\nColumns: name in")
+        for name, in_ in (LocalConnection() if connection is None else connection).query(
+            "GET timeperiods\nColumns: name in"
+        )
     }

@@ -13,7 +13,7 @@ import sys
 import time
 import warnings
 import zipfile
-from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from html import escape as html_escape
 from pathlib import Path
@@ -322,6 +322,42 @@ def mib_dirs() -> list[tuple[Path, str]]:
     ]
 
 
+def _no_livestatus_connection_message(site_id: SiteId) -> str:
+    """Explains why the GUI has no Livestatus connection to a site, like the site status snap-in"""
+    site_status = sites.states().get(site_id, sites.SiteStatus())
+    if site_status.get("state") == "disabled":
+        return _(
+            "The GUI has no Livestatus connection to site %(site)s, because the site is disabled "
+            'in the "Site status" snap-in.'
+        ) % {"site": site_id}
+    if "exception" in site_status:
+        return _("The GUI has no Livestatus connection to site %(site)s: %(error)s") % {
+            "site": site_id,
+            "error": site_status["exception"],
+        }
+    return _("The GUI has no Livestatus connection to site %(site)s.") % {"site": site_id}
+
+
+class _SiteLivestatus:
+    """Sends Livestatus queries to a single site"""
+
+    def __init__(self, site_id: SiteId) -> None:
+        self._site_id = site_id
+
+    def query(self, query: str) -> Sequence[Sequence[Any]]:
+        # The GUI has no connection to its own site if the user disabled it in the site status
+        # snap-in, so query the local site directly.
+        if self._site_id == omd_site():
+            return LocalConnection().query(query)
+        # Restricting a query via sites.only_sites() silently returns no rows if the GUI has no
+        # connection to the site, e.g. because it is down or disabled, so fail loudly instead.
+        try:
+            connection = sites.live().get_connection(self._site_id)
+        except KeyError:
+            raise MKGeneralException(_no_livestatus_connection_message(self._site_id)) from None
+        return connection.query(query)
+
+
 def match_event_rule(
     rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event, site_configs: SiteConfigurations
 ) -> ec.MatchResult:
@@ -333,7 +369,7 @@ def match_event_rule(
         if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
             return ec.MatchFailure(reason=_("Wrong customer"))
 
-    time_period = ec.TimePeriods(log.logger)
+    time_period = ec.TimePeriods(log.logger, _SiteLivestatus(event["site"]))
     rule_matcher = ec.RuleMatcher(
         logger=None,
         # Match against the site the event is simulated for, not the one running the GUI.

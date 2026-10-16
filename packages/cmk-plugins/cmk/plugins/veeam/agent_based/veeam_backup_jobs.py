@@ -15,6 +15,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    LevelsT,
     Metric,
     render,
     Result,
@@ -52,9 +53,10 @@ DEFAULT_DISCOVERY_PARAMETERS = DiscoveryParams(discover_disabled=True)
 
 class CheckParameters(TypedDict):
     disabled_state: int
+    age: LevelsT[float]
 
 
-DEFAULT_PARAMETERS = CheckParameters(disabled_state=State.OK.value)
+DEFAULT_PARAMETERS = CheckParameters(disabled_state=State.OK.value, age=("no_levels", None))
 
 
 def parse_veeam_backup_jobs(string_table: StringTable) -> Section:
@@ -131,9 +133,11 @@ def check_veeam_backup_jobs(
         else:
             yield from check_levels(
                 age,
+                # The state of a disabled job is set by disabled_state alone
+                levels_upper=None if is_disabled else params["age"],
                 metric_name="veeam_backup_job_age",
-                render_func=lambda v: f"{render.timespan(v)} ago",
-                label="Last run",
+                render_func=render.timespan,
+                label="Time since last run",
             )
         yield Result(state=State.OK, notice=f"Last run time: {render.datetime(job.last_run)}")
 

@@ -111,7 +111,7 @@ def test_check_veeam_backup_jobs_success() -> None:
     next_run = render.datetime(next_run_epoch)
     assert list(check_veeam_backup_jobs("VMware_Server", PARAMS, section, now=NOW)) == [
         Result(state=State.OK, summary="Result: Success"),
-        Result(state=State.OK, summary="Last run: 1 hour 0 minutes ago"),
+        Result(state=State.OK, summary="Time since last run: 1 hour 0 minutes"),
         Metric("veeam_backup_job_age", 3600.0),
         Result(state=State.OK, notice=f"Last run time: {last_run}"),
         Result(state=State.OK, notice="Status: Inactive"),
@@ -178,9 +178,38 @@ def test_check_veeam_backup_jobs_disabled_takes_the_configured_state(
     section = parse_veeam_backup_jobs(
         [[_job("disabled", status="Disabled", lastRun=last_run, lastResult="Failed")]]
     )
-    params = CheckParameters(disabled_state=State.WARN.value)
+    params = CheckParameters(disabled_state=State.WARN.value, age=("no_levels", None))
     results = list(check_veeam_backup_jobs("disabled", params, section, now=NOW))
     assert results[0] == Result(state=State.WARN, summary=summary)
+
+
+@pytest.mark.parametrize(
+    "status, expected",
+    [
+        pytest.param(
+            "Inactive",
+            Result(
+                state=State.WARN,
+                summary=(
+                    "Time since last run: 1 hour 0 minutes "
+                    "(warn/crit at 30 minutes 0 seconds/2 hours 0 minutes)"
+                ),
+            ),
+            id="enabled",
+        ),
+        pytest.param(
+            "Disabled",
+            Result(state=State.OK, summary="Time since last run: 1 hour 0 minutes"),
+            id="disabled",
+        ),
+    ],
+)
+def test_check_veeam_backup_jobs_age_levels_skip_disabled_jobs(
+    status: str, expected: Result
+) -> None:
+    section = parse_veeam_backup_jobs([[_job("job", status=status)]])
+    params = CheckParameters(disabled_state=State.OK.value, age=("fixed", (1800.0, 7200.0)))
+    assert expected in check_veeam_backup_jobs("job", params, section, now=NOW)
 
 
 def test_check_veeam_backup_jobs_never_run() -> None:

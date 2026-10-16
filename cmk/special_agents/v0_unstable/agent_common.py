@@ -14,6 +14,8 @@ Current responsibilities include:
 import argparse
 import json
 import logging
+import os
+import select
 import sys
 import traceback
 from collections.abc import Callable, Sequence
@@ -122,6 +124,16 @@ class SectionWriter(SectionManager):
         self.append(f"<<<{section_name}{f':sep({ord(separator)})' if separator else ''}>>>")
 
 
+def _stdout_reader_gone() -> bool:
+    # The write end of a pipe reports POLLERR once its read end is closed.
+    try:
+        poller = select.poll()
+        poller.register(sys.stdout.fileno(), select.POLLOUT)
+        return any(event & select.POLLERR for _fd, event in poller.poll(0))
+    except (OSError, ValueError):
+        return False
+
+
 def _special_agent_main_core(
     parse_arguments: Callable[[Sequence[str] | None], argparse.Namespace],
     main_fn: Callable[[argparse.Namespace], int],
@@ -151,9 +163,14 @@ def _special_agent_main_core(
         return main_fn(args)
     except CannotRecover as exc:
         sys.stderr.write(f"{exc}\n")
-    except Exception:
+    except Exception as exc:
         if args.debug:
             raise
+        if isinstance(exc, BrokenPipeError) and _stdout_reader_gone():
+            # Keep the interpreter's final flush of stdout from failing again.
+            os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+            sys.stderr.write(traceback.format_exc())
+            return 1
         crash_dump = create_agent_crash_dump()
         sys.stderr.write(crash_dump)
         sys.stderr.write(f"\n\n{traceback.format_exc()}")

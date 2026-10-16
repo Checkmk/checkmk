@@ -320,6 +320,7 @@ py_test(
         ":__test__",
         ":pure_storage_fa",
         requirement("pytest"),
+        requirement("responses"),
     ],
 )
 

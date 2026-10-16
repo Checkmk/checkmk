@@ -87,7 +87,7 @@ def check_silverpeak(_item, _params, parsed):
         yield 0, "No active alarms."
         return
 
-    alarms = parsed["alarms"]
+    alarms = parsed.get("alarms", [])
 
     cnt_ok = len([alarm for alarm in alarms if alarm["state"] == 0])
     cnt_warn = len([alarm for alarm in alarms if alarm["state"] == 1])
@@ -98,6 +98,9 @@ def check_silverpeak(_item, _params, parsed):
         0,
         f"{alarm_cnt} active alarms. OK: {cnt_ok}, WARN: {cnt_warn}, CRIT: {cnt_crit}, UNKNOWN: {cnt_unkn}",
     )
+
+    if not alarms:
+        yield 3, f"Device reports {alarm_cnt} active alarms but delivered no alarm details"
 
     for elem in alarms:
         yield (

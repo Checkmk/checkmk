@@ -82,6 +82,29 @@ test('renders the state markers of plugin output as badges', () => {
   expect(container.querySelector('.cmk-state-tag--warning')).toHaveTextContent('WA')
 })
 
+test('spells the state markers of plugin output out in its tooltip', () => {
+  mountCell('[otel_metrics] (!!), execution time 4.9 sec', { stateMarkers: true })
+
+  expect(screen.getByTitle('[otel_metrics] (CRIT), execution time 4.9 sec')).toBeInTheDocument()
+})
+
+test('leaves a state marker as written in the tooltip unless the cell shows plugin output', () => {
+  mountCell('load: 90(!!)')
+
+  expect(screen.getByTitle('load: 90(!!)')).toBeInTheDocument()
+})
+
+test('spells the state markers out in the tooltip of a cut value, when told to title only a cut one', async () => {
+  const { container } = mountCell('load: 90(!!)', { stateMarkers: true, titleOnlyWhenCut: true })
+  const text = container.querySelector('.monitoring-string-cell__text')!
+  Object.defineProperty(text, 'scrollWidth', { configurable: true, value: 120 })
+  Object.defineProperty(text, 'clientWidth', { configurable: true, value: 40 })
+
+  await fireEvent.mouseEnter(text)
+
+  expect(text).toHaveAttribute('title', 'load: 90(CRIT)')
+})
+
 test('renders a button and forwards its click when the button prop is set', async () => {
   const onClick = vi.fn()
   const { container } = render(

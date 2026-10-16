@@ -108,11 +108,10 @@ test('renders the state markers of the summary as badges', () => {
   expect(container.querySelector('.cmk-state-tag--critical')).toHaveTextContent('CR')
 })
 
-test('keeps the whole summary readable on hover, markers and all', () => {
-  const summary = 'load: 3.1(!), temp: 90(!!)'
-  mountRow(makeService({ summary }))
+test('keeps the whole summary readable on hover, with the markers spelled out', () => {
+  mountRow(makeService({ summary: 'load: 3.1(!), temp: 90(!!)' }))
 
-  expect(screen.getByTitle(summary)).toBeInTheDocument()
+  expect(screen.getByTitle('load: 3.1(WARN), temp: 90(CRIT)')).toBeInTheDocument()
 })
 
 test('renders the flapping icon next to the state badge for a flapping service', () => {

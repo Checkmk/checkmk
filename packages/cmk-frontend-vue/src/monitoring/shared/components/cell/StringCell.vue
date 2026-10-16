@@ -7,6 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import { spellStateMarkers } from '@/monitoring/shared/spellStateMarkers'
+
 import PluginOutput from '../PluginOutput.vue'
 import BaseCell, { type CellLink, type CellVerticalAlign } from './BaseCell.vue'
 
@@ -33,7 +35,12 @@ const emit = defineEmits<{
 const display = computed(() => props.value ?? props.emptyLabel ?? 'n/a')
 
 const cut = ref(false)
-const title = computed(() => (!props.titleOnlyWhenCut || cut.value ? props.value : undefined))
+const title = computed(() => {
+  if (props.titleOnlyWhenCut && !cut.value) {
+    return undefined
+  }
+  return props.stateMarkers && props.value ? spellStateMarkers(props.value) : props.value
+})
 
 function measureCut(event: MouseEvent): void {
   const text = event.currentTarget as HTMLElement

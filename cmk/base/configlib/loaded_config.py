@@ -61,8 +61,156 @@ class CustomCheck(TypedDict):
     freshness: NotRequired[ReadOnly[CustomCheckFreshness]]
 
 
+# The mixins below mirror the split of the cmk.base.default_config
+# package. One day, the consumers should only parse what they actually
+# need, rather than all of BaseConfig.
+
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class BaseConfig:  # type: ignore[explicit-any]
+class _AlertHandlingConfig:
+    alert_handler_event_types: Sequence[Literal["statechange", "checkresult"]] = dataclasses.field(
+        default_factory=lambda: ["statechange"]
+    )
+    alert_logging: int = 20
+    alert_handler_timeout: int = 60
+    alert_handler_rules: Sequence[EventRule] = dataclasses.field(default_factory=list)
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class _CMCConfig:
+    cmc_check_helpers: int = 5
+    cmc_fetcher_helpers: int = 13
+    cmc_checker_helpers: int = 4
+    cmc_real_time_helpers: int = 1
+    cmc_config_multiprocessing: object = dataclasses.field(
+        default_factory=lambda: {"use_multiprocessing": True}
+    )
+    cmc_pnp_update_delay: int = 3600
+    cmc_pnp_update_on_restart: bool = False
+    cmc_state_retention_interval: int = 600
+    cmc_log_rotation_method: int = 3
+    cmc_log_limit: int = 50 * 1024 * 1024
+    cmc_check_timeout: int = 60
+    cmc_service_check_timeout: Sequence[RuleSpec[int]] = dataclasses.field(default_factory=list)
+    cmc_flap_settings: tuple[float, float, float] = (3.0, 5.0, 0.1)
+    cmc_service_flap_settings: Sequence[RuleSpec[tuple[float, float, float]]] = dataclasses.field(
+        default_factory=list
+    )
+    cmc_host_flap_settings: Sequence[RuleSpec[tuple[float, float, float]]] = dataclasses.field(
+        default_factory=list
+    )
+    cmc_initial_scheduling: CMCInitialScheduling = dataclasses.field(
+        default_factory=lambda: CMCInitialScheduling(burst=10, spread_cmk=1200, spread_generic=150)
+    )
+    cmc_housekeeping_interval: int = 1000
+    cmc_smartping_check_interval: int = 500
+    cmc_smartping_settings: Sequence[RuleSpec[Mapping[str, float]]] = dataclasses.field(
+        default_factory=list
+    )
+    cmc_smartping_tuning: SmartPingTuning = dataclasses.field(
+        default_factory=lambda: SmartPingTuning(omit_payload=False, num_sockets=8, ignore_rst=False)
+    )
+    cmc_dump_core: bool = False
+    cmc_log_levels: Mapping[str, int] = dataclasses.field(
+        default_factory=lambda: {
+            "cmk.alert": 5,
+            "cmk.carbon": 5,
+            "cmk.core": 5,
+            "cmk.downtime": 5,
+            "cmk.helper": 5,
+            "cmk.livestatus": 5,
+            "cmk.notification": 5,
+            "cmk.rrd": 5,
+            "cmk.influxdb": 5,
+            "cmk.smartping": 5,
+        }
+    )
+    cmc_log_cmk_helpers: LogCmkHelpers = dataclasses.field(
+        default_factory=lambda: LogCmkHelpers(log_level=0, debug=False)
+    )
+    cmc_log_microtime: bool = False
+    cmc_livestatus_threads: int = 20
+    cmc_max_response_size: int = 100
+    cmc_livestatus_logcache_size: int = 500000
+    cmc_livestatus_lines_per_file: int = 1000000
+    cmc_statehist_cache: Mapping[str, object] | None = dataclasses.field(
+        default_factory=lambda: {"horizon": 63072000, "max_core_downtime": 30}
+    )
+    cmc_debug_notifications: bool = False
+    max_long_output_size: int = 2000
+    cmc_authorization: CMCAuthorization = dataclasses.field(
+        default_factory=lambda: CMCAuthorization(host=0, group=0)
+    )
+    cmc_timeperiod_horizon: int = 2 * 365
+    cmc_import_nagios_state: bool = True
+    cmc_graphite: Sequence[CMCGraphiteConnection] = dataclasses.field(default_factory=list)
+    cmc_graphite_host_metrics: Sequence[RuleSpec[Sequence[str]]] = dataclasses.field(
+        default_factory=list
+    )
+    cmc_graphite_service_metrics: Sequence[RuleSpec[Sequence[str]]] = dataclasses.field(
+        default_factory=list
+    )
+    cmc_influxdb_service_metrics: Sequence[RuleSpec[Mapping[str, object]]] = dataclasses.field(
+        default_factory=list
+    )
+    influxdb_connections: Mapping[str, dict[str, object]] = dataclasses.field(default_factory=dict)
+    cmc_host_limit: int | None = None
+    cmc_service_limit: int | None = None
+    shadow_hosts: dict[HostName, dict[str, object]] = dataclasses.field(default_factory=dict)
+    cmc_store_params_in_config: bool = False
+    cmc_service_long_output_in_monitoring_history: Sequence[RuleSpec[bool]] = dataclasses.field(
+        default_factory=list
+    )
+    cmc_host_long_output_in_monitoring_history: Sequence[RuleSpec[bool]] = dataclasses.field(
+        default_factory=list
+    )
+    service_state_translation: Sequence[RuleSpec[Mapping[str, object]]] = dataclasses.field(
+        default_factory=list
+    )
+    host_state_translation: Sequence[RuleSpec[Mapping[str, object]]] = dataclasses.field(
+        default_factory=list
+    )
+    cmc_real_time_checks: RealTimeChecks | None = None
+    host_recurring_downtimes: Sequence[RuleSpec[Mapping[str, int | str]]] = dataclasses.field(
+        default_factory=list
+    )
+    service_recurring_downtimes: Sequence[RuleSpec[Mapping[str, int | str]]] = dataclasses.field(
+        default_factory=list
+    )
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class _CustomerConfig:
+    current_customer: str = "provider"
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class _NotifyConfig:
+    notification_logging: int = 15
+    notification_backlog: int = 10
+    enable_rulebased_notifications: bool = True
+    notification_fallback_email: str = ""
+    notification_fallback_format: tuple[NotificationPluginNameStr, NotifyPluginParamsDict] = (
+        "asciimail",
+        {},
+    )
+    notification_rules: Sequence[EventRule] = dataclasses.field(default_factory=list)
+    notification_parameter: NotificationParameterSpecs = dataclasses.field(default_factory=dict)
+    notification_bulk_interval: int = 10
+    notification_plugin_timeout: int = 60
+    notification_spooling: bool | Literal["local", "remote", "both", "off"] | None = None
+    notification_spool_to: object = None
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class _RelayConfig:
+    relays: object = dataclasses.field(default_factory=dict)  # not parsed
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class BaseConfig(  # type: ignore[explicit-any]
+    _AlertHandlingConfig, _CMCConfig, _CustomerConfig, _NotifyConfig, _RelayConfig
+):
     """Typed snapshot of the loaded base configuration.
 
     The config loader (`load()` / `load_packed_config()`) builds an instance
@@ -101,7 +249,6 @@ class BaseConfig:  # type: ignore[explicit-any]
     cmc_illegal_chars: str = ";\t"
     all_hosts: Sequence[str] = dataclasses.field(default_factory=list)
     clusters: Mapping[HostAddress, Sequence[HostAddress]] = dataclasses.field(default_factory=dict)
-    shadow_hosts: dict[HostName, dict[str, object]] = dataclasses.field(default_factory=dict)
     service_dependencies: Sequence[tuple] = dataclasses.field(default_factory=list)
     fallback_agent_output_encoding: str = "latin-1"
     agent_config: Mapping[str, Sequence[RuleSpec]] = dataclasses.field(default_factory=dict)
@@ -129,7 +276,6 @@ class BaseConfig:  # type: ignore[explicit-any]
     metrics_identity_routing: Sequence[RuleSpec[Mapping[str, object]]] = dataclasses.field(
         default_factory=list
     )
-    cmc_real_time_checks: RealTimeChecks | None = None
     snmp_check_interval: list[
         RuleSpec[
             tuple[list[str], tuple[Literal["cached"], float] | tuple[Literal["uncached"], None]]
@@ -150,65 +296,8 @@ class BaseConfig:  # type: ignore[explicit-any]
     host_tags: object = dataclasses.field(default_factory=dict)
     cmc_log_rrdcreation: Literal["terse", "full"] | None = None
     cmc_host_rrd_config: Sequence[RuleSpec[Any]] = dataclasses.field(default_factory=list)
-    cmc_statehist_cache: Mapping[str, object] | None = dataclasses.field(
-        default_factory=lambda: {"horizon": 63072000, "max_core_downtime": 30}
-    )
-    cmc_timeperiod_horizon: int = 2 * 365
-    host_recurring_downtimes: Sequence[RuleSpec[Mapping[str, int | str]]] = dataclasses.field(
-        default_factory=list
-    )
-    cmc_flap_settings: tuple[float, float, float] = (3.0, 5.0, 0.1)
-    cmc_host_flap_settings: Sequence[RuleSpec[tuple[float, float, float]]] = dataclasses.field(
-        default_factory=list
-    )
-    cmc_host_long_output_in_monitoring_history: Sequence[RuleSpec[bool]] = dataclasses.field(
-        default_factory=list
-    )
-    host_state_translation: Sequence[RuleSpec[Mapping[str, object]]] = dataclasses.field(
-        default_factory=list
-    )
-    cmc_smartping_settings: Sequence[RuleSpec[Mapping[str, float]]] = dataclasses.field(
-        default_factory=list
-    )
     cmc_service_rrd_config: Sequence[RuleSpec[RRDObjectConfig]] = dataclasses.field(
         default_factory=list
-    )
-    service_recurring_downtimes: Sequence[RuleSpec[Mapping[str, int | str]]] = dataclasses.field(
-        default_factory=list
-    )
-    cmc_service_flap_settings: Sequence[RuleSpec[tuple[float, float, float]]] = dataclasses.field(
-        default_factory=list
-    )
-    cmc_service_long_output_in_monitoring_history: Sequence[RuleSpec[bool]] = dataclasses.field(
-        default_factory=list
-    )
-    service_state_translation: Sequence[RuleSpec[Mapping[str, object]]] = dataclasses.field(
-        default_factory=list
-    )
-    cmc_check_timeout: int = 60
-    cmc_service_check_timeout: Sequence[RuleSpec[int]] = dataclasses.field(default_factory=list)
-    cmc_graphite_host_metrics: Sequence[RuleSpec[Sequence[str]]] = dataclasses.field(
-        default_factory=list
-    )
-    cmc_graphite_service_metrics: Sequence[RuleSpec[Sequence[str]]] = dataclasses.field(
-        default_factory=list
-    )
-    cmc_influxdb_service_metrics: Sequence[RuleSpec[Mapping[str, object]]] = dataclasses.field(
-        default_factory=list
-    )
-    cmc_log_levels: Mapping[str, int] = dataclasses.field(
-        default_factory=lambda: {
-            "cmk.alert": 5,
-            "cmk.carbon": 5,
-            "cmk.core": 5,
-            "cmk.downtime": 5,
-            "cmk.helper": 5,
-            "cmk.livestatus": 5,
-            "cmk.notification": 5,
-            "cmk.rrd": 5,
-            "cmk.influxdb": 5,
-            "cmk.smartping": 5,
-        }
     )
     cluster_max_cachefile_age: int = 90
     http_proxies: Mapping[str, HTTPProxySpec] = dataclasses.field(default_factory=dict)
@@ -230,58 +319,13 @@ class BaseConfig:  # type: ignore[explicit-any]
     snmp_default_community: str = "public"
     snmp_communities: Sequence[RuleSpec[SNMPCredentials]] = dataclasses.field(default_factory=list)
     inventory_check_severity: int = 1
-    enable_rulebased_notifications: bool = True
-    current_customer: str = "provider"
     host_paths: Mapping[HostName, str] = dataclasses.field(default_factory=dict)
     timeperiods: object = dataclasses.field(
         default_factory=dict
     )  # Here we don't lie for a change. We haven't parsed anything.
     check_periods: Sequence[RuleSpec[object]] = dataclasses.field(default_factory=list)
-    relays: object = dataclasses.field(default_factory=dict)  # see above
-    cmc_config_multiprocessing: object = dataclasses.field(
-        default_factory=lambda: {"use_multiprocessing": True}
-    )
-    cmc_check_helpers: int = 5
-    cmc_fetcher_helpers: int = 13
-    cmc_checker_helpers: int = 4
-    cmc_real_time_helpers: int = 1
-    cmc_initial_scheduling: CMCInitialScheduling = dataclasses.field(
-        default_factory=lambda: CMCInitialScheduling(burst=10, spread_cmk=1200, spread_generic=150)
-    )
-    cmc_housekeeping_interval: int = 1000
-    cmc_state_retention_interval: int = 600
-    cmc_debug_notifications: bool = False
-    cmc_dump_core: bool = False
-    cmc_log_microtime: bool = False
-    cmc_log_rotation_method: int = 3
-    cmc_log_limit: int = 50 * 1024 * 1024
-    cmc_log_cmk_helpers: LogCmkHelpers = dataclasses.field(
-        default_factory=lambda: LogCmkHelpers(log_level=0, debug=False)
-    )
-    cmc_livestatus_threads: int = 20
-    cmc_max_response_size: int = 100
-    cmc_livestatus_logcache_size: int = 500000
-    cmc_livestatus_lines_per_file: int = 1000000
-    cmc_authorization: CMCAuthorization = dataclasses.field(
-        default_factory=lambda: CMCAuthorization(host=0, group=0)
-    )
-    cmc_smartping_check_interval: int = 500
-    cmc_smartping_tuning: SmartPingTuning = dataclasses.field(
-        default_factory=lambda: SmartPingTuning(omit_payload=False, num_sockets=8, ignore_rst=False)
-    )
     mkeventd_enabled: bool = False
     pnp4nagios_enabled: bool = True
-    cmc_pnp_update_delay: int = 3600
-    cmc_pnp_update_on_restart: bool = False
-    max_long_output_size: int = 2000
-    influxdb_connections: Mapping[str, dict[str, object]] = dataclasses.field(default_factory=dict)
-    cmc_graphite: Sequence[CMCGraphiteConnection] = dataclasses.field(default_factory=list)
-    alert_handler_event_types: Sequence[Literal["statechange", "checkresult"]] = dataclasses.field(
-        default_factory=lambda: ["statechange"]
-    )
-    alert_handler_rules: Sequence[EventRule] = dataclasses.field(default_factory=list)
-    alert_handler_timeout: int = 60
-    alert_logging: int = 20
     host_template: str = "check_mk_host"
     cluster_template: str = "check_mk_cluster"
     pingonly_template: str = "check_mk_pingonly"
@@ -305,7 +349,6 @@ class BaseConfig:  # type: ignore[explicit-any]
     contactgroup_members: Mapping[str, Sequence[ContactName]] = dataclasses.field(
         default_factory=dict
     )
-    cmc_import_nagios_state: bool = True
     restart_locking: Literal["abort", "wait"] | None = "abort"
     check_submission: Literal["file", "pipe"] = "file"
     check_max_cachefile_age: int = 0
@@ -320,22 +363,6 @@ class BaseConfig:  # type: ignore[explicit-any]
     explicit_snmp_communities: Mapping[HostName | HostAddress, SNMPCredentials] = dataclasses.field(
         default_factory=dict
     )
-    cmc_host_limit: int | None = None
-    cmc_service_limit: int | None = None
-    cmc_store_params_in_config: bool = False
-    notification_rules: Sequence[EventRule] = dataclasses.field(default_factory=list)
-    notification_parameter: NotificationParameterSpecs = dataclasses.field(default_factory=dict)
-    notification_backlog: int = 10
-    notification_bulk_interval: int = 10
-    notification_fallback_email: str = ""
-    notification_fallback_format: tuple[NotificationPluginNameStr, NotifyPluginParamsDict] = (
-        "asciimail",
-        {},
-    )
-    notification_plugin_timeout: int = 60
-    notification_logging: int = 15
-    notification_spooling: bool | Literal["local", "remote", "both", "off"] | None = None
-    notification_spool_to: object = None
     active_checks: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]] = dataclasses.field(
         default_factory=dict
     )

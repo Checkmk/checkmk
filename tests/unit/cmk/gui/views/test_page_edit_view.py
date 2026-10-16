@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import pytest
 
 from cmk.ccc.user import UserId
@@ -76,7 +78,7 @@ def test_cloning_a_builtin_view_opens_the_view_editor_with_its_column_editor(
     with mock_livestatus():
         response = logged_in_admin_wsgi_app.get(
             "/NO_SITE/check_mk/edit_view.py?mode=clone&load_name=allhosts&owner=",
-            status=200,  # astrein: disable=http-status-literal
+            status=HTTPStatus.OK,
         )
 
     assert "Add column" in response.text

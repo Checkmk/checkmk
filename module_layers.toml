@@ -671,6 +671,9 @@ allows = [
 [components."cmk.ccc"]
 allows = ["@trace"]
 
+[components."cmk.config"]
+allows = []
+
 [components."cmk.config_anonymizer"]
 allows = [
   "@ccc",

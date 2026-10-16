@@ -11,14 +11,20 @@ from typing import override
 
 from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.automations.results import (
+    DiagCmkAgentInput,
+    DiagSnmpInput,
     DiagSpecialAgentHostConfig,
     DiagSpecialAgentInput,
+    DiagSpecialAgentResult,
     Gateway,
     GatewayResult,
     NotifyResult,
+    PingHostCmd,
+    PingHostInput,
     ScanParentsResult,
     ServiceDiscoveryPreviewResult,
     ServiceDiscoveryResult,
+    SpecialAgentResult,
 )
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -207,6 +213,92 @@ class TestDiagSpecialAgentInput:
                 )
             )
             == self.DIAG_SPECIAL_AGENT_INPUT
+        )
+
+
+class TestDiagSpecialAgentResult:
+    DIAG_SPECIAL_AGENT_RESULT = DiagSpecialAgentResult(
+        results=[
+            SpecialAgentResult(return_code=0, response="<<<aws_ec2>>>\n"),
+            SpecialAgentResult(return_code=2, response="Unauthorized"),
+        ]
+    )
+
+    def test_serialization_roundtrip(self) -> None:
+        assert (
+            DiagSpecialAgentResult.deserialize(
+                self.DIAG_SPECIAL_AGENT_RESULT.serialize(cmk_version.__version__)
+            )
+            == self.DIAG_SPECIAL_AGENT_RESULT
+        )
+
+    def test_deserialize_empty_string_gives_no_results(self) -> None:
+        assert DiagSpecialAgentResult.deserialize("") == DiagSpecialAgentResult(results=[])
+
+
+class TestDiagCmkAgentInput:
+    DIAG_CMK_AGENT_INPUT = DiagCmkAgentInput(
+        host_name=HostName("agent-host"),
+        ip_address=HostAddress("10.1.2.3"),
+        address_family="ip-v4-only",
+        agent_port=6557,
+        timeout=9,
+    )
+
+    def test_serialization_roundtrip(self) -> None:
+        assert (
+            DiagCmkAgentInput.deserialize(
+                self.DIAG_CMK_AGENT_INPUT.serialize(
+                    cmk_version.Version.from_str(cmk_version.__version__)
+                )
+            )
+            == self.DIAG_CMK_AGENT_INPUT
+        )
+
+
+class TestDiagSnmpInput:
+    DIAG_SNMP_INPUT = DiagSnmpInput(
+        host_name=HostName("snmp-host"),
+        ip_address=HostAddress("2001:db8::1"),
+        address_family="ip-v6-only",
+        snmp_version="snmp-v2",
+        snmp_community="community",
+        snmpv3_use="authPriv",
+        snmpv3_auth_proto="SHA-256",
+        snmpv3_security_name="security-name",
+        snmpv3_security_password="security-password",
+        snmpv3_privacy_proto="AES",
+        snmpv3_privacy_password="privacy-password",
+        port=1161,
+        timeout=7,
+        retries=3,
+    )
+
+    def test_serialization_roundtrip(self) -> None:
+        assert (
+            DiagSnmpInput.deserialize(
+                self.DIAG_SNMP_INPUT.serialize(
+                    cmk_version.Version.from_str(cmk_version.__version__)
+                )
+            )
+            == self.DIAG_SNMP_INPUT
+        )
+
+
+class TestPingHostInput:
+    PING_HOST_INPUT = PingHostInput(
+        ip_or_dns_name="ping-host.example.com",
+        base_cmd=PingHostCmd.PING6,
+    )
+
+    def test_serialization_roundtrip(self) -> None:
+        assert (
+            PingHostInput.deserialize(
+                self.PING_HOST_INPUT.serialize(
+                    cmk_version.Version.from_str(cmk_version.__version__)
+                )
+            )
+            == self.PING_HOST_INPUT
         )
 
 

@@ -107,12 +107,13 @@ def _rule_pack(*rules: ec.Rule, disabled: bool = False) -> ec.ECRulePackSpec:
 def _simulator(
     *,
     simulated_site: SiteId,
+    text: str = "Still nothing happened.",
     host: HostName = HostName("myhost089"),
     hostname_translation: TranslationOptions | None = None,
 ) -> mkeventd_wato.EventSimulator:
     return mkeventd_wato.EventSimulator(
         ec.Event(
-            text="Still nothing happened.",
+            text=text,
             application="Foobar-Daemon",
             host=host,
             ipaddress="1.2.3.4",
@@ -293,3 +294,39 @@ def test_hostname_translation_of_a_site_is_its_site_specific_one() -> None:
     )
 
     assert translation == TranslationOptions(drop_domain=True)
+
+
+def test_match_groups_of_a_match_come_from_the_message_text() -> None:
+    result = _simulator(simulated_site=SiteId("remote"), text="disk sda failed").match_rule(
+        _rule_pack(), ec.Rule(id="rule", match="disk (\\S+) failed")
+    )
+
+    assert isinstance(result, ec.MatchSuccess)
+    assert mkeventd_wato.message_match_groups_text(result) == "sda"
+
+
+def test_match_groups_of_a_cancelling_match_come_from_the_cancelling_text() -> None:
+    result = _simulator(simulated_site=SiteId("remote"), text="disk sda ok").match_rule(
+        _rule_pack(), ec.Rule(id="rule", match="disk (\\S+) failed", match_ok="disk (\\S+) ok")
+    )
+
+    assert isinstance(result, ec.MatchSuccess)
+    assert mkeventd_wato.message_match_groups_text(result) == "sda"
+
+
+def test_match_groups_which_did_not_participate_in_a_match_show_up_as_none() -> None:
+    result = _simulator(simulated_site=SiteId("remote"), text="disk sda").match_rule(
+        _rule_pack(), ec.Rule(id="rule", match="disk (\\S+)( failed)?")
+    )
+
+    assert isinstance(result, ec.MatchSuccess)
+    assert mkeventd_wato.message_match_groups_text(result) == "sda,(none)"
+
+
+def test_an_inverted_match_has_no_match_groups() -> None:
+    result = _simulator(simulated_site=SiteId("remote"), text="disk sda").match_rule(
+        _rule_pack(), ec.Rule(id="rule", match="disk (\\S+) failed", invert_matching=True)
+    )
+
+    assert isinstance(result, ec.MatchSuccess)
+    assert mkeventd_wato.message_match_groups_text(result) == ""

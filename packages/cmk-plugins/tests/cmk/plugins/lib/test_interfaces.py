@@ -2370,6 +2370,29 @@ def test_check_multiple_interfaces_group_simple() -> None:
     ]
 
 
+@pytest.mark.xfail(
+    strict=True,
+    raises=IndexError,
+    reason="Crash report e70dd334-5597-11f1-96e1-005056abe340: IndexError",
+)
+def test_check_multiple_interfaces_group_empty_section() -> None:
+    # Crash group 4775: the agent delivered an interface section without any
+    # interfaces while an interface group was configured. The group must not
+    # report a state it cannot measure; returning no result lets the service
+    # show that its item was not found in the monitoring data.
+    params = {
+        "aggregate": {
+            "member_appearance": "index",
+            "inclusion_condition": {},
+            "exclusion_conditions": [],
+        },
+        "discovered_oper_status": ["1"],
+        "discovered_speed": 20000000,
+    }
+
+    assert not list(interfaces.check_multiple_interfaces("group", params, [], value_store={}))
+
+
 @pytest.mark.usefixtures("initialised_item_state")
 def test_check_multiple_interfaces_group_exclude() -> None:
     params = {

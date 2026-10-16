@@ -81,7 +81,7 @@ from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.config_sync import get_site_globals
 from cmk.gui.watolib.groups_io import load_contact_group_information
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
@@ -111,12 +111,7 @@ from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import (
-    makeactionuri,
-    makeactionuri_contextless,
-    makeuri,
-    makeuri_contextless,
-)
+from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 
 from ._user_security_message import (
     SecurityNotificationEvent,
@@ -191,9 +186,7 @@ class ModeUsers(WatoMode):
                             title=_("Add user"),
                             icon_name=StaticIcon(IconNames.new),
                             item=make_simple_link(
-                                makeuri_contextless(
-                                    request, [("mode", "edit_user")], filename="wato.py"
-                                )
+                                folder_preserving_link(request, [("mode", "edit_user")])
                             ),
                             is_shortcut=True,
                             is_suggested=True,
@@ -310,18 +303,14 @@ class ModeUsers(WatoMode):
             yield PageMenuEntry(
                 title=_("Custom attributes"),
                 icon_name=StaticIcon(IconNames.custom_attr),
-                item=make_simple_link(
-                    makeuri_contextless(request, [("mode", "user_attrs")], filename="wato.py")
-                ),
+                item=make_simple_link(folder_preserving_link(request, [("mode", "user_attrs")])),
             )
 
         if ldap_connections_are_configurable():
             yield PageMenuEntry(
                 title=_("LDAP & Active Directory"),
                 icon_name=StaticIcon(IconNames.ldap),
-                item=make_simple_link(
-                    makeuri_contextless(request, [("mode", "ldap_config")], filename="wato.py")
-                ),
+                item=make_simple_link(folder_preserving_link(request, [("mode", "ldap_config")])),
             )
 
         # The SAML2 config mode is only registered under commercial (non cloud) editions
@@ -329,9 +318,7 @@ class ModeUsers(WatoMode):
             yield PageMenuEntry(
                 title=_("SAML connections"),
                 icon_name=StaticIcon(IconNames.saml),
-                item=make_simple_link(
-                    makeuri_contextless(request, [("mode", "saml_config")], filename="wato.py")
-                ),
+                item=make_simple_link(folder_preserving_link(request, [("mode", "saml_config")])),
             )
 
     @override
@@ -610,14 +597,14 @@ class ModeUsers(WatoMode):
                 # Buttons
                 table.cell(_("Actions"), css=["buttons"])
                 if connection:  # only show edit buttons when the connector is available and enabled
-                    edit_url = makeuri_contextless(
-                        request, [("mode", "edit_user"), ("edit", uid)], filename="wato.py"
+                    edit_url = folder_preserving_link(
+                        request, [("mode", "edit_user"), ("edit", uid)]
                     )
                     html.icon_button(edit_url, _("Properties"), StaticIcon(IconNames.edit))
 
                     if self._can_create_and_delete_users:
-                        clone_url = makeuri_contextless(
-                            request, [("mode", "edit_user"), ("clone", uid)], filename="wato.py"
+                        clone_url = folder_preserving_link(
+                            request, [("mode", "edit_user"), ("clone", uid)]
                         )
                         html.icon_button(
                             clone_url, _("Create a copy of this user"), StaticIcon(IconNames.clone)
@@ -627,25 +614,19 @@ class ModeUsers(WatoMode):
                 if self._can_create_and_delete_users:
                     delete_url = make_confirm_delete_link(
                         i18n=_,
-                        url=makeactionuri_contextless(
-                            request,
-                            transactions.get(),
-                            [("mode", "users"), ("_delete", uid)],
-                            filename="wato.py",
-                        ),
+                        url=make_action_link(request, [("mode", "users"), ("_delete", uid)]),
                         title=_("Delete user"),
                         suffix=user_alias,
                         message=_("ID: %(uid)s") % {"uid": uid},
                     )
                     html.icon_button(delete_url, _("Delete"), StaticIcon(IconNames.delete))
 
-                notifications_url = makeuri_contextless(
+                notifications_url = folder_preserving_link(
                     request,
                     [
                         ("mode", "user_notifications"),
                         ("user", uid),
                     ],
-                    filename="wato.py",
                 )
                 html.icon_button(
                     notifications_url,
@@ -789,10 +770,8 @@ class ModeUsers(WatoMode):
                         contact_groups[c]["alias"] if c in contact_groups else c for c in cgs
                     ]
                     cg_urls = [
-                        makeuri_contextless(
-                            request,
-                            [("mode", "edit_contact_group"), ("edit", c)],
-                            filename="wato.py",
+                        folder_preserving_link(
+                            request, [("mode", "edit_contact_group"), ("edit", c)]
                         )
                         for c in cgs
                     ]
@@ -859,9 +838,7 @@ def _get_user_role_links(
     return [
         _RoleLinkSpec(
             alias=roles[user_role]["alias"] if user_role in roles else user_role,
-            url=makeuri_contextless(
-                request, [("mode", "edit_role"), ("edit", user_role)], filename="wato.py"
-            ),
+            url=folder_preserving_link(request, [("mode", "edit_role"), ("edit", user_role)]),
         )
         for user_role in user_roles
     ]
@@ -986,13 +963,12 @@ class ModeEditUser(WatoMode):
                 title=_("Notification rules"),
                 icon_name=StaticIcon(IconNames.topic_events),
                 item=make_simple_link(
-                    makeuri_contextless(
+                    folder_preserving_link(
                         request,
                         [
                             ("mode", "user_notifications"),
                             ("user", self._user_id),
                         ],
-                        filename="wato.py",
                     )
                 ),
             )
@@ -1014,15 +990,13 @@ class ModeEditUser(WatoMode):
                 item=make_simple_link(
                     make_confirm_delete_link(
                         i18n=_,
-                        url=makeactionuri_contextless(
+                        url=make_action_link(
                             request,
-                            transactions.get(),
                             [
                                 ("mode", "edit_user"),
                                 ("user", self._user_id),
                                 ("_disable_two_factor", "1"),
                             ],
-                            filename="wato.py",
                         ),
                         title=_("Remove two-factor authentication of %(user_id)s")
                         % {"user_id": self._user_id},
@@ -1324,9 +1298,7 @@ class ModeEditUser(WatoMode):
         # Contact groups
         forms.header(_("Contact groups"), isopen=False)
         forms.section()
-        groups_page_url = makeuri_contextless(
-            request, [("mode", "contact_groups")], filename="wato.py"
-        )
+        groups_page_url = folder_preserving_link(request, [("mode", "contact_groups")])
         hosts_assign_url = folder_preserving_link(
             request,
             [
@@ -1363,8 +1335,8 @@ class ModeEditUser(WatoMode):
                     html.hidden_field("cg_" + gid, "1" if is_member else "")
 
                 if not self._is_locked("contactgroups") or is_member:
-                    url = makeuri_contextless(
-                        request, [("mode", "edit_contact_group"), ("edit", gid)], filename="wato.py"
+                    url = folder_preserving_link(
+                        request, [("mode", "edit_contact_group"), ("edit", gid)]
                     )
                     html.a(alias, href=url)
                     html.br()
@@ -1669,16 +1641,16 @@ class ModeEditUser(WatoMode):
                 html.open_td()
                 if not self._is_locked("roles"):
                     html.checkbox("role_" + role_id, role_id in self._user.get("roles", []))
-                    url = makeuri_contextless(
-                        request, [("mode", "edit_role"), ("edit", role_id)], filename="wato.py"
+                    url = folder_preserving_link(
+                        request, [("mode", "edit_role"), ("edit", role_id)]
                     )
                     html.a(role["alias"], href=url)
                 else:
                     is_member = role_id in self._user.get("roles", [])
                     if is_member:
                         is_member_of_at_least_one = True
-                        url = makeuri_contextless(
-                            request, [("mode", "edit_role"), ("edit", role_id)], filename="wato.py"
+                        url = folder_preserving_link(
+                            request, [("mode", "edit_role"), ("edit", role_id)]
                         )
                         html.a(role["alias"], href=url)
                     html.hidden_field("role_" + role_id, "1" if is_member else "")

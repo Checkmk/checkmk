@@ -624,17 +624,13 @@ class ModeFolder(WatoMode):
         yield PageMenuEntry(
             title=_("Tags"),
             icon_name=StaticIcon(IconNames.tag),
-            item=make_simple_link(
-                makeuri_contextless(request, [("mode", "tags")], filename="wato.py")
-            ),
+            item=make_simple_link(folder_preserving_link(request, [("mode", "tags")])),
         )
 
         yield PageMenuEntry(
             title=_("Custom host attributes"),
             icon_name=StaticIcon(IconNames.custom_attr),
-            item=make_simple_link(
-                makeuri_contextless(request, [("mode", "host_attrs")], filename="wato.py")
-            ),
+            item=make_simple_link(folder_preserving_link(request, [("mode", "host_attrs")])),
         )
 
         if user.may("wato.dcd_connections"):
@@ -642,7 +638,7 @@ class ModeFolder(WatoMode):
                 title=_("Dynamic host management"),
                 icon_name=StaticIcon(IconNames.dcd_connections),
                 item=make_simple_link(
-                    makeuri_contextless(request, [("mode", "dcd_connections")], filename="wato.py")
+                    folder_preserving_link(request, [("mode", "dcd_connections")])
                 ),
             )
 

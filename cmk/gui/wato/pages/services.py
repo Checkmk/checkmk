@@ -1449,8 +1449,8 @@ class DiscoveryPageRenderer:
             ctype = "check_" + entry.check_plugin_name
         else:
             ctype = entry.check_plugin_name
-        manpage_url = makeuri_contextless(
-            request, [("mode", "check_manpage"), ("check_type", ctype)], filename="wato.py"
+        manpage_url = folder_preserving_link(
+            request, [("mode", "check_manpage"), ("check_type", ctype)]
         )
 
         if self._options.show_parameters:

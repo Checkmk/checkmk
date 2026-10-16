@@ -59,15 +59,15 @@ _RULE_PACKS: Sequence[ec.ECRulePack] = [
             [
                 (
                     "Event Console rule: test2",
-                    "wato.py?edit=0&mode=mkeventd_edit_rule&rule_pack=default",
+                    "wato.py?edit=0&folder=&mode=mkeventd_edit_rule&rule_pack=default",
                 ),
                 (
                     "Event Console rule: test1",
-                    "wato.py?edit=2&mode=mkeventd_edit_rule&rule_pack=default",
+                    "wato.py?edit=2&folder=&mode=mkeventd_edit_rule&rule_pack=default",
                 ),
                 (
                     "Event Console rule: test",
-                    "wato.py?edit=3&mode=mkeventd_edit_rule&rule_pack=default",
+                    "wato.py?edit=3&folder=&mode=mkeventd_edit_rule&rule_pack=default",
                 ),
             ],
             id="existing contact group, should match",

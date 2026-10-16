@@ -68,7 +68,7 @@ from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
+from cmk.web.utils.urls import makeactionuri, makeuri
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -409,9 +409,7 @@ class ModeHostgroups(ModeGroups):
         yield PageMenuEntry(
             title=_("Service groups"),
             icon_name=StaticIcon(IconNames.servicegroups),
-            item=make_simple_link(
-                makeuri_contextless(request, [("mode", "service_groups")], filename="wato.py")
-            ),
+            item=make_simple_link(folder_preserving_link(request, [("mode", "service_groups")])),
         )
 
     @override
@@ -450,9 +448,7 @@ class ModeServicegroups(ModeGroups):
         yield PageMenuEntry(
             title=_("Host groups"),
             icon_name=StaticIcon(IconNames.hostgroups),
-            item=make_simple_link(
-                makeuri_contextless(request, [("mode", "host_groups")], filename="wato.py")
-            ),
+            item=make_simple_link(folder_preserving_link(request, [("mode", "host_groups")])),
         )
 
     @override
@@ -493,9 +489,7 @@ class ModeContactgroups(ModeGroups):
         yield PageMenuEntry(
             title=_("Users"),
             icon_name=StaticIcon(IconNames.users),
-            item=make_simple_link(
-                makeuri_contextless(request, [("mode", "users")], filename="wato.py")
-            ),
+            item=make_simple_link(folder_preserving_link(request, [("mode", "users")])),
         )
 
     @override
@@ -525,8 +519,8 @@ class ModeContactgroups(ModeGroups):
                 [
                     HTMLWriter.render_a(
                         alias,
-                        href=makeuri_contextless(
-                            request, [("mode", "edit_user"), ("edit", userid)], filename="wato.py"
+                        href=folder_preserving_link(
+                            request, [("mode", "edit_user"), ("edit", userid)]
                         ),
                     )
                     for userid, alias in self._members.get(name, [])

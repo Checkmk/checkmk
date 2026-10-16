@@ -61,7 +61,7 @@ from cmk.gui.valuespec import AbsoluteDate
 from cmk.gui.valuespec import Integer as IntegerVS
 from cmk.gui.wato.pages.activate_changes import render_object_ref
 from cmk.gui.watolib.audit_log import AuditLogFilterRaw, AuditLogStore, build_audit_log_filter
-from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, FolderTree, make_folder_tree
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.objref import ObjectRefType
 from cmk.gui.watolib.paths import wato_var_dir
@@ -89,7 +89,7 @@ from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
+from cmk.web.utils.urls import makeactionuri, makeuri
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -227,9 +227,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             yield PageMenuEntry(
                 title=_("Activate pending changes"),
                 icon_name=StaticIcon(IconNames.activate),
-                item=make_simple_link(
-                    makeuri_contextless(request, [("mode", "changelog")], filename="wato.py")
-                ),
+                item=make_simple_link(folder_preserving_link(request, [("mode", "changelog")])),
             )
 
     def _page_menu_entries_actions(self) -> Iterator[PageMenuEntry]:

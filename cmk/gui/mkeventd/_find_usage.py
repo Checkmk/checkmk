@@ -13,6 +13,7 @@ from cmk.gui.groups import GroupName
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.web.utils.urls import makeuri_contextless
 
 
@@ -57,14 +58,13 @@ def find_usages_of_contact_group_in_ec_rules(
                 used_in.append(
                     (
                         "{}: {}".format(_("Event Console rule"), rule["id"]),
-                        makeuri_contextless(
+                        folder_preserving_link(
                             request,
                             [
                                 ("mode", "mkeventd_edit_rule"),
                                 ("edit", nr),
                                 ("rule_pack", pack["id"]),
                             ],
-                            filename="wato.py",
                         ),
                     )
                 )
@@ -79,14 +79,13 @@ def find_timeperiod_usage_in_ec_rules(
     for rule_pack in rule_packs:
         for rule_index, rule in enumerate(rule_pack["rules"]):
             if rule.get("match_timeperiod") == time_period_name:
-                url = makeuri_contextless(
+                url = folder_preserving_link(
                     request,
                     [
                         ("mode", "mkeventd_edit_rule"),
                         ("edit", rule_index),
                         ("rule_pack", rule_pack["id"]),
                     ],
-                    filename="wato.py",
                 )
                 used_in.append((_("Event Console rule"), url))
     return used_in

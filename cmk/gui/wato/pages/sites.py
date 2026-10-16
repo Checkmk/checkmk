@@ -98,8 +98,10 @@ from cmk.gui.watolib.global_settings import (
 )
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
+    folder_preserving_link,
     FolderSiteStats,
     FolderTree,
+    make_action_link,
     make_folder_tree,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -1529,17 +1531,15 @@ class ModeDistributedMonitoring(WatoMode):
 
     def _show_buttons_connection(self, table: Table, connection_id: str) -> None:
         table.cell(_("Actions"), css=["buttons"])
-        edit_url = makeuri_contextless(
+        edit_url = folder_preserving_link(
             request,
             [("mode", "edit_broker_connection"), ("edit_connection_id", connection_id)],
-            filename="wato.py",
         )
         html.icon_button(edit_url, _("Properties"), StaticIcon(IconNames.edit))
 
-        clone_url = makeuri_contextless(
+        clone_url = folder_preserving_link(
             request,
             [("mode", "edit_broker_connection"), ("clone_connection_id", connection_id)],
-            filename="wato.py",
         )
         html.icon_button(
             clone_url,
@@ -1565,14 +1565,10 @@ class ModeDistributedMonitoring(WatoMode):
         site_configs: SiteConfigurations,
     ) -> None:
         table.cell(_("Actions"), css=["buttons"])
-        edit_url = makeuri_contextless(
-            request, [("mode", "edit_site"), ("site", site_id)], filename="wato.py"
-        )
+        edit_url = folder_preserving_link(request, [("mode", "edit_site"), ("site", site_id)])
         html.icon_button(edit_url, _("Properties"), StaticIcon(IconNames.edit))
 
-        clone_url = makeuri_contextless(
-            request, [("mode", "edit_site"), ("clone", site_id)], filename="wato.py"
-        )
+        clone_url = folder_preserving_link(request, [("mode", "edit_site"), ("clone", site_id)])
         html.icon_button(
             clone_url,
             _("Clone this connection in order to create a new one"),
@@ -1650,8 +1646,8 @@ class ModeDistributedMonitoring(WatoMode):
     ) -> None:
         table.cell("")
 
-        encrypted_url = makeuri_contextless(
-            request, [("mode", "site_livestatus_encryption"), ("site", site_id)], filename="wato.py"
+        encrypted_url = folder_preserving_link(
+            request, [("mode", "site_livestatus_encryption"), ("site", site_id)]
         )
         html.icon_button(
             encrypted_url,
@@ -1697,12 +1693,7 @@ class ModeDistributedMonitoring(WatoMode):
             if site.get("secret"):
                 logout_url = make_confirm_delete_link(
                     i18n=_,
-                    url=makeactionuri_contextless(
-                        request,
-                        transactions.get(),
-                        [("mode", "sites"), ("_logout", site_id)],
-                        filename="wato.py",
-                    ),
+                    url=make_action_link(request, [("mode", "sites"), ("_logout", site_id)]),
                     title=_("Log out of site"),
                     suffix=site["alias"],
                     message=_("ID: %(site_id)s") % {"site_id": site_id},
@@ -1710,12 +1701,7 @@ class ModeDistributedMonitoring(WatoMode):
                 )
                 html.icon_button(logout_url, _("Logout"), StaticIcon(IconNames.autherr))
             else:
-                login_url = makeactionuri_contextless(
-                    request,
-                    transactions.get(),
-                    [("mode", "sites"), ("_login", site_id)],
-                    filename="wato.py",
-                )
+                login_url = make_action_link(request, [("mode", "sites"), ("_login", site_id)])
                 html.icon_button(login_url, _("Login"), StaticIcon(IconNames.authok))
 
         html.open_div(id_="replication_status_%s" % site_id, class_="connection_status")
@@ -1733,11 +1719,8 @@ class ModeDistributedMonitoring(WatoMode):
     ) -> None:
         table.cell("Remote message broker")
         if is_replication_enabled(site):
-            trigger_url = makeactionuri_contextless(
-                request,
-                transactions.get(),
-                [("mode", "sites"), ("_trigger_certs_creation", site_id)],
-                filename="wato.py",
+            trigger_url = make_action_link(
+                request, [("mode", "sites"), ("_trigger_certs_creation", site_id)]
             )
             html.open_ts_container(
                 container="div",

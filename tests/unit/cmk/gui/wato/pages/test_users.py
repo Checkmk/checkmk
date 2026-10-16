@@ -73,11 +73,11 @@ def test_get_user_role_links() -> None:
     expected = [
         _RoleLinkSpec(
             alias="Administrator",
-            url="wato.py?edit=admin&mode=edit_role",
+            url="wato.py?edit=admin&folder=&mode=edit_role",
         ),
         _RoleLinkSpec(
             alias="nonexistent_role",  # falls back to the user role
-            url="wato.py?edit=nonexistent_role&mode=edit_role",
+            url="wato.py?edit=nonexistent_role&folder=&mode=edit_role",
         ),
     ]
 

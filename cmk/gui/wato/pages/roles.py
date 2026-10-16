@@ -59,6 +59,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import CORE
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
     Change,
@@ -77,7 +78,7 @@ from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import makeactionuri, makeactionuri_contextless, makeuri_contextless
+from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -117,9 +118,7 @@ class ModeRoles(WatoMode):
                                     title=_("Permission matrix"),
                                     icon_name=StaticIcon(IconNames.matrix),
                                     item=make_simple_link(
-                                        makeuri_contextless(
-                                            request, [("mode", "role_matrix")], filename="wato.py"
-                                        )
+                                        folder_preserving_link(request, [("mode", "role_matrix")])
                                     ),
                                 ),
                             ],
@@ -192,23 +191,13 @@ class ModeRoles(WatoMode):
 
                 # Actions
                 table.cell(_("Actions"), css=["buttons"])
-                edit_url = makeuri_contextless(
-                    request, [("mode", "edit_role"), ("edit", role.name)], filename="wato.py"
+                edit_url = folder_preserving_link(
+                    request, [("mode", "edit_role"), ("edit", role.name)]
                 )
-                clone_url = makeactionuri_contextless(
-                    request,
-                    transactions.get(),
-                    [("mode", "roles"), ("_clone", role.name)],
-                    filename="wato.py",
-                )
+                clone_url = make_action_link(request, [("mode", "roles"), ("_clone", role.name)])
                 delete_url = make_confirm_delete_link(
                     i18n=_,
-                    url=makeactionuri_contextless(
-                        request,
-                        transactions.get(),
-                        [("mode", "roles"), ("_delete", role.name)],
-                        filename="wato.py",
-                    ),
+                    url=make_action_link(request, [("mode", "roles"), ("_delete", role.name)]),
                     title=_("Delete role #%(nr)d") % {"nr": nr},
                     suffix=role.alias,
                     message=("Name: %s") % role.name,
@@ -248,10 +237,8 @@ class ModeRoles(WatoMode):
                         [
                             HTMLWriter.render_a(
                                 user.get("alias", user_id),
-                                makeuri_contextless(
-                                    request,
-                                    [("mode", "edit_user"), ("edit", user_id)],
-                                    filename="wato.py",
+                                folder_preserving_link(
+                                    request, [("mode", "edit_user"), ("edit", user_id)]
                                 ),
                             )
                             for (user_id, user) in users.items()

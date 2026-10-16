@@ -15,7 +15,7 @@ import sys
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from datetime import datetime
-from typing import override
+from typing import override, TextIO
 
 import boto3
 import botocore
@@ -229,8 +229,11 @@ class AWSSections(abc.ABC):
         account_id: str,
         debug: bool = False,
         config: botocore.config.Config | None = None,
+        output: TextIO | None = None,
     ) -> None:
         self._hostname = hostname
+        # Where the agent output goes. None is sys.stdout at the time of writing.
+        self._output = output
         # The host of the labels and exceptions of the account. init_sections sets it.
         self._account_host: TargetHost | None = SOURCE_HOST
         self._session = session
@@ -353,9 +356,11 @@ class AWSSections(abc.ABC):
                     host_labels[str(row.piggyback_hostname)].update(row.piggyback_host_labels or {})
         return host_labels
 
-    @staticmethod
-    def _write_to_host(host: TargetHost | None, content: str) -> None:
-        sys.stdout.write(content if host is SOURCE_HOST else f"<<<<{host}>>>>\n{content}<<<<>>>>\n")
+    def _write(self, content: str) -> None:
+        (self._output or sys.stdout).write(content)
+
+    def _write_to_host(self, host: TargetHost | None, content: str) -> None:
+        self._write(content if host is SOURCE_HOST else f"<<<<{host}>>>>\n{content}<<<<>>>>\n")
 
     def _write_host_labels(self, results: Results) -> None:
         static_host_labels = self._collect_static_host_labels()
@@ -365,7 +370,7 @@ class AWSSections(abc.ABC):
 
         piggyback_host_labels = self._collect_piggyback_host_labels(results, static_host_labels)
         for hostname, host_labels in piggyback_host_labels.items():
-            sys.stdout.write(
+            self._write(
                 f"<<<<{hostname}>>>>\n<<<labels:sep(0)>>>\n{json.dumps(host_labels)}\n<<<<>>>>\n"
             )
 

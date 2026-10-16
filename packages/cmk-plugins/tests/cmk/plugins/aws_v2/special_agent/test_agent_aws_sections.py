@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="explicit-any"
 
+import io
 from argparse import Namespace as Args
 from collections.abc import Sequence
 from datetime import datetime
@@ -251,3 +252,16 @@ def test_account_host_receives_the_labels(capsys: pytest.CaptureFixture[str]) ->
         '{"cmk/aws/account": "333333333333"}',
         "<<<<>>>>",
     ]
+
+
+def test_run_writes_only_into_the_given_output(capsys: pytest.CaptureFixture[str]) -> None:
+    output = io.StringIO()
+
+    AWSSectionsGeneric(
+        hostname="", session=mock.Mock(), account_id="333333333333", output=output
+    ).run()
+
+    assert (capsys.readouterr().out, output.getvalue().splitlines()[:2]) == (
+        "",
+        ["<<<aws_v2_exceptions>>>", "AWSSectionsGeneric: No exceptions"],
+    )

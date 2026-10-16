@@ -37,6 +37,7 @@ from .rule_matcher import MatchSuccess as MatchSuccess
 from .rule_matcher import RuleMatcher as RuleMatcher
 from .rule_packs import export_rule_pack as export_rule_pack
 from .rule_packs import load_config as load_config
+from .rule_packs import load_config_to_activate as load_config_to_activate
 from .rule_packs import load_rule_packs as load_rule_packs
 from .rule_packs import override_rule_pack_proxy as override_rule_pack_proxy
 from .rule_packs import remove_exported_rule_pack as remove_exported_rule_pack

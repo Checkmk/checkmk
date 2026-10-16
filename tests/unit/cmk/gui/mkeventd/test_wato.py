@@ -18,6 +18,7 @@ from livestatus import SingleSiteConnection, SiteConfiguration, SiteConfiguratio
 
 from cmk.ccc.site import omd_site
 
+import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.timeperiod import TimeperiodName
@@ -356,6 +357,20 @@ def test_simulator_matches_like_an_empty_host_name_if_the_translation_fails() ->
     result = simulator.match_rule(_rule_pack(), ec.Rule(id="rule", match_host="^$"))
 
     assert isinstance(result, ec.MatchSuccess)
+
+
+def test_hand_written_hostname_translation_of_the_local_site_overrides_the_one_of_setup() -> None:
+    (cmk.utils.paths.ec_config_dir / "wato").mkdir(parents=True, exist_ok=True)
+    (cmk.utils.paths.ec_config_dir / "wato/global.mk").write_text(
+        'hostname_translation = {"case": "lower"}\n'
+    )
+    cmk.utils.paths.ec_main_config_file.write_text('hostname_translation = {"case": "upper"}\n')
+
+    translation = mkeventd_wato.hostname_translation_of_site(
+        omd_site(), SiteConfigurations({omd_site(): _site_configuration(omd_site())})
+    )
+
+    assert translation == TranslationOptions(case="upper")
 
 
 @pytest.mark.usefixtures("request_context")

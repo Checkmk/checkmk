@@ -81,7 +81,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.permissions import Permission, PermissionRegistry
-from cmk.gui.site_config import enabled_sites, is_wato_slave_site, site_is_local
+from cmk.gui.site_config import enabled_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, Icon, PermissionName
 from cmk.gui.user_sites import get_event_console_site_choices
@@ -160,11 +160,7 @@ from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
 )
-from cmk.gui.watolib.global_settings import (
-    load_configuration_settings,
-    load_site_global_settings,
-    save_global_settings,
-)
+from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import (
     CollectedHostAttributes,
     make_action_link,
@@ -554,13 +550,11 @@ def hostname_translation_of_site(
     site_id: SiteId, site_configs: SiteConfigurations
 ) -> cmk.utils.translations.TranslationOptions:
     """Returns the host name translation the Event Console of the given site uses"""
-    site_config = site_configs[site_id]
-    # On a remote site, the local site runs with the site-specific settings the central site pushes.
-    site_globals: Mapping[str, object] = (
-        load_site_global_settings()
-        if is_wato_slave_site() and site_is_local(active_config, site_id)
-        else site_config.get("globals", {})
-    )
+    # Only the configuration of the local Event Console is available with all its files, including
+    # the ones written by hand, which override the ones of Setup.
+    if site_id == omd_site():
+        return ec.load_config_to_activate(ec.mkp_rule_pack_dir())["hostname_translation"]
+    site_globals = site_configs[site_id].get("globals", {})
     # Without a site-specific setting, the site inherits the global one, which in turn falls back to
     # the built-in default.
     if "hostname_translation" in site_globals:

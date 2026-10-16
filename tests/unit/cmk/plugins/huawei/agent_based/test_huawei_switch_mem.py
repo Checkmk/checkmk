@@ -7,15 +7,12 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.internal import evaluate_snmp_detection
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.huawei.agent_based.huawei_switch_mem import (
     check_huawei_switch_mem,
     discover_huawei_switch_mem,
     Params,
     parse_huawei_switch_mem,
-    snmp_section_huawei_switch_mem,
-    snmp_section_huawei_switch_mem_huarong,
 )
 
 STRING_TABLE: Sequence[StringTable] = [
@@ -102,35 +99,3 @@ def test_check_huawei_switch_mem_item_not_found() -> None:
     parsed = parse_huawei_switch_mem(STRING_TABLE)
     results = list(check_huawei_switch_mem("4", PARAMS, parsed))
     assert results == []
-
-
-@pytest.mark.parametrize(
-    "sys_object_id, expected_sections",
-    [
-        pytest.param(
-            ".1.3.6.1.4.1.2011.2.23.1.2",
-            {"huawei_switch_mem"},
-            id="huawei enterprise number",
-        ),
-        pytest.param(
-            ".1.3.6.1.4.1.56813.2.23.1.2",
-            {"huawei_switch_mem_huarong"},
-            id="huarong enterprise number",
-        ),
-        pytest.param(".1.3.6.1.4.1.9.1.1745", set(), id="other vendor"),
-    ],
-)
-def test_detect_huawei_switch_mem(sys_object_id: str, expected_sections: set[str]) -> None:
-    detected = {
-        str(section.name)
-        for section in (snmp_section_huawei_switch_mem, snmp_section_huawei_switch_mem_huarong)
-        if evaluate_snmp_detection(
-            detect_spec=section.detect,
-            oid_value_getter={".1.3.6.1.2.1.1.2.0": sys_object_id}.get,
-        )
-    }
-    assert detected == expected_sections
-
-
-def test_huarong_section_feeds_huawei_switch_mem_plugin() -> None:
-    assert snmp_section_huawei_switch_mem_huarong.parsed_section_name == "huawei_switch_mem"

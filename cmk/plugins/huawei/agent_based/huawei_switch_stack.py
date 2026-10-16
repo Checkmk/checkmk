@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.huawei.lib import HUAWEI_ENTERPRISE
+from cmk.plugins.huawei.lib import HUARONG_ENTERPRISE, HUAWEI_ENTERPRISE
 
 _UNKNOWN_ROLE = "unknown"
 
@@ -76,6 +76,23 @@ snmp_section_huawei_switch_stack = SNMPSection(
         ),
         SNMPTree(
             base=HUAWEI_ENTERPRISE.subtree("5.25.183.1.20.1"),
+            oids=[OIDEnd(), "3"],
+        ),
+    ],
+    parse_function=parse_huawei_switch_stack,
+)
+
+snmp_section_huawei_switch_stack_huarong = SNMPSection(
+    name="huawei_switch_stack_huarong",
+    parsed_section_name="huawei_switch_stack",
+    detect=HUARONG_ENTERPRISE.switch_detect,
+    fetch=[
+        SNMPTree(
+            base=HUARONG_ENTERPRISE.subtree("5.25.183.1"),
+            oids=["5"],
+        ),
+        SNMPTree(
+            base=HUARONG_ENTERPRISE.subtree("5.25.183.1.20.1"),
             oids=[OIDEnd(), "3"],
         ),
     ],

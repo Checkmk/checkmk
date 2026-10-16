@@ -10,7 +10,6 @@
 use super::connection;
 use super::verification;
 use crate::agent_receiver_api;
-use crate::certs;
 use crate::config::{
     tmp_path_for_atomical_save, JSONLoader, JSONLoaderMissingSafe, Registry, TOMLLoader,
     UpdaterRegistration,
@@ -464,24 +463,6 @@ fn ensure_verifiable(
     Ok(())
 }
 
-/// The certificates of `blocks`, in the form [`UpdatePackage::verify`] takes
-/// them. They borrow `blocks`, which is why the two steps are separate.
-///
-/// A block that is no certificate is dropped with a warning, for the reason
-/// given at [`Updater::signature_key_blocks`].
-fn local_certificates(blocks: &[x509_parser::pem::Pem]) -> Vec<X509Certificate<'_>> {
-    blocks
-        .iter()
-        .filter_map(|block| match block.parse_x509() {
-            Ok(certificate) => Some(certificate),
-            Err(error) => {
-                log::warn!("Ignoring a configured signature key that is no certificate: {error}");
-                None
-            }
-        })
-        .collect()
-}
-
 /// What the site answered a check with. Nothing was changed to learn it.
 #[derive(Debug, PartialEq, Eq)]
 pub enum CheckOutcome {
@@ -851,7 +832,7 @@ impl Updater {
         // The PEM blocks are kept alive here: the parsed certificates borrow
         // the DER they decode to.
         let blocks = self.signature_key_blocks();
-        let local_certificates = local_certificates(&blocks);
+        let local_certificates = verification::certificates(&blocks);
         if signature == SignatureCheck::Required {
             ensure_verifiable(offered, &local_certificates)?;
         }
@@ -1043,26 +1024,10 @@ impl Updater {
             .map_or(&[], |config| &config.signature_keys)
     }
 
-    /// The configured signature keys as PEM blocks.
-    ///
-    /// Separate from [`local_certificates`] because a parsed certificate
-    /// borrows the DER of its block: the blocks have to outlive it.
-    ///
-    /// A key that is no PEM block is dropped with a warning. One unusable
-    /// entry of the baked configuration must not disable the others.
+    /// The configured signature keys as PEM blocks, which
+    /// [`verification::certificates`] turns into certificates.
     fn signature_key_blocks(&self) -> Vec<x509_parser::pem::Pem> {
-        self.signature_keys()
-            .iter()
-            .filter_map(|key| match certs::parse_pem(key) {
-                Ok(block) => Some(block),
-                Err(error) => {
-                    log::warn!(
-                        "Ignoring a configured signature key that is no PEM block: {error:#}"
-                    );
-                    None
-                }
-            })
-            .collect()
+        verification::pem_blocks(self.signature_keys())
     }
 
     pub fn platform(&self) -> Option<&str> {
@@ -2478,7 +2443,9 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             updater(config_trusting_the_signer(), some_agent_info()).signature_key_blocks();
         let status = offered(Some(TARGET_HASH));
 
-        assert!(ensure_verifiable(target_agent(&status), &local_certificates(&blocks)).is_ok());
+        assert!(
+            ensure_verifiable(target_agent(&status), &verification::certificates(&blocks)).is_ok()
+        );
     }
 
     #[test]
@@ -2487,8 +2454,8 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             updater(config_trusting_the_signer(), some_agent_info()).signature_key_blocks();
         let status = unsigned(TARGET_HASH);
 
-        let error =
-            ensure_verifiable(target_agent(&status), &local_certificates(&blocks)).unwrap_err();
+        let error = ensure_verifiable(target_agent(&status), &verification::certificates(&blocks))
+            .unwrap_err();
 
         assert_eq!(
             error.to_string(),
@@ -2516,8 +2483,8 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             updater(config_trusting_a_stranger(), some_agent_info()).signature_key_blocks();
         let status = offered(Some(TARGET_HASH));
 
-        let error =
-            ensure_verifiable(target_agent(&status), &local_certificates(&blocks)).unwrap_err();
+        let error = ensure_verifiable(target_agent(&status), &verification::certificates(&blocks))
+            .unwrap_err();
 
         assert_eq!(
             error.to_string(),

@@ -9,11 +9,13 @@
 //! unit runs as root, reads it from its standard input. Both ends speak these
 //! models, so they live with the other models of the updater.
 
+use super::backend::UpdaterConfig;
+use super::verification;
 use crate::agent_receiver_api::AgentSignature;
 use anyhow::{bail, Context, Result as AnyhowResult};
 use serde::Deserialize;
 use std::io::Read;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Upper bound of one request, in bytes.
 ///
@@ -65,11 +67,144 @@ impl InstallRequest {
     }
 }
 
+/// The certificates the privileged install step accepts a package under.
+///
+/// Holds the PEM blocks, because a parsed certificate borrows the DER of its
+/// block. The anchors decide alone: the certificates that travel in the
+/// request are the site's claim and are only matched against these.
+pub struct TrustAnchors {
+    blocks: Vec<x509_parser::pem::Pem>,
+}
+
+impl TrustAnchors {
+    /// The `signature_keys` of the update configuration at `path`.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - the configuration the installer unit names in its
+    ///   `Environment=`. It must not come from the request: the agent user
+    ///   writes the request, and the file named here is what decides whether
+    ///   root installs a package at all.
+    ///
+    /// # Errors
+    ///
+    /// If there is no configuration at `path`, if it cannot be read, or if it
+    /// carries no usable signature key. The last case is an error rather than
+    /// an empty anchor set, because a step that trusts nothing must refuse
+    /// everything, and refusing loudly beats installing quietly.
+    pub fn load(path: &Path) -> AnyhowResult<TrustAnchors> {
+        let config = UpdaterConfig::load_if_configured(path)?.with_context(|| {
+            format!("No updater configuration at {path:?}, so nothing is trusted here")
+        })?;
+        let blocks = verification::pem_blocks(&config.signature_keys);
+        if blocks.is_empty() {
+            bail!("The updater configuration {path:?} carries no usable signature key");
+        }
+        Ok(TrustAnchors { blocks })
+    }
+
+    /// Check `package` against the signatures the site delivered with it.
+    ///
+    /// # Arguments
+    ///
+    /// * `package` - the bytes that are about to be installed, not the file
+    ///   they were read from
+    /// * `signatures` - `signatures` of the [`InstallRequest`]
+    ///
+    /// # Errors
+    ///
+    /// If none of `signatures` is a valid signature of `package` under one of
+    /// the anchors.
+    pub fn verify(&self, package: &[u8], signatures: &[AgentSignature]) -> AnyhowResult<()> {
+        verification::verify(
+            package,
+            signatures,
+            &verification::certificates(&self.blocks),
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     const PACKAGE: &str = "/opt/checkmk/agent/runtime/controller/update/0123456789abcdef.deb";
+
+    /// Any certificate: which signature [`TrustAnchors::verify`] accepts is
+    /// covered by the matrix in [`super::verification`], so these tests only
+    /// need a configuration whose key parses.
+    fn a_certificate() -> String {
+        let key = rcgen::KeyPair::generate().unwrap();
+        let der = rcgen::CertificateParams::default()
+            .self_signed(&key)
+            .unwrap()
+            .der()
+            .to_vec();
+        pem_rfc7468::encode_string("CERTIFICATE", pem_rfc7468::LineEnding::LF, &der).unwrap()
+    }
+
+    /// An update configuration holding `keys`, as the bakery writes it.
+    fn config_with(keys: &[String], dir: &tempfile::TempDir) -> PathBuf {
+        let entries: Vec<String> = keys
+            .iter()
+            .map(|key| format!("\"\"\"\n{key}\"\"\""))
+            .collect();
+        let path = dir.path().join("cmk-agent-ctl-update.toml");
+        std::fs::write(
+            &path,
+            format!(
+                "activated = true\nsignature_keys = [{}]\n",
+                entries.join(", ")
+            ),
+        )
+        .unwrap();
+        path
+    }
+
+    #[test]
+    fn test_load_the_configured_anchors() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let path = config_with(&[a_certificate()], &dir);
+
+        assert_eq!(TrustAnchors::load(&path).unwrap().blocks.len(), 1);
+    }
+
+    /// Nothing to trust is not an empty anchor set that silently refuses every
+    /// package later: it is a broken deployment, and it says so here.
+    #[test]
+    fn test_refuse_to_load_anchors_without_a_key() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let path = config_with(&[], &dir);
+
+        assert!(TrustAnchors::load(&path).is_err());
+    }
+
+    #[test]
+    fn test_refuse_to_load_anchors_from_a_key_that_is_no_pem_block() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let path = config_with(&[String::from("not a certificate\n")], &dir);
+
+        assert!(TrustAnchors::load(&path).is_err());
+    }
+
+    /// The configuration is the unit's, and a missing one means the mode runs
+    /// where no agent updates are configured.
+    #[test]
+    fn test_refuse_to_load_anchors_without_a_configuration() {
+        let dir = tempfile::TempDir::new().unwrap();
+
+        assert!(TrustAnchors::load(&dir.path().join("cmk-agent-ctl-update.toml")).is_err());
+    }
+
+    /// A site that signed nothing, or signed with a key this host does not
+    /// carry, ends here.
+    #[test]
+    fn test_a_package_without_a_matching_signature_is_refused() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let anchors = TrustAnchors::load(&config_with(&[a_certificate()], &dir)).unwrap();
+
+        assert!(anchors.verify(b"an agent package", &[]).is_err());
+    }
 
     fn request(body: &str) -> AnyhowResult<InstallRequest> {
         InstallRequest::read(body.as_bytes())

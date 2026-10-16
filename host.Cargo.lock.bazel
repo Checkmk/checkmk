@@ -1,5 +1,5 @@
 {
-  "checksum": "683ff5b651ee93c3994dd802faf4da1762500c3ebed5666c5c4df5d27ccdeec4",
+  "checksum": "636af3fd93a25421183c3cae098ded6619d6880265e121c2ffff1741af8c923a",
   "conditions": {
     "aarch64-linux-android": [],
     "aarch64-pc-windows-gnullvm": [],
@@ -9457,6 +9457,7 @@
         "crate_features": [
           "default",
           "feature",
+          "fs",
           "user"
         ],
         "deps": [

@@ -47,6 +47,13 @@ pub const ENV_LOG_TO_FILE: &str = "CMK_AGENT_CTL_LOG_TO_FILE";
 pub const WIN_AGENT_HOME_DIR: &str = "\\checkmk\\agent";
 
 // ENV VARS
+/// Names the root-owned update configuration of `install-agent`.
+///
+/// The installer unit sets it. The path must come from the unit and not from
+/// the install request, which the agent user writes: the file it names decides
+/// what root is willing to install.
+#[cfg(unix)]
+pub const ENV_UPDATE_CONFIG: &str = "CMK_AGENT_CTL_UPDATE_CONFIG";
 pub const ENV_HOME_DIR: &str = "DEBUG_HOME_DIR";
 pub const ENV_MAX_CONNECTIONS: &str = "DEBUG_MAX_CONNECTIONS";
 pub const ENV_CONNECTION_TIMEOUT: &str = "DEBUG_CONNECTION_TIMEOUT";

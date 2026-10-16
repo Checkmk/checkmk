@@ -101,8 +101,9 @@ pub enum Mode {
     /// The privileged step of an agent update: a socket-activated systemd unit
     /// runs this command as root for one package, with the request and the
     /// answer on its standard input and output. Not meant to be called by
-    /// hand. The signature of the package is not verified yet, and the outcome
-    /// is reported through the exit code only.
+    /// hand. The package is installed only if one of its signatures matches a
+    /// signature key of the update configuration. The outcome is reported
+    /// through the exit code only.
     #[cfg(unix)]
     InstallAgent,
 }

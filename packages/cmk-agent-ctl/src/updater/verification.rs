@@ -16,6 +16,42 @@ use sha2::Sha256;
 use x509_parser::certificate::X509Certificate;
 use x509_parser::prelude::ASN1Time;
 
+/// The configured signature keys as PEM blocks.
+///
+/// Separate from [`certificates`] because a parsed certificate borrows the DER
+/// of its block: the blocks have to outlive it.
+///
+/// A key that is no PEM block is dropped with a warning. One unusable entry of
+/// the baked configuration must not disable the others.
+pub fn pem_blocks(keys: &[String]) -> Vec<x509_parser::pem::Pem> {
+    keys.iter()
+        .filter_map(|key| match certs::parse_pem(key) {
+            Ok(block) => Some(block),
+            Err(error) => {
+                log::warn!("Ignoring a configured signature key that is no PEM block: {error:#}");
+                None
+            }
+        })
+        .collect()
+}
+
+/// The certificates of `blocks`, in the form [`verify`] takes them.
+///
+/// A block that is no certificate is dropped with a warning, for the reason
+/// given at [`pem_blocks`].
+pub fn certificates(blocks: &[x509_parser::pem::Pem]) -> Vec<X509Certificate<'_>> {
+    blocks
+        .iter()
+        .filter_map(|block| match block.parse_x509() {
+            Ok(certificate) => Some(certificate),
+            Err(error) => {
+                log::warn!("Ignoring a configured signature key that is no certificate: {error}");
+                None
+            }
+        })
+        .collect()
+}
+
 /// Check `bytes` against the signatures the site delivered with them.
 ///
 /// # Errors

@@ -54,25 +54,51 @@ readonly OUTSIDE="${WORK}/outside"
 readonly CALLS="${WORK}/calls"
 mkdir -p "${UPDATE_DIR}" "${FAKE_BIN}" "${OUTSIDE}"
 
-# One stand-in for both managers: it records its arguments and obeys
-# FAKE_EXIT, so a failing installation needs no second script.
+# One stand-in for both managers: it records its arguments and the content it
+# was handed, and obeys FAKE_EXIT, so a failing installation needs no second
+# script. The content matters because the mode hands over a descriptor of the
+# bytes it verified, not the directory entry.
 cat >"${FAKE_BIN}/dpkg" <<'STANDIN'
 #!/bin/sh
-echo "$(basename "$0") called with: $*" >>"${FAKE_CALLS}"
+for argument in "$@"; do package="${argument}"; done
+{
+    echo "$(basename "$0") called with: $*"
+    echo "$(basename "$0") read: $(head -c 64 "${package}")"
+} >>"${FAKE_CALLS}"
 echo "stand-in $(basename "$0"): nothing was installed" >&2
 exit "${FAKE_EXIT:-0}"
 STANDIN
 chmod +x "${FAKE_BIN}/dpkg"
 cp "${FAKE_BIN}/dpkg" "${FAKE_BIN}/rpm"
 
+if ! command -v openssl >/dev/null; then
+    echo "openssl is needed to sign the test packages."
+    exit 2
+fi
+
+# The trust anchor of this run: an RSA certificate in an update configuration,
+# as the bakery writes it, plus the key to sign packages with.
+readonly KEY="${WORK}/key.pem"
+readonly CERTIFICATE="${WORK}/cert.pem"
+readonly CONFIG="${WORK}/cmk-agent-ctl-update.toml"
+openssl req -x509 -newkey rsa:2048 -nodes -days 2 -subj "/CN=smoke-install-agent" \
+    -keyout "${KEY}" -out "${CERTIFICATE}" 2>/dev/null
+{
+    echo 'activated = true'
+    echo 'signature_keys = ["""'
+    cat "${CERTIFICATE}"
+    echo '"""]'
+} >"${CONFIG}"
+
 failures=0
 
 # Run the mode on one request and report whether it behaved as expected.
 #
 # $1 title, $2 expected exit code, $3 expected text, $4 the request on standard
-# input. FAKE_EXIT is passed through. The expected text is looked for in what
-# the run leaves behind: the output of the mode and the call the stand-in
-# recorded.
+# input. FAKE_EXIT and CONFIG_PATH are passed through, so that a case can let
+# the package manager fail or name another update configuration. The expected
+# text is looked for in what the run leaves behind: the output of the mode and
+# what the stand-in recorded.
 run_case() {
     local title="$1" expected_code="$2" expected_text="$3" request="$4"
     local output code evidence
@@ -80,6 +106,7 @@ run_case() {
     : >"${CALLS}"
     output="$(printf '%s\n' "${request}" |
         env PATH="${FAKE_BIN}:${PATH}" DEBUG_HOME_DIR="${HOME_DIR}" \
+            CMK_AGENT_CTL_UPDATE_CONFIG="${CONFIG_PATH:-${CONFIG}}" \
             FAKE_EXIT="${FAKE_EXIT:-0}" FAKE_CALLS="${CALLS}" \
             "${CONTROLLER}" install-agent 2>&1)"
     code=$?
@@ -108,19 +135,43 @@ spool() {
     echo "${UPDATE_DIR}/${name}"
 }
 
-request_for() {
-    printf '{"package": "%s", "signatures": [{"certificate": "c", "signature": "s"}]}' "$1"
+# The certificate as one JSON string, newlines escaped as the site sends them.
+json_certificate() {
+    awk 'BEGIN { printf "\"" } { printf "%s\\n", $0 } END { printf "\"" }' "${CERTIFICATE}"
 }
 
+# A request for $1, signed with the key of the trust anchor. SIGN_INSTEAD names
+# a file to sign in its place, which is how a package nothing vouches for is
+# built.
+request_for() {
+    local package="$1" signature
+    signature="$(openssl dgst -sha256 -sign "${KEY}" "${SIGN_INSTEAD:-${package}}" |
+        openssl base64 -A)"
+    printf '{"package": "%s", "signatures": [{"certificate": %s, "signature": "%s"}]}' \
+        "${package}" "$(json_certificate)" "${signature}"
+}
+
+# A request for $1 that carries no signature at all.
+unsigned_request_for() {
+    printf '{"package": "%s", "signatures": []}' "$1"
+}
+
+# The package manager is handed /proc/<pid>/fd/<n> of the verified bytes, not
+# the directory entry, which is why these cases match on "/proc/" and one of
+# them on the content that arrived there.
 package="$(spool "${HASH}.deb")"
-run_case "a deb is handed to dpkg" 0 "dpkg called with: -i ${package}" \
+run_case "a deb is handed to dpkg" 0 "dpkg called with: -i /proc/" \
     "$(request_for "${package}")"
 [ -e "${package}" ] && echo "    ${RED}FAIL: the package was not removed${RESET}" &&
     failures=$((failures + 1))
 
+package="$(spool "${HASH}.deb")"
+run_case "the verified bytes reach the package manager" 0 "dpkg read: not a real package" \
+    "$(request_for "${package}")"
+
 package="$(spool "${HASH}.rpm")"
 run_case "an rpm is handed to rpm" 0 \
-    "rpm called with: -vU --oldpackage --replacepkgs ${package}" \
+    "rpm called with: -vU --oldpackage --replacepkgs /proc/" \
     "$(request_for "${package}")"
 [ -e "${package}" ] && echo "    ${RED}FAIL: the package was not removed${RESET}" &&
     failures=$((failures + 1))
@@ -130,6 +181,27 @@ FAKE_EXIT=1 run_case "a failing package manager is reported" 1 "failed, exit sta
     "$(request_for "${package}")"
 [ -e "${package}" ] && echo "    ${RED}FAIL: the package was not removed${RESET}" &&
     failures=$((failures + 1))
+
+package="$(spool "${HASH}.deb")"
+echo "another package" >"${OUTSIDE}/other.deb"
+# Set before the request is built: a prefix on run_case would come too late,
+# the argument is expanded first.
+SIGN_INSTEAD="${OUTSIDE}/other.deb"
+mismatched_request="$(request_for "${package}")"
+unset SIGN_INSTEAD
+run_case "a package the signature does not cover is refused" 1 \
+    "no signature of it matches a configured signature key" "${mismatched_request}"
+rm -f "${package}"
+
+package="$(spool "${HASH}.deb")"
+run_case "an unsigned package is refused" 1 "no signature of it matches a configured signature key" \
+    "$(unsigned_request_for "${package}")"
+rm -f "${package}"
+
+package="$(spool "${HASH}.deb")"
+CONFIG_PATH="${WORK}/absent.toml" run_case "a missing update configuration is refused" 1 \
+    "No updater configuration" "$(request_for "${package}")"
+rm -f "${package}"
 
 # A package of our own, so that the case does not depend on a system file that
 # a test sandbox may not carry.

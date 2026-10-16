@@ -34,7 +34,7 @@ from pysmi.writer.pyfile import PyFileWriter  # type: ignore[import-untyped]
 from livestatus import LocalConnection, MKLivestatusSocketError, SiteConfigurations, SiteId
 
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.site import omd_site
 from cmk.ccc.version import Edition, edition
 
@@ -45,6 +45,7 @@ import cmk.utils.translations
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import RegexFutureWarning
 from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.timeperiod import TimeperiodName
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -66,7 +67,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.type_defs import RequireConfirmation
 from cmk.gui.http import request
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     get_search_expression,
@@ -363,6 +364,46 @@ class _SiteLivestatus:
         return connection.query(query)
 
 
+class _TimePeriodsUnavailable(MKGeneralException):
+    pass
+
+
+def _timeout_causing(exception: BaseException) -> MKTimeout | None:
+    """Returns the timeout which caused an exception, e.g. one the Livestatus client turned into an
+    error of its own"""
+    seen: set[int] = set()
+    cause: BaseException | None = exception
+    while cause is not None and id(cause) not in seen:
+        if isinstance(cause, MKTimeout):
+            return cause
+        seen.add(id(cause))
+        cause = cause.__cause__ or cause.__context__
+    return None
+
+
+class _SiteTimePeriods:
+    """Tells whether time periods of a site are active, giving up after the first failed query"""
+
+    def __init__(self, site_id: SiteId) -> None:
+        self._time_periods = ec.TimePeriods(log.logger, _SiteLivestatus(site_id))
+        self._error: str | None = None
+
+    def active(self, name: TimeperiodName) -> bool:
+        # Querying again for every rule could mean waiting for a timeout every time.
+        if self._error is not None:
+            raise _TimePeriodsUnavailable(self._error)
+        try:
+            return self._time_periods.active(name)
+        except MKTimeout:
+            raise
+        except Exception as e:
+            # The Livestatus client turns e.g. a request timeout into an error of its own.
+            if (timeout := _timeout_causing(e)) is not None:
+                raise timeout from None
+            self._error = str(e)
+            raise _TimePeriodsUnavailable(self._error) from e
+
+
 class MatchOutcome(enum.Enum):
     """What the Event Console does with a message when a rule matches it"""
 
@@ -386,10 +427,17 @@ class RuleMatch:
 
 
 @dataclass(frozen=True)
+class UnknownMatch(ec.MatchFailure):
+    """The simulator can't tell whether a rule matches, unlike the Event Console of the site"""
+
+
+@dataclass(frozen=True)
 class RulePackMatch:
     matching_rules: int
     # Like in the Event Console, the first matching rule decides what happens.
     first_match: RuleMatch | None
+    # One of these rules before the first match might match and decide instead.
+    unknown_matches: Sequence[UnknownMatch]
 
 
 class EventSimulator:
@@ -409,6 +457,8 @@ class EventSimulator:
             self._event["host"] = cmk.utils.translations.translate_hostname(
                 hostname_translation, event["host"]
             )
+        except MKTimeout:
+            raise
         except Exception:
             self._event["host"] = HostName("")
         self._site_config = site_configs[event["site"]]
@@ -416,7 +466,7 @@ class EventSimulator:
             logger=None,
             # Match against the site the event is simulated for, not the one running the GUI.
             omd_site_id=event["site"],
-            is_active_time_period=ec.TimePeriods(log.logger, _SiteLivestatus(event["site"])).active,
+            is_active_time_period=_SiteTimePeriods(event["site"]).active,
         )
 
     @classmethod
@@ -443,19 +493,61 @@ class EventSimulator:
 
         rule = rule.copy()
         rule["pack"] = rule_pack["id"]
-        ec.compile_rule(rule)
-        return self._rule_matcher.event_rule_matches(rule, self._event)
+        # The Event Console ignores rules it can't compile, and errors while matching mean no match.
+        # A request timeout must still abort the page, though.
+        try:
+            ec.compile_rule(rule)
+        except MKTimeout:
+            raise
+        except Exception as e:
+            return ec.MatchFailure(reason=_("Cannot compile the rule: %(error)s") % {"error": e})
+        try:
+            return self._match_compiled_rule(rule)
+        except MKTimeout:
+            raise
+        except Exception as e:
+            log.logger.exception(
+                "Cannot match rule %(pack)s/%(rule_id)s against the simulated event",
+                {"pack": rule["pack"], "rule_id": rule["id"]},
+            )
+            return ec.MatchFailure(reason=_("Cannot match the rule: %(error)s") % {"error": e})
+
+    def _match_compiled_rule(self, rule: ec.Rule) -> ec.MatchResult:
+        try:
+            return self._rule_matcher.event_rule_matches(rule, self._event)
+        except _TimePeriodsUnavailable as e:
+            # The Event Console of the site knows its time periods, though, so the simulator can
+            # only tell whether the rule matches if that doesn't depend on them. The failed query is
+            # logged already.
+            if_active = self._match_assuming_time_periods(rule, active=True)
+            if_inactive = self._match_assuming_time_periods(rule, active=False)
+            if isinstance(if_active, ec.MatchSuccess) is isinstance(if_inactive, ec.MatchSuccess):
+                return if_active
+            return UnknownMatch(
+                reason=_("Cannot look up the time periods: %(error)s") % {"error": e}
+            )
+
+    def _match_assuming_time_periods(self, rule: ec.Rule, *, active: bool) -> ec.MatchResult:
+        """Matches the rule as if all time periods were active or all were inactive"""
+        return ec.RuleMatcher(
+            logger=None,
+            omd_site_id=self._event["site"],
+            is_active_time_period=lambda _name: active,
+        ).event_rule_matches(rule, self._event)
 
     def match_rule_pack(self, rule_pack: ec.ECRulePack) -> RulePackMatch:
         matching_rules = 0
         first_match: RuleMatch | None = None
+        unknown_matches: list[UnknownMatch] = []
         for rule in rule_pack["rules"]:
             result = self.match_rule(rule_pack, rule)
             if isinstance(result, ec.MatchSuccess):
                 matching_rules += 1
                 if first_match is None:
                     first_match = RuleMatch(result, match_outcome(rule, result))
-        return RulePackMatch(matching_rules, first_match)
+            elif isinstance(result, UnknownMatch) and first_match is None:
+                unknown_matches.append(result)
+        return RulePackMatch(matching_rules, first_match, tuple(unknown_matches))
 
 
 def hostname_translation_of_site(
@@ -2294,6 +2386,18 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                                 icon = "checkmark"
                                 have_match = True
                     html.icon(icon, msg)
+                    if unknown_matches := pack_match.unknown_matches:
+                        html.icon(
+                            "warning",
+                            ungettext(
+                                "This might be wrong, because the simulator cannot tell whether "
+                                "%(count)d rule of this pack matches: %(reason)s",
+                                "This might be wrong, because the simulator cannot tell whether "
+                                "%(count)d rules of this pack match: %(reason)s",
+                                len(unknown_matches),
+                            )
+                            % {"count": len(unknown_matches), "reason": unknown_matches[0].reason},
+                        )
 
                 table.cell(_("ID"), id_)
                 table.cell(_("Title"), rule_pack["title"])
@@ -2624,7 +2728,13 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     )
                 elif simulator:
                     result = simulator.match_rule(self._rule_pack, rule)
-                    if not isinstance(result, ec.MatchSuccess):
+                    if isinstance(result, UnknownMatch):
+                        html.icon(
+                            "warning",
+                            _("The simulator cannot tell whether this rule matches: %s")
+                            % result.reason,
+                        )
+                    elif not isinstance(result, ec.MatchSuccess):
                         html.icon("hyphen", _("Rule does not match: %s") % result.reason)
                     else:
                         if have_match:

@@ -66,3 +66,25 @@ def test_check_fast_lta_silent_cube_capacity(
         if hasattr(actual_metric, "levels"):
             assert actual_metric.levels[0] == pytest.approx(expected_metric.levels[0])
             assert actual_metric.levels[1] == pytest.approx(expected_metric.levels[1])
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=ValueError,
+    reason="Crash report 8aca83da-fb3b-11f0-ace5-2a2e0f3d4944: ValueError",
+)
+def test_check_fast_lta_silent_cube_capacity_empty_used_value(
+    check_fast_lta_silent_cubes_capacity: CheckFunction,
+) -> None:
+    # Crash group 4562: the device reported its total capacity but an empty
+    # value for the used capacity.
+    assert list(
+        check_fast_lta_silent_cubes_capacity(
+            "Total", FILESYSTEM_DEFAULT_PARAMS, [["200021140045824", ""]]
+        )
+    ) == [
+        Result(
+            state=State.UNKNOWN,
+            summary="Cannot parse capacity: got total '200021140045824', used '' (expected integers)",
+        ),
+    ]

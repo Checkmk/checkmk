@@ -2,6 +2,8 @@
 
 per-file test_add_notification_rule.py=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file test_add_notification_rule.py=set noparent
+per-file test_dashboard.py=file:/component_owners/dashboards/OWNERS_DEFINITION
+per-file test_dashboard.py=set noparent
 per-file test_email_notifications.py=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file test_email_notifications.py=set noparent
 per-file test_login.py=file:/component_owners/user_management_and_authentication/OWNERS_DEFINITION

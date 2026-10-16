@@ -13,6 +13,7 @@ py_library(
         "//cmk/gui:customer",
         "//cmk/gui/monitor/command",
         "//cmk/gui/monitor/setup_folders",
+        "//cmk/gui/monitor/table_widget",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/pagetypes",

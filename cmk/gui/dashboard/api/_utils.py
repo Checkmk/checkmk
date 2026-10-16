@@ -107,6 +107,7 @@ INTERNAL_TO_API_TYPE_NAME: Mapping[str, str] = {
     "network_flow_trend_chart": "network_flow_trend_chart",
     "alert_overview": "alert_overview",
     "site_overview": "site_overview",
+    "monitoring_table": "monitoring_table",
     "snapin": "sidebar_element",
     "state_host": "host_state",
     "state_service": "service_state",

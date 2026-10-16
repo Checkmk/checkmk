@@ -54,6 +54,7 @@ type WidgetComputeAction = Literal[
     "compute-state",
     "compute-state-summary",
     "compute-single-metric",
+    "compute-monitoring-table",
 ]
 
 

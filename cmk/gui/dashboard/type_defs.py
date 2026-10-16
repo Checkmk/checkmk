@@ -279,6 +279,16 @@ class AlertOverviewDashletConfig(DashletConfig):
     limit_objects: NotRequired[int]
 
 
+type MonitoringTableName = Literal["hosts"]
+
+
+class MonitoringTableDashletConfig(DashletConfig):
+    table: MonitoringTableName
+    columns: Sequence[str]
+    sort: Sequence[str]
+    limit: int
+
+
 class SiteOverviewDashletConfig(DashletConfig):
     dataset: NotRequired[Literal["hosts", "sites"]]
     box_scale: NotRequired[Literal["default", "large"]]

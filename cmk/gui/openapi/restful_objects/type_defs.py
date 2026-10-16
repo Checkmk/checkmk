@@ -163,6 +163,7 @@ CmkEndpointName = Literal[
     "cmk/compute_alert_overview",
     "cmk/compute_barplot",
     "cmk/compute_dashboard_widget_titles",
+    "cmk/compute_monitoring_table",
     "cmk/compute_gauge",
     "cmk/compute_inventory",
     "cmk/compute_network_flow_autonomous_system_context",

@@ -12,6 +12,7 @@ from pydantic import PlainValidator
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.monitor.setup_folders import SetupFolderSource
+from cmk.gui.monitor.table_widget import TableRows
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -24,6 +25,7 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
+from cmk.gui.type_defs import VisualContext
 from cmk.livestatus_client import SiteConfigurations
 from cmk.web.utils import permission_verification as permissions
 
@@ -44,6 +46,8 @@ from .._models import (
 )
 from .._repositories import HostRepository
 from .._site import MonitorSite, MonitorSites
+from .._table_catalog import HOST_TABLE
+from ..context_filters import HostContextFilters
 from ._family import MONITOR_HOSTS_FAMILY
 from ._filters import extract_site_scope, FilterNode, parse_as_livestatus_filter
 from ._modes import build_host_modes, ModeInfo
@@ -426,6 +430,24 @@ class HostTable:
                 customer_of=self._customer_of,
                 visible_relations=visible_relations,
             )
+
+    def rows(
+        self, *, columns: Sequence[str], sort: Sequence[str], limit: int, context: VisualContext
+    ) -> TableRows[HostEntry]:
+        translation = HostContextFilters.translate(context)
+        response = self.list(
+            limit=limit,
+            query="",
+            sorters=HOST_TABLE.sorters(columns, sort),
+            filter_node=translation.node,
+            fields=HOST_TABLE.fields(columns),
+        )
+        return TableRows(
+            rows=response.hosts,
+            matched=response.meta.matched,
+            total=response.meta.total,
+            unapplied_filters=translation.unapplied,
+        )
 
 
 def _handle_list_hosts(

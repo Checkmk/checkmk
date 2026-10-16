@@ -289,6 +289,7 @@ py_cmk_test(
         "//cmk/gui/monitor/hosts",
         "//cmk/gui/monitor/services",
         "//cmk/gui/monitor/setup_folders",
+        "//cmk/gui/monitor/table_widget",
         "//cmk/gui/nagvis",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",

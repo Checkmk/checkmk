@@ -25,6 +25,7 @@ from .metric import (
     SingleMetricContent,
     TopListContent,
 )
+from .monitoring_table import MonitoringTableContent
 from .network_flow import (
     NetworkFlowDonutContent,
     NetworkFlowKpiStatCardContent,
@@ -89,6 +90,7 @@ type WidgetContent = Annotated[
     | InventoryContent
     | AlertOverviewContent
     | SiteOverviewContent
+    | MonitoringTableContent
     | HostStatsContent
     | ServiceStatsContent
     | EventStatsContent
@@ -129,6 +131,7 @@ _CONTENT_TYPES = (
     InventoryContent,
     AlertOverviewContent,
     SiteOverviewContent,
+    MonitoringTableContent,
     HostStatsContent,
     ServiceStatsContent,
     EventStatsContent,

@@ -20,6 +20,7 @@ def test_dashlet_registry_plugins() -> None:
         "view",
         "embedded_view",
         "linked_view",
+        "monitoring_table",
         "user_messages",
         "nodata",
         "snapin",

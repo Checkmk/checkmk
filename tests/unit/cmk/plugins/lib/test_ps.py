@@ -36,6 +36,33 @@ def test_host_labels_ps_no_match_attr() -> None:
     assert not list(ps.host_labels_ps(params, section))
 
 
+@pytest.mark.xfail(
+    strict=True, reason="Crash report b3dc9174-60a2-11f1-b75b-92896c16dd6b: TypeError"
+)
+def test_discover_ps_skips_empty_service_name() -> None:
+    # Crash group 4791: a discovery rule whose service name expands to an
+    # empty string crashed the discovery of the whole host.
+    section = (
+        1,
+        [
+            (
+                ps.PsInfo.from_raw("(root,4056,1512,0.0/52-04:56:05,5689)"),
+                ["/usr/sbin/sshd"],
+            ),
+        ],
+        int(time.time()),
+    )
+    params: Sequence[Mapping[str, Any]] = [
+        {"default_params": {}, "descr": "%s", "match": "~/usr/sbin/(x*)sshd"},
+        {"default_params": {}, "descr": "SSH", "match": "~.*sshd"},
+        {},
+    ]
+
+    discovered = list(ps.discover_ps(params, section, None, None, None, None))
+
+    assert [service.item for service in discovered] == ["SSH"]
+
+
 def test_host_labels_ps_no_match_pattern() -> None:
     section = (
         1,

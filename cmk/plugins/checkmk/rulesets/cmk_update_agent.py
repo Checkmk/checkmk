@@ -8,7 +8,12 @@ from collections.abc import Mapping, Sequence
 from cmk.ccc.site import omd_site
 from cmk.ccc.store import load_from_mk_file
 from cmk.ccc.version import Edition, edition
-from cmk.rulesets.internal.form_specs import MultipleChoiceElementExtended, MultipleChoiceExtended
+from cmk.rulesets.internal.form_specs import (
+    DictGroupExtended,
+    DictionaryGroupLayout,
+    MultipleChoiceElementExtended,
+    MultipleChoiceExtended,
+)
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -34,6 +39,19 @@ from cmk.utils.keypair_store import KeypairStore
 
 DEFAULT_UPDATE_INTERVAL: int = 3600
 MAX_UPDATE_INTERVAL: int = 30 * 24 * 60 * 60  # 30 days
+
+_LEGACY_UPDATER_GROUP = DictGroupExtended(
+    title=Title("Options of the legacy updater"),
+    help_text=Help(
+        "Only the legacy updater uses these options. The entries <i>Enable agent updates "
+        "using the Agent Controller (fallback to legacy updater in case of problems)</i> and "
+        "<i>Enable agent updates using the legacy updater (deprecated)</i> of "
+        "<i>Activation</i> deploy it. The entry <i>Enable agent updates using the Agent "
+        "Controller</i> deploys it on Solaris only. <i>Do not enable agent updates</i> "
+        "ignores these options."
+    ),
+    layout=DictionaryGroupLayout.vertical,
+)
 
 
 def _migrate(obj: object) -> Mapping[str, object]:
@@ -599,25 +617,9 @@ def _valuespec_agent_config_cmk_update_agent() -> Dictionary:
                 required=False,
                 parameter_form=_valuespec_activation(),
             ),
-            "server_data": DictElement(
-                required=False,
-                parameter_form=_valuespec_server_data(),
-            ),
-            "certificates": DictElement(
-                required=False,
-                parameter_form=_valuespec_certificates(),
-            ),
             "interval": DictElement(
                 required=False,
                 parameter_form=_valuespec_interval(),
-            ),
-            "proxy": DictElement(
-                required=False,
-                parameter_form=_valuespec_proxy_settings(),
-            ),
-            "edition": DictElement(
-                required=False,
-                parameter_form=_valuespec_editions(),
             ),
             "signature_keys": DictElement(
                 required=False,
@@ -626,6 +628,26 @@ def _valuespec_agent_config_cmk_update_agent() -> Dictionary:
             "updater_registration": DictElement(
                 required=False,
                 parameter_form=_valuespec_updater_registration(),
+            ),
+            "server_data": DictElement(
+                required=False,
+                parameter_form=_valuespec_server_data(),
+                group=_LEGACY_UPDATER_GROUP,
+            ),
+            "certificates": DictElement(
+                required=False,
+                parameter_form=_valuespec_certificates(),
+                group=_LEGACY_UPDATER_GROUP,
+            ),
+            "proxy": DictElement(
+                required=False,
+                parameter_form=_valuespec_proxy_settings(),
+                group=_LEGACY_UPDATER_GROUP,
+            ),
+            "edition": DictElement(
+                required=False,
+                parameter_form=_valuespec_editions(),
+                group=_LEGACY_UPDATER_GROUP,
             ),
         },
         migrate=_migrate,

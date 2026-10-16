@@ -445,9 +445,8 @@ class EventSimulator:
                 matching_rules += 1
                 if first_match is None:
                     first_match = result
-                    first_match_skips_pack = (
-                        not result.cancelling and rule.get("drop") == "skip_pack"
-                    )
+                    # The Event Console skips the pack even for a cancelling match.
+                    first_match_skips_pack = rule.get("drop") == "skip_pack"
         return RulePackMatch(matching_rules, first_match, first_match_skips_pack)
 
 

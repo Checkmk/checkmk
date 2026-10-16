@@ -310,6 +310,9 @@ _MATCHING_RULE = ec.Rule(id="matching", match="nothing")
 _NON_MATCHING_RULE = ec.Rule(id="non_matching", match="no such text")
 _CANCELLING_RULE = ec.Rule(id="cancelling", match="no such text", match_ok="nothing")
 _SKIPPING_RULE = ec.Rule(id="skipping", match="nothing", drop="skip_pack")
+_CANCELLING_SKIPPING_RULE = ec.Rule(
+    id="cancelling_skipping", match="no such text", match_ok="nothing", drop="skip_pack"
+)
 
 
 def _rule_pack(*rules: ec.Rule) -> ec.ECRulePackSpec:
@@ -329,6 +332,7 @@ def test_first_matching_rule_decides_the_match_of_a_rule_pack() -> None:
     "rules, skips_pack",
     [
         pytest.param([_SKIPPING_RULE, _MATCHING_RULE], True, id="first match skips"),
+        pytest.param([_CANCELLING_SKIPPING_RULE, _MATCHING_RULE], True, id="first cancel skips"),
         pytest.param([_MATCHING_RULE, _SKIPPING_RULE], False, id="later match skips"),
     ],
 )

@@ -83,3 +83,18 @@ def test_check_silverpeak_VX6000(
     parsed = parse_silverpeak(info)
     result = list(check_silverpeak(item, params, parsed))
     assert result == expected_results
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=KeyError,
+    reason="Crash report 9be3337a-c8a8-11f1-b2c1-0050568d12fe: KeyError",
+)
+def test_check_silverpeak_VX6000_alarm_count_without_alarm_rows() -> None:
+    # Crash group 4960: the device reported three active alarms, but its alarm
+    # table delivered no rows.
+    parsed = parse_silverpeak([[["3"]], []])
+    assert list(check_silverpeak(None, {}, parsed)) == [
+        (0, "3 active alarms. OK: 0, WARN: 0, CRIT: 0, UNKNOWN: 0"),
+        (3, "Device reports 3 active alarms but delivered no alarm details"),
+    ]

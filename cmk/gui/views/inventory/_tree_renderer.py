@@ -103,6 +103,11 @@ def compute_cell_spec(td_spec: TDSpec, text_align: Literal["", "left"]) -> tuple
     )
 
 
+def _render_td(td_spec: TDSpec, text_align: Literal["", "left"]) -> HTML:
+    css_class, html_value = compute_cell_spec(td_spec, text_align)
+    return HTMLWriter.render_td(html_value, class_=css_class or None)
+
+
 @dataclass(frozen=True, kw_only=True)
 class SDItem:
     key: SDKey
@@ -541,19 +546,17 @@ class TreeRenderer:
     def _show_attributes(
         self, now: float, sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]
     ) -> None:
-        html.open_table()
-        for item in sorted_pairs:
-            html.open_tr()
-            html.th(self._get_header(item.title, item.key))
-            css_class, html_value = compute_cell_spec(item.compute_td_spec(now), text_align="left")
-            if css_class:
-                html.open_td(class_=css_class)
-            else:
-                html.open_td()
-            html.write_html(html_value)
-            html.close_td()
-            html.close_tr()
-        html.close_table()
+        html.write_html(
+            HTMLWriter.render_table(
+                HTML.empty().join(
+                    HTMLWriter.render_tr(
+                        HTMLWriter.render_th(self._get_header(item.title, item.key))
+                        + _render_td(item.compute_td_spec(now), text_align="left")
+                    )
+                    for item in sorted_pairs
+                )
+            )
+        )
 
     def _show_table(
         self,
@@ -582,25 +585,22 @@ class TreeRenderer:
                 class_="invtablelink",
             )
 
-        # TODO: Use table.open_table() below.
-        html.open_table(class_="data")
-        html.open_tr()
-        for column in columns:
-            html.th(self._get_header(column.title, column.key_info))
-        html.close_tr()
-
-        for row in sorted_rows:
-            html.open_tr(class_="even0")
-            for item in row:
-                css_class, html_value = compute_cell_spec(item.compute_td_spec(now), text_align="")
-                if css_class:
-                    html.open_td(class_=css_class)
-                else:
-                    html.open_td()
-                html.write_html(html_value)
-                html.close_td()
-            html.close_tr()
-        html.close_table()
+        header = HTMLWriter.render_tr(
+            HTML.empty().join(
+                HTMLWriter.render_th(self._get_header(column.title, column.key_info))
+                for column in columns
+            )
+        )
+        body = HTML.empty().join(
+            HTMLWriter.render_tr(
+                HTML.empty().join(
+                    _render_td(item.compute_td_spec(now), text_align="") for item in row
+                ),
+                class_="even0",
+            )
+            for row in sorted_rows
+        )
+        html.write_html(HTMLWriter.render_table(header + body, class_="data"))
 
     def _show_node(
         self, now: float, node: ImmutableTree | ImmutableDeltaTree, tree_id: str

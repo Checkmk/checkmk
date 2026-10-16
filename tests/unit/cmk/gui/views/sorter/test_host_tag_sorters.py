@@ -36,4 +36,4 @@ def test_host_tag_sorter_registration(monkeypatch: pytest.MonkeyPatch) -> None:
                 }
             ),
         )
-        assert "host_tag_whoot" in all_sorters(active_config)
+        assert "host_tag_whoot" in all_sorters(active_config.tags.tag_groups)

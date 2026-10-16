@@ -7,7 +7,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Final
 
 from cmk.ccc.site import SiteId
-from cmk.gui.config import active_config, RequestCacheConfig
+from cmk.gui.config import RequestCacheConfig
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
@@ -99,8 +99,9 @@ class View:
     def row_cells(self) -> list[Cell]:
         """Regular cells are displaying information about the rows of the type the view is about"""
         cells: list[Cell] = []
-        registered_sorters = all_sorters(active_config)
-        registered_painters = all_painters(active_config.tags.tag_groups)
+        tag_groups = self.painter_context.config.tags.tag_groups
+        registered_sorters = all_sorters(tag_groups)
+        registered_painters = all_painters(tag_groups)
         for index, e in enumerate(self.spec["painters"]):
             if e.name not in registered_painters:
                 continue
@@ -139,8 +140,9 @@ class View:
     @property
     def group_cells(self) -> list[Cell]:
         """Group cells are displayed as titles of grouped rows"""
-        registered_sorters = all_sorters(active_config)
-        registered_painters = all_painters(active_config.tags.tag_groups)
+        tag_groups = self.painter_context.config.tags.tag_groups
+        registered_sorters = all_sorters(tag_groups)
+        registered_painters = all_painters(tag_groups)
         return [
             Cell(
                 e,
@@ -161,7 +163,8 @@ class View:
     @property
     def sorters(self) -> list[SorterEntry]:
         """Returns the list of effective sorters to be used to sort the rows of this view"""
-        registered_sorters = all_sorters(active_config)
+        tag_groups = self.painter_context.config.tags.tag_groups
+        registered_sorters = all_sorters(tag_groups)
         return self._get_sorter_entries(
             self.user_sorters if self.user_sorters else self.spec["sorters"],
             registered_sorters,

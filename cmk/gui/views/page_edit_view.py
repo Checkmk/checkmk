@@ -1318,7 +1318,7 @@ def infos_needed_by_plugin(
 
 
 def sorters_of_datasource(ds_name: str) -> Mapping[str, Sorter]:
-    return _allowed_for_datasource(all_sorters(active_config), ds_name)
+    return _allowed_for_datasource(all_sorters(active_config.tags.tag_groups), ds_name)
 
 
 def painters_of_datasource(ds_name: str) -> Mapping[str, InternalPainter]:

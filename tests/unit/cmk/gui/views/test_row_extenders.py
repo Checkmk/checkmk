@@ -6,8 +6,6 @@
 import copy
 from collections.abc import Sequence
 
-import pytest
-
 from cmk.gui.config import Config
 from cmk.gui.painter.painters import (
     add_docker_nodes,
@@ -41,7 +39,6 @@ def _view_of_services(painters: Sequence[ColumnSpec], sorters: Sequence[SorterSp
     return _view("allservices", spec)
 
 
-@pytest.mark.usefixtures("request_context")
 def test_a_column_tooltip_needs_the_row_extender_of_its_painter() -> None:
     view = _view_of_services(
         [ColumnSpec(name="service_description", tooltip="svc_long_plugin_output")], []
@@ -49,7 +46,6 @@ def test_a_column_tooltip_needs_the_row_extender_of_its_painter() -> None:
     assert _needed_row_extenders(view) == [add_max_long_output_sizes]
 
 
-@pytest.mark.usefixtures("request_context")
 def test_a_row_extender_needed_by_several_columns_is_needed_once() -> None:
     view = _view_of_services(
         [ColumnSpec(name="svc_long_plugin_output"), ColumnSpec(name="svc_long_plugin_output")], []
@@ -57,13 +53,11 @@ def test_a_row_extender_needed_by_several_columns_is_needed_once() -> None:
     assert _needed_row_extenders(view) == [add_max_long_output_sizes]
 
 
-@pytest.mark.usefixtures("request_context")
 def test_a_sorter_needs_its_row_extender() -> None:
     view = _view_of_services([], [SorterSpec(sorter="host_docker_node", negate=False)])
     assert _needed_row_extenders(view) == [add_docker_nodes]
 
 
-@pytest.mark.usefixtures("request_context")
 def test_the_inventory_history_needs_the_sites_of_same_named_hosts() -> None:
     spec: ViewSpec = copy.deepcopy(multisite_builtin_views["inv_host_history"])
     assert _needed_row_extenders(_view("inv_host_history", spec)) == [add_sites_of_same_named_hosts]

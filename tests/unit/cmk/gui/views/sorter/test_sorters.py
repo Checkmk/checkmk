@@ -34,7 +34,7 @@ def test_service_specific_metric_sorter_orders_by_metric_value(
     row1: Row, row2: Row, expected: int
 ) -> None:
     config = Config()
-    sorter = all_sorters(config)["service_specific_metric"]
+    sorter = all_sorters(config.tags.tag_groups)["service_specific_metric"]
     assert (
         sorter.cmp(
             row1,

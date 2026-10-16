@@ -80,6 +80,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser
 from cmk.gui.page_menu import confirmed_form_submit_options
 from cmk.gui.pages import PageContext
+from cmk.gui.session_context import get_session_csrf_token
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import CustomHostAttrSpec, SetOnceDict
 from cmk.gui.utils.host_relations import (
@@ -93,6 +94,7 @@ from cmk.gui.utils.host_relations import (
     reverse_direction,
     same_links,
 )
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.automations import (
     make_automation_config,
 )
@@ -3066,7 +3068,7 @@ class Folder:
                 % {"folder": self.title()}
             )
 
-    def url(self, _request: Request, add_vars: Sequence[HTTPVariable] | None = None) -> str:
+    def url(self, request: Request, add_vars: Sequence[HTTPVariable] | None = None) -> str:
         if add_vars is None:
             add_vars = []
 
@@ -3079,6 +3081,8 @@ class Folder:
         if not have_mode:
             url_vars.append(("mode", "folder"))
         url_vars += add_vars
+        if request.var("debug") == "1":
+            url_vars.append(("debug", "1"))
         return _makeuri_to_wato(url_vars)
 
     def edit_url(self, backfolder: Folder | None = None) -> str:
@@ -5210,6 +5214,20 @@ def collect_hosts(hosts: Mapping[HostName, Host]) -> Mapping[HostName, Collected
         hosts_attributes[host_name]["path"] = host.folder().path()
         hosts_attributes[host_name]["edit_url"] = host.edit_url()
     return hosts_attributes
+
+
+def folder_preserving_link(request: Request, add_vars: Sequence[HTTPVariable]) -> str:
+    return folder_from_request(
+        folder_tree(), request.var("folder"), request.get_ascii_input("host")
+    ).url(request, add_vars)
+
+
+def make_action_link(request: Request, vars_: Sequence[HTTPVariable]) -> str:
+    session_vars: list[HTTPVariable] = [("_transid", transactions.get())]
+    if (csrf_token := get_session_csrf_token()) is not None:
+        session_vars.append(("_csrf_token", csrf_token))
+
+    return folder_preserving_link(request, [*vars_, *session_vars])
 
 
 @request_memoize()

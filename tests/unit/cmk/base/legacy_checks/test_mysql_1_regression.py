@@ -243,3 +243,16 @@ def test_mysql_sessions_discovery_insufficient_data() -> None:
 
     # Should not discover any service with insufficient data
     assert len(result) == 0
+
+
+@pytest.mark.xfail(
+    strict=True, reason="Crash report cd895460-6159-11f1-8ed5-005056a8b5b9: KeyError"
+)
+def test_mysql_connections_check_without_max_connections() -> None:
+    # Crash group 4823: the service was discovered, but a later agent output
+    # lacked the server variable max_connections.
+    parsed = mysql.parse_mysql([["Max_used_connections", "80"], ["Threads_connected", "10"]])
+
+    assert list(mysql.check_mysql_connections("mysql", {}, parsed)) == [
+        (3, "Connection information is missing: max_connections"),
+    ]

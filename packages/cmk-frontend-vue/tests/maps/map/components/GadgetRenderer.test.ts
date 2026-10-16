@@ -7,7 +7,7 @@ import { render, screen } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
 import GadgetRenderer from '@/maps/map/components/GadgetRenderer.vue'
-import type { MetricUnitMap, ObjectState } from '@/maps/types/api'
+import type { MetricUnitMap, ObjectState, PerfometerResult } from '@/maps/types/api'
 
 import { aState } from '../../support/fixtures'
 
@@ -118,6 +118,24 @@ describe('GadgetRenderer gauge readout', () => {
       }
     })
     expect(screen.getByText('8.54%')).toBeInTheDocument()
+  })
+})
+
+describe('GadgetRenderer caption', () => {
+  const perfometer: PerfometerResult = {
+    label: '48.91 %',
+    rows: [],
+    sides: [{ title: 'RAM usage', label: '48.91 %', pct: 48.91 }],
+    bg_color: '#000'
+  }
+
+  // A gadget is narrower than "RAM usage 48.91 %"; on its own line the value
+  // survives when the title has to be shortened.
+  it.each(['bar', 'gauge'])('puts the %s value on a line of its own', (type) => {
+    render(GadgetRenderer, { props: { type, state: makeState(), size: 60, perfometer } })
+
+    expect(screen.getByText('RAM usage')).toBeInTheDocument()
+    expect(screen.getByText('48.91 %')).toBeInTheDocument()
   })
 })
 

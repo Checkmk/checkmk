@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { perfometerCaption } from '@/maps/map/composables/usePerfometer'
+import { perfometerCaptionLines } from '@/maps/map/composables/usePerfometer'
 import type { MetricUnitMap, ObjectState, PerfometerResult } from '@/maps/types/api'
 import { renderMetricValue } from '@/maps/utils/metricFormat'
 import { getMetric, hasFillScale, parsePerfData, utilColor, utilPercent } from '@/maps/utils/perf'
@@ -54,7 +54,7 @@ const valueLabel = computed(() =>
 // when the unit genuinely is % — never faked from a bare `max` such as CPU
 // load's core count. The CMK perfometer caption carries the titled context below.
 const readout = computed(() => valueLabel.value)
-const caption = computed(() => (props.perfometer ? perfometerCaption(props.perfometer) : ''))
+const caption = computed(() => (props.perfometer ? perfometerCaptionLines(props.perfometer) : null))
 
 // The raw-value gadget scales on its own label since it never shows a percentage.
 const rawScale = computed(() => {
@@ -202,16 +202,16 @@ const valArc = computed(() => {
         >{{ readout }}</span
       >
     </div>
-    <span
+    <div
       v-if="caption"
-      style="
-        color: var(--maps-map-view-gadget-ink-dim);
-        text-shadow: var(--maps-map-view-text-outline);
-      "
       class="maps-gadget-renderer__value maps-gadget-renderer__value--bar"
       :style="{ fontSize: `${Math.max(8, Math.round(size * 0.13))}px` }"
-      >{{ caption }}</span
     >
+      <span v-if="caption.title" class="maps-gadget-renderer__caption-line">{{
+        caption.title
+      }}</span>
+      <span class="maps-gadget-renderer__caption-line">{{ caption.value }}</span>
+    </div>
   </div>
 
   <!-- Raw value (NagVis rawNumbers): the metric reading as bare state-coloured text -->
@@ -262,16 +262,12 @@ const valArc = computed(() => {
         {{ readout }}
       </text>
     </svg>
-    <span
-      v-if="caption"
-      style="
-        color: var(--maps-map-view-gadget-ink-dim);
-        text-shadow: var(--maps-map-view-text-outline);
-      "
-      class="maps-gadget-renderer__value"
-      :style="{ fontSize: '9px', maxWidth: `${size}px` }"
-      >{{ caption }}</span
-    >
+    <div v-if="caption" class="maps-gadget-renderer__value" :style="{ maxWidth: `${size}px` }">
+      <span v-if="caption.title" class="maps-gadget-renderer__caption-line">{{
+        caption.title
+      }}</span>
+      <span class="maps-gadget-renderer__caption-line">{{ caption.value }}</span>
+    </div>
   </div>
 </template>
 
@@ -332,14 +328,27 @@ const valArc = computed(() => {
 }
 
 .maps-gadget-renderer__value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+/* A gadget is narrower than its caption ("RAM usage 48.91 %"); on lines of
+   their own the title can be shortened and the value still shows. Colour and
+   outline sit on each line because the theme resets text-shadow everywhere. */
+.maps-gadget-renderer__caption-line {
   overflow: hidden;
+  color: var(--maps-map-view-gadget-ink-dim);
+  text-shadow: var(--maps-map-view-text-outline);
+  max-width: 100%;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .maps-gadget-renderer__value--bar {
   width: 100%;
-  text-align: center;
 }
 
 .maps-gadget-renderer__arc {

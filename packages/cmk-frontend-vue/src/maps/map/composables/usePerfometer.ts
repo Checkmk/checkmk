@@ -6,7 +6,7 @@
 import { type Ref, computed } from 'vue'
 
 import { type MetricInfoBinding, useMetricInfo } from '@/maps/map/composables/useMetricInfo'
-import type { PerfometerResult, PerfometerSegment } from '@/maps/types/api'
+import type { PerfometerResult, PerfometerSegment, PerfometerSide } from '@/maps/types/api'
 
 /**
  * The GUI-rendered CMK Perf-O-Meter for a bound host/service, kept fresh as
@@ -61,4 +61,28 @@ export function perfometerCaption(perfometer: PerfometerResult): string {
     .map((_, i) => sideCaption(perfometer, i))
     .filter((p): p is string => !!p)
   return parts.length ? parts.join(' / ') : perfometer.label
+}
+
+/** The caption as a title line and a value line ("RAM usage" / "48.91 %"),
+ * so a gadget too narrow for both can shorten the title and keep the value. */
+export function perfometerCaptionLines(perfometer: PerfometerResult): {
+  title: string
+  value: string
+} {
+  const sides = perfometer.sides.filter((side): side is PerfometerSide => !!side)
+  if (!sides.length) {
+    return { title: '', value: perfometer.label }
+  }
+  // Split apart, titles only pair up with their values when every side has one.
+  const titled = sides.filter((side) => !!side.title).length
+  if (titled > 0 && titled < sides.length) {
+    return { title: '', value: perfometerCaption(perfometer) }
+  }
+  return {
+    title: sides
+      .map((side) => side.title)
+      .filter((title) => !!title)
+      .join(' / '),
+    value: sides.map((side) => side.label).join(' / ')
+  }
 }

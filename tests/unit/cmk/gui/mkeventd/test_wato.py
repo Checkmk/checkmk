@@ -5,6 +5,7 @@
 
 from collections.abc import Iterable
 from datetime import datetime, timezone
+from typing import cast
 
 import pytest
 import time_machine
@@ -18,6 +19,7 @@ from cmk.ccc.site import omd_site
 from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.timeperiod import TimeperiodName
+from cmk.utils.translations import TranslationOptions
 
 import cmk.ec.export as ec
 
@@ -105,12 +107,17 @@ def _rule_pack(*rules: ec.Rule, disabled: bool = False) -> ec.ECRulePackSpec:
     return ec.ECRulePackSpec(id="pack", title="Pack", disabled=disabled, rules=list(rules))
 
 
-def _simulator(*, simulated_site: SiteId) -> mkeventd_wato.EventSimulator:
+def _simulator(
+    *,
+    simulated_site: SiteId,
+    host: HostName = HostName("myhost089"),
+    hostname_translation: TranslationOptions | None = None,
+) -> mkeventd_wato.EventSimulator:
     return mkeventd_wato.EventSimulator(
         ec.Event(
             text="Still nothing happened.",
             application="Foobar-Daemon",
-            host=HostName("myhost089"),
+            host=host,
             ipaddress="1.2.3.4",
             priority=5,
             facility=1,
@@ -118,6 +125,7 @@ def _simulator(*, simulated_site: SiteId) -> mkeventd_wato.EventSimulator:
             site=simulated_site,
         ),
         SiteConfigurations({simulated_site: _site_configuration(simulated_site)}),
+        hostname_translation or TranslationOptions(),
     )
 
 
@@ -253,3 +261,48 @@ def test_simulator_queries_time_periods_once_for_all_rules(
         results = [simulator.match_rule(_rule_pack(), rule) for rule in rules]
 
     assert all(isinstance(result, ec.MatchSuccess) for result in results)
+
+
+def test_simulator_translates_the_host_name_once_for_all_rules() -> None:
+    simulator = _simulator(
+        simulated_site=SiteId("remote"),
+        hostname_translation=TranslationOptions(regex=[("(.*)", "translated_\\1")]),
+    )
+    rules = [ec.Rule(id=f"rule{nr}", match_host="translated_myhost089") for nr in range(2)]
+
+    results = [simulator.match_rule(_rule_pack(), rule) for rule in rules]
+
+    assert all(isinstance(result, ec.MatchSuccess) for result in results)
+
+
+def test_simulator_matches_an_invalid_host_name_like_an_empty_one() -> None:
+    # The simulator form accepts any host name without spaces, just like the Event Console.
+    simulator = _simulator(simulated_site=SiteId("remote"), host=cast(HostName, "user@host"))
+
+    result = simulator.match_rule(_rule_pack(), ec.Rule(id="rule", match_host="^$"))
+
+    assert isinstance(result, ec.MatchSuccess)
+
+
+def test_simulator_matches_like_an_empty_host_name_if_the_translation_fails() -> None:
+    # Nobody validates settings written by hand.
+    simulator = _simulator(
+        simulated_site=SiteId("remote"),
+        hostname_translation=TranslationOptions(regex=[("((", "x")]),
+    )
+
+    result = simulator.match_rule(_rule_pack(), ec.Rule(id="rule", match_host="^$"))
+
+    assert isinstance(result, ec.MatchSuccess)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_hostname_translation_of_a_site_is_its_site_specific_one() -> None:
+    site_config = _site_configuration(SiteId("remote"))
+    site_config["globals"] = {"hostname_translation": TranslationOptions(drop_domain=True)}
+
+    translation = mkeventd_wato.hostname_translation_of_site(
+        SiteId("remote"), SiteConfigurations({SiteId("remote"): site_config})
+    )
+
+    assert translation == TranslationOptions(drop_domain=True)

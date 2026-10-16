@@ -39,6 +39,13 @@ def check_db2_connections(item: str, params: Mapping[str, Any], section: Section
     if not db:
         raise IgnoreResultsError("Login into database failed")
 
+    if unparsable := [" ".join(line) for line in db if len(line) != 2]:
+        yield Result(
+            state=State.UNKNOWN,
+            summary=f"Cannot parse agent output: {' '.join(unparsable)}",
+        )
+        return
+
     data = dict(db)
 
     yield from check_levels_v1(

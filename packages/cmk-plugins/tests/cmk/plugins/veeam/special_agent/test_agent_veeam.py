@@ -36,7 +36,7 @@ from cmk.plugins.veeam.special_agent.agent_veeam import (
     VeeamClient,
     write_sections,
 )
-from cmk.server_side_programs.v1 import Storage
+from cmk.server_side_programs.v1 import AgentMessages, Storage
 
 URL = "https://veeam.example.com:443"
 TOKEN_URL = f"{URL}/api/oauth2/token"
@@ -300,24 +300,71 @@ def test_broken_response_on_a_data_endpoint_does_stop_the_other_sections(
     assert "<<<veeam_jobs:sep(0)>>>" not in captured.out
 
 
-def test_access_denied_names_the_section_and_the_endpoint(
-    api: responses.RequestsMock, storage: Storage, capsys: pytest.CaptureFixture[str]
-) -> None:
+_REPLICAS_DENIED = (
+    "Could not create section 'veeam_replicas': denied permission to endpoint /api/v1/replicas"
+)
+
+
+def _replicas_denied_section() -> str:
+    messages = AgentMessages()
+    messages.add_warning(_REPLICAS_DENIED)
+    return messages.render()
+
+
+def _deny_replicas(api: responses.RequestsMock) -> None:
     api.get(
         f"{URL}/api/v1/replicas",
         status=HTTPStatus.FORBIDDEN,
         json={"errorCode": "Forbidden", "message": "Access denied."},
     )
 
-    with pytest.raises(TerminateAgent) as excinfo:
-        write_sections(
-            _client(_auth(storage), storage), [("veeam_replicas", fetch_list("/api/v1/replicas"))]
-        )
 
-    assert str(excinfo.value) == (
-        "Could not create section 'veeam_replicas': denied permission to endpoint /api/v1/replicas"
+def test_denied_section_is_reported_as_warning_and_the_others_are_written(
+    api: responses.RequestsMock, storage: Storage, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _deny_replicas(api)
+    api.get(f"{URL}/api/v1/license", json={"edition": "Enterprise"})
+
+    write_sections(
+        _client(_auth(storage), storage),
+        [
+            ("veeam_replicas", fetch_list("/api/v1/replicas")),
+            ("veeam_license", fetch_object("/api/v1/license")),
+        ],
     )
-    assert capsys.readouterr().out == ""
+
+    assert capsys.readouterr().out == (
+        '<<<veeam_license:sep(0)>>>\n{"edition": "Enterprise"}\n' + _replicas_denied_section()
+    )
+
+
+def test_warnings_are_written_after_the_piggyback_hosts(
+    api: responses.RequestsMock, storage: Storage, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _deny_replicas(api)
+
+    write_sections(
+        _client(_auth(storage), storage),
+        [
+            ("section_a", _piggyback_on("host-1")),
+            ("veeam_replicas", fetch_list("/api/v1/replicas")),
+        ],
+    )
+
+    assert capsys.readouterr().out == (
+        "<<<section_a:sep(0)>>>\n"
+        "<<<<host-1>>>>\n"
+        "<<<section_a:sep(0)>>>\n{}\n"
+        "<<<<>>>>\n" + _replicas_denied_section()
+    )
+
+
+@pytest.mark.usefixtures("storage")
+def test_main_succeeds_if_a_section_is_denied(api: responses.RequestsMock) -> None:
+    api.post(TOKEN_URL, json=_token("first"))
+    _deny_replicas(api)
+
+    assert main([*_MINIMAL_ARGV, "--sections", "veeam_replicas", "veeam.example.com"]) == 0
 
 
 def test_session_rejected_again_after_renewal_is_fatal(

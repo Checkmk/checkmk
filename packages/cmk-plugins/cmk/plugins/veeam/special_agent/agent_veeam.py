@@ -30,7 +30,12 @@ from pydantic.alias_generators import to_camel
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option, Secret
 from cmk.plugins.veeam.lib import parse_iso8601_epoch
-from cmk.server_side_programs.v1 import HostnameValidationAdapter, report_agent_crashes, Storage
+from cmk.server_side_programs.v1 import (
+    AgentMessages,
+    HostnameValidationAdapter,
+    report_agent_crashes,
+    Storage,
+)
 
 AGENT = "veeam"
 
@@ -74,7 +79,7 @@ class TerminateAgent(RuntimeError):
     """
 
 
-class AccessDenied(TerminateAgent):
+class AccessDenied(RuntimeError):
     """The Veeam user may not read an endpoint (HTTP 403)."""
 
     def __init__(self, path: str) -> None:
@@ -1048,20 +1053,27 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
 
 
 def write_sections(client: VeeamClient, sections: Sequence[Section]) -> None:
-    """Each piggyback host is written once, with the sections of all fetches for it."""
+    """Each piggyback host is written once, with the sections of all fetches for it.
+
+    A section the user may not read is left out and reported as a warning, the other
+    sections are still written.
+    """
     piggyback: dict[str, list[str]] = {}
+    messages = AgentMessages()
     for name, fetch in sections:
         try:
             fetched = fetch(client, name)
         except AccessDenied as exc:
-            raise TerminateAgent(
+            messages.add_warning(
                 f"Could not create section '{name}': denied permission to endpoint {exc.endpoint}"
-            ) from exc
+            )
+            continue
         sys.stdout.write(fetched.own)
         for host, text in fetched.piggyback.items():
             piggyback.setdefault(host, []).append(text)
     for host, texts in piggyback.items():
         sys.stdout.write(f"<<<<{host}>>>>\n{''.join(texts)}<<<<>>>>\n")
+    sys.stdout.write(messages.render())
 
 
 SECTIONS: Sequence[Section] = (

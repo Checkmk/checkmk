@@ -240,5 +240,5 @@ def test_account_list_role_is_assumed_with_the_external_id(fake_sts: FakeSts) ->
 
 @pytest.mark.usefixtures("fake_sts")
 def test_failed_listing_is_an_access_error() -> None:
-    with pytest.raises(AwsAccessError, match="Cannot list the accounts of the organization"):
+    with pytest.raises(AwsAccessError, match="Cannot list the accounts in the organization"):
         _organization(Organization(), key_id=NO_LIST_KEY_ID).monitored_account_ids()

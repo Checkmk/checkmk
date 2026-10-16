@@ -272,7 +272,7 @@ def test_failed_listing_is_a_run_error_in_the_agent_info(
     [header, row] = _sections_by_host(capsys.readouterr().out)[None][-2:]
     assert (header, json.loads(row)["reason"].split(":")[0]) == (
         "<<<aws_v2_agent_info:sep(0)>>>",
-        "Cannot list the accounts of the organization",
+        "Cannot list the accounts in the organization",
     )
 
 

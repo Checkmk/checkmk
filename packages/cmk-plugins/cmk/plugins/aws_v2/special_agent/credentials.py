@@ -255,7 +255,7 @@ class AwsCredentials:
             ]
         except Exception as e:
             raise AwsAccessError(
-                f"Cannot list the accounts of the organization: {describe_credential_failure(e)}"
+                f"Cannot list the accounts in the organization: {describe_credential_failure(e)}"
             )
         return [
             account["Id"]

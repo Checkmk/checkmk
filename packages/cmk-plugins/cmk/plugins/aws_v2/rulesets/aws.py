@@ -404,7 +404,12 @@ def _accounts() -> Mapping[str, DictElement]:
                     "<b>Explicit list of account IDs:</b> monitor several accounts with this one "
                     "rule. Every listed account needs a role with the same name that these "
                     "credentials may assume. The data of each account goes to a piggyback host "
-                    "named after its account ID."
+                    "named after its account ID.<br>"
+                    "<b>All accounts in the organization:</b> like the list, but the agent queries "
+                    "AWS Organizations for the accounts on every run, so new accounts are "
+                    "monitored without changing the rule. Suspended and closed accounts are "
+                    "skipped. The management account is one of the accounts: exclude it if it "
+                    "has no such role."
                 ),
                 elements=[
                     CascadingSingleChoiceElement(
@@ -417,6 +422,11 @@ def _accounts() -> Mapping[str, DictElement]:
                         title=Title("Explicit list of account IDs"),
                         parameter_form=Dictionary(elements=_account_list()),
                     ),
+                    CascadingSingleChoiceElement(
+                        name="organization",
+                        title=Title("All accounts in the organization"),
+                        parameter_form=Dictionary(elements=_organization()),
+                    ),
                 ],
                 prefill=DefaultValue("single"),
             ),
@@ -425,19 +435,23 @@ def _accounts() -> Mapping[str, DictElement]:
     }
 
 
+def _account_id() -> String:
+    return String(
+        field_size=FieldSize.SMALL,
+        custom_validate=(
+            validators.MatchRegex(
+                r"^[0-9]{12}$", Message("An AWS account ID has exactly 12 digits.")
+            ),
+        ),
+    )
+
+
 def _account_list() -> Mapping[str, DictElement]:
     return {
         "account_ids": DictElement(
             parameter_form=List(
                 title=Title("Account IDs"),
-                element_template=String(
-                    field_size=FieldSize.SMALL,
-                    custom_validate=(
-                        validators.MatchRegex(
-                            r"^[0-9]{12}$", Message("An AWS account ID has exactly 12 digits.")
-                        ),
-                    ),
-                ),
+                element_template=_account_id(),
                 custom_validate=(
                     validators.LengthInRange(min_value=1),
                     _validate_unique_account_ids,
@@ -445,6 +459,51 @@ def _account_list() -> Mapping[str, DictElement]:
             ),
             required=True,
         ),
+        **_spoke_role(),
+    }
+
+
+def _organization() -> Mapping[str, DictElement]:
+    return {
+        **_spoke_role(),
+        "excluded_account_ids": DictElement(
+            parameter_form=List(
+                title=Title("Excluded account IDs"),
+                help_text=Help(
+                    "Accounts in the organization that this rule does not monitor, for example "
+                    "the management account when it has no role of that name."
+                ),
+                element_template=_account_id(),
+                custom_validate=(_validate_unique_account_ids,),
+            ),
+        ),
+        "account_list_role_arn": DictElement(
+            parameter_form=String(
+                title=Title("Role that lists the accounts"),
+                help_text=Help(
+                    "The ARN of a role in the management account that may call "
+                    "<tt>organizations:ListAccounts</tt>. The credentials assume it only to "
+                    "list the accounts. The role in each account is still assumed directly "
+                    "from the credentials. Leave this empty when the credentials may list the "
+                    "accounts themselves, for example as a delegated administrator."
+                ),
+                field_size=FieldSize.LARGE,
+                custom_validate=(
+                    validators.MatchRegex(
+                        r"^arn:[\w-]+:iam::[0-9]{12}:role/.*",
+                        Message(
+                            "Enter the ARN of an IAM role, for example "
+                            "arn:aws:iam::123456789012:role/CheckmkAccountList."
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    }
+
+
+def _spoke_role() -> Mapping[str, DictElement]:
+    return {
         "role_name": DictElement(
             parameter_form=String(
                 title=Title("Name of the role in every account"),
@@ -468,10 +527,11 @@ def _account_list() -> Mapping[str, DictElement]:
             parameter_form=String(
                 title=Title("External ID"),
                 help_text=Help(
-                    "Sent with every AssumeRole call, the same for every account. Set it when "
-                    "the roles in the accounts require one. A rule on this site can then use "
-                    "those roles only if it knows the ID. It is not a secret: it is stored "
-                    "and passed in plain text, so every user who can read this rule can copy it."
+                    "Sent with every AssumeRole call of this rule, the same for every account "
+                    "and for the role that lists the accounts. Set it when the roles require "
+                    "one. A rule on this site can then use those roles only if it knows the ID. "
+                    "It is not a secret: it is stored and passed in plain text, so every user "
+                    "who can read this rule can copy it."
                 ),
                 custom_validate=(validators.LengthInRange(min_value=1),),
             ),

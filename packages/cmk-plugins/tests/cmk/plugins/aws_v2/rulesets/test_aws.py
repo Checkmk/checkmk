@@ -13,7 +13,10 @@ from cmk.plugins.aws_v2.rulesets.aws import (
     configuration_regions_and_tags,
     configuration_services,
 )
-from cmk.plugins.aws_v2.server_side_calls.agent_aws import special_agent_aws_v2
+from cmk.plugins.aws_v2.server_side_calls.agent_aws import (
+    OrganizationAccounts,
+    special_agent_aws_v2,
+)
 from cmk.plugins.aws_v2.special_agent.agent_aws_v2 import AWS_SERVICES
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -88,13 +91,17 @@ def _login_forms() -> dict[str, object]:
     return {element.name: element.parameter_form for element in auth.elements}
 
 
-def _account_list_elements() -> Mapping[str, DictElement[object]]:
+def _account_choice_elements(choice: str) -> Mapping[str, DictElement[object]]:
     login = _login_forms()["none"]
     assert isinstance(login, Dictionary)
     accounts = _parameter_form(login.elements, "accounts", CascadingSingleChoice)
-    (account_list,) = [e.parameter_form for e in accounts.elements if e.name == "list"]
-    assert isinstance(account_list, Dictionary)
-    return account_list.elements
+    (form,) = [e.parameter_form for e in accounts.elements if e.name == choice]
+    assert isinstance(form, Dictionary)
+    return form.elements
+
+
+def _account_list_elements() -> Mapping[str, DictElement[object]]:
+    return _account_choice_elements("list")
 
 
 def test_only_logins_without_a_role_offer_an_account_list() -> None:
@@ -131,3 +138,60 @@ def test_account_ids_must_be_unique() -> None:
     with pytest.raises(ValidationError):
         for validate in account_ids.custom_validate or ():
             validate(["333333333333", "333333333333"])
+
+
+def test_organization_offers_every_option_of_the_server_side_call() -> None:
+    elements = _account_choice_elements("organization")
+
+    assert (set(elements), {key for key, element in elements.items() if element.required}) == (
+        set(OrganizationAccounts.model_fields),
+        {"role_name"},
+    )
+
+
+def test_excluded_account_id_needs_exactly_twelve_digits() -> None:
+    excluded = _parameter_form(
+        _account_choice_elements("organization"), "excluded_account_ids", List
+    )
+    assert isinstance(excluded.element_template, String)
+
+    with pytest.raises(ValidationError):
+        for validate in excluded.element_template.custom_validate or ():
+            validate("12345678901")
+
+
+def test_excluded_account_ids_must_be_unique() -> None:
+    excluded = _parameter_form(
+        _account_choice_elements("organization"), "excluded_account_ids", List
+    )
+
+    with pytest.raises(ValidationError):
+        for validate in excluded.custom_validate or ():
+            validate(["333333333333", "333333333333"])
+
+
+@pytest.mark.parametrize(
+    "arn",
+    [
+        pytest.param("CheckmkAccountList", id="role name only"),
+        pytest.param("arn:aws:iam::888888888888:user/checkmk", id="user"),
+        pytest.param("arn:aws:iam::88888888888:role/CheckmkAccountList", id="short account ID"),
+    ],
+)
+def test_account_list_role_must_be_a_role_arn(arn: str) -> None:
+    list_role = _parameter_form(
+        _account_choice_elements("organization"), "account_list_role_arn", String
+    )
+
+    with pytest.raises(ValidationError):
+        for validate in list_role.custom_validate or ():
+            validate(arn)
+
+
+def test_account_list_role_accepts_a_role_arn_with_a_path() -> None:
+    list_role = _parameter_form(
+        _account_choice_elements("organization"), "account_list_role_arn", String
+    )
+
+    for validate in list_role.custom_validate or ():
+        validate("arn:aws-us-gov:iam::888888888888:role/monitoring/CheckmkAccountList")

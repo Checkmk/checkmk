@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""An agent run over a list of accounts, against the fake STS endpoint."""
+"""An agent run over several accounts, against the fake STS endpoint."""
 
 import itertools
 import json
@@ -11,9 +11,13 @@ import pytest
 
 from cmk.plugins.aws_v2.special_agent.agent_aws_v2 import agent_aws_main, parse_arguments
 from cmk.testlib.aws_v2.fake_sts import (
+    ACTIVE_ORGANIZATION_ACCOUNTS,
     AssumeRoleCall,
     DENIED_ACCOUNT,
     FakeSts,
+    LIST_ROLE,
+    MANAGEMENT_ACCOUNT,
+    NO_LIST_KEY_ID,
     NOT_ENABLED_REGION,
     SCP_DENIED_ACCOUNT,
     SignedRequest,
@@ -217,3 +221,74 @@ def test_deny_of_a_service_control_policy_is_info_not_error(
         ("ok", None),
         ("info", "eu-central-1"),
     }
+
+
+def _hosts(
+    fake_sts: FakeSts,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    args: list[str],
+) -> set[str | None]:
+    monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
+    agent_aws_main(parse_arguments(args))
+    return set(_sections_by_host(capsys.readouterr().out))
+
+
+def test_organization_mode_gives_every_active_account_its_own_host(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    hosts = _hosts(fake_sts, monkeypatch, capsys, [*LOGIN_ARGS, "--organization"])
+
+    assert hosts == {None, *ACTIVE_ORGANIZATION_ACCOUNTS}
+
+
+def test_excluded_account_of_the_organization_gets_no_host(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    args = [*LOGIN_ARGS, "--organization", "--exclude-account", MANAGEMENT_ACCOUNT]
+
+    assert MANAGEMENT_ACCOUNT not in _hosts(fake_sts, monkeypatch, capsys, args)
+
+
+def test_account_list_role_lists_the_accounts_of_the_organization(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    args = [*LOGIN_ARGS, "--organization", "--account-list-role-arn", LIST_ROLE]
+    _hosts(fake_sts, monkeypatch, capsys, args)
+
+    assert {call.key_id for call in fake_sts.list_accounts_calls} == {
+        temporary_key_id(MANAGEMENT_ACCOUNT)
+    }
+
+
+def test_failed_listing_is_a_run_error_in_the_agent_info(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
+    args = [NO_LIST_KEY_ID if arg == "AKIAHUB" else arg for arg in LOGIN_ARGS]
+
+    agent_aws_main(parse_arguments([*args, "--organization"]))
+
+    [header, row] = _sections_by_host(capsys.readouterr().out)[None][-2:]
+    assert (header, json.loads(row)["reason"].split(":")[0]) == (
+        "<<<aws_v2_agent_info:sep(0)>>>",
+        "Cannot list the accounts of the organization",
+    )
+
+
+def test_organization_without_an_account_to_monitor_is_a_run_error(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
+    excluded = [
+        arg for account in ACTIVE_ORGANIZATION_ACCOUNTS for arg in ("--exclude-account", account)
+    ]
+
+    agent_aws_main(parse_arguments([*LOGIN_ARGS, "--organization", *excluded]))
+
+    [header, row] = _sections_by_host(capsys.readouterr().out)[None][-2:]
+    assert (header, set(json.loads(row)), json.loads(row)["status"]) == (
+        "<<<aws_v2_agent_info:sep(0)>>>",
+        {"status", "reason"},
+        "error",
+    )

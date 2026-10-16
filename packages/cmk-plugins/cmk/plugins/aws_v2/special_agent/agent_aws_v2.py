@@ -42,6 +42,7 @@ from .credentials import (
     AwsCredentials,
     DefaultCredentials,
     HubCredentials,
+    Organization,
     role_session_name,
     SpokeAccounts,
 )
@@ -280,27 +281,49 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         help="Set this to your region when you are in 'us-gov-*' or 'cn-*' regions.",
         default="us-east-1",
     )
-    parser.add_argument(
+    # Each of these decides which accounts the run monitors.
+    account_modes = parser.add_mutually_exclusive_group()
+    account_modes.add_argument(
         "--assume-role",
         action="store_true",
-        help="Use STS AssumeRole to assume a different IAM role",
+        help="Use STS AssumeRole to assume a different IAM role. It cannot be combined with"
+        " --account or --organization: their roles are assumed directly from the credentials,"
+        " not through another role.",
     )
     parser.add_argument("--role-arn", help="The ARN of the IAM role to assume")
     parser.add_argument(
         "--external-id", help="Unique identifier to assume a role in another account"
     )
-    parser.add_argument(
+    account_modes.add_argument(
         "--account",
         dest="accounts",
         action="append",
         help="Monitor this account ID instead of the account of the credentials. Repeat it for"
         " several accounts. The agent assumes the role --spoke-role-name in each of them.",
     )
-    parser.add_argument(
-        "--spoke-role-name", help="The name of the role to assume in every --account"
+    account_modes.add_argument(
+        "--organization",
+        action="store_true",
+        help="Monitor every active account of the organization, found by ListAccounts on every"
+        " run. The agent assumes the role --spoke-role-name in each of them.",
     )
     parser.add_argument(
-        "--spoke-external-id", help="The external ID of the role in every --account"
+        "--exclude-account",
+        dest="excluded_accounts",
+        action="append",
+        help="Do not monitor this account of the --organization. Repeat it for several accounts.",
+    )
+    parser.add_argument(
+        "--account-list-role-arn",
+        help="Assume this role in the management account to list the accounts of the"
+        " --organization. Without it, the credentials list them themselves.",
+    )
+    parser.add_argument(
+        "--spoke-role-name", help="The name of the role to assume in every monitored account"
+    )
+    parser.add_argument(
+        "--spoke-external-id",
+        help="The external ID of every role the agent assumes for --account or --organization",
     )
     parser.add_argument(
         "--region",
@@ -425,15 +448,15 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         parser.error("--access-key-identity requires --secret or --secret-id")
     if args.assume_role and not args.role_arn:
         parser.error("--assume-role requires --role-arn")
-    if args.accounts and not args.spoke_role_name:
-        parser.error("--account requires --spoke-role-name")
-    if (args.spoke_role_name or args.spoke_external_id) and not args.accounts:
-        parser.error("--spoke-role-name and --spoke-external-id require --account")
-    if args.accounts and args.assume_role:
+    spokes = args.accounts or args.organization
+    if spokes and not args.spoke_role_name:
+        parser.error("--account and --organization require --spoke-role-name")
+    if (args.spoke_role_name or args.spoke_external_id) and not spokes:
         parser.error(
-            "--account cannot be combined with --assume-role: every account role must be"
-            " assumed directly from the credentials, not through another role"
+            "--spoke-role-name and --spoke-external-id require --account or --organization"
         )
+    if (args.excluded_accounts or args.account_list_role_arn) and not args.organization:
+        parser.error("--exclude-account and --account-list-role-arn require --organization")
     return args
 
 
@@ -610,9 +633,15 @@ def _hub_credentials_from_args(args: argparse.Namespace) -> HubCredentials:
 
 
 def _spoke_accounts_from_args(args: argparse.Namespace) -> SpokeAccounts | None:
-    if not args.accounts:
+    if args.organization:
+        accounts: Sequence[str] | Organization = Organization(
+            args.excluded_accounts or (), args.account_list_role_arn
+        )
+    elif args.accounts:
+        accounts = args.accounts
+    else:
         return None
-    return SpokeAccounts(args.accounts, args.spoke_role_name, args.spoke_external_id or None)
+    return SpokeAccounts(accounts, args.spoke_role_name, args.spoke_external_id or None)
 
 
 def _test_connection(credentials: AwsCredentials) -> int:
@@ -747,6 +776,18 @@ def agent_aws_main(args: argparse.Namespace) -> int:
     except AwsAccessError as ae:
         _write_access_error(ae)
         write_agent_info([AgentInfoRow("error", reason=str(ae))])
+        return 0
+    if not account_ids:
+        # Only an organization can leave nothing: every account is excluded or inactive.
+        write_agent_info(
+            [
+                AgentInfoRow(
+                    "error",
+                    reason="No active account of the organization is left to monitor."
+                    " Check the excluded account IDs.",
+                )
+            ]
+        )
         return 0
 
     aws_config = _configure_aws(args)

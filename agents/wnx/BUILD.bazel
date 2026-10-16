@@ -340,6 +340,12 @@ filegroup(
     srcs = glob(["install/resources/**"]),
 )
 
+# Signed along with the plugins, see //agents/windows/plugins:TO_SIGN_SCRIPTS.
+exports_files(
+    ["install/resources/configure_and_exec.ps1"],
+    visibility = ["//agents/windows/plugins:__pkg__"],
+)
+
 package_msi(
     name = "check_mk_agent_msi",
     srcs = [
@@ -352,6 +358,7 @@ package_msi(
     script = "install/build_msi.sh",
     # Where Product.wxs expects them.
     stage_files = {
+        "//agents/windows/plugins:unsigned_plugins": "agents/wnx/install/plugins.tar",
         "//packages/cmk-agent-ctl:cmk-agent-ctl-windows": "artefacts/cmk-agent-ctl.exe",
         ":check_mk_service-windows": "agents/wnx/build/check_mk_service/x64/Release/check_mk_service.exe",
     },

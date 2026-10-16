@@ -1233,10 +1233,9 @@ describe('TrialModeSelectionApp', () => {
       })
     })
 
-    it('still verifies a code already delivered once the send limit is used up', async () => {
+    it('still verifies the code after several resends', async () => {
       renderApp()
       await reachCodeStep()
-      // The first send plus four resends use up the five a day.
       for (let sends = 1; sends < 5; sends++) {
         await resend()
       }
@@ -1276,10 +1275,10 @@ describe('TrialModeSelectionApp', () => {
       answerVerificationWith({
         status: 'error',
         errorCode: 'rejected',
-        errorMessage: 'Your verification code has expired.'
+        errorMessage: 'You have exceeded the maximum number of attempts.'
       })
       await user.type(codeDigits()[0]!, '424242')
-      await screen.findByText('Your verification code has expired.')
+      await screen.findByText('You have exceeded the maximum number of attempts.')
       await vi.advanceTimersByTimeAsync(60_000)
       answerVerificationWith({
         status: 'error',
@@ -1292,10 +1291,12 @@ describe('TrialModeSelectionApp', () => {
       expect(
         await screen.findByText('Too many verification codes have been requested.')
       ).toBeInTheDocument()
-      expect(screen.queryByText('Your verification code has expired.')).not.toBeInTheDocument()
+      expect(
+        screen.queryByText('You have exceeded the maximum number of attempts.')
+      ).not.toBeInTheDocument()
     })
 
-    it('offers continuing without verification once a resend fails after a wrong code', async () => {
+    it('offers continuing without verification once a resend fails after an expired code', async () => {
       renderApp()
       await reachCodeStep()
       answerVerificationWith({

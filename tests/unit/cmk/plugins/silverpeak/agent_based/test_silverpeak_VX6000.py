@@ -90,11 +90,6 @@ def test_check_silverpeak_VX6000(info: InfoType, expected_results: Sequence[Resu
     assert result == expected_results
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=KeyError,
-    reason="Crash report 9be3337a-c8a8-11f1-b2c1-0050568d12fe: KeyError",
-)
 def test_check_silverpeak_VX6000_alarm_count_without_alarm_rows() -> None:
     # Crash group 4960: the device reported three active alarms, but its alarm
     # table delivered no rows.

@@ -20,6 +20,7 @@ from cmk.ccc.translations import TranslationOptions
 from cmk.gui.config import Config
 from cmk.gui.logged_in import user
 from cmk.gui.mkeventd import wato as mkeventd_wato
+from cmk.gui.mkeventd.wato import MatchOutcome
 from cmk.gui.search.matchers import MatchItem, MatchItemConfig
 from cmk.gui.utils.roles import UserPermissions
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
@@ -309,39 +310,80 @@ def test_match_groups_which_did_not_participate_in_a_match_show_up_as_none() -> 
 _MATCHING_RULE = ec.Rule(id="matching", match="nothing")
 _NON_MATCHING_RULE = ec.Rule(id="non_matching", match="no such text")
 _CANCELLING_RULE = ec.Rule(id="cancelling", match="no such text", match_ok="nothing")
+_DROPPING_RULE = ec.Rule(id="dropping", match="nothing", drop=True)
+_CANCELLING_DROPPING_RULE = ec.Rule(
+    id="cancelling_dropping", match="no such text", match_ok="nothing", drop=True
+)
 _SKIPPING_RULE = ec.Rule(id="skipping", match="nothing", drop="skip_pack")
 _CANCELLING_SKIPPING_RULE = ec.Rule(
     id="cancelling_skipping", match="no such text", match_ok="nothing", drop="skip_pack"
 )
 
 
+@pytest.mark.parametrize(
+    "rule, outcome",
+    [
+        pytest.param(_MATCHING_RULE, MatchOutcome.NEW_EVENT, id="match"),
+        pytest.param(_CANCELLING_RULE, MatchOutcome.CANCEL_EVENTS, id="cancel"),
+        pytest.param(_DROPPING_RULE, MatchOutcome.DROP_MESSAGE, id="drop"),
+        pytest.param(_CANCELLING_DROPPING_RULE, MatchOutcome.DROP_MESSAGE, id="cancel, drop"),
+        pytest.param(_SKIPPING_RULE, MatchOutcome.SKIP_PACK, id="skip"),
+        pytest.param(_CANCELLING_SKIPPING_RULE, MatchOutcome.SKIP_PACK, id="cancel, skip"),
+    ],
+)
+def test_match_outcome_is_the_one_of_the_event_console(
+    rule: ec.Rule, outcome: MatchOutcome
+) -> None:
+    result = _simulate(rule, simulated_site=SiteId("remote"))
+
+    assert isinstance(result, ec.MatchSuccess)
+    assert mkeventd_wato.match_outcome(rule, result) is outcome
+
+
+@pytest.mark.parametrize(
+    "drop, outcome",
+    [
+        pytest.param(1, MatchOutcome.DROP_MESSAGE, id="true value"),
+        pytest.param(0, MatchOutcome.NEW_EVENT, id="false value"),
+    ],
+)
+def test_match_outcome_uses_the_truth_value_of_drop_like_the_event_console(
+    drop: int, outcome: MatchOutcome
+) -> None:
+    # Nobody validates rule packs written by hand or shipped in an MKP.
+    rule = ec.Rule(id="rule", match="nothing", drop=drop)  # type: ignore[typeddict-item]
+    result = _simulate(rule, simulated_site=SiteId("remote"))
+
+    assert isinstance(result, ec.MatchSuccess)
+    assert mkeventd_wato.match_outcome(rule, result) is outcome
+
+
 def _rule_pack(*rules: ec.Rule) -> ec.ECRulePackSpec:
     return ec.ECRulePackSpec(id="pack", title="Pack", disabled=False, rules=list(rules))
 
 
-def test_first_matching_rule_decides_the_match_of_a_rule_pack() -> None:
-    simulator = _simulator(simulated_site=SiteId("remote"))
-    rule_pack = _rule_pack(_NON_MATCHING_RULE, _MATCHING_RULE, _CANCELLING_RULE)
+def _first_match_outcome(*rules: ec.Rule) -> MatchOutcome | None:
+    pack_match = _simulator(simulated_site=SiteId("remote")).match_rule_pack(_rule_pack(*rules))
+    return pack_match.first_match.outcome if pack_match.first_match else None
 
-    pack_match = simulator.match_rule_pack(rule_pack)
 
-    assert pack_match.first_match == simulator.match_rule(rule_pack, _MATCHING_RULE)
+def test_first_matching_rule_decides_the_outcome_of_a_rule_pack() -> None:
+    outcome = _first_match_outcome(_NON_MATCHING_RULE, _MATCHING_RULE, _CANCELLING_RULE)
+
+    assert outcome is MatchOutcome.NEW_EVENT
 
 
 @pytest.mark.parametrize(
-    "rules, skips_pack",
+    "rules, outcome",
     [
-        pytest.param([_SKIPPING_RULE, _MATCHING_RULE], True, id="first match skips"),
-        pytest.param([_CANCELLING_SKIPPING_RULE, _MATCHING_RULE], True, id="first cancel skips"),
-        pytest.param([_MATCHING_RULE, _SKIPPING_RULE], False, id="later match skips"),
+        pytest.param([_SKIPPING_RULE, _MATCHING_RULE], MatchOutcome.SKIP_PACK, id="first skips"),
+        pytest.param([_MATCHING_RULE, _SKIPPING_RULE], MatchOutcome.NEW_EVENT, id="later skips"),
     ],
 )
 def test_rule_pack_is_skipped_only_if_its_first_match_skips_it(
-    rules: list[ec.Rule], skips_pack: bool
+    rules: list[ec.Rule], outcome: MatchOutcome
 ) -> None:
-    pack_match = _simulator(simulated_site=SiteId("remote")).match_rule_pack(_rule_pack(*rules))
-
-    assert pack_match.first_match_skips_pack is skips_pack
+    assert _first_match_outcome(*rules) is outcome
 
 
 def test_rule_pack_match_counts_all_matching_rules() -> None:
@@ -367,9 +409,7 @@ def test_disabled_rules_do_not_match_in_a_rule_pack() -> None:
         _rule_pack(disabled_rule)
     )
 
-    assert pack_match == mkeventd_wato.RulePackMatch(
-        matching_rules=0, first_match=None, first_match_skips_pack=False
-    )
+    assert pack_match == mkeventd_wato.RulePackMatch(matching_rules=0, first_match=None)
 
 
 def test_rules_of_a_disabled_rule_pack_do_not_match() -> None:

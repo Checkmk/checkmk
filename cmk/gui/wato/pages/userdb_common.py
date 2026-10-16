@@ -34,13 +34,14 @@ from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
 from cmk.gui.userdb import load_connection_config, UserConnectionConfigFile
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import redirect
 from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.livestatus_client import SiteConfigurations
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.icons import IconNames, StaticIcon
-from cmk.web.utils.urls import makeactionuri_contextless, makeuri_contextless
+from cmk.web.utils.urls import makeuri_contextless
 
 DisplayIndex = NewType("DisplayIndex", int)
 RealIndex = NewType("RealIndex", int)
@@ -80,13 +81,12 @@ def add_connections_page_menu(
                                 title=_("Add connection"),
                                 icon_name=StaticIcon(IconNames.new),
                                 item=make_simple_link(
-                                    makeuri_contextless(
+                                    folder_preserving_link(
                                         request,
                                         [
                                             ("mode", edit_mode_path),
                                             ("new", request.get_ascii_input("id")),
                                         ],
-                                        filename="wato.py",
                                     )
                                 ),
                                 is_shortcut=True,
@@ -157,35 +157,29 @@ def render_connections_page(
 
             table.cell(_("Actions"), css=["buttons"])
             connection_id = connection["id"]
-            edit_url = makeuri_contextless(
+            edit_url = folder_preserving_link(
                 request,
                 [("mode", edit_mode_path), ("id", connection_id), ("edit", connection_id)],
-                filename="wato.py",
             )
             delete_url = make_confirm_delete_link(
                 i18n=_,
-                url=makeactionuri_contextless(
-                    request,
-                    transactions.get(),
-                    [("mode", config_mode_path), ("_delete", real_index)],
-                    filename="wato.py",
+                url=make_action_link(
+                    request, [("mode", config_mode_path), ("_delete", real_index)]
                 ),
                 title=_("Delete connection #%(display_index)d") % {"display_index": display_index},
                 suffix=connection.get("name", connection["id"]),
                 message=_("ID: %(connection_id)s") % {"connection_id": connection["id"]},
             )
-            drag_url = makeactionuri_contextless(
+            drag_url = make_action_link(
                 request,
-                transactions.get(),
                 [
                     ("mode", config_mode_path),
                     ("_move", real_index),
                     ("_connection_type", connection["type"]),
                 ],
-                filename="wato.py",
             )
-            clone_url = makeuri_contextless(
-                request, [("mode", edit_mode_path), ("clone", connection["id"])], filename="wato.py"
+            clone_url = folder_preserving_link(
+                request, [("mode", edit_mode_path), ("clone", connection["id"])]
             )
 
             html.icon_button(edit_url, _("Edit this connection"), StaticIcon(IconNames.edit))

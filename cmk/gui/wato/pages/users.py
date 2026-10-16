@@ -81,6 +81,7 @@ from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.config_sync import get_site_globals
 from cmk.gui.watolib.groups_io import load_contact_group_information
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
@@ -1326,21 +1327,19 @@ class ModeEditUser(WatoMode):
         groups_page_url = makeuri_contextless(
             request, [("mode", "contact_groups")], filename="wato.py"
         )
-        hosts_assign_url = makeuri_contextless(
+        hosts_assign_url = folder_preserving_link(
             request,
             [
                 ("mode", "edit_ruleset"),
                 ("varname", "host_contactgroups"),
             ],
-            filename="wato.py",
         )
-        services_assign_url = makeuri_contextless(
+        services_assign_url = folder_preserving_link(
             request,
             [
                 ("mode", "edit_ruleset"),
                 ("varname", "service_contactgroups"),
             ],
-            filename="wato.py",
         )
 
         if not self._contact_groups:

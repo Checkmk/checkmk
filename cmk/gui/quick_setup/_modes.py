@@ -62,6 +62,7 @@ from cmk.gui.watolib.configuration_bundles import (
 )
 from cmk.gui.watolib.hosts_and_folders import (
     FolderTree,
+    make_action_link,
     make_folder_tree,
 )
 from cmk.gui.watolib.main_menu import (
@@ -89,7 +90,7 @@ from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import HTTPVariable, makeactionuri_contextless
+from cmk.web.utils.urls import HTTPVariable
 
 
 def register(
@@ -403,7 +404,7 @@ class ModeEditConfigurationBundles(WatoMode):
             (self.VAR_BUNDLE_ID, bundle_id),
             (self.VAR_ACTION, action),
         ]
-        return makeactionuri_contextless(request, transactions.get(), vars_, filename="wato.py")
+        return make_action_link(request, vars_)
 
     @override
     def action(self, config: Config) -> ActionResult:

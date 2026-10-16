@@ -3755,13 +3755,12 @@ class ModeUnknownRulesets(WatoMode):
                                     title=_("Service monitoring rules"),
                                     icon_name=StaticIcon(IconNames.rulesets),
                                     item=make_simple_link(
-                                        makeuri_contextless(
+                                        folder_preserving_link(
                                             request,
                                             [
                                                 ("group", "monconf"),
                                                 ("mode", "rulesets"),
                                             ],
-                                            filename="wato.py",
                                         )
                                     ),
                                 )

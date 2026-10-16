@@ -453,6 +453,8 @@ py_test(
         ":splunk",
         requirement("pytest"),
         requirement("polyfactory"),
+        requirement("requests"),
+        requirement("responses"),
     ],
 )
 

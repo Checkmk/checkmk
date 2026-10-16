@@ -23,9 +23,11 @@ from cmk.ccc.translations import TranslationOptions
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.logged_in import user
 from cmk.gui.mkeventd import wato as mkeventd_wato
+from cmk.gui.mkeventd.config_domain import EVENT_CONSOLE
 from cmk.gui.mkeventd.wato import MatchOutcome
 from cmk.gui.search import MatchItem
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.watolib.config_domain_name import config_domain_registry
 from cmk.livestatus_client import SingleSiteConnection, SiteConfiguration, SiteConfigurations
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 
@@ -340,6 +342,45 @@ def test_hostname_translation_of_a_site_is_its_site_specific_one() -> None:
     )
 
     assert translation == TranslationOptions(drop_domain=True)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_site_specific_hostname_translation_does_not_need_the_global_settings() -> None:
+    global_settings_file = config_domain_registry[EVENT_CONSOLE].config_file(site_specific=False)
+    global_settings_file.parent.mkdir(parents=True, exist_ok=True)
+    global_settings_file.write_text("this is no valid Python (\n")
+    site_config = _site_configuration(SiteId("remote"))
+    site_config["globals"] = {"hostname_translation": TranslationOptions(drop_domain=True)}
+
+    translation = mkeventd_wato.hostname_translation_of_site(
+        SiteId("remote"), SiteConfigurations({SiteId("remote"): site_config})
+    )
+
+    assert translation == TranslationOptions(drop_domain=True)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_hostname_translation_of_a_site_without_a_site_specific_one_is_the_global_one() -> None:
+    config_domain_registry[EVENT_CONSOLE].save(
+        {"hostname_translation": TranslationOptions(drop_domain=True)}
+    )
+
+    translation = mkeventd_wato.hostname_translation_of_site(
+        SiteId("remote"),
+        SiteConfigurations({SiteId("remote"): _site_configuration(SiteId("remote"))}),
+    )
+
+    assert translation == TranslationOptions(drop_domain=True)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_hostname_translation_of_a_site_without_any_is_the_default_of_the_event_console() -> None:
+    translation = mkeventd_wato.hostname_translation_of_site(
+        SiteId("remote"),
+        SiteConfigurations({SiteId("remote"): _site_configuration(SiteId("remote"))}),
+    )
+
+    assert translation == ec.default_config()["hostname_translation"]
 
 
 def test_match_groups_of_a_match_come_from_the_message_text() -> None:

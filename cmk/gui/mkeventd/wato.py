@@ -5,6 +5,7 @@
 
 import abc
 import ast
+import enum
 import io
 import os
 import re
@@ -362,12 +363,33 @@ class _SiteLivestatus:
         return connection.query(query)
 
 
+class MatchOutcome(enum.Enum):
+    """What the Event Console does with a message when a rule matches it"""
+
+    NEW_EVENT = enum.auto()
+    CANCEL_EVENTS = enum.auto()
+    DROP_MESSAGE = enum.auto()
+    SKIP_PACK = enum.auto()
+
+
+def match_outcome(rule: ec.Rule, result: ec.MatchSuccess) -> MatchOutcome:
+    # Like the Event Console, look at the rule type first, even for cancelling matches.
+    if drop := rule.get("drop"):
+        return MatchOutcome.SKIP_PACK if drop == "skip_pack" else MatchOutcome.DROP_MESSAGE
+    return MatchOutcome.CANCEL_EVENTS if result.cancelling else MatchOutcome.NEW_EVENT
+
+
+@dataclass(frozen=True)
+class RuleMatch:
+    result: ec.MatchSuccess
+    outcome: MatchOutcome
+
+
 @dataclass(frozen=True)
 class RulePackMatch:
     matching_rules: int
     # Like in the Event Console, the first matching rule decides what happens.
-    first_match: ec.MatchSuccess | None
-    first_match_skips_pack: bool
+    first_match: RuleMatch | None
 
 
 class EventSimulator:
@@ -426,18 +448,14 @@ class EventSimulator:
 
     def match_rule_pack(self, rule_pack: ec.ECRulePack) -> RulePackMatch:
         matching_rules = 0
-        first_match: ec.MatchSuccess | None = None
-        first_match_skips_pack = False
+        first_match: RuleMatch | None = None
         for rule in rule_pack["rules"]:
             result = self.match_rule(rule_pack, rule)
             if isinstance(result, ec.MatchSuccess):
                 matching_rules += 1
                 if first_match is None:
-                    first_match = result
-                    first_match_skips_pack = (
-                        not result.cancelling and rule.get("drop") == "skip_pack"
-                    )
-        return RulePackMatch(matching_rules, first_match, first_match_skips_pack)
+                    first_match = RuleMatch(result, match_outcome(rule, result))
+        return RulePackMatch(matching_rules, first_match)
 
 
 def hostname_translation_of_site(
@@ -2249,7 +2267,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 # Simulation of all rules in this pack
                 elif simulator:
                     pack_match = simulator.match_rule_pack(rule_pack)
-                    if pack_match.first_match is None:
+                    if (first_match := pack_match.first_match) is None:
                         msg = _("None of the rules in this pack matches")
                         icon = "hyphen"
                     else:
@@ -2257,13 +2275,15 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                             _("Number of matching rules in this pack: %d")
                             % pack_match.matching_rules
                         )
-                        if pack_match.first_match_skips_pack:
+                        if first_match.outcome is MatchOutcome.SKIP_PACK:
                             msg += _(", the first match skips this rule pack")
                             icon = "hyphen"
                         else:
-                            if pack_match.first_match.cancelling:
+                            if first_match.outcome is MatchOutcome.CANCEL_EVENTS:
                                 msg += _(", first match is a cancelling match")
-                            if groups := message_match_groups_text(pack_match.first_match):
+                            elif first_match.outcome is MatchOutcome.DROP_MESSAGE:
+                                msg += _(", first match drops the message")
+                            if groups := message_match_groups_text(first_match.result):
                                 msg += _(", match groups of decisive match: %s") % groups
                             if have_match:
                                 msg += _(
@@ -2313,6 +2333,18 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     found_rules = found_packs.setdefault(rule_pack["id"], [])
                     found_rules.append(rule)
         return found_packs
+
+
+def _rule_match_text(outcome: MatchOutcome) -> str:
+    match outcome:
+        case MatchOutcome.NEW_EVENT:
+            return _("This rule matches.")
+        case MatchOutcome.CANCEL_EVENTS:
+            return _("This rule does a cancelling match.")
+        case MatchOutcome.DROP_MESSAGE:
+            return _("This rule matches and drops the message.")
+        case MatchOutcome.SKIP_PACK:
+            return _("This rule matches and skips the rest of this rule pack.")
 
 
 T = TypeVar("T")
@@ -2595,18 +2627,14 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     if not isinstance(result, ec.MatchSuccess):
                         html.icon("hyphen", _("Rule does not match: %s") % result.reason)
                     else:
-                        cancelling, groups = result.cancelling, message_match_groups_text(result)
                         if have_match:
                             msg = _("This rule matches, but is overruled by a previous match.")
                             icon = "checkmark_plus"
                         else:
-                            if cancelling:
-                                msg = _("This rule does a cancelling match.")
-                            else:
-                                msg = _("This rule matches.")
+                            msg = _rule_match_text(match_outcome(rule, result))
                             icon = "checkmark"
                             have_match = True
-                        if groups:
+                        if groups := message_match_groups_text(result):
                             msg += _(" Match groups: %s") % groups
                         html.icon(icon, msg)
 

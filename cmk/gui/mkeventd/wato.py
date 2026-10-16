@@ -21,7 +21,7 @@ import zipfile
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, cast, Literal, overload, override
+from typing import Any, cast, Literal, overload, override, Self
 
 import cmk.ccc.translations
 
@@ -141,6 +141,8 @@ from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupWATO,
 )
 from cmk.gui.watolib.global_settings import (
+    effective_site_value,
+    load_configuration_settings,
     make_pending_changes,
 )
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
@@ -167,6 +169,7 @@ from cmk.gui.watolib.sample_config import (
     SampleConfigGenerator,
     SampleConfigGeneratorRegistry,
 )
+from cmk.gui.watolib.sites import load_site_globals
 from cmk.gui.watolib.translation import translation_form_spec_elements
 from cmk.livestatus_client import (
     ECCreate,
@@ -219,7 +222,7 @@ from cmk.web.utils.urls import (
 from ._rulespecs import RulespecLogwatchEC
 from .config_domain import ConfigDomainEventConsole
 from .defines import syslog_facilities, syslog_priorities
-from .helpers import action_choices, eventd_configuration, service_levels
+from .helpers import action_choices, service_levels
 from .permission_section import PERMISSION_SECTION_EVENT_CONSOLE
 
 
@@ -371,8 +374,22 @@ class _SiteLivestatus:
 class EventSimulator:
     """Matches a simulated event against rules like the Event Console of the simulated site"""
 
-    def __init__(self, event: ec.Event, site_configs: SiteConfigurations) -> None:
-        self._event = event
+    def __init__(
+        self,
+        event: ec.Event,
+        site_configs: SiteConfigurations,
+        hostname_translation: cmk.ccc.translations.TranslationOptions,
+    ) -> None:
+        # Like the Event Console, match against the translated host name, or an empty one if the
+        # translation fails, e.g. because of an invalid regular expression, or if the translated
+        # host name is invalid.
+        self._event = event.copy()
+        try:
+            self._event["host"] = HostName(
+                cmk.ccc.translations.translate(hostname_translation, event["host"])
+            )
+        except Exception:
+            self._event["host"] = HostName("")
         self._site_config = site_configs[event["site"]]
         self._rule_matcher = ec.RuleMatcher(
             logger=None,
@@ -380,6 +397,11 @@ class EventSimulator:
             omd_site_id=event["site"],
             is_active_time_period=ec.TimePeriods(log.logger, _SiteLivestatus(event["site"])).active,
         )
+
+    @classmethod
+    def for_event(cls, event: ec.Event, site_configs: SiteConfigurations) -> Self:
+        """Creates a simulator with the host name translation of the simulated site"""
+        return cls(event, site_configs, hostname_translation_of_site(event["site"], site_configs))
 
     def match_rule(self, rule_pack: ec.ECRulePack, rule: ec.Rule) -> ec.MatchResult:
         if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT:
@@ -396,6 +418,18 @@ class EventSimulator:
         rule["pack"] = rule_pack["id"]
         ec.compile_rule(rule)
         return self._rule_matcher.event_rule_matches(rule, self._event)
+
+
+def hostname_translation_of_site(
+    site_id: SiteId, site_configs: SiteConfigurations
+) -> cmk.ccc.translations.TranslationOptions:
+    """Returns the host name translation the Event Console of the given site uses"""
+    translation, _origin = effective_site_value(
+        load_site_globals(site_configs, site_id),
+        "hostname_translation",
+        global_settings=load_configuration_settings(),
+    )
+    return cast(cmk.ccc.translations.TranslationOptions, translation)
 
 
 # .
@@ -2104,7 +2138,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         id_to_mkp = self._get_rule_pack_to_mkp_map()
 
-        simulator = EventSimulator(event, config.sites) if event else None
+        simulator = EventSimulator.for_event(event, config.sites) if event else None
         have_match = False
 
         rule_stats = _get_rule_stats_from_ec()
@@ -2615,7 +2649,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         with table_element(title=_("Rules"), css="ruleset", limit=0) as table:
             have_match = False
             hits = _get_rule_stats_from_ec()
-            simulator = EventSimulator(event, site_configs) if event else None
+            simulator = EventSimulator.for_event(event, site_configs) if event else None
             for nr, rule in enumerate(rules):
                 table.row(css=["matches_search"] if rule in found_rules else [])
                 delete_url = make_confirm_delete_link(
@@ -2666,13 +2700,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         StaticIcon(IconNames.disabled),
                         title=_("This rule is currently disabled and will not be applied"),
                     )
-                elif event and simulator:
-                    # The simulator sees this, too.
-                    event["host"] = HostName(
-                        cmk.ccc.translations.translate(
-                            eventd_configuration()["hostname_translation"], event["host"]
-                        )
-                    )
+                elif simulator:
                     result = simulator.match_rule(self._rule_pack, rule)
                     if not isinstance(result, ec.MatchSuccess):
                         html.static_icon(

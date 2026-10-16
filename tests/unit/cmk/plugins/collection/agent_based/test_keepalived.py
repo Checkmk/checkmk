@@ -124,11 +124,6 @@ def test_check_keepalived_item_not_found():
     ]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report e28bd4c2-421a-11f1-8eb0-005056a3205b: ValueError",
-)
 def test_keepalived_unparsable_address() -> None:
     # Crash group 4727: the address table delivered a two byte value for a
     # virtual IP address, which is neither IPv4 nor IPv6.

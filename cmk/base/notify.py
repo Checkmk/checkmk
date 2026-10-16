@@ -42,7 +42,7 @@ import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.base import events
-from cmk.base.configlib.loaded_config import BaseConfig
+from cmk.base.configlib.notify import NotifyConfigFields
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.hostaddress import HostName
@@ -225,7 +225,7 @@ def resolve_spooling(
 
 def make_notification_config(
     edition: cmk_version.Edition,
-    base_config: BaseConfig,
+    base_config: NotifyConfigFields,
     matcher: RulesetMatcher,
     label_manager: LabelManager,
 ) -> NotificationConfig:

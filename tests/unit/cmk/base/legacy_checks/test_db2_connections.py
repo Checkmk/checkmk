@@ -101,3 +101,25 @@ def test_check_db2_connections_without_port() -> None:
     results = list(check_db2_connections("db2inst:DB1", {"levels_total": (150, 200)}, section))
 
     assert [(state, text) for state, text, *_ in results] == [(0, "Connections: 40.00")]
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=ValueError,
+    reason="Crash report 4a74cce8-34c3-11f1-b8fd-0050569bb2ad: ValueError",
+)
+def test_check_db2_connections_reports_db2_error_message() -> None:
+    # Crash group 4695: DB2 answered the connection query with an error
+    # message, which the agent printed in place of the connection count.
+    section = parse_db2_dbs(
+        [
+            ["[[[db2inst1:DB1]]]"],
+            ["port", "0"],
+            ["connections", "SQL20249N", "The", "statement", "was", "not", "processed."],
+            ["latency", "1042"],
+        ]
+    )
+
+    assert list(check_db2_connections("db2inst1:DB1", {"levels_total": (200, 500)}, section)) == [
+        (3, "Cannot parse agent output: connections SQL20249N The statement was not processed."),
+    ]

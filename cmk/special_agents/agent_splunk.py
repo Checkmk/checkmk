@@ -27,7 +27,7 @@ class Section(NamedTuple):
     handler: Callable[[Any], None]
 
 
-def main(argv: None | Sequence[str] = None) -> None | int:
+def main(argv: None | Sequence[str] = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
     # Sections to query
@@ -68,15 +68,15 @@ def main(argv: None | Sequence[str] = None) -> None | int:
     args = parse_arguments(argv)
 
     try:
-        handle_request(args, sections)
+        return handle_request(args, sections)
     except Exception as e:
-        sys.stderr.write("Unhandled exception: %s\n" % e)
         if args.debug:
-            return 1
-    return None
+            raise
+        sys.stderr.write("Unhandled exception: %s\n" % e)
+        return 1
 
 
-def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> None | int:
+def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> int:
     url_base = "%s://%s:%d" % (args.proto, args.hostname, args.port)
 
     for section in sections:
@@ -105,7 +105,7 @@ def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> Non
 
             sys.stdout.write("<<<splunk_%s>>>\n" % section.name)
             section.handler(value)
-    return None
+    return 0
 
 
 def parse_arguments(argv):

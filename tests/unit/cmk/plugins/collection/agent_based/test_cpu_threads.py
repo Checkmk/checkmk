@@ -43,9 +43,6 @@ def test_cpu_threads_max_threads() -> None:
     }
 
 
-@pytest.mark.xfail(
-    strict=True, reason="Crash report cfcf639a-d29d-11f0-87aa-bc24117351f4: ZeroDivisionError"
-)
 def test_cpu_threads_max_threads_zero() -> None:
     # Crash group 4503: the agent reported 0 as the maximum number of threads.
     # The usage cannot be computed, the thread count is still checked.

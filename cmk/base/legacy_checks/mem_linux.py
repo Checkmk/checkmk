@@ -25,6 +25,10 @@ def check_mem_linux(_no_item, params, section):
     if not section:
         return
 
+    if missing := sorted(memory.LINUX_REQUIRED_KEYS - section.keys()):
+        yield 3, f"Memory information is missing: {', '.join(missing)}"
+        return
+
     # quick fix: stop modifying parsed data in place!
     section = section.copy()
 

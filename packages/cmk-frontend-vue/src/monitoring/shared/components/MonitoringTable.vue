@@ -19,6 +19,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { type ComponentPublicInstance, computed, inject, nextTick, provide, ref, watch } from 'vue'
 
+import { BREAKPOINTS } from '@/assets/breakpoints'
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
 import type { FetchState } from '@/monitoring/shared/services/MonitoringService'
 
@@ -37,6 +38,9 @@ import MonitoringTableHeader from './MonitoringTableHeader.vue'
 
 const DEFAULT_COLUMN_MIN_SIZE = 20
 const DEFAULT_COLUMN_MAX_SIZE = Number.POSITIVE_INFINITY
+// Below breakpoint m (sizes s and xs) pinned columns would take up most of the width, so
+// nothing is pinned and the whole table scrolls instead.
+const MIN_PINNING_CONTAINER_WIDTH = BREAKPOINTS.m
 const borderSpacing = TABLE_BORDER_SPACING_PX
 
 const props = defineProps<{
@@ -253,6 +257,7 @@ const pinningActive = computed(
   () =>
     pinningEnabled.value &&
     containerWidth.value !== null &&
+    containerWidth.value >= MIN_PINNING_CONTAINER_WIDTH &&
     containerWidth.value - borderSpacingTotal.value < totalMinWidth.value
 )
 

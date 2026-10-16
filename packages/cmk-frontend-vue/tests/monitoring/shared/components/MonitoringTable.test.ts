@@ -6,6 +6,7 @@
 import type {
   ColumnDef,
   ColumnFiltersState,
+  ColumnPinningState,
   SortingState,
   Row as TableRow,
   VisibilityState
@@ -21,7 +22,7 @@ import {
 } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { FetchState, MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 
-import { FakeResizeObserver } from '@tests/lib/fakeResizeObserver'
+import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
 
 const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
 const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
@@ -107,6 +108,11 @@ const layoutProbe = defineComponent({
             Object.fromEntries(
               [...(columns?.value.entries() ?? [])].map(([id, info]) => [id, info.width])
             )
+          ),
+          'data-pinned': JSON.stringify(
+            [...(columns?.value.entries() ?? [])]
+              .filter(([, info]) => info.pinnedLeft !== null || info.pinnedRight !== null)
+              .map(([id]) => id)
           )
         },
         [...(columns?.value.keys() ?? [])].join(',')
@@ -125,6 +131,10 @@ function probedWidth(columnId: string): number | null {
   return widths[columnId] ?? null
 }
 
+function probedPinnedColumns(): string[] {
+  return JSON.parse(screen.getAllByTestId('layout-probe')[0]!.dataset.pinned ?? '[]') as string[]
+}
+
 function mountTable(overrides: {
   rows?: Row[]
   columns?: ColumnDef<Row>[]
@@ -138,6 +148,7 @@ function mountTable(overrides: {
   onSortUpdate?: (value: SortingState) => void
   onFilterUpdate?: (value: ColumnFiltersState) => void
   getRowKey?: (row: Row, index: number) => string | number
+  columnPinning?: ColumnPinningState
 }) {
   const rows = overrides.rows ?? makeRows(3)
   const columns = overrides.columns ?? COLUMNS
@@ -148,6 +159,7 @@ function mountTable(overrides: {
   const filterState = overrides.filterState ?? []
   const onFilterUpdate = overrides.onFilterUpdate ?? (() => {})
   const getRowKey = overrides.getRowKey
+  const columnPinning = overrides.columnPinning
   const mockService = makeMockService(
     overrides.sortState,
     overrides.onSortUpdate,
@@ -170,7 +182,8 @@ function mountTable(overrides: {
             onRetry,
             filterState,
             onFilterUpdate,
-            getRowKey
+            getRowKey,
+            columnPinning
           }
         },
         render() {
@@ -184,6 +197,7 @@ function mountTable(overrides: {
               columns: this.columns,
               filterState: this.filterState,
               ...(this.getRowKey ? { getRowKey: this.getRowKey } : {}),
+              ...(this.columnPinning ? { columnPinning: this.columnPinning } : {}),
               'onUpdate:filterState': this.onFilterUpdate,
               onRetry: this.onRetry
             },
@@ -761,5 +775,39 @@ describe('a column that fits its header', () => {
     await nextTick()
 
     expect(probedWidth('mode')).toBe(56)
+  })
+})
+
+describe('pinned columns', () => {
+  // Together the columns need 1200px, more than any of the widths below offer.
+  const WIDE_COLUMNS: ColumnDef<Row>[] = COLUMNS.map((column) => ({ ...column, minSize: 400 }))
+  const PINNING: ColumnPinningState = { left: ['name'], right: ['actions'] }
+
+  async function mountPinnedTable(width: number): Promise<void> {
+    mountTable({ columns: WIDE_COLUMNS, columnPinning: PINNING })
+    await nextTick()
+    deliverSize(width, 600)
+    await nextTick()
+  }
+
+  beforeEach(() => {
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    FakeResizeObserver.instances = []
+  })
+
+  test('stay in place while the table scrolls', async () => {
+    await mountPinnedTable(1000)
+
+    expect(probedPinnedColumns()).toEqual(['name', 'actions'])
+  })
+
+  test('scroll along with the table when it is too narrow to leave room beside them', async () => {
+    await mountPinnedTable(600)
+
+    expect(probedPinnedColumns()).toEqual([])
   })
 })

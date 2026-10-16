@@ -5,8 +5,6 @@
 
 import json
 
-import pytest
-
 from cmk.agent_based.v2 import Service, StringTable
 from cmk.plugins.redfish.agent_based.redfish_temperatures import discovery_redfish_temperatures
 from cmk.plugins.redfish.lib import parse_redfish_multiple, RedfishAPIData
@@ -23,9 +21,6 @@ def _thermal_section(*temperatures: dict[str, object]) -> RedfishAPIData:
     return parse_redfish_multiple(string_table)
 
 
-@pytest.mark.xfail(
-    strict=True, reason="Crash report 46c9cbe6-c8c7-11f1-8e06-bc2411416c01: AttributeError"
-)
 def test_discovery_redfish_temperatures_skips_entries_without_data() -> None:
     # Some iDRACs list entries whose fields are all null and that carry no "Status".
     placeholder = dict.fromkeys(

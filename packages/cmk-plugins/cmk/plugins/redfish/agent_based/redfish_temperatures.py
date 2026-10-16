@@ -28,9 +28,9 @@ def discovery_redfish_temperatures(section: RedfishAPIData) -> DiscoveryResult:
         if not temps:
             continue
         for temp in temps:
-            if temp.get("Status").get("State") in ["Absent", "Disabled"]:
-                continue
             if not temp.get("ReadingCelsius"):
+                continue
+            if temp.get("Status", {}).get("State") in ["Absent", "Disabled"]:
                 continue
             if temp.get("Name"):
                 yield Service(item=temp.get("Name"))

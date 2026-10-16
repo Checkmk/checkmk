@@ -28,6 +28,10 @@ def check_db2_connections(item, params, parsed):
     if not db:
         raise IgnoreResultsError("Login into database failed")
 
+    if unparsable := [" ".join(line) for line in db if len(line) != 2]:
+        yield 3, f"Cannot parse agent output: {' '.join(unparsable)}"
+        return
+
     data = dict(db)
 
     warn, crit = params["levels_total"]

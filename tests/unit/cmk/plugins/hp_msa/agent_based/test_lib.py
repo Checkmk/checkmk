@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 from cmk.agent_based.v2 import Service
 from cmk.plugins.hp_msa.agent_based.health import discover_hp_msa_health
 from cmk.plugins.hp_msa.agent_based.lib import parse_hp_msa
@@ -1888,12 +1886,6 @@ def test_parse_hp_msa_if() -> None:
     }
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=TypeError,
-    reason="Crash report a46a1a44-23db-11f1-a43c-bc241114d4e5: TypeError "
-    "'item' must be a non empty string or ommited entirely, got ''",
-)
 def test_discover_hp_msa_health_with_empty_location() -> None:
     # Crash group 4648: an object reported an empty location, which turned
     # into an empty item and crashed the discovery of the whole host.

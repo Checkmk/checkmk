@@ -270,6 +270,7 @@ class ModeRevertChanges(WatoMode):
         manager.start(
             sites=[local_site],
             source="GUI",
+            # A tree of its own, read after the snapshot restored the folders
             tree=make_folder_tree(config),
             all_site_configs=active_config.sites,
             user_permission_config=UserPermissionSerializableConfig.from_global_config(config),

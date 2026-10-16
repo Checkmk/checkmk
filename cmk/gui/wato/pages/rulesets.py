@@ -3696,6 +3696,10 @@ class MatchItemGeneratorUnknownRuleSets(ABCMatchItemGenerator):
 
 
 class ModeUnknownRulesets(WatoMode):
+    @override
+    def _from_vars(self) -> None:
+        self._tree = make_folder_tree(self._ctx.config)
+
     @classmethod
     @override
     def name(cls) -> str:
@@ -3910,7 +3914,7 @@ class ModeUnknownRulesets(WatoMode):
     @override
     def page(self, config: Config) -> None:
         unknown_check_parameter_rulesets, unknown_rulesets = self._unknown_rulesets(
-            make_folder_tree(config), debug=config.debug
+            self._tree, debug=config.debug
         )
         with html.form_context("bulk_delete_selected_unknown_rulesets", method="POST"):
             html.hidden_field("mode", "unknown_rulesets", add_var=True)
@@ -4055,10 +4059,9 @@ class ModeUnknownRulesets(WatoMode):
             for vn, _vv in request.itervars(prefix="_c_unknown_rule")
         ]
         pending_changes = _pending_changes(config, omd_site(), user.id)
-        tree = make_folder_tree(config)
         if request.var("_bulk_delete_selected_unknown_rulesets") and (d_cp_rule_ids or d_rule_ids):
             return self._bulk_delete_selected_rules(
-                tree,
+                self._tree,
                 d_cp_rule_ids,
                 d_rule_ids,
                 pprint_value=config.wato_pprint_config,
@@ -4070,7 +4073,7 @@ class ModeUnknownRulesets(WatoMode):
             d_rule_id := request.var("_delete_cp_rule_id")
         ):
             return self._delete_selected_cp_rule(
-                tree,
+                self._tree,
                 d_ruleset_name,
                 d_rule_id,
                 pprint_value=config.wato_pprint_config,
@@ -4082,7 +4085,7 @@ class ModeUnknownRulesets(WatoMode):
             d_rule_id := request.var("_delete_rule_id")
         ):
             return self._delete_selected_rule(
-                tree,
+                self._tree,
                 d_ruleset_name,
                 d_rule_id,
                 pprint_value=config.wato_pprint_config,

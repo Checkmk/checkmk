@@ -248,6 +248,7 @@ class ModeEditConfigurationBundles(WatoMode):
 
     @override
     def _from_vars(self) -> None:
+        self._tree = make_folder_tree(self._ctx.config)
         self._name = request.get_ascii_input_mandatory(self.VAR_NAME)
         try:
             self._bundle_group_type = RuleGroupType(self._name.split(":")[0])
@@ -316,7 +317,7 @@ class ModeEditConfigurationBundles(WatoMode):
             )
             html.div(display_varname, class_="varname")
 
-        self._bundles_listing(make_folder_tree(config), self._name)
+        self._bundles_listing(self._tree, self._name)
 
     def _delete_bundle(
         self,
@@ -415,7 +416,7 @@ class ModeEditConfigurationBundles(WatoMode):
         action = request.get_ascii_input_mandatory(self.VAR_ACTION)
         if action == "delete":
             self._delete_bundle(
-                make_folder_tree(config),
+                self._tree,
                 bundle_id,
                 user_permissions=UserPermissions.from_config(config, permission_registry),
                 pprint_value=config.wato_pprint_config,
@@ -895,6 +896,7 @@ class ModeConfigurationBundle(WatoMode):
 
     @override
     def _from_vars(self) -> None:
+        self._tree = make_folder_tree(self._ctx.config)
         self._bundle_id = request.get_validated_type_input_mandatory(BundleId, "bundle_id")
 
         bundle_store = ConfigBundleStore().load_for_reading()
@@ -906,7 +908,7 @@ class ModeConfigurationBundle(WatoMode):
         self._bundle: ConfigBundle = bundle_store[self._bundle_id]
         self._bundle_group = self._bundle["group"]
         self._bundle_references = identify_bundle_references(
-            make_folder_tree(self._ctx.config),
+            self._tree,
             self._bundle_group,
             {self._bundle_id},
             acting_user=user,
@@ -1096,16 +1098,15 @@ class ModeConfigurationBundle(WatoMode):
             return redirect(self.mode_url(bundle_id=self._bundle_id))
 
         if request.has_var("_clean_up"):
-            tree = make_folder_tree(config)
             references = identify_bundle_references(
-                tree,
+                self._tree,
                 None,
                 {self._bundle_id},
                 acting_user=user,
                 program_id=self._bundle["program_id"],
             )[self._bundle_id]
             delete_config_bundle_objects(
-                tree,
+                self._tree,
                 references,
                 acting_user=user,
                 pprint_value=config.wato_pprint_config,

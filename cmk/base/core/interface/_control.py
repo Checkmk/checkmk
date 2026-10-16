@@ -67,10 +67,10 @@ def build_and_activate_monitoring_config(
     ],
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     ip_address_of_mgmt: ip_lookup.IPLookupOptional,
-    core: MonitoringConfigBuilder,
     core_client: CoreClient,
     plugins: AgentBasedPlugins,
     *,
+    config_builders: Sequence[MonitoringConfigBuilder],
     hosts_to_update: set[HostName] | None = None,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     locking_mode: _LockingMode,
@@ -86,8 +86,8 @@ def build_and_activate_monitoring_config(
             main_mk_file=cmk.utils.paths.default_config_dir / "main.mk", mode=locking_mode
         ):
             do_create_config(
-                core=core,
                 core_client=core_client,
+                config_builders=config_builders,
                 config_cache=config_cache,
                 core_objects_config=core_objects_config,
                 hosts_config=hosts_config,
@@ -118,7 +118,6 @@ def build_and_activate_monitoring_config(
 
 
 def do_create_config(
-    core: MonitoringConfigBuilder,
     core_client: CoreClient,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
@@ -141,6 +140,7 @@ def do_create_config(
     hosts_to_update: set[HostName] | None,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     *,
+    config_builders: Sequence[MonitoringConfigBuilder],
     duplicates: Collection[HostName],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
     licensing_handler_factory: Callable[[], LicensingHandler],
@@ -155,7 +155,7 @@ def do_create_config(
     """
     with suppress(IOError):
         sys.stdout.write(
-            "Generating configuration for core (type %s)...\n" % core.name,
+            "Generating configuration for core (type %s)...\n" % loaded_config.monitoring_core,
         )
         sys.stdout.flush()
 
@@ -163,12 +163,11 @@ def do_create_config(
         with tracer.span(
             "create_core_config",
             attributes={
-                "cmk.core_config.core": core.name,
+                "cmk.core_config.core": loaded_config.monitoring_core,
                 "cmk.core_config.core_config.hosts_to_update": repr(hosts_to_update),
             },
         ):
             _create_active_config(
-                core,
                 core_client,
                 config_cache,
                 core_objects_config,
@@ -184,6 +183,7 @@ def do_create_config(
                 ip_address_of_mgmt,
                 hosts_to_update=hosts_to_update,
                 service_depends_on=service_depends_on,
+                config_builders=config_builders,
                 duplicates=duplicates,
                 licensing_handler_factory=licensing_handler_factory,
                 edition=edition,
@@ -242,7 +242,6 @@ def _backup_objects_file(core_client: CoreClient) -> Iterator[None]:
 # we create below to indicate that the configuration is ready to be used.
 # Everything that should be in it must be created before creating that link.
 def _create_active_config(
-    core: MonitoringConfigBuilder,
     core_client: CoreClient,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
@@ -265,6 +264,7 @@ def _create_active_config(
     hosts_to_update: set[HostName] | None,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     *,
+    config_builders: Sequence[MonitoringConfigBuilder],
     duplicates: Collection[HostName],
     licensing_handler_factory: Callable[[], LicensingHandler],
     edition: Edition,
@@ -281,8 +281,6 @@ def _create_active_config(
         {k: s.reveal() for k, s in passwords.items()},
         cmk.utils.password_store.pending_secrets_path_site(),
     )
-
-    config_builders = _make_config_builders(core)
 
     with (
         config_path.create(cmk.utils.paths.omd_root) as config_creation_context,
@@ -317,7 +315,7 @@ def _create_active_config(
     core_client.cleanup_old_configs()
 
 
-def _make_config_builders(
+def config_builders(
     core: MonitoringConfigBuilder,
 ) -> Sequence[MonitoringConfigBuilder]:
     """Everything that goes into one activation, in the order it is created.

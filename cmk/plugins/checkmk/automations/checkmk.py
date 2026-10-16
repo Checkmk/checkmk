@@ -109,7 +109,7 @@ from cmk.base.configlib.servicename import (
     PassiveServiceNameConfig,
 )
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
-from cmk.base.core.interface import build_and_activate_monitoring_config
+from cmk.base.core.interface import build_and_activate_monitoring_config, config_builders
 from cmk.base.core.shared import autodetect_plugin, get_service_attributes
 from cmk.base.errorhandling import create_section_crash_dump, RecordingFetcher
 from cmk.base.parent_scan import ScanConfig
@@ -1358,9 +1358,9 @@ def _execute_autodiscovery(
         env.ip_lookup_config.default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
-        core,
         core_client,
         env.plugins,
+        config_builders=config_builders(core),
         locking_mode=env.loaded_config.restart_locking,
         hosts_to_update=None,
         service_depends_on=config.ServiceDependsOn(
@@ -2564,9 +2564,9 @@ def _execute_silently(
             env.ip_lookup_config.default_address_family,
             rctx.ip_address_of,
             rctx.ip_address_of_mgmt,
-            rctx.monitoring_core,
             rctx.core_client,
             env.plugins,
+            config_builders=config_builders(rctx.monitoring_core),
             hosts_to_update=hosts_to_update,
             service_depends_on=rctx.service_depends_on,
             locking_mode=env.loaded_config.restart_locking,

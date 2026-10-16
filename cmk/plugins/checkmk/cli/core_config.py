@@ -222,8 +222,8 @@ def _mode_update(
             core, core_client = app.create_core(loaded_config)
 
             core_interface.do_create_config(
-                core=core,
                 core_client=core_client,
+                config_builders=core_interface.config_builders(core),
                 hosts_config=hosts_config,
                 host_tags=loading_result.host_tags,
                 config_cache=loading_result.config_cache,
@@ -348,9 +348,9 @@ def _mode_restart(
         ip_lookup_config.default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
-        core,
         core_client,
         plugins,
+        config_builders=core_interface.config_builders(core),
         hosts_to_update=set(args) if args else None,
         locking_mode=loaded_config.restart_locking,
         service_depends_on=config.ServiceDependsOn(
@@ -458,9 +458,9 @@ def _mode_reload(
         ip_lookup_config.default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
-        core,
         core_client,
         plugins,
+        config_builders=core_interface.config_builders(core),
         hosts_to_update=set(args) if args else None,
         locking_mode=loaded_config.restart_locking,
         service_depends_on=config.ServiceDependsOn(

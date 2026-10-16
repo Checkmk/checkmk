@@ -18,6 +18,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.huawei.lib import (
+    HUARONG_ENTERPRISE,
     HUAWEI_ENTERPRISE,
     parse_huawei_physical_entity_values,
     Section,
@@ -62,6 +63,14 @@ snmp_section_huawei_switch_mem = SNMPSection(
     name="huawei_switch_mem",
     detect=HUAWEI_ENTERPRISE.switch_detect,
     fetch=HUAWEI_ENTERPRISE.entity_state_trees("7"),
+    parse_function=parse_huawei_switch_mem,
+)
+
+snmp_section_huawei_switch_mem_huarong = SNMPSection(
+    name="huawei_switch_mem_huarong",
+    parsed_section_name="huawei_switch_mem",
+    detect=HUARONG_ENTERPRISE.switch_detect,
+    fetch=HUARONG_ENTERPRISE.entity_state_trees("7"),
     parse_function=parse_huawei_switch_mem,
 )
 

@@ -29,6 +29,7 @@ class HuaweiEnterprise:
 
 
 HUAWEI_ENTERPRISE = HuaweiEnterprise(".1.3.6.1.4.1.2011")
+HUARONG_ENTERPRISE = HuaweiEnterprise(".1.3.6.1.4.1.56813")
 
 DETECT_HUAWEI_OSN = contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2011.2.25.1")
 

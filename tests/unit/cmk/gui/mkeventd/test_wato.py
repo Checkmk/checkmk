@@ -346,3 +346,11 @@ def test_rule_pack_match_counts_all_matching_rules() -> None:
     )
 
     assert pack_match.matching_rules == 2
+
+
+def test_simulator_leaves_the_rule_unchanged() -> None:
+    rule = ec.Rule(id="rule", state=("text_pattern", {"2": "ERROR"}))
+
+    _simulate(rule, simulated_site=SiteId("remote"))
+
+    assert rule == ec.Rule(id="rule", state=("text_pattern", {"2": "ERROR"}))

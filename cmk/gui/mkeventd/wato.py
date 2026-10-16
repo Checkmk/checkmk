@@ -10,6 +10,7 @@
 import abc
 import ast
 import contextlib
+import copy
 import io
 import logging
 import re
@@ -422,7 +423,8 @@ class EventSimulator:
             if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
                 return ec.MatchFailure(reason=_("Wrong customer"))
 
-        rule = rule.copy()
+        # Compiling changes nested parts of the rule, too, so keep the caller's rule intact.
+        rule = copy.deepcopy(rule)
         rule["pack"] = rule_pack["id"]
         ec.compile_rule(rule)
         return self._rule_matcher.event_rule_matches(rule, self._event)

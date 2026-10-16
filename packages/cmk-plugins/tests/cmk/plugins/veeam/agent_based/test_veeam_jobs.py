@@ -11,7 +11,10 @@ from cmk.plugins.veeam.agent_based.veeam_jobs import (
     discovery_veeam_jobs,
     Job,
     monitoring_state,
+    parse_veeam_agent_policy_workloads,
     parse_veeam_jobs,
+    PolicyWorkloads,
+    Workload,
 )
 
 STRING_TABLE = [
@@ -75,7 +78,7 @@ STRING_TABLE = [
 
 def test_discovery_veeam_jobs() -> None:
     section = parse_veeam_jobs(STRING_TABLE)
-    assert list(discovery_veeam_jobs(section)) == [
+    assert list(discovery_veeam_jobs(section, None)) == [
         Service(item="VMware_Server"),
         Service(item="warning_backup"),
         Service(item="backup_sync_job"),
@@ -91,11 +94,11 @@ def test_check_veeam_jobs() -> None:
     section = parse_veeam_jobs(STRING_TABLE)
     items = [
         service.item or ""
-        for service in discovery_veeam_jobs(section)
+        for service in discovery_veeam_jobs(section, None)
         if service.item != "backup_sync_job"
     ]
 
-    results = [(item, list(check_veeam_jobs(item, section))) for item in items]
+    results = [(item, list(check_veeam_jobs(item, section, None))) for item in items]
     assert results == [
         (
             "VMware_Server",
@@ -156,7 +159,7 @@ def test_check_veeam_jobs() -> None:
 def test_check_veeam_jobs_running_raises_ignore_results() -> None:
     section = parse_veeam_jobs(STRING_TABLE)
     with pytest.raises(IgnoreResultsError):
-        list(check_veeam_jobs("backup_sync_job", section))
+        list(check_veeam_jobs("backup_sync_job", section, None))
 
 
 def test_parse_veeam_jobs_pads_missing_trailing_columns() -> None:
@@ -198,3 +201,131 @@ def test_monitoring_state(last_state: str, last_result: str, expected: State) ->
 def test_monitoring_state_running_raises_ignore_results(last_state: str) -> None:
     with pytest.raises(IgnoreResultsError):
         monitoring_state(last_state, "None")
+
+
+POLICY_JOBS = parse_veeam_jobs(
+    [["Policy_Wave_1", "EpAgentPolicy", "Stopped", "Success", "26.08.2026 15:47:13"]]
+)
+POLICY_RESULTS = [
+    Result(state=State.OK, summary="State: Stopped, Result: Success"),
+    Result(state=State.OK, summary="Creation time: 26.08.2026 15:47:13"),
+    Result(state=State.OK, summary="Type: EpAgentPolicy"),
+]
+
+
+def _check_policy(*workloads: tuple[str, str]) -> list[object]:
+    section = parse_veeam_agent_policy_workloads(
+        [
+            [
+                "computer",
+                "Policy_Wave_1",
+                name,
+                "Stopped",
+                result,
+                "26.08.2026 15:47:13",
+                "26.08.2026 15:50:00",
+            ]
+            for name, result in workloads
+        ]
+    )
+    return list(check_veeam_jobs("Policy_Wave_1", POLICY_JOBS, section))
+
+
+@pytest.mark.parametrize(
+    "result, state",
+    [
+        pytest.param("Warning", State.WARN, id="warning"),
+        pytest.param("Failed", State.CRIT, id="failed"),
+    ],
+)
+def test_unhealthy_workload_is_not_masked_by_policy_result(result: str, state: State) -> None:
+    assert _check_policy(("SRV-DC01", result), ("SRV-APP01", "Success")) == [
+        *POLICY_RESULTS,
+        Result(state=state, summary=f"SRV-DC01: {result} (ended 26.08.2026 15:50:00)"),
+        Result(
+            state=State.OK,
+            notice="Protected computers without problems: 1",
+            details="SRV-APP01: Success (ended 26.08.2026 15:50:00)",
+        ),
+    ]
+
+
+def test_many_unhealthy_workloads_are_counted() -> None:
+    assert _check_policy(*((f"PC{i}", "Failed") for i in range(4))) == [
+        *POLICY_RESULTS,
+        Result(
+            state=State.CRIT,
+            summary="Protected computers with failed backups: 4",
+            details="\n".join(f"PC{i}: Failed (ended 26.08.2026 15:50:00)" for i in range(4)),
+        ),
+    ]
+
+
+def test_running_workload_is_not_reported() -> None:
+    section = parse_veeam_agent_policy_workloads(
+        [["computer", "Policy_Wave_1", "SRV-DC01", "Working", "None", "26.08.2026 15:47:13"]]
+    )
+    assert list(check_veeam_jobs("Policy_Wave_1", POLICY_JOBS, section)) == POLICY_RESULTS
+
+
+def test_workload_without_finished_backup_is_listed() -> None:
+    section = parse_veeam_agent_policy_workloads(
+        [["computer", "Policy_Wave_1", "SRV-NEW", "None", "None"]]
+    )
+    assert list(check_veeam_jobs("Policy_Wave_1", POLICY_JOBS, section)) == [
+        *POLICY_RESULTS,
+        Result(
+            state=State.OK,
+            notice="Protected computers without a finished backup yet: 1",
+            details="SRV-NEW",
+        ),
+    ]
+
+
+@pytest.mark.parametrize("policy", ["Policy_Wave_1", "*"])
+def test_failure_to_determine_workloads_is_unknown(policy: str) -> None:
+    section = parse_veeam_agent_policy_workloads([["error", policy, "Access", "denied"]])
+    assert list(check_veeam_jobs("Policy_Wave_1", POLICY_JOBS, section)) == [
+        *POLICY_RESULTS,
+        Result(
+            state=State.UNKNOWN,
+            summary="Could not determine the protected computers: Access denied",
+        ),
+    ]
+
+
+def test_failure_for_all_policies_does_not_affect_other_jobs() -> None:
+    jobs = parse_veeam_jobs([["Backup_Job", "Backup", "Stopped", "Success"]])
+    section = parse_veeam_agent_policy_workloads([["error", "*", "Access denied"]])
+    assert list(check_veeam_jobs("Backup_Job", jobs, section)) == [
+        Result(state=State.OK, summary="State: Stopped, Result: Success"),
+        Result(state=State.OK, summary="Type: Backup"),
+    ]
+
+
+def test_policy_without_workload_section_is_unchanged() -> None:
+    assert list(check_veeam_jobs("Policy_Wave_1", POLICY_JOBS, None)) == POLICY_RESULTS
+
+
+def test_parse_veeam_agent_policy_workloads() -> None:
+    assert parse_veeam_agent_policy_workloads(
+        [
+            ["computer", "Policy_Wave_1", "SRV-DC01", "Stopped", "Warning", "26.08.2026 15:47:13"],
+            ["error", "Policy_Wave_2", "Access denied"],
+            ["broken"],
+        ]
+    ) == {
+        "Policy_Wave_1": PolicyWorkloads(
+            workloads=[
+                Workload(
+                    name="SRV-DC01",
+                    last_state="Stopped",
+                    last_result="Warning",
+                    creation_time="26.08.2026 15:47:13",
+                    end_time="",
+                )
+            ],
+            error=None,
+        ),
+        "Policy_Wave_2": PolicyWorkloads(workloads=[], error="Access denied"),
+    }

@@ -120,3 +120,29 @@ def test_check_keepalived_item_not_found() -> None:
     assert list(check_keepalived("VI_1", _PARAMS, {})) == [
         Result(state=State.UNKNOWN, summary="Item not found in output")
     ]
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=ValueError,
+    reason="Crash report e28bd4c2-421a-11f1-8eb0-005056a3205b: ValueError",
+)
+def test_keepalived_unparsable_address() -> None:
+    # Crash group 4727: the address table delivered a two byte value for a
+    # virtual IP address, which is neither IPv4 nor IPv6.
+    section = parse_keepalived(
+        [
+            [["VI_1", "2", "1"], ["VI_2", "1", "2"]],
+            [["1.1", _raw_address("2342")], ["2.1", _raw_address("c0a80101")]],
+        ]
+    )
+
+    assert list(check_keepalived("VI_1", _PARAMS, section)) == [
+        Result(
+            state=State.OK,
+            summary="This node is master. IP Address: cannot parse 0x2342 (expected 4 or 16 bytes)",
+        )
+    ]
+    assert list(check_keepalived("VI_2", _PARAMS, section)) == [
+        Result(state=State.OK, summary="This node is backup. IP Address: 192.168.1.1")
+    ]

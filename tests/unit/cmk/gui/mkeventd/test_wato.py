@@ -110,7 +110,8 @@ def test_send_event(monkeypatch: MonkeyPatch) -> None:
     )
 
 
-_RULE_PACK = ec.ECRulePackSpec(id="pack", title="Pack", disabled=False, rules=[])
+def _rule_pack(*rules: ec.Rule, disabled: bool = False) -> ec.ECRulePackSpec:
+    return ec.ECRulePackSpec(id="pack", title="Pack", disabled=disabled, rules=list(rules))
 
 
 def _simulator(
@@ -137,7 +138,7 @@ def _simulator(
 
 
 def _simulate(rule: ec.Rule, *, simulated_site: SiteId) -> ec.MatchResult:
-    return _simulator(simulated_site=simulated_site).match_rule(_RULE_PACK, rule)
+    return _simulator(simulated_site=simulated_site).match_rule(_rule_pack(), rule)
 
 
 def _site_configuration(site_id: SiteId) -> SiteConfiguration:
@@ -243,7 +244,7 @@ def test_simulator_queries_time_periods_once_for_all_rules(
     ]
 
     with mock_livestatus(expect_status_query=True):
-        results = [simulator.match_rule(_RULE_PACK, rule) for rule in rules]
+        results = [simulator.match_rule(_rule_pack(), rule) for rule in rules]
 
     assert all(isinstance(result, ec.MatchSuccess) for result in results)
 
@@ -258,7 +259,7 @@ def test_simulator_gives_up_on_time_periods_after_the_first_failed_query(
     ]
 
     with mock_livestatus(expect_status_query=True):
-        results = [simulator.match_rule(_RULE_PACK, rule) for rule in rules]
+        results = [simulator.match_rule(_rule_pack(), rule) for rule in rules]
 
     assert caplog.messages.count("Cannot update time period information.") == 1
     assert results == 2 * [
@@ -275,7 +276,7 @@ def test_simulator_translates_the_host_name_once_for_all_rules() -> None:
     )
     rules = [ec.Rule(id=f"rule{nr}", match_host="translated_myhost089") for nr in range(2)]
 
-    results = [simulator.match_rule(_RULE_PACK, rule) for rule in rules]
+    results = [simulator.match_rule(_rule_pack(), rule) for rule in rules]
 
     assert all(isinstance(result, ec.MatchSuccess) for result in results)
 
@@ -284,7 +285,7 @@ def test_simulator_matches_an_invalid_host_name_like_an_empty_one() -> None:
     # The simulator form accepts any host name without spaces, just like the Event Console.
     simulator = _simulator(simulated_site=SiteId("remote"), host=cast(HostName, "user@host"))
 
-    result = simulator.match_rule(_RULE_PACK, ec.Rule(id="rule", match_host="^$"))
+    result = simulator.match_rule(_rule_pack(), ec.Rule(id="rule", match_host="^$"))
 
     assert isinstance(result, ec.MatchSuccess)
 
@@ -296,7 +297,7 @@ def test_simulator_matches_like_an_empty_host_name_if_the_translation_fails() ->
         hostname_translation=TranslationOptions(regex=[("((", "x")]),
     )
 
-    result = simulator.match_rule(_RULE_PACK, ec.Rule(id="rule", match_host="^$"))
+    result = simulator.match_rule(_rule_pack(), ec.Rule(id="rule", match_host="^$"))
 
     assert isinstance(result, ec.MatchSuccess)
 
@@ -354,7 +355,7 @@ def test_hostname_translation_of_a_site_without_any_is_the_default_of_the_event_
 
 def test_match_groups_of_a_match_come_from_the_message_text() -> None:
     result = _simulator(simulated_site=SiteId("remote"), text="disk sda failed").match_rule(
-        _RULE_PACK, ec.Rule(id="rule", match="disk (\\S+) failed")
+        _rule_pack(), ec.Rule(id="rule", match="disk (\\S+) failed")
     )
 
     assert isinstance(result, ec.MatchSuccess)
@@ -363,7 +364,7 @@ def test_match_groups_of_a_match_come_from_the_message_text() -> None:
 
 def test_match_groups_of_a_cancelling_match_come_from_the_cancelling_text() -> None:
     result = _simulator(simulated_site=SiteId("remote"), text="disk sda ok").match_rule(
-        _RULE_PACK, ec.Rule(id="rule", match="disk (\\S+) failed", match_ok="disk (\\S+) ok")
+        _rule_pack(), ec.Rule(id="rule", match="disk (\\S+) failed", match_ok="disk (\\S+) ok")
     )
 
     assert isinstance(result, ec.MatchSuccess)
@@ -372,7 +373,7 @@ def test_match_groups_of_a_cancelling_match_come_from_the_cancelling_text() -> N
 
 def test_match_groups_which_did_not_participate_in_a_match_show_up_as_empty() -> None:
     result = _simulator(simulated_site=SiteId("remote"), text="disk sda").match_rule(
-        _RULE_PACK, ec.Rule(id="rule", match="disk (\\S+)( failed)?")
+        _rule_pack(), ec.Rule(id="rule", match="disk (\\S+)( failed)?")
     )
 
     assert isinstance(result, ec.MatchSuccess)
@@ -428,10 +429,6 @@ def test_match_outcome_uses_the_truth_value_of_drop_like_the_event_console(
 
     assert isinstance(result, ec.MatchSuccess)
     assert mkeventd_wato.match_outcome(rule, result) is outcome
-
-
-def _rule_pack(*rules: ec.Rule) -> ec.ECRulePackSpec:
-    return ec.ECRulePackSpec(id="pack", title="Pack", disabled=False, rules=list(rules))
 
 
 def _first_match_outcome(*rules: ec.Rule) -> MatchOutcome | None:
@@ -528,10 +525,8 @@ def test_disabled_rules_do_not_match_in_a_rule_pack() -> None:
 
 
 def test_rules_of_a_disabled_rule_pack_do_not_match() -> None:
-    disabled_rule_pack = ec.ECRulePackSpec(id="pack", title="Pack", disabled=True, rules=[])
-
     result = _simulator(simulated_site=SiteId("remote")).match_rule(
-        disabled_rule_pack, ec.Rule(id="rule", match="nothing")
+        _rule_pack(disabled=True), ec.Rule(id="rule", match="nothing")
     )
 
     assert result == ec.MatchFailure(reason="The rule pack is disabled.")

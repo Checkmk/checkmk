@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.oracle.agent_based.oracle_longactivesessions import (
     check_oracle_longactivesessions,
@@ -89,5 +91,30 @@ def test_check() -> None:
         Result(
             state=State.OK,
             notice="Session (sid,serial,proc) TUX12C1 Yet Another Serial Number 0 active for 8 minutes 20 seconds from another machine osuser yet another osuser program 5800 sql_id 0 ",
+        ),
+    ]
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=ValueError,
+    reason="Crash report 2e48e266-d1c2-11f0-9c9f-00155d017705: ValueError",
+)
+def test_check_session_row_with_extra_field() -> None:
+    # Crash group 4502: a non-ASCII OS user name was split into two fields, so
+    # the session row has ten fields instead of nine.
+    section = parse_oracle_longactivesessions(
+        [
+            ["orcl", "398", "64367", "machine", "4352:6876", "os", "user", "prog.exe", "1805", "x"],
+            ["orcl", "", "", "", "", "", "", "", ""],
+        ]
+    )
+
+    assert list(check_oracle_longactivesessions("orcl", {"levels": (500, 1000)}, section)) == [
+        Result(state=State.OK, summary="1"),
+        Metric("count", 1, levels=(500, 1000)),
+        Result(
+            state=State.OK,
+            notice="Session 398: cannot parse session details, got 10 fields (expected 9)",
         ),
     ]

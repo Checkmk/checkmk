@@ -1479,6 +1479,9 @@ def _check_grouped_ifs(
     Grouped interfaces are combined into a single interface, which is then passed to
     check_single_interface.
     """
+    if not section:
+        return
+
     matching_interfaces = [
         InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
             iface,

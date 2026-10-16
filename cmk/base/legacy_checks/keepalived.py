@@ -65,7 +65,11 @@ def parse_keepalived(string_table: Sequence[StringTable]) -> Mapping[str, tuple[
     for oid_end, address in address_table:
         instance_index = oid_end.split(".")[0]
         hexaddr = address.encode("latin-1").hex()
-        addresses_by_instance.setdefault(instance_index, []).append(hex2ip(hexaddr))
+        try:
+            ip_address = hex2ip(hexaddr)
+        except ValueError:
+            ip_address = f"cannot parse 0x{hexaddr} (expected 4 or 16 bytes)"
+        addresses_by_instance.setdefault(instance_index, []).append(ip_address)
 
     return {
         vrrp_id: (state, addresses_by_instance.get(instance_index, []))

@@ -49,9 +49,6 @@ def test_check_tplink_poe_summary(
     assert result == expected_results
 
 
-@pytest.mark.xfail(
-    strict=True, reason="Crash report edbd90ca-39bd-11f1-89a9-00155d64710a: IndexError"
-)
 def test_check_tplink_poe_summary_without_data() -> None:
     # Crash group 4704: the switch answered the PoE power query with an empty
     # table. The check yields nothing, so the service reports that its item was

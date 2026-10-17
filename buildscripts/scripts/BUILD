@@ -131,6 +131,7 @@ sh_library(
         "extract_llvm.sh",
         "gcc-toolchain/docker/build.sh",
         "gcc-toolchain/docker/test.sh",
+        "nexus_upload.sh",
         "sign-packages.sh",
     ],
 )

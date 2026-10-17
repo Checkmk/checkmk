@@ -32,7 +32,7 @@ void main() {
     dir("${checkout_dir}") {
         stash(
             name: "qemu-recipe",
-            includes: "bazel_variables.bzl,buildscripts/scripts/build_qemu.sh,third_party/qemu/**");
+            includes: "bazel_variables.bzl,buildscripts/scripts/build_qemu.sh,buildscripts/scripts/nexus_upload.sh,third_party/qemu/**");
     }
 
     podTemplate(

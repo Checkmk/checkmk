@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-13 04:09+0000\n"
+"PO-Revision-Date: 2026-10-16 05:06+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -1181,6 +1181,10 @@ msgstr "1つの変更"
 
 msgid "1 host"
 msgstr "1 ホスト"
+
+#, fuzzy
+msgid "1 hour"
+msgstr "時間"
 
 msgid "1 row"
 msgstr "1行"
@@ -11663,9 +11667,6 @@ msgstr "クラスターホストを通常のホストとして複製できませ
 
 msgid "Can not clone a regular host as cluster host"
 msgstr "通常のホストをクラスターホストとしてクローンできません"
-
-msgid "Can not evaluate search"
-msgstr "検索を評価できません"
 
 #, python-format
 msgid "Can not start activation: %s"
@@ -31660,6 +31661,15 @@ msgstr ""
 "統計ファイルがターゲットシステムに保持される期間。この時間は、チェック間隔の"
 "少なくとも2倍にする必要があります。"
 
+msgid ""
+"How long the provider caches tool definitions and the conversation. Cached "
+"input costs a fraction of the normal price. OpenAI picks its own duration, "
+"up to 24 hours without zero data retention, and caches even when Off. "
+"Checkmk asks OpenAI not to store responses; providers keep requests for "
+"abuse monitoring either way. Turn caching off for a base URL without caching "
+"support."
+msgstr ""
+
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr "Checkmkが測定データを評価すべき過去の日数"
 
@@ -48677,9 +48687,8 @@ msgstr "Oracle データポンプ ダンプ ファイルの小規模書き込み
 msgid "Oracle databases"
 msgstr "Oracleデータベース"
 
-#, fuzzy
 msgid "Oracle databases (Experimental)"
-msgstr "Oracleデータベース"
+msgstr "Oracleデータベース（実験的機能）"
 
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
 msgstr "Oracleデータベース(Linux、Solaris、AIX、Windows)"
@@ -52971,6 +52980,10 @@ msgstr "Prometheus スクレイプ構成"
 
 msgid "Prometheus targets"
 msgstr "Prometheus ターゲット"
+
+#, fuzzy
+msgid "Prompt caching"
+msgstr "プロセスパス照合"
 
 msgid "Properties"
 msgstr "プロパティ"
@@ -67905,7 +67918,6 @@ msgstr "メールボックスサーバー上のデータベース名。"
 msgid "The database to authenticate on."
 msgstr "認証するデータベースを指定します。"
 
-#, fuzzy
 msgid ""
 "The default interval is set to 6 seconds for Smart Ping and one minute for "
 "all other. Here you can specify a larger interval. The host is contacted in "
@@ -70142,6 +70154,14 @@ msgid ""
 msgstr ""
 "上記の問題はキャッシュの欠落が原因かもしれません。再スキャンを行ってくださ"
 "い。"
+
+#, python-format
+msgid ""
+"The process name refers to %(required)d group(s) of the regular expression, "
+"but the process matching provides only %(available)d. Match the command line "
+"with a regular expression that contains enough groups, or remove the "
+"replacements from the process name."
+msgstr ""
 
 msgid ""
 "The provided header key and value need to match exactly with the actual "
@@ -93003,11 +93023,11 @@ msgid "Show date and time"
 msgstr "日付と時間"
 
 #, fuzzy
-msgid "Sharing"
-msgstr "ストリング"
+msgid "Public sharing"
+msgstr "公衆"
 
 #, fuzzy
-msgid "Sharing until"
+msgid "Public sharing until"
 msgstr "まで有効"
 
 msgid "expires in %{days} days"
@@ -93022,7 +93042,7 @@ msgid "expires today"
 msgstr "有効期限"
 
 #, fuzzy
-msgid "Sharing expired on"
+msgid "Public sharing expired on"
 msgstr "グルーピング表現"
 
 #, fuzzy
@@ -96677,9 +96697,26 @@ msgstr ""
 msgid "The answer ended before it was complete."
 msgstr "回答が途中で途切れてしまいました。"
 
+msgid "What needs my attention right now?"
+msgstr ""
+
 #, fuzzy
-msgid "Ctrl+Enter to send"
-msgstr "送信する文字列"
+msgid "What changed in the last hour?"
+msgstr "１時間当たりの再起動数"
+
+msgid "Any recurring problems this week?"
+msgstr ""
+
+msgid "What should I do to fix the current problem?"
+msgstr ""
+
+#, fuzzy
+msgid "Suggested questions"
+msgstr "推奨されるチュートリアルビデオ"
+
+#, fuzzy
+msgid "Ask across all hosts and services"
+msgstr "全てのホストとサービスを表示"
 
 #, fuzzy
 msgid "Dock to the left"
@@ -96697,10 +96734,6 @@ msgstr "高さを設定する"
 msgid "Back to chat"
 msgstr "表示に戻る"
 
-#, fuzzy
-msgid "Chat history"
-msgstr "DCDバッチ履歴"
-
 msgid "AI assistant"
 msgstr "AIアシスタント"
 
@@ -96709,8 +96742,23 @@ msgid "New chat"
 msgstr "新しいアクション"
 
 #, fuzzy
+msgid "Chat history"
+msgstr "DCDバッチ履歴"
+
+#, fuzzy
 msgid "Dock position"
 msgstr "マウスの位置"
+
+#, fuzzy
+msgid "Welcome to"
+msgstr "manページを確認する"
+
+#, fuzzy
+msgid "Checkmk Assistant"
+msgstr "Checkmkの状態"
+
+msgid "An AI assistant that helps you dive into your data and investigate"
+msgstr ""
 
 #, fuzzy
 msgid "Cancelled"
@@ -97767,6 +97815,17 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid "Can not evaluate search"
+#~ msgstr "検索を評価できません"
+
+#, fuzzy
+#~ msgid "Sharing"
+#~ msgstr "ストリング"
+
+#, fuzzy
+#~ msgid "Ctrl+Enter to send"
+#~ msgstr "送信する文字列"
 
 #~ msgid ""
 #~ "The start of a recurring downtime can only be set for days 1-28 of a "

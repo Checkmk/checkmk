@@ -1208,6 +1208,10 @@ msgstr "1 changement"
 msgid "1 host"
 msgstr "hôte"
 
+#, fuzzy
+msgid "1 hour"
+msgstr "heure"
+
 msgid "1 row"
 msgstr "1 rang"
 
@@ -12717,9 +12721,6 @@ msgstr "Impossible de cloner un hôte de cluster comme hôte normal"
 
 msgid "Can not clone a regular host as cluster host"
 msgstr "Impossible de cloner un hôte ordinaire comme hôte de cluster"
-
-msgid "Can not evaluate search"
-msgstr "Impossible d'évaluer la recherche"
 
 #, python-format
 msgid "Can not start activation: %s"
@@ -34387,6 +34388,15 @@ msgstr ""
 "La durée pendant laquelle les fichiers de statistiques sont conservés sur le "
 "système cible. Cette durée doit être au moins égale au double de "
 "l'intervalle de vérification."
+
+msgid ""
+"How long the provider caches tool definitions and the conversation. Cached "
+"input costs a fraction of the normal price. OpenAI picks its own duration, "
+"up to 24 hours without zero data retention, and caches even when Off. "
+"Checkmk asks OpenAI not to store responses; providers keep requests for "
+"abuse monitoring either way. Turn caching off for a base URL without caching "
+"support."
+msgstr ""
 
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr ""
@@ -57066,6 +57076,10 @@ msgstr "Ajouter une configuration d'état"
 msgid "Prometheus targets"
 msgstr "Prométhée"
 
+#, fuzzy
+msgid "Prompt caching"
+msgstr "Correspondance des chemins de processus"
+
 msgid "Properties"
 msgstr "Propriétés"
 
@@ -75022,6 +75036,14 @@ msgid ""
 msgstr ""
 "Les problèmes ci-dessus peuvent être dus à des caches manquants. Veuillez "
 "déclencher un nouveau balayage."
+
+#, python-format
+msgid ""
+"The process name refers to %(required)d group(s) of the regular expression, "
+"but the process matching provides only %(available)d. Match the command line "
+"with a regular expression that contains enough groups, or remove the "
+"replacements from the process name."
+msgstr ""
 
 msgid ""
 "The provided header key and value need to match exactly with the actual "
@@ -99272,11 +99294,11 @@ msgid "Show date and time"
 msgstr "Heure de fin du temps d'arrêt"
 
 #, fuzzy
-msgid "Sharing"
-msgstr "Chaîne de caractères"
+msgid "Public sharing"
+msgstr "Public"
 
 #, fuzzy
-msgid "Sharing until"
+msgid "Public sharing until"
 msgstr "Valable jusqu'au"
 
 #, fuzzy
@@ -99292,7 +99314,7 @@ msgid "expires today"
 msgstr "Expiration"
 
 #, fuzzy
-msgid "Sharing expired on"
+msgid "Public sharing expired on"
 msgstr "Expression de regroupement"
 
 #, fuzzy
@@ -102859,9 +102881,26 @@ msgstr ""
 msgid "The answer ended before it was complete."
 msgstr ""
 
+msgid "What needs my attention right now?"
+msgstr ""
+
 #, fuzzy
-msgid "Ctrl+Enter to send"
-msgstr "Chaîne à envoyer"
+msgid "What changed in the last hour?"
+msgstr "Redémarrages par heure"
+
+msgid "Any recurring problems this week?"
+msgstr ""
+
+msgid "What should I do to fix the current problem?"
+msgstr ""
+
+#, fuzzy
+msgid "Suggested questions"
+msgstr "Vidéos tutorielles suggérées"
+
+#, fuzzy
+msgid "Ask across all hosts and services"
+msgstr "Voir tous les hôtes et services"
 
 #, fuzzy
 msgid "Dock to the left"
@@ -102880,10 +102919,6 @@ msgid "Back to chat"
 msgstr "Retour à la vue"
 
 #, fuzzy
-msgid "Chat history"
-msgstr "Historique de la recherche"
-
-#, fuzzy
 msgid "AI assistant"
 msgstr "Instance"
 
@@ -102892,8 +102927,23 @@ msgid "New chat"
 msgstr "Nouvelle action"
 
 #, fuzzy
+msgid "Chat history"
+msgstr "Historique de la recherche"
+
+#, fuzzy
 msgid "Dock position"
 msgstr "Options de montage"
+
+#, fuzzy
+msgid "Welcome to"
+msgstr "Vérifiez la page du manuel"
+
+#, fuzzy
+msgid "Checkmk Assistant"
+msgstr "État du contrôle"
+
+msgid "An AI assistant that helps you dive into your data and investigate"
+msgstr ""
 
 #, fuzzy
 msgid "Cancelled"
@@ -103812,6 +103862,17 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Can not evaluate search"
+#~ msgstr "Impossible d'évaluer la recherche"
+
+#, fuzzy
+#~ msgid "Sharing"
+#~ msgstr "Chaîne de caractères"
+
+#, fuzzy
+#~ msgid "Ctrl+Enter to send"
+#~ msgstr "Chaîne à envoyer"
 
 #~ msgid ""
 #~ "The start of a recurring downtime can only be set for days 1-28 of a "

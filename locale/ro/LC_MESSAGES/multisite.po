@@ -1210,6 +1210,10 @@ msgstr "1 schimbare"
 msgid "1 host"
 msgstr "gazdă"
 
+#, fuzzy
+msgid "1 hour"
+msgstr "orăore"
+
 msgid "1 row"
 msgstr "1 rând"
 
@@ -12694,9 +12698,6 @@ msgstr "Nu se poate clona o gazdă cluster ca gazdă obișnuită"
 
 msgid "Can not clone a regular host as cluster host"
 msgstr "Nu se poate clona o gazdă obișnuită ca gazdă de cluster"
-
-msgid "Can not evaluate search"
-msgstr "Nu se poate evalua căutarea"
 
 #, python-format
 msgid "Can not start activation: %s"
@@ -34198,6 +34199,15 @@ msgid ""
 msgstr ""
 "Cât timp sunt păstrate fișierele statistice pe sistemul țintă. Acest timp ar "
 "trebui să fie cel puțin dublu față de intervalul de verificare."
+
+msgid ""
+"How long the provider caches tool definitions and the conversation. Cached "
+"input costs a fraction of the normal price. OpenAI picks its own duration, "
+"up to 24 hours without zero data retention, and caches even when Off. "
+"Checkmk asks OpenAI not to store responses; providers keep requests for "
+"abuse monitoring either way. Turn caching off for a base URL without caching "
+"support."
+msgstr ""
 
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr "Câte zile din trecut Checkmk trebuie să evalueze datele de măsurare"
@@ -56763,6 +56773,10 @@ msgstr "Configurația stilului selectat"
 msgid "Prometheus targets"
 msgstr "Prometheus"
 
+#, fuzzy
+msgid "Prompt caching"
+msgstr "Potrivirea căilor de procesare"
+
 msgid "Properties"
 msgstr "Proprietăți"
 
@@ -74669,6 +74683,14 @@ msgid ""
 msgstr ""
 "Problemele de mai sus pot fi cauzate de lipsa memoriei cache. Vă rugăm să "
 "declanșați o rescanare."
+
+#, python-format
+msgid ""
+"The process name refers to %(required)d group(s) of the regular expression, "
+"but the process matching provides only %(available)d. Match the command line "
+"with a regular expression that contains enough groups, or remove the "
+"replacements from the process name."
+msgstr ""
 
 msgid ""
 "The provided header key and value need to match exactly with the actual "
@@ -98716,11 +98738,11 @@ msgid "Show date and time"
 msgstr "Data și ora"
 
 #, fuzzy
-msgid "Sharing"
-msgstr "Șir de caractere"
+msgid "Public sharing"
+msgstr "Public"
 
 #, fuzzy
-msgid "Sharing until"
+msgid "Public sharing until"
 msgstr "Valabil până la"
 
 #, fuzzy
@@ -98736,7 +98758,7 @@ msgid "expires today"
 msgstr "Expiră la"
 
 #, fuzzy
-msgid "Sharing expired on"
+msgid "Public sharing expired on"
 msgstr "Expresia de grupare"
 
 #, fuzzy
@@ -102314,9 +102336,26 @@ msgstr ""
 msgid "The answer ended before it was complete."
 msgstr ""
 
+msgid "What needs my attention right now?"
+msgstr ""
+
 #, fuzzy
-msgid "Ctrl+Enter to send"
-msgstr "Șirul de trimis"
+msgid "What changed in the last hour?"
+msgstr "Reporniri pe oră"
+
+msgid "Any recurring problems this week?"
+msgstr ""
+
+msgid "What should I do to fix the current problem?"
+msgstr ""
+
+#, fuzzy
+msgid "Suggested questions"
+msgstr "Videoclipuri tutorial sugerate"
+
+#, fuzzy
+msgid "Ask across all hosts and services"
+msgstr "Vezi toate gazdele și serviciile"
 
 #, fuzzy
 msgid "Dock to the left"
@@ -102335,10 +102374,6 @@ msgid "Back to chat"
 msgstr "Înapoi la vizualizare"
 
 #, fuzzy
-msgid "Chat history"
-msgstr "Istoric de căutare"
-
-#, fuzzy
 msgid "AI assistant"
 msgstr "Instanța"
 
@@ -102347,8 +102382,23 @@ msgid "New chat"
 msgstr "Acțiune nouă"
 
 #, fuzzy
+msgid "Chat history"
+msgstr "Istoric de căutare"
+
+#, fuzzy
 msgid "Dock position"
 msgstr "Poziția mouse-ului"
+
+#, fuzzy
+msgid "Welcome to"
+msgstr "Verificați pagina de manual"
+
+#, fuzzy
+msgid "Checkmk Assistant"
+msgstr "Verificați starea Checkmk"
+
+msgid "An AI assistant that helps you dive into your data and investigate"
+msgstr ""
 
 #, fuzzy
 msgid "Cancelled"
@@ -103272,6 +103322,17 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Can not evaluate search"
+#~ msgstr "Nu se poate evalua căutarea"
+
+#, fuzzy
+#~ msgid "Sharing"
+#~ msgstr "Șir de caractere"
+
+#, fuzzy
+#~ msgid "Ctrl+Enter to send"
+#~ msgstr "Șirul de trimis"
 
 #~ msgid ""
 #~ "The start of a recurring downtime can only be set for days 1-28 of a "

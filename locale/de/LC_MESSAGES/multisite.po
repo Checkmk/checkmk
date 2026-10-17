@@ -1215,6 +1215,10 @@ msgstr "1 Änderung"
 msgid "1 host"
 msgstr "Host"
 
+#, fuzzy
+msgid "1 hour"
+msgstr "Stunde"
+
 msgid "1 row"
 msgstr "1 Zeile"
 
@@ -12229,9 +12233,6 @@ msgstr "Ein Cluster-Host kann nicht als regulärer Host geklont werden"
 
 msgid "Can not clone a regular host as cluster host"
 msgstr "Ein regulärer Host kann nicht als Cluster-Host geklont werden"
-
-msgid "Can not evaluate search"
-msgstr "Kann Suche nicht auswerten"
 
 #, python-format
 msgid "Can not start activation: %s"
@@ -32748,6 +32749,15 @@ msgstr ""
 "Wie lange die Statistikdateien auf dem Zielsystem aufgehoben werden soll. "
 "Dieses Intervall sollte mindestens doppel so gross wie das Check-Interval "
 "sein."
+
+msgid ""
+"How long the provider caches tool definitions and the conversation. Cached "
+"input costs a fraction of the normal price. OpenAI picks its own duration, "
+"up to 24 hours without zero data retention, and caches even when Off. "
+"Checkmk asks OpenAI not to store responses; providers keep requests for "
+"abuse monitoring either way. Turn caching off for a base URL without caching "
+"support."
+msgstr ""
 
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr ""
@@ -54226,6 +54236,10 @@ msgstr "Prometheus Scraper Konfigurationen"
 msgid "Prometheus targets"
 msgstr "Prometheus Ziele"
 
+#, fuzzy
+msgid "Prompt caching"
+msgstr "Abgleich von Prozesspfaden"
+
 msgid "Properties"
 msgstr "Eigenschaften"
 
@@ -71693,6 +71707,14 @@ msgid ""
 msgstr ""
 "Die oben genannten Probleme können durch fehlende Caches verursacht worden "
 "sein. Bitte führen Sie einen Rescan durch."
+
+#, python-format
+msgid ""
+"The process name refers to %(required)d group(s) of the regular expression, "
+"but the process matching provides only %(available)d. Match the command line "
+"with a regular expression that contains enough groups, or remove the "
+"replacements from the process name."
+msgstr ""
 
 msgid ""
 "The provided header key and value need to match exactly with the actual "
@@ -94920,10 +94942,12 @@ msgstr "Einstellungen-Menü"
 msgid "Show date and time"
 msgstr "Tag und Zeit anzeigen"
 
-msgid "Sharing"
-msgstr "Freigabe"
+#, fuzzy
+msgid "Public sharing"
+msgstr "Öffentlicher Link"
 
-msgid "Sharing until"
+#, fuzzy
+msgid "Public sharing until"
 msgstr "Freigabe bis"
 
 msgid "expires in %{days} days"
@@ -94935,7 +94959,8 @@ msgstr "läuft in einem Tag ab"
 msgid "expires today"
 msgstr "läuft heute ab"
 
-msgid "Sharing expired on"
+#, fuzzy
+msgid "Public sharing expired on"
 msgstr "Freigabe lief ab am"
 
 msgid "No items selected"
@@ -98250,9 +98275,26 @@ msgstr ""
 msgid "The answer ended before it was complete."
 msgstr ""
 
+msgid "What needs my attention right now?"
+msgstr ""
+
 #, fuzzy
-msgid "Ctrl+Enter to send"
-msgstr "Zu sendende Zeichenkette"
+msgid "What changed in the last hour?"
+msgstr "Neustarts während der letzten Stunde"
+
+msgid "Any recurring problems this week?"
+msgstr ""
+
+msgid "What should I do to fix the current problem?"
+msgstr ""
+
+#, fuzzy
+msgid "Suggested questions"
+msgstr "Vorgeschlagene Tutorial Videos"
+
+#, fuzzy
+msgid "Ask across all hosts and services"
+msgstr "Alle Hosts/Services zeigen"
 
 #, fuzzy
 msgid "Dock to the left"
@@ -98271,10 +98313,6 @@ msgid "Back to chat"
 msgstr "Zurück zu Ansicht"
 
 #, fuzzy
-msgid "Chat history"
-msgstr "DCD Batch Historie"
-
-#, fuzzy
 msgid "AI assistant"
 msgstr "KI-Unterstützung"
 
@@ -98283,8 +98321,23 @@ msgid "New chat"
 msgstr "Neue Aktione"
 
 #, fuzzy
+msgid "Chat history"
+msgstr "DCD Batch Historie"
+
+#, fuzzy
 msgid "Dock position"
 msgstr "Mausposition"
+
+#, fuzzy
+msgid "Welcome to"
+msgstr "Begrüßungsseite"
+
+#, fuzzy
+msgid "Checkmk Assistant"
+msgstr "Checkmk Zustand"
+
+msgid "An AI assistant that helps you dive into your data and investigate"
+msgstr ""
 
 #, fuzzy
 msgid "Cancelled"
@@ -99288,6 +99341,16 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Can not evaluate search"
+#~ msgstr "Kann Suche nicht auswerten"
+
+#~ msgid "Sharing"
+#~ msgstr "Freigabe"
+
+#, fuzzy
+#~ msgid "Ctrl+Enter to send"
+#~ msgstr "Zu sendende Zeichenkette"
 
 #~ msgid ""
 #~ "The start of a recurring downtime can only be set for days 1-28 of a "

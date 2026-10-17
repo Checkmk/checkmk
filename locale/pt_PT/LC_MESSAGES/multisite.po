@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-15 17:31+0000\n"
+"PO-Revision-Date: 2026-10-16 17:31+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -1204,6 +1204,10 @@ msgstr "1 mudança"
 #, fuzzy
 msgid "1 host"
 msgstr "hospedeiro"
+
+#, fuzzy
+msgid "1 hour"
+msgstr "Uma hora"
 
 msgid "1 row"
 msgstr "1 fila"
@@ -12638,9 +12642,6 @@ msgstr "Não pode clonar um hospedeiro de cluster como hospedeiro regular"
 
 msgid "Can not clone a regular host as cluster host"
 msgstr "Não pode clonar um anfitrião regular como anfitrião de cluster"
-
-msgid "Can not evaluate search"
-msgstr "Não consegue avaliar a pesquisa"
 
 #, python-format
 msgid "Can not start activation: %s"
@@ -34108,6 +34109,15 @@ msgid ""
 msgstr ""
 "Quanto tempo os arquivos de estatísticas são mantidos no sistema de destino. "
 "Este tempo deve ser pelo menos o dobro do intervalo de verificação."
+
+msgid ""
+"How long the provider caches tool definitions and the conversation. Cached "
+"input costs a fraction of the normal price. OpenAI picks its own duration, "
+"up to 24 hours without zero data retention, and caches even when Off. "
+"Checkmk asks OpenAI not to store responses; providers keep requests for "
+"abuse monitoring either way. Turn caching off for a base URL without caching "
+"support."
+msgstr ""
 
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr ""
@@ -56602,6 +56612,10 @@ msgstr "Adicionar configuração do estado"
 msgid "Prometheus targets"
 msgstr "Prometheus"
 
+#, fuzzy
+msgid "Prompt caching"
+msgstr "Correspondência do caminho do processo"
+
 msgid "Properties"
 msgstr "Imóveis"
 
@@ -74377,6 +74391,14 @@ msgid ""
 msgstr ""
 "Os problemas acima podem ser causados por caches em falta. Por favor, active "
 "uma nova verificação."
+
+#, python-format
+msgid ""
+"The process name refers to %(required)d group(s) of the regular expression, "
+"but the process matching provides only %(available)d. Match the command line "
+"with a regular expression that contains enough groups, or remove the "
+"replacements from the process name."
+msgstr ""
 
 msgid ""
 "The provided header key and value need to match exactly with the actual "
@@ -95681,7 +95703,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -96207,7 +96228,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -98285,11 +98305,11 @@ msgid "Show date and time"
 msgstr "Tempo de paragem"
 
 #, fuzzy
-msgid "Sharing"
-msgstr "Cordão"
+msgid "Public sharing"
+msgstr "Público"
 
 #, fuzzy
-msgid "Sharing until"
+msgid "Public sharing until"
 msgstr "Válido até"
 
 #, fuzzy
@@ -98305,7 +98325,7 @@ msgid "expires today"
 msgstr "Expira"
 
 #, fuzzy
-msgid "Sharing expired on"
+msgid "Public sharing expired on"
 msgstr "Expressão de agrupamento"
 
 #, fuzzy
@@ -101858,9 +101878,26 @@ msgstr ""
 msgid "The answer ended before it was complete."
 msgstr ""
 
+msgid "What needs my attention right now?"
+msgstr ""
+
 #, fuzzy
-msgid "Ctrl+Enter to send"
-msgstr "Cordão para enviar"
+msgid "What changed in the last hour?"
+msgstr "Reinícios por hora"
+
+msgid "Any recurring problems this week?"
+msgstr ""
+
+msgid "What should I do to fix the current problem?"
+msgstr ""
+
+#, fuzzy
+msgid "Suggested questions"
+msgstr "Vídeos tutoriais sugeridos"
+
+#, fuzzy
+msgid "Ask across all hosts and services"
+msgstr "Ver todos os anfitriões e serviços"
 
 #, fuzzy
 msgid "Dock to the left"
@@ -101879,10 +101916,6 @@ msgid "Back to chat"
 msgstr "Voltar para ver"
 
 #, fuzzy
-msgid "Chat history"
-msgstr "Histórico de pesquisa"
-
-#, fuzzy
 msgid "AI assistant"
 msgstr "Instância"
 
@@ -101891,8 +101924,23 @@ msgid "New chat"
 msgstr "Nova Ação"
 
 #, fuzzy
+msgid "Chat history"
+msgstr "Histórico de pesquisa"
+
+#, fuzzy
 msgid "Dock position"
 msgstr "Opções de montagem"
+
+#, fuzzy
+msgid "Welcome to"
+msgstr "Consulte a página do manual"
+
+#, fuzzy
+msgid "Checkmk Assistant"
+msgstr "Estado do checkmk"
+
+msgid "An AI assistant that helps you dive into your data and investigate"
+msgstr ""
 
 #, fuzzy
 msgid "Cancelled"
@@ -102811,6 +102859,17 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Can not evaluate search"
+#~ msgstr "Não consegue avaliar a pesquisa"
+
+#, fuzzy
+#~ msgid "Sharing"
+#~ msgstr "Cordão"
+
+#, fuzzy
+#~ msgid "Ctrl+Enter to send"
+#~ msgstr "Cordão para enviar"
 
 #~ msgid ""
 #~ "The start of a recurring downtime can only be set for days 1-28 of a "

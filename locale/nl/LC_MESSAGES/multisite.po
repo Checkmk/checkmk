@@ -1197,6 +1197,10 @@ msgstr "1 wijziging"
 msgid "1 host"
 msgstr "host"
 
+#, fuzzy
+msgid "1 hour"
+msgstr "uur"
+
 msgid "1 row"
 msgstr "1 rij"
 
@@ -12628,9 +12632,6 @@ msgstr "Kan een cluster host niet klonen als gewone host"
 
 msgid "Can not clone a regular host as cluster host"
 msgstr "Kan een gewone host niet klonen als cluster host"
-
-msgid "Can not evaluate search"
-msgstr "Kan zoekopdracht niet evalueren"
 
 #, python-format
 msgid "Can not start activation: %s"
@@ -34090,6 +34091,15 @@ msgid ""
 msgstr ""
 "Hoe lang de statistiekbestanden op het doelsysteem worden bewaard. Deze tijd "
 "moet minstens het dubbele zijn van het controle-interval."
+
+msgid ""
+"How long the provider caches tool definitions and the conversation. Cached "
+"input costs a fraction of the normal price. OpenAI picks its own duration, "
+"up to 24 hours without zero data retention, and caches even when Off. "
+"Checkmk asks OpenAI not to store responses; providers keep requests for "
+"abuse monitoring either way. Turn caching off for a base URL without caching "
+"support."
+msgstr ""
 
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr ""
@@ -56603,6 +56613,10 @@ msgstr "Configuratie toestand toevoegen"
 msgid "Prometheus targets"
 msgstr "Prometheus"
 
+#, fuzzy
+msgid "Prompt caching"
+msgstr "Procespad overeenstemmen"
+
 msgid "Properties"
 msgstr "Eigenschappen"
 
@@ -74390,6 +74404,14 @@ msgid ""
 msgstr ""
 "De bovenstaande problemen kunnen worden veroorzaakt door ontbrekende caches. "
 "Gelieve een rescan uit te voeren."
+
+#, python-format
+msgid ""
+"The process name refers to %(required)d group(s) of the regular expression, "
+"but the process matching provides only %(available)d. Match the command line "
+"with a regular expression that contains enough groups, or remove the "
+"replacements from the process name."
+msgstr ""
 
 msgid ""
 "The provided header key and value need to match exactly with the actual "
@@ -98369,11 +98391,11 @@ msgid "Show date and time"
 msgstr "Eindtijd downtime"
 
 #, fuzzy
-msgid "Sharing"
-msgstr "String"
+msgid "Public sharing"
+msgstr "Publiek"
 
 #, fuzzy
-msgid "Sharing until"
+msgid "Public sharing until"
 msgstr "Geldig tot"
 
 #, fuzzy
@@ -98389,7 +98411,7 @@ msgid "expires today"
 msgstr "Verloopt op"
 
 #, fuzzy
-msgid "Sharing expired on"
+msgid "Public sharing expired on"
 msgstr "Groeperingsexpressie"
 
 #, fuzzy
@@ -101943,9 +101965,26 @@ msgstr ""
 msgid "The answer ended before it was complete."
 msgstr ""
 
+msgid "What needs my attention right now?"
+msgstr ""
+
 #, fuzzy
-msgid "Ctrl+Enter to send"
-msgstr "String om te verzenden"
+msgid "What changed in the last hour?"
+msgstr "Herstart per uur"
+
+msgid "Any recurring problems this week?"
+msgstr ""
+
+msgid "What should I do to fix the current problem?"
+msgstr ""
+
+#, fuzzy
+msgid "Suggested questions"
+msgstr "Voorgestelde instructievideo's"
+
+#, fuzzy
+msgid "Ask across all hosts and services"
+msgstr "Bekijk alle hosts en diensten"
 
 #, fuzzy
 msgid "Dock to the left"
@@ -101964,10 +102003,6 @@ msgid "Back to chat"
 msgstr "Terug naar overzicht"
 
 #, fuzzy
-msgid "Chat history"
-msgstr "Zoekgeschiedenis"
-
-#, fuzzy
 msgid "AI assistant"
 msgstr "Instantie"
 
@@ -101976,8 +102011,23 @@ msgid "New chat"
 msgstr "Nieuwe Actie"
 
 #, fuzzy
+msgid "Chat history"
+msgstr "Zoekgeschiedenis"
+
+#, fuzzy
 msgid "Dock position"
 msgstr "Montagemogelijkheden"
+
+#, fuzzy
+msgid "Welcome to"
+msgstr "Zie handleiding pagina"
+
+#, fuzzy
+msgid "Checkmk Assistant"
+msgstr "Checkmk staat"
+
+msgid "An AI assistant that helps you dive into your data and investigate"
+msgstr ""
 
 #, fuzzy
 msgid "Cancelled"
@@ -102894,6 +102944,17 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Can not evaluate search"
+#~ msgstr "Kan zoekopdracht niet evalueren"
+
+#, fuzzy
+#~ msgid "Sharing"
+#~ msgstr "String"
+
+#, fuzzy
+#~ msgid "Ctrl+Enter to send"
+#~ msgstr "String om te verzenden"
 
 #~ msgid ""
 #~ "The start of a recurring downtime can only be set for days 1-28 of a "

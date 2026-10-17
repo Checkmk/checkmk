@@ -21,7 +21,10 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.gui.permissions import load_dynamic_permissions, permission_registry
+from cmk.gui.permissions import (
+    all_permissions,
+    load_dynamic_permissions,
+)
 from cmk.gui.userdb import load_roles, UserRole
 from cmk.gui.utils.roles import UserPermissions
 
@@ -46,7 +49,7 @@ def list_user_roles_v1(api_context: ApiContext) -> UserRoleCollectionModel:
     user.need_permission("wato.users")
     user_permissions = UserPermissions(
         (roles := load_roles()),
-        permission_registry,
+        all_permissions(),
         user_roles={
             UserId(user_id): user["roles"]
             for user_id, user in api_context.config.multisite_users.items()

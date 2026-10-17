@@ -83,7 +83,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.nodevis.utils import topology_configs_dir, topology_settings_lookup
 from cmk.gui.ntop import ntop_connection
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.search import index as search_index
 from cmk.gui.site_config import (
     is_distributed_setup_remote_site,
@@ -3249,7 +3249,10 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         tree: FolderTree,
     ) -> None:
         with job_interface.gui_context(
-            UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+            UserPermissions.from_serialized_config(
+                user_permission_config,
+                all_permissions(),
+            )
         ):
             job_interface.send_progress_update(
                 _("Activate changes scheduler started"), with_timestamp=True
@@ -3520,7 +3523,8 @@ class RemoteActivationBackgroundJob(BackgroundJob):
         try:
             with job_interface.gui_context(
                 UserPermissions.from_serialized_config(
-                    args.user_permission_config, permission_registry
+                    args.user_permission_config,
+                    all_permissions(),
                 )
             ):
                 warnings = execute_activate_changes(

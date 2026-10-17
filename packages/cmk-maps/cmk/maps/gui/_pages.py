@@ -23,7 +23,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import Page, PageContext, PageResult
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import VisualPublic
 from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermissions
 from cmk.maps.gui._images import seed_builtin_images
@@ -131,7 +131,7 @@ def _authorized_public(requested: object) -> VisualPublic:
     restriction), so a client cannot publish to a contact group it isn't in or to
     sites it isn't authorized for by crafting the request.
     """
-    user_permissions = UserPermissions.from_config(active_config, permission_registry)
+    user_permissions = UserPermissions.from_config(active_config, all_permissions())
     if not is_user_with_publish_permissions("pagetype", user.ident, "map", user_permissions):
         return False
     if requested is True:

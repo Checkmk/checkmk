@@ -31,7 +31,7 @@ from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.web.utils.urls import is_kiosk_request
 
@@ -97,7 +97,7 @@ class MainNavigation:
         """
         return MainNavigation(
             config=config,
-            user_permissions=UserPermissions.from_config(config, permission_registry),
+            user_permissions=UserPermissions.from_config(config, all_permissions()),
             sidebar_config=config.sidebar,
             start_url=user.start_url or config.start_url,
             screenshot_mode=config.screenshotmode,

@@ -85,7 +85,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.painter import PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, PainterParameters, Row, Visual, VisualLinkSpec
 from cmk.gui.utils.roles import UserPermissions
@@ -264,7 +264,9 @@ class ABCTopologyPage(Page):
         request_cache = RequestCache(ctx.config)
 
         self.make_ui_components(
-            UserPermissions.from_config(ctx.config, permission_registry), ctx.config, request_cache
+            UserPermissions.from_config(ctx.config, all_permissions()),
+            ctx.config,
+            request_cache,
         )
         self.show_topology(
             config=ctx.config,
@@ -2122,7 +2124,7 @@ def _get_topology_context_and_filters(
             painter_options=PainterOptions.get_instance(),
             theme=theme,
             url_renderer=RenderLink(request, response, display_options),
-            user_permissions=UserPermissions.from_config(config, permission_registry),
+            user_permissions=UserPermissions.from_config(config, all_permissions()),
         ),
         request_cache,
     )

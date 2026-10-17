@@ -73,6 +73,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, page_registry, PageContext, PageEndpoint, PageHandler
 from cmk.gui.permissions import (
+    all_permissions,
     declare_permission_section,
     Permission,
     permission_registry,
@@ -643,7 +644,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
     # TODO: Wie is die Semantik hier genau? Umsetzung vervollständigen!
     def may_see(self) -> bool:
         perm_name = f"{self.type_name()}.{self.name()}"
-        return perm_name not in permission_registry or user.may(perm_name)
+        return not user.permission_exists(perm_name) or user.may(perm_name)
 
         # if self.owner() == "" and not user.may(perm_name):
         #    return False
@@ -1027,7 +1028,7 @@ class ListPage[T: Overridable](Page):
 
     @override
     def page(self, ctx: PageContext) -> None:
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
         instances = self._type.load(user_permissions)
         self._type.need_overriding_permission("edit")
 
@@ -1294,7 +1295,7 @@ class EditPage[T_OverridableConfig: OverridableConfig, T: Overridable](Page):
         back_url = request.get_url_input("back", self._type.list_url())
 
         instances = self._type.load(
-            user_permissions := UserPermissions.from_config(ctx.config, permission_registry)
+            user_permissions := UserPermissions.from_config(ctx.config, all_permissions())
         )
         self._type.need_overriding_permission("edit")
 
@@ -1853,7 +1854,7 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
             page_name,
             element_type,
             create_info,
-            UserPermissions.from_config(ctx.config, permission_registry),
+            UserPermissions.from_config(ctx.config, all_permissions()),
             ctx.config,
         )
         # Redirect user to tha page this displays the thing we just added to
@@ -2640,7 +2641,7 @@ class CustomizePermissionsHandler:
 
     @classmethod
     def build(cls, ctx: PageContext) -> Self:
-        return cls(UserPermissions.from_config(ctx.config, permission_registry))
+        return cls(UserPermissions.from_config(ctx.config, all_permissions()))
 
     def may_see_category(self, category: str) -> bool:  # noqa: ARG002
         return not hide_customize_menu()

@@ -10,7 +10,7 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui import login
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.role_types import CustomUserRole
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.config_domain_name import (
@@ -89,7 +89,12 @@ def logged_in(user_id: UserId, *permissions: PermissionName) -> Iterator[None]:
     )
     with login.TransactionIdContext(
         user_id,
-        UserPermissions({"test_role": role}, permission_registry, {user_id: ["test_role"]}, []),
+        UserPermissions(
+            {"test_role": role},
+            all_permissions(),
+            {user_id: ["test_role"]},
+            [],
+        ),
     ):
         yield
 

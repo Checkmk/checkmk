@@ -17,7 +17,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import login
 from cmk.gui.config import Config, get_default_config, make_config_object
 from cmk.gui.logged_in import LoggedInSuperUser, user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle
 from cmk.gui.watolib.configuration_bundles import (
@@ -394,7 +394,7 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
     ) as (user_id, _password):
         user_permissions = UserPermissions(
             config.roles,
-            permission_registry,
+            all_permissions(),
             {user_id: ["user"]},
             [],
         )
@@ -670,7 +670,10 @@ def test_create_config_bundle_does_not_replace_a_password_the_user_cannot_see(
         automation=False, role="user", username="bundleuser", config=config
     ) as (user_id, _password):
         user_permissions = UserPermissions(
-            config.roles, permission_registry, {user_id: ["user"]}, []
+            config.roles,
+            all_permissions(),
+            {user_id: ["user"]},
+            [],
         )
         bundle_id, bundle = _make_bundle(owned_by="bundleuser")
         with (

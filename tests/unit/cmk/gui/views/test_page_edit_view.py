@@ -12,7 +12,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.painter import PainterContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import (
     ColumnSpec,
     ContextFilterConfig,
@@ -160,7 +160,12 @@ def test_the_view_editor_without_browser_reload_hides_the_automatic_page_reload(
 @pytest.fixture(name="admin_painter_context")
 def fixture_admin_painter_context(load_config: Config, with_admin_login: UserId) -> PainterContext:
     return make_painter_context(
-        UserPermissions(load_config.roles, permission_registry, {with_admin_login: ["admin"]}, [])
+        UserPermissions(
+            load_config.roles,
+            all_permissions(),
+            {with_admin_login: ["admin"]},
+            [],
+        )
     )
 
 

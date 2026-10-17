@@ -16,7 +16,7 @@ from cmk.gui.pagetypes import (
     Overridable,
     OverridableInstances,
 )
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.update_config.internal import (
     ConflictMode,
@@ -87,7 +87,7 @@ class UpdatePagetypes[TOverridable_co: Overridable](UpdateAction):
                 continue
             instances.add_instance((user_id, name), instance)
 
-        user_permissions = UserPermissions.from_config(active_config, permission_registry)
+        user_permissions = UserPermissions.from_config(active_config, all_permissions())
         for user_id in {
             user_id for user_id, _name in raw_page_dicts if user_id != UserId.builtin()
         }:

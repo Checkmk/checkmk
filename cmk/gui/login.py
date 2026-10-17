@@ -33,7 +33,7 @@ from cmk.gui.logged_in import (
     user,
 )
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.saml2_login import show_saml2_login
 from cmk.gui.session import session
 from cmk.gui.session_context import UserContext
@@ -210,7 +210,7 @@ class LoginPage(Page):
                 # c) Redirect to really requested page
                 session_state = session.login(
                     username,
-                    UserPermissions.from_config(config, permission_registry),
+                    UserPermissions.from_config(config, all_permissions()),
                     request.is_secure,
                 )
 

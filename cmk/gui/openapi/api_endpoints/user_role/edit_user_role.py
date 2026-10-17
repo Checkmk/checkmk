@@ -25,7 +25,10 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
-from cmk.gui.permissions import load_dynamic_permissions, permission_registry
+from cmk.gui.permissions import (
+    all_permissions,
+    load_dynamic_permissions,
+)
 from cmk.gui.userdb import load_roles, UserRole
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.userroles import (
@@ -110,7 +113,7 @@ def edit_user_role_v1(
         existing_userrole_copy,
         UserPermissions(
             load_roles(),
-            permission_registry,
+            all_permissions(),
             user_roles={
                 UserId(user_id): user["roles"]
                 for user_id, user in api_context.config.multisite_users.items()

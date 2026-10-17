@@ -13,7 +13,7 @@ from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.table import Table
 from cmk.gui.token_auth import (
     DashboardToken,
@@ -39,7 +39,7 @@ def page_edit_dashboards(ctx: PageContext) -> None:
         what="dashboards",
         title=_("Edit dashboards"),
         visuals=get_all_dashboards(),
-        user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
+        user_permissions=UserPermissions.from_config(ctx.config, all_permissions()),
         config=ctx.config,
         render_custom_buttons=_render_dashboard_buttons(ctx.request),
         render_custom_columns=_render_dashboard_columns(),

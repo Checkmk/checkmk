@@ -12,7 +12,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.quick_setup.v0_unstable.setups import (
     ProgressLogger,
     QuickSetupActionMode,
@@ -162,7 +162,7 @@ def finish_setup(
         settings,
         tree=ctx.tree,
         acting_user=user,
-        user_permissions=UserPermissions.from_config(active_config, permission_registry),
+        user_permissions=UserPermissions.from_config(active_config, all_permissions()),
         pending_changes=pending_changes,
         pprint_value=ctx.pprint_value,
         debug=active_config.debug,

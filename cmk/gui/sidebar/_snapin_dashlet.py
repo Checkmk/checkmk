@@ -15,7 +15,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.roles import UserPermissions
 from cmk.web.utils.request_cache import RequestCache
@@ -55,7 +55,7 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
     @override
     def default_display_title(self, _request_cache: RequestCache[RequestCacheConfig]) -> str:
         return all_snapins(
-            UserPermissions.from_config(active_config, permission_registry),
+            UserPermissions.from_config(active_config, all_permissions()),
         )[self._dashlet_spec["snapin"]].title()
 
 
@@ -65,7 +65,8 @@ class SnapinWidgetIFramePage(Page):
         """Render a snapin for use in an iframe."""
         snapin_name = ctx.request.get_ascii_input_mandatory("name")
         snapin_instance = self._get_snapin_instance(
-            snapin_name, UserPermissions.from_config(ctx.config, permission_registry)
+            snapin_name,
+            UserPermissions.from_config(ctx.config, all_permissions()),
         )
 
         html.browser_reload = False

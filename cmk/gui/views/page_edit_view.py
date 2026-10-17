@@ -30,7 +30,7 @@ from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.painter import all_painters, Cell, InternalPainter, PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
@@ -135,7 +135,7 @@ def page_edit_view(ctx: PageContext) -> None:
     visuals.page_edit_visual(
         "views",
         get_all_views(),
-        UserPermissions.from_config(ctx.config, permission_registry),
+        UserPermissions.from_config(ctx.config, all_permissions()),
         ctx.config,
         custom_field_handler=partial(_render_editable_view_config, config=ctx.config),
         create_handler=partial(_create_editable_view, config=ctx.config),
@@ -1211,7 +1211,7 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
             painter_options=PainterOptions.get_instance(),
             theme=theme,
             url_renderer=RenderLink(ctx.request, response, display_options),
-            user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
+            user_permissions=UserPermissions.from_config(ctx.config, all_permissions()),
         )
         if api_request["painter_type"] == "painter":
             painters = painters_of_datasource(api_request["ds_name"])
@@ -1286,7 +1286,7 @@ def render_view_config(
         painter_options=PainterOptions.get_instance(),
         theme=theme,
         url_renderer=RenderLink(request, response, display_options),
-        user_permissions=UserPermissions.from_config(config, permission_registry),
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
     )
     if column_links is None:
         vs_columns = view_editor_column_spec("columns", ds_name, painter_context)
@@ -1433,7 +1433,7 @@ def _create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
         painter_options=PainterOptions.get_instance(),
         theme=theme,
         url_renderer=RenderLink(request, response, display_options),
-        user_permissions=UserPermissions.from_config(config, permission_registry),
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
     )
     update_view(
         "view", view_editor_general_properties(ds_name, allow_browser_reload=allow_browser_reload)

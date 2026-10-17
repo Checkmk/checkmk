@@ -21,7 +21,7 @@ from cmk.gui.monitor.hosts._models import (
     UnixTimestamp,
 )
 from cmk.gui.monitor.hosts._repositories import EventRepository, HostRepository
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.role_types import BuiltInUserRole
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.host_relation_kinds import RELATION_KINDS
@@ -156,6 +156,12 @@ def login_with(permissions: dict[str, bool]) -> Iterator[None]:
     """A logged-in user whose role spells out exactly these permissions."""
     role: BuiltInUserRole = {"alias": "Test", "permissions": permissions, "builtin": True}
     with UserContext(
-        UserId("test"), UserPermissions({"user": role}, permission_registry, {}, ["user"])
+        UserId("test"),
+        UserPermissions(
+            {"user": role},
+            all_permissions(),
+            {},
+            ["user"],
+        ),
     ):
         yield

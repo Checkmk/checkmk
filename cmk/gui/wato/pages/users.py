@@ -47,7 +47,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.table import show_row_count, table_element
 from cmk.gui.type_defs import ActionResult, CustomUserAttrSpec, UserSpec
 from cmk.gui.user_connection_config_types import UserConnectionConfig
@@ -1278,7 +1278,7 @@ class ModeEditUser(WatoMode):
                 config.default_language,
                 config.wato_user_attrs,
                 config.sites,
-                UserPermissions.from_config(config, permission_registry),
+                UserPermissions.from_config(config, all_permissions()),
             )
 
     def _show_form(

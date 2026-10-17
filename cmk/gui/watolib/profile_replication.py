@@ -33,7 +33,7 @@ from cmk.gui.background_job.job import (
 from cmk.gui.config import Config
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import AnnotatedUserId, UserSpec, VisualTypeName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
@@ -213,7 +213,10 @@ class ProfileReplicationBackgroundJob(BackgroundJob):
         job_interface: BackgroundProcessInterface,
     ) -> None:
         with job_interface.gui_context(
-            UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
+            UserPermissions.from_serialized_config(
+                args.user_permission_config,
+                all_permissions(),
+            )
         ):
             self._do_execute(args, job_interface)
 

@@ -32,7 +32,7 @@ from cmk.gui.dashboard.api.model.contextual_link import (
 )
 from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
 from cmk.gui.dashboard.api.model.widget_content.stats import EventStatsContent, HostStatsContent
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from tests.unit.cmk.gui.helpers.dashboard_widget_resolution_test_helper import (
     api_context,
@@ -154,7 +154,10 @@ def test_an_inherited_link_takes_the_title_of_a_readable_target(
     load_config: Config, with_admin_login: UserId
 ) -> None:
     admin_permissions = UserPermissions(
-        load_config.roles, permission_registry, {with_admin_login: ["admin"]}, []
+        load_config.roles,
+        all_permissions(),
+        {with_admin_login: ["admin"]},
+        [],
     )
 
     [link] = _links(_linked(_INHERITED), admin_permissions)
@@ -166,7 +169,10 @@ def test_a_link_whose_owned_copy_is_gone_takes_the_built_in_title(
     load_config: Config, with_admin_login: UserId
 ) -> None:
     admin_permissions = UserPermissions(
-        load_config.roles, permission_registry, {with_admin_login: ["admin"]}, []
+        load_config.roles,
+        all_permissions(),
+        {with_admin_login: ["admin"]},
+        [],
     )
     gone_copy = dataclasses.replace(
         _INHERITED, location=VisualLocation(type="views", name="searchhost", owner=UserId("gone"))

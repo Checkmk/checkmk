@@ -24,7 +24,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import http, login
 from cmk.gui.config import Config
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.livestatus_client.testing import mock_livestatus_communication, MockLiveStatusConnection
@@ -172,7 +172,13 @@ def with_user(load_config: Config) -> Iterator[tuple[UserId, str]]:
 def with_user_login(load_config: Config, with_user: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = UserId(with_user[0])
     with login.TransactionIdContext(
-        user_id, UserPermissions(load_config.roles, permission_registry, {user_id: ["user"]}, [])
+        user_id,
+        UserPermissions(
+            load_config.roles,
+            all_permissions(),
+            {user_id: ["user"]},
+            [],
+        ),
     ):
         yield user_id
 
@@ -187,7 +193,13 @@ def with_admin(load_config: Config) -> Iterator[tuple[UserId, str]]:
 def with_admin_login(load_config: Config, with_admin: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = with_admin[0]
     with login.TransactionIdContext(
-        user_id, UserPermissions(load_config.roles, permission_registry, {user_id: ["admin"]}, [])
+        user_id,
+        UserPermissions(
+            load_config.roles,
+            all_permissions(),
+            {user_id: ["admin"]},
+            [],
+        ),
     ):
         yield user_id
 

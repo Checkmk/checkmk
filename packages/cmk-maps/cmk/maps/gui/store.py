@@ -20,7 +20,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import pagetypes
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import VisualPublic
 from cmk.gui.utils.roles import UserPermissions
 from cmk.maps.gui.pagetype import MapPage
@@ -36,7 +36,7 @@ def is_valid_map_name(name: str) -> bool:
 
 @request_memoize()
 def _user_permissions() -> UserPermissions:
-    return UserPermissions.from_config(active_config, permission_registry)
+    return UserPermissions.from_config(active_config, all_permissions())
 
 
 @request_memoize()

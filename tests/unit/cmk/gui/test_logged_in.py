@@ -36,7 +36,7 @@ from cmk.gui.logged_in import (
     UserDefaultConfig,
 )
 from cmk.gui.logged_in import user as global_user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.role_types import CustomUserRole
 from cmk.gui.scopes import ScopeId
 from cmk.gui.session import session
@@ -331,7 +331,7 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
     with create_and_destroy_user(username="test", config=active_config) as user:
         yield LoggedInUser(
             user[0],
-            UserPermissions.from_config(active_config, permission_registry),
+            UserPermissions.from_config(active_config, all_permissions()),
             defaults=UserDefaultConfig(
                 users=active_config.multisite_users,
                 default_language=active_config.default_language,

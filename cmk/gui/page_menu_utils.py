@@ -29,7 +29,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.painter import PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import InfoName, Rows, SingleInfos, Visual
 from cmk.gui.utils.loading_transition import LoadingTransition
@@ -718,7 +718,7 @@ class LegacyHostMenus:
         if (view_spec := get_permitted_views().get(_HOST_VIEW_NAME)) is None:
             return []
 
-        user_permissions = UserPermissions.from_config(active_config, permission_registry)
+        user_permissions = UserPermissions.from_config(active_config, all_permissions())
         view = View(
             _HOST_VIEW_NAME,
             view_spec,

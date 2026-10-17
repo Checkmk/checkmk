@@ -21,7 +21,7 @@ from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.oauth.wato._user_tokens_page import UserOAuthTokensOverview
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.scopes import DEFAULT_SCOPE
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
@@ -126,7 +126,13 @@ def _login(user_id: UserId, load_config: Config) -> AbstractContextManager[None]
     # not carry over into a new one, so the two tests below that need real
     # POST form data (for the bulk-checkbox parsing) can't rely on it.
     return login.TransactionIdContext(
-        user_id, UserPermissions(load_config.roles, permission_registry, {user_id: ["admin"]}, [])
+        user_id,
+        UserPermissions(
+            load_config.roles,
+            all_permissions(),
+            {user_id: ["admin"]},
+            [],
+        ),
     )
 
 

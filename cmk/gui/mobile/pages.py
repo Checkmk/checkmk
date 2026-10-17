@@ -26,7 +26,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.painter import PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.saml2_login import show_saml2_login
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import Rows, VisualContext
@@ -257,7 +257,7 @@ class PageMobileIndex(Page):
 
 
 def _page_index(request: Request, config: Config) -> None:
-    user_permissions = UserPermissions.from_config(config, permission_registry)
+    user_permissions = UserPermissions.from_config(config, all_permissions())
     request_cache = RequestCache(config)
     title = _("Checkmk mobile")
     mobile_html_head(title)
@@ -357,7 +357,7 @@ def _page_view(request: Request, config: Config, *, debug: bool) -> None:
         datasource.infos, view_spec["context"], request_cache
     )
 
-    user_permissions = UserPermissions.from_config(config, permission_registry)
+    user_permissions = UserPermissions.from_config(config, all_permissions())
     view = View(
         view_name,
         view_spec,

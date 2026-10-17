@@ -734,12 +734,15 @@ def rename_hosts_job_entry_point(
     args: RenameHostsJobArgs,
 ) -> None:
     from cmk.gui.i18n import ungettext
-    from cmk.gui.permissions import permission_registry
+    from cmk.gui.permissions import all_permissions
     from cmk.gui.utils.roles import UserPermissions
     from cmk.gui.watolib.activate_changes import ActivateChanges
 
     with job_interface.gui_context(
-        UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
+        UserPermissions.from_serialized_config(
+            args.user_permission_config,
+            all_permissions(),
+        )
     ):
         # The job acts on the configuration of the request that started it, so the tree is built
         # from the values that request put into the job arguments.

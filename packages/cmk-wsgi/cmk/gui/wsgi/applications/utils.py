@@ -22,7 +22,7 @@ from cmk.gui.http import Request, request, Response, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInRemoteSite, LoggedInSuperUser, user
 from cmk.gui.pages import get_page_handler, PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.post_auth_gates import post_auth_gate_redirect_url
 from cmk.gui.session import session
 from cmk.gui.theme.current_theme import theme
@@ -57,7 +57,7 @@ def ensure_authentication(handler: pages.PageHandler) -> Callable[[PageContext],
     # user objects.
     @functools.wraps(handler)
     def _call_auth(ctx: PageContext) -> Response:
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
         with login.authenticate(user_permissions) as authenticated:
             if not authenticated:
                 return _handle_not_authenticated(ctx)

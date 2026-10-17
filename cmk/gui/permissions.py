@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import override
 
@@ -123,6 +123,13 @@ class PermissionRegistry(cmk.ccc.plugin_registry.Registry[Permission]):
             return sorted(permissions, key=lambda p: (p.title, p.sort_index))
         return sorted(permissions, key=lambda p: p.sort_index)
 
+    @override
+    def register(self, instance: Permission) -> Permission:
+        # A permission registered again is sorted by its last registration
+        if (name := self.plugin_name(instance)) in self:
+            self.unregister(name)
+        return super().register(instance)
+
 
 permission_registry = PermissionRegistry()
 
@@ -177,3 +184,100 @@ def declare_dynamic_permissions(func: Callable[[], None]) -> None:
 def load_dynamic_permissions() -> None:
     for func in _permission_declaration_functions:
         func()
+
+
+type DynamicPermissionsProvider = Callable[[], Iterable[Permission]]
+
+
+class DynamicPermissionRegistry(Mapping[str, Sequence[DynamicPermissionsProvider]]):
+    """The providers of the permissions which are not known at import time, by section name
+
+    For example for each user defined view there is also a permission. A
+    provider computes the permissions of its section on demand. It must not
+    change registries or other global state. Updating a cache it reads from
+    is fine."""
+
+    def __init__(self) -> None:
+        self._providers: dict[str, list[DynamicPermissionsProvider]] = {}
+
+    def register(self, section_name: str, provider: DynamicPermissionsProvider) -> None:
+        providers = self._providers.setdefault(section_name, [])
+        if provider not in providers:
+            providers.append(provider)
+
+    @override
+    def __getitem__(self, key: str) -> Sequence[DynamicPermissionsProvider]:
+        return self._providers[key]
+
+    @override
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._providers)
+
+    @override
+    def __len__(self) -> int:
+        return len(self._providers)
+
+
+dynamic_permission_registry = DynamicPermissionRegistry()
+
+
+class AllPermissions(Mapping[str, Permission]):
+    """The static permissions plus the dynamic ones
+
+    The dynamic permissions of a section are computed on the first access to a
+    permission of the section which is not a static one. Iterating computes the
+    permissions of all sections."""
+
+    def __init__(
+        self,
+        static: Mapping[str, Permission],
+        providers: Mapping[str, Sequence[DynamicPermissionsProvider]],
+    ) -> None:
+        self._static = static
+        self._providers = providers
+        self._dynamic: dict[str, dict[str, Permission]] = {}
+
+    def _dynamic_of_section(self, section_name: str) -> Mapping[str, Permission]:
+        if (permissions := self._dynamic.get(section_name)) is None:
+            permissions = self._dynamic[section_name] = {}
+            for provider in self._providers.get(section_name, []):
+                for p in provider():
+                    # The first declaration of a permission wins
+                    if p.name not in self._static and p.name not in permissions:
+                        permissions[p.name] = p
+        return permissions
+
+    @override
+    def __getitem__(self, key: str) -> Permission:
+        if (permission := self._static.get(key)) is not None:
+            return permission
+        return self._dynamic_of_section(key.split(".", 1)[0])[key]
+
+    @override
+    def __iter__(self) -> Iterator[str]:
+        yield from self._static
+        for section_name in self._providers:
+            yield from self._dynamic_of_section(section_name)
+
+    @override
+    def __len__(self) -> int:
+        return len(self._static) + sum(
+            len(self._dynamic_of_section(section_name)) for section_name in self._providers
+        )
+
+
+def all_permissions() -> AllPermissions:
+    """The permissions of the registered static permissions and dynamic permission providers"""
+    return AllPermissions(permission_registry, dynamic_permission_registry)
+
+
+def get_sorted_permissions(
+    permissions: Mapping[str, Permission], section: PermissionSection
+) -> list[Permission]:
+    """Returns the sorted permissions of a section respecting the sorting config of the section
+
+    Without sorting by title, the permissions keep the order they have been declared in."""
+    section_permissions = [p for p in permissions.values() if p.section.name == section.name]
+    if section.do_sort:
+        return sorted(section_permissions, key=lambda p: p.title)
+    return section_permissions

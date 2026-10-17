@@ -36,7 +36,7 @@ from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.painter import PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.token_auth import AuthToken, DashboardToken
 from cmk.gui.type_defs import (
@@ -456,7 +456,7 @@ class ViewWidgetIFramePage(Page):
         ViewWidgetIFramePageHelper.setup_filled_in(ctx.request)
         ViewWidgetIFramePageHelper.setup_datasource(ctx.request, view_spec["datasource"])
 
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
         row_limit = get_limit(
             view_spec_row_limit=view_spec.get("row_limit", 0),
             request_limit_mode=parameters.limit,
@@ -548,7 +548,7 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
     @override
     def _get(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> None:
         parameters = _ViewWidgetIFrameAuthTokenRequestParameters.from_request(ctx.request)
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
 
         with impersonate_dashboard_token_issuer(
             token.issuer, token_details, user_permissions

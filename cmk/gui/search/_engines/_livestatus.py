@@ -18,7 +18,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment, main_menu_registry
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import Row, Rows, SearchQuery, SearchResult, SearchResultsByTopic, ViewName
 from cmk.gui.utils.labels import (
     encode_labels_for_livestatus,
@@ -1426,7 +1426,7 @@ class LivestatusSearchEngine:
             build_url=get_url_builder(request),
         )
         self._user_permissions = user_permissions or UserPermissions.from_config(
-            config, permission_registry
+            config, all_permissions()
         )
 
     def search(self, query: str, *, provider: ProviderName) -> Iterable[UnifiedSearchResultItem]:

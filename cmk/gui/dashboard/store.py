@@ -19,7 +19,9 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import (
+    all_permissions,
+)
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import TimerangeValue
@@ -58,7 +60,7 @@ class DashboardStore:
         return cls()
 
     def __init__(self) -> None:
-        user_permissions = UserPermissions.from_config(active_config, permission_registry)
+        user_permissions = UserPermissions.from_config(active_config, all_permissions())
         self.all = self.load_all()
         self.permitted = self._load_permitted(self.all, user_permissions)
         self.permitted_by_owner = self._load_permitted_by_owner(self.all, user_permissions)

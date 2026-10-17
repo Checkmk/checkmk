@@ -20,7 +20,7 @@ from cmk.gui.main_menu import (
 )
 from cmk.gui.main_menu_match_items import MatchItemGeneratorMainMenu
 from cmk.gui.main_menu_types import MainMenuItem
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.search.matchers import MatchItemGeneratorRegistry
 from cmk.gui.sidebar import (
     footnotelinks,
@@ -75,7 +75,7 @@ def render_wato(config: Config, mini: bool) -> None:
     if not user.may("wato.use"):
         html.write_text_permissive(_("You are not allowed to use the setup."))
 
-    menu = get_wato_menu_items(UserPermissions.from_config(config, permission_registry))
+    menu = get_wato_menu_items(UserPermissions.from_config(config, all_permissions()))
 
     if mini:
         for topic in menu:
@@ -340,7 +340,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
 
     @override
     def show(self, config: Config) -> None:
-        user_permissions = UserPermissions.from_config(config, permission_registry)
+        user_permissions = UserPermissions.from_config(config, all_permissions())
         if (
             not site_config.is_distributed_setup_remote_site(config.sites)
             and not config.wato_enabled

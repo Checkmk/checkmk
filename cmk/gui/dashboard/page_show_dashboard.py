@@ -22,7 +22,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_navigation import MainNavigation
 from cmk.gui.ntop import ntop_connection
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import VisualTypeName
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.utils.roles import UserPermissions
@@ -93,7 +93,7 @@ def page_dashboard_app(ctx: PageContext) -> None:
         )
         board["context"] = board_context
         title = visuals.visual_title("dashboard", board, board_context, request_cache=request_cache)
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
         # some dashboards have more complicated context requirements when loaded, these are
         # constructed when clicking on a linking dashboard which means that this will (for now
         # with the current architecture) always go through a full page reload rather than a

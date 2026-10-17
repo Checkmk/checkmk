@@ -29,7 +29,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext
 from cmk.gui.pagetypes import page_menu_add_to_topics
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import ADD_TO_GRAPH_TYPES, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.regex import validate_regex
@@ -50,7 +50,7 @@ def ajax_popup_add(ctx: PageContext) -> None:
     page_menu_dropdown = page_menu_dropdown_add_to_visual(
         add_type=request.get_ascii_input_mandatory("add_type"),
         name="",
-        user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
+        user_permissions=UserPermissions.from_config(ctx.config, all_permissions()),
     )[0]
 
     html.open_ul()
@@ -194,7 +194,7 @@ def ajax_add_visual(ctx: PageContext) -> None:
         element_type,
         create_info.context,
         create_info.params,
-        UserPermissions.from_config(ctx.config, permission_registry),
+        UserPermissions.from_config(ctx.config, all_permissions()),
         RequestCache(ctx.config),
     )
 
@@ -247,7 +247,7 @@ def add_to_dashboard_choices_autocompleter(
     return get_visual_choices(
         visual_type_name="dashboards",
         value=value,
-        user_permissions=UserPermissions.from_config(config, permission_registry),
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
     )
 
 

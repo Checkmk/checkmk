@@ -22,7 +22,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.valuespec import (
@@ -309,7 +309,7 @@ class Bookmarks(SidebarSnapin):
     @override
     def show(self, config: Config) -> None:
         for topic, bookmarks in self._get_bookmarks_by_topic(
-            UserPermissions.from_config(config, permission_registry)
+            UserPermissions.from_config(config, all_permissions())
         ):
             with foldable_container(
                 treename="bookmarks",
@@ -349,7 +349,7 @@ class Bookmarks(SidebarSnapin):
         check_csrf_token(session, request, i18n=_)
         title = request.var("title")
         url = request.var("url")
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
         if title and url:
             BookmarkList.validate_url(url, "url")
             self._add_bookmark(title, url, user_permissions)

@@ -471,6 +471,9 @@ class LoggedInUser:
             }
         )
 
+    def permission_exists(self, permission_name: str) -> bool:
+        return self._user_permissions.permission_exists(permission_name)
+
     def may(self, permission_name: str) -> bool:
         """Whether this user may do this, in this request.
 

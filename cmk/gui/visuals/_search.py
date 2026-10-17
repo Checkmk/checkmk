@@ -10,7 +10,7 @@ from typing import override
 from cmk.ccc.user import UserId
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.search.matchers import (
     ABCMatchItemGenerator,
     MatchItem,
@@ -59,7 +59,8 @@ class BuiltinVisualsSearch:
 
     def build_permissions_handler(self, ctx: PageContext) -> BuiltinVisualsPermissionsHandler:
         return BuiltinVisualsPermissionsHandler(
-            self, UserPermissions.from_config(ctx.config, permission_registry)
+            self,
+            UserPermissions.from_config(ctx.config, all_permissions()),
         )
 
     def builtin_visuals(self) -> Mapping[VisualName, Visual]:

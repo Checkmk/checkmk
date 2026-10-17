@@ -17,7 +17,7 @@ from cmk.gui.config import active_config
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.main_menu_types import MainMenuItem
 from cmk.gui.pages import page_registry
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 
 
@@ -37,7 +37,7 @@ def test_the_customize_entry_leads_to_a_registered_page() -> None:
 def test_only_maps_are_marked_experimental_in_the_customize_menu() -> None:
     customize = main_menu_registry["customize"]
     assert isinstance(customize, MainMenuItem) and customize.get_topics is not None
-    topics = customize.get_topics(UserPermissions.from_config(active_config, permission_registry))
+    topics = customize.get_topics(UserPermissions.from_config(active_config, all_permissions()))
     titles = {entry.id: entry.title for topic in topics for entry in topic.entries}
 
     assert titles["map"] == "Maps (experimental)"

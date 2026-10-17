@@ -44,8 +44,9 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import (
+    all_permissions,
+    get_sorted_permissions,
     load_dynamic_permissions,
-    permission_registry,
     permission_section_registry,
 )
 from cmk.gui.site_config import get_login_sites
@@ -541,10 +542,11 @@ class ModeEditRole(WatoMode):
             )
         )
 
+        permissions = all_permissions()
         for section in permission_section_registry.get_sorted_sections():
             # Now filter by the optional search term
             filtered_perms = []
-            for perm in permission_registry.get_sorted_permissions(section):
+            for perm in get_sorted_permissions(permissions, section):
                 if search and (
                     search not in perm.title.lower() and search not in perm.name.lower()
                 ):
@@ -606,6 +608,7 @@ class ModeRoleMatrix(WatoMode):
 
     @override
     def page(self, config: Config) -> None:
+        permissions = all_permissions()
         for section in permission_section_registry.get_sorted_sections():
             with table_element(
                 section.name,
@@ -613,7 +616,7 @@ class ModeRoleMatrix(WatoMode):
                 foldable=Foldable.FOLDABLE_SAVE_STATE,
                 limit=max(200, config.table_row_limit),
             ) as table:
-                permission_list = permission_registry.get_sorted_permissions(section)
+                permission_list = get_sorted_permissions(permissions, section)
 
                 if not permission_list:
                     table.row()

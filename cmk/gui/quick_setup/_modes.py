@@ -30,7 +30,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.page_menu_entry import enable_page_menu_entry
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.quick_setup.config_setups.kubernetes.constants import (
     QUICK_SETUP_ID as KUBERNETES_QUICK_SETUP_ID,
 )
@@ -418,7 +418,7 @@ class ModeEditConfigurationBundles(WatoMode):
             self._delete_bundle(
                 self._tree,
                 bundle_id,
-                user_permissions=UserPermissions.from_config(config, permission_registry),
+                user_permissions=UserPermissions.from_config(config, all_permissions()),
                 pprint_value=config.wato_pprint_config,
                 use_git=config.wato_use_git,
                 debug=config.debug,

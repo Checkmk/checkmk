@@ -44,7 +44,7 @@ from cmk.gui.graphing import (
     TemplateGraphSpecification,
 )
 from cmk.gui.i18n import _
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import GraphRenderOptionsVS, SingleInfos, VisualContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import (
@@ -138,7 +138,7 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig](Dashlet[T]):
             start, end = Timerange.compute_range(self._dashlet_spec["timerange"]).range
             discovered = self.discover_graphs(
                 debug=active_config.debug,
-                user_permissions=UserPermissions.from_config(active_config, permission_registry),
+                user_permissions=UserPermissions.from_config(active_config, all_permissions()),
             )
             evaluated = evaluate_built_graphs(
                 [built.graph for built in discovered.graphs[:1]],

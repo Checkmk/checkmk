@@ -510,11 +510,11 @@ def available_by_owner[TVisual: Visual](
 
     def restricted_visual(visualname: VisualName) -> bool:
         permname = f"{permprefix}.{visualname}"
-        return permname in permission_registry and not user.may(permname)
+        return user.permission_exists(permname) and not user.may(permname)
 
     def restricted_packaged_visual(visualname: VisualName) -> bool:
         permname = f"{permprefix}.{visualname}_packaged"
-        return permname in permission_registry and not user.may(permname)
+        return user.permission_exists(permname) and not user.may(permname)
 
     # 1. user's own visuals, if allowed to edit visuals
     if user.may("general.edit_" + what):

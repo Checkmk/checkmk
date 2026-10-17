@@ -20,7 +20,7 @@ from cmk.gui.main_menu_types import MainMenuItem
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import Visual
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import get_permitted_views
@@ -82,7 +82,7 @@ class Views(SidebarSnapin):
     def show(self, config: Config) -> None:
         show_main_menu(
             treename="views",
-            menu=default_view_menu_topics(UserPermissions.from_config(config, permission_registry)),
+            menu=default_view_menu_topics(UserPermissions.from_config(config, all_permissions())),
         )
 
         links = []

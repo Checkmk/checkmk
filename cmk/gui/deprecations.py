@@ -28,7 +28,7 @@ from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import JobSchedulerClient
 from cmk.gui.log import logger
 from cmk.gui.message import create_message, get_gui_messages, MessageText, send_message
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.sites import states
 from cmk.gui.type_defs import Users
@@ -495,7 +495,7 @@ def execute_deprecation_tests_and_notify_users(config: Config) -> None:
         list(
             _filter_notifiable_users(
                 load_users(),
-                UserPermissions.from_config(config, permission_registry),
+                UserPermissions.from_config(config, all_permissions()),
             )
         ),
     ):

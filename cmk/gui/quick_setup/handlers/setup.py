@@ -25,7 +25,7 @@ from cmk.gui.background_job.job import (
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.quick_setup.handlers.stage import (
     NextStageStructure,
     validate_stage_formspecs,
@@ -407,7 +407,10 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
     ) -> None:
         job_interface.get_logger().debug("Running Quick setup action finally")
         with job_interface.gui_context(
-            UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+            UserPermissions.from_serialized_config(
+                user_permission_config,
+                all_permissions(),
+            )
         ):
             try:
                 self._run_quick_setup_stage(

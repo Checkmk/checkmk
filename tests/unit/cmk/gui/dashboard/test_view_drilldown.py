@@ -12,7 +12,7 @@ from cmk.gui import visuals
 from cmk.gui.config import Config
 from cmk.gui.dashboard.view_drilldown import column_drilldowns
 from cmk.gui.http import request
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import (
     ContextFilterConfig,
     ContextualLinkEntryConfig,
@@ -43,7 +43,10 @@ _CONTEXT: VisualContext = {"opthostgroup": {"opthost_group": "linux"}}
 @pytest.fixture(name="admin_permissions")
 def fixture_admin_permissions(load_config: Config, with_admin_login: UserId) -> UserPermissions:
     return UserPermissions(
-        load_config.roles, permission_registry, {with_admin_login: ["admin"]}, []
+        load_config.roles,
+        all_permissions(),
+        {with_admin_login: ["admin"]},
+        [],
     )
 
 

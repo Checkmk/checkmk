@@ -23,7 +23,7 @@ from cmk.gui.http import request as request_
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.sites import live
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperature_unit import TemperatureUnit
@@ -206,7 +206,7 @@ class PredictionPage:
         site_id = SiteId(request_.get_str_input_mandatory("site"))
         requested_metric = request_.var("dsname")
 
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
         make_header(
             html,
             title=_("Prediction for %(host_name)s - %(service_name)s")

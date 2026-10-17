@@ -23,7 +23,7 @@ from cmk.gui.config import Config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import AnnotatedUserId, CustomHostAttrSpec
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
@@ -210,7 +210,10 @@ def autodiscovery_job_entry_point(
     job_interface: BackgroundProcessInterface, args: AutoDiscoveryJobArgs
 ) -> None:
     with job_interface.gui_context(
-        UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
+        UserPermissions.from_serialized_config(
+            args.user_permission_config,
+            all_permissions(),
+        )
     ):
         # The job acts on the configuration of the request that started it, so the tree is built
         # from the values that request put into the job arguments.

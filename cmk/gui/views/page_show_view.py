@@ -29,7 +29,7 @@ from cmk.gui.pages import PageContext
 from cmk.gui.painter import Cell, columns_of_cells, PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
@@ -76,7 +76,7 @@ def page_show_view(
         )
         _patch_view_context(view_spec)
 
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
         request_cache = RequestCache(ctx.config)
         datasource = data_source_registry[view_spec["datasource"]]()
         context = visuals.active_context_from_request(

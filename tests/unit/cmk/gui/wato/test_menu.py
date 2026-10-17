@@ -12,7 +12,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import login
 from cmk.gui.config import Config
 from cmk.gui.main_menu_match_items import MatchItemGeneratorMainMenu
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.search.matchers import MatchItem, MatchItemConfig
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.wato._snapins import get_wato_menu_items, SidebarSnapinWATOMini
@@ -120,7 +120,12 @@ def fixture_user_without_setup(
     roles = copy.deepcopy(load_config.roles)
     roles["user"]["permissions"] = {**roles["user"].get("permissions", {}), "wato.use": False}
     user_id = UserId(with_user[0])
-    permissions = UserPermissions(roles, permission_registry, {user_id: ["user"]}, [])
+    permissions = UserPermissions(
+        roles,
+        all_permissions(),
+        {user_id: ["user"]},
+        [],
+    )
     with login.TransactionIdContext(user_id, permissions):
         yield permissions
 

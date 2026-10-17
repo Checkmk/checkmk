@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.config import active_config
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.sidebar._snapin import all_snapins
 from cmk.gui.utils.roles import UserPermissions
 from tests.testlib.unit.rest_api_client import ClientRegistry
@@ -12,7 +12,7 @@ from tests.testlib.unit.rest_api_client import ClientRegistry
 
 def test_list_test_openapi_sidebar_element(clients: ClientRegistry) -> None:
     all_sidebar_elements = clients.SidebarElement.get_all().json["value"]
-    snapins = all_snapins(UserPermissions.from_config(active_config, permission_registry))
+    snapins = all_snapins(UserPermissions.from_config(active_config, all_permissions()))
 
     assert len(all_sidebar_elements) == len(snapins)
     for key, snapin in snapins.items():

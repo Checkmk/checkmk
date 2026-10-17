@@ -24,7 +24,7 @@ from cmk.gui import userdb
 from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.site_config import (
     distributed_setup_remote_sites,
     has_distributed_setup_remote_sites,
@@ -1744,7 +1744,7 @@ class ACTestAutomationUserSecret(ACTest):
         if is_distributed_setup_remote_site(config.sites):
             return
         flagged_users = self.get_flagged_users(
-            UserPermissions.from_config(config, permission_registry),
+            UserPermissions.from_config(config, all_permissions()),
             userdb.load_users(),
         )
 
@@ -1758,6 +1758,7 @@ class ACTestAutomationUserSecret(ACTest):
             )
             return
 
+        permissions = all_permissions()
         for user_id, dangerous_perms in flagged_users.items():
             yield ACSingleResult(
                 state=ACResultState.WARN,
@@ -1768,8 +1769,7 @@ class ACTestAutomationUserSecret(ACTest):
                     "user_id": user_id,
                     "count": len(dangerous_perms),
                     "permissions": ", ".join(
-                        (perm.title if (perm := permission_registry.get(p)) else p)
-                        for p in dangerous_perms
+                        (perm.title if (perm := permissions.get(p)) else p) for p in dangerous_perms
                     ),
                 },
                 site_id=site_id,

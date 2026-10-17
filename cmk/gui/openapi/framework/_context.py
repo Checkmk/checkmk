@@ -15,7 +15,7 @@ from cmk.gui.customer import is_provider_site
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.openapi.restful_objects.constructors import ETagHash, hash_of_dict
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.token_auth import AuthToken
 from cmk.gui.type_defs import (
@@ -139,7 +139,7 @@ class ApiConfig:
     def user_permissions(self) -> UserPermissions:
         return UserPermissions(
             roles=self.roles,
-            permissions=permission_registry,
+            permissions=all_permissions(),
             user_roles={
                 UserId(user_id): user["roles"] for user_id, user in self.multisite_users.items()
             },

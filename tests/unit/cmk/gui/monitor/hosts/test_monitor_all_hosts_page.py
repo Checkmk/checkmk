@@ -23,7 +23,7 @@ from cmk.gui.monitor.hosts._pages._monitor_all_hosts import (
     MonitorAllHostsPage,
 )
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
@@ -39,7 +39,10 @@ def fixture_user_without_permissions(load_config: Config) -> Iterator[UserId]:
         with login.TransactionIdContext(
             user_id,
             UserPermissions(
-                load_config.roles, permission_registry, {user_id: ["no_permissions"]}, []
+                load_config.roles,
+                all_permissions(),
+                {user_id: ["no_permissions"]},
+                [],
             ),
         ):
             yield user_id

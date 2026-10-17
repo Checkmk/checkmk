@@ -15,7 +15,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.config import Config, get_default_config, make_config_object
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.logged_in import LoggedInUser, UserDefaultConfig
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.quick_setup.config_setups.kubernetes.helm import MonitoringSettings
 from cmk.gui.quick_setup.config_setups.kubernetes.save import save_configuration
 from cmk.gui.quick_setup.config_setups.kubernetes.settings import (
@@ -59,7 +59,12 @@ def _admin(roles: Mapping[str, BuiltInUserRole | CustomUserRole]) -> LoggedInUse
     paths.profile_dir.mkdir(parents=True, exist_ok=True)
     return LoggedInUser(
         _ADMIN_ID,
-        UserPermissions(roles, permission_registry, {_ADMIN_ID: ["admin"]}, []),
+        UserPermissions(
+            roles,
+            all_permissions(),
+            {_ADMIN_ID: ["admin"]},
+            [],
+        ),
         defaults=UserDefaultConfig(
             users={}, default_language="en", default_show_mode="default_show_less"
         ),
@@ -100,7 +105,7 @@ def _save(
         settings,
         tree=make_folder_tree(config),
         acting_user=acting_user,
-        user_permissions=UserPermissions.from_config(config, permission_registry),
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
         pending_changes=PendingChanges(
             activation_sites=config.sites,
             local_site=omd_site(),

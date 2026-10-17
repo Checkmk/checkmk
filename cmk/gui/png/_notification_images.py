@@ -32,7 +32,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
@@ -60,7 +60,7 @@ class AjaxGraphImagesForNotifications(AjaxPage):
         return _answer_graph_image_request(
             ctx.request,
             GraphEnvironment(
-                user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
+                user_permissions=UserPermissions.from_config(ctx.config, all_permissions()),
                 debug=ctx.config.debug,
             ),
             get_temperature_unit(user, ctx.config.default_temperature_unit),

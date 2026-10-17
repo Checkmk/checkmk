@@ -9,7 +9,7 @@ import pytest
 import cmk.utils.paths
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.maps.gui import store
 from cmk.maps.gui.pagetype import MapPage
@@ -17,7 +17,7 @@ from cmk.maps.gui.type_defs import map_config_from_spec
 
 
 def _user_permissions() -> UserPermissions:
-    return UserPermissions.from_config(active_config, permission_registry)
+    return UserPermissions.from_config(active_config, all_permissions())
 
 
 def _map(name: str, alias: str = "My map") -> dict[str, object]:

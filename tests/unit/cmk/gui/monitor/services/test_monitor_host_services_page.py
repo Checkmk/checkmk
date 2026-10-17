@@ -30,7 +30,7 @@ from cmk.gui.monitor.services._pages._monitor_host_services import (
 )
 from cmk.gui.page_menu import PageMenu, PageMenuEntry, PageMenuLink
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
@@ -59,7 +59,10 @@ def fixture_user_without_permissions(load_config: Config) -> Iterator[UserId]:
         with login.TransactionIdContext(
             user_id,
             UserPermissions(
-                load_config.roles, permission_registry, {user_id: ["no_permissions"]}, []
+                load_config.roles,
+                all_permissions(),
+                {user_id: ["no_permissions"]},
+                [],
             ),
         ):
             yield user_id
@@ -89,7 +92,7 @@ def _breadcrumb_of(host: str = "web-1", site: str = "local") -> Breadcrumb:
         HostName(host),
         SiteId(site),
         _host_url(ctx, HostName(host), SiteId(site)),
-        UserPermissions.from_config(ctx.config, permission_registry),
+        UserPermissions.from_config(ctx.config, all_permissions()),
     )
 
 

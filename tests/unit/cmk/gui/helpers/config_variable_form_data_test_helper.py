@@ -59,7 +59,7 @@ from cmk.gui.form_specs.unstable.legacy_converter.transform import (
 )
 from cmk.gui.form_specs.unstable.legacy_valuespec import LegacyValueSpec
 from cmk.gui.form_specs.unstable.list_unique_selection import UniqueSingleChoiceElement
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
@@ -3041,7 +3041,12 @@ class ConfigVariableSuite:
         user_id = UserId("admin")
         with login.TransactionIdContext(
             user_id,
-            UserPermissions(load_config.roles, permission_registry, {user_id: ["admin"]}, []),
+            UserPermissions(
+                load_config.roles,
+                all_permissions(),
+                {user_id: ["admin"]},
+                [],
+            ),
         ):
             yield
 

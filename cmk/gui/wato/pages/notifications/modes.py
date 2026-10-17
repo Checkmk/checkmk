@@ -41,7 +41,7 @@ from cmk.events.notify_types import (
     NotifyAnalysisInfo,
     NotifyPluginInfo,
 )
-from cmk.gui import forms, permissions, sites, userdb
+from cmk.gui import forms, sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.default_name import unique_clone_increment_suggestion
@@ -790,7 +790,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
     def _actions_allowed(self, rule: EventRule) -> bool:
         # In case a notification plug-in does not exist anymore the permission is completely missing.
         permission_name = "notification_plugin.%s" % rule["notify_plugin"][0]
-        return permission_name not in permissions.permission_registry or user.may(permission_name)
+        return not user.permission_exists(permission_name) or user.may(permission_name)
 
     def _rule_links(
         self,

@@ -30,7 +30,7 @@ from cmk.gui.i18n import (
     translate_to_current_language,
 )
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.session_context import SuperUserContext
 from cmk.gui.type_defs import SearchQuery, SearchResult
 from cmk.gui.utils.loading_transition import LoadingTransition
@@ -464,7 +464,8 @@ def _index_building_in_background_job(
     with (
         job_interface.gui_context(
             user_permissions := UserPermissions.from_serialized_config(
-                args.user_permission_config, permission_registry
+                args.user_permission_config,
+                all_permissions(),
             )
         ),
         get_redis_client() as redis_client,
@@ -524,7 +525,8 @@ def _process_update_requests_background(
     with (
         job_interface.gui_context(
             user_permissions := UserPermissions.from_serialized_config(
-                args.user_permission_config, permission_registry
+                args.user_permission_config,
+                all_permissions(),
             )
         ),
         get_redis_client() as redis_client,

@@ -15,7 +15,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.search.quicksearch import (
     ABCQuicksearchConductor,
     get_url_builder,
@@ -94,7 +94,7 @@ class QuicksearchSnapin(SidebarSnapin):
         try:
             search_objects = quicksearch_manager.determine_search_objects(
                 livestatus.lqencode(query),
-                UserPermissions.from_config(ctx.config, permission_registry),
+                UserPermissions.from_config(ctx.config, all_permissions()),
             )
             quicksearch_manager.conduct_search(search_objects)
 
@@ -129,7 +129,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
         quicksearch_manager = _build_quicksearch_manager_from_context(ctx)
 
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
         search_url = quicksearch_manager.generate_search_url(query, user_permissions)
 
         raise HTTPRedirect(search_url)

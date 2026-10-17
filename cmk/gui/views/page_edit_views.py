@@ -9,7 +9,7 @@ from cmk.gui import visuals
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 
 from .store import get_all_views
@@ -21,7 +21,7 @@ def page_edit_views(ctx: PageContext) -> None:
         "views",
         _("Edit views"),
         get_all_views(),
-        UserPermissions.from_config(ctx.config, permission_registry),
+        UserPermissions.from_config(ctx.config, all_permissions()),
         ctx.config,
         cols,
     )

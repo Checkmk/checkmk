@@ -10,7 +10,10 @@ from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.i18n import _l
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import (
+    all_permissions,
+    permission_registry,
+)
 from cmk.gui.search.matchers import match_item_generator_registry, MatchItemConfig
 from cmk.gui.search.permissions import category_permissions_handler_registry
 from cmk.gui.type_defs import Visual
@@ -72,7 +75,12 @@ def test_match_items_cover_builtin_visuals_only(
 
     match_items = list(
         generator.generate_match_items(
-            UserPermissions(load_config.roles, permission_registry, {}, []),
+            UserPermissions(
+                load_config.roles,
+                all_permissions(),
+                {},
+                [],
+            ),
             MatchItemConfig.from_config(load_config),
         )
     )
@@ -95,7 +103,12 @@ def test_permitted_builtin_visual_is_visible(
 ) -> None:
     handler = BuiltinVisualsPermissionsHandler(
         search,
-        UserPermissions(load_config.roles, permission_registry, {with_admin_login: ["admin"]}, []),
+        UserPermissions(
+            load_config.roles,
+            all_permissions(),
+            {with_admin_login: ["admin"]},
+            [],
+        ),
     )
 
     visibility_check = handler.get_visibility_check(search.category)
@@ -114,7 +127,7 @@ def test_registered_builtin_views_are_visible_to_admin(load_config: Config) -> N
 
     match_items = list(
         match_item_generator_registry["builtin_views"].generate_match_items(
-            UserPermissions.from_config(load_config, permission_registry),
+            UserPermissions.from_config(load_config, all_permissions()),
             MatchItemConfig.from_config(load_config),
         )
     )
@@ -147,7 +160,12 @@ def test_match_items_cover_custom_visuals_only(load_config: Config) -> None:
     generator = CustomVisualsMatchItemGenerator(_custom_search(UserId("me")))
 
     match_items = generator.generate_match_items(
-        UserPermissions(load_config.roles, permission_registry, {}, []),
+        UserPermissions(
+            load_config.roles,
+            all_permissions(),
+            {},
+            [],
+        ),
         MatchItemConfig.from_config(load_config),
     )
 

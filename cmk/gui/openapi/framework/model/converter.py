@@ -24,7 +24,10 @@ from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.openapi.framework._context import ApiContext
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.validation_context import validation_context_of
-from cmk.gui.permissions import load_dynamic_permissions, permission_registry
+from cmk.gui.permissions import (
+    all_permissions,
+    load_dynamic_permissions,
+)
 from cmk.gui.site_config import distributed_setup_remote_sites
 from cmk.gui.userdb import connection_choices, get_saml_connections
 from cmk.gui.utils.roles import UserPermissions
@@ -122,7 +125,7 @@ class RegistryConverter[T]:
     def _registry(self) -> Mapping[str, T]:
         if not isinstance(self.registry_or_getter, Mapping):
             self.registry_or_getter = self.registry_or_getter(
-                UserPermissions.from_config(active_config, permission_registry)
+                UserPermissions.from_config(active_config, all_permissions())
             )
 
         return self.registry_or_getter
@@ -442,8 +445,9 @@ class PermissionsConverter:
     @staticmethod
     def validate(value: dict[str, str]) -> dict[str, str]:
         _validation_errors = []
+        permissions = all_permissions()
         for key, val in value.items():
-            if key not in permission_registry:
+            if key not in permissions:
                 _validation_errors.append(f"The specified permission name doesn't exist: {key}")
             if val not in ["yes", "no", "default"]:
                 _validation_errors.append(

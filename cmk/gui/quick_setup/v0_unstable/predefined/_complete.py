@@ -15,7 +15,7 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,
     QSHostPath,
@@ -353,7 +353,7 @@ def _create_and_save_special_agent_bundle(
     progress_logger.log_new_progress_step(
         "create_config_bundle", "Create underlying configurations"
     )
-    user_permissions = UserPermissions.from_config(active_config, permission_registry)
+    user_permissions = UserPermissions.from_config(active_config, all_permissions())
     create_config_bundle(
         tree,
         acting_user=user,

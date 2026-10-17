@@ -11,7 +11,7 @@ import pytest
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
 from cmk.gui.config import Config
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.search import index
 from cmk.gui.search.matchers import MatchItemConfig, MatchItemGeneratorRegistry
 from cmk.gui.search.permissions import CategoryPermissionsHandlerRegistry
@@ -33,7 +33,12 @@ def _target_pages(category: str, load_config: Config) -> list[tuple[str, str, st
     return [
         _page_target(item.url)
         for item in match_item_generator_registry[category].generate_match_items(
-            UserPermissions(load_config.roles, permission_registry, {}, []),
+            UserPermissions(
+                load_config.roles,
+                all_permissions(),
+                {},
+                [],
+            ),
             MatchItemConfig.from_config(load_config),
         )
     ]

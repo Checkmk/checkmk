@@ -177,7 +177,6 @@ from cmk.gui.watolib.sample_config import (
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import (
-    declare_notification_plugin_permissions,
     load_notification_scripts,
 )
 from cmk.gui.watolib.users import notification_script_choices
@@ -335,8 +334,6 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
         # Set before the base class reads the request vars, so _from_vars can use it.
         self._tree = make_folder_tree(ctx.config)
         super().__init__(edition, ctx)
-
-        declare_notification_plugin_permissions()
 
     @classmethod
     @override

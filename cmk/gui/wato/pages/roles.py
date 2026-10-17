@@ -21,7 +21,6 @@ from typing import override
 
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
-from cmk.ccc.version import Edition
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -42,11 +41,9 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     show_confirm_cancel_dialog,
 )
-from cmk.gui.pages import PageContext
 from cmk.gui.permissions import (
     all_permissions,
     get_sorted_permissions,
-    load_dynamic_permissions,
     permission_section_registry,
 )
 from cmk.gui.site_config import get_login_sites
@@ -282,10 +279,6 @@ class ModeRoleTwoFactor(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRoles
 
-    def __init__(self, edition: Edition, ctx: PageContext) -> None:
-        super().__init__(edition, ctx)
-        load_dynamic_permissions()
-
     @override
     def _from_vars(self) -> None:
         self._role_id = RoleID(request.get_ascii_input_mandatory("edit"))
@@ -376,13 +369,6 @@ class ModeEditRole(WatoMode):
     @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRoles
-
-    def __init__(self, edition: Edition, ctx: PageContext) -> None:
-        super().__init__(edition, ctx)
-
-        # Make sure that all dynamic permissions are available (e.g. those for custom
-        # views)
-        load_dynamic_permissions()
 
     @override
     def _from_vars(self) -> None:

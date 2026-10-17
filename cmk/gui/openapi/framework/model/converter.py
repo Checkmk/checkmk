@@ -24,10 +24,7 @@ from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.openapi.framework._context import ApiContext
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.validation_context import validation_context_of
-from cmk.gui.permissions import (
-    all_permissions,
-    load_dynamic_permissions,
-)
+from cmk.gui.permissions import all_permissions
 from cmk.gui.site_config import distributed_setup_remote_sites
 from cmk.gui.userdb import connection_choices, get_saml_connections
 from cmk.gui.utils.roles import UserPermissions
@@ -433,8 +430,6 @@ class UserRoleIdConverter:
         return RoleID(user_role)
 
     def _verify_user_permissions(self) -> None:
-        # TODO: clean this up (CMK-17068)
-        load_dynamic_permissions()
         user.need_permission("wato.users")
 
         if self.permission_type == "wato.edit":

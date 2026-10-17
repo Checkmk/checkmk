@@ -8,7 +8,7 @@
 
 import time
 import uuid
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from typing import Any, cast, NotRequired
 
 import cmk.ccc.version as cmk_version
@@ -19,9 +19,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import (
-    all_permissions,
-)
+from cmk.gui.permissions import all_permissions, Permission
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import TimerangeValue
@@ -191,6 +189,11 @@ def save_and_replicate_all_dashboards(
 
 def get_all_dashboards() -> dict[tuple[UserId, DashboardName], DashboardConfig]:
     return DashboardStore.get_instance().all
+
+
+def dashboard_permissions() -> Iterator[Permission]:
+    """The permissions of the published custom and the packaged dashboards"""
+    return visuals.visual_permissions("dashboards", _internal_dashboard_to_runtime_dashboard)
 
 
 def get_permitted_dashboards() -> dict[DashboardName, DashboardConfig]:

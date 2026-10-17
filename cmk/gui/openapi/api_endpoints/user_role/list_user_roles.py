@@ -21,10 +21,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.gui.permissions import (
-    all_permissions,
-    load_dynamic_permissions,
-)
+from cmk.gui.permissions import all_permissions
 from cmk.gui.userdb import load_roles, UserRole
 from cmk.gui.utils.roles import UserPermissions
 
@@ -45,7 +42,6 @@ class UserRoleCollectionModel(DomainObjectCollectionModel):
 
 def list_user_roles_v1(api_context: ApiContext) -> UserRoleCollectionModel:
     """Show all user roles"""
-    load_dynamic_permissions()
     user.need_permission("wato.users")
     user_permissions = UserPermissions(
         (roles := load_roles()),

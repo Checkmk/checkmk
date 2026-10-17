@@ -75,6 +75,7 @@ from cmk.gui.pages import Page, page_registry, PageContext, PageEndpoint, PageHa
 from cmk.gui.permissions import (
     all_permissions,
     declare_permission_section,
+    dynamic_permission_registry,
     Permission,
     permission_registry,
     permission_section_registry,
@@ -934,7 +935,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         return page_dicts_by_instance_id
 
     @classmethod
-    def load(cls, user_permissions: UserPermissions) -> OverridableInstances[Self]:
+    def load(cls, _user_permissions: UserPermissions) -> OverridableInstances[Self]:
         instances = OverridableInstances[Self]()
 
         # First load built-in pages. Set username to ''
@@ -954,20 +955,26 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
                 continue
             instances.add_instance((user_id, name), instance)
 
-        cls._declare_instance_permissions(instances, user_permissions)
         return instances
 
     @classmethod
-    def _declare_instance_permissions(
-        cls, instances: OverridableInstances[Self], user_permissions: UserPermissions
-    ) -> None:
-        for instance in instances.instances():
-            # Skip the permission declaration for the fallback topic.
+    def instance_permissions(cls) -> Iterator[Permission]:
+        """The permissions of the public instances of this page type"""
+        # The publish permissions are static ones, so the registry is sufficient here
+        user_permissions = UserPermissions.from_config(active_config, permission_registry)
+        for instance in cls.load(user_permissions).instances():
+            # Skip the permission for the fallback topic.
             # Otherwise, users can disable it leading to a crashed GUI
             if instance.name() == cls.default_topic():
                 continue
             if instance.is_public(user_permissions):
-                cls.declare_permission(instance, user_permissions)
+                yield Permission(
+                    section=permission_section_registry[cls.type_name()],
+                    name=instance.name(),
+                    title=f"{instance.title()} ({instance.name()})",
+                    description=instance.description(),
+                    defaults=default_authorized_builtin_role_ids,
+                )
 
     @classmethod
     def save_user_instances(
@@ -991,20 +998,6 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         page_config = replace(self.config)
         page_config.owner = user.id if user.id else UserId("")
         return self.__class__(page_config)
-
-    @classmethod
-    def declare_permission(cls, page: Self, user_permissions: UserPermissions) -> None:
-        permname = f"{cls.type_name()}.{page.name()}"
-        if page.is_public(user_permissions) and permname not in permission_registry:
-            permission_registry.register(
-                Permission(
-                    section=permission_section_registry[cls.type_name()],
-                    name=page.name(),
-                    title=f"{page.title()} ({page.name()})",
-                    description=page.description(),
-                    defaults=default_authorized_builtin_role_ids,
-                )
-            )
 
     @classmethod
     def custom_list_buttons(cls, instance: Self) -> None:
@@ -2141,6 +2134,7 @@ page_types: dict[str, type[Overridable]] = {}
 
 def declare(page_ty: type[Overridable]) -> None:
     page_ty.declare_overriding_permissions()
+    dynamic_permission_registry.register(page_ty.type_name(), page_ty.instance_permissions)
     page_types[page_ty.type_name()] = page_ty
 
     for path, page_func in page_ty.page_handlers().items():
@@ -2654,21 +2648,3 @@ class CustomizePermissionsHandler:
             if main_menu_item.url
         }
         return lambda url: url in visible_urls
-
-
-#   .--Permissions---------------------------------------------------------.
-#   |        ____                     _         _                          |
-#   |       |  _ \ ___ _ __ _ __ ___ (_)___ ___(_) ___  _ __  ___          |
-#   |       | |_) / _ \ '__| '_ ` _ \| / __/ __| |/ _ \| '_ \/ __|         |
-#   |       |  __/  __/ |  | | | | | | \__ \__ \ | (_) | | | \__ \         |
-#   |       |_|   \___|_|  |_| |_| |_|_|___/___/_|\___/|_| |_|___/         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Declare all pagetype permissions as dynamic permissions              |
-#   '----------------------------------------------------------------------'
-
-
-def _load_pagetype_permissions() -> None:
-    user_permissions = UserPermissions.from_config(active_config, permission_registry)
-    for pagetype in all_page_types().values():
-        pagetype.load(user_permissions)

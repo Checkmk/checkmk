@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 
+from collections.abc import Iterator
 from typing import Any, Final
 
 import cmk.ccc.version as cmk_version
@@ -13,9 +14,7 @@ from cmk.gui import visuals
 from cmk.gui.config import active_config
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.hooks import request_memoize
-from cmk.gui.permissions import (
-    all_permissions,
-)
+from cmk.gui.permissions import all_permissions, Permission
 from cmk.gui.type_defs import (
     AllViewSpecs,
     ColumnSpec,
@@ -92,6 +91,11 @@ class ViewStore:
     ) -> PermittedViewSpecs:
         """Returns all view defitions that a user is allowed to use"""
         return visuals.available("views", all_views, user_permissions)
+
+
+def view_permissions() -> Iterator[Permission]:
+    """The permissions of the published custom and the packaged views"""
+    return visuals.visual_permissions("views", internal_view_to_runtime_view)
 
 
 def get_all_views() -> AllViewSpecs:

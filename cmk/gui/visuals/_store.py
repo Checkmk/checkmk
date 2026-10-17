@@ -9,7 +9,7 @@
 
 import os
 import pickle
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
 from typing import Any, cast, Final, get_args, TypeVar
@@ -26,14 +26,13 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import save_user_file, user
-from cmk.gui.permissions import declare_permission, permission_registry
+from cmk.gui.permissions import Permission, permission_section_registry
 from cmk.gui.search import index as search_index
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import RoleName, Visual, VisualName, VisualTypeName
 from cmk.gui.utils.roles import UserPermissions
 from cmk.mkp_tool import id_to_mkp, Installer, PackageName, PackagePart
 from cmk.web.utils.escaping import escape
-from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.speaklater import LazyString
 
 TVisual = TypeVar("TVisual", bound=Visual)  # TODO: Remove this
@@ -42,7 +41,7 @@ type CustomUserVisuals[TVisual: Visual] = dict[tuple[UserId, VisualName], TVisua
 __all__ = [
     "save",
     "load",
-    "declare_custom_permissions",
+    "visual_permissions",
     "available",
     "get_permissioned_visual",
     "move_visual_to_local",
@@ -154,16 +153,8 @@ class _CombinedVisualsCache[TVisual: Visual]:
         internal_to_runtime_transformer: Callable[[dict[str, Any]], TVisual],
     ) -> CustomUserVisuals:
         if self._may_use_cache() and (content := self._read_from_cache()) is not None:
-            self._set_permissions(content)
             return content
         return self._compute_and_write_cache(internal_to_runtime_transformer)
-
-    def _set_permissions(self, content: CustomUserVisuals) -> None:
-        """Make sure that all permissions are known to the current apache process"""
-        for name, visual in content.items():
-            declare_visual_permission(self._visual_type, name[1], visual)
-            if visual["packaged"]:
-                declare_packaged_visual_permission(self._visual_type, name[1], visual)
 
     def _may_use_cache(self) -> bool:
         if not self._content_filename.exists():
@@ -236,7 +227,6 @@ def _load_custom_user_visuals[TVisual: Visual](
 
             visuals.update(
                 load_visuals_of_a_user(
-                    what,
                     internal_to_runtime_transformer,
                     Path(visual_path),
                     UserId(user_id),
@@ -260,7 +250,6 @@ def _load_custom_user_visuals[TVisual: Visual](
 
 
 def load_visuals_of_a_user[TVisual: Visual](
-    what: VisualTypeName,
     internal_to_runtime_transformer: Callable[[dict[str, Any]], TVisual],
     path: Path,
     user_id: UserId,
@@ -272,10 +261,6 @@ def load_visuals_of_a_user[TVisual: Visual](
         visual = internal_to_runtime_transformer(raw_visual)
         visual["owner"] = user_id
         visual["name"] = name
-
-        # Declare custom permissions
-        declare_visual_permission(what, name, visual)
-
         user_visuals[(user_id, name)] = visual
 
     return user_visuals
@@ -312,10 +297,6 @@ def _get_packaged_visuals[TVisual: Visual](
                 visual["owner"] = UserId.builtin()
                 visual["name"] = name
                 visual["packaged"] = True
-
-                # Declare custom permissions
-                declare_packaged_visual_permission(visual_type, name, visual)
-
                 local_visuals[(UserId.builtin(), name)] = visual
         except Exception:
             logger.exception(
@@ -407,74 +388,41 @@ def _get_dynamic_visual_default_permissions() -> Sequence[RoleName]:
     return ["admin"]
 
 
-def declare_visual_permission[TVisual: Visual](
-    what: VisualTypeName, name: str, visual: TVisual
-) -> None:
-    permname = PermissionName(f"{what[:-1]}.{name}")
-    if published_to_user(visual) and permname not in permission_registry:
-        declare_permission(
-            permname,
-            f"{visual['title']} ({visual['name']})",
-            visual["description"],
-            _get_dynamic_visual_default_permissions(),
-        )
+def _visual_permission(what: VisualTypeName, name: str, visual: Visual) -> Permission:
+    return Permission(
+        section=permission_section_registry[what[:-1]],
+        name=name,
+        title=f"{visual['title']} ({name})",
+        description=visual["description"],
+        defaults=_get_dynamic_visual_default_permissions(),
+    )
 
 
-def declare_packaged_visual_permission[TVisual: Visual](
-    what: VisualTypeName, name: str, visual: TVisual
-) -> None:
-    permname = PermissionName(f"{what[:-1]}.{name}_packaged")
-    if visual["packaged"] and permname not in permission_registry:
-        declare_permission(
-            permname,
-            f"{visual['title']} ({visual['name']}, {_('packaged)')}",
-            visual["description"],
-            _get_dynamic_visual_default_permissions(),
-        )
+def _packaged_visual_permission(what: VisualTypeName, name: str, visual: Visual) -> Permission:
+    return Permission(
+        section=permission_section_registry[what[:-1]],
+        name=f"{name}_packaged",
+        title=f"{visual['title']} ({name}, {_('packaged)')}",
+        description=visual["description"],
+        defaults=_get_dynamic_visual_default_permissions(),
+    )
 
 
-# Load all users visuals just in order to declare permissions of custom visuals
-# TODO: Use regular load logic here, e.g. _load_custom_user_visuals()
-def declare_custom_permissions(what: VisualTypeName) -> None:
-    for dirpath in cmk.utils.paths.profile_dir.iterdir():
-        try:
-            if dirpath.is_dir():
-                path = dirpath.joinpath("user_%s.mk" % what)
-                if not path.exists():
-                    continue
-                visuals = store.load_object_from_file(path, default={})
-                for name, visual in visuals.items():
-                    declare_visual_permission(what, name, visual)
-        except Exception:
-            logger.exception(
-                "Error on declaring permissions for customized visuals in file %(dirpath)s",
-                {"dirpath": dirpath},
-            )
-            if active_config.debug:
-                raise
+def visual_permissions[TVisual: Visual](
+    what: VisualTypeName,
+    internal_to_runtime_transformer: Callable[[dict[str, Any]], TVisual],
+) -> Iterator[Permission]:
+    """The permissions of the published custom visuals and the packaged visuals
 
-
-def declare_packaged_visuals_permissions(what: VisualTypeName) -> None:
-    for dirpath in _get_local_path(what).iterdir():
-        try:
-            if dirpath.is_dir():
-                continue
-
-            for name, visual in store.try_load_file_from_pickle_cache(
-                dirpath,
-                default={},
-                temp_dir=cmk.utils.paths.tmp_dir,
-                root_dir=cmk.utils.paths.omd_root,
-            ).items():
-                visual["packaged"] = True
-                declare_packaged_visual_permission(what, name, visual)
-        except Exception:
-            logger.exception(
-                "Error on declaring permissions for packaged visuals in file %(dirpath)s",
-                {"dirpath": dirpath},
-            )
-            if active_config.debug:
-                raise
+    Uses the combined visuals cache, so that a warm cache needs no access to the files of
+    the individual users."""
+    for (_owner, name), visual in (
+        _CombinedVisualsCache[TVisual](what).load(internal_to_runtime_transformer).items()
+    ):
+        if visual["packaged"]:
+            yield _packaged_visual_permission(what, name, visual)
+        elif published_to_user(visual):
+            yield _visual_permission(what, name, visual)
 
 
 def available[TVisual: Visual](

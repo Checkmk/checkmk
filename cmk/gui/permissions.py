@@ -99,6 +99,12 @@ class Permission:
 
 
 class PermissionRegistry(cmk.ccc.plugin_registry.Registry[Permission]):
+    """The permissions known at import time
+
+    Only fill this during registration. Permissions that depend on the
+    configuration or on user content are provided via the dynamic_permission_registry
+    and are only visible through AllPermissions."""
+
     def __init__(self) -> None:
         super().__init__()
         # TODO: Better make the sorting explicit in the future
@@ -164,26 +170,6 @@ def declare_permission(
             defaults=defaults,
         )
     )
-
-
-_permission_declaration_functions: list[Callable[[], None]] = []
-
-
-# Some module have a non-fixed list of permissions. For example for
-# each user defined view there is also a permission. This list is
-# not known at the time of the loading of the module - though. For
-# that purpose module can register functions. These functions should
-# just call declare_permission(). They are being called in the correct
-# situations.
-def declare_dynamic_permissions(func: Callable[[], None]) -> None:
-    _permission_declaration_functions.append(func)
-
-
-# This function needs to be called by all code that needs access
-# to possible dynamic permissions
-def load_dynamic_permissions() -> None:
-    for func in _permission_declaration_functions:
-        func()
 
 
 type DynamicPermissionsProvider = Callable[[], Iterable[Permission]]

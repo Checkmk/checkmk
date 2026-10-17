@@ -13,7 +13,7 @@ from cmk.gui.data_source import data_source_registry
 from cmk.gui.i18n import _, _u
 from cmk.gui.legacy_plugins import load_web_plugins
 from cmk.gui.painter import painter_registry, register_painter
-from cmk.gui.permissions import declare_dynamic_permissions, declare_permission
+from cmk.gui.permissions import declare_permission, dynamic_permission_registry
 from cmk.gui.type_defs import Perfdata, ViewSpec, VisualLinkSpec
 from cmk.gui.view_utils import cmp_service_name_equiv, get_labels, render_labels, render_tag_groups
 from cmk.gui.views.sorter import sorter_registry
@@ -27,7 +27,7 @@ from .exporter import exporter_registry
 from .icon import Icon, icon_and_action_registry
 from .inventory import register_table_views_and_columns
 from .sorter import register_sorter
-from .store import multisite_builtin_views
+from .store import multisite_builtin_views, view_permissions
 from .view_choices import format_view_title
 
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
@@ -82,8 +82,7 @@ def register() -> None:
         )
 
     # Make sure that custom views also have permissions
-    declare_dynamic_permissions(lambda: visuals.declare_custom_permissions("views"))
-    declare_dynamic_permissions(lambda: visuals.declare_packaged_visuals_permissions("views"))
+    dynamic_permission_registry.register("view", view_permissions)
 
 
 def _lazy_view_title(name: str, view_spec: ViewSpec) -> LazyText:

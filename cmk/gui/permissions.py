@@ -41,8 +41,6 @@ permission_section_registry = PermissionSectionRegistry()
 
 
 class Permission:
-    _sort_index = 0
-
     def __init__(
         self,
         section: PermissionSection,
@@ -56,7 +54,6 @@ class Permission:
         self._title = title
         self._description = description
         self._defaults = defaults
-        self._sort_index = 0
 
     @property
     def section(self) -> PermissionSection:
@@ -88,15 +85,6 @@ class Permission:
         """The full identity of a permission (including the section identity)."""
         return f"{self.section.name}.{self.permission_name}"
 
-    @property
-    def sort_index(self) -> int:
-        """Number to sort the permission with"""
-        return self._sort_index
-
-    @sort_index.setter
-    def sort_index(self, value: int) -> None:
-        self._sort_index = value
-
 
 class PermissionRegistry(cmk.ccc.plugin_registry.Registry[Permission]):
     """The permissions known at import time
@@ -105,29 +93,9 @@ class PermissionRegistry(cmk.ccc.plugin_registry.Registry[Permission]):
     configuration or on user content are provided via the dynamic_permission_registry
     and are only visible through AllPermissions."""
 
-    def __init__(self) -> None:
-        super().__init__()
-        # TODO: Better make the sorting explicit in the future
-        # used as auto incrementing counter to numerate the permissions in
-        # the order they have been added.
-        self._index_counter = 0
-
     @override
     def plugin_name(self, instance: Permission) -> str:
         return instance.name
-
-    @override
-    def registration_hook(self, instance: Permission) -> None:
-        instance._sort_index = self._index_counter  # noqa: SLF001
-        self._index_counter += 1
-
-    def get_sorted_permissions(self, section: PermissionSection) -> list[Permission]:
-        """Returns the sorted permissions of a section respecting the sorting config of the section"""
-        permissions = [p for p in self.values() if p.section.name == section.name]
-
-        if section.do_sort:
-            return sorted(permissions, key=lambda p: (p.title, p.sort_index))
-        return sorted(permissions, key=lambda p: p.sort_index)
 
     @override
     def register(self, instance: Permission) -> Permission:

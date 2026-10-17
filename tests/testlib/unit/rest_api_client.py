@@ -5141,6 +5141,30 @@ class DataBackendClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def test_central_connection(
+        self, payload: Mapping[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/test_central_connection/invoke",
+            body=dict(payload),
+            expect_ok=expect_ok,
+        )
+
+    def show_central_connection_test(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/actions/show_central_connection_test/invoke",
+            expect_ok=expect_ok,
+        )
+
+    def abort_central_connection_test(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/abort_central_connection_test/invoke",
+            expect_ok=expect_ok,
+        )
+
 
 class TelemetryMetricsClient(RestApiClient):
     domain: DomainType = "telemetry_metrics"

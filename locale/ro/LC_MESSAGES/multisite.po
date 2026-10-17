@@ -736,6 +736,10 @@ msgstr "ID: %(visual_name)s"
 msgid "%(name)s (%(dotted_string)s)"
 msgstr "pe %(per_string)s"
 
+#, fuzzy, python-format
+msgid "%(name)s + all attributes"
+msgstr "Atributul nume complet"
+
 #, python-format
 msgid "%(name)s - Dependency missing"
 msgstr "%(name)s - Lipsește dependența"
@@ -1449,6 +1453,10 @@ msgstr "1 schimbare"
 msgid "1 host"
 msgstr "gazdă"
 
+#, fuzzy
+msgid "1 hour"
+msgstr "orăore"
+
 msgid "1 row"
 msgstr "1 rând"
 
@@ -1946,12 +1954,17 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"<b>This feature is deprecated and will be removed in the version 3.1 of "
-"Checkmk.</b><br><br>You can no longer add management boards here. Existing "
-"settings can still be changed or removed.<br>Monitor the management boards "
-"via a dedicated host using <a href='%(ipmi_url)s'>IPMI</a> or SNMP instead."
-"<br><br><a href='%(read_more_url)s' target='_blank'>Read more about "
-"management boards.</a>"
+"<b>This feature is deprecated and will be removed in version 3.1 of Checkmk."
+"</b><br>You can no longer add management boards here. Existing settings can "
+"still be changed or removed.<br><br><b>How to monitor management boards "
+"going forward:</b><br>Create a dedicated host for the management board (e.g. "
+"myhost-mgmt) and configure it with the board's IP address using <a "
+"href='%(ipmi_url)s'>IPMI</a> or SNMP. Use the host relations in the host "
+"properties to link it to the original host, or use the <a "
+"href='%(relation_detection_url)s'>relation detection</a> functionality."
+"<br><br><a href='%(werk_url)s' target='_blank'>Werk #%(werk_id)d</a> · <a "
+"href='%(read_more_url)s' target='_blank'>Read more about management boards "
+"&amp; relations.</a>"
 msgstr ""
 "<b>Această funcție va fi eliminată într-o versiune viitoare a Checkmk.</"
 "b><br>Vă rugăm să nu mai configurați panouri de management aici. "
@@ -3524,6 +3537,34 @@ msgid "AWS tags"
 msgstr "Etichete AWS"
 
 #, fuzzy
+msgid "AWS v2/CE costs and usage"
+msgstr "Costurile și utilizarea AWS/CE"
+
+#, fuzzy
+msgid "AWS v2/CE total reservation utilization"
+msgstr "Utilizarea totală a rezervărilor AWS/CE"
+
+#, fuzzy
+msgid "AWS v2/CloudFront"
+msgstr "AWS/CloudFront"
+
+#, fuzzy
+msgid "AWS v2/CloudWatch alarms limits"
+msgstr "Limitele alarmelor AWS/CloudWatch"
+
+#, fuzzy
+msgid "AWS v2/DynamoDB latency"
+msgstr "Latența AWS/DynamoDB"
+
+#, fuzzy
+msgid "AWS v2/DynamoDB limits"
+msgstr "Limitele AWS/DynamoDB"
+
+#, fuzzy
+msgid "AWS v2/DynamoDB read/write capacity"
+msgstr "Capacitatea de citire/scriere AWS/DynamoDB"
+
+#, fuzzy
 msgid "AWS v2/EBS burst balance"
 msgstr "AWS/EBS Burst Balance"
 
@@ -3540,8 +3581,24 @@ msgid "AWS v2/EC2 limits"
 msgstr "Limitele AWS/EC2"
 
 #, fuzzy
+msgid "AWS v2/ECS CPU reservation"
+msgstr "Rezervare CPU"
+
+#, fuzzy
+msgid "AWS v2/ECS Limits"
+msgstr "Limitele AWS/ECS"
+
+#, fuzzy
+msgid "AWS v2/ECS memory reservation"
+msgstr "Rezervarea memoriei"
+
+#, fuzzy
 msgid "AWS v2/ELB HTTP errors"
 msgstr "Erori HTTP AWS/ELB"
+
+#, fuzzy
+msgid "AWS v2/ELB application target errors"
+msgstr "Erorile țintă ale aplicației AWS/ELBApplication Target"
 
 #, fuzzy
 msgid "AWS v2/ELB backend connection errors"
@@ -3562,6 +3619,118 @@ msgstr "Limitele AWS/ELB"
 #, fuzzy
 msgid "AWS v2/ELB statistics"
 msgstr "Statistici AWS/ELB"
+
+#, fuzzy
+msgid "AWS v2/ELBv2 LCU"
+msgstr "AWS/ELBv2 LCU"
+
+#, fuzzy
+msgid "AWS v2/ELBv2 Limits"
+msgstr "Limitele AWS/ELBv2"
+
+#, fuzzy
+msgid "AWS v2/ElastiCache CPU utilization"
+msgstr "AWS/ElastiCache Utilizare CPU"
+
+#, fuzzy
+msgid "AWS v2/ElastiCache Memory"
+msgstr "Memorie AWS/ElastiCache"
+
+#, fuzzy
+msgid "AWS v2/ElastiCache connections"
+msgstr "Conexiuni AWS/ElastiCache"
+
+#, fuzzy
+msgid "AWS v2/ElastiCache limits"
+msgstr "Limitele AWS/ElastiCache"
+
+#, fuzzy
+msgid "AWS v2/Glacier limits"
+msgstr "Limitele AWS/Glacier"
+
+#, fuzzy
+msgid "AWS v2/Glacier vault objects"
+msgstr "Obiecte AWS/Glacier Vault"
+
+#, fuzzy
+msgid "AWS v2/Glacier vaults"
+msgstr "AWS/Glacier Vaults"
+
+#, fuzzy
+msgid "AWS v2/Lambda Concurrency"
+msgstr "Concurența AWS/Lambda"
+
+#, fuzzy
+msgid "AWS v2/Lambda Memory"
+msgstr "Memorie AWS/Lambda"
+
+#, fuzzy
+msgid "AWS v2/Lambda Performance"
+msgstr "Performanța AWS/Lambda"
+
+#, fuzzy
+msgid "AWS v2/RDS CPU credits"
+msgstr "Credite CPU AWS/RDS"
+
+#, fuzzy
+msgid "AWS v2/RDS connections"
+msgstr "Conexiuni AWS/RDS"
+
+#, fuzzy
+msgid "AWS v2/RDS disk usage"
+msgstr "Utilizarea discurilor AWS/RDS"
+
+#, fuzzy
+msgid "AWS v2/RDS limits"
+msgstr "Limitele AWS/RDS"
+
+#, fuzzy
+msgid "AWS v2/RDS replica lag"
+msgstr "AWS/RDS Replica lag"
+
+#, fuzzy
+msgid "AWS v2/Route53"
+msgstr "AWS/Route53"
+
+#, fuzzy
+msgid "AWS v2/S3 HTTP errors"
+msgstr "Erori HTTP AWS/S3"
+
+#, fuzzy
+msgid "AWS v2/S3 bucket objects"
+msgstr "Obiecte AWS/S3 Bucket"
+
+#, fuzzy
+msgid "AWS v2/S3 bucket requests"
+msgstr "Solicitări de găleți AWS/S3 Bucket"
+
+#, fuzzy
+msgid "AWS v2/S3 buckets"
+msgstr "Grămezi AWS/S3"
+
+#, fuzzy
+msgid "AWS v2/S3 latency"
+msgstr "Latența AWS/S3"
+
+#, fuzzy
+msgid "AWS v2/S3 limits"
+msgstr "Limitele AWS/EBS"
+
+#, fuzzy
+msgid "AWS v2/SNS"
+msgstr "AWS/SNS"
+
+#, fuzzy
+msgid "AWS v2/SNS Limits"
+msgstr "Limitele AWS/SNS"
+
+#, fuzzy
+msgid "AWS v2/WAFV2 limits"
+msgstr "Limitele AWS/WAFV2"
+
+#, fuzzy
+msgid "AWS v2/WAFV2 web ACL requests"
+msgstr "Solicitări ACL Web AWS/WAFV2 Web ACL"
 
 #, fuzzy
 msgid "AWS/CE costs and usage"
@@ -7411,6 +7580,12 @@ msgstr "Stocarea alocată"
 msgid "Allocation method"
 msgstr "Metoda de alocare"
 
+#, python-format
+msgid ""
+"Allow access by remote sites on the data backend instance of the central "
+"site %(site)s to store data there."
+msgstr ""
+
 msgid "Allow access via TCP"
 msgstr "Permiteți accesul prin TCP"
 
@@ -11057,7 +11232,7 @@ msgstr "Backup-ID"
 msgid "Backups"
 msgstr "Copii de rezervă"
 
-msgid "Backups (per protected machine)"
+msgid "Backups (piggybacked to the protected machine)"
 msgstr ""
 
 #, fuzzy
@@ -12244,6 +12419,18 @@ msgid ""
 "you instead want to require that every currently failing component is "
 "covered — ensuring that no active, unplanned failure goes unnoticed behind a "
 "partial maintenance window."
+msgstr ""
+
+msgid ""
+"By default, a service is also created for a CDP job that is disabled in "
+"Veeam; it is always OK. Disable this option to create no services for "
+"disabled CDP jobs."
+msgstr ""
+
+msgid ""
+"By default, a service is also created for a backup job that is disabled in "
+"Veeam; it is OK by default. Disable this option to create no services for "
+"disabled backup jobs."
 msgstr ""
 
 msgid ""
@@ -13503,9 +13690,6 @@ msgstr "Nu se poate clona o gazdă cluster ca gazdă obișnuită"
 msgid "Can not clone a regular host as cluster host"
 msgstr "Nu se poate clona o gazdă obișnuită ca gazdă de cluster"
 
-msgid "Can not evaluate search"
-msgstr "Nu se poate evalua căutarea"
-
 #, python-format
 msgid "Can not start activation: %(e)s"
 msgstr "Nu se poate începe activarea: %(e)s."
@@ -13916,6 +14100,14 @@ msgstr "Utilizarea capacității"
 msgid "Capacity license consumption"
 msgstr ""
 
+#, fuzzy
+msgid "Capacity licensed"
+msgstr "Capacitate umplută"
+
+#, fuzzy
+msgid "Capacity licenses"
+msgstr "Utilizarea capacității"
+
 msgid "Capacity providers per cluster"
 msgstr "Furnizori de capacitate per cluster"
 
@@ -13923,6 +14115,10 @@ msgid "Capacity remaining"
 msgstr "Capacitate rămasă"
 
 msgid "Capacity usage"
+msgstr "Utilizarea capacității"
+
+#, fuzzy
+msgid "Capacity used"
 msgstr "Utilizarea capacității"
 
 #, fuzzy
@@ -16478,9 +16674,6 @@ msgstr "Culoare A3"
 
 msgid "Color A4"
 msgstr "Culoare A4"
-
-msgid "Color gradient"
-msgstr "Gradient de culoare"
 
 msgid "Color theme"
 msgstr "Tema de culoare"
@@ -20836,7 +21029,6 @@ msgstr "Conexiuni Varnish Backend"
 msgid "Data backend is disabled, auto-completion is not available."
 msgstr "Instanțe Oracle"
 
-#. weblate-flags: read-only, domain-specific
 #, fuzzy
 msgid "Data backend is not reachable, auto-completion is not available."
 msgstr "Instanțe Oracle"
@@ -23400,11 +23592,19 @@ msgstr "Nume - Folosiți numele containerului"
 msgid "Disabled (configured away by admin)"
 msgstr "Dezactivat (configurat de către administrator)"
 
+#, fuzzy
+msgid "Disabled CDP jobs"
+msgstr "Persoane cu handicap "
+
 msgid "Disabled active checks"
 msgstr "Controale active dezactivate"
 
 msgid "Disabled alerts"
 msgstr "Alerte dezactivate"
+
+#, fuzzy
+msgid "Disabled backup jobs"
+msgstr "Persoane cu handicap "
 
 msgid "Disabled checks"
 msgstr "Controale pentru persoanele cu handicap"
@@ -23500,6 +23700,14 @@ msgstr "Serviciul în perioada de serviciu"
 #, fuzzy
 msgid "Discover a service per resource kind"
 msgstr "Descoperiți serviciile în timpul creării"
+
+#, fuzzy
+msgid "Discover disabled CDP jobs"
+msgstr "Descoperiți sarcinile cu handicap"
+
+#, fuzzy
+msgid "Discover disabled backup jobs"
+msgstr "Descoperiți sarcinile cu handicap"
 
 msgid "Discover disabled tasks"
 msgstr "Descoperiți sarcinile cu handicap"
@@ -25501,6 +25709,10 @@ msgstr ""
 msgid "Earliest entry in journal"
 msgstr ""
 
+#, fuzzy
+msgid "Eaton UPS: Temperature and humidity sensors"
+msgstr "Temperatura și umiditatea pentru UPS Eaton"
+
 msgid "Edit"
 msgstr "Editați"
 
@@ -26458,6 +26670,12 @@ msgid "Enable the AI assistant"
 msgstr "Activați acest site"
 
 msgid "Enable the MCP Server"
+msgstr ""
+
+#, python-format
+msgid ""
+"Enable the data backend instance of the central site %(site)s to store data "
+"there."
 msgstr ""
 
 #, python-format
@@ -35640,6 +35858,15 @@ msgstr ""
 "Cât timp sunt păstrate fișierele statistice pe sistemul țintă. Acest timp ar "
 "trebui să fie cel puțin dublu față de intervalul de verificare."
 
+msgid ""
+"How long the provider caches tool definitions and the conversation. Cached "
+"input costs a fraction of the normal price. OpenAI picks its own duration, "
+"up to 24 hours without zero data retention, and caches even when Off. "
+"Checkmk asks OpenAI not to store responses; providers keep requests for "
+"abuse monitoring either way. Turn caching off for a base URL without caching "
+"support."
+msgstr ""
+
 msgid "How long to alert after the most recent watch error."
 msgstr ""
 
@@ -39636,6 +39863,10 @@ msgstr "Identificatorul instanței și regiunea"
 msgid "Instance license consumption"
 msgstr "Rata de accesare a memoriei cache"
 
+#, fuzzy
+msgid "Instance licenses"
+msgstr "Rata de accesare a memoriei cache"
+
 msgid "Instance name"
 msgstr "Numele instanței"
 
@@ -39663,6 +39894,10 @@ msgid "Instances CRITICAL"
 msgstr "ID-ul instanței"
 
 #, fuzzy
+msgid "Instances licensed"
+msgstr "Setări de instanțe"
+
+#, fuzzy
 msgid "Instances matching one of these patterns are not monitored."
 msgstr ""
 "Versiunile iOS care corespund acestui model vor fi raportate ca OK, în caz "
@@ -39673,6 +39908,10 @@ msgstr "Setări de instanțe"
 
 msgid "Instances to monitor"
 msgstr "Instanțe de monitorizat"
+
+#, fuzzy
+msgid "Instances used"
+msgstr "Starea instanței"
 
 #, fuzzy
 msgid "Instant reports - PDF export"
@@ -52906,6 +53145,10 @@ msgstr "Tipul de obiect"
 msgid "Objects"
 msgstr "Obiecte"
 
+#, fuzzy
+msgid "Objects in the job"
+msgstr "Tipul de obiect"
+
 msgid "Observation period for temperature trend computation"
 msgstr "Perioada de observație pentru calcularea tendințelor de temperatură"
 
@@ -59259,6 +59502,10 @@ msgstr "Configurația stilului selectat"
 msgid "Prometheus targets"
 msgstr "Alertmanager"
 
+#, fuzzy
+msgid "Prompt caching"
+msgstr "Potrivirea căilor de procesare"
+
 msgid "Properties"
 msgstr "Proprietăți"
 
@@ -60195,8 +60442,9 @@ msgstr "Cozi RabbitMQ"
 msgid "RabbitMQ vhosts"
 msgstr "RabbitMQ vhosts"
 
-msgid "Radar (dynamic filter)"
-msgstr ""
+#, fuzzy
+msgid "Radar map"
+msgstr "Rezumat"
 
 msgid "Radial layout"
 msgstr "Dispunere radială"
@@ -61587,6 +61835,14 @@ msgstr ""
 "Site-urile la distanță nu sunt permise atunci când site-ul central se află "
 "în starea de licență %(license_state)s"
 
+#. weblate-flags: read-only, domain-specific
+#, python-brace-format
+msgid ""
+"Remote sites store data in this data backend instance: {sites}. Change where "
+"they store their data before you disable the instance or its access by "
+"remote sites."
+msgstr ""
+
 msgid "Remote: Send events to remote syslog host"
 msgstr "La distanță: Trimiteți evenimente la o gazdă syslog la distanță"
 
@@ -62714,6 +62970,9 @@ msgstr "Restabilirea locului de muncă"
 #, fuzzy
 msgid "Restore points"
 msgstr "Restabilirea locului de muncă"
+
+msgid "Restore points (on one piggyback host per protected machine)"
+msgstr ""
 
 msgid "Restrict access to IP addresses"
 msgstr "Restricționarea accesului la adresele IP"
@@ -65630,7 +65889,13 @@ msgid ""
 "Select which data the special agent fetches from the backup server. Deselect "
 "services you do not need, for example ones your monitoring account has no "
 "permission for. A service that is selected but cannot be fetched makes the "
-"agent fail, so that you can correct the selection or the permissions."
+"agent fail, so that you can correct the selection or the permissions. Most "
+"services are created on the host this rule applies to. \"Backups\" and "
+"\"Restore points\" are instead delivered via piggyback to one host per "
+"protected machine, named after the machine in its Veeam backup chain. Create "
+"these hosts, for example with the dynamic host management, or map the names "
+"to existing hosts with the rule \"Host name translation for piggybacked "
+"hosts\". Without such a host, these services are not created."
 msgstr ""
 
 msgid "Selected"
@@ -68825,14 +69090,6 @@ msgstr "Slab (Diverse ascunzători mai mici)"
 msgid "Slack or Mattermost parameters"
 msgstr "Niveluri pentru parametrii bateriei"
 
-#, no-python-format
-msgid ""
-"Slight gradient in the colors of the colored areas in the graphs. 0% turns "
-"off the gradient, 100% makes it the strongest possible."
-msgstr ""
-"Un ușor gradient în culorile zonelor colorate din grafice. 0% dezactivează "
-"gradientul, iar 100% îl face cel mai puternic posibil."
-
 msgid "Slot"
 msgstr ""
 
@@ -68943,10 +69200,22 @@ msgid "Socket license consumption"
 msgstr "Consumul de stocare IO"
 
 #, fuzzy
+msgid "Socket licenses"
+msgstr "Total licențe"
+
+#, fuzzy
 msgid "Socket path"
 msgstr "Soclu"
 
 msgid "Sockets"
+msgstr "Prize"
+
+#, fuzzy
+msgid "Sockets licensed"
+msgstr "Nu deține licență"
+
+#, fuzzy
+msgid "Sockets used"
 msgstr "Prize"
 
 msgid "Soft query limit"
@@ -71564,6 +71833,10 @@ msgstr "Starea în care sunt detectate modificările software"
 
 msgid "State when software packages info is missing"
 msgstr "Starea când lipsesc informațiile despre pachetele software"
+
+#, fuzzy
+msgid "State when the job is disabled"
+msgstr "Stare atunci când lucrarea este în stare dezactivată"
 
 #, fuzzy
 msgid "State when the protection group is disabled"
@@ -76885,6 +77158,11 @@ msgid "The latest licensed active time series count of the data backend"
 msgstr ""
 
 msgid ""
+"The levels are not applied to jobs that have never run, or to disabled jobs, "
+"whose state is set with \"State when the job is disabled\"."
+msgstr ""
+
+msgid ""
 "The levels are only applied if the used bandwidth, in relation to the "
 "operating speed of the interface, reaches at least this value. On interfaces "
 "with little traffic, a few packets can already account for a large share of "
@@ -78156,9 +78434,10 @@ msgstr "Portul care este utilizat pentru apelul api."
 msgid "The port the DBMS listens to"
 msgstr "Portul la care ascultă SGBD"
 
-#, fuzzy
-msgid "The port the Veeam REST API listens on."
-msgstr "Portul la care ascultă SGBD"
+msgid ""
+"The port the Veeam REST API listens on. Veeam Backup & Replication 13.1 and "
+"later use port 443 by default; earlier versions use port 9419."
+msgstr ""
 
 #. weblate-flags: read-only, domain-specific
 #, fuzzy
@@ -78211,6 +78490,14 @@ msgstr ""
 msgid ""
 "The process name as reported by WMI, for example <tt>notepad.exe</tt>. "
 "Matching is case insensitive."
+msgstr ""
+
+#, python-format
+msgid ""
+"The process name refers to %(required)d group(s) of the regular expression, "
+"but the process matching provides only %(available)d. Match the command line "
+"with a regular expression that contains enough groups, or remove the "
+"replacements from the process name."
 msgstr ""
 
 msgid ""
@@ -78367,6 +78654,13 @@ msgstr ""
 msgid ""
 "The remote site {site} stores data here, but this data backend is not opened "
 "to remote sites. Set the address they reach it at to let them connect."
+msgstr ""
+
+#. weblate-flags: read-only, domain-specific
+#, python-brace-format
+msgid ""
+"The remote site {site} stores data here, but this site runs no data backend "
+"instance. Enable the instance or change where that site stores its data."
 msgstr ""
 
 msgid ""
@@ -79231,6 +79525,14 @@ msgstr ""
 
 #. weblate-flags: read-only, domain-specific
 msgid "The telemetry metrics snapin shows the number of custom metrics"
+msgstr ""
+
+msgid ""
+"The template the host names of this service's OpenTelemetry data are "
+"computed from, using the macros <tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, "
+"<tt>$SCOPE_ATTR.&lt;key&gt;$</tt> and <tt>$DATA_POINT_ATTR.&lt;key&gt;$</"
+"tt>. Set for custom services that are assigned to hosts via a host name "
+"template."
 msgstr ""
 
 #, fuzzy
@@ -80458,6 +80760,9 @@ msgid ""
 "This Prometheus scraper is part of the {config_name} Prometheus "
 "configuration.<br>To access further parts of the Prometheus configuration, "
 "go to the related Prometheus configuration."
+msgstr ""
+
+msgid "This Quick Setup is deprecated. You cannot add new configurations."
 msgstr ""
 
 #, fuzzy
@@ -83628,7 +83933,7 @@ msgstr "Această regulă selectează agentul special pentru Salesforce."
 #, fuzzy
 msgid ""
 "This rule set allows to add embedded Python to the Windows agent "
-"installation. "
+"installation."
 msgstr ""
 "Acest set de reguli permite adăugarea de Python încorporat la instalarea "
 "Windows Agent. "
@@ -84766,6 +85071,12 @@ msgstr ""
 
 #, python-format
 msgid ""
+"This site (%(local)s) is newer than the site it contacted (%(peer)s). The "
+"contacted site must be updated to %(local_base)s or newer."
+msgstr ""
+
+#, python-format
+msgid ""
 "This site belongs to customer %(customer)s but uses the following login "
 "connections (authentication connections) that belong to a different "
 "customer: %(connections)s. Remove these connections from the site or assign "
@@ -85696,8 +86007,9 @@ msgstr "Timpul scurs de la sfârșitul ultimei copii de rezervă"
 msgid "Time since last AD Connect sync"
 msgstr "Timp de la ultima sincronizare AD Connect"
 
-msgid "Time since last CDP run"
-msgstr "Timpul scurs de la ultima rulare CDP"
+#, fuzzy
+msgid "Time since last CDP sync"
+msgstr "Timp de la ultima sincronizare"
 
 msgid "Time since last NTPMessage"
 msgstr "Timpul scurs de la ultimul mesaj NTPMessage"
@@ -85733,6 +86045,10 @@ msgstr "Timp de la ultimul punct de control"
 #, fuzzy
 msgid "Time since last resource event"
 msgstr "Timp de la ultimul punct de control"
+
+#, fuzzy
+msgid "Time since last run"
+msgstr "Timpul scurs de la ultima rulare CDP"
 
 #, fuzzy
 msgid "Time since last successful backup"
@@ -94501,8 +94817,20 @@ msgid "Veeam tape backup jobs"
 msgstr "Lucrări de backup pe bandă VEEAM"
 
 #, fuzzy
+msgid "Veeam: Backup job"
+msgstr "Rescrieți aplicația"
+
+#, fuzzy
+msgid "Veeam: Backup job discovery"
+msgstr "Determinată prin descoperire"
+
+#, fuzzy
 msgid "Veeam: Backup proxy"
 msgstr "Rescrieți aplicația"
+
+#, fuzzy
+msgid "Veeam: CDP job discovery"
+msgstr "Determinată prin descoperire"
 
 #, fuzzy
 msgid "Veeam: Configuration backup"
@@ -94530,7 +94858,8 @@ msgstr ""
 msgid "Veeam: Scale-out repository"
 msgstr ""
 
-msgid "Veeam: Time since last CDP run"
+#, fuzzy
+msgid "Veeam: Time since last CDP sync"
 msgstr "Veeam: Timpul de la ultima rulare CDP"
 
 #, fuzzy
@@ -97037,9 +97366,6 @@ msgstr "Windows Firewall"
 
 msgid "Windows License"
 msgstr "Licență Windows"
-
-msgid "Windows Modules"
-msgstr "Module Windows"
 
 msgid "Windows Multipath"
 msgstr "Windows Multipath"
@@ -104450,6 +104776,18 @@ msgstr ""
 msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
 
+#, fuzzy
+msgid "Show graph legend"
+msgstr "Afișați legenda graficului"
+
+#, fuzzy
+msgid "Compact"
+msgstr "Impact"
+
+#, fuzzy
+msgid "Extended"
+msgstr "S-a încheiat"
+
 msgid "Axis"
 msgstr ""
 
@@ -104477,8 +104815,8 @@ msgid "Margin round the graph"
 msgstr "Afișați marja în jurul graficului"
 
 #, fuzzy
-msgid "Graph legend"
-msgstr "Arată legenda"
+msgid "Legend"
+msgstr "Stil de linie"
 
 #, fuzzy
 msgid "Interaction"
@@ -105124,10 +105462,6 @@ msgid "Protocols"
 msgstr "Protocol"
 
 #, fuzzy
-msgid "Compact"
-msgstr "Impact"
-
-#, fuzzy
 msgid "Breakdown dimension"
 msgstr "Urmăriți timpii de oprire"
 
@@ -105199,10 +105533,6 @@ msgstr "Permisiune"
 #, fuzzy
 msgid "series (max. %{max_series})"
 msgstr "intrări (max. 50)"
-
-#, fuzzy
-msgid "Legend"
-msgstr "Stil de linie"
 
 msgid "List the plotted series below the graph"
 msgstr ""
@@ -106044,6 +106374,10 @@ msgid "Preview in graph"
 msgstr "Căutări predefinite"
 
 #, fuzzy
+msgid "Back to metrics selection"
+msgstr "Selecția fișierelor"
+
+#, fuzzy
 msgid "Mirrored"
 msgstr "Zona oglinzată"
 
@@ -106761,33 +107095,26 @@ msgstr ""
 msgid "Alt + k"
 msgstr ""
 
-msgid "Free placement of objects on a canvas or background image"
+msgid "Place objects on a blank canvas or a picture, such as a floor plan"
 msgstr ""
 
-msgid "Objects positioned on an interactive world map using geo-coordinates"
+msgid "Show hosts, services and groups at their locations on a world map"
 msgstr ""
 
-msgid "Dynamic tree of all hosts and their relationships"
+msgid "Lay out all hosts automatically by how they are connected"
 msgstr ""
 
-msgid "Automatic display of all hosts/services matching a group filter"
+msgid "Show all hosts or services, or those of one group, worst first"
 msgstr ""
 
-msgid ""
-"Live status tree along the Checkmk SETUP folder hierarchy, with worst-state "
-"roll-up"
+msgid "Watch your Setup folders as a tree, each folder in its worst state"
 msgstr ""
 
-msgid ""
-"Design-first slide for dashboards and status walls — direct manipulation"
+msgid "Design a slide for a status wall from text, shapes and live states"
 msgstr ""
 
 msgid "Map ID is too long (max %{max} characters)"
 msgstr ""
-
-#, fuzzy
-msgid "Only letters, digits, hyphens (-) and underscores (_) allowed"
-msgstr "Folosiți aici numai litere mici, cifre și caractere de subliniere."
 
 msgid ""
 "Some characters were removed (umlauts, punctuation, symbols are not allowed)"
@@ -106798,20 +107125,28 @@ msgid "A map with this ID already exists"
 msgstr "Un pachet BI cu acest ID există deja."
 
 #, fuzzy
+msgid "Only letters, digits, hyphens (-) and underscores (_) allowed"
+msgstr "Folosiți aici numai litere mici, cifre și caractere de subliniere."
+
+#, fuzzy
 msgid "Failed to create map"
 msgstr "Nu a reușit să redea valoarea:"
+
+#, fuzzy
+msgid "My map"
+msgstr "Adăugați macro"
 
 msgid "Map ID"
 msgstr ""
 
 msgid ""
-"Letters, digits, hyphens and underscores only — spaces become hyphens "
-"automatically"
+"This name has no letters or digits to fill in an ID from. Enter a map ID."
 msgstr ""
 
-#, fuzzy
-msgid "My map"
-msgstr "Adăugați macro"
+msgid ""
+"Part of the map's address, filled in from the display name. Letters, digits, "
+"hyphens and underscores only."
+msgstr ""
 
 #, fuzzy
 msgid "No connections configured yet — create one first."
@@ -109309,6 +109644,14 @@ msgid "Use a 6-digit hex code like '#ffffff' or 'transparent'"
 msgstr ""
 
 #, fuzzy
+msgid "%{enable} – %{name}"
+msgstr "Ștergeți gazda"
+
+#, fuzzy
+msgid "Choose %{name}"
+msgstr "Alegeți toate"
+
+#, fuzzy
 msgid "Nothing to pick"
 msgstr "Nimic înregistrat"
 
@@ -109525,8 +109868,20 @@ msgstr ""
 "Vă rugăm să setați un nume de gazdă pentru reclasificarea statului de gazdă"
 
 #, fuzzy
+msgid "+ all attributes"
+msgstr "Atributul rolului"
+
+#, fuzzy
 msgid "Register this metric as a service on a host."
 msgstr "Denumirea serviciului personalizat"
+
+msgid ""
+"The attribute values of each series are appended to this name, so that every "
+"series gets its own service, e.g. \"http.server.duration GET - 200\". Very "
+"long names are shortened and end in a short hash. Use \"Group by\" to append "
+"only the grouped attributes: this keeps the names short and stable, as every "
+"new attribute value creates a new service."
+msgstr ""
 
 #, fuzzy
 msgid "Search hosts by name…"
@@ -111456,6 +111811,27 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Exporting hosts…"
+msgstr "Opțiuni de etichetare"
+
+#, fuzzy
+msgid "The hosts could not be loaded, so nothing was exported."
+msgstr "DN-ul de bază al grupului nu a putut fi găsit."
+
+#, fuzzy
+msgid "The export failed: %{error}"
+msgstr "Verificarea a eșuat: %(error)s"
+
+msgid ""
+"Exported %{exported} of %{matched} hosts. Show more hosts to export more."
+msgstr ""
+
+msgid ""
+"Exported %{exported} of %{matched} hosts. Narrow the filters to export all "
+"of them."
+msgstr ""
+
+#, fuzzy
 msgid "Selected host: %{count}"
 msgid_plural "Selected hosts: %{count}"
 msgstr[0] "Ștergeți gazda"
@@ -111467,6 +111843,9 @@ msgid_plural "Selected hosts: %{selected} | Total hosts: %{total}"
 msgstr[0] ""
 msgstr[1] ""
 msgstr[2] ""
+
+msgid "Dismiss"
+msgstr ""
 
 #, fuzzy
 msgid "Actions for selected hosts"
@@ -112755,7 +113134,9 @@ msgstr "Date nete primite"
 msgid ""
 "Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
 "<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
-"<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
+"<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>, <tt>$SERIES_ATTRIBUTES$</tt> (all "
+"attribute values of the series; names longer than 200 bytes are shortened "
+"and end in a short hash)"
 msgstr ""
 
 #, fuzzy
@@ -113166,7 +113547,7 @@ msgstr "Dimensiunea codului"
 msgid "Enter your verification code"
 msgstr "Începeți verificarea"
 
-msgid "We sent a 6-digit code to %{email}. It expires after 24 hours."
+msgid "We sent a 6-digit code to %{email}."
 msgstr ""
 
 #, fuzzy
@@ -113223,8 +113604,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Use an address you can access now — codes expire after 24 hours. "
-"Verification links this site to your trial registration."
+"Use an address you can access now. Verification links this site to your "
+"trial registration."
 msgstr ""
 
 msgid "unsubscribe from the newsletter by email"
@@ -114173,6 +114554,34 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Can not evaluate search"
+#~ msgstr "Nu se poate evalua căutarea"
+
+#~ msgid "Time since last CDP run"
+#~ msgstr "Timpul scurs de la ultima rulare CDP"
+
+#~ msgid "Windows Modules"
+#~ msgstr "Module Windows"
+
+#~ msgid "Color gradient"
+#~ msgstr "Gradient de culoare"
+
+#, no-python-format
+#~ msgid ""
+#~ "Slight gradient in the colors of the colored areas in the graphs. 0% "
+#~ "turns off the gradient, 100% makes it the strongest possible."
+#~ msgstr ""
+#~ "Un ușor gradient în culorile zonelor colorate din grafice. 0% "
+#~ "dezactivează gradientul, iar 100% îl face cel mai puternic posibil."
+
+#, fuzzy
+#~ msgid "The port the Veeam REST API listens on."
+#~ msgstr "Portul la care ascultă SGBD"
+
+#, fuzzy
+#~ msgid "Graph legend"
+#~ msgstr "Arată legenda"
 
 #, fuzzy
 #~ msgid "Sharing"
@@ -118699,9 +119108,6 @@ msgstr ""
 #~ msgid "username"
 #~ msgstr "Nume utilizator"
 
-#~ msgid "Capacity filled"
-#~ msgstr "Capacitate umplută"
-
 #, fuzzy
 #~ msgid "Cisco Meraki appliance performance utilization"
 #~ msgstr "Automatizare Checkmk"
@@ -121786,9 +122192,6 @@ msgstr ""
 #, python-format
 #~ msgid "A user with the id \"%s\" does not exist."
 #~ msgstr "Un utilizator cu id-ul \"%s\" nu există."
-
-#~ msgid "Disabled "
-#~ msgstr "Persoane cu handicap "
 
 #~ msgid "Invalid messaging method selected."
 #~ msgstr "Metoda de mesagerie nevalabilă selectată."

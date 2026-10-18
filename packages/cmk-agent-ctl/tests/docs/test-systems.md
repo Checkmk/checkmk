@@ -45,7 +45,7 @@ whether the controller's sandboxing works, or what an upgrade or an uninstall do
 ## The test container with systemd
 
 `tests/scripts/run-dockerized.py --systemd` boots systemd as PID 1 in the test container. It
-supports Debian and Ubuntu only. The comments in
+supports Debian, Ubuntu and AlmaLinux. The comments in
 `tests/testlib/system/script_helpers/dockerized_execution.py` explain how.
 
 The container gets a private cgroup namespace and a tmpfs on `/run`, and it runs without Docker's
@@ -70,7 +70,7 @@ These environment variables select what is tested:
 | :------------ | :---------------------------------------------------------------------------- |
 | `EDITION`     | the Checkmk edition, for example `pro` or `community`                         |
 | `VERSION`     | the Checkmk version, by default the daily build of the branch                 |
-| `DISTRO`      | the distribution of the test container, a Debian or Ubuntu one                |
+| `DISTRO`      | the distribution of the test container: Debian, Ubuntu or AlmaLinux           |
 | `TEST_FILTER` | extra pytest arguments, for example `-k test_installed_agent_reports_data`    |
 | `RESULT_PATH` | the directory the results are copied to, by default a new temporary directory |
 

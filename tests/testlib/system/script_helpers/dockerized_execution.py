@@ -59,7 +59,8 @@ _BOOT_SYSTEMD = (
     "{ echo 'cgroup2 at /sys/fs/cgroup is not writable' >&2; exit 1; }; "
     "exec /sbin/init"
 )
-_SYSTEMD_PACKAGES = ["systemd", "systemd-sysv", "dbus", "dbus-user-session"]
+_SYSTEMD_PACKAGES_APT = ["systemd", "systemd-sysv", "dbus", "dbus-user-session"]
+_SYSTEMD_PACKAGES_DNF = ["systemd", "dbus"]
 # Units that either cannot work in a container or serve no purpose in one. tmp.mount would
 # replace /tmp by a fresh tmpfs and thereby change the size of the directory the package
 # downloads and pytest's tmp_path use.
@@ -301,19 +302,27 @@ def _prepare_systemd(container: docker.models.containers.Container, distro_name:
     systemctl mask works without a running systemd, because it only symlinks the unit to
     /dev/null.
     """
-    if not distro_name.startswith(("debian-", "ubuntu-")):
-        raise NotImplementedError(
-            f"Preparing systemd for {distro_name} is not implemented yet. Only the apt based "
-            "distributions are supported so far."
+    if distro_name.startswith(("debian-", "ubuntu-")):
+        logger.info("Installing systemd: %s", " ".join(_SYSTEMD_PACKAGES_APT))
+        _exec_run(container, ["apt-get", "update"], stream=True)
+        _exec_run(
+            container,
+            ["apt-get", "install", "-y", "--no-install-recommends"] + _SYSTEMD_PACKAGES_APT,
+            environment={"DEBIAN_FRONTEND": "noninteractive"},
+            stream=True,
         )
-    logger.info("Installing systemd: %s", " ".join(_SYSTEMD_PACKAGES))
-    _exec_run(container, ["apt-get", "update"], stream=True)
-    _exec_run(
-        container,
-        ["apt-get", "install", "-y", "--no-install-recommends"] + _SYSTEMD_PACKAGES,
-        environment={"DEBIAN_FRONTEND": "noninteractive"},
-        stream=True,
-    )
+    elif distro_name.startswith("almalinux-"):
+        logger.info("Installing systemd: %s", " ".join(_SYSTEMD_PACKAGES_DNF))
+        _exec_run(
+            container,
+            ["dnf", "install", "-y", "--setopt=install_weak_deps=False"] + _SYSTEMD_PACKAGES_DNF,
+            stream=True,
+        )
+    else:
+        raise NotImplementedError(
+            f"Preparing systemd for {distro_name} is not implemented yet. Only the apt and dnf "
+            "based distributions are supported so far."
+        )
     logger.info("Masking %d systemd units", len(_SYSTEMD_UNITS_TO_MASK))
     _exec_run(container, ["systemctl", "mask"] + _SYSTEMD_UNITS_TO_MASK)
 

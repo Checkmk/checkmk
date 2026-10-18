@@ -22,6 +22,7 @@ py_cmk_test(
     visibility = ["//visibility:private"],
     deps = [
         "//cmk/base:active-check-result",
+        "//cmk/config",
         "//cmk/plugins",
         "//tests/testlib/unit",
         "//tests/unit:conftest",

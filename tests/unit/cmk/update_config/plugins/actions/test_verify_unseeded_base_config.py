@@ -13,6 +13,7 @@ import pytest
 
 import cmk.utils.paths
 from cmk.ccc import store
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.update_config.internal import ExpiryVersion
 from cmk.update_config.plugins.actions.verify_unseeded_base_config import (
     VerifyUnseededBaseConfig,
@@ -27,18 +28,22 @@ _ACTION = VerifyUnseededBaseConfig(
 )
 
 
+def _main_mk() -> Path:
+    return BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).main_mk
+
+
 @pytest.fixture(name="config_dir")
 def config_dir_fixture() -> Iterator[Path]:
     # Both are removed afterwards, along with anything the test wrote.
-    wato_dir = cmk.utils.paths.check_mk_config_dir / "wato"
-    assert not cmk.utils.paths.main_config_file.exists()
+    wato_dir = BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d / "wato"
+    assert not _main_mk().exists()
     assert not wato_dir.exists()
-    cmk.utils.paths.main_config_file.parent.mkdir(parents=True, exist_ok=True)
-    cmk.utils.paths.main_config_file.write_text("")
+    _main_mk().parent.mkdir(parents=True, exist_ok=True)
+    _main_mk().write_text("")
     wato_dir.mkdir(parents=True)
     yield wato_dir
     shutil.rmtree(wato_dir)
-    cmk.utils.paths.main_config_file.unlink()
+    _main_mk().unlink()
 
 
 _WS = re.compile(r"\s+")
@@ -86,13 +91,13 @@ def test_a_legacy_file_is_named_with_its_error(
 
 
 def test_every_failing_file_is_named(config_dir: Path, caplog: pytest.LogCaptureFixture) -> None:
-    cmk.utils.paths.main_config_file.write_text("extra_nagios_conf += 'define command {}'\n")
+    _main_mk().write_text("extra_nagios_conf += 'define command {}'\n")
     (config_dir / "groups.mk").write_text("define_hostgroups.update({'a': 'A'})\n")
 
     _ACTION(logging.getLogger(__name__), debug=True)
 
     assert [w.strip().split(":")[0] for w in _warnings(caplog)[1:]] == [
-        str(cmk.utils.paths.main_config_file),
+        str(_main_mk()),
         str(config_dir / "groups.mk"),
     ]
 
@@ -100,7 +105,7 @@ def test_every_failing_file_is_named(config_dir: Path, caplog: pytest.LogCapture
 def test_a_file_relying_on_an_earlier_one_is_named(
     config_dir: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    cmk.utils.paths.main_config_file.write_text("define_hostgroups = {}\n")
+    _main_mk().write_text("define_hostgroups = {}\n")
     (config_dir / "groups.mk").write_text("define_hostgroups.update({'a': 'A'})\n")
 
     _ACTION(logging.getLogger(__name__), debug=True)

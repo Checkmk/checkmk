@@ -57,6 +57,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import get_omd_config, omd_site, SiteId
 from cmk.ccc.user import UserId
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.crypto.certificate import PersistedCertificateWithPrivateKey
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.gui import hooks, userdb
@@ -4350,7 +4351,9 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
     ) -> None:
         """Use the given tar archive and list of files to be deleted to update the local files"""
         base_dir = cmk.utils.paths.omd_root
-        base_folder_path = str(cmk.utils.paths.check_mk_config_dir / "wato")
+        base_folder_path = str(
+            BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d / "wato"
+        )
 
         active_connectors = _active_connectors_for_user_preservation(site_config)
         current_users: Users = {}

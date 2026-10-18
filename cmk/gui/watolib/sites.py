@@ -26,6 +26,7 @@ from cmk.ccc.regex import SITE_ID_PATTERN
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.store import load_from_mk_file
 from cmk.ccc.user import UserId
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.gui import hooks
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -1108,7 +1109,10 @@ def _update_distributed_wato_file(sites: SiteConfigurations) -> None:
     always get their distributed_wato.mk file pushed from the central site.
     """
 
-    distributed_file = cmk.utils.paths.check_mk_config_dir / "distributed_wato.mk"
+    distributed_file = (
+        BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d
+        / "distributed_wato.mk"
+    )
     if distributed_file.exists() and load_from_mk_file(
         distributed_file, key="is_distributed_setup_remote_site", default=False, lock=False
     ):
@@ -1209,7 +1213,10 @@ def save_site_globals(
 
 
 def _clear_distributed_wato_file() -> None:
-    p = cmk.utils.paths.check_mk_config_dir / "distributed_wato.mk"
+    p = (
+        BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d
+        / "distributed_wato.mk"
+    )
     # We do not delete the file but empty it. That way
     # we do not need write permissions to the conf.d
     # directory!

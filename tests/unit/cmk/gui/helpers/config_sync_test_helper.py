@@ -17,6 +17,7 @@ import cmk.ccc.version as cmk_version
 import cmk.gui.mkeventd.wato
 import cmk.utils.paths
 from cmk.ccc.site import SiteId
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.gui.config import active_config, Config
 from cmk.gui.nodevis.utils import topology_configs_dir
 from cmk.gui.watolib import activate_changes, config_sync
@@ -81,7 +82,7 @@ def create_sync_snapshot(  # type: ignore[misc]
 @contextmanager
 def create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """Create some config files to be synchronized"""
-    conf_dir = cmk.utils.paths.check_mk_config_dir / "wato"
+    conf_dir = BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d / "wato"
     conf_dir.mkdir(parents=True, exist_ok=True)
     with conf_dir.joinpath("hosts.mk").open("w", encoding="utf-8") as f:
         f.write("all_hosts = []\n")

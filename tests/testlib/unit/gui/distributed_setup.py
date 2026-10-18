@@ -7,13 +7,15 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 
 import cmk.utils.paths
+from cmk.config.paths import BaseConfigurationMKFiles
 
 
 @contextmanager
 def running_on_a_remote_site() -> Iterator[None]:
     """Make the code believe it runs on a distributed-setup remote site."""
-    cmk.utils.paths.check_mk_config_dir.mkdir(parents=True, exist_ok=True)
-    distr_wato_mk = cmk.utils.paths.check_mk_config_dir / "distributed_wato.mk"
+    conf_d = BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d
+    conf_d.mkdir(parents=True, exist_ok=True)
+    distr_wato_mk = conf_d / "distributed_wato.mk"
     previous = distr_wato_mk.read_bytes() if distr_wato_mk.exists() else None
     distr_wato_mk.write_text("is_distributed_setup_remote_site = True\n")
     try:

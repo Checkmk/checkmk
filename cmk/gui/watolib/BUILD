@@ -28,6 +28,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/config",
         "//cmk/gui:auth_core",
         "//cmk/gui:core_toolkit",
         "//cmk/gui/search:index",
@@ -248,6 +249,7 @@ py_library(
         ":wire_format",
         "//cmk/automations",
         "//cmk/bi",
+        "//cmk/config",
         "//cmk/fields",
         "//cmk/gui:auth_core",
         "//cmk/gui:config",

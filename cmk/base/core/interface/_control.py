@@ -28,6 +28,7 @@ from cmk.checkengine.checker_helper_config import make_packed_config_writer
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.fetcher_utils.trigger import FetcherTriggerFactory
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.core_client import CoreAction, CoreClient
 from cmk.licensing.basics.paths import get_licensed_state_file_path
 from cmk.licensing.handler import LicensingHandlerFactory
@@ -83,7 +84,8 @@ def build_and_activate_monitoring_config(
 ) -> None:
     try:
         with activation_lock(
-            main_mk_file=cmk.utils.paths.default_config_dir / "main.mk", mode=locking_mode
+            main_mk_file=BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).main_mk,
+            mode=locking_mode,
         ):
             do_create_config(
                 core_client=core_client,

@@ -86,6 +86,7 @@ py_cmk_test(
         ":conftest",
         "//cmk:cmkpasswd",
         "//cmk/bi",
+        "//cmk/config",
         "//cmk/diskspace",
         "//cmk/fields",
         "//cmk/piggyback:hub",

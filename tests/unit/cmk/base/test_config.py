@@ -59,6 +59,7 @@ from cmk.checkengine.plugins import (
 from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.discover_plugins import family_libexec_dir, PluginLocation
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
 from cmk.password_store.v1 import Secret
@@ -2821,15 +2822,16 @@ def test_load_config_folder_paths(folder_path_test_config: BaseConfig) -> None:
 
 @pytest.fixture(name="main_mk")
 def main_mk_fixture() -> Iterator[Path]:
-    cmk.utils.paths.main_config_file.parent.mkdir(parents=True, exist_ok=True)
-    cmk.utils.paths.main_config_file.write_text("")
-    yield cmk.utils.paths.main_config_file
-    cmk.utils.paths.main_config_file.unlink(missing_ok=True)
+    main_mk = BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).main_mk
+    main_mk.parent.mkdir(parents=True, exist_ok=True)
+    main_mk.write_text("")
+    yield main_mk
+    main_mk.unlink(missing_ok=True)
 
 
 @pytest.fixture(name="wato_folder")
 def wato_folder_fixture(main_mk: Path) -> Iterator[Path]:
-    folder = cmk.utils.paths.check_mk_config_dir / "wato"
+    folder = BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d / "wato"
     folder.mkdir(parents=True, exist_ok=True)
     yield folder
     shutil.rmtree(folder)
@@ -2944,10 +2946,11 @@ def test_load_raw_config_seeds_legacy_config_files_by_default(main_mk: Path) -> 
 def folder_path_test_config_fixture(
     monkeypatch: MonkeyPatch,
 ) -> Iterator[BaseConfig]:
-    config_dir = cmk.utils.paths.check_mk_config_dir
+    mk_file_paths = BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root)
+    config_dir = mk_file_paths.conf_d
     config_dir.mkdir(parents=True, exist_ok=True)
 
-    with cmk.utils.paths.main_config_file.open("w", encoding="utf-8") as f:
+    with mk_file_paths.main_mk.open("w", encoding="utf-8") as f:
         f.write(
             """
 all_hosts += ['%(name)s']
@@ -3002,7 +3005,7 @@ cmc_host_rrd_config = [
     yield config.load(validate_hosts=True, debug=True).loaded_config
 
     # Cleanup after the test. Would be better to use a dedicated test directory
-    cmk.utils.paths.main_config_file.unlink()
+    mk_file_paths.main_mk.unlink()
     (wato_main_folder / "hosts.mk").unlink()
     (wato_main_folder / "rules.mk").unlink()
     (wato_lvl1_folder / "hosts.mk").unlink()
@@ -3076,14 +3079,14 @@ explicit_host_conf['{setting_name}'].update({values_})
 
 @pytest.mark.usefixtures("patch_omd_site")
 def test_explicit_setting_loading() -> None:
-    main_mk_file = cmk.utils.paths.main_config_file
+    main_mk_file = BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).main_mk
     settings = [
         ("sub1", "parents", {HostName("hostA"): "setting1"}),
         ("sub2", "parents", {HostName("hostB"): "setting2"}),
         ("sub3", "other", {HostName("hostA"): "setting3"}),
         ("sub4", "other", {HostName("hostB"): "setting4"}),
     ]
-    config_dir = cmk.utils.paths.check_mk_config_dir
+    config_dir = BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d
     wato_main_folder = config_dir / "wato"
     try:
         main_mk_file.touch()

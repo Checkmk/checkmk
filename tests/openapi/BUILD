@@ -64,6 +64,7 @@ py_cmk_test(
     use_project_pytest_config = True,
     deps = [
         ":conftest",
+        "//cmk/config",
         "//cmk/gui:auth_core",
         "//cmk/gui:core_toolkit",
         "//cmk/gui:scopes",

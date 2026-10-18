@@ -27,6 +27,7 @@ py_library(
         "//non-free/packages/cmk-plugins-nonfree:__subpackages__",
     ],
     deps = [
+        "//cmk/config",
         "//cmk/utils",
         "//packages/cmk-ccc:daemon",
         "//packages/cmk-ccc:hostaddress",

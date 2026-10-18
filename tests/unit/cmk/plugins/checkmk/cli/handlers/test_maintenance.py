@@ -17,6 +17,7 @@ from cmk.ccc.hostaddress import HostAddress
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.piggyback import backend
 from cmk.plugins.checkmk.cli.handlers.maintenance import (
     _CleanupPiggybackCommand,
@@ -83,8 +84,9 @@ def _write_main_mk(
     max_cache_file_age: int, rules: Sequence[RuleSpec[Mapping[str, object]]]
 ) -> None:
     """The command loads the configuration itself, so it has to find it on disk."""
-    cmk.utils.paths.main_config_file.parent.mkdir(parents=True, exist_ok=True)
-    cmk.utils.paths.main_config_file.write_text(
+    main_mk = BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).main_mk
+    main_mk.parent.mkdir(parents=True, exist_ok=True)
+    main_mk.write_text(
         f"piggyback_max_cachefile_age = {max_cache_file_age!r}\n"
         f"piggybacked_host_files = {list(rules)!r}\n"
     )

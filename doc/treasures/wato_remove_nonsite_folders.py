@@ -32,6 +32,9 @@
 # the parameter do_remove_folders (just below) to True.
 
 
+from cmk.config.paths import BaseConfigurationMKFiles
+
+
 def remove_nonrelated_site_folders(effective_hosts):
     # Note: most of the paths here are hardcorded
     # I do not want to use any helper functions from the WATO world, because
@@ -44,6 +47,8 @@ def remove_nonrelated_site_folders(effective_hosts):
 
     logfile = open(os.path.expanduser("~/var/log/remove_site_folders.log"), "w")
 
+    conf_d = str(BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d)
+
     def log_info(info):
         logfile.write(info + "\n")
 
@@ -52,7 +57,7 @@ def remove_nonrelated_site_folders(effective_hosts):
         return
 
     # The own site id is written into the distributed_wato.mk file. If it's missing -> return
-    if not os.path.exists(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk"):
+    if not os.path.exists(conf_d + "/distributed_wato.mk"):
         return
 
     # Parse the file with the site name
@@ -60,7 +65,7 @@ def remove_nonrelated_site_folders(effective_hosts):
     file_vars = {}
     try:
         exec(
-            open(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk").read(),
+            open(conf_d + "/distributed_wato.mk").read(),
             file_vars_g,
             file_vars,
         )
@@ -74,7 +79,7 @@ def remove_nonrelated_site_folders(effective_hosts):
         return
 
     # Get all folders in WATO dir
-    config_dir = cmk.utils.paths.check_mk_config_dir + "/wato/"
+    config_dir = conf_d + "/wato/"
     all_folders = sorted([x[0][len(config_dir) :] for x in os.walk(config_dir)])[
         1:
     ]  # Skip first folder (WATO root!)

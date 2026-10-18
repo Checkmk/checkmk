@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 import cmk.utils.paths
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.gui.session_context import SuperUserContext
 from cmk.gui.watolib import groups_io
 from cmk.gui.wsgi.app import application_and_request_context
@@ -16,11 +17,11 @@ from cmk.gui.wsgi.app import application_and_request_context
 
 @pytest.fixture
 def patch_config_paths(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    cmk_confd = tmp_path / "check_mk" / "conf.d"
-    monkeypatch.setattr(cmk.utils.paths, "check_mk_config_dir", cmk_confd)
+    monkeypatch.setattr(cmk.utils.paths, "omd_root", tmp_path)
+    cmk_confd = BaseConfigurationMKFiles.from_omd_root(tmp_path).conf_d
     (cmk_confd / "wato").mkdir(parents=True)
 
-    gui_confd = tmp_path / "check_mk" / "multisite.d"
+    gui_confd = cmk_confd.parent / "multisite.d"
     monkeypatch.setattr(cmk.utils.paths, "default_config_dir", gui_confd.parent)
     (gui_confd / "wato").mkdir(parents=True)
 
@@ -35,7 +36,10 @@ def test_load_group_information_empty() -> None:
 
 @pytest.mark.usefixtures("patch_config_paths")
 def test_load_group_information() -> None:
-    with open(cmk.utils.paths.check_mk_config_dir / "wato/groups.mk", "w") as f:
+    with open(
+        BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d / "wato/groups.mk",
+        "w",
+    ) as f:
         f.write(
             """# encoding: utf-8
 

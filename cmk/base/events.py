@@ -27,6 +27,7 @@ from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import regex
 from cmk.ccc.site import omd_site
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.events.event_context import EnrichedEventContext, EventContext
 from cmk.events.notify import read_notify_host_file
 from cmk.events.notify_types import EventRule
@@ -165,15 +166,12 @@ def event_keepalive(
 
 def config_timestamp() -> float:
     mtime = 0.0
-    for dirpath, _unused_dirnames, filenames in os.walk(str(cmk.utils.paths.check_mk_config_dir)):
+    mk_files = BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root)
+    for dirpath, _unused_dirnames, filenames in os.walk(str(mk_files.conf_d)):
         for f in filenames:
             mtime = max(mtime, os.stat(dirpath + "/" + f).st_mtime)
 
-    for path in [
-        cmk.utils.paths.main_config_file,
-        cmk.utils.paths.final_config_file,
-        cmk.utils.paths.local_config_file,
-    ]:
+    for path in [mk_files.main_mk, mk_files.final_mk, mk_files.local_mk]:
         with contextlib.suppress(Exception):
             mtime = max(mtime, os.stat(path).st_mtime)
     return mtime

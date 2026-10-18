@@ -14,13 +14,13 @@ from typing import override
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.config import get_legacy_default_base_config
+from cmk.config.paths import BaseConfigurationMKFiles, key_config_paths
 from cmk.utils.host_storage import (
     apply_hosts_file_to_object,
     get_host_storage_loaders,
     StorageFormat,
 )
 from cmk.utils.log import console
-from cmk.utils.misc import key_config_paths
 
 
 def strip_tag(tagged_hostname: str) -> HostName:
@@ -156,6 +156,7 @@ def load_raw_config(
 
     host_storage_loaders = get_host_storage_loaders(StorageFormat.PICKLE)
     paths = get_config_file_paths(with_conf_d=True) if config_files is None else config_files
+    conf_d = BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d
     for path in paths:
         try:
             # Make the config path available as a global variable to be used
@@ -165,7 +166,7 @@ def load_raw_config(
             current_path: str | None = None
             folder_path: str | None = None
             with contextlib.suppress(ValueError):
-                relative_path = path.relative_to(cmk.utils.paths.check_mk_config_dir)
+                relative_path = path.relative_to(conf_d)
                 current_path = f"/{relative_path}"
                 folder_path = str(relative_path.parent)
             target_context["FOLDER_PATH"] = folder_path
@@ -212,11 +213,12 @@ def load_raw_config(
 
 # Create list of all files to be included during configuration loading
 def get_config_file_paths(with_conf_d: bool) -> list[Path]:
-    list_of_files = [cmk.utils.paths.main_config_file]
+    mk_file_paths = BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root)
+    list_of_files = [mk_file_paths.main_mk]
     if with_conf_d:
-        all_files = cmk.utils.paths.check_mk_config_dir.rglob("*")
+        all_files = mk_file_paths.conf_d.rglob("*")
         list_of_files += sorted([p for p in all_files if p.suffix in {".mk"}], key=key_config_paths)
-    for path in [cmk.utils.paths.final_config_file, cmk.utils.paths.local_config_file]:
+    for path in [mk_file_paths.final_mk, mk_file_paths.local_mk]:
         if path.exists():
             list_of_files.append(path)
     return list_of_files

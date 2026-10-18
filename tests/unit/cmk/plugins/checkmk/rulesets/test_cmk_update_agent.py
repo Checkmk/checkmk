@@ -10,6 +10,7 @@ import pytest
 
 import cmk.utils.paths
 from cmk.ccc.version import Edition
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.gui.form_specs import get_visitor, RawDiskData, registration, VisitorOptions
 from cmk.plugins.checkmk.rulesets import cmk_update_agent
 from cmk.rulesets.v1.form_specs import DictGroup, Dictionary, SingleChoice
@@ -17,9 +18,9 @@ from cmk.rulesets.v1.form_specs import DictGroup, Dictionary, SingleChoice
 
 @pytest.fixture(name="config_dir")
 def _config_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
-    config_dir = tmp_path / "conf.d"
-    config_dir.mkdir()
-    monkeypatch.setattr(cmk.utils.paths, "check_mk_config_dir", config_dir)
+    monkeypatch.setattr(cmk.utils.paths, "omd_root", tmp_path)
+    config_dir = BaseConfigurationMKFiles.from_omd_root(tmp_path).conf_d
+    config_dir.mkdir(parents=True)
     return config_dir
 
 

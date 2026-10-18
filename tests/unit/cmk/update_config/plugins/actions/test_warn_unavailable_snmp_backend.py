@@ -10,6 +10,7 @@ import pytest
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 from cmk.gui.watolib.global_settings import save_global_settings_raw
@@ -221,9 +222,9 @@ def test_action_is_silent_on_remote_sites(
     """The central site owns the configuration, warning here would not help anybody"""
     monkeypatch.setattr(action_module, "edition", lambda _omd_root: Edition.COMMUNITY)
     _configure_inline_backend()
-    (paths.check_mk_config_dir / "distributed_wato.mk").write_text(
-        "is_distributed_setup_remote_site = True\n"
-    )
+    (
+        BaseConfigurationMKFiles.from_omd_root(paths.omd_root).conf_d / "distributed_wato.mk"
+    ).write_text("is_distributed_setup_remote_site = True\n")
 
     with caplog.at_level(logging.WARNING):
         _action()(LOGGER, debug=True)

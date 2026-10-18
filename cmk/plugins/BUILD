@@ -38,6 +38,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/config",
         "//cmk/plugins/jolokia/agents",  # imported by the special agent
         "//cmk/utils",
         "//packages/cmk-ccc:regex",

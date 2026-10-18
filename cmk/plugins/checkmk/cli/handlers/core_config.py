@@ -25,6 +25,7 @@ from cmk.ccc.store import activation_lock
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.plugins.checkmk.cli.core_config import (
     cli_command_nagios_config,
     cli_command_reload,
@@ -184,7 +185,7 @@ def _update(fake_dns: HostAddress | None, *, omd_root: Path, debug: bool) -> boo
 
     try:
         with activation_lock(
-            main_mk_file=cmk.utils.paths.default_config_dir / "main.mk",
+            main_mk_file=BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).main_mk,
             mode=loaded_config.restart_locking,
         ):
             core, core_client = app.create_core(loaded_config)

@@ -9,14 +9,15 @@ import pytest
 from pytest_mock import MockerFixture, MockType
 
 import cmk.product_usage.collectors.site_info as site_info_collector
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.product_usage.exceptions import SiteInfoInvalidError, SiteInfoItemsInvalidError
-from cmk.utils.paths import check_mk_config_dir, omd_root, var_dir
+from cmk.utils.paths import omd_root, var_dir
 
 
 @pytest.fixture()
 def wato_path() -> Path:
     # Almost all paths in cmk.utils.paths are patched by default in tests/unit/conftest.py
-    wato_fp = check_mk_config_dir / "wato"
+    wato_fp = BaseConfigurationMKFiles.from_omd_root(omd_root).conf_d / "wato"
     wato_fp.mkdir(parents=True, exist_ok=True)
     return wato_fp
 
@@ -37,7 +38,9 @@ def test_collect_and_number_of_folders(local_connection: MockType, wato_path: Pa
     (wato_path / "folder1" / "subfolder2").mkdir(parents=True, exist_ok=True)
     (wato_path / "folder2" / "subfolder3").mkdir(parents=True, exist_ok=True)
 
-    data = site_info_collector.collect(check_mk_config_dir, var_dir, omd_root)
+    data = site_info_collector.collect(
+        BaseConfigurationMKFiles.from_omd_root(omd_root).conf_d, var_dir, omd_root
+    )
 
     assert data.count_hosts == 10
     assert data.count_services == 20
@@ -50,21 +53,27 @@ def test_collect_and_number_of_folders(local_connection: MockType, wato_path: Pa
 def test_collect_too_many_columns(local_connection: MockType) -> None:
     local_connection.query.return_value = [[0, 0, "unexpected"]]
     with pytest.raises(SiteInfoItemsInvalidError):
-        site_info_collector.collect(check_mk_config_dir, var_dir, omd_root)
+        site_info_collector.collect(
+            BaseConfigurationMKFiles.from_omd_root(omd_root).conf_d, var_dir, omd_root
+        )
 
 
 @pytest.mark.usefixtures("mock_instance_id", "mock_checkmk_info")
 def test_collect_too_few_columns(local_connection: MockType) -> None:
     local_connection.query.return_value = [[0]]
     with pytest.raises(SiteInfoItemsInvalidError):
-        site_info_collector.collect(check_mk_config_dir, var_dir, omd_root)
+        site_info_collector.collect(
+            BaseConfigurationMKFiles.from_omd_root(omd_root).conf_d, var_dir, omd_root
+        )
 
 
 @pytest.mark.usefixtures("mock_instance_id", "mock_checkmk_info")
 def test_collect_no_site_info(local_connection: MockType) -> None:
     local_connection.query.return_value = []
     with pytest.raises(SiteInfoInvalidError):
-        site_info_collector.collect(check_mk_config_dir, var_dir, omd_root)
+        site_info_collector.collect(
+            BaseConfigurationMKFiles.from_omd_root(omd_root).conf_d, var_dir, omd_root
+        )
 
 
 def test_get_site_status_query_can_be_answered_as_json(local_connection: MockType) -> None:

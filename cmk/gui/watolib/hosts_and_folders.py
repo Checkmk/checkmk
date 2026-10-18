@@ -64,6 +64,7 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.regex import regex, WATO_FOLDER_PATH_NAME_CHARS
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.gui import hooks, userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import Config
@@ -754,7 +755,7 @@ class _RedisHelper:
         find (+spawn process) -> 0.14 seconds
         """
         result = subprocess.run(  # nosec B602 # BNS:248184
-            f"find {cmk.utils.paths.check_mk_config_dir / 'wato'} -type d -printf '%T@\n' -o -name .wato -printf '%T@\n' | sort -n | tail -6 | uniq",
+            f"find {BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d / 'wato'} -type d -printf '%T@\n' -o -name .wato -printf '%T@\n' | sort -n | tail -6 | uniq",
             shell=True,
             capture_output=True,
             check=True,

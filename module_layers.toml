@@ -230,6 +230,7 @@ allows = [
   # The "cmk" commands (cli) drive the whole base: automations, man pages
   # (feature filter), plug-in discovery, profiling and tracing.
   "cmk.automations",
+  "cmk.config",
   "cmk.discover_plugins",
   "cmk.inventory",
   "cmk.licensing.basics.finder",
@@ -584,6 +585,7 @@ allows = [
   "@ccc",
   "@plugin_apis",
   "@relay_protocols",
+  "cmk.config",
   "cmk.monitoring_config",
   "cmk.base.config",
   "cmk.base.configlib",
@@ -688,6 +690,7 @@ allows = ["cmk.bakery", "cmk.base.api.bakery", "cmk.utils"]
 
 [components."cmk.base"]
 allows = [
+  "cmk.config",
   "cmk.diagnostics.automation_types",
   "cmk.diagnostics.engine",
   "cmk.monitoring_config",
@@ -1359,6 +1362,7 @@ excludes = ["cmk.gui.nonfree.pro.plugins", "cmk.gui.plugins"]
 
 [components."cmk.gui.nonfree.ultimatemt"]
 allows = [
+  "cmk.config",
   "cmk.web.utils",
   "@ccc",
   "@livestatus_client",
@@ -1424,6 +1428,7 @@ excludes = ["cmk.gui.nonfree.pro.plugins", "cmk.gui.plugins"]
 
 [components."cmk.gui"]
 allows = [
+  "cmk.config",
   "cmk.diagnostics.automation_types",
   "cmk.diagnostics.engine",
   "@ccc",
@@ -1577,6 +1582,7 @@ allows = [
 allows = [
   "@ccc",
   "cmk.base",
+  "cmk.config",
   "cmk.licensing",
   "cmk.product_usage",
   "cmk.utils.paths",
@@ -1751,6 +1757,7 @@ allows = [
 [components."cmk.update_config.plugins.actions.create_customer_host_label"] # lives in cmk-multi-tenancy
 allows = [
   "@ccc",
+  "cmk.config",
   "cmk.multi_tenancy.shared",
   "cmk.update_config",
   "cmk.ruleset_matcher",
@@ -1866,6 +1873,7 @@ allows = [
 allows = [
   "@ccc",
   "@plugin_apis",
+  "cmk.config",
   "cmk.crash",
   "cmk.dcd.protocols",
   "cmk.discover_plugins",

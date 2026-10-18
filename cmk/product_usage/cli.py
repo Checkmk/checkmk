@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from cmk.ccc.version import Edition, edition
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.licensing.handler import LicenseState
 from cmk.product_usage.collection import (
     collect_cloud_trial_data,
@@ -101,7 +102,7 @@ def main(args: Sequence[str] | None = None) -> int:
         if request.collect:
             data = collect_data(
                 paths.var_dir,
-                paths.check_mk_config_dir,
+                BaseConfigurationMKFiles.from_omd_root(paths.omd_root).conf_d,
                 paths.omd_root,
                 logger,
             )

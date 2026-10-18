@@ -11,6 +11,7 @@ from typing import Any
 import cmk.ruleset_matcher.tuple_rulesets
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.gui.i18n import _
 
 # TODO: Clean up all call sites in the GUI and only use them in Setup config file loading code
@@ -20,7 +21,7 @@ NEGATE = cmk.ruleset_matcher.tuple_rulesets.NEGATE
 
 
 def wato_root_dir() -> Path:
-    return cmk.utils.paths.check_mk_config_dir / "wato"
+    return BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d / "wato"
 
 
 def multisite_dir() -> Path:

@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from cmk.ccc.site import omd_site
 from cmk.ccc.store import load_from_mk_file
 from cmk.ccc.version import Edition, edition
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.rulesets.internal.form_specs import (
     DictGroupExtended,
     DictionaryGroupLayout,
@@ -446,7 +447,9 @@ def _is_ultimatemt_remote_site() -> bool:
     # Reading distributed_wato.mk directly avoids cmk.gui import
     if edition(paths.omd_root) is not Edition.ULTIMATEMT:
         return False
-    distributed_wato_file = paths.check_mk_config_dir / "distributed_wato.mk"
+    distributed_wato_file = (
+        BaseConfigurationMKFiles.from_omd_root(paths.omd_root).conf_d / "distributed_wato.mk"
+    )
     if not distributed_wato_file.exists() or distributed_wato_file.stat().st_size == 0:
         return False
     return load_from_mk_file(

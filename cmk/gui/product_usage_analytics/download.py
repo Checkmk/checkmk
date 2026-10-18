@@ -7,6 +7,7 @@
 import logging
 from typing import override
 
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.gui.http import ContentDispositionType, response
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
@@ -26,7 +27,7 @@ class PageDownloadProductUsage(Page):
         logger = logging.getLogger("cmk.download_product_usage")
         data = collect_data(
             paths.var_dir,
-            paths.check_mk_config_dir,
+            BaseConfigurationMKFiles.from_omd_root(paths.omd_root).conf_d,
             paths.omd_root,
             logger,
         )

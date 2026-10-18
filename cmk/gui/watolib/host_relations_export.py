@@ -40,6 +40,7 @@ import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.gui.customer import customer_api
 from cmk.gui.log import logger
 from cmk.gui.site_config import is_distributed_setup_remote_site
@@ -72,7 +73,7 @@ DROPPED_RELATIONS_WARNING_KEY = "host_relations"
 
 def relations_export_path() -> Path:
     """The generated ``explicit_host_conf`` file, in the directory that is synced to the sites."""
-    return cmk.utils.paths.check_mk_config_dir / "relations.mk"
+    return BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d / "relations.mk"
 
 
 def relations_dropped_path() -> Path:

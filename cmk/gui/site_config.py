@@ -8,6 +8,7 @@ from collections.abc import Mapping
 
 import cmk.utils.paths
 from cmk.ccc.site import omd_site, SiteId
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 
 
@@ -33,7 +34,10 @@ def is_distributed_setup_remote_site(site_configs: SiteConfigurations) -> bool:
 
 
 def _has_distributed_wato_file() -> bool:
-    path = cmk.utils.paths.check_mk_config_dir / "distributed_wato.mk"
+    path = (
+        BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d
+        / "distributed_wato.mk"
+    )
     return path.exists() and path.stat().st_size != 0
 
 

@@ -17,6 +17,7 @@ py_cmk_test(
     use_project_pytest_config = True,
     visibility = ["//visibility:private"],
     deps = [
+        "//cmk/config",
         "//cmk/gui/rule_specs:legacy_converter",
         "//cmk/gui/watolib",
         "//cmk/plugins",

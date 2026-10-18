@@ -29,6 +29,7 @@ from cmk.ccc.store import (
     save_to_mk_file,
 )
 from cmk.ccc.user import UserId
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.crypto import password_hashing
 from cmk.crypto.password import Password
 from cmk.gui import hooks
@@ -118,7 +119,7 @@ def rewrite_users(user_attributes: Sequence[tuple[str, UserAttribute]], now: dat
 
 
 def _root_dir() -> Path:
-    return cmk.utils.paths.check_mk_config_dir / "wato"
+    return BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d / "wato"
 
 
 def _multisite_dir() -> Path:
@@ -869,4 +870,6 @@ def convert_session_info(value: str) -> dict[str, SessionInfo]:
 
 
 def release_users_lock() -> None:
-    release_lock(cmk.utils.paths.check_mk_config_dir / "wato/contacts.mk")
+    release_lock(
+        BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).conf_d / "wato/contacts.mk"
+    )

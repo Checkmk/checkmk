@@ -149,6 +149,7 @@ py_library(
     deps = [
         ":auth_core",
         ":core_toolkit",
+        "//cmk/config",
         "//cmk/gui/utils",
         "//cmk/utils",
         "//cmk/utils:paths",

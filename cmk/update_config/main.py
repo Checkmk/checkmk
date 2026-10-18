@@ -31,6 +31,7 @@ from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import Edition
 from cmk.ccc.version import edition as cmk_edition
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -53,7 +54,6 @@ from cmk.gui.wsgi.app import gui_context
 from cmk.update_config.internal import ConflictMode, PreUpdateAction, UpdateAction
 from cmk.utils import log, paths
 from cmk.utils.log import VERBOSE
-from cmk.utils.paths import check_mk_config_dir
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.redis import disable_redis
 
@@ -131,7 +131,9 @@ def main_check_config(
 
 def _cleanup_precompiled_files(logger: logging.Logger) -> None:
     logger.info("Cleanup precompiled host and folder files")
-    for p in (check_mk_config_dir / "wato").glob("**/*.pkl"):
+    for p in (BaseConfigurationMKFiles.from_omd_root(paths.omd_root).conf_d / "wato").glob(
+        "**/*.pkl"
+    ):
         p.unlink(missing_ok=True)
 
 

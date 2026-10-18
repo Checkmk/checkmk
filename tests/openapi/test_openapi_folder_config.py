@@ -16,6 +16,7 @@ import pytest
 from cmk.ccc import version
 from cmk.ccc.regex import WATO_FOLDER_PATH_NAME_REGEX
 from cmk.ccc.user import UserId
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.gui.config import get_default_config, make_config_object
 from cmk.gui.fields import FOLDER_PATTERN, FolderField
 from cmk.gui.fields.utils import BaseSchema
@@ -792,7 +793,7 @@ def test_openapi_folder_config_folders_with_duplicate_names_allowed_regression(
     resp = clients.Folder.create(folder_name=None, title="a_duplicate", parent="~")
     assert resp.json["id"] == "~a_duplicate-3"
 
-    wato_dir = paths.check_mk_config_dir / "wato"
+    wato_dir = BaseConfigurationMKFiles.from_omd_root(paths.omd_root).conf_d / "wato"
     assert (wato_dir / "a_duplicate").exists()
     assert (wato_dir / "a_duplicate-2").exists()
     assert (wato_dir / "a_duplicate-3").exists()

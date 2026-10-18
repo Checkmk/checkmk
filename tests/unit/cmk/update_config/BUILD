@@ -49,6 +49,7 @@ py_cmk_test(
     deps = [
         ":conftest",
         ":selfbootstrap_conf_d_helpers",
+        "//cmk/config",
         "//cmk/update_config",
         "//packages/cmk-backup:utils",
         "//packages/cmk-ccc:store",

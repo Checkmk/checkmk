@@ -191,6 +191,7 @@ py_cmk_test(
         ":conftest",
         ":helpers",
         ":init_py",
+        "//cmk/config",
         "//cmk/gui:auth_core",
         "//cmk/gui:customer",
         "//cmk/gui:page_toolkit",

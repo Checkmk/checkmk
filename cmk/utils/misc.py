@@ -7,8 +7,6 @@ usable in all components of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
-from pathlib import Path
-
 
 def pnp_cleanup(s: str) -> str:
     """Quote a string (host name or service name) in PNP4Nagios format
@@ -22,20 +20,3 @@ def pnp_cleanup(s: str) -> str:
         .replace("\\", "_")
         .replace("\x00", "_")
     )
-
-
-def key_config_paths(a: Path) -> tuple[tuple[str, ...], int, tuple[str, ...]]:
-    """Key function for Check_MK configuration file paths
-
-    Helper functions that determines the sort order of the
-    configuration files. The following two rules are implemented:
-
-    1. *.mk files in the same directory will be read
-       according to their lexical order.
-    2. subdirectories in the same directory will be
-       scanned according to their lexical order.
-    3. subdirectories of a directory will always be read *after*
-       the *.mk files in that directory.
-    """
-    pa = a.parts
-    return pa[:-1], len(pa), pa

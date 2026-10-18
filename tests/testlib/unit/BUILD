@@ -23,6 +23,7 @@ py_library(
     deps = [
         "//cmk/base",
         "//cmk/base/config",
+        "//cmk/config",
         "//cmk/gui:app",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",

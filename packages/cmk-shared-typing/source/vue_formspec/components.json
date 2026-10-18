@@ -966,6 +966,9 @@
             },
             "central_location": {
               "type": "string"
+            },
+            "connection_test_site_id": {
+              "type": ["string", "null"]
             }
           },
           "required": [
@@ -974,7 +977,8 @@
             "additional_static_elements",
             "no_elements_text",
             "groups",
-            "central_location"
+            "central_location",
+            "connection_test_site_id"
           ]
         }
       ]

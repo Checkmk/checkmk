@@ -4,8 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { userEvent } from '@testing-library/user-event'
-import { render, screen } from '@testing-library/vue'
+import { render, screen, waitFor } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 
 import FormReadonly from '@/form/FormReadonly.vue'
 
@@ -14,6 +15,8 @@ import { registerDataBackendFormComponents } from '@/data-backend/registerFormCo
 import { renderForm } from '../form/components/cmk-form-helper'
 
 registerDataBackendFormComponents()
+
+const server = useMswServer()
 
 const CENTRAL = 'encoded-central'
 const DISABLED = 'encoded-disabled'
@@ -79,8 +82,10 @@ const spec: FormSpec.DataBackendSettings = {
   groups: [],
   no_elements_text: '',
   additional_static_elements: null,
-  central_location: CENTRAL
+  central_location: CENTRAL,
+  connection_test_site_id: null
 }
+const remoteSpec: FormSpec.DataBackendSettings = { ...spec, connection_test_site_id: 'remote1' }
 
 test('shows the address only while a feature uses the central data backend', async () => {
   await renderForm({
@@ -125,3 +130,37 @@ test.each([
     expect(screen.queryAllByText('10.0.0.2')).toHaveLength(shownAddresses)
   }
 )
+
+test('the connection test sends the settings as entered', async () => {
+  let requestBody: unknown
+  server.use(
+    restApiHttp.post(
+      '/domain-types/data_backend/actions/test_central_connection/invoke',
+      async ({ request, response }) => {
+        requestBody = await request.json()
+        return response(200).json({ running: false, phases: [] })
+      }
+    ),
+    restApiHttp.get(
+      '/domain-types/data_backend/actions/show_central_connection_test/invoke',
+      ({ response }) => response(200).json({ running: false, phases: [] })
+    )
+  )
+  await renderForm({
+    spec: remoteSpec,
+    data: { features: { telemetry: CENTRAL }, address_seen_by_central: '10.0.0.2' },
+    backendValidation: []
+  })
+
+  await userEvent.type(screen.getByRole('textbox', { name: ADDRESS_TITLE }), '0')
+  await userEvent.click(screen.getByRole('button', { name: 'Test connection' }))
+
+  await waitFor(() =>
+    expect(requestBody).toEqual({
+      site_id: 'remote1',
+      centrally_routed_features: ['telemetry'],
+      address_seen_by_central: '10.0.0.20',
+      allow_restart: false
+    })
+  )
+})

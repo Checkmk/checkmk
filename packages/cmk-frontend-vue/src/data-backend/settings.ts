@@ -10,12 +10,19 @@ import type {
 
 export const ADDRESS_SEEN_BY_CENTRAL = 'address_seen_by_central'
 
+export function centrallyRoutedFeatures(
+  spec: DataBackendSettings,
+  data: Record<string, unknown>
+): string[] {
+  const locations = (data['features'] ?? {}) as Record<string, unknown>
+  return Object.keys(locations).filter((feature) => locations[feature] === spec.central_location)
+}
+
 export function placesAFeatureCentrally(
   spec: DataBackendSettings,
   data: Record<string, unknown>
 ): boolean {
-  const locations = (data['features'] ?? {}) as Record<string, unknown>
-  return Object.values(locations).includes(spec.central_location)
+  return centrallyRoutedFeatures(spec, data).length > 0
 }
 
 export function dictionaryOf(

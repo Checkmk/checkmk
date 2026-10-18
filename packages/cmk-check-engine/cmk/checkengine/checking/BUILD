@@ -21,5 +21,6 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-ruleset-matcher",
     ],
 )

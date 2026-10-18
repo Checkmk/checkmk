@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.hostaddress import HostName
+from cmk.ruleset_matcher.tuple_rulesets import ALL_HOSTS, ALL_SERVICES
 from cmk.utils.host_storage import (
     apply_hosts_file_to_object,
     ContactGroupsField,
@@ -199,3 +200,9 @@ def test_written_hosts_mk_ends_each_update_with_a_blank_line(tmp_path: Path) -> 
     content = path.with_suffix(".mk").read_text()
 
     assert "management_snmp_credentials.update({'host1': 'public'})\n\n" in content
+
+
+def test_hosts_files_see_the_ruleset_matchers_all_hosts_and_all_services() -> None:
+    variables = get_hosts_file_variables()
+
+    assert (variables["ALL_HOSTS"], variables["ALL_SERVICES"]) == (ALL_HOSTS, ALL_SERVICES)

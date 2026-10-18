@@ -16,6 +16,7 @@ py_library(
         "//cmk/utils:redis",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-ruleset-matcher",
         requirement("marshmallow"),
         requirement("marshmallow-oneofschema"),
         requirement("redis"),

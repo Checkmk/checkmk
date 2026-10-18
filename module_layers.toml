@@ -2112,7 +2112,7 @@ allows = []
 allows = []
 
 [components."cmk.utils.host_storage"]
-allows = ["cmk.ccc.hostaddress", "cmk.ccc.store", "cmk.ruleset_matcher"]
+allows = ["cmk.ccc.hostaddress", "cmk.ccc.store"]
 
 [components."cmk.utils.html"]
 allows = []

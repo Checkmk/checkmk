@@ -26,7 +26,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.ruleset_matcher.labels import Labels
-from cmk.ruleset_matcher.tags import BuiltinTagConfig, TagGroupID, TagID
+from cmk.ruleset_matcher.tags import BuiltinTagConfig, TagGroupID
 from cmk.utils.host_storage import (
     ContactGroupsField,
     FolderAttributesForBase,
@@ -536,7 +536,7 @@ def _anonymize(anon_interface: AnonInterface, data: HostsStorageData) -> HostsSt
             for value, hosts in macro_entries
         ]
 
-    anon_host_tags: dict[HostName, dict[TagGroupID, TagID]] = {}
+    anon_host_tags: dict[HostName, dict[str, str]] = {}
     builtin_tag_group_ids = [tag_group.id for tag_group in BuiltinTagConfig().get_tag_groups()]
     for host, host_tags in data.host_tags.items():
         anon_host = anon_interface.get_host(host)
@@ -549,12 +549,10 @@ def _anonymize(anon_interface: AnonInterface, data: HostsStorageData) -> HostsSt
                 )
                 continue
             if tag_key == "site":
-                anon_host_tags[HostName(anon_host)][TagGroupID(tag_key)] = TagID(
-                    anon_interface.get_site(tag_value)
-                )
+                anon_host_tags[HostName(anon_host)][tag_key] = anon_interface.get_site(tag_value)
                 continue
             anon_key, anon_value = anon_interface.get_tags(tag_key, tag_value)
-            anon_host_tags[HostName(anon_host)].update({TagGroupID(anon_key): TagID(anon_value)})
+            anon_host_tags[HostName(anon_host)].update({anon_key: anon_value})
 
     anon_host_labels: dict[HostAddress, dict[str, str]] = {}
     for host, host_label in data.host_labels.items():

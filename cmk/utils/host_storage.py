@@ -19,9 +19,6 @@ from typing import Any, Literal, override, TypedDict
 
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
-from cmk.ruleset_matcher.labels import Labels
-from cmk.ruleset_matcher.tags import TagGroupID, TagID
-from cmk.ruleset_matcher.tuple_rulesets import ALL_HOSTS, ALL_SERVICES
 
 HostAttributeMapping = tuple[
     str, str, dict[str, Any], str
@@ -46,8 +43,9 @@ def get_hosts_file_variables() -> HostsData:
     """These parameters imitate a cmk.base environment"""
     return {
         "FOLDER_PATH": "",
-        "ALL_HOSTS": ALL_HOSTS,
-        "ALL_SERVICES": ALL_SERVICES,
+        # The values of cmk.ruleset_matcher.tuple_rulesets.ALL_HOSTS and ALL_SERVICES
+        "ALL_HOSTS": ["@all"],
+        "ALL_SERVICES": [""],
         "all_hosts": [],
         "host_labels": {},
         "host_tags": {},
@@ -87,8 +85,8 @@ class HostsStorageData:
     clusters: dict[HostName, Sequence[HostName]]
     attributes: dict[str, Any]
     custom_macros: dict[str, Any]
-    host_tags: dict[HostName, Mapping[TagGroupID, TagID]]
-    host_labels: dict[HostName, Labels]
+    host_tags: dict[HostName, Mapping[str, str]]
+    host_labels: dict[HostName, Mapping[str, str]]
     contact_groups: ContactGroupsField
     explicit_host_conf: dict[str, dict[HostName, str]]
     host_attributes: dict[HostName, Any]

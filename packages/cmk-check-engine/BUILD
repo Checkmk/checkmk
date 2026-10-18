@@ -163,6 +163,7 @@ py_library(
         "//packages/cmk-check-engine:subclass-discovery",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-ruleset-matcher",
     ],
 )
 
@@ -180,6 +181,7 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-ruleset-matcher",
     ],
 )
 

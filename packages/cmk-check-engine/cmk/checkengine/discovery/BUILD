@@ -23,6 +23,7 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-inventory:label_picker",
         "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-ruleset-matcher",
         "//packages/cmk-trace",
     ],
 )

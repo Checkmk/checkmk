@@ -2370,7 +2370,7 @@ class Folder:
         # collect value for attributes that are explicitly set for one host
         explicit_host_conf: dict[str, dict[HostName, str]] = {}
         cleaned_hosts = {}
-        host_tags = {}
+        host_tags: dict[HostName, Mapping[str, str]] = {}
         host_labels = {}
         group_rules_list: list[tuple[list[GroupRuleType], bool]] = []
 
@@ -2392,7 +2392,9 @@ class Folder:
 
             tag_groups = host.tag_groups()
             if tag_groups:
-                host_tags[hostname] = tag_groups
+                host_tags[hostname] = {
+                    str(group_id): str(tag_id) for group_id, tag_id in tag_groups.items()
+                }
 
             if host.is_cluster():
                 nodes = host.cluster_nodes()

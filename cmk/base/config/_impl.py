@@ -25,12 +25,6 @@ import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.utils
 import cmk.utils.paths
 from cmk import trace
-from cmk.base.config._load_raw import (
-    ConfigFileLoadError,
-    load_raw_config,
-    strip_tag,
-    strip_tags,
-)
 from cmk.base.configlib.agent import make_only_from_config
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.exit_code import make_exit_code_spec
@@ -90,6 +84,12 @@ from cmk.checkengine.snmplib import (  # some of these are required in the modul
 from cmk.checkengine.source_abc import SourceConfig
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.summarize import SummaryConfig
+from cmk.config import (
+    ConfigFileLoadError,
+    load_raw_config,
+    strip_tag,
+    strip_tags,
+)
 from cmk.password_store.v1 import Secret
 from cmk.piggyback import backend as piggyback_backend
 from cmk.ruleset_matcher import matcher as ruleset_matcher

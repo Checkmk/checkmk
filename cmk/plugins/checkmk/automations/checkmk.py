@@ -186,6 +186,7 @@ from cmk.checkengine.specs.parameters import TimespecificParameters
 from cmk.checkengine.submitters import ServiceDetails
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
+from cmk.config import ConfigFileLoadError, load_raw_default_config
 from cmk.core_client import CoreAction, CoreClient
 from cmk.discover_plugins import (
     addons_plugins_local_path,
@@ -2673,8 +2674,8 @@ def _automation_get_configuration(
     variable_names = {str(vn) for vn in ast.literal_eval(sys.stdin.read())}
 
     try:
-        raw_config = config.load_raw_default_config(omd_root=cmk.utils.paths.omd_root)
-    except config.ConfigFileLoadError as e:
+        raw_config = load_raw_default_config(omd_root=cmk.utils.paths.omd_root)
+    except ConfigFileLoadError as e:
         # the engine reports an MKGeneralException as a known error
         raise MKGeneralException(str(e)) from e
 

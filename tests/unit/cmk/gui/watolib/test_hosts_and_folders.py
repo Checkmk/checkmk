@@ -34,6 +34,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.config.host_storage import PickleHostsStorage
 from cmk.gui import userdb
 from cmk.gui.config import Config, get_default_config, make_config_object
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -87,7 +88,6 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
-from cmk.utils.host_storage import PickleHostsStorage
 from cmk.utils.redis import disable_redis
 from tests.unit.cmk.gui.compare_html import click_handling
 from tests.unit.cmk.gui.watolib.host_relations_fakes import refuse_relations_across_sites

@@ -10,7 +10,7 @@ py_library(
     ],
     deps = [
         "//cmk/base:diagnostics",
-        "//cmk/base/config",
+        "//cmk/config",
         "//cmk/plugins/diagnostics/cli",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:exceptions",

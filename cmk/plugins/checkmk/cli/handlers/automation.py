@@ -14,12 +14,12 @@ import cmk.utils.paths
 from cmk import trace
 from cmk.automations.engine import AutomationError, Automations, discover_automations
 from cmk.automations.internal import AutomationID, AutomationResult
-from cmk.base import config
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.store import lock_checkmk_configuration
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
+from cmk.config import ConfigFileLoadError, load_raw_config
 from cmk.plugins.checkmk.cli.automation import (
     AutomationRequest,
     cli_command_automation,
@@ -63,9 +63,9 @@ def _execute_automation(
                 if automations.wants_configuration_lock(name)
                 else nullcontext(),
             ):
-                raw_config = config.load_raw_config(omd_root=cmk.utils.paths.omd_root)
+                raw_config = load_raw_config(omd_root=cmk.utils.paths.omd_root)
             automations.update(omd_root, raw_config)
-        except (config.ConfigFileLoadError, MKGeneralException, MKTimeout) as e:
+        except (ConfigFileLoadError, MKGeneralException, MKTimeout) as e:
             logger.error("Loading the configuration failed: %(error)s", {"error": e})  # noqa: TRY400
             if debug:
                 raise

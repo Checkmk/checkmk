@@ -59,7 +59,13 @@ from cmk.checkengine.plugins import (
 from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.config import get_legacy_default_base_config
+from cmk.config import (
+    ConfigFileLoadError,
+    get_legacy_default_base_config,
+    host_storage,
+    load_raw_config,
+    load_raw_config_files,
+)
 from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.discover_plugins import family_libexec_dir, PluginLocation
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
@@ -70,7 +76,7 @@ from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher, RulesetMatche
 from cmk.ruleset_matcher.ruleset_name import RuleSetName
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
-from cmk.utils import host_storage, password_store
+from cmk.utils import password_store
 from cmk.utils.ip_lookup import IPStackConfig, make_lookup_ip_address
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.testlib.unit.empty_config import EMPTY_CONFIG
@@ -2811,7 +2817,7 @@ def _write_hosts_mk(folder: Path, host_name: HostName) -> None:
 def test_load_raw_config_tracks_the_folder_of_a_written_hosts_mk(wato_folder: Path) -> None:
     _write_hosts_mk(wato_folder, HostName("host1"))
 
-    raw_config = config.load_raw_config(omd_root=cmk.utils.paths.omd_root)
+    raw_config = load_raw_config(omd_root=cmk.utils.paths.omd_root)
 
     assert raw_config["all_hosts"] == ["host1"]
     assert raw_config["host_paths"] == {"host1": "/wato/hosts.mk"}
@@ -2821,7 +2827,7 @@ def test_load_raw_config_executes_only_the_given_files(wato_folder: Path) -> Non
     (wato_folder / "groups.mk").write_text("define_hostgroups.update({'a': 'A'})\n")
     (wato_folder / "other.mk").write_text("define_servicegroups.update({'b': 'B'})\n")
 
-    raw_config = config.load_raw_config_files(
+    raw_config = load_raw_config_files(
         config_files=[(wato_folder / "groups.mk", Path("wato/groups.mk"))],
         context_factory=get_legacy_default_base_config,
     )
@@ -2833,8 +2839,8 @@ def test_load_raw_config_executes_only_the_given_files(wato_folder: Path) -> Non
 def test_load_raw_config_raises_on_an_unreadable_config_file(main_mk: Path) -> None:
     main_mk.write_text("raise ValueError('broken')\n")
 
-    with pytest.raises(config.ConfigFileLoadError) as excinfo:
-        config.load_raw_config_files(
+    with pytest.raises(ConfigFileLoadError) as excinfo:
+        load_raw_config_files(
             config_files=[(main_mk, None)], context_factory=get_legacy_default_base_config
         )
 
@@ -2855,7 +2861,7 @@ def test_load_exits_with_code_1_on_an_unreadable_config_file(main_mk: Path) -> N
 def test_load_raises_an_unreadable_config_file_when_debugging(main_mk: Path) -> None:
     main_mk.write_text("raise ValueError('broken')\n")
 
-    with pytest.raises(config.ConfigFileLoadError):
+    with pytest.raises(ConfigFileLoadError):
         config.load(validate_hosts=False, debug=True)
 
 
@@ -2871,8 +2877,8 @@ def test_load_raw_config_into_an_empty_context(wato_folder: Path) -> None:
     )
     store.save_to_mk_file(wato_folder / "groups.mk", key="define_hostgroups", value={"a": "A"})
 
-    seeded = config.load_raw_config(omd_root=cmk.utils.paths.omd_root)
-    unseeded = config.load_raw_config(omd_root=cmk.utils.paths.omd_root, context_factory=dict)
+    seeded = load_raw_config(omd_root=cmk.utils.paths.omd_root)
+    unseeded = load_raw_config(omd_root=cmk.utils.paths.omd_root, context_factory=dict)
 
     assert unseeded == {k: v for k, v in seeded.items() if k in unseeded}
     assert unseeded["host_paths"] == {"host1": "/wato/hosts.mk"}
@@ -2883,8 +2889,8 @@ def test_load_raw_config_into_an_empty_context(wato_folder: Path) -> None:
 def test_load_raw_config_into_an_empty_context_fails_on_legacy_config_files(main_mk: Path) -> None:
     main_mk.write_text("define_hostgroups.update({'linux': 'Linux'})\n")
 
-    with pytest.raises(config.ConfigFileLoadError) as excinfo:
-        config.load_raw_config_files(config_files=[(main_mk, None)], context_factory=dict)
+    with pytest.raises(ConfigFileLoadError) as excinfo:
+        load_raw_config_files(config_files=[(main_mk, None)], context_factory=dict)
 
     assert isinstance(excinfo.value.__cause__, NameError)
 
@@ -2892,7 +2898,7 @@ def test_load_raw_config_into_an_empty_context_fails_on_legacy_config_files(main
 def test_load_raw_config_seeds_legacy_config_files_by_default(main_mk: Path) -> None:
     main_mk.write_text("define_hostgroups.update({'linux': 'Linux'})\n")
 
-    raw_config = config.load_raw_config(omd_root=cmk.utils.paths.omd_root)
+    raw_config = load_raw_config(omd_root=cmk.utils.paths.omd_root)
 
     assert raw_config["define_hostgroups"] == {"linux": "Linux"}
 

@@ -29,8 +29,7 @@ from logging import Logger
 from pathlib import Path
 from typing import override
 
-from cmk.base.config import ConfigFileLoadError, load_raw_config_files
-from cmk.config import get_legacy_default_base_config
+from cmk.config import ConfigFileLoadError, get_legacy_default_base_config, load_raw_config_files
 from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.update_config.internal import ExpiryVersion, UpdateAction
 from cmk.update_config.registry import update_action_registry

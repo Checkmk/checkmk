@@ -36,7 +36,3 @@ from ._impl import SERVICE_RETRY_INTERVAL as SERVICE_RETRY_INTERVAL
 from ._impl import ServiceDependsOn as ServiceDependsOn
 from ._impl import ServicegroupName as ServicegroupName
 from ._impl import SMARTPING_CHECK_INTERVAL as SMARTPING_CHECK_INTERVAL
-from ._load_raw import ConfigFileLoadError as ConfigFileLoadError
-from ._load_raw import load_raw_config as load_raw_config
-from ._load_raw import load_raw_config_files as load_raw_config_files
-from ._load_raw import load_raw_default_config as load_raw_default_config

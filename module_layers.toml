@@ -208,8 +208,8 @@ allows = [
   "cmk.ccc.site",
   "cmk.ccc.store",
   "cmk.ccc.version_info",
-  "cmk.base.config",
   "cmk.base.diagnostics",
+  "cmk.config",
   "cmk.ccc.exceptions",
   "cmk.ccc.i18n",
   "cmk.diagnostics.automation_types",
@@ -525,6 +525,7 @@ allows = [
   "cmk.bakery.base.cap",
   "cmk.bakery.shared",
   "cmk.base.api.bakery",
+  "cmk.config",
   "cmk.base.nonfree.plugins.bakery.bakery_api",
   "cmk.base.plugins.bakery.bakery_api",
   "cmk.crypto.certificate",
@@ -746,7 +747,7 @@ allows = [
 allows = ["@trace"]
 
 [components."cmk.config"]
-allows = []
+allows = ["cmk.ccc.hostaddress", "cmk.ccc.store"]
 
 [components."cmk.config_anonymizer"]
 allows = [
@@ -778,7 +779,7 @@ allows = [
   "cmk.gui.wsgi.app",
   "cmk.ruleset_matcher",
   "cmk.utils.global_ident_type",
-  "cmk.utils.host_storage",
+  "cmk.config",
   "cmk.utils.paths",
   "cmk.utils.redis.disable_redis",
 ]
@@ -1486,7 +1487,6 @@ allows = [
   "cmk.utils.encryption",
   "cmk.utils.everythingtype",
   "cmk.utils.global_ident_type",
-  "cmk.utils.host_storage",
   "cmk.utils.html",
   "cmk.utils.http_proxy_config",
   "cmk.utils.ip_lookup",
@@ -2114,9 +2114,6 @@ allows = []
 
 [components."cmk.utils.global_ident_type"]
 allows = []
-
-[components."cmk.utils.host_storage"]
-allows = ["cmk.ccc.hostaddress", "cmk.ccc.store"]
 
 [components."cmk.utils.html"]
 allows = []

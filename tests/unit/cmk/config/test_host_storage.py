@@ -8,8 +8,7 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.ruleset_matcher.tuple_rulesets import ALL_HOSTS, ALL_SERVICES
-from cmk.utils.host_storage import (
+from cmk.config.host_storage import (
     apply_hosts_file_to_object,
     ContactGroupsField,
     get_host_storage_loaders,
@@ -20,6 +19,7 @@ from cmk.utils.host_storage import (
     StandardStorageLoader,
     StorageFormat,
 )
+from cmk.ruleset_matcher.tuple_rulesets import ALL_HOSTS, ALL_SERVICES
 
 
 @pytest.mark.parametrize(

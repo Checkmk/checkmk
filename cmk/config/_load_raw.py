@@ -3,20 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
 from typing import override
 
 from cmk.ccc.hostaddress import HostName
-from cmk.config import get_legacy_default_base_config
-from cmk.config.paths import BaseConfigurationMKFiles
-from cmk.utils.host_storage import (
+
+from ._legacy_default_base_config import get_legacy_default_base_config
+from .host_storage import (
     apply_hosts_file_to_object,
     get_host_storage_loaders,
     StorageFormat,
 )
+from .paths import BaseConfigurationMKFiles
 
 
 def strip_tag(tagged_hostname: str) -> HostName:
@@ -28,7 +27,7 @@ def strip_tags(tagged_hostlist: Iterable[str]) -> tuple[HostName, ...]:
 
 
 class SetFolderPathAbstract:
-    def __init__(self, the_object: Iterable) -> None:
+    def __init__(self, the_object: Iterable) -> None:  # type: ignore[type-arg]
         # TODO: Cleanup this somehow to work nicer with mypy
         super().__init__(the_object)  # type: ignore[call-arg]
         self._current_path: str | None = None
@@ -48,7 +47,7 @@ class SetFolderPathAbstract:
             self._collected_host_paths[hostname] = self._current_path
 
 
-class SetFolderPathList(SetFolderPathAbstract, list):
+class SetFolderPathList(SetFolderPathAbstract, list):  # type: ignore[type-arg]
     @override
     def __iadd__(self, new_hosts: Iterable[str]) -> SetFolderPathList:  # type: ignore[override]
         assert isinstance(new_hosts, list)
@@ -76,7 +75,7 @@ class SetFolderPathList(SetFolderPathAbstract, list):
 
 
 # TODO: This whole class must die!
-class SetFolderPathDict(SetFolderPathAbstract, dict):
+class SetFolderPathDict(SetFolderPathAbstract, dict):  # type: ignore[type-arg]
     # TODO: How to annotate this?
     @override
     def update(self, new_hosts: Mapping[str, object]) -> None:  # type: ignore[override]

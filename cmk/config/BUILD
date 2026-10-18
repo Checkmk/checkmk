@@ -9,4 +9,8 @@ py_library(
         "//non-free/packages:__subpackages__",
         "//tests:__subpackages__",
     ],
+    deps = [
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:store",
+    ],
 )

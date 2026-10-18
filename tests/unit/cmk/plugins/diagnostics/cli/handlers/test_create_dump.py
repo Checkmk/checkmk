@@ -9,11 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from cmk.base.config import ConfigFileLoadError
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.config import ConfigFileLoadError
 from cmk.diagnostics.engine import DumpSelection
 from cmk.diagnostics.internal import DiagnosticsPlugin, Help, Sensitivity, Topic
 from cmk.plugins.diagnostics.cli.create_dump import CliSelection

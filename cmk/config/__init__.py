@@ -12,3 +12,9 @@ We are currently far away from that long term goal.
 from ._legacy_default_base_config import (
     get_legacy_default_base_config as get_legacy_default_base_config,
 )
+from ._load_raw import ConfigFileLoadError as ConfigFileLoadError
+from ._load_raw import load_raw_config as load_raw_config
+from ._load_raw import load_raw_config_files as load_raw_config_files
+from ._load_raw import load_raw_default_config as load_raw_default_config
+from ._load_raw import strip_tag as strip_tag
+from ._load_raw import strip_tags as strip_tags

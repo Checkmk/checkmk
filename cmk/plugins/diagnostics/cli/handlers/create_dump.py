@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Protocol
 
 import cmk.utils.paths
-from cmk.base.config import ConfigFileLoadError, load_raw_config
 from cmk.base.diagnostics import (
     ConsoleLogger,
     create_diagnostics_dump_v2,
@@ -21,6 +20,7 @@ from cmk.ccc.i18n import _
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Handler as CLIHandler
+from cmk.config import ConfigFileLoadError, load_raw_config
 from cmk.diagnostics.engine import DumpSelection, resolve_selection
 from cmk.diagnostics.internal import DiagnosticsPlugin, Sensitivity, Topic
 from cmk.plugins.diagnostics.cli.create_dump import (

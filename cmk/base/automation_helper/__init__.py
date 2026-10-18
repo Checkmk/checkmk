@@ -25,8 +25,8 @@ from cmk.automations.helper import (
     run_watcher,
 )
 from cmk.automations.logging import LoggingManager
-from cmk.base import config
 from cmk.ccc.daemon import daemonize, pid_file_lock
+from cmk.config import load_raw_config
 from cmk.utils.paths import omd_root
 from cmk.utils.redis import get_redis_client
 
@@ -117,4 +117,4 @@ def _application() -> FastAPI:
 def _reload_automation_config() -> Mapping[str, object]:
     # Let a ConfigFileLoadError through: it names the file and the error, which the helper logs and
     # reports to the automations.
-    return config.load_raw_config(omd_root=omd_root)
+    return load_raw_config(omd_root=omd_root)

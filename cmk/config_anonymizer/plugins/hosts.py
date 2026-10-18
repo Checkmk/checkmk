@@ -14,6 +14,12 @@ from typing import Any, cast, override
 from cmk.base.config import LoadingResult
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.config.host_storage import (
+    ContactGroupsField,
+    FolderAttributesForBase,
+    HostsStorageData,
+    StandardHostsStorage,
+)
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.config_anonymizer.step import AnonymizeStep
 from cmk.gui.config import Config
@@ -27,12 +33,6 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import BuiltinTagConfig, TagGroupID
-from cmk.utils.host_storage import (
-    ContactGroupsField,
-    FolderAttributesForBase,
-    HostsStorageData,
-    StandardHostsStorage,
-)
 
 KNOWN_EXPLICIT_BUILTIN_ATTRS = ["cmk_agent_connection", "alias", "parents", "metrics_association"]
 

@@ -21,6 +21,7 @@ from cmk.base.configlib.notify import AlertHandlingConfigFields, NotifyConfigFie
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetchers.ipmi import IPMICredentials
 from cmk.checkengine.snmplib import SNMPCredentials, SNMPTiming
+from cmk.config.host_storage import FolderAttributesForBase
 from cmk.events.notify_types import (
     Contact,
     ContactName,
@@ -28,7 +29,6 @@ from cmk.events.notify_types import (
 from cmk.inventory.config import LabelPickerRuleValue, RawIntervalFromConfig
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.matcher import RuleSpec
-from cmk.utils.host_storage import FolderAttributesForBase
 from cmk.utils.http_proxy_config import HTTPProxySpec
 from cmk.utils.oauth2_connection import OAuth2Connection
 from cmk.utils.servicename import ServiceName

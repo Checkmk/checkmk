@@ -64,6 +64,21 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.regex import regex, WATO_FOLDER_PATH_NAME_CHARS
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
+from cmk.config.host_storage import (
+    ABCHostsStorage,
+    apply_hosts_file_to_object,
+    FolderAttributesForBase,
+    get_all_storage_readers,
+    get_host_storage_loaders,
+    get_hosts_file_variables,
+    GroupRuleType,
+    HostsData,
+    HostsStorageData,
+    HostsStorageFieldsGenerator,
+    PickleHostsStorage,
+    StandardHostsStorage,
+    StorageFormat,
+)
 from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.gui import hooks, userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -129,21 +144,6 @@ from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import TagConfig, TagGroupID, TagID
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.global_ident_type import GlobalIdent
-from cmk.utils.host_storage import (
-    ABCHostsStorage,
-    apply_hosts_file_to_object,
-    FolderAttributesForBase,
-    get_all_storage_readers,
-    get_host_storage_loaders,
-    get_hosts_file_variables,
-    GroupRuleType,
-    HostsData,
-    HostsStorageData,
-    HostsStorageFieldsGenerator,
-    PickleHostsStorage,
-    StandardHostsStorage,
-    StorageFormat,
-)
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
 from cmk.web.utils import urls

@@ -12,7 +12,7 @@ py_library(
     deps = [
         "//cmk/automations",
         "//cmk/automations:helper",
-        "//cmk/base/config",
+        "//cmk/config",
         "//cmk/utils:paths",
         "//cmk/utils:redis",
         "//packages/cmk-ccc:daemon",

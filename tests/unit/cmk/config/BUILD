@@ -9,6 +9,7 @@ py_cmk_test(
     visibility = ["//visibility:private"],
     deps = [
         "//cmk/config",
+        "//packages/cmk-ruleset-matcher",
         requirement("pytest-random-order"),
     ],
 )

@@ -5,9 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
-import contextlib
-import sys
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
 from typing import override
 
@@ -19,7 +17,6 @@ from cmk.utils.host_storage import (
     get_host_storage_loaders,
     StorageFormat,
 )
-from cmk.utils.log import console
 
 
 def strip_tag(tagged_hostname: str) -> HostName:
@@ -99,19 +96,6 @@ class ConfigFileLoadError(Exception):
     def __init__(self, path: Path, error: Exception) -> None:
         super().__init__(f"Cannot read in configuration file {path}: {error}")
         self.path = path
-
-
-@contextlib.contextmanager
-def exit_on_config_file_load_error(*, debug: bool) -> Iterator[None]:
-    """Report an unreadable config file and end the process, unless debugging"""
-    try:
-        yield
-    except ConfigFileLoadError as e:
-        if debug:
-            raise
-        if sys.stderr.isatty():
-            console.error(str(e), file=sys.stderr)
-        sys.exit(1)
 
 
 def _load_config_file(file_to_load: Path, into_dict: dict[str, object]) -> None:

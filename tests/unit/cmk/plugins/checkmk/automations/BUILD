@@ -10,7 +10,9 @@ py_cmk_test(
     use_project_pytest_config = True,
     visibility = ["//visibility:private"],
     deps = [
+        "//cmk/automations",
         "//cmk/base",
+        "//cmk/config",
         "//cmk/plugins",
         "//cmk/plugins/checkmk/automations",
         "//tests/testlib/unit",

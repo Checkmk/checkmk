@@ -27,7 +27,8 @@ import cmk.plugins.monitoring_plugins.server_side_calls.ftp
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.automations import results as automation_results
-from cmk.automations.internal import NoState
+from cmk.automations.engine import AutomationError, Automations
+from cmk.automations.internal import AutomationID, NoState
 from cmk.automations.results import (
     AnalyseHostResult,
     AnalyzeHostRuleEffectivenessResult,
@@ -46,6 +47,7 @@ from cmk.checkengine.fetcher_utils.trigger import PlainFetcherTrigger
 from cmk.checkengine.fetchers.piggyback import PiggybackFetcher
 from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.checkengine.submitters import ServiceDetails
+from cmk.config.paths import BaseConfigurationMKFiles
 from cmk.discover_plugins import PluginLocation
 from cmk.inventory.host_labels import InventorizedHostLabelsStore
 from cmk.plugins.checkmk.automations import checkmk
@@ -975,3 +977,18 @@ def test_service_labels(monkeypatch: MonkeyPatch) -> None:
             "CPU temp": {"label1": "val1"},
         }
     )
+
+
+def test_get_configuration_reports_an_unreadable_config_file_as_known_error(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    main_mk = BaseConfigurationMKFiles.from_omd_root(cmk.utils.paths.omd_root).main_mk
+    main_mk.parent.mkdir(parents=True, exist_ok=True)
+    main_mk.write_text("raise ValueError('broken')\n")
+    monkeypatch.setattr(sys, "stdin", io.StringIO("[]"))
+    engine = Automations([checkmk.automation_get_configuration], debug=False)
+    engine.update(cmk.utils.paths.omd_root, {})
+
+    result = engine.execute(AutomationID("get-configuration"), [])
+
+    assert result is AutomationError.KNOWN_ERROR

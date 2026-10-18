@@ -2664,7 +2664,7 @@ def _execute_silently(
 
 
 def _automation_get_configuration(
-    state: NoState,
+    _state: NoState,
     _args: object,
 ) -> GetConfigurationResult:
     """Automation call to get the default configuration"""
@@ -2672,8 +2672,11 @@ def _automation_get_configuration(
     # that could be too much for the command line
     variable_names = {str(vn) for vn in ast.literal_eval(sys.stdin.read())}
 
-    with config.exit_on_config_file_load_error(debug=state.debug):
+    try:
         raw_config = config.load_raw_default_config(omd_root=cmk.utils.paths.omd_root)
+    except config.ConfigFileLoadError as e:
+        # the engine reports an MKGeneralException as a known error
+        raise MKGeneralException(str(e)) from e
 
     return GetConfigurationResult(
         {

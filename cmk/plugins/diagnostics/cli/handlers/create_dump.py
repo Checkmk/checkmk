@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Protocol
 
 import cmk.utils.paths
-from cmk.base.config import exit_on_config_file_load_error, load_raw_config
+from cmk.base.config import ConfigFileLoadError, load_raw_config
 from cmk.base.diagnostics import (
     ConsoleLogger,
     create_diagnostics_dump_v2,
@@ -68,16 +68,15 @@ type _LoadCatalogue = Callable[[], Mapping[str, DiagnosticsPlugin]]
 
 
 class _CreateDump(Protocol):
-    def __call__(self, omd_root: Path, selection: DumpSelection, *, debug: bool) -> Path | None: ...
+    def __call__(self, omd_root: Path, selection: DumpSelection) -> Path | None: ...
 
 
 def _load_catalogue() -> Mapping[str, DiagnosticsPlugin]:
     return load_plugin_catalogue(logger=ConsoleLogger())
 
 
-def _create_dump(omd_root: Path, selection: DumpSelection, *, debug: bool) -> Path | None:
-    with exit_on_config_file_load_error(debug=debug):
-        raw_config = load_raw_config(omd_root=omd_root)
+def _create_dump(omd_root: Path, selection: DumpSelection) -> Path | None:
+    raw_config = load_raw_config(omd_root=omd_root)
 
     dump = create_diagnostics_dump_v2(
         omd_root=omd_root,
@@ -104,7 +103,6 @@ class _CreateDiagnosticsDumpCommand:
             tarfile_path = self.create_dump(
                 context.omd_root,
                 _resolve_cli_selection(catalogue, options),
-                debug=context.global_options.debug,
             )
             logger = ConsoleLogger()
             logger.section_step("Creating diagnostics dump", verbose=False)
@@ -113,6 +111,12 @@ class _CreateDiagnosticsDumpCommand:
             else:
                 logger.filepath(tarfile_path.relative_to(context.omd_root), verbose=False)
             return CLIExitCode.SUCCESS
+        except ConfigFileLoadError as e:
+            if context.global_options.debug:
+                raise
+            if sys.stderr.isatty():
+                sys.stderr.write(f"{e}\n")
+            return CLIExitCode.FAILURE
         except MKGeneralException as e:
             context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if context.global_options.debug:

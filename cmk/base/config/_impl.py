@@ -26,7 +26,7 @@ import cmk.utils
 import cmk.utils.paths
 from cmk import trace
 from cmk.base.config._load_raw import (
-    exit_on_config_file_load_error,
+    ConfigFileLoadError,
     load_raw_config,
     strip_tag,
     strip_tags,
@@ -619,8 +619,14 @@ class LoadingResult:
 
 
 def load(validate_hosts: bool, *, debug: bool) -> LoadingResult:
-    with exit_on_config_file_load_error(debug=debug):
+    try:
         raw_config = load_raw_config(omd_root=cmk.utils.paths.omd_root)
+    except ConfigFileLoadError as e:
+        if debug:
+            raise
+        if sys.stderr.isatty():
+            console.error(str(e), file=sys.stderr)
+        sys.exit(1)
 
     loading_result = perform_post_config_loading_actions(
         raw_config,

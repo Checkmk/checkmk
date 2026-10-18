@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from cmk.base.config import ConfigFileLoadError
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
@@ -58,16 +59,23 @@ class _FakeLoadCatalogue:
 
 
 class _FakeCreateDump:
-    def __init__(self) -> None:
-        self.asked: list[tuple[Path, DumpSelection, bool]] = []
+    def __init__(self, error: Exception | None = None) -> None:
+        self.asked: list[tuple[Path, DumpSelection]] = []
+        self._error = error
 
-    def __call__(self, omd_root: Path, selection: DumpSelection, *, debug: bool) -> Path | None:
-        self.asked.append((omd_root, selection, debug))
+    def __call__(self, omd_root: Path, selection: DumpSelection) -> Path | None:
+        self.asked.append((omd_root, selection))
+        if self._error is not None:
+            raise self._error
         return omd_root / "var/check_mk/diagnostics/dump.tar.gz"
 
 
+_UNREADABLE_CONFIG = ConfigFileLoadError(_OMD_ROOT / "etc/check_mk/main.mk", ValueError("broken"))
+
+
 def _dump_command(
-    create_dump: _FakeCreateDump, catalogue: Mapping[str, DiagnosticsPlugin] = _CLI_CATALOGUE
+    create_dump: _FakeCreateDump,
+    catalogue: Mapping[str, DiagnosticsPlugin] = _CLI_CATALOGUE,
 ) -> _CreateDiagnosticsDumpCommand:
     return _CreateDiagnosticsDumpCommand(
         load_catalogue=_FakeLoadCatalogue(catalogue), create_dump=create_dump
@@ -94,7 +102,7 @@ def test_the_dump_is_created_with_the_selected_plugins() -> None:
     _dump_command(create_dump).run(_context(), _selection("b_high"))
 
     assert create_dump.asked == [
-        (_OMD_ROOT, DumpSelection(plugins=["b_high"], checkmk_server_host=""), False)
+        (_OMD_ROOT, DumpSelection(plugins=["b_high"], checkmk_server_host=""))
     ]
 
 
@@ -103,9 +111,7 @@ def test_without_a_selection_only_the_plugins_that_always_run_are_left() -> None
 
     _dump_command(create_dump).run(_context(), _selection())
 
-    assert create_dump.asked == [
-        (_OMD_ROOT, DumpSelection(plugins=[], checkmk_server_host=""), False)
-    ]
+    assert create_dump.asked == [(_OMD_ROOT, DumpSelection(plugins=[], checkmk_server_host=""))]
 
 
 def test_all_topics_select_the_plugins_up_to_their_sensitivity() -> None:
@@ -123,7 +129,6 @@ def test_all_topics_select_the_plugins_up_to_their_sensitivity() -> None:
         (
             _OMD_ROOT,
             DumpSelection(plugins=["a_low", "b_high"], checkmk_server_host="my_server"),
-            False,
         )
     ]
 
@@ -153,3 +158,15 @@ def test_an_unknown_plugin_exits_three() -> None:
 def test_an_unknown_plugin_is_raised_through_under_debug() -> None:
     with pytest.raises(MKGeneralException, match="Unknown plugin 'nope'"):
         _dump_command(_FakeCreateDump()).run(_context(debug=True), _selection("nope"))
+
+
+def test_an_unreadable_config_file_exits_one() -> None:
+    assert (
+        _dump_command(_FakeCreateDump(_UNREADABLE_CONFIG)).run(_context(), _selection())
+        == CLIExitCode.FAILURE
+    )
+
+
+def test_an_unreadable_config_file_is_raised_through_under_debug() -> None:
+    with pytest.raises(ConfigFileLoadError):
+        _dump_command(_FakeCreateDump(_UNREADABLE_CONFIG)).run(_context(debug=True), _selection())

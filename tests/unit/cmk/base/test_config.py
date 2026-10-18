@@ -2843,19 +2843,20 @@ def test_load_raw_config_raises_on_an_unreadable_config_file(main_mk: Path) -> N
     assert str(excinfo.value) == f"Cannot read in configuration file {main_mk}: broken"
 
 
-def test_exit_on_config_file_load_error_ends_the_process() -> None:
-    with pytest.raises(SystemExit) as excinfo, config.exit_on_config_file_load_error(debug=False):
-        raise config.ConfigFileLoadError(Path("main.mk"), ValueError("broken"))
+def test_load_exits_with_code_1_on_an_unreadable_config_file(main_mk: Path) -> None:
+    main_mk.write_text("raise ValueError('broken')\n")
+
+    with pytest.raises(SystemExit) as excinfo:
+        config.load(validate_hosts=False, debug=False)
 
     assert excinfo.value.code == 1
 
 
-def test_exit_on_config_file_load_error_reraises_when_debugging() -> None:
-    with (
-        pytest.raises(config.ConfigFileLoadError),
-        config.exit_on_config_file_load_error(debug=True),
-    ):
-        raise config.ConfigFileLoadError(Path("main.mk"), ValueError("broken"))
+def test_load_raises_an_unreadable_config_file_when_debugging(main_mk: Path) -> None:
+    main_mk.write_text("raise ValueError('broken')\n")
+
+    with pytest.raises(config.ConfigFileLoadError):
+        config.load(validate_hosts=False, debug=True)
 
 
 def test_load_raw_config_into_an_empty_context(wato_folder: Path) -> None:

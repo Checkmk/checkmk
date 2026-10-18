@@ -62,11 +62,10 @@ def _execute_automation(
                 lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile)
                 if automations.wants_configuration_lock(name)
                 else nullcontext(),
-                config.exit_on_config_file_load_error(debug=debug),
             ):
                 raw_config = config.load_raw_config(omd_root=cmk.utils.paths.omd_root)
             automations.update(omd_root, raw_config)
-        except (MKGeneralException, MKTimeout) as e:
+        except (config.ConfigFileLoadError, MKGeneralException, MKTimeout) as e:
             logger.error("Loading the configuration failed: %(error)s", {"error": e})  # noqa: TRY400
             if debug:
                 raise

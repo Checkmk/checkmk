@@ -2488,10 +2488,12 @@ class Folder:
 
         root_dir = self.tree.get_root_dir()
         dir_path = root_dir + self.path()
-        if not os.path.exists(dir_path):
+        try:
+            entries = os.listdir(dir_path)
+        except FileNotFoundError:
             return loaded_subfolders
 
-        for entry in os.listdir(dir_path):
+        for entry in entries:
             subfolder_dir = os.path.join(dir_path, entry)
             if os.path.isdir(subfolder_dir):
                 loaded_subfolders[entry] = Folder.load(

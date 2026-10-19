@@ -13,7 +13,7 @@ import pytest
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate
 from cmk.cli.engine.commands import Command, make_command
 from cmk.cli.engine.run import dispatch, enable_file_logging, log_level, run, Runtime
-from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
+from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 
 from ._logger import null_logger
 
@@ -202,6 +202,37 @@ def _runtime(
 
 def _run(argv: Sequence[str], runtime: Runtime) -> int:
     return run(_SITE, argv, {}, runtime)
+
+
+def _numbered(handler: Callable[[Path, GlobalOptions, Options, Args], int]) -> Command:
+    return make_command(
+        CLICommand(
+            long_option="demo",
+            handler_function=handler,
+            short_help="Demonstrate",
+            sub_options=[
+                CLIOption(
+                    long_option="number",
+                    short_help="A number",
+                    argument=True,
+                    argument_descr="N",
+                    argument_conv=int,
+                )
+            ],
+        )
+    )
+
+
+def test_a_sub_option_reaches_the_command_converted() -> None:
+    seen: list[Options] = []
+
+    def remember(_omd_root: Path, _options: GlobalOptions, sub: Options, _args: Args) -> int:
+        seen.append(sub)
+        return 0
+
+    _run(["cmk", "--demo", "--number", "5"], _runtime([_numbered(remember)]))
+
+    assert seen == [{"number": 5}]
 
 
 def test_a_command_reports_its_own_exit_status() -> None:

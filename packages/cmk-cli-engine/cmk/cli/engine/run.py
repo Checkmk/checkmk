@@ -30,6 +30,7 @@ from cmk.cli.engine.commands import (
     general_options,
     Option,
     parse_general_options,
+    parse_sub_options,
     write_paged,
     write_stdout,
 )
@@ -252,12 +253,13 @@ def run(
             runtime.page(commands.help())
             return 0
         runtime.start_tracing(omd_root)
+        sub_options = parse_sub_options(parsed.command.sub_options, parsed.options)
         return call(
             omd_root,
             parsed.command,
             global_options,
             parsed.argument,
-            parsed.options,
+            sub_options,
             parsed.arguments,
             trace.extract_context_from_environment(dict(environ)),
         )

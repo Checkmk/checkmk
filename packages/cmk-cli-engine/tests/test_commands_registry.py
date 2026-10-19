@@ -97,7 +97,7 @@ def test_call_shapes_the_positional_arguments(
         command,
         GlobalOptions(),
         "ARG" if argument else "",
-        [("--thing", "ARG" if argument else "")],
+        parse_sub_options(command.sub_options, [("--thing", "ARG" if argument else "")]),
         ["ARG", "more"],
         trace.extract_context_from_environment({}),
     )

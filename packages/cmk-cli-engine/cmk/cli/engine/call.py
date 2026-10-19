@@ -6,14 +6,8 @@
 from pathlib import Path
 
 from cmk import trace
-from cmk.cli.engine.commands import (
-    Argument,
-    Arguments,
-    Command,
-    Options,
-    parse_sub_options,
-)
-from cmk.cli.internal import GlobalOptions
+from cmk.cli.engine.commands import Argument, Arguments, Command
+from cmk.cli.internal import GlobalOptions, Options
 
 tracer = trace.get_tracer()
 
@@ -23,11 +17,10 @@ def call(
     command: Command,
     global_options: GlobalOptions,
     arg: Argument,
-    all_opts: Options,
+    sub_options: Options,
     all_args: Arguments,
     trace_context: trace.Context,
 ) -> int:
-    sub_options = parse_sub_options(command.sub_options, all_opts)
 
     args: Arguments
     if command.argument and not command.argument_optional:

@@ -28,8 +28,8 @@ from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
 from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.sources._sources import SNMPSource
 from cmk.cli.engine.call import call
-from cmk.cli.engine.commands import make_command, Options
-from cmk.cli.internal import GlobalOptions
+from cmk.cli.engine.commands import make_command
+from cmk.cli.internal import GlobalOptions, Options
 from cmk.plugins.checkmk.cli import dump
 from cmk.plugins.checkmk.cli.dump import cli_command_dump_agent
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
@@ -156,7 +156,7 @@ class TestDumpAgent:
             make_command(cli_command_dump_agent),
             GlobalOptions(),
             hostname,
-            [],
+            {},
             [],
             Context(),
         )
@@ -228,10 +228,8 @@ class TestDumpAgentSnmpBackend:
     @pytest.mark.parametrize(
         ["options", "expected_backend_type"],
         [
-            pytest.param([], ClassicSNMPBackend, id="default"),
-            pytest.param(
-                [("--snmp-backend", "stored-walk")], StoredWalkSNMPBackend, id="stored-walk"
-            ),
+            pytest.param({}, ClassicSNMPBackend, id="default"),
+            pytest.param({"snmp-backend": "stored-walk"}, StoredWalkSNMPBackend, id="stored-walk"),
         ],
     )
     def test_the_snmp_backend_option_selects_the_backend(

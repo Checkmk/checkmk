@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Final
 
 from cmk.cli.engine.call import call
-from cmk.cli.engine.commands import Command, Option
+from cmk.cli.engine.commands import Command, Option, parse_sub_options
 from cmk.cli.internal import Args, CommandHandler, GlobalOptions, Options
 from cmk.trace import Context
 
@@ -52,7 +52,13 @@ def _command(
 
 def _call(command: Command, argument: str = "", *, arguments: Sequence[str] = ()) -> int:
     return call(
-        _OMD_ROOT, command, _GLOBAL_OPTIONS, argument, [("--flag", "")], arguments, Context()
+        _OMD_ROOT,
+        command,
+        _GLOBAL_OPTIONS,
+        argument,
+        parse_sub_options(command.sub_options, [("--flag", "")]),
+        arguments,
+        Context(),
     )
 
 

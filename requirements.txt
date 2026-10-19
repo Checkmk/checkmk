@@ -5653,6 +5653,7 @@ time-machine==2.19.0 \
     # via
     #   -c constraints.txt
     #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
+    #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r non-free/packages/cmk-mknotifyd/dev-requirements.in
     #   -r non-free/packages/cmk-otel-collector/dev-requirements.in
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in

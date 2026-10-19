@@ -50,7 +50,7 @@ def _comprehensive_graph() -> Graph:
         title="Title %(x)s",
         kind="template",
         vertical_range=FixedRange(
-            lower=0, upper=ScalarOf(metric=rrd, scalar_kind=ScalarKind.MAXIMUM, color="#mx")
+            lower=0, upper=ScalarOf(metric=rrd, scalar_kind=ScalarKind.MAXIMUM)
         ),
         stacks=[
             Stack(
@@ -59,7 +59,7 @@ def _comprehensive_graph() -> Graph:
                         quantity=Sum(
                             summands=(
                                 rrd,
-                                Constant(2, CurveAttributes(title="c", unit=unit, color="#c")),
+                                Constant(2),
                             )
                         ),
                         attributes=attrs,
@@ -80,7 +80,7 @@ def _comprehensive_graph() -> Graph:
         lines=[
             Line(
                 curve=Curve(
-                    quantity=ScalarOf(metric=rrd, scalar_kind=ScalarKind.WARNING, color="#w"),
+                    quantity=ScalarOf(metric=rrd, scalar_kind=ScalarKind.WARNING),
                     attributes=attrs,
                 ),
                 inverse=False,
@@ -89,7 +89,7 @@ def _comprehensive_graph() -> Graph:
         rules=[
             Rule(
                 curve=Curve(
-                    quantity=ScalarOf(metric=rrd, scalar_kind=ScalarKind.MAXIMUM, color="#mx"),
+                    quantity=ScalarOf(metric=rrd, scalar_kind=ScalarKind.MAXIMUM),
                     attributes=attrs,
                 ),
                 inverse=True,

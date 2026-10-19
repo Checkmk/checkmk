@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 
-from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing_engine import (
     AutoPrecision,
     ConsolidationFunction,
@@ -146,14 +145,6 @@ class _BeyondTheFetch:
         fetched = context.time_range
         ahead = TimeRange(start=fetched.end, end=fetched.end + _AHEAD, step=fetched.step)
         return [EvaluatedQuantity(value=None, time_series=constant_time_series(1.0, ahead))]
-
-    def attributes(
-        self,
-        _localizer: Callable[[str], str],
-        _registered_metrics: Mapping[str, metrics_v1.Metric],
-        /,
-    ) -> CurveAttributes | None:
-        return None
 
 
 def test_reports_the_time_range_of_curves_computed_beyond_the_fetch() -> None:

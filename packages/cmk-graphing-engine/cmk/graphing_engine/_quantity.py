@@ -4,11 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
+from collections.abc import Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
-
-from cmk.graphing.v1 import metrics as metrics_v1
 
 from ._fetched import FetchedData, PerformanceData, SeriesAttributes
 from ._naming import MetricName
@@ -80,13 +78,6 @@ class QuantityProtocol(Hashable, Protocol):
     # and several when a fan-out leaf (e.g. a query matching many services) expands into one curve
     # per matched series.
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]: ...
-
-    def attributes(
-        self,
-        localizer: Callable[[str], str],
-        registered_metrics: Mapping[str, metrics_v1.Metric],
-        /,
-    ) -> CurveAttributes | None: ...
 
 
 @runtime_checkable

@@ -153,14 +153,6 @@ def _attributes_from_json(data: object) -> CurveAttributes:
     )
 
 
-def _display_to_json(display: CurveAttributes | None) -> Mapping[str, object] | None:
-    return None if display is None else _attributes_to_json(display)
-
-
-def _display_from_json(data: object) -> CurveAttributes | None:
-    return None if data is None else _attributes_from_json(data)
-
-
 def _rrd_metric_to_json(quantity: QuantityProtocol, _codec: QuantityCodec) -> Mapping[str, object]:
     quantity = ensure_type(quantity, RRDMetric)
     return {
@@ -225,11 +217,11 @@ def _prediction_metric_from_json(
 
 def _constant_to_json(quantity: QuantityProtocol, _codec: QuantityCodec) -> Mapping[str, object]:
     quantity = ensure_type(quantity, Constant)
-    return {"value": quantity.value, "display": _display_to_json(quantity.display)}
+    return {"value": quantity.value}
 
 
 def _constant_from_json(data: Mapping[str, object], _codec: QuantityCodec) -> Constant:
-    return Constant(_as_number(data["value"]), _display_from_json(data["display"]))
+    return Constant(_as_number(data["value"]))
 
 
 def _scalar_of_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mapping[str, object]:
@@ -237,18 +229,13 @@ def _scalar_of_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mapp
     return {
         "metric": codec.serialize(quantity.metric),
         "scalar_kind": str(quantity.scalar_kind),
-        "color": quantity.color,
     }
 
 
 def _scalar_of_from_json(data: Mapping[str, object], codec: QuantityCodec) -> ScalarOf:
-    color = data["color"]
-    if color is not None and not isinstance(color, str):
-        raise TypeError(f"expected a string or None, got {type(color).__name__}")
     return ScalarOf(
         metric=ensure_type(codec.deserialize(data["metric"]), RRDMetric),
         scalar_kind=ScalarKind(ensure_type(data["scalar_kind"], str)),
-        color=color,
     )
 
 
@@ -266,24 +253,22 @@ def _sum_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mapping[st
     quantity = ensure_type(quantity, Sum)
     return {
         "summands": _operands_to_json(quantity.summands, codec),
-        "display": _display_to_json(quantity.display),
     }
 
 
 def _sum_from_json(data: Mapping[str, object], codec: QuantityCodec) -> Sum:
-    return Sum(_operands_from_json(data["summands"], codec), _display_from_json(data["display"]))
+    return Sum(_operands_from_json(data["summands"], codec))
 
 
 def _product_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mapping[str, object]:
     quantity = ensure_type(quantity, Product)
     return {
         "factors": _operands_to_json(quantity.factors, codec),
-        "display": _display_to_json(quantity.display),
     }
 
 
 def _product_from_json(data: Mapping[str, object], codec: QuantityCodec) -> Product:
-    return Product(_operands_from_json(data["factors"], codec), _display_from_json(data["display"]))
+    return Product(_operands_from_json(data["factors"], codec))
 
 
 def _difference_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mapping[str, object]:
@@ -291,7 +276,6 @@ def _difference_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Map
     return {
         "minuend": codec.serialize(quantity.minuend),
         "subtrahend": codec.serialize(quantity.subtrahend),
-        "display": _display_to_json(quantity.display),
     }
 
 
@@ -299,7 +283,6 @@ def _difference_from_json(data: Mapping[str, object], codec: QuantityCodec) -> D
     return Difference(
         minuend=codec.deserialize(data["minuend"]),
         subtrahend=codec.deserialize(data["subtrahend"]),
-        display=_display_from_json(data["display"]),
     )
 
 
@@ -308,7 +291,6 @@ def _fraction_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mappi
     return {
         "dividend": codec.serialize(quantity.dividend),
         "divisor": codec.serialize(quantity.divisor),
-        "display": _display_to_json(quantity.display),
     }
 
 
@@ -316,7 +298,6 @@ def _fraction_from_json(data: Mapping[str, object], codec: QuantityCodec) -> Fra
     return Fraction(
         dividend=codec.deserialize(data["dividend"]),
         divisor=codec.deserialize(data["divisor"]),
-        display=_display_from_json(data["display"]),
     )
 
 

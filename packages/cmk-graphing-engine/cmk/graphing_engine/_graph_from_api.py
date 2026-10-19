@@ -15,7 +15,8 @@ from ._api_plugins import ApiQuantity, is_scalar, metric_names_in_quantity
 from ._graph import Graph, Line, MinimalRange, Rule, Stack
 from ._naming import Service
 from ._quantity import Bound, Curve, QuantityProtocol
-from ._quantity_from_api import build_curve, parse_quantity, QuantityContext
+from ._quantity_from_api import attributes_of_quantity, parse_quantity, QuantityContext
+from ._units import CurveAttributes
 
 
 class QuantityBuilderProtocol(Protocol):
@@ -50,6 +51,9 @@ class _ParseContext:
         if any(metric_names_in_quantity(bound)):
             return self.single_object()
         return self._of(self.services[0])
+
+    def attributes(self, quantity: ApiQuantity) -> CurveAttributes:
+        return attributes_of_quantity(quantity, self._of(self.services[0]))
 
     def drawn(self, quantity: ApiQuantity) -> QuantityProtocol:
         # Built once per matched object and combined, so an operation only ever takes that object's
@@ -116,13 +120,13 @@ def _parse_lines(
     *,
     inverse: bool,
 ) -> tuple[Sequence[Stack], Sequence[Line], Sequence[Rule]]:
-    def _curve(quantity: QuantityProtocol) -> Curve:
-        return build_curve(quantity, context.localizer, context.registered_metrics)
+    def _curve(api_quantity: ApiQuantity, quantity: QuantityProtocol) -> Curve:
+        return Curve(quantity=quantity, attributes=context.attributes(api_quantity))
 
-    stack_members = [_curve(context.drawn(q)) for q in graph.compound_lines if not is_scalar(q)]
+    stack_members = [_curve(q, context.drawn(q)) for q in graph.compound_lines if not is_scalar(q)]
     stacks = [Stack(members=stack_members, inverse=inverse)] if stack_members else []
     lines = [
-        Line(curve=_curve(context.drawn(q)), inverse=inverse)
+        Line(curve=_curve(q, context.drawn(q)), inverse=inverse)
         for q in graph.simple_lines
         if not is_scalar(q)
     ]
@@ -131,7 +135,7 @@ def _parse_lines(
         ()
         if single_object is None
         else [
-            Rule(curve=_curve(parse_quantity(q, single_object)), inverse=inverse)
+            Rule(curve=_curve(q, parse_quantity(q, single_object)), inverse=inverse)
             for q in (*graph.compound_lines, *graph.simple_lines)
             if is_scalar(q)
         ]

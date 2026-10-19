@@ -5,13 +5,9 @@
 
 import enum
 import itertools
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import assert_never
 
-from cmk.graphing.v1 import metrics as metrics_v1
-
-from ._display import metric_display_attributes
 from ._fetched import ScalarKind, SeriesAttributes, value_of
 from ._naming import HostName, MetricName, Service, ServiceName, SiteID
 from ._operations import (
@@ -28,7 +24,6 @@ from ._quantity import (
     QuantityProtocol,
 )
 from ._timeseries import ConsolidationFunction, constant_time_series, TimeSeries
-from ._units import CurveAttributes
 
 
 def _operand_label_macros(operands: Sequence[EvaluatedQuantity]) -> Mapping[str, str]:
@@ -112,7 +107,6 @@ def _evaluate_operation(
 @dataclass(frozen=True)
 class Constant:
     value: int | float
-    display: CurveAttributes | None = None
 
     def kind(self) -> str:
         return "constant"
@@ -129,13 +123,6 @@ class Constant:
                 value=self.value, time_series=constant_time_series(self.value, context.time_range)
             )
         ]
-
-    def attributes(
-        self,
-        _localizer: Callable[[str], str],
-        _registered_metrics: Mapping[str, metrics_v1.Metric],
-    ) -> CurveAttributes | None:
-        return self.display
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -182,13 +169,6 @@ class RRDMetric:
             )
         ]
 
-    def attributes(
-        self,
-        localizer: Callable[[str], str],
-        registered_metrics: Mapping[str, metrics_v1.Metric],
-    ) -> CurveAttributes:
-        return metric_display_attributes(self.metric_name, localizer, registered_metrics)
-
 
 class PredictionCurveKind(enum.StrEnum):
     UPPER_REFERENCE = "upper_reference"
@@ -232,13 +212,6 @@ class PredictionMetric:
             )
         ]
 
-    def attributes(
-        self,
-        _localizer: Callable[[str], str],
-        _registered_metrics: Mapping[str, metrics_v1.Metric],
-    ) -> CurveAttributes | None:
-        return None
-
 
 def rrd_metric_of(service: Service, metric_name: str) -> RRDMetric:
     return RRDMetric(
@@ -253,7 +226,6 @@ def rrd_metric_of(service: Service, metric_name: str) -> RRDMetric:
 class ScalarOf:
     metric: RRDMetric
     scalar_kind: ScalarKind
-    color: str | None = None
 
     def kind(self) -> str:
         return "scalar_of"
@@ -274,42 +246,10 @@ class ScalarOf:
             )
         ]
 
-    def attributes(
-        self,
-        localizer: Callable[[str], str],
-        registered_metrics: Mapping[str, metrics_v1.Metric],
-    ) -> CurveAttributes:
-        attributes = self.metric.attributes(localizer, registered_metrics)
-        # A threshold names the metric it is a threshold of: several of them can be drawn in one
-        # graph, and "Warning" alone would not say which curve it belongs to.
-        label: str
-        type_color: str | None
-        match self.scalar_kind:
-            case ScalarKind.WARNING:
-                label, type_color = "Warning of %(title)s", "#ffd000"
-            case ScalarKind.CRITICAL:
-                label, type_color = "Critical of %(title)s", "#ff3232"
-            case ScalarKind.LOWER_WARNING:
-                label, type_color = "Warning (lower) of %(title)s", "#ffd000"
-            case ScalarKind.LOWER_CRITICAL:
-                label, type_color = "Critical (lower) of %(title)s", "#ff3232"
-            case ScalarKind.MINIMUM:
-                label, type_color = "Minimum of %(title)s", None
-            case ScalarKind.MAXIMUM:
-                label, type_color = "Maximum of %(title)s", None
-            case _:
-                assert_never(self.scalar_kind)
-        return CurveAttributes(
-            title=localizer(label) % {"title": attributes.title},
-            unit=attributes.unit,
-            color=self.color or type_color or attributes.color,
-        )
-
 
 @dataclass(frozen=True)
 class Sum:
     summands: tuple[QuantityProtocol, ...]
-    display: CurveAttributes | None = None
 
     def kind(self) -> str:
         return "sum"
@@ -323,18 +263,10 @@ class Sum:
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         return _evaluate_operation(op_sum, self.summands, context)
 
-    def attributes(
-        self,
-        _localizer: Callable[[str], str],
-        _registered_metrics: Mapping[str, metrics_v1.Metric],
-    ) -> CurveAttributes | None:
-        return self.display
-
 
 @dataclass(frozen=True)
 class Product:
     factors: tuple[QuantityProtocol, ...]
-    display: CurveAttributes | None = None
 
     def kind(self) -> str:
         return "product"
@@ -348,19 +280,11 @@ class Product:
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         return _evaluate_operation(op_product, self.factors, context)
 
-    def attributes(
-        self,
-        _localizer: Callable[[str], str],
-        _registered_metrics: Mapping[str, metrics_v1.Metric],
-    ) -> CurveAttributes | None:
-        return self.display
-
 
 @dataclass(frozen=True, kw_only=True)
 class Difference:
     minuend: QuantityProtocol
     subtrahend: QuantityProtocol
-    display: CurveAttributes | None = None
 
     def kind(self) -> str:
         return "difference"
@@ -374,19 +298,11 @@ class Difference:
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         return _evaluate_operation(op_difference, (self.minuend, self.subtrahend), context)
 
-    def attributes(
-        self,
-        _localizer: Callable[[str], str],
-        _registered_metrics: Mapping[str, metrics_v1.Metric],
-    ) -> CurveAttributes | None:
-        return self.display
-
 
 @dataclass(frozen=True, kw_only=True)
 class Fraction:
     dividend: QuantityProtocol
     divisor: QuantityProtocol
-    display: CurveAttributes | None = None
 
     def kind(self) -> str:
         return "fraction"
@@ -399,10 +315,3 @@ class Fraction:
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         return _evaluate_operation(op_fraction, (self.dividend, self.divisor), context)
-
-    def attributes(
-        self,
-        _localizer: Callable[[str], str],
-        _registered_metrics: Mapping[str, metrics_v1.Metric],
-    ) -> CurveAttributes | None:
-        return self.display

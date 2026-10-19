@@ -96,21 +96,6 @@ def _rule(quantity: QuantityProtocol, attributes: CurveAttributes = _METRIC_ATTR
     return Rule(curve=_curve(quantity, attributes), inverse=False)
 
 
-def _attrs_of(quantity: QuantityProtocol) -> CurveAttributes:
-    # The display a quantity resolves to here: its own intrinsic display (constants / operations) or the
-    # uniform registered-metric attributes.
-    display = getattr(quantity, "display", None)
-    return display if isinstance(display, CurveAttributes) else _METRIC_ATTRS
-
-
-def _dline(quantity: QuantityProtocol) -> Line:
-    return Line(curve=Curve(quantity=quantity, attributes=_attrs_of(quantity)), inverse=False)
-
-
-def _drule(quantity: QuantityProtocol) -> Rule:
-    return Rule(curve=Curve(quantity=quantity, attributes=_attrs_of(quantity)), inverse=False)
-
-
 # --- parse_graph_from_api -> Graph (display resolved inline) ------------------------------
 
 
@@ -163,8 +148,8 @@ def test_parse_graph_from_api_parses_a_metric_valued_minimal_range_bound() -> No
 
 
 def test_parse_graph_from_api_builds_the_rrd_metric_of_a_curve() -> None:
-    # A line parses to a bare RRDMetric carrying the service's host/service, with no display (that is
-    # resolved later by build_curve); the consolidation function is supplied later, not by parsing.
+    # A line parses to a bare RRDMetric carrying the service's host/service; the consolidation
+    # function is supplied later, not by parsing.
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["a"])
     parsed = parse_graph_from_api(
         graph,
@@ -182,9 +167,7 @@ def test_parse_graph_from_api_builds_the_rrd_metric_of_a_curve() -> None:
     ]
 
 
-def test_parse_graph_from_api_routes_scalars_to_rules_without_display() -> None:
-    # Warn / crit scalars carry no drawn display; their resolved curve takes the label from the
-    # kind); MinimumOf / MaximumOf carry only their author-chosen colour, which is not scalar-type-derivable.
+def test_parse_graph_from_api_routes_scalars_to_rules() -> None:
     graph = graphs_v1.Graph(
         name="g",
         title=Title("t"),
@@ -200,8 +183,8 @@ def test_parse_graph_from_api_routes_scalars_to_rules_without_display() -> None:
     assert [rule.curve.quantity for rule in parsed.rules] == [
         ScalarOf(metric=_rrd("a"), scalar_kind=ScalarKind.WARNING),
         ScalarOf(metric=_rrd("a"), scalar_kind=ScalarKind.CRITICAL),
-        ScalarOf(metric=_rrd("a"), scalar_kind=ScalarKind.MINIMUM, color="#15d1a0"),
-        ScalarOf(metric=_rrd("a"), scalar_kind=ScalarKind.MAXIMUM, color="#ed3b3b"),
+        ScalarOf(metric=_rrd("a"), scalar_kind=ScalarKind.MINIMUM),
+        ScalarOf(metric=_rrd("a"), scalar_kind=ScalarKind.MAXIMUM),
     ]
 
 
@@ -250,35 +233,29 @@ def test_parse_graph_from_api_constants_carry_their_intrinsic_display() -> None:
     # Constants are scalars, so they become horizontal rules; each carries its own intrinsic display.
     assert parsed.lines == []
     assert parsed.rules == [
-        _drule(
-            Constant(
-                1,
-                display=CurveAttributes(
-                    title="c1",
-                    unit=Unit(notation=SINotation("bytes"), precision=AutoPrecision(2)),
-                    color="#28a2f3",
-                ),
-            )
+        _rule(
+            Constant(1),
+            CurveAttributes(
+                title="c1",
+                unit=Unit(notation=SINotation("bytes"), precision=AutoPrecision(2)),
+                color="#28a2f3",
+            ),
         ),
-        _drule(
-            Constant(
-                2,
-                display=CurveAttributes(
-                    title="c2",
-                    unit=Unit(notation=IECNotation("bits"), precision=StrictPrecision(3)),
-                    color="#ed3b3b",
-                ),
-            )
+        _rule(
+            Constant(2),
+            CurveAttributes(
+                title="c2",
+                unit=Unit(notation=IECNotation("bits"), precision=StrictPrecision(3)),
+                color="#ed3b3b",
+            ),
         ),
-        _drule(
-            Constant(
-                3,
-                display=CurveAttributes(
-                    title="c3",
-                    unit=Unit(notation=TimeNotation(), precision=AutoPrecision(2)),
-                    color="#15d1a0",
-                ),
-            )
+        _rule(
+            Constant(3),
+            CurveAttributes(
+                title="c3",
+                unit=Unit(notation=TimeNotation(), precision=AutoPrecision(2)),
+                color="#15d1a0",
+            ),
         ),
     ]
 
@@ -307,31 +284,21 @@ def test_parse_graph_from_api_operations_carry_their_intrinsic_display() -> None
     )
     parsed = parse_graph_from_api(graph, [_SERVICE], _id, _METRICS, kind=_KIND)
     assert parsed.lines == [
-        _dline(
-            Sum(
-                summands=(_rrd("a"), _rrd("b")),
-                display=CurveAttributes(title="s", unit=_DECIMAL, color="#28a2f3"),
-            )
+        _line(
+            Sum(summands=(_rrd("a"), _rrd("b"))),
+            CurveAttributes(title="s", unit=_DECIMAL, color="#28a2f3"),
         ),
-        _dline(
-            Product(
-                factors=(_rrd("x"), _rrd("y")),
-                display=CurveAttributes(title="p", unit=_DECIMAL, color="#ed3b3b"),
-            )
+        _line(
+            Product(factors=(_rrd("x"), _rrd("y"))),
+            CurveAttributes(title="p", unit=_DECIMAL, color="#ed3b3b"),
         ),
-        _dline(
-            Difference(
-                minuend=_rrd("a"),
-                subtrahend=_rrd("b"),
-                display=CurveAttributes(title="d", unit=_DECIMAL, color="#15d1a0"),
-            )
+        _line(
+            Difference(minuend=_rrd("a"), subtrahend=_rrd("b")),
+            CurveAttributes(title="d", unit=_DECIMAL, color="#15d1a0"),
         ),
-        _dline(
-            Fraction(
-                dividend=_rrd("a"),
-                divisor=_rrd("b"),
-                display=CurveAttributes(title="f", unit=_DECIMAL, color="#ffd703"),
-            )
+        _line(
+            Fraction(dividend=_rrd("a"), divisor=_rrd("b")),
+            CurveAttributes(title="f", unit=_DECIMAL, color="#ffd703"),
         ),
     ]
 
@@ -353,17 +320,9 @@ def test_parse_graph_from_api_recurses_into_nested_quantities() -> None:
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=[nested])
     parsed = parse_graph_from_api(graph, [_SERVICE], _id, _METRICS, kind=_KIND)
     assert parsed.lines == [
-        _dline(
-            Sum(
-                summands=(
-                    _rrd("a"),
-                    Product(
-                        factors=(_rrd("b"), _rrd("c")),
-                        display=CurveAttributes(title="inner", unit=_DECIMAL, color="#ed3b3b"),
-                    ),
-                ),
-                display=CurveAttributes(title="outer", unit=_DECIMAL, color="#28a2f3"),
-            )
+        _line(
+            Sum(summands=(_rrd("a"), Product(factors=(_rrd("b"), _rrd("c"))))),
+            CurveAttributes(title="outer", unit=_DECIMAL, color="#28a2f3"),
         ),
     ]
 
@@ -467,11 +426,11 @@ def test_parse_resolves_resolves_threshold_rules_from_the_scalar_type() -> None:
             CurveAttributes(title="Critical of Metric", unit=_DECIMAL, color=_CRIT_COLOR),
         ),
         _rule(
-            ScalarOf(metric=_rrd("a"), scalar_kind=ScalarKind.MINIMUM, color="#15d1a0"),
+            ScalarOf(metric=_rrd("a"), scalar_kind=ScalarKind.MINIMUM),
             CurveAttributes(title="Minimum of Metric", unit=_DECIMAL, color="#15d1a0"),
         ),
         _rule(
-            ScalarOf(metric=_rrd("a"), scalar_kind=ScalarKind.MAXIMUM, color="#ed3b3b"),
+            ScalarOf(metric=_rrd("a"), scalar_kind=ScalarKind.MAXIMUM),
             CurveAttributes(title="Maximum of Metric", unit=_DECIMAL, color="#ed3b3b"),
         ),
     ]
@@ -521,10 +480,7 @@ def test_parse_resolves_reads_operation_display_from_the_quantity() -> None:
     concrete = discovered
     assert concrete.lines == [
         _line(
-            Sum(
-                summands=(_rrd("a"), _rrd("b")),
-                display=CurveAttributes(title="s", unit=_DECIMAL, color="#28a2f3"),
-            ),
+            Sum(summands=(_rrd("a"), _rrd("b"))),
             CurveAttributes(title="s", unit=_DECIMAL, color="#28a2f3"),
         )
     ]
@@ -560,6 +516,4 @@ def test_parse_graph_from_api_bidirectional_range_widens_each_end_on_its_own() -
     # The comparable end is the envelope of both halves; the two quantity uppers cannot be compared
     # before evaluation, so the upper half's is kept.
     assert parsed.vertical_range.lower == 0
-    assert parsed.vertical_range.upper == ScalarOf(
-        metric=_rrd("b"), scalar_kind=ScalarKind.MAXIMUM, color="#8c8c8c"
-    )
+    assert parsed.vertical_range.upper == ScalarOf(metric=_rrd("b"), scalar_kind=ScalarKind.MAXIMUM)

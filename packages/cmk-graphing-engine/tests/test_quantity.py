@@ -6,12 +6,11 @@
 """The open quantity protocol: a custom quantity kind defined entirely outside the engine
 is evaluated by the engine without any change to its code."""
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 import pytest
 
-from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing_engine import (
     AutoPrecision,
     Constant,
@@ -68,13 +67,6 @@ class Negated:
     def children(self) -> Sequence[QuantityProtocol]:
         return (self.operand,)
 
-    def attributes(
-        self,
-        localizer: Callable[[str], str],
-        registered_metrics: Mapping[str, metrics_v1.Metric],
-    ) -> CurveAttributes | None:
-        return self.operand.attributes(localizer, registered_metrics)
-
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         return [
             EvaluatedQuantity(
@@ -104,13 +96,6 @@ class _FanOut:
 
     def children(self) -> Sequence[QuantityProtocol]:
         return ()
-
-    def attributes(
-        self,
-        _localizer: Callable[[str], str],
-        _registered_metrics: Mapping[str, metrics_v1.Metric],
-    ) -> CurveAttributes | None:
-        return None
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         return [
@@ -241,13 +226,6 @@ class _CountingOperation:
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         return self.operand.evaluate(context)
-
-    def attributes(
-        self,
-        _localizer: Callable[[str], str],
-        _registered_metrics: Mapping[str, metrics_v1.Metric],
-    ) -> CurveAttributes | None:
-        return None
 
 
 def test_a_quantity_two_branches_share_is_walked_once() -> None:

@@ -94,23 +94,23 @@ def _rich_graphs() -> Sequence[Graph]:
                 Stack(
                     members=[
                         Curve(quantity=_METRIC, attributes=decimal, source_id="A"),
-                        Curve(quantity=Sum((_METRIC, _METRIC_CF), decimal), attributes=decimal),
+                        Curve(quantity=Sum((_METRIC, _METRIC_CF)), attributes=decimal),
                     ],
                     inverse=True,
-                    reference=Curve(quantity=Constant(5, scientific), attributes=scientific),
+                    reference=Curve(quantity=Constant(5), attributes=scientific),
                 )
             ],
             lines=[
                 Line(
                     curve=Curve(
-                        quantity=Fraction(dividend=_METRIC, divisor=Constant(2), display=decimal),
+                        quantity=Fraction(dividend=_METRIC, divisor=Constant(2)),
                         attributes=decimal,
                     ),
                     inverse=False,
                 ),
                 Line(
                     curve=Curve(
-                        quantity=Product((_METRIC, Constant(3.5)), display=None),
+                        quantity=Product((_METRIC, Constant(3.5))),
                         attributes=scientific,
                     ),
                     inverse=True,
@@ -126,9 +126,7 @@ def _rich_graphs() -> Sequence[Graph]:
                 ),
                 Rule(
                     curve=Curve(
-                        quantity=ScalarOf(
-                            metric=_METRIC, scalar_kind=ScalarKind.MAXIMUM, color="#00ff00"
-                        ),
+                        quantity=ScalarOf(metric=_METRIC, scalar_kind=ScalarKind.MAXIMUM),
                         attributes=iec,
                     ),
                     inverse=False,
@@ -144,21 +142,21 @@ def _rich_graphs() -> Sequence[Graph]:
             lines=[
                 Line(
                     curve=Curve(
-                        quantity=Difference(minuend=_METRIC, subtrahend=_METRIC_CF, display=si),
+                        quantity=Difference(minuend=_METRIC, subtrahend=_METRIC_CF),
                         attributes=si,
                     ),
                     inverse=False,
                 ),
                 Line(
-                    curve=Curve(quantity=Sum((_METRIC,), iec), attributes=iec),
+                    curve=Curve(quantity=Sum((_METRIC,)), attributes=iec),
                     inverse=False,
                 ),
                 Line(
-                    curve=Curve(quantity=Constant(1, time), attributes=time),
+                    curve=Curve(quantity=Constant(1), attributes=time),
                     inverse=False,
                 ),
                 Line(
-                    curve=Curve(quantity=Constant(2, engineering), attributes=engineering),
+                    curve=Curve(quantity=Constant(2), attributes=engineering),
                     inverse=False,
                 ),
             ],
@@ -247,18 +245,12 @@ _ENGINE_QUANTITY_SAMPLES: Mapping[str, QuantityProtocol] = {
         valid_until=1700086400,
         curve_kind=PredictionCurveKind.LOWER_CRITICAL,
     ),
-    "constant": Constant(23.5, _ROUND_TRIP_DISPLAY),
-    "scalar_of": ScalarOf(
-        metric=_ROUND_TRIP_METRIC, scalar_kind=ScalarKind.LOWER_CRITICAL, color="#040506"
-    ),
-    "sum": Sum((_ROUND_TRIP_METRIC, Constant(1.0)), _ROUND_TRIP_DISPLAY),
-    "product": Product((_ROUND_TRIP_METRIC, Constant(2.0)), _ROUND_TRIP_DISPLAY),
-    "difference": Difference(
-        minuend=_ROUND_TRIP_METRIC, subtrahend=Constant(3.0), display=_ROUND_TRIP_DISPLAY
-    ),
-    "fraction": Fraction(
-        dividend=_ROUND_TRIP_METRIC, divisor=Constant(4.0), display=_ROUND_TRIP_DISPLAY
-    ),
+    "constant": Constant(23.5),
+    "scalar_of": ScalarOf(metric=_ROUND_TRIP_METRIC, scalar_kind=ScalarKind.LOWER_CRITICAL),
+    "sum": Sum((_ROUND_TRIP_METRIC, Constant(1.0))),
+    "product": Product((_ROUND_TRIP_METRIC, Constant(2.0))),
+    "difference": Difference(minuend=_ROUND_TRIP_METRIC, subtrahend=Constant(3.0)),
+    "fraction": Fraction(dividend=_ROUND_TRIP_METRIC, divisor=Constant(4.0)),
 }
 
 

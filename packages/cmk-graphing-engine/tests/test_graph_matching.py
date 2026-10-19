@@ -11,10 +11,10 @@ from cmk.graphing.v1 import Title
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
-    build_curve,
     build_matched_graphs,
     ConsolidationFunction,
     Constant,
+    Curve,
     Difference,
     evaluate_graphs,
     EvaluatedGraph,
@@ -22,6 +22,7 @@ from cmk.graphing_engine import (
     Graph,
     HostName,
     Line,
+    metric_display_attributes,
     MetricName,
     MetricProtocol,
     MinimalRange,
@@ -29,6 +30,7 @@ from cmk.graphing_engine import (
     QuantityProtocol,
     RRDMetric,
     Rule,
+    scalar_attributes,
     ScalarKind,
     ScalarOf,
     Service,
@@ -78,12 +80,19 @@ def _rrd(name: MetricName) -> RRDMetric:
     )
 
 
-def _dstack(*quantities: QuantityProtocol) -> Stack:
-    return Stack(members=[build_curve(q, _id, _METRICS) for q in quantities], inverse=False)
+def _metric_curve(metric: RRDMetric) -> Curve:
+    return Curve(
+        quantity=metric,
+        attributes=metric_display_attributes(metric.metric_name, _id, _METRICS),
+    )
 
 
-def _dline(quantity: QuantityProtocol) -> Line:
-    return Line(curve=build_curve(quantity, _id, _METRICS), inverse=False)
+def _dstack(*metrics: RRDMetric) -> Stack:
+    return Stack(members=[_metric_curve(metric) for metric in metrics], inverse=False)
+
+
+def _dline(metric: RRDMetric) -> Line:
+    return Line(curve=_metric_curve(metric), inverse=False)
 
 
 _FALLBACK_RULE_TYPES = (
@@ -105,8 +114,11 @@ def _fallback(name: MetricName) -> Graph:
         stacks=[_dstack(_rrd(name))],
         rules=[
             Rule(
-                curve=build_curve(
-                    ScalarOf(metric=_rrd(name), scalar_kind=scalar_kind), _id, _METRICS
+                curve=Curve(
+                    quantity=ScalarOf(metric=_rrd(name), scalar_kind=scalar_kind),
+                    attributes=scalar_attributes(
+                        metric_display_attributes(name, _id, _METRICS), scalar_kind, None, _id
+                    ),
                 ),
                 inverse=False,
             )

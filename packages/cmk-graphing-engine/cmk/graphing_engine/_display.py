@@ -9,6 +9,7 @@ from typing import assert_never
 
 from cmk.graphing.v1 import metrics as metrics_v1
 
+from ._fetched import ScalarKind
 from ._units import (
     AutoPrecision,
     CurveAttributes,
@@ -166,3 +167,33 @@ def metric_display_attributes(
     ) is not None:
         return prediction
     return _declared_attributes(metric_name, localizer, registered_metrics)
+
+
+def scalar_attributes(
+    metric_attributes: CurveAttributes,
+    scalar_kind: ScalarKind,
+    color: str | None,
+    localizer: Callable[[str], str],
+) -> CurveAttributes:
+    label: str
+    type_color: str | None
+    match scalar_kind:
+        case ScalarKind.WARNING:
+            label, type_color = "Warning of %(title)s", "#ffd000"
+        case ScalarKind.CRITICAL:
+            label, type_color = "Critical of %(title)s", "#ff3232"
+        case ScalarKind.LOWER_WARNING:
+            label, type_color = "Warning (lower) of %(title)s", "#ffd000"
+        case ScalarKind.LOWER_CRITICAL:
+            label, type_color = "Critical (lower) of %(title)s", "#ff3232"
+        case ScalarKind.MINIMUM:
+            label, type_color = "Minimum of %(title)s", None
+        case ScalarKind.MAXIMUM:
+            label, type_color = "Maximum of %(title)s", None
+        case _:
+            assert_never(scalar_kind)
+    return CurveAttributes(
+        title=localizer(label) % {"title": metric_attributes.title},
+        unit=metric_attributes.unit,
+        color=color or type_color or metric_attributes.color,
+    )

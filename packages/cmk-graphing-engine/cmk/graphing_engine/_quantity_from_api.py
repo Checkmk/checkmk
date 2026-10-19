@@ -16,10 +16,10 @@ from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 
 from ._api_plugins import ApiQuantity, ApiScalar, operands_of
 from ._display import (
-    FALLBACK_ATTRIBUTES,
     metric_display_attributes,
     parse_color,
     parse_unit,
+    scalar_attributes,
 )
 from ._fetched import ScalarKind
 from ._naming import Service
@@ -33,7 +33,7 @@ from ._quantities import (
     ScalarOf,
     Sum,
 )
-from ._quantity import Curve, QuantityProtocol
+from ._quantity import QuantityProtocol
 from ._units import CurveAttributes
 
 
@@ -67,7 +67,7 @@ class QuantityContext:
         return rrd_metric_of(self.service, metric_name)
 
 
-def _curve_display(quantity: ApiQuantity, context: QuantityContext) -> CurveAttributes:
+def attributes_of_quantity(quantity: ApiQuantity, context: QuantityContext) -> CurveAttributes:
     match quantity:
         case str():
             return metric_display_attributes(
@@ -85,18 +85,25 @@ def _curve_display(quantity: ApiQuantity, context: QuantityContext) -> CurveAttr
             | metrics_v1.WarningOf()
             | metrics_v1.CriticalOf()
         ):
-            return _curve_display(quantity.metric_name, context)
+            return scalar_attributes(
+                attributes_of_quantity(quantity.metric_name, context),
+                scalar_kind_of(quantity),
+                None,
+                context.localizer,
+            )
         case metrics_v1.MinimumOf() | metrics_v1.MaximumOf():
-            attributes = _curve_display(quantity.metric_name, context)
-            return CurveAttributes(
-                title=attributes.title, unit=attributes.unit, color=parse_color(quantity.color)
+            return scalar_attributes(
+                attributes_of_quantity(quantity.metric_name, context),
+                scalar_kind_of(quantity),
+                parse_color(quantity.color),
+                context.localizer,
             )
         case metrics_v1.Sum() | metrics_v1.Difference():
             # A sum and a difference are in the unit of what they add up or take apart, so the API
             # does not spell one out: it is the first operand's.
             return CurveAttributes(
                 title=quantity.title.localize(context.localizer),
-                unit=_curve_display(operands_of(quantity)[0], context).unit,
+                unit=attributes_of_quantity(operands_of(quantity)[0], context).unit,
                 color=parse_color(quantity.color),
             )
         case metrics_v1.Product() | metrics_v1.Fraction():
@@ -114,69 +121,36 @@ def parse_quantity(quantity: ApiQuantity, context: QuantityContext) -> QuantityP
         case str():
             return context.metric(quantity)
         case metrics_v1.Constant():
-            return Constant(quantity.value, display=_curve_display(quantity, context))
+            return Constant(quantity.value)
         case (
             metrics_v2_unstable.LowerWarningOf()
             | metrics_v2_unstable.LowerCriticalOf()
             | metrics_v1.WarningOf()
             | metrics_v1.CriticalOf()
+            | metrics_v1.MinimumOf()
+            | metrics_v1.MaximumOf()
         ):
             return ScalarOf(
                 metric=context.metric(quantity.metric_name),
                 scalar_kind=scalar_kind_of(quantity),
             )
-        case metrics_v1.MinimumOf() | metrics_v1.MaximumOf():
-            return ScalarOf(
-                metric=context.metric(quantity.metric_name),
-                scalar_kind=scalar_kind_of(quantity),
-                color=parse_color(quantity.color),
-            )
         case metrics_v1.Sum():
             return Sum(
                 summands=tuple(parse_quantity(s, context) for s in quantity.summands),
-                display=_curve_display(quantity, context),
             )
         case metrics_v1.Product():
             return Product(
                 factors=tuple(parse_quantity(f, context) for f in quantity.factors),
-                display=_curve_display(quantity, context),
             )
         case metrics_v1.Difference():
             return Difference(
                 minuend=parse_quantity(quantity.minuend, context),
                 subtrahend=parse_quantity(quantity.subtrahend, context),
-                display=_curve_display(quantity, context),
             )
         case metrics_v1.Fraction():
             return Fraction(
                 dividend=parse_quantity(quantity.dividend, context),
                 divisor=parse_quantity(quantity.divisor, context),
-                display=_curve_display(quantity, context),
             )
         case _:
             assert_never(quantity)
-
-
-def _display_of(
-    quantity: QuantityProtocol,
-    localizer: Callable[[str], str],
-    registered_metrics: Mapping[str, metrics_v1.Metric],
-) -> CurveAttributes:
-    return quantity.attributes(localizer, registered_metrics) or FALLBACK_ATTRIBUTES
-
-
-def build_curve(
-    quantity: QuantityProtocol,
-    localizer: Callable[[str], str],
-    registered_metrics: Mapping[str, metrics_v1.Metric],
-) -> Curve:
-    return Curve(
-        quantity=quantity,
-        attributes=_display_of(quantity, localizer, registered_metrics),
-    )
-
-
-def attributes_of_quantity(quantity: ApiQuantity, context: QuantityContext) -> CurveAttributes:
-    return _display_of(
-        parse_quantity(quantity, context), context.localizer, context.registered_metrics
-    )

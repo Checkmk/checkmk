@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 
-from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing_engine import (
     AutoPrecision,
     Constant,
@@ -390,13 +389,6 @@ class _FannedQuantity:
             for label, value in self.series
         ]
 
-    def attributes(
-        self,
-        _localizer: Callable[[str], str],
-        _registered_metrics: Mapping[str, metrics_v1.Metric],
-    ) -> CurveAttributes | None:
-        return None
-
 
 def test_evaluate_graph_carries_the_curve_source_id() -> None:
     a, b = _metric("a"), _metric("b")
@@ -718,13 +710,6 @@ class _CountingQuantity:
     def evaluate(self, _context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         self.evaluations += 1
         return [EvaluatedQuantity(value=1.0, time_series=_time_series(1.0, 1.0, 1.0))]
-
-    def attributes(
-        self,
-        _localizer: Callable[[str], str],
-        _registered_metrics: Mapping[str, metrics_v1.Metric],
-    ) -> CurveAttributes | None:
-        return None
 
 
 def test_evaluate_graph_evaluates_a_quantity_of_two_curves_once() -> None:

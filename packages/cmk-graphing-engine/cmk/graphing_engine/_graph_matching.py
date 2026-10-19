@@ -11,7 +11,7 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._api_plugins import drawn_metric_names_of_graph
-from ._display import metric_display_attributes, PredictPrefix
+from ._display import metric_display_attributes, PredictPrefix, scalar_attributes
 from ._fetch import FetchMetricNamesProtocol
 from ._fetched import ScalarKind
 from ._graph import Graph, Line, Rule, Stack
@@ -22,8 +22,7 @@ from ._graph_from_api import (
 )
 from ._naming import MetricName, Service
 from ._quantities import rrd_metric_of, RRDMetric, ScalarOf
-from ._quantity import fetch_leaves
-from ._quantity_from_api import build_curve
+from ._quantity import Curve, fetch_leaves
 
 _METRIC_PREFIX = "METRIC_"
 
@@ -91,8 +90,11 @@ def _add_predictive_lines(
             if predictive in available and predictive not in names:
                 added.append(
                     Line(
-                        curve=build_curve(
-                            rrd_metric_of(service, predictive), localizer, registered_metrics
+                        curve=Curve(
+                            quantity=rrd_metric_of(service, predictive),
+                            attributes=metric_display_attributes(
+                                predictive, localizer, registered_metrics
+                            ),
                         ),
                         inverse=inverse,
                     )
@@ -177,8 +179,14 @@ def build_matched_graphs(
         metric = rrd_metric_of(single_service, name)
         return [
             Rule(
-                curve=build_curve(
-                    ScalarOf(metric=metric, scalar_kind=scalar_kind), localizer, registered_metrics
+                curve=Curve(
+                    quantity=ScalarOf(metric=metric, scalar_kind=scalar_kind),
+                    attributes=scalar_attributes(
+                        metric_display_attributes(name, localizer, registered_metrics),
+                        scalar_kind,
+                        None,
+                        localizer,
+                    ),
                 ),
                 inverse=False,
             )
@@ -193,12 +201,13 @@ def build_matched_graphs(
             stacks=[
                 Stack(
                     members=[
-                        build_curve(
-                            quantity_builder(
+                        Curve(
+                            quantity=quantity_builder(
                                 [rrd_metric_of(service, name) for service in resolved]
                             ),
-                            localizer,
-                            registered_metrics,
+                            attributes=metric_display_attributes(
+                                name, localizer, registered_metrics
+                            ),
                         )
                     ],
                     inverse=False,

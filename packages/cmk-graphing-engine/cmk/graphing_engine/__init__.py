@@ -8,6 +8,7 @@ from ._display import (
     metric_display_attributes,
     parse_color,
     parse_unit,
+    scalar_attributes,
     split_predict_prefix,
 )
 from ._drawn_curves import (
@@ -93,7 +94,6 @@ from ._quantity import (
     MetricProtocol,
     QuantityProtocol,
 )
-from ._quantity_from_api import build_curve
 from ._timeseries import (
     ConsolidationFunction,
     constant_time_series,
@@ -195,7 +195,6 @@ __all__ = [
     "Unit",
     "VerticalRange",
     "VerticalRangeKind",
-    "build_curve",
     "build_matched_graphs",
     "evaluate_graphs",
     "drawn_curves",
@@ -204,6 +203,7 @@ __all__ = [
     "DrawnLineType",
     "evaluate_perfometer",
     "metric_display_attributes",
+    "scalar_attributes",
     "parse_color",
     "parse_unit",
     "split_predict_prefix",

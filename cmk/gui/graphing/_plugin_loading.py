@@ -4,10 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.graphing.v1 import graphs as graphs_v1
-from cmk.graphing.v1 import perfometers as perfometers_v1
-from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
-from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
+from cmk.graphing_engine import ApiGraph, ApiPerfometer
 from cmk.gui.log import logger
 
 from ._from_api import graphs_from_api, perfometers_from_api
@@ -16,24 +13,9 @@ from ._plugins import graphing_plugins, GraphingPlugins
 
 def _add_graphing_plugins(plugins: GraphingPlugins) -> None:
     for plugin in plugins.plugins.values():
-        if isinstance(
-            plugin,
-            perfometers_v1.Perfometer
-            | perfometers_v1.Bidirectional
-            | perfometers_v1.Stacked
-            | perfometers_v2_unstable.Perfometer
-            | perfometers_v2_unstable.Bidirectional
-            | perfometers_v2_unstable.Stacked,
-        ):
+        if isinstance(plugin, ApiPerfometer):
             perfometers_from_api.register(plugin)
-
-        elif isinstance(
-            plugin,
-            graphs_v1.Graph
-            | graphs_v1.Bidirectional
-            | graphs_v2_unstable.Graph
-            | graphs_v2_unstable.Bidirectional,
-        ):
+        elif isinstance(plugin, ApiGraph):
             graphs_from_api.register(plugin)
 
 

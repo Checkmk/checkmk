@@ -38,6 +38,8 @@ from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
 from cmk.graphing_engine import (
+    ApiGraph,
+    ApiPerfometer,
     build_matched_graphs,
     ConsolidationFunction,
     evaluate_graphs,
@@ -63,10 +65,8 @@ from cmk.gui.graphing import (
     evaluated_metrics,
     evaluated_perfometer,
     EvaluatedMetric,
-    GraphFromAPI,
     parse_performance_data,
     perfometer_label,
-    PerfometerFromAPI,
     sort_registered_graph_plugins,
     translated_names_and_scales,
     unit_to_unit_format,
@@ -234,7 +234,7 @@ def _side_payload(
 
 
 def _component_perfometers(
-    plugin: PerfometerFromAPI,
+    plugin: ApiPerfometer,
 ) -> Sequence[perfometers_v1.Perfometer | perfometers_v2_unstable.Perfometer]:
     """The plain Perf-O-Meters a plugin is composed of, in stack-row order."""
     if isinstance(plugin, perfometers_v1.Bidirectional | perfometers_v2_unstable.Bidirectional):
@@ -248,7 +248,7 @@ def _perfometer_payload(
     perf_data_str: str,
     check_command: str,
     metrics: Mapping[MetricName, EvaluatedMetric],
-    registered_perfometers: Mapping[str, PerfometerFromAPI],
+    registered_perfometers: Mapping[str, ApiPerfometer],
     engine: _EngineInputs,
     temperature_unit: TemperatureUnit,
     theme: Theme,
@@ -329,7 +329,7 @@ def _metrics_payload(
 
 
 def _matched_graphs(
-    plugin: GraphFromAPI,
+    plugin: ApiGraph,
     metrics: Mapping[MetricName, EvaluatedMetric],
     engine: _EngineInputs,
     object_context: tuple[SiteId, HostName, ServiceName],
@@ -393,7 +393,7 @@ def _graph_title(graph: Graph, evaluated: Mapping[MetricName, EvaluatedMetric]) 
 def _graphs_payload(
     names_and_scales: Mapping[MetricName, tuple[MetricName, float]],
     metrics: Mapping[MetricName, EvaluatedMetric],
-    registered_graphs: Mapping[str, GraphFromAPI],
+    registered_graphs: Mapping[str, ApiGraph],
     engine: _EngineInputs,
     object_context: tuple[SiteId, HostName, ServiceName],
 ) -> list[GraphGroup]:
@@ -466,11 +466,11 @@ def metric_info(
     *,
     registered_metric_plugins: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
-    registered_perfometers: Mapping[str, PerfometerFromAPI],
+    registered_perfometers: Mapping[str, ApiPerfometer],
     temperature_unit: TemperatureUnit,
     theme: Theme,
     debug: bool,
-    registered_graphs: Mapping[str, GraphFromAPI] | None = None,
+    registered_graphs: Mapping[str, ApiGraph] | None = None,
     object_context: tuple[SiteId, HostName, ServiceName] | None = None,
 ) -> MetricInfo:
     """Resolve raw perfdata display semantics through Checkmk's graphing pipeline.

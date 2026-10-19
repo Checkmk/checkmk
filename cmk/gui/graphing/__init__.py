@@ -6,9 +6,7 @@ from ._autocompleter import monitored_metrics_autocompleter
 from ._built_graphs import BuiltGraph, DiscoveredGraphs
 from ._decoding import context_from_json, ensure_type
 from ._from_api import (
-    GraphFromAPI,
     graphs_from_api,
-    PerfometerFromAPI,
     perfometers_from_api,
 )
 from ._frontend import (
@@ -236,7 +234,6 @@ __all__ = [
     "GraphDisplayConfigHTML",
     "GraphEnvironment",
     "GraphExportRequest",
-    "GraphFromAPI",
     "GraphLineGroupByKey",
     "GraphPluginChoice",
     "GraphRanges",
@@ -283,7 +280,6 @@ __all__ = [
     "parse_performance_data",
     "perfometer_label",
     "perfometer_sort_value",
-    "PerfometerFromAPI",
     "perfometers_from_api",
     "prediction_graph_dispatcher",
     "QuantityCodec",

@@ -7,13 +7,13 @@ from collections.abc import Mapping, Sequence
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing_engine import ApiPerfometer
 from cmk.gui.graphing import (
     drawn_segments,
     DrawnSegment,
     evaluated_perfometer,
     perfometer_label,
     perfometer_sort_value,
-    PerfometerFromAPI,
     registered_translations,
 )
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -28,7 +28,7 @@ class Perfometer:
         self,
         row: Row,
         registered_metrics: Mapping[str, metrics_v1.Metric],
-        registered_perfometers: Mapping[str, PerfometerFromAPI],
+        registered_perfometers: Mapping[str, ApiPerfometer],
         *,
         debug: bool,
     ) -> None:

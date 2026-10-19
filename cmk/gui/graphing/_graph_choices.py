@@ -7,10 +7,9 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from cmk.graphing_engine import Graph
+from cmk.graphing_engine import ApiGraph, Graph
 from cmk.gui.i18n import _
 
-from ._from_api import GraphFromAPI
 from ._graph_dispatch import legacy_graph_id
 
 
@@ -26,9 +25,7 @@ class GraphChoices:
     single_metrics: Sequence[GraphPluginChoice]
 
 
-def graph_choices(
-    graphs: Sequence[Graph], registered_graphs: Sequence[GraphFromAPI]
-) -> GraphChoices:
+def graph_choices(graphs: Sequence[Graph], registered_graphs: Sequence[ApiGraph]) -> GraphChoices:
     plugin_graphs = []
     single_metrics = []
     for graph in graphs:

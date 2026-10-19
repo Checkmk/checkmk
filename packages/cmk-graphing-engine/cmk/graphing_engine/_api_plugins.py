@@ -119,7 +119,14 @@ def drawn_metric_names_of_graph(
     )
 
 
-type ApiPerfometer = (
+ApiGraph = (
+    graphs_v1.Graph
+    | graphs_v1.Bidirectional
+    | graphs_v2_unstable.Graph
+    | graphs_v2_unstable.Bidirectional
+)
+
+ApiPerfometer = (
     perfometers_v1.Perfometer
     | perfometers_v1.Bidirectional
     | perfometers_v1.Stacked

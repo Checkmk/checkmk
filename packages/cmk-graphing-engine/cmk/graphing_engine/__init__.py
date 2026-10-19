@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ._api_plugins import ApiGraph, ApiPerfometer
 from ._display import (
     FALLBACK_UNIT,
     metric_display_attributes,
@@ -122,6 +123,8 @@ from ._units import (
 )
 
 __all__ = [
+    "ApiGraph",
+    "ApiPerfometer",
     "FALLBACK_UNIT",
     "MACRO_SERIES_ID",
     "AutoPrecision",

@@ -10,6 +10,7 @@ from typing import override, Protocol
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.graphing_engine import (
+    ApiGraph,
     ConsolidationFunction,
     EvaluatedGraph,
     FetchDataProtocol,
@@ -18,12 +19,11 @@ from cmk.graphing_engine import (
 )
 
 from ._decoding import ensure_type
-from ._from_api import GraphFromAPI
 from ._graph_codec import GraphCodec
 from ._source import FetchDiagnostics
 
 
-def legacy_graph_id(graph: Graph, registered_graphs: Sequence[GraphFromAPI]) -> str:
+def legacy_graph_id(graph: Graph, registered_graphs: Sequence[ApiGraph]) -> str:
     """The graph id a built graph is addressed by in the specifications legacy stores and replays.
 
     A fallback single-metric graph must carry the "METRIC_" prefix legacy stores it under; without

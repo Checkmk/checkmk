@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from ._from_api import GraphFromAPI
+from cmk.graphing_engine import ApiGraph
 
 # Graph order from 2.2 but slightly adapted
 GRAPHS_ORDER = [
@@ -431,8 +431,8 @@ GRAPHS_ORDER = [
 
 
 def sort_registered_graph_plugins(
-    registered_graphs: Mapping[str, GraphFromAPI],
-) -> list[tuple[str, GraphFromAPI]]:
+    registered_graphs: Mapping[str, ApiGraph],
+) -> list[tuple[str, ApiGraph]]:
     def _by_index(graph_name: str) -> int:
         try:
             return GRAPHS_ORDER.index(graph_name)

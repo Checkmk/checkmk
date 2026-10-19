@@ -17,6 +17,7 @@ from cmk.graphing.v1 import Title as TitleV1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
+    ApiGraph,
     build_matched_graphs,
     evaluate_graphs,
     FetchMetricNamesProtocol,
@@ -31,7 +32,6 @@ from cmk.gui.i18n import _, translate_to_current_language
 from cmk.utils.servicename import ServiceName as GUIServiceName
 
 from ._built_graphs import BuiltGraph, DiscoveredGraphs
-from ._from_api import GraphFromAPI
 from ._graph_choices import GraphPluginChoice
 from ._graph_codec import GraphCodec
 from ._graph_dispatch import (
@@ -57,7 +57,7 @@ class MKGraphMixedUnitsError(MKGeneralException): ...
 
 
 def get_graph_plugin_choices(
-    registered_graphs: Mapping[str, GraphFromAPI],
+    registered_graphs: Mapping[str, ApiGraph],
 ) -> list[GraphPluginChoice]:
     return sorted(
         [
@@ -69,9 +69,9 @@ def get_graph_plugin_choices(
 
 
 def get_graph_plugin_from_id(
-    registered_graphs: Mapping[str, GraphFromAPI],
+    registered_graphs: Mapping[str, ApiGraph],
     graph_id: str,
-) -> GraphFromAPI:
+) -> ApiGraph:
     if graph_id.startswith("METRIC_"):
         metric_name = graph_id[7:]
         return graphs_v2_unstable.Graph(
@@ -162,7 +162,7 @@ def _resolved_site(graph: Graph) -> SiteId | None:
 def build_template_graphs(
     specification: TemplateGraphSpecification,
     *,
-    registered_graphs: Sequence[GraphFromAPI],
+    registered_graphs: Sequence[ApiGraph],
     registered_metrics: Mapping[str, metrics_v1.Metric],
     fetch_metric_names: FetchMetricNamesProtocol,
 ) -> Sequence[BuiltGraph]:

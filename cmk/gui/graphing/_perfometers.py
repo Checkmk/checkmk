@@ -12,6 +12,7 @@ from typing import assert_never, Final, Self
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
+    ApiPerfometer,
     evaluate_perfometer,
     EvaluatedBidirectional,
     EvaluatedFocusBound,
@@ -29,7 +30,6 @@ from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
-from ._from_api import PerfometerFromAPI
 from ._metric_data import translate_performance_data
 from ._performance_data import parse_performance_data
 from ._user_specific_unit import user_specific_unit
@@ -337,7 +337,7 @@ def evaluated_perfometer(
     *,
     host_name: str,
     service_name: str,
-    registered_perfometers: Mapping[str, PerfometerFromAPI],
+    registered_perfometers: Mapping[str, ApiPerfometer],
     registered_metrics: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
     debug: bool,

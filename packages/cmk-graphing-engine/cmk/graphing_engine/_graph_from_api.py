@@ -11,7 +11,7 @@ from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
-from ._api_plugins import ApiQuantity, is_scalar, metric_names_in_quantity
+from ._api_plugins import ApiGraph, ApiQuantity, is_scalar, metric_names_in_quantity
 from ._graph import Graph, Line, MinimalRange, Rule, Stack
 from ._naming import Service
 from ._quantity import Bound, Curve, QuantityProtocol
@@ -144,12 +144,7 @@ def _parse_lines(
 
 
 def parse_graph_from_api(
-    graph: (
-        graphs_v1.Graph
-        | graphs_v1.Bidirectional
-        | graphs_v2_unstable.Graph
-        | graphs_v2_unstable.Bidirectional
-    ),
+    graph: ApiGraph,
     services: Sequence[Service],
     localizer: Callable[[str], str],
     registered_metrics: Mapping[str, metrics_v1.Metric],

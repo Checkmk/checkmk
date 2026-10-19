@@ -15,7 +15,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import translations as translations_v1
-from cmk.graphing_engine import ConsolidationFunction, TimeRange
+from cmk.graphing_engine import ApiGraph, ConsolidationFunction, TimeRange
 from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui import sites
@@ -32,7 +32,6 @@ from cmk.gui.graphing import (
     graph_choices,
     GraphChoices,
     GraphDestinations,
-    GraphFromAPI,
     GraphPluginChoice,
     graphs_from_api,
     GraphSpecification,
@@ -323,7 +322,7 @@ def _graph_templates_autocompleter_testable(
     *,
     value_entered_by_user: str,
     params: Mapping[str, Any],
-    registered_plugin_graphs: Mapping[str, GraphFromAPI],
+    registered_plugin_graphs: Mapping[str, ApiGraph],
     registered_metric_definitions: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
     debug: bool,
@@ -352,7 +351,7 @@ def _graph_templates_autocompleter_testable(
 
 def _graph_and_single_metric_templates_choices_for_context(
     context: VisualContext,
-    registered_graphs: Mapping[str, GraphFromAPI],
+    registered_graphs: Mapping[str, ApiGraph],
     registered_metric_definitions: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
     *,

@@ -10,7 +10,7 @@ from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
-from ._api_plugins import drawn_metric_names_of_graph
+from ._api_plugins import ApiGraph, drawn_metric_names_of_graph
 from ._display import metric_display_attributes, PredictPrefix, scalar_attributes
 from ._fetch import FetchMetricNamesProtocol
 from ._fetched import ScalarKind
@@ -41,13 +41,6 @@ def _matches(
     return any(name in available for name in names)
 
 
-type _GraphPlugin = (
-    graphs_v1.Graph
-    | graphs_v1.Bidirectional
-    | graphs_v2_unstable.Graph
-    | graphs_v2_unstable.Bidirectional
-)
-
 # A plug-in's independently matchable parts paired with the metric names they draw: one part for a
 # plain graph, the lower and the upper one for a bidirectional graph. The names depend on the plug-in
 # alone, so they are resolved once and then matched against each service's available names.
@@ -56,7 +49,7 @@ type _MatchableParts = Sequence[
 ]
 
 
-def _matchable_parts(graph: _GraphPlugin) -> _MatchableParts:
+def _matchable_parts(graph: ApiGraph) -> _MatchableParts:
     match graph:
         case graphs_v1.Graph() | graphs_v2_unstable.Graph():
             return [(graph, drawn_metric_names_of_graph(graph))]
@@ -143,7 +136,7 @@ def build_matched_graphs(
     localizer: Callable[[str], str],
     fetch_metric_names: FetchMetricNamesProtocol,
     kind: str,
-    registered_graphs: Sequence[_GraphPlugin],
+    registered_graphs: Sequence[ApiGraph],
     registered_metrics: Mapping[str, metrics_v1.Metric],
     quantity_builder: QuantityBuilderProtocol = build_single_quantity,
     graph_name: str | None = None,

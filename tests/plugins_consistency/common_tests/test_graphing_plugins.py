@@ -19,7 +19,7 @@ from cmk.graphing.v1 import translations as translations_api
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
-from cmk.gui.graphing import GraphFromAPI, PerfometerFromAPI
+from cmk.graphing_engine import ApiGraph, ApiPerfometer
 from cmk.gui.graphing._plugins import graphing_plugins
 
 
@@ -179,9 +179,7 @@ class _MetricNamesInModule:
 
     def add_from_plugin(
         self,
-        plugin: (
-            metrics_v1.Metric | PerfometerFromAPI | GraphFromAPI | translations_api.Translation
-        ),
+        plugin: (metrics_v1.Metric | ApiPerfometer | ApiGraph | translations_api.Translation),
     ) -> None:
         match plugin:
             case metrics_v1.Metric():
@@ -294,7 +292,7 @@ def test__MetricNamesInModule_bundles(
 def _metric_names_by_module(
     plugins: Mapping[
         PluginLocation,
-        metrics_v1.Metric | PerfometerFromAPI | GraphFromAPI | translations_api.Translation,
+        metrics_v1.Metric | ApiPerfometer | ApiGraph | translations_api.Translation,
     ],
 ) -> Mapping[str, _MetricNamesInModule]:
     metric_names_by_module: dict[str, _MetricNamesInModule] = {}

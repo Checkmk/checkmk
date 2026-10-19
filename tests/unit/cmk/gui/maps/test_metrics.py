@@ -27,10 +27,7 @@ from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v1 import Title
 from cmk.graphing.v1 import translations as translations_api
-from cmk.gui.graphing import (
-    GraphFromAPI,
-    PerfometerFromAPI,
-)
+from cmk.graphing_engine import ApiGraph, ApiPerfometer
 from cmk.gui.theme import make_theme
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.maps.gui._metrics import (
@@ -68,7 +65,7 @@ _METRIC_PLUGINS: Mapping[str, metrics_api.Metric] = {
     "load1": _metric("load1", Title("CPU load average of last minute"), _COUNT),
 }
 
-_REGISTERED_PERFOMETERS: Mapping[str, PerfometerFromAPI] = {
+_REGISTERED_PERFOMETERS: Mapping[str, ApiPerfometer] = {
     "mem_used_percent": perfometers_api.Perfometer(
         name="mem_used_percent",
         focus_range=perfometers_api.FocusRange(
@@ -96,7 +93,7 @@ _REGISTERED_PERFOMETERS: Mapping[str, PerfometerFromAPI] = {
 }
 
 
-_REGISTERED_GRAPHS: Mapping[str, GraphFromAPI] = {
+_REGISTERED_GRAPHS: Mapping[str, ApiGraph] = {
     "ram_usage": graphs_api.Graph(
         name="ram_usage",
         title=Title("RAM usage graph"),

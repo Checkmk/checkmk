@@ -791,6 +791,27 @@ def test_matches_search_with_rules(
     assert ruleset.matches_search_with_rules(search_options) == expected_result
 
 
+@pytest.mark.xfail(strict=True, reason="Crash group 4628: re.error")
+def test_matches_search_with_rules_invalid_host_regex(with_admin_login: UserId) -> None:
+    # Crash group 4628: a rule's explicit host condition holds an invalid regex
+    folder_tree().create_missing_folders("regex_check")
+    folder = folder_tree().folder("regex_check")
+    ruleset = _ruleset("host_contactgroups")
+    rule = rulesets.Rule.from_config(
+        folder,
+        ruleset,
+        {
+            "id": "3a52e4b4-6c3c-4d3a-9b0e-3c3a0b4e8e11",
+            "value": "all",
+            "condition": {"host_name": [{"$regex": "*foo"}]},
+            "options": {"description": "foo"},
+        },
+    )
+    ruleset.append_rule(folder, rule)
+
+    assert ruleset.matches_search_with_rules({"rule_host_list": "foobar123"}) is False
+
+
 @dataclass
 class _RuleHelper:
     """Helps making and accessing rules"""

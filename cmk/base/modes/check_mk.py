@@ -263,11 +263,7 @@ SNMP_BACKEND_OPTION: Final = CLIOption(
 
 
 def _convert_sections_argument(arg: str) -> set[SectionName]:
-    try:
-        # kindly forgive empty strings
-        return {SectionName(n) for n in arg.split(",") if n}
-    except ValueError as exc:
-        raise MKBailOut("Error in --detect-sections argument: %s" % exc)
+    return {SectionName(n) for n in arg.split(",") if n}
 
 
 option_sections = CLIOption(
@@ -286,11 +282,7 @@ def get_plugins_option[TName: (str, CheckPluginName, InventoryPluginName, Sectio
     type_: type[TName],
 ) -> CLIOption:
     def _convert_plugins_argument(arg: str) -> set[TName]:
-        try:
-            # kindly forgive empty strings
-            return {type_(n) for n in arg.split(",") if n}
-        except ValueError as exc:
-            raise MKBailOut("Error in --plugins argument: %s" % exc) from exc
+        return {type_(n) for n in arg.split(",") if n}
 
     return CLIOption(
         long_option="plugins",
@@ -302,12 +294,7 @@ def get_plugins_option[TName: (str, CheckPluginName, InventoryPluginName, Sectio
 
 
 def _convert_detect_plugins_argument(arg: str) -> set[str]:
-    try:
-        # kindly forgive empty strings
-        # also maincheckify, as we may be dealing with old "--checks" input including dots.
-        return {maincheckify(n) for n in arg.split(",") if n}
-    except ValueError as exc:
-        raise MKBailOut("Error in --detect-plugins argument: %s" % exc) from exc
+    return {maincheckify(n) for n in arg.split(",") if n}
 
 
 option_detect_plugins = CLIOption(

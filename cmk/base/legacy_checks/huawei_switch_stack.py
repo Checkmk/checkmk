@@ -6,7 +6,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
-from cmk.plugins.lib.huawei import DETECT_HUAWEI_SWITCH
+from cmk.plugins.lib.huawei import HUAWEI_ENTERPRISE
 
 check_info = {}
 
@@ -54,14 +54,14 @@ def check_huawei_switch_stack(item, params, parsed):
 
 check_info["huawei_switch_stack"] = LegacyCheckDefinition(
     name="huawei_switch_stack",
-    detect=DETECT_HUAWEI_SWITCH,
+    detect=HUAWEI_ENTERPRISE.switch_detect,
     fetch=[
         SNMPTree(
-            base=".1.3.6.1.4.1.2011.5.25.183.1",
+            base=HUAWEI_ENTERPRISE.subtree("5.25.183.1"),
             oids=["5"],
         ),
         SNMPTree(
-            base=".1.3.6.1.4.1.2011.5.25.183.1.20.1",
+            base=HUAWEI_ENTERPRISE.subtree("5.25.183.1.20.1"),
             oids=[OIDEnd(), "3"],
         ),
     ],

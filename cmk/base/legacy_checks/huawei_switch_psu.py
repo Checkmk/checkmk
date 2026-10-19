@@ -5,14 +5,13 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_legacy_includes.huawei_switch import (
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import StringTable
+from cmk.plugins.lib.huawei import (
+    HUAWEI_ENTERPRISE,
     parse_huawei_physical_entity_values,
     Section,
 )
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
-from cmk.plugins.lib.huawei import DETECT_HUAWEI_SWITCH
 
 check_info = {}
 
@@ -48,17 +47,8 @@ def check_huawei_switch_psu(
 
 check_info["huawei_switch_psu"] = LegacyCheckDefinition(
     name="huawei_switch_psu",
-    detect=DETECT_HUAWEI_SWITCH,
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.2.1.47.1.1.1.1",
-            oids=[OIDEnd(), "7"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.2011.5.25.31.1.1.1.1",
-            oids=[OIDEnd(), "2"],
-        ),
-    ],
+    detect=HUAWEI_ENTERPRISE.switch_detect,
+    fetch=HUAWEI_ENTERPRISE.entity_state_trees("2"),
     parse_function=parse_huawei_switch_psu,
     service_name="Powersupply %s",
     discovery_function=discover_huawei_switch_psu,

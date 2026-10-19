@@ -24,7 +24,6 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.logged_in import user
 from cmk.gui.mkeventd import wato as mkeventd_wato
-from cmk.gui.mkeventd.wato import MatchOutcome
 from cmk.gui.search.matchers import MatchItem, MatchItemConfig
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.config_domain_name import config_domain_registry, EVENT_CONSOLE
@@ -451,42 +450,42 @@ _CANCELLING_SKIPPING_RULE = ec.Rule(
 @pytest.mark.parametrize(
     "rule, outcome",
     [
-        pytest.param(_MATCHING_RULE, MatchOutcome.NEW_EVENT, id="match"),
-        pytest.param(_CANCELLING_RULE, MatchOutcome.CANCEL_EVENTS, id="cancel"),
-        pytest.param(_DROPPING_RULE, MatchOutcome.DROP_MESSAGE, id="drop"),
-        pytest.param(_CANCELLING_DROPPING_RULE, MatchOutcome.DROP_MESSAGE, id="cancel, drop"),
-        pytest.param(_SKIPPING_RULE, MatchOutcome.SKIP_PACK, id="skip"),
-        pytest.param(_CANCELLING_SKIPPING_RULE, MatchOutcome.SKIP_PACK, id="cancel, skip"),
+        pytest.param(_MATCHING_RULE, ec.MatchOutcome.NEW_EVENT, id="match"),
+        pytest.param(_CANCELLING_RULE, ec.MatchOutcome.CANCEL_EVENTS, id="cancel"),
+        pytest.param(_DROPPING_RULE, ec.MatchOutcome.DROP_MESSAGE, id="drop"),
+        pytest.param(_CANCELLING_DROPPING_RULE, ec.MatchOutcome.DROP_MESSAGE, id="cancel, drop"),
+        pytest.param(_SKIPPING_RULE, ec.MatchOutcome.SKIP_PACK, id="skip"),
+        pytest.param(_CANCELLING_SKIPPING_RULE, ec.MatchOutcome.SKIP_PACK, id="cancel, skip"),
     ],
 )
 def test_match_outcome_is_the_one_of_the_event_console(
-    rule: ec.Rule, outcome: MatchOutcome
+    rule: ec.Rule, outcome: ec.MatchOutcome
 ) -> None:
     result = _simulate(rule, simulated_site=SiteId("remote"))
 
     assert isinstance(result, ec.MatchSuccess)
-    assert mkeventd_wato.match_outcome(rule, result) is outcome
+    assert ec.match_outcome(rule, result) is outcome
 
 
 @pytest.mark.parametrize(
     "drop, outcome",
     [
-        pytest.param(1, MatchOutcome.DROP_MESSAGE, id="true value"),
-        pytest.param(0, MatchOutcome.NEW_EVENT, id="false value"),
+        pytest.param(1, ec.MatchOutcome.DROP_MESSAGE, id="true value"),
+        pytest.param(0, ec.MatchOutcome.NEW_EVENT, id="false value"),
     ],
 )
 def test_match_outcome_uses_the_truth_value_of_drop_like_the_event_console(
-    drop: int, outcome: MatchOutcome
+    drop: int, outcome: ec.MatchOutcome
 ) -> None:
     # Nobody validates rule packs written by hand or shipped in an MKP.
     rule = ec.Rule(id="rule", match="nothing", drop=drop)  # type: ignore[typeddict-item]
     result = _simulate(rule, simulated_site=SiteId("remote"))
 
     assert isinstance(result, ec.MatchSuccess)
-    assert mkeventd_wato.match_outcome(rule, result) is outcome
+    assert ec.match_outcome(rule, result) is outcome
 
 
-def _first_match_outcome(*rules: ec.Rule) -> MatchOutcome | None:
+def _first_match_outcome(*rules: ec.Rule) -> ec.MatchOutcome | None:
     pack_match = _simulator(simulated_site=SiteId("remote")).match_rule_pack(_rule_pack(*rules))
     return pack_match.first_match.outcome if pack_match.first_match else None
 
@@ -494,18 +493,18 @@ def _first_match_outcome(*rules: ec.Rule) -> MatchOutcome | None:
 def test_first_matching_rule_decides_the_outcome_of_a_rule_pack() -> None:
     outcome = _first_match_outcome(_NON_MATCHING_RULE, _MATCHING_RULE, _CANCELLING_RULE)
 
-    assert outcome is MatchOutcome.NEW_EVENT
+    assert outcome is ec.MatchOutcome.NEW_EVENT
 
 
 @pytest.mark.parametrize(
     "rules, outcome",
     [
-        pytest.param([_SKIPPING_RULE, _MATCHING_RULE], MatchOutcome.SKIP_PACK, id="first skips"),
-        pytest.param([_MATCHING_RULE, _SKIPPING_RULE], MatchOutcome.NEW_EVENT, id="later skips"),
+        pytest.param([_SKIPPING_RULE, _MATCHING_RULE], ec.MatchOutcome.SKIP_PACK, id="first skips"),
+        pytest.param([_MATCHING_RULE, _SKIPPING_RULE], ec.MatchOutcome.NEW_EVENT, id="later skips"),
     ],
 )
 def test_rule_pack_is_skipped_only_if_its_first_match_skips_it(
-    rules: list[ec.Rule], outcome: MatchOutcome
+    rules: list[ec.Rule], outcome: ec.MatchOutcome
 ) -> None:
     assert _first_match_outcome(*rules) is outcome
 

@@ -14,8 +14,10 @@ from typing import Literal, TypedDict
 from dateutil.parser import isoparse
 from dateutil.tz import tzlocal
 
+from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
+from cmk.ccc.translations import translate, TranslationOptions
 
 # State transitions (probably incomplete):
 #   {ack, open, counting} => closed
@@ -494,3 +496,20 @@ def scrub_string(s: str) -> str:
 
 
 _scrub_string_unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}
+
+
+def translate_event_host(
+    translation: TranslationOptions, host_name: str, logger: Logger | None = None
+) -> HostName:
+    """Translates the host name of an event like the Event Console. The translated host name is empty
+    if the translation fails, e.g. because of an invalid regular expression, or if the translated
+    host name is invalid. A given logger logs why.
+    """
+    try:
+        return HostName(translate(translation, host_name))
+    except MKTimeout:  # e.g. the request timeout of the GUI
+        raise
+    except Exception:
+        if logger:
+            logger.exception('Unable to parse host "%(host)s"', {"host": host_name})
+        return HostName("")

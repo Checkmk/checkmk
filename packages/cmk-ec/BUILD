@@ -22,8 +22,10 @@ py_library(
         "//visibility:public",
     ],
     deps = [
+        "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:translations",
         requirement("python-dateutil"),
     ],
 )

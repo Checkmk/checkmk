@@ -323,3 +323,10 @@ class TestPredictionStore:
         PredictionStore(tmp_path).remove_outdated_predictions(now)
 
         assert unknown_period.exists()
+
+    @pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4827: ValidationError")
+    def test_iter_all_valid_predictions_skips_unreadable_meta(self, tmp_path: Path) -> None:
+        # Crash group 4827: an empty prediction meta file crashed every predictive check
+        (tmp_path / f"wday-{int(time.time())}-upper.info").write_text("")
+
+        assert not list(PredictionStore(tmp_path).iter_all_valid_predictions(time.time()))

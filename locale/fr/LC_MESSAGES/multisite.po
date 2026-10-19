@@ -20906,6 +20906,9 @@ msgstr "Statistiques DHCP (messages reçus)"
 msgid "DHCP statistics (sent messages)"
 msgstr "Statistiques DHCP (messages envoyés)"
 
+msgid "DISTRIBUTION"
+msgstr ""
+
 msgid "DISTTAG"
 msgstr "DISTTAG"
 
@@ -36042,6 +36045,14 @@ msgid "How long to alert after the most recent watch error."
 msgstr ""
 
 msgid "How many days in the past Checkmk should evaluate the measurement data"
+msgstr ""
+
+msgid ""
+"How many times the model may reply while answering one question. In each "
+"reply it can call several tools at once, then it reads their results and "
+"replies again. When an answer needs more replies, it ends with an error; the "
+"next question can build on what was found. Higher values allow longer "
+"investigations and cost more tokens."
 msgstr ""
 
 msgid ""
@@ -55797,6 +55808,10 @@ msgstr "Seuils des capteurs de sortie"
 msgid "Output text encoding settings for SNMP devices"
 msgstr "Paramètres d'encodage du texte de sortie pour les dispositifs SNMP"
 
+#, fuzzy
+msgid "Output tokens per reply"
+msgstr "Seuils des capteurs de sortie"
+
 msgid "Output traffic"
 msgstr "Trafic de sortie"
 
@@ -63892,6 +63907,10 @@ msgstr "%sRound trip minimum"
 msgid "Round trip time"
 msgstr "Durée du voyage aller-retour"
 
+#, fuzzy
+msgid "Rounds per turn"
+msgstr "Nœuds par région"
+
 msgid ""
 "Route OpenTelemetry data to the hosts matched by this rule. Which data "
 "belongs to a host is determined by its identity labels 'cmk/metrics_identity/"
@@ -67684,12 +67703,6 @@ msgstr "Définir la taille absolue"
 msgid "Set the according numbers to 0 if you want to disable alerting."
 msgstr ""
 "Mettez les chiffres correspondants sur 0 si vous voulez désactiver l'alerte."
-
-#, python-format
-msgid ""
-"Set the address this site connects to the central data backend from to store "
-"these features centrally: %(features)s"
-msgstr ""
 
 msgid "Set the bucket of the InfluxDB server."
 msgstr "Définir le bucket du serveur InfluxDB."
@@ -77960,6 +77973,12 @@ msgstr ""
 
 msgid "The monitoring state that this event will trigger."
 msgstr "L'état de surveillance que cet événement va déclencher."
+
+msgid ""
+"The most tokens one model reply may produce, its thinking included. A value "
+"above what the model supports makes every answer fail: Claude Haiku 4.5, for "
+"example, allows at most 64,000."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""

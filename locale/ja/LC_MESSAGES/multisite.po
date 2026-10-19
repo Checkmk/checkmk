@@ -19210,6 +19210,9 @@ msgstr "DHCP統計(受信メッセージ)"
 msgid "DHCP statistics (sent messages)"
 msgstr "DHCP統計(送信メッセージ)"
 
+msgid "DISTRIBUTION"
+msgstr ""
+
 msgid "DISTTAG"
 msgstr "DISTTAG"
 
@@ -32980,6 +32983,14 @@ msgstr "直近のwatchエラー発生後、アラートを継続する時間。"
 
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr "Checkmkが測定データを評価すべき過去の日数"
+
+msgid ""
+"How many times the model may reply while answering one question. In each "
+"reply it can call several tools at once, then it reads their results and "
+"replies again. When an answer needs more replies, it ends with an error; the "
+"next question can build on what was found. Higher values allow longer "
+"investigations and cost more tokens."
+msgstr ""
 
 msgid ""
 "How many top-affected hosts get service detail (0–1000). Leave unchecked to "
@@ -51022,6 +51033,10 @@ msgstr "出力センサーのしきい値"
 msgid "Output text encoding settings for SNMP devices"
 msgstr "SNMPデバイスの出力テキストエンコーディング設定"
 
+#, fuzzy
+msgid "Output tokens per reply"
+msgstr "出力センサーのしきい値"
+
 msgid "Output traffic"
 msgstr "出力トラフィック"
 
@@ -58463,6 +58478,10 @@ msgstr "ラウンドトリップの最小値"
 msgid "Round trip time"
 msgstr "ラウンドトリップタイム"
 
+#, fuzzy
+msgid "Rounds per turn"
+msgstr "リージョンごとのノード"
+
 msgid ""
 "Route OpenTelemetry data to the hosts matched by this rule. Which data "
 "belongs to a host is determined by its identity labels 'cmk/metrics_identity/"
@@ -61992,14 +62011,6 @@ msgstr "絶対サイズを設定する"
 
 msgid "Set the according numbers to 0 if you want to disable alerting."
 msgstr "アラートを無効にする場合は、対応する番号を0に設定します。"
-
-#, python-format
-msgid ""
-"Set the address this site connects to the central data backend from to store "
-"these features centrally: %(features)s"
-msgstr ""
-"これらの機能を一元的に保存するために、このサイトが中央データバックエンドに接"
-"続するアドレスを設定してください：%(features)s"
 
 msgid "Set the bucket of the InfluxDB server."
 msgstr "InfluxDBサーバーのバケットを設定します。"
@@ -71793,6 +71804,12 @@ msgstr "エージェントプラグインのバージョンが解析不可能な
 
 msgid "The monitoring state that this event will trigger."
 msgstr "このイベントがトリガーする監視状態。"
+
+msgid ""
+"The most tokens one model reply may produce, its thinking included. A value "
+"above what the model supports makes every answer fail: Claude Haiku 4.5, for "
+"example, allows at most 64,000."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -107240,6 +107257,14 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#, python-format
+#~ msgid ""
+#~ "Set the address this site connects to the central data backend from to "
+#~ "store these features centrally: %(features)s"
+#~ msgstr ""
+#~ "これらの機能を一元的に保存するために、このサイトが中央データバックエンドに"
+#~ "接続するアドレスを設定してください：%(features)s"
 
 #~ msgid "Can not evaluate search"
 #~ msgstr "検索を評価できません"

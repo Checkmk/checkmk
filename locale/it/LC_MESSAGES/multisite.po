@@ -20559,6 +20559,9 @@ msgstr "Statistiche DHCP (messaggi ricevuti)"
 msgid "DHCP statistics (sent messages)"
 msgstr "Statistiche DHCP (messaggi inviati)"
 
+msgid "DISTRIBUTION"
+msgstr ""
+
 msgid "DISTTAG"
 msgstr "DISTTAG"
 
@@ -35571,6 +35574,14 @@ msgstr ""
 
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr "Quanti giorni nel passato Checkmk deve confrontare i dati misurati"
+
+msgid ""
+"How many times the model may reply while answering one question. In each "
+"reply it can call several tools at once, then it reads their results and "
+"replies again. When an answer needs more replies, it ends with an error; the "
+"next question can build on what was found. Higher values allow longer "
+"investigations and cost more tokens."
+msgstr ""
 
 msgid ""
 "How many top-affected hosts get service detail (0–1000). Leave unchecked to "
@@ -55164,6 +55175,10 @@ msgstr "Soglie dei sensori di uscita"
 msgid "Output text encoding settings for SNMP devices"
 msgstr "Impostazioni di codifica del testo in uscita per i dispositivi SNMP"
 
+#, fuzzy
+msgid "Output tokens per reply"
+msgstr "Soglie dei sensori di uscita"
+
 msgid "Output traffic"
 msgstr "Traffico in uscita"
 
@@ -63158,6 +63173,10 @@ msgstr "%sRound trip minimo"
 msgid "Round trip time"
 msgstr "Tempo di andata e ritorno"
 
+#, fuzzy
+msgid "Rounds per turn"
+msgstr "Nodi per regione"
+
 msgid ""
 "Route OpenTelemetry data to the hosts matched by this rule. Which data "
 "belongs to a host is determined by its identity labels 'cmk/metrics_identity/"
@@ -66917,12 +66936,6 @@ msgstr "Impostare la dimensione assoluta"
 
 msgid "Set the according numbers to 0 if you want to disable alerting."
 msgstr "Imposta i numeri corrispondenti a 0 se vuoi disabilitare gli avvisi."
-
-#, python-format
-msgid ""
-"Set the address this site connects to the central data backend from to store "
-"these features centrally: %(features)s"
-msgstr ""
 
 msgid "Set the bucket of the InfluxDB server."
 msgstr "Impostare il bucket del server InfluxDB."
@@ -77103,6 +77116,12 @@ msgstr ""
 
 msgid "The monitoring state that this event will trigger."
 msgstr "Lo stato di monitoraggio che questo evento attiverà."
+
+msgid ""
+"The most tokens one model reply may produce, its thinking included. A value "
+"above what the model supports makes every answer fail: Claude Haiku 4.5, for "
+"example, allows at most 64,000."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""

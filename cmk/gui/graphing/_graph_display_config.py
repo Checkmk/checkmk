@@ -68,7 +68,7 @@ class GraphRenderOptions(BaseModel):
             render_options_vs
             | (
                 {"title_format": GraphTitleFormat.from_vs(title_format_vs)}
-                if (title_format_vs := render_options_vs.get("title_format"))
+                if (title_format_vs := render_options_vs.get("title_format")) is not None
                 else {}
             )
         )

@@ -3,12 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 from cmk.gui.graphing._graph_display_config import GraphRenderOptions, GraphTitleFormat
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4324: ValidationError")
 def test_from_graph_render_options_vs_empty_title_format() -> None:
     # Crash group 4324: no title element was selected, stored as an empty list
     assert GraphRenderOptions.from_graph_render_options_vs(

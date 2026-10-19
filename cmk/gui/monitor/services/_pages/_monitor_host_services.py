@@ -36,7 +36,6 @@ from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
 from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.monitoring.host_services import (
     AcknowledgeDefaults,
@@ -126,9 +125,8 @@ class MonitorHostServicesPage(Page):
         site_id = SiteId(ctx.request.get_str_input_mandatory("site"))
         title = _("Services of host %(host)s") % {"host": hostname}
 
-        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
         host_url = _host_url(ctx, hostname, site_id)
-        breadcrumb = _make_breadcrumb(ctx, hostname, site_id, host_url, user_permissions)
+        breadcrumb = _make_breadcrumb(ctx, hostname, site_id, host_url, ctx.user_permissions)
 
         make_header(
             html,

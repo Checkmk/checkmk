@@ -18,7 +18,9 @@ from cmk.gui.htmllib.html import _load_vue_manifest
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageContext, PageHandler, PageRegistry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.welcome.pages import get_welcome_data, register
@@ -28,7 +30,13 @@ from cmk.shared_typing.welcome import FinishedEnum, WelcomeCards
 
 @pytest.fixture(name="page_context")
 def fixture_page_context() -> PageContext:
-    return PageContext(config=Config(), request=request, transactions=transactions, session=session)
+    return PageContext(
+        config=Config(),
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+    )
 
 
 @pytest.fixture(name="installed_themes")
@@ -248,6 +256,9 @@ def test_welcome_page_sends_users_without_setup_permissions_to_the_start_page(
         request=request,
         transactions=transactions,
         session=session,
+        user_permissions=UserPermissions.from_config(
+            replace(Config(), start_url="index.py"), all_permissions()
+        ),
     )
 
     with output_funnel.plugged():
@@ -271,6 +282,9 @@ def test_welcome_page_falls_back_to_the_dashboard_for_a_rejected_start_page(
         request=request,
         transactions=transactions,
         session=session,
+        user_permissions=UserPermissions.from_config(
+            replace(Config(), start_url="http://phishing.example.com"), all_permissions()
+        ),
     )
 
     with output_funnel.plugged():

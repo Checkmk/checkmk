@@ -49,7 +49,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
@@ -179,8 +178,7 @@ class PageCrash(Page):
         report = CrashReport.build(ctx.request, CrashReportsRowTable())
         title = _("Crash report: %(crash_id)s") % {"crash_id": report.crash_id}
 
-        permissions = UserPermissions.from_config(ctx.config, all_permissions())
-        breadcrumb = self._breadcrumb(ctx.request, title, permissions)
+        breadcrumb = self._breadcrumb(ctx.request, title, ctx.user_permissions)
 
         page_menu = self._page_menu(ctx.request, breadcrumb, report.info, report.site_id)
         make_header(

@@ -135,7 +135,7 @@ def page_edit_view(ctx: PageContext) -> None:
     visuals.page_edit_visual(
         "views",
         get_all_views(),
-        UserPermissions.from_config(ctx.config, all_permissions()),
+        ctx.user_permissions,
         ctx.config,
         custom_field_handler=partial(_render_editable_view_config, config=ctx.config),
         create_handler=partial(_create_editable_view, config=ctx.config),
@@ -1211,7 +1211,7 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
             painter_options=PainterOptions.get_instance(),
             theme=theme,
             url_renderer=RenderLink(ctx.request, response, display_options),
-            user_permissions=UserPermissions.from_config(ctx.config, all_permissions()),
+            user_permissions=ctx.user_permissions,
         )
         if api_request["painter_type"] == "painter":
             painters = painters_of_datasource(api_request["ds_name"])

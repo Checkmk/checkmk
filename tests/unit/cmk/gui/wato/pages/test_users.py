@@ -16,7 +16,9 @@ from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.users import (
@@ -50,7 +52,13 @@ def test_edit_user_keeps_the_stored_connector(test_edition: Edition) -> None:
 
     mode = ModeEditUser(
         test_edition,
-        PageContext(config=Config(), request=request, transactions=transactions, session=session),
+        PageContext(
+            config=Config(),
+            request=request,
+            transactions=transactions,
+            session=session,
+            user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+        ),
     )
     mode._user = UserSpec(connector="ldap_corp", alias="Directory User")  # noqa: SLF001
 
@@ -90,7 +98,11 @@ def test_users_breadcrumb_dont_list_users_topic(test_edition: Edition) -> None:
         ModeUsers(
             test_edition,
             PageContext(
-                config=Config(), request=request, transactions=transactions, session=session
+                config=Config(),
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(Config(), all_permissions()),
             ),
         ).breadcrumb()
     ) == [
@@ -105,7 +117,11 @@ def test_edituser_breadcrumb_dont_list_users_topic(test_edition: Edition) -> Non
         ModeEditUser(
             test_edition,
             PageContext(
-                config=Config(), request=request, transactions=transactions, session=session
+                config=Config(),
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(Config(), all_permissions()),
             ),
         ).breadcrumb()
     ) == [
@@ -123,7 +139,13 @@ def test_password_user_choose_secret_wo_secret(test_edition: Edition) -> None:
     request.set_var("authmethod", "secret")
     mode = ModeEditUser(
         test_edition,
-        PageContext(config=Config(), request=request, transactions=transactions, session=session),
+        PageContext(
+            config=Config(),
+            request=request,
+            transactions=transactions,
+            session=session,
+            user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+        ),
     )
 
     user_with_password_auth = UserSpec(
@@ -143,7 +165,13 @@ def test_password_user_choose_secret_w_secret(test_edition: Edition) -> None:
     request.set_var("_auth_secret", "secret")
     mode = ModeEditUser(
         test_edition,
-        PageContext(config=Config(), request=request, transactions=transactions, session=session),
+        PageContext(
+            config=Config(),
+            request=request,
+            transactions=transactions,
+            session=session,
+            user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+        ),
     )
 
     user_with_password_auth = UserSpec(
@@ -167,7 +195,13 @@ def test_automation_user_choose_secret_wo_secret(test_edition: Edition) -> None:
     request.set_var("authmethod", "secret")
     mode = ModeEditUser(
         test_edition,
-        PageContext(config=Config(), request=request, transactions=transactions, session=session),
+        PageContext(
+            config=Config(),
+            request=request,
+            transactions=transactions,
+            session=session,
+            user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+        ),
     )
 
     user_with_secret_auth = UserSpec(
@@ -192,7 +226,13 @@ def test_automation_user_choose_password_wo_pw(test_edition: Edition) -> None:
     request.set_var("authmethod", "password")
     mode = ModeEditUser(
         test_edition,
-        PageContext(config=Config(), request=request, transactions=transactions, session=session),
+        PageContext(
+            config=Config(),
+            request=request,
+            transactions=transactions,
+            session=session,
+            user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+        ),
     )
 
     user_with_secret_auth = UserSpec(
@@ -215,7 +255,13 @@ def test_automation_user_choose_password_wo_pw(test_edition: Edition) -> None:
 def test_automation_user_choose_password_w_pw(test_edition: Edition) -> None:
     mode = ModeEditUser(
         test_edition,
-        PageContext(config=Config(), request=request, transactions=transactions, session=session),
+        PageContext(
+            config=Config(),
+            request=request,
+            transactions=transactions,
+            session=session,
+            user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+        ),
     )
     request.set_var("authmethod", "password")
     request.set_var("_password_" + mode._pw_suffix(), "longer_than_12")  # noqa: SLF001

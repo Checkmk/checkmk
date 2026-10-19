@@ -20,7 +20,9 @@ from cmk.gui.oauth.store._auth_code_store import AuthCodeRecord, AuthCodeStore
 from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.scopes import format_scopes
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.utils.redis import disable_redis
@@ -80,7 +82,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -103,7 +109,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -129,7 +139,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -155,7 +169,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -172,7 +190,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
             assert isinstance(response.json, dict)
@@ -184,7 +206,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
             assert isinstance(response.json, dict)
@@ -197,7 +223,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -212,7 +242,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -230,7 +264,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -245,7 +283,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -257,7 +299,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -269,7 +315,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -282,7 +332,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -296,7 +350,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -311,7 +369,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -332,7 +394,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -355,7 +421,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -376,7 +446,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -391,7 +465,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -407,7 +485,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -425,7 +507,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
             assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -435,7 +521,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -451,7 +541,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -469,7 +563,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -488,7 +586,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -504,7 +606,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -521,7 +627,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -537,7 +647,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -554,7 +668,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -571,7 +689,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -583,7 +705,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -597,7 +723,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
             assert response.status_code == HTTPStatus.OK
@@ -606,7 +736,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -620,7 +754,11 @@ class TestOAuthTokenPage:
             with disable_redis():
                 OAuthTokenPage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -637,7 +775,11 @@ class TestOAuthTokenPage:
             with disable_redis():
                 OAuthTokenPage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -655,7 +797,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -675,7 +821,11 @@ class TestOAuthTokenPage:
             with disable_redis():
                 OAuthTokenPage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -688,7 +838,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -699,7 +853,11 @@ class TestOAuthTokenPage:
             flask_app.preprocess_request()
             OAuthTokenPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 

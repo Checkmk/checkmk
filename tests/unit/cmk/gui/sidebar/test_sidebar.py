@@ -17,6 +17,7 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.http import Request, request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.sidebar import UserSidebarSnapin
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
@@ -375,6 +376,7 @@ def test_ajax_fold(
             request=Request(create_environ()),
             transactions=transactions,
             session=session,
+            user_permissions=UserPermissions.from_config(Config(), all_permissions()),
         )
     )
 
@@ -427,6 +429,7 @@ def test_ajax_openclose_close(mocker: MockerFixture, origin_state: str, set_stat
             request=Request(create_environ()),
             transactions=transactions,
             session=session,
+            user_permissions=UserPermissions.from_config(Config(), all_permissions()),
         )
     )
 
@@ -461,6 +464,7 @@ def test_move_snapin_not_permitted(monkeypatch: pytest.MonkeyPatch, mocker: Mock
                 request=Request(create_environ()),
                 transactions=transactions,
                 session=session,
+                user_permissions=UserPermissions.from_config(Config(), all_permissions()),
             )
         )
         m_load.assert_not_called()
@@ -484,6 +488,7 @@ def test_move_snapin(mocker: MockerFixture, move: str, before: str, do_save: boo
             request=Request(create_environ()),
             transactions=transactions,
             session=session,
+            user_permissions=UserPermissions.from_config(Config(), all_permissions()),
         )
     )
 

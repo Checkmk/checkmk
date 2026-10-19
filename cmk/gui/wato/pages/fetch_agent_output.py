@@ -37,7 +37,6 @@ from cmk.gui.http import ContentDispositionType, Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
-from cmk.gui.permissions import all_permissions
 from cmk.gui.theme import make_theme
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
@@ -206,7 +205,7 @@ class PageFetchAgentOutput(AgentOutputPage):
             title=title,
             breadcrumb=self._breadcrumb(
                 title,
-                user_permissions := UserPermissions.from_config(ctx.config, all_permissions()),
+                ctx.user_permissions,
             ),
             debug=ctx.config.debug,
             lang=user.language,
@@ -219,7 +218,7 @@ class PageFetchAgentOutput(AgentOutputPage):
             user_role_ids=user.role_ids,
         )
 
-        self._action(user_permissions)
+        self._action(ctx.user_permissions)
 
         automation_config = make_automation_config(ctx.config.sites[self._request.host.site_id()])
         if request.has_var("_start"):

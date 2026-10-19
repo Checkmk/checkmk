@@ -349,10 +349,9 @@ class Bookmarks(SidebarSnapin):
         check_csrf_token(session, request, i18n=_)
         title = request.var("title")
         url = request.var("url")
-        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
         if title and url:
             BookmarkList.validate_url(url, "url")
-            self._add_bookmark(title, url, user_permissions)
+            self._add_bookmark(title, url, ctx.user_permissions)
         self.show(ctx.config)
 
     def _add_bookmark(self, title: str, url: str, user_permissions: UserPermissions) -> None:

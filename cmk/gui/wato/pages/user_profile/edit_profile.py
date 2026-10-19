@@ -25,10 +25,8 @@ from cmk.gui.i18n import _, _u, localize
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
-from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import CustomUserAttrSpec, UserSpec
 from cmk.gui.userdb import get_user_attributes, get_user_attributes_by_topic, UserAttribute
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import ValueSpec
@@ -124,7 +122,7 @@ class UserProfile(Page):
     @override
     def page(self, ctx: PageContext) -> None:
         verify_requirements(
-            UserPermissions.from_config(ctx.config, all_permissions()),
+            ctx.user_permissions,
             "general.edit_profile",
             ctx.config.wato_enabled,
         )

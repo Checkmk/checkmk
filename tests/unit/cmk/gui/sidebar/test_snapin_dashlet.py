@@ -19,6 +19,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.sidebar._snapin._base import SidebarSnapin
 from cmk.gui.sidebar._snapin_dashlet import SnapinDashlet, SnapinWidgetIFramePage
 from cmk.gui.utils.output_funnel import output_funnel
@@ -82,7 +83,13 @@ def _dashlet_spec(snapin: str) -> SnapinDashletConfig:
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request, transactions=transactions, session=session)
+    return PageContext(
+        config=config,
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
+    )
 
 
 def test_dashlet_metadata() -> None:

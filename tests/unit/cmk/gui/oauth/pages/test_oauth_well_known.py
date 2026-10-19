@@ -12,6 +12,8 @@ from cmk.gui.config import Config
 from cmk.gui.http import Request, response
 from cmk.gui.oauth.pages._oauth_well_known import OAuthAuthorizationServerMetadataPage
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 
@@ -25,6 +27,7 @@ class TestOAuthAuthorizationServerMetadataPage:
                 request=Request(create_environ()),
                 transactions=transactions,
                 session=session,
+                user_permissions=UserPermissions.from_config(Config(), all_permissions()),
             )
         )
 

@@ -19,7 +19,9 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import CustomHostAttrSpec
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.bulk_import import (
@@ -202,7 +204,13 @@ def test_bulk_import_csv_parsing(
     )
     mode_bulk_import = ModeBulkImport(
         test_edition,
-        PageContext(config=Config(), request=request, transactions=transactions, session=session),
+        PageContext(
+            config=Config(),
+            request=request,
+            transactions=transactions,
+            session=session,
+            user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+        ),
     )
     request.set_var("attribute_0", "host_name")
     request.set_var("attribute_1", "ipaddress")

@@ -64,7 +64,6 @@ from cmk.gui.page_menu import (
     PageMenuVue,
 )
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
-from cmk.gui.permissions import all_permissions
 from cmk.gui.session import session
 from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
 from cmk.gui.table import Table, table_element
@@ -93,7 +92,6 @@ from cmk.gui.userdb.session import (
     save_session_infos,
 )
 from cmk.gui.userdb.store import save_custom_attr, save_two_factor_credentials
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import TwoFactorEvent, TwoFactorEventType, TwoFAFailureEvent
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
@@ -624,7 +622,7 @@ class UserTwoFactorOverview(Page):
     @override
     def page(self, ctx: PageContext) -> None:
         verify_requirements(
-            UserPermissions.from_config(ctx.config, all_permissions()),
+            ctx.user_permissions,
             "general.manage_2fa",
             ctx.config.wato_enabled,
         )
@@ -828,7 +826,7 @@ class UserTwoFactorEnforce(Page):
     @override
     def page(self, ctx: PageContext) -> None:
         verify_requirements(
-            UserPermissions.from_config(ctx.config, all_permissions()),
+            ctx.user_permissions,
             "general.manage_2fa",
             ctx.config.wato_enabled,
         )
@@ -1011,7 +1009,7 @@ class RegisterTotpSecret(Page):
     @override
     def page(self, ctx: PageContext) -> None:
         verify_requirements(
-            UserPermissions.from_config(ctx.config, all_permissions()),
+            ctx.user_permissions,
             "general.manage_2fa",
             ctx.config.wato_enabled,
         )
@@ -1139,7 +1137,7 @@ class EditCredentialAlias(Page):
     @override
     def page(self, ctx: PageContext) -> None:
         verify_requirements(
-            UserPermissions.from_config(ctx.config, all_permissions()),
+            ctx.user_permissions,
             "general.manage_2fa",
             ctx.config.wato_enabled,
         )
@@ -1249,7 +1247,7 @@ class UserWebAuthnRegisterBegin(JsonPage):
 
         if not session.two_factor_enforced(
             user.ident,
-            UserPermissions.from_config(ctx.config, all_permissions()),
+            ctx.user_permissions,
         ):
             user.need_permission("general.manage_2fa")
 
@@ -1282,7 +1280,7 @@ class UserWebAuthnRegisterComplete(JsonPage):
 
         if not session.two_factor_enforced(
             user.ident,
-            UserPermissions.from_config(ctx.config, all_permissions()),
+            ctx.user_permissions,
         ):
             user.need_permission("general.manage_2fa")
 

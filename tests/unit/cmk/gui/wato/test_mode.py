@@ -15,6 +15,8 @@ from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato import MainModuleTopicHosts
@@ -97,7 +99,11 @@ class TestWatoMode:
             SomeWatoMode(
                 test_edition,
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 ),
             ).breadcrumb()
         ) == [
@@ -134,7 +140,11 @@ class TestWatoMode:
             SomeWatoMode(
                 test_edition,
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 ),
             ).breadcrumb()
         ) == [

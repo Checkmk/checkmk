@@ -12,8 +12,10 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.mode import WatoMode
@@ -22,7 +24,13 @@ type TableRow = dict[str, Tag]
 
 
 def page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request, transactions=transactions, session=session)
+    return PageContext(
+        config=config,
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
+    )
 
 
 def render_page[T](mode: WatoMode[T], config: Config) -> str:

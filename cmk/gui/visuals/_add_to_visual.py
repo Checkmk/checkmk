@@ -50,7 +50,7 @@ def ajax_popup_add(ctx: PageContext) -> None:
     page_menu_dropdown = page_menu_dropdown_add_to_visual(
         add_type=request.get_ascii_input_mandatory("add_type"),
         name="",
-        user_permissions=UserPermissions.from_config(ctx.config, all_permissions()),
+        user_permissions=ctx.user_permissions,
     )[0]
 
     html.open_ul()
@@ -194,7 +194,7 @@ def ajax_add_visual(ctx: PageContext) -> None:
         element_type,
         create_info.context,
         create_info.params,
-        UserPermissions.from_config(ctx.config, all_permissions()),
+        ctx.user_permissions,
         RequestCache(ctx.config),
     )
 

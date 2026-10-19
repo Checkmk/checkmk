@@ -36,7 +36,6 @@ from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.painter import PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.permissions import all_permissions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.token_auth import AuthToken, DashboardToken
 from cmk.gui.type_defs import (
@@ -456,7 +455,6 @@ class ViewWidgetIFramePage(Page):
         ViewWidgetIFramePageHelper.setup_filled_in(ctx.request)
         ViewWidgetIFramePageHelper.setup_datasource(ctx.request, view_spec["datasource"])
 
-        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
         row_limit = get_limit(
             view_spec_row_limit=view_spec.get("row_limit", 0),
             request_limit_mode=parameters.limit,
@@ -470,7 +468,7 @@ class ViewWidgetIFramePage(Page):
             view_spec,
             row_limit,
             parameters.get_context(),
-            user_permissions,
+            ctx.user_permissions,
             ctx.config,
             column_links=column_links,
             is_reload=parameters.is_reload(),
@@ -548,10 +546,9 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
     @override
     def _get(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> None:
         parameters = _ViewWidgetIFrameAuthTokenRequestParameters.from_request(ctx.request)
-        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
 
         with impersonate_dashboard_token_issuer(
-            token.issuer, token_details, user_permissions
+            token.issuer, token_details, ctx.user_permissions
         ) as issuer:
             dashboard = issuer.load_dashboard()
             unique_widget_name = f"{dashboard['name']}_{parameters.widget_id}"
@@ -570,7 +567,7 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
                 row_limit=view_spec.get("row_limit", 0) or ctx.config.soft_query_limit,
                 # includes dashboard context via _get_view_spec_by_widget_id
                 context=widget.context,
-                user_permissions=user_permissions,
+                user_permissions=ctx.user_permissions,
                 config=ctx.config,
                 # Every drill-down target sits behind a login, so a shared dashboard links nowhere.
                 column_links={},

@@ -40,10 +40,7 @@ from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.permissions import (
-    all_permissions,
-    PermissionSectionRegistry,
-)
+from cmk.gui.permissions import PermissionSectionRegistry
 from cmk.gui.product_usage_analytics.popup import render_product_usage_analytics_popup
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.user_sites import get_configured_site_choices
@@ -817,7 +814,7 @@ def _get_icon_path() -> str | None:
 def page_side(ctx: PageContext) -> None:
     SidebarRenderer().show(
         config=ctx.config,
-        user_permissions=UserPermissions.from_config(ctx.config, all_permissions()),
+        user_permissions=ctx.user_permissions,
         title=None,
         content=None,
         sidebar_config=ctx.config.sidebar,
@@ -836,7 +833,7 @@ def ajax_snapin(ctx: PageContext) -> None:
     user_config = UserSidebarConfig(
         user,
         ctx.config.sidebar,
-        (user_permissions := UserPermissions.from_config(ctx.config, all_permissions())),
+        ctx.user_permissions,
     )
 
     snapin_id = request.var("name")
@@ -851,7 +848,7 @@ def ajax_snapin(ctx: PageContext) -> None:
         except KeyError:
             continue  # Skip not existing snapins
 
-        if not snapin_instance.may_see(user_permissions):
+        if not snapin_instance.may_see(ctx.user_permissions):
             continue
 
         # When restart snapins are about to be refreshed, only render
@@ -897,7 +894,7 @@ class AjaxFoldSnapin(AjaxPage):
         user_config = UserSidebarConfig(
             user,
             ctx.config.sidebar,
-            UserPermissions.from_config(ctx.config, all_permissions()),
+            ctx.user_permissions,
         )
         user_config.folded = request.var("fold") == "yes"
         user_config.save()
@@ -927,7 +924,7 @@ class AjaxOpenCloseSnapin(AjaxPage):
         user_config = UserSidebarConfig(
             user,
             ctx.config.sidebar,
-            UserPermissions.from_config(ctx.config, all_permissions()),
+            ctx.user_permissions,
         )
 
         try:
@@ -956,7 +953,7 @@ def move_snapin(ctx: PageContext) -> None:
     user_config = UserSidebarConfig(
         user,
         ctx.config.sidebar,
-        UserPermissions.from_config(ctx.config, all_permissions()),
+        ctx.user_permissions,
     )
 
     try:
@@ -987,7 +984,6 @@ def move_snapin(ctx: PageContext) -> None:
 
 
 def page_add_snapin(ctx: PageContext) -> None:
-    user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
     if not user.may("general.configure_sidebar"):
         raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
@@ -1009,13 +1005,13 @@ def page_add_snapin(ctx: PageContext) -> None:
         user_role_ids=user.role_ids,
     )
 
-    used_snapins = _used_snapins(ctx.config, user_permissions)
+    used_snapins = _used_snapins(ctx.config, ctx.user_permissions)
 
     html.open_div(class_=["add_snapin"])
     for name, snapin_class in sorted(all_snapins().items()):
         if name in used_snapins:
             continue
-        if not snapin_class.may_see(user_permissions):
+        if not snapin_class.may_see(ctx.user_permissions):
             continue  # not allowed for this user
 
         html.open_div(
@@ -1061,8 +1057,7 @@ def _used_snapins(config: Config, user_permissions: UserPermissions) -> list[Any
 class AjaxGetAvialableSnapins(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
-        used_snapins = _used_snapins(ctx.config, user_permissions)
+        used_snapins = _used_snapins(ctx.config, ctx.user_permissions)
 
         def get_snapin_content(name: str) -> str:
             with output_funnel.plugged():
@@ -1101,7 +1096,7 @@ class AjaxGetAvialableSnapins(AjaxPage):
                 )
             )
             for name, snapin_class in sorted(all_snapins().items())
-            if name not in used_snapins and snapin_class.may_see(user_permissions)
+            if name not in used_snapins and snapin_class.may_see(ctx.user_permissions)
         ]
 
 
@@ -1114,16 +1109,15 @@ class AjaxAddSnapin(AjaxPage):
 
         addname = request.var("name")
 
-        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
         if addname is None or addname not in all_snapins():
             raise MKUserError(None, _("Invalid sidebar element %(addname)s") % {"addname": addname})
 
-        if addname in _used_snapins(ctx.config, user_permissions):
+        if addname in _used_snapins(ctx.config, ctx.user_permissions):
             raise MKUserError(
                 None, _("Element %(addname)s is already enabled") % {"addname": addname}
             )
 
-        user_config = UserSidebarConfig(user, ctx.config.sidebar, user_permissions)
+        user_config = UserSidebarConfig(user, ctx.config.sidebar, ctx.user_permissions)
         snapin = UserSidebarSnapin.from_snapin_type_id(addname)
         user_config.add_snapin(snapin)
         user_config.save()

@@ -13,8 +13,10 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import Request
 from cmk.gui.pages import PageContext, PageRegistry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.product_usage_analytics import download
 from cmk.gui.product_usage_analytics.download import PageDownloadProductUsage
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.product_usage.schema import ProductUsagePayload
@@ -27,6 +29,7 @@ def fixture_page_context(request_context: Request) -> PageContext:
         request=request_context,
         transactions=transactions,
         session=session,
+        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
     )
 
 

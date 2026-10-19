@@ -19,6 +19,8 @@ from cmk.gui.monitor.hosts._pages._monitor_all_hosts import (
     MonitorAllHostsPage,
 )
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 
@@ -30,7 +32,11 @@ def test_page_denied_without_legacy_view_permission() -> None:
     with pytest.raises(MKAuthException):
         page.page(
             PageContext(
-                config=Config(), request=request, transactions=transactions, session=session
+                config=Config(),
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(Config(), all_permissions()),
             )
         )
 

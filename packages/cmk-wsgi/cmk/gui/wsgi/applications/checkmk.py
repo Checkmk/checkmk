@@ -43,8 +43,10 @@ from cmk.gui.http import LEGACY_CONTENT_SECURITY_POLICY, request, Response, resp
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.permissions import all_permissions
 from cmk.gui.session import session
 from cmk.gui.token_auth import handle_token_page, MKTokenExpiredOrRevokedException
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wsgi.applications.utils import (
     AbstractWSGIApp,
@@ -214,7 +216,11 @@ class CheckmkApp(AbstractWSGIApp):
             #                     AbstractWSGIApp.__call__()
             #                         CheckmkApp.wsgi_app()
             context = pages.PageContext(
-                config=active_config, request=request, transactions=transactions, session=session
+                config=active_config,
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(active_config, all_permissions()),
             )
             return _process_request(
                 context, environ, start_response, debug=self.debug, testing=self.testing

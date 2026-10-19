@@ -10,9 +10,7 @@ import time
 from cmk.gui import visuals
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import SingleInfos
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import Checkbox, Dictionary
 
 from .store import get_all_dashboards
@@ -25,7 +23,7 @@ def page_edit_dashboard(ctx: PageContext) -> None:
     visuals.page_edit_visual(
         "dashboards",
         get_all_dashboards(),
-        UserPermissions.from_config(ctx.config, all_permissions()),
+        ctx.user_permissions,
         ctx.config,
         create_handler=create_dashboard,
         custom_field_handler=dashboard_fields_handler,

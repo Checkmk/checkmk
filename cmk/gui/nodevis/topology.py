@@ -264,7 +264,7 @@ class ABCTopologyPage(Page):
         request_cache = RequestCache(ctx.config)
 
         self.make_ui_components(
-            UserPermissions.from_config(ctx.config, all_permissions()),
+            ctx.user_permissions,
             ctx.config,
             request_cache,
         )

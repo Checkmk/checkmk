@@ -14,6 +14,7 @@ from cmk.gui.dashboard.page_view_widget import ViewWidgetEditPage, ViewWidgetIFr
 from cmk.gui.dashboard.store import DashboardStore, get_all_dashboards, save_all_dashboards
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import (
     ColumnSpec,
     ContextFilterConfig,
@@ -21,6 +22,7 @@ from cmk.gui.type_defs import (
     DashboardEmbeddedViewSpec,
 )
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
@@ -149,7 +151,13 @@ def test_widget_edit_view_duplicate_keeps_the_offered_filters_of_a_custom_column
 
 @pytest.mark.usefixtures("request_context", "patch_theme")
 def test_widget_iframe_token_redirects_to_shared_dashboard() -> None:
-    ctx = PageContext(config=Config(), request=request, transactions=transactions, session=session)
+    ctx = PageContext(
+        config=Config(),
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+    )
     request.set_var("widget_id", "any")
 
     # The token's dashboard does not exist, which disables the token

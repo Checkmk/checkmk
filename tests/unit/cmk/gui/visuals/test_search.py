@@ -121,7 +121,11 @@ def test_permitted_builtin_visual_is_visible(
 @pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_registered_builtin_views_are_visible_to_admin(load_config: Config) -> None:
     ctx = PageContext(
-        config=load_config, request=request, session=session, transactions=transactions
+        config=load_config,
+        request=request,
+        session=session,
+        transactions=transactions,
+        user_permissions=UserPermissions.from_config(load_config, all_permissions()),
     )
     handler = category_permissions_handler_registry["builtin_views"].build(ctx)
 

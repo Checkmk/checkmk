@@ -17,9 +17,11 @@ from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.sidebar._snapin._site_status import SiteStatus as SiteStatusSnapin
 from cmk.gui.sites import SiteStatus
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 
@@ -162,7 +164,13 @@ def test_show_offers_the_bulk_switches(
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request, transactions=transactions, session=session)
+    return PageContext(
+        config=config,
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
+    )
 
 
 def test_switch_site_needs_the_snapin_permission(

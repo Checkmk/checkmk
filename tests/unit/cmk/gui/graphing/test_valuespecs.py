@@ -23,6 +23,8 @@ from cmk.gui.graphing._valuespecs import (
 )
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -185,6 +187,7 @@ def test_unit_autocompleter_without_metric_uses_fallback_unit(load_config: Confi
                 request=request,
                 transactions=transactions,
                 session=session,
+                user_permissions=UserPermissions.from_config(load_config, all_permissions()),
             )
         )
 

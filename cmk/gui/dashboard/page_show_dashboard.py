@@ -22,10 +22,8 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_navigation import MainNavigation
 from cmk.gui.ntop import ntop_connection
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import VisualTypeName
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals import visual_page_breadcrumb
 from cmk.gui.visuals._filter_context import requested_context_from_request
 from cmk.licensing.registry import get_licensing_user_effect
@@ -92,18 +90,17 @@ def page_dashboard_app(ctx: PageContext) -> None:
         )
         board["context"] = board_context
         title = visuals.visual_title("dashboard", board, board_context, request_cache=request_cache)
-        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
         # some dashboards have more complicated context requirements when loaded, these are
         # constructed when clicking on a linking dashboard which means that this will (for now
         # with the current architecture) always go through a full page reload rather than a
         # state changing action. Hence, we can rely on the breadcrumb building mechanism here
         # Loading a dashboard on the frontend through other means will only necessitate the
         # simple breadcrumb as it does not have any prior context
-        breadcrumb = dashboard_breadcrumb(name, board, title, board_context, user_permissions)
+        breadcrumb = dashboard_breadcrumb(name, board, title, board_context, ctx.user_permissions)
 
         loaded_dashboard_properties = {
             "metadata": asdict(
-                DashboardMetadataObject.from_dashboard_config(board, user_permissions)
+                DashboardMetadataObject.from_dashboard_config(board, ctx.user_permissions)
             ),
             "filter_context": {
                 "context": requested_context,

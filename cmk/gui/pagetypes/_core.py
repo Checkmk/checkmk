@@ -73,7 +73,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, page_registry, PageContext, PageEndpoint, PageHandler
 from cmk.gui.permissions import (
-    all_permissions,
     declare_permission_section,
     dynamic_permission_registry,
     Permission,
@@ -1021,7 +1020,6 @@ class ListPage[T: Overridable](Page):
 
     @override
     def page(self, ctx: PageContext) -> None:
-        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
         instances = self._type.load()
         self._type.need_overriding_permission("edit")
 
@@ -1107,7 +1105,7 @@ class ListPage[T: Overridable](Page):
 
             try:
                 instances.remove_instance((owner, delname))
-                self._type.save_user_instances(instances, user_permissions, owner)
+                self._type.save_user_instances(instances, ctx.user_permissions, owner)
                 flash(
                     _("Your %(pagetype_title)s has been deleted.")
                     % {"pagetype_title": pagetype_title}
@@ -1117,10 +1115,10 @@ class ListPage[T: Overridable](Page):
                 html.user_error(e)
 
         elif request.var("_bulk_delete") and transactions.check_transaction(request):
-            self._bulk_delete_after_confirm(instances, user_permissions)
+            self._bulk_delete_after_confirm(instances, ctx.user_permissions)
 
         my_instances, foreign_instances, builtin_instances = self._partition_instances(
-            instances, user_permissions
+            instances, ctx.user_permissions
         )
         for what, title, scope_instances in [
             ("my", _("Customized"), my_instances),
@@ -1133,13 +1131,15 @@ class ListPage[T: Overridable](Page):
                 if what != "builtin":
                     with html.form_context("bulk_delete", method="POST"):
                         self._show_table(
-                            instances, scope_instances, user_permissions, deletable=True
+                            instances, scope_instances, ctx.user_permissions, deletable=True
                         )
                         html.hidden_field("selection_id", SelectionId.from_request(request))
                         html.hidden_fields()
                         init_rowselect(self._type.type_name())
                 else:
-                    self._show_table(instances, scope_instances, user_permissions, deletable=False)
+                    self._show_table(
+                        instances, scope_instances, ctx.user_permissions, deletable=False
+                    )
 
         html.call_ts_function(
             function_name="check_menu_entry_by_checkboxes", arguments={"id": "delete"}
@@ -1287,7 +1287,6 @@ class EditPage[T_OverridableConfig: OverridableConfig, T: Overridable](Page):
         """Page for editing an existing page, or creating a new one"""
         back_url = request.get_url_input("back", self._type.list_url())
 
-        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
         instances = self._type.load()
         self._type.need_overriding_permission("edit")
 
@@ -1365,7 +1364,7 @@ class EditPage[T_OverridableConfig: OverridableConfig, T: Overridable](Page):
             user_role_ids=user.role_ids,
         )
 
-        parameters, keys_by_topic = self._collect_parameters(mode, user_permissions)
+        parameters, keys_by_topic = self._collect_parameters(mode, ctx.user_permissions)
 
         vs = Dictionary(
             title=_("General properties"),
@@ -1377,7 +1376,7 @@ class EditPage[T_OverridableConfig: OverridableConfig, T: Overridable](Page):
                 mode,
                 {
                     p.name(): p
-                    for p in instances.permitted_instances_sorted(user_permissions)
+                    for p in instances.permitted_instances_sorted(ctx.user_permissions)
                     if p.is_mine()
                 },
                 self._type.reserved_unique_ids(),
@@ -1416,7 +1415,7 @@ class EditPage[T_OverridableConfig: OverridableConfig, T: Overridable](Page):
                 new_page = self._type.deserialize(page_dict)
 
                 instances.add_page(new_page)
-                self._type.save_user_instances(instances, user_permissions, owner_id)
+                self._type.save_user_instances(instances, ctx.user_permissions, owner_id)
                 if request.var("save_and_view"):
                     redirect_url = new_page.after_create_url() or makeuri_contextless(
                         request,
@@ -1846,7 +1845,7 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
             page_name,
             element_type,
             create_info,
-            UserPermissions.from_config(ctx.config, all_permissions()),
+            ctx.user_permissions,
             ctx.config,
         )
         # Redirect user to tha page this displays the thing we just added to
@@ -2634,7 +2633,7 @@ class CustomizePermissionsHandler:
 
     @classmethod
     def build(cls, ctx: PageContext) -> Self:
-        return cls(UserPermissions.from_config(ctx.config, all_permissions()))
+        return cls(ctx.user_permissions)
 
     def may_see_category(self, category: str) -> bool:  # noqa: ARG002
         return not hide_customize_menu()

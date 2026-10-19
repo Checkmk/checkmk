@@ -59,19 +59,29 @@ def test_page_denied_without_legacy_view_permission() -> None:
     with pytest.raises(MKAuthException):
         page.page(
             PageContext(
-                config=Config(), request=request, transactions=transactions, session=session
+                config=Config(),
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(Config(), all_permissions()),
             )
         )
 
 
 def _breadcrumb_of(host: str = "web-1", site: str = "local") -> Breadcrumb:
-    ctx = PageContext(config=Config(), request=request, transactions=transactions, session=session)
+    ctx = PageContext(
+        config=Config(),
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+    )
     return _make_breadcrumb(
         ctx,
         HostName(host),
         SiteId(site),
         _host_url(ctx, HostName(host), SiteId(site)),
-        UserPermissions.from_config(ctx.config, all_permissions()),
+        ctx.user_permissions,
     )
 
 

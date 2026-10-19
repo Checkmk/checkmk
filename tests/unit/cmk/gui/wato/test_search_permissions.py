@@ -16,6 +16,8 @@ from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato._search_permissions import SetupPermissionsHandler
@@ -57,7 +59,11 @@ class TestPermissionHandler:
         permissions_handler = SetupPermissionsHandler(
             test_edition,
             PageContext(
-                config=config, request=http_request, transactions=transactions, session=session
+                config=config,
+                request=http_request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(config, all_permissions()),
             ),
         )
         for category in permissions_handler._category_permissions:  # noqa: SLF001
@@ -70,7 +76,11 @@ class TestPermissionHandler:
         permissions_handler = SetupPermissionsHandler(
             test_edition,
             PageContext(
-                config=config, request=http_request, transactions=transactions, session=session
+                config=config,
+                request=http_request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(config, all_permissions()),
             ),
         )
         visibility_check = permissions_handler.get_visibility_check("setup")
@@ -83,7 +93,11 @@ class TestPermissionHandler:
         permissions_handler = SetupPermissionsHandler(
             test_edition,
             PageContext(
-                config=config, request=http_request, transactions=transactions, session=session
+                config=config,
+                request=http_request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(config, all_permissions()),
             ),
         )
         visibility_check = permissions_handler.get_visibility_check("setup")
@@ -101,7 +115,13 @@ class TestPermissionHandler:
 
         permissions_handler = SetupPermissionsHandler(
             test_edition,
-            PageContext(config=config, request=request, transactions=transactions, session=session),
+            PageContext(
+                config=config,
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(config, all_permissions()),
+            ),
         )
         visibility_check = permissions_handler.get_visibility_check("setup")
         assert visibility_check(created_host_url)
@@ -120,7 +140,11 @@ class TestPermissionHandler:
         permissions_handler = SetupPermissionsHandler(
             test_edition,
             PageContext(
-                config=config, request=http_request, transactions=transactions, session=session
+                config=config,
+                request=http_request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(config, all_permissions()),
             ),
         )
         visibility_check = permissions_handler.get_visibility_check("setup")

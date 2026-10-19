@@ -37,10 +37,8 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import Visual
 from cmk.gui.user_sites import sorted_sites
-from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.monitoring.all_hosts import (
     AcknowledgeDefaults,
     DowntimePreset,
@@ -198,10 +196,9 @@ class MonitorAllHostsPage(Page):
 
 
 def _make_breadcrumb(ctx: PageContext) -> Breadcrumb:
-    user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
     breadcrumb = make_topic_breadcrumb(
         main_menu_registry.menu_monitoring(),
-        PagetypeTopics.get_topic("overview", user_permissions).title(),
+        PagetypeTopics.get_topic("overview", ctx.user_permissions).title(),
     )
     breadcrumb.append(
         BreadcrumbItem(

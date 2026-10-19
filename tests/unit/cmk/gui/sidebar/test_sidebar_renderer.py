@@ -24,7 +24,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions, permission_registry
 from cmk.gui.sidebar import (
     SidebarRenderer,
     SidebarSnapin,
@@ -118,7 +118,13 @@ def fixture_extra_snapins() -> Iterator[None]:
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request, transactions=transactions, session=session)
+    return PageContext(
+        config=config,
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
+    )
 
 
 def _only_test_snapins(monkeypatch: pytest.MonkeyPatch) -> None:

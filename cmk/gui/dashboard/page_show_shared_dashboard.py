@@ -21,7 +21,6 @@ from cmk.gui.graphing.openapi.models import ApiDiscoveredGraph
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageResult
-from cmk.gui.permissions import all_permissions
 from cmk.gui.token_auth import AuthToken, DashboardToken, TokenId
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.roles import UserPermissions
@@ -197,10 +196,9 @@ def remove_embedded_graph_definitions(spec: dict[str, object]) -> None:
 def page_shared_dashboard(
     token_id: TokenId, token_issuer: UserId, token_details: DashboardToken, ctx: PageContext
 ) -> None:
-    user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
     request_cache = RequestCache(ctx.config)
     with impersonate_dashboard_token_issuer(
-        token_issuer, token_details, user_permissions
+        token_issuer, token_details, ctx.user_permissions
     ) as issuer:
         board = issuer.load_dashboard()
         SharedDashboardPageComponents.verify_dashboard_referenced_token(board, token_id)
@@ -210,7 +208,7 @@ def page_shared_dashboard(
         widget_graphs = compute_widget_graphs(
             board,
             debug=ctx.config.debug,
-            user_permissions=user_permissions,
+            user_permissions=ctx.user_permissions,
             temperature_unit=issuer.temperature_unit(ctx.config.default_temperature_unit),
         )
         remove_sensitive_filter_information(board)

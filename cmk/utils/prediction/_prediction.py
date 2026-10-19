@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, NamedTuple, Protocol, Self
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from cmk.agent_based.prediction_backend import PredictionInfo
 
@@ -94,7 +94,7 @@ class PredictionStore:
         for files in iter_prediction_files(self.path):
             try:
                 meta = PredictionInfo.model_validate_json(files.info.read_text())
-            except FileNotFoundError:
+            except FileNotFoundError, ValidationError:
                 continue
 
             if not meta.valid_interval[0] <= now < meta.valid_interval[1]:
@@ -104,7 +104,7 @@ class PredictionStore:
                 if files.info.stat().st_mtime <= files.data.stat().st_mtime:
                     yield meta, PredictionData.model_validate_json(files.data.read_text())
                     continue
-            except FileNotFoundError:
+            except FileNotFoundError, ValidationError:
                 pass
 
             yield meta, None

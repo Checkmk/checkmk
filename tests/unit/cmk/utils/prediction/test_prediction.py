@@ -14,6 +14,7 @@ import pytest
 
 from livestatus import RRDResponse
 
+from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
 from cmk.utils.prediction import _prediction, DataStat, PredictionStore
 from tests.testlib.common.repo import repo_path
 
@@ -324,9 +325,24 @@ class TestPredictionStore:
 
         assert unknown_period.exists()
 
-    @pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4827: ValidationError")
     def test_iter_all_valid_predictions_skips_unreadable_meta(self, tmp_path: Path) -> None:
         # Crash group 4827: an empty prediction meta file crashed every predictive check
         (tmp_path / f"wday-{int(time.time())}-upper.info").write_text("")
 
         assert not list(PredictionStore(tmp_path).iter_all_valid_predictions(time.time()))
+
+    def test_iter_all_valid_predictions_skips_unreadable_data(self, tmp_path: Path) -> None:
+        now = int(time.time())
+        meta = PredictionInfo(
+            valid_interval=(now - 3600, now + 3600),
+            metric="rocket_fuel",
+            direction="upper",
+            params=PredictionParameters(period="wday", horizon=90, levels=("absolute", (2, 4))),
+        )
+        store = PredictionStore(tmp_path)
+        meta_file = Path(store.meta_file_path_template.format(meta=meta))
+        meta_file.parent.mkdir(parents=True)
+        meta_file.write_text(meta.model_dump_json())
+        meta_file.with_suffix("").write_text("")
+
+        assert list(store.iter_all_valid_predictions(now)) == [(meta, None)]

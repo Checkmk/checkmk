@@ -5,6 +5,9 @@
 
 # pylint: disable=protected-access
 
+import pytest
+
+from cmk.gui.dashboard.dashlet.dashlets.stats import HostStatsDashlet
 from cmk.gui.dashboard.page_edit_dashlet import _keys_not_managed_by_editor
 from cmk.gui.dashboard.type_defs import DashletConfig
 
@@ -26,4 +29,15 @@ def test_keys_not_managed_by_editor_takes_over_layout_keys_only() -> None:
         "type": "hoststats",
         "size": (40, 20),
         "position": (31, 1),
+    }
+
+
+@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 3156: KeyError")
+def test_keys_not_managed_by_editor_falls_back_to_initial_size() -> None:
+    dashlet_spec = DashletConfig({"type": "hoststats", "position": (1, 1)})
+
+    assert _keys_not_managed_by_editor(dashlet_spec) == {
+        "type": "hoststats",
+        "size": HostStatsDashlet.initial_size(),
+        "position": (1, 1),
     }

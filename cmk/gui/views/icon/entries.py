@@ -51,6 +51,7 @@ class IconEntry(ABCIconEntry):
     icon_name: StaticIcon | DynamicIcon
     title: str | None = None
     url_spec: None | tuple[str, str] | str = None
+    ident: str | None = None
 
 
 def get_icons(
@@ -215,6 +216,7 @@ def _process_icon(
         icon_name=icon_name,
         title=title,
         url_spec=url,
+        ident=icon_id,
     )
 
 

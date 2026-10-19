@@ -90,7 +90,7 @@ const overview = ref<ServiceOverview | null>(null)
 // Rescheduling is the one action that is not offered on every service: what it does, and whether
 // it can be done at all, is decided per service by the backend. A service it cannot be done for
 // gets no button here - the row's action menu is where the refusal is spelled out.
-const slideInActions = computed(() =>
+const commandActions = computed(() =>
   props.permittedActions
     .filter((action) => action.id in props.actions)
     .flatMap((action) => {
@@ -110,6 +110,24 @@ const slideInActions = computed(() =>
       ]
     })
 )
+
+// Links out next to the commands, offered by the overview once it has loaded.
+const slideInActions = computed<CellAction[]>(() => {
+  const discoveryLink = overview.value?.legacy_service_discovery_link
+  return [
+    ...commandActions.value,
+    ...(discoveryLink
+      ? [
+          {
+            id: 'run_service_discovery',
+            label: _t('Run service discovery'),
+            icon: 'services' as SimpleIcons,
+            url: discoveryLink
+          }
+        ]
+      : [])
+  ]
+})
 
 const targets = computed<string[]>(() => (props.service ? [props.service.name] : []))
 
@@ -251,7 +269,13 @@ const actionMenuLoader = computed<(() => Promise<CellAction[]>) | undefined>(() 
   if (!service || !load) {
     return undefined
   }
-  return () => load(service.name)
+  // The menu entry of the discovery is left out while the button next to the commands offers it.
+  return async () => {
+    const items = await load(service.name)
+    return overview.value?.legacy_service_discovery_link
+      ? items.filter((item) => item.ident !== 'wato')
+      : items
+  }
 })
 
 const tabs = computed<SlideInTab[]>(() => {

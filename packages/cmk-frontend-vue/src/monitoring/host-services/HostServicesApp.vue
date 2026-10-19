@@ -133,7 +133,8 @@ async function loadActionMenu(service: string): Promise<CellAction[]> {
     label: item.title as TranslatedString,
     icon: item.icon_name as SimpleIcons,
     url: item.url,
-    target: item.target
+    target: item.target,
+    ident: item.ident
   }))
 }
 

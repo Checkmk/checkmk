@@ -462,6 +462,35 @@ describe('ServiceSlideIn', () => {
     expect(screen.queryByRole('link', { name: 'Show service parameters' })).not.toBeInTheDocument()
   })
 
+  it('offers the service discovery as a link next to the actions', async () => {
+    vi.spyOn(client, 'GET').mockResolvedValue({
+      data: makeOverview({
+        name: 'Check_MK Discovery',
+        legacy_service_discovery_link: 'wato.py?mode=inventory&host=web-server-01'
+      }),
+      error: undefined,
+      response: new Response()
+    } as never)
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
+
+    expect(await screen.findByRole('link', { name: 'Run service discovery' })).toHaveAttribute(
+      'href',
+      'wato.py?mode=inventory&host=web-server-01'
+    )
+  })
+
+  it('offers no service discovery without a link to it', async () => {
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
+
+    await screen.findByRole('link', { name: 'Show service details' })
+
+    expect(screen.queryByRole('link', { name: 'Run service discovery' })).not.toBeInTheDocument()
+  })
+
   it('offers no AI explanation outside the cloud edition', async () => {
     render(ServiceSlideIn, {
       props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
@@ -550,6 +579,69 @@ describe('ServiceSlideIn', () => {
       'href',
       'view.py?view_name=logwatch&host=web-server-01'
     )
+  })
+
+  const LOGWATCH_MENU_ENTRY: CellAction = {
+    id: 'logwatch',
+    label: 'Open log file viewer' as TranslatedString,
+    icon: 'services',
+    url: 'view.py?view_name=logwatch&host=web-server-01',
+    ident: 'logwatch'
+  }
+
+  const DISCOVERY_MENU_ENTRY: CellAction = {
+    id: 'discovery',
+    label: 'Run service discovery' as TranslatedString,
+    icon: 'services',
+    url: 'wato.py?folder=&host=web-server-01&mode=inventory',
+    ident: 'wato'
+  }
+
+  it('leaves the discovery out of the action menu while it is offered as a button', async () => {
+    vi.spyOn(client, 'GET').mockResolvedValue({
+      data: makeOverview({
+        name: 'Check_MK Discovery',
+        legacy_service_discovery_link: 'wato.py?mode=inventory&host=web-server-01'
+      }),
+      error: undefined,
+      response: new Response()
+    } as never)
+    render(ServiceSlideIn, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService(),
+        host: HOST,
+        loadActionMenu: async () => [LOGWATCH_MENU_ENTRY, DISCOVERY_MENU_ENTRY]
+      }
+    })
+    await screen.findByRole('link', { name: 'Run service discovery' })
+
+    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+
+    expect(
+      await screen.findByRole('menuitem', { name: /Open log file viewer/ })
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('menuitem', { name: /Run service discovery/ })
+    ).not.toBeInTheDocument()
+  })
+
+  it('keeps the discovery in the action menu while no button offers it', async () => {
+    render(ServiceSlideIn, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService(),
+        host: HOST,
+        loadActionMenu: async () => [DISCOVERY_MENU_ENTRY]
+      }
+    })
+    await screen.findByRole('link', { name: 'Show service details' })
+
+    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+
+    expect(
+      await screen.findByRole('menuitem', { name: /Run service discovery/ })
+    ).toBeInTheDocument()
   })
 
   it('offers a History tab next to Overview, with Overview still shown first', async () => {

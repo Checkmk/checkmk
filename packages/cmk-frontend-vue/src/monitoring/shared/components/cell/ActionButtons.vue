@@ -33,6 +33,8 @@ export interface CellAction {
   // that emits `select` for the parent to handle.
   url?: string | undefined
   target?: string | undefined
+  /** The legacy icon an action menu entry comes from, for a page to leave out what it shows. */
+  ident?: string | undefined
 }
 
 const props = withDefaults(

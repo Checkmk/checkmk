@@ -52,12 +52,18 @@ from cmk.web.utils.icons import DynamicIcon, StaticIcon
 
 from ._family import MONITOR_SERVICES_FAMILY
 
-# "Parameters" (rule_editor) is surfaced as an explicit inline button of the slide-in header.
+# Shared by the table row and the slide-in, so only what both offer on their own is left out:
+# "Parameters" (rule_editor) is a row action and a slide-in header button.
 _EXCLUDED_IDENTS = frozenset({"rule_editor"})
 
 
 @api_model
 class ServiceActionMenuItem:
+    ident: str | ApiOmitted = api_field(
+        description="Identifier of the icon providing this action",
+        example="logwatch",
+        default_factory=ApiOmitted,
+    )
     icon_name: str = api_field(description="Icon to render for this action", example="logwatch")
     title: str = api_field(description="Label shown for the action", example="Open log file viewer")
     url: str = api_field(
@@ -97,6 +103,7 @@ def _serialize_entry(entry: IconEntry, row: Row) -> ServiceActionMenuItem | None
         return None
 
     return ServiceActionMenuItem(
+        ident=entry.ident if entry.ident else ApiOmitted(),
         icon_name=_icon_name(entry.icon_name),
         title=entry.title or "",
         url=url,

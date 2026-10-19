@@ -385,6 +385,7 @@ SCALAR_VALUE_MODELS: frozenset[type] = frozenset(
         form_specs.DataSize,
         form_specs.Float,
         form_specs.Integer,
+        form_specs.MultilineText,
         form_specs.Percentage,
         form_specs.SingleChoice,
         form_specs.String,
@@ -1611,6 +1612,7 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
         CaseFail("unknown-key", {"bogus": 1}),
         CaseFail("not-a-pem", {"certificates": ["not a pem"]}),
     ],
+    "ai_control_plane_instructions": [CasePass("custom", "Dummy instructions.")],
     "ai_control_plane_provider": [
         CasePass("none", ("none", None)),
         CasePass(

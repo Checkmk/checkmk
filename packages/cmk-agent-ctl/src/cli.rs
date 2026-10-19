@@ -92,8 +92,9 @@ pub enum Mode {
     /// Update the agent of this host from the Checkmk site it is registered with
     ///
     /// The package the site offers is downloaded, verified unless
-    /// --skip-signatures is given, and left in the spool directory for the
-    /// installer. Installing it is not implemented yet.
+    /// --skip-signatures is given, write it in the spool directory for the
+    /// installer and trigger installation. The installer runs as root in a unit
+    /// of its own.
     Update(UpdateOpts),
 
     /// Install an agent package the `update` mode spooled

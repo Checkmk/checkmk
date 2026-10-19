@@ -13,21 +13,27 @@ use super::backend::UpdaterConfig;
 use super::verification;
 use crate::agent_receiver_api::AgentSignature;
 use anyhow::{bail, Context, Result as AnyhowResult};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::io::Read;
+#[cfg(unix)]
+use std::io::Write;
+#[cfg(unix)]
+use std::net::Shutdown;
+#[cfg(unix)]
+use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
 
 /// Upper bound of one request, in bytes.
-///
-/// A request is a path and a handful of certificates, which is a few
-/// kilobytes. The bound exists because the sender runs as the agent user: a
-/// reader that holds root must not let it fill root's memory.
 const MAX_REQUEST_BYTES: u64 = 64 * 1024;
+
+/// Upper bound of one answer, in bytes.
+#[cfg(unix)]
+const MAX_REPLY_BYTES: u64 = 64 * 1024;
 
 /// What the controller asks the installer unit to install.
 ///
 /// Everything in it comes from the agent user and is therefore untrusted.
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct InstallRequest {
     /// Absolute path of the package in the controller's download directory.
     pub package: PathBuf,
@@ -65,6 +71,60 @@ impl InstallRequest {
         }
         serde_json::from_slice(&raw).context("Failed to parse the install request")
     }
+}
+
+/// Hand `request` to the privileged install step and wait for it to finish.
+///
+/// The protocol of the installer socket: one request as one line of JSON, then
+/// the write side is shut down, because the unit reads its input to the end.
+/// The connection lives as long as the unit instance, so a return here means
+/// the install step is over, whatever it made of the package.
+///
+/// What is installed is decided on the other side: the unit verifies the
+/// package again against its own root-owned trust anchors. This end only names
+/// the file and the signatures the site delivered with it.
+///
+/// # Arguments
+///
+/// * `socket` - the installer socket, `installer_socket` of the updater
+///   configuration
+/// * `request` - the spooled package and the signatures of the status that
+///   named it
+///
+/// # Errors
+///
+/// If the socket cannot be reached, the request cannot be written, or the unit
+/// answers more than [`MAX_REPLY_BYTES`].
+#[cfg(unix)]
+pub fn hand_over(socket: &Path, request: &InstallRequest) -> AnyhowResult<()> {
+    let mut stream = UnixStream::connect(socket)
+        .with_context(|| format!("Cannot reach the installer socket {socket:?}"))?;
+    let mut line = serde_json::to_vec(request).context("Cannot serialize the install request")?;
+    line.push(b'\n');
+    stream
+        .write_all(&line)
+        .with_context(|| format!("Cannot write the install request to {socket:?}"))?;
+    // Signal: writing is done.
+    stream
+        .shutdown(Shutdown::Write)
+        .with_context(|| format!("Cannot finish the install request to {socket:?}"))?;
+
+    let mut reply = Vec::new();
+    // One byte over the bound, as in `InstallRequest::read`.
+    (&stream)
+        .take(MAX_REPLY_BYTES + 1)
+        .read_to_end(&mut reply)
+        .with_context(|| format!("Cannot read what the installer at {socket:?} answered"))?;
+    if reply.len() as u64 > MAX_REPLY_BYTES {
+        bail!("The installer at {socket:?} answered more than {MAX_REPLY_BYTES} bytes");
+    }
+    if !reply.is_empty() {
+        log::info!(
+            "The installer answered: {}",
+            String::from_utf8_lossy(&reply).trim_end()
+        );
+    }
+    Ok(())
 }
 
 /// The certificates the privileged install step accepts a package under.
@@ -241,5 +301,70 @@ mod tests {
             r#"{{"package": "{PACKAGE}{padding}", "signatures": []}}"#
         ))
         .is_err());
+    }
+
+    /// A socket in `dir` that takes one request, answers `reply` and hands the
+    /// request it read back through its handle: the installer unit as far as
+    /// [`hand_over`] can tell.
+    #[cfg(unix)]
+    fn installer_listening(
+        dir: &tempfile::TempDir,
+        reply: &'static [u8],
+    ) -> (PathBuf, std::thread::JoinHandle<Vec<u8>>) {
+        let path = dir.path().join("cmk-agent-installer.sock");
+        let listener = std::os::unix::net::UnixListener::bind(&path).unwrap();
+        let handle = std::thread::spawn(move || {
+            let (mut connection, _) = listener.accept().unwrap();
+            let mut raw = Vec::new();
+            connection.read_to_end(&mut raw).unwrap();
+            connection.write_all(reply).unwrap();
+            raw
+        });
+        (path, handle)
+    }
+
+    #[cfg(unix)]
+    fn an_install_request() -> InstallRequest {
+        InstallRequest {
+            package: PathBuf::from(PACKAGE),
+            signatures: vec![AgentSignature {
+                certificate: String::from("cert"),
+                signature: String::from("sig"),
+            }],
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_hand_over_delivers_the_request() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let (socket, installer) = installer_listening(&dir, b"");
+        let request = an_install_request();
+
+        hand_over(&socket, &request).unwrap();
+
+        let delivered = installer.join().unwrap();
+        assert_eq!(InstallRequest::read(&delivered[..]).unwrap(), request);
+    }
+
+    /// The unit answers nothing today, and whatever it may answer must not
+    /// turn a finished install step into a failure here.
+    #[cfg(unix)]
+    #[test]
+    fn test_hand_over_accepts_an_answer() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let (socket, _installer) = installer_listening(&dir, b"{\"success\": true}\n");
+
+        assert!(hand_over(&socket, &an_install_request()).is_ok());
+    }
+
+    /// A host whose installer unit is not there: the package was spooled, and
+    /// nobody takes it.
+    #[cfg(unix)]
+    #[test]
+    fn test_hand_over_without_an_installer() {
+        let dir = tempfile::TempDir::new().unwrap();
+
+        assert!(hand_over(&dir.path().join("none.sock"), &an_install_request()).is_err());
     }
 }

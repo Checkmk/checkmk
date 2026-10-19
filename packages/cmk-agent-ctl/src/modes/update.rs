@@ -7,22 +7,30 @@
 
 use crate::agent_receiver_api;
 use crate::configuration::config::{ClientConfig, Registry};
+#[cfg(unix)]
+use crate::updater::InstallOutcome;
 use crate::updater::{CheckOutcome, FetchOutcome, SignatureCheck, Updater};
 use anyhow::Result as AnyhowResult;
+#[cfg(unix)]
+use std::path::Path;
 
 /// Fetch the agent package the site has for this host, or only report it.
 ///
 /// Without `check_only` the package is downloaded and, once `signature` is
-/// satisfied, spooled for the installer. Installing it is not implemented
-/// yet, so the run ends with the package waiting on disk.
+/// satisfied, spooled for the installer and handed to it. The install step
+/// runs as root in a unit of its own, so this run ends when that unit does,
+/// and the line it prints says what reached it rather than what it installed.
 ///
 /// `signature` carries `--skip-signatures` through. It only reaches a fetch:
-/// a check downloads nothing, so there is nothing for it to vouch for.
+/// a check downloads nothing, so there is nothing for it to vouch for. The
+/// install step checks the signature again regardless, so a package nobody
+/// vouched for is spooled here and refused there.
 ///
 /// # Errors
 ///
-/// If the site cannot be asked, does not deliver the package it offered, or if
-/// the package fails verification or cannot be spooled.
+/// If the site cannot be asked, does not deliver the package it offered, if
+/// the package fails verification or cannot be spooled, or if the installer
+/// cannot be reached.
 pub fn update(
     updater: &Updater,
     registry: &Registry,
@@ -33,14 +41,20 @@ pub fn update(
     let api = agent_receiver_api::Api {
         use_proxy: client_config.use_proxy,
     };
-    println!(
-        "{}",
-        if check_only {
-            report(updater.check(registry, &api)?)
-        } else {
-            report_fetch(updater.fetch_update(registry, &api, signature)?)
-        }
-    );
+    if check_only {
+        println!("{}", report(updater.check(registry, &api)?));
+        return Ok(());
+    }
+    let fetched = updater.fetch_update(registry, &api, signature)?;
+    println!("{}", report_fetch(&fetched));
+    #[cfg(unix)]
+    if let FetchOutcome::Spooled {
+        path, signatures, ..
+    } = &fetched
+    {
+        let outcome = updater.install_update(path, signatures)?;
+        println!("{}", report_install(outcome, path));
+    }
     Ok(())
 }
 
@@ -62,18 +76,18 @@ fn report(outcome: CheckOutcome) -> String {
     }
 }
 
-/// The outcome of a fetch in the one line the mode prints.
+/// The outcome of a fetch in the line the mode prints for it.
 ///
-/// The package stops at the spool directory: whoever installs it is a
-/// privileged process, and that step does not exist yet. Naming the file is
-/// therefore the whole result, not a detail.
+/// A spooled package is named by its file: the privileged step is a process of
+/// its own, and [`report_install`] says on the next line what became of the
+/// hand-over to it.
 ///
 /// The two outcomes that end without a package read as they do in [`report`]:
 /// the same situation must not be worded by whether `--check-only` was passed.
 ///
 /// An unverified package says so. The file on disk carries no such mark, so
 /// this line is the only place the two are told apart.
-fn report_fetch(outcome: FetchOutcome) -> String {
+fn report_fetch(outcome: &FetchOutcome) -> String {
     match outcome {
         FetchOutcome::NotPossible => {
             String::from("No agent update is possible for this host, run with -v for the reason")
@@ -84,10 +98,31 @@ fn report_fetch(outcome: FetchOutcome) -> String {
             hash,
             path,
             signature,
+            ..
         } => format!(
-            "{} is ready at {}; installing it is not implemented yet",
-            signature.package_name(&hash),
+            "{} is ready at {}",
+            signature.package_name(hash),
             path.display()
+        ),
+    }
+}
+
+/// What the hand-over to the privileged install step did, in the line the mode
+/// prints after the one of the fetch.
+///
+/// The step answers nothing yet, so a finished hand-over is all this side
+/// knows about it. What it made of the package is in the journal of its unit,
+/// and whether the agent moved is what the next check says.
+#[cfg(unix)]
+fn report_install(outcome: InstallOutcome, path: &Path) -> String {
+    match outcome {
+        InstallOutcome::NoInstaller => format!(
+            "No installer socket is configured, {} stays where it is",
+            path.display()
+        ),
+        InstallOutcome::HandedOver => String::from(
+            "The installer has taken it and finished, run with --check-only to see \
+             whether the agent moved",
         ),
     }
 }
@@ -137,13 +172,14 @@ mod tests {
     #[test]
     fn test_report_a_spooled_package() {
         assert_eq!(
-            report_fetch(FetchOutcome::Spooled {
+            report_fetch(&FetchOutcome::Spooled {
                 hash: TARGET_HASH.parse().unwrap(),
                 path: std::path::PathBuf::from("/spool/fedcba9876543210.deb"),
                 signature: SignatureCheck::Required,
+                signatures: vec![],
             }),
             "Verified agent package fedcba9876543210 is ready at \
-             /spool/fedcba9876543210.deb; installing it is not implemented yet"
+             /spool/fedcba9876543210.deb"
         );
     }
 
@@ -152,20 +188,50 @@ mod tests {
     #[test]
     fn test_report_a_spooled_package_nobody_vouched_for() {
         assert_eq!(
-            report_fetch(FetchOutcome::Spooled {
+            report_fetch(&FetchOutcome::Spooled {
                 hash: TARGET_HASH.parse().unwrap(),
                 path: std::path::PathBuf::from("/spool/fedcba9876543210.deb"),
                 signature: SignatureCheck::Skip,
+                signatures: vec![],
             }),
             "UNVERIFIED agent package fedcba9876543210 is ready at \
-             /spool/fedcba9876543210.deb; installing it is not implemented yet"
+             /spool/fedcba9876543210.deb"
+        );
+    }
+
+    /// The hand-over is over, and the outcome of the installation is not
+    /// this run's to report.
+    #[cfg(unix)]
+    #[test]
+    fn test_report_a_package_the_installer_took() {
+        assert_eq!(
+            report_install(
+                InstallOutcome::HandedOver,
+                std::path::Path::new("/spool/fedcba9876543210.deb")
+            ),
+            "The installer has taken it and finished, run with --check-only to see \
+             whether the agent moved"
+        );
+    }
+
+    /// Without a privileged step the package stays a file, and the line says
+    /// where it is rather than leaving the run without an answer.
+    #[cfg(unix)]
+    #[test]
+    fn test_report_a_package_nobody_takes() {
+        assert_eq!(
+            report_install(
+                InstallOutcome::NoInstaller,
+                std::path::Path::new("/spool/fedcba9876543210.deb")
+            ),
+            "No installer socket is configured, /spool/fedcba9876543210.deb stays where it is"
         );
     }
 
     #[test]
     fn test_report_a_fetch_from_a_site_without_a_package() {
         assert_eq!(
-            report_fetch(FetchOutcome::NoPackage),
+            report_fetch(&FetchOutcome::NoPackage),
             "No agent package available for this host"
         );
     }
@@ -173,7 +239,7 @@ mod tests {
     #[test]
     fn test_report_a_fetch_of_an_agent_that_is_up_to_date() {
         assert_eq!(
-            report_fetch(FetchOutcome::UpToDate(INSTALLED_HASH.parse().unwrap())),
+            report_fetch(&FetchOutcome::UpToDate(INSTALLED_HASH.parse().unwrap())),
             "Agent is up to date: 0123456789abcdef"
         );
     }
@@ -181,7 +247,7 @@ mod tests {
     #[test]
     fn test_report_a_fetch_that_could_not_be_made() {
         assert_eq!(
-            report_fetch(FetchOutcome::NotPossible),
+            report_fetch(&FetchOutcome::NotPossible),
             "No agent update is possible for this host, run with -v for the reason"
         );
     }

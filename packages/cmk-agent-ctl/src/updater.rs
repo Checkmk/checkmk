@@ -27,6 +27,8 @@ mod backend;
 mod connection;
 mod install;
 mod verification;
+#[cfg(unix)]
+pub use backend::InstallOutcome;
 pub use backend::{
     AgentInfo, CheckOutcome, FetchOutcome, SignatureCheck, UpdateSource, UpdateState, Updater,
     UpdaterConfig,

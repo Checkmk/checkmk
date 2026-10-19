@@ -8,6 +8,8 @@
 //! See [`crate::updater`] for what the three artifacts are and how they relate.
 
 use super::connection;
+#[cfg(unix)]
+use super::install;
 use super::verification;
 use crate::agent_receiver_api;
 use crate::config::{
@@ -75,6 +77,14 @@ pub struct UpdaterConfig {
     /// PEM-encoded certificates whose signatures are accepted for an agent package. .
     #[serde(default)]
     pub signature_keys: Vec<String>,
+
+    /// Where the privileged install step of this host listens.
+    ///
+    /// Linux only: the bakery writes it into the configuration of a package
+    /// that ships the installer unit. Absent means a package can be fetched but
+    /// not handed over to anybody.
+    #[serde(default)]
+    pub installer_socket: Option<PathBuf>,
 }
 
 impl TOMLLoader for UpdaterConfig {}
@@ -504,7 +514,22 @@ pub enum FetchOutcome {
         hash: AgentHash,
         path: PathBuf,
         signature: SignatureCheck,
+
+        /// The signatures the site delivered with the package.
+        signatures: Vec<agent_receiver_api::AgentSignature>,
     },
+}
+
+/// What the hand-over of a spooled package to the privileged install step did.
+#[cfg(unix)]
+#[derive(Debug, PartialEq, Eq)]
+pub enum InstallOutcome {
+    /// The configuration names no installer socket, so this host has no
+    /// privileged install step. The package stays where it was spooled.
+    NoInstaller,
+
+    /// The install step has taken the package and finished.
+    HandedOver,
 }
 
 /// What the site offers, as [`Updater::offered_update`] decided it.
@@ -854,7 +879,59 @@ impl Updater {
             hash,
             path,
             signature,
+            signatures: offered.signatures.clone(),
         })
+    }
+
+    /// Hand a spooled package to the privileged install step of this host.
+    ///
+    /// The step is a process of its own, running as root: this side only names
+    /// the package and the signatures the site delivered with it, and the unit
+    /// verifies both again against trust anchors the agent user cannot write.
+    /// Blocks until the step has finished, which is as long as the package
+    /// manager takes.
+    ///
+    /// Writes no artifact of the updater, as [`Updater::fetch_update`] does
+    /// not: reconciling the outcome belongs to the automatic cycle, which
+    /// compares hashes on a later run.
+    ///
+    /// # Arguments
+    ///
+    /// * `package` - the spooled package, as [`Updater::fetch_update`]
+    ///   reported it
+    /// * `signatures` - the signatures of the status that named the package
+    ///
+    /// # Returns
+    ///
+    /// [`InstallOutcome::NoInstaller`] when no installer socket is configured.
+    ///
+    /// # Errors
+    ///
+    /// If the installer socket cannot be reached or the request not be
+    /// delivered.
+    #[cfg(unix)]
+    pub fn install_update(
+        &self,
+        package: &Path,
+        signatures: &[agent_receiver_api::AgentSignature],
+    ) -> AnyhowResult<InstallOutcome> {
+        let Some(socket) = self
+            .config
+            .as_ref()
+            .and_then(|config| config.installer_socket.as_ref())
+        else {
+            log::info!("No installer socket is configured, leaving {package:?} where it is");
+            return Ok(InstallOutcome::NoInstaller);
+        };
+        log::info!("Handing {package:?} to the installer at {socket:?}");
+        install::hand_over(
+            socket,
+            &install::InstallRequest {
+                package: package.to_path_buf(),
+                signatures: signatures.to_vec(),
+            },
+        )?;
+        Ok(InstallOutcome::HandedOver)
     }
 
     /// The connection to run an update over, if the updater may run at all.
@@ -1144,6 +1221,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
                 signature_keys: vec![String::from(
                     "-----BEGIN CERTIFICATE-----\nabc\n-----END CERTIFICATE-----\n"
                 )],
+                installer_socket: None,
             }
         );
     }
@@ -1169,6 +1247,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
                 activated: true,
                 interval: DEFAULT_INTERVAL,
                 signature_keys: vec![],
+                installer_socket: None,
             }
         );
     }
@@ -1784,6 +1863,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             activated: true,
             interval: 60,
             signature_keys: vec![],
+            installer_socket: None,
         })
     }
 
@@ -2511,6 +2591,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             hash,
             path,
             signature,
+            ..
         } = outcome
         else {
             panic!("expected a spooled package, got {outcome:?}");
@@ -2522,6 +2603,72 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             dir.path().join(PACKAGE_DIR).join("fedcba9876543210.deb")
         );
         assert_eq!(fs::read(&path).unwrap(), PACKAGE);
+    }
+
+    #[test]
+    fn test_fetch_update_reports_the_signatures_the_site_delivered() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = updater_spooling_into(&dir);
+
+        let outcome = updater
+            .fetch_update(
+                &registry.registry,
+                &TestApi::new(Some(TARGET_HASH)),
+                SignatureCheck::Required,
+            )
+            .unwrap();
+
+        let FetchOutcome::Spooled { signatures, .. } = outcome else {
+            panic!("expected a spooled package, got {outcome:?}");
+        };
+        assert_eq!(signatures, vec![SITE_SIGNATURE.clone()]);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_install_update_without_an_installer_socket() {
+        let updater = updater(some_config(), some_agent_info());
+
+        assert_eq!(
+            updater
+                .install_update(Path::new("/spool/fedcba9876543210.deb"), &[])
+                .unwrap(),
+            InstallOutcome::NoInstaller
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_install_update_hands_the_package_to_the_configured_socket() {
+        use std::io::Read;
+
+        let dir = tempfile::TempDir::new().unwrap();
+        let socket = dir.path().join("cmk-agent-installer.sock");
+        let listener = std::os::unix::net::UnixListener::bind(&socket).unwrap();
+        let installer = std::thread::spawn(move || {
+            let (mut connection, _) = listener.accept().unwrap();
+            let mut request = String::new();
+            connection.read_to_string(&mut request).unwrap();
+            request
+        });
+        let updater = updater(
+            Some(UpdaterConfig {
+                installer_socket: Some(socket),
+                ..some_config().unwrap()
+            }),
+            some_agent_info(),
+        );
+
+        let outcome = updater
+            .install_update(Path::new("/spool/fedcba9876543210.deb"), &[])
+            .unwrap();
+
+        assert_eq!(outcome, InstallOutcome::HandedOver);
+        assert!(installer
+            .join()
+            .unwrap()
+            .contains("/spool/fedcba9876543210.deb"));
     }
 
     #[test]
@@ -2643,6 +2790,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             hash,
             path,
             signature,
+            ..
         } = outcome
         else {
             panic!("expected a spooled package, got {outcome:?}");

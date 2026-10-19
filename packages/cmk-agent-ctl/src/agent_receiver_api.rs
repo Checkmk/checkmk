@@ -126,7 +126,10 @@ pub struct UpdateStatusBody<'a> {
 }
 
 /// One signature of the offered agent package.
-#[derive(Deserialize, Clone, Debug, PartialEq, Eq)]
+///
+/// Serialized as well as read: the install request carries the signatures on
+/// to the privileged install step, in the shape the site sent them.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct AgentSignature {
     /// PEM-encoded certificate of the signing key.
     pub certificate: String,

@@ -18,6 +18,7 @@ const OWNED_DASHBOARD: VisualLocation = { type: 'dashboards', name: 'linux', own
 const HOST_STATISTICS_OPTIONS: ContextualLinkOptions = {
   modes: ['default', 'inherited', 'custom'],
   filters: ['siteopt', 'wato_folder', 'hoststate', 'opthostgroup'],
+  filter_keys: {},
   single_infos: []
 }
 

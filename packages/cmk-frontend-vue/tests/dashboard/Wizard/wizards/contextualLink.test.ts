@@ -134,7 +134,12 @@ const WIDGET_CONSTANTS: DashboardConstants['widgets'][string] = {
     responsive: {}
   },
   title_macros: [],
-  contextual_link: { modes: ['default', 'inherited', 'custom'], filters: [], single_infos: [] }
+  contextual_link: {
+    modes: ['default', 'inherited', 'custom'],
+    filters: [],
+    filter_keys: {},
+    single_infos: []
+  }
 }
 
 const CONSTANTS: DashboardConstants = {

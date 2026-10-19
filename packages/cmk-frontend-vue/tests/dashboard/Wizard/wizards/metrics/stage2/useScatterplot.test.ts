@@ -35,7 +35,7 @@ const CONSTANTS: DashboardConstants = {
         responsive: {}
       },
       title_macros: [],
-      contextual_link: { modes: [], filters: [], single_infos: [] }
+      contextual_link: { modes: [], filters: [], filter_keys: {}, single_infos: [] }
     }
   }
 }

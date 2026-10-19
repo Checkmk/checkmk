@@ -221,6 +221,7 @@ def test_dashboard_constants_tell_the_link_options_of_a_widget(clients: ClientRe
     assert widgets["host_stats"]["contextual_link"] == {
         "modes": ["default", "inherited", "custom"],
         "filters": ["siteopt", "wato_folder", "hoststate", "opthostgroup"],
+        "filter_keys": {},
         "single_infos": [],
     }
     assert "contextual_link" not in widgets["event_stats"]

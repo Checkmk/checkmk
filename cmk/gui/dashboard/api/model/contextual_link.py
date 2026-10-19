@@ -39,12 +39,17 @@ from cmk.gui.type_defs import (
     VisualName,
 )
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.views.drilldown_filters import exceeded_aux_tag_limits, filter_key
+from cmk.gui.visuals.filter import filter_registry
+from cmk.gui.visuals.filter.drilldowns import AuxTagKey, FilterKey, LabelKey, TagGroupKey
 from cmk.gui.visuals.type import visual_type_registry
+from cmk.ruleset_matcher.tags import TagConfig
 
 from ...store import get_permitted_dashboards, get_permitted_dashboards_by_owners
 from .context_filters import (
     AggregateHostContextFilter,
     AggregateServiceContextFilter,
+    context_filter_to_internal,
     ObjectHostContextFilter,
     ObjectServiceContextFilter,
 )
@@ -146,12 +151,42 @@ type AnyContextualLinkSpec = (
 
 
 @api_model
+class LabelKeyOption:
+    type: Literal["label"] = api_field(description="The filter takes a label key.")
+    object_type: Literal["host", "service"] = api_field(
+        description="Whose labels the key names: the host's or the service's."
+    )
+
+
+@api_model
+class TagGroupKeyOption:
+    type: Literal["tag_group"] = api_field(description="The filter takes a tag group.")
+
+
+@api_model
+class AuxTagKeyOption:
+    type: Literal["aux_tag"] = api_field(description="The filter takes auxiliary tags.")
+    max_count: int = api_field(description="How many auxiliary tags a link may carry.")
+
+
+type FilterKeyOption = Annotated[
+    LabelKeyOption | TagGroupKeyOption | AuxTagKeyOption, Discriminator("type")
+]
+
+
+@api_model
 class ContextualLinkOptions:
     modes: list[ConfigurableLinkMode] = api_field(
         description="The modes the widget offers besides linking nowhere."
     )
     filters: list[FilterName] = api_field(
         description="The filters a custom link of the widget may carry."
+    )
+    filter_keys: dict[FilterName, FilterKeyOption] = api_field(
+        description=(
+            "The key each filter that needs one takes: a label key, a tag group or an auxiliary"
+            " tag."
+        )
     )
     single_infos: list[InfoName] = api_field(
         description=(
@@ -170,20 +205,47 @@ def contextual_link_options(link_type: object) -> ContextualLinkOptions:
     spec = get_origin(link_type)
     if not isinstance(spec, TypeAliasType):
         raise TypeError(f"Not a contextual link type: {link_type!r}")
-    filters = [
-        _literal(member, "filter_id")
+    accepted = [
+        filter_id
         for filter_type in get_args(link_type)
         for member in _members(filter_type)
+        for filter_id in _literals(member, "filter_id")
     ]
     modes = _MODES_ADAPTER.validate_python(
-        [mode for arm in _members(spec) if (mode := _literal(arm, "type")) != "none"]
+        [mode for arm in _members(spec) for mode in _literals(arm, "type") if mode != "none"]
+    )
+    offered = (
+        [
+            filter_id
+            for filter_id in accepted
+            if filter_id in filter_registry and filter_registry[filter_id].available()
+        ]
+        if "custom" in modes
+        else []
     )
     return ContextualLinkOptions(
         modes=modes,
-        filters=filters if "custom" in modes else [],
+        filters=offered,
+        filter_keys={
+            filter_id: option
+            for filter_id in offered
+            if (option := _key_option(filter_key(filter_id))) is not None
+        },
         # An object filter set holds the name filter of exactly the objects its click names.
-        single_infos=[info for info in ("host", "service") if info in filters],
+        single_infos=[info for info in ("host", "service") if info in accepted],
     )
+
+
+def _key_option(key: FilterKey | None) -> FilterKeyOption | None:
+    match key:
+        case LabelKey(object_type=object_type):
+            return LabelKeyOption(type="label", object_type=object_type)
+        case TagGroupKey():
+            return TagGroupKeyOption(type="tag_group")
+        case AuxTagKey(max_count=max_count):
+            return AuxTagKeyOption(type="aux_tag", max_count=max_count)
+        case None:
+            return None
 
 
 def _members(alias: TypeAliasType) -> tuple[object, ...]:
@@ -192,9 +254,8 @@ def _members(alias: TypeAliasType) -> tuple[object, ...]:
     return members
 
 
-def _literal(model: object, field: str) -> str:
-    (value,) = get_args(get_type_hints(get_origin(model) or model)[field])
-    return str(value)
+def _literals(model: object, field: str) -> list[str]:
+    return [str(value) for value in get_args(get_type_hints(get_origin(model) or model)[field])]
 
 
 def contextual_link_to_internal(
@@ -213,7 +274,7 @@ def contextual_link_to_internal(
                     ContextualLinkEntryConfig(
                         title=entry.title,
                         location=_location_to_internal(entry.location),
-                        filters=[ContextFilterConfig(filter_id=f.filter_id) for f in entry.filters],
+                        filters=[context_filter_to_internal(f) for f in entry.filters],
                         include_context=entry.include_context,
                         include_time_range=entry.include_time_range,
                         show_filter_form=entry.show_filter_form,
@@ -311,9 +372,11 @@ def iter_contextual_link_errors(
     link: AnyContextualLinkSpec,
     location: tuple[str | int, ...],
     user_permissions: UserPermissions,
+    tags: TagConfig,
 ) -> Iterator[ErrorDetails]:
-    """The write-time errors of a link: targets outside the writer's permitted visuals, and
-    filters a custom link carries twice."""
+    """The write-time errors of a link: a target the writer may not open, and a custom link's
+    filter this edition lacks, listed twice, with a key the tag config lacks, or beyond what the
+    target takes."""
     targets: list[tuple[tuple[str | int, ...], VisualLocation]]
     match link:
         case ContextualLinkInherited():
@@ -329,8 +392,10 @@ def iter_contextual_link_errors(
             for index, entry in enumerate(entries):
                 entry_location = location + ("custom", "links", index)
                 targets.append((entry_location + ("location",), entry.location))
-                yield from _iter_duplicate_filter_errors(
-                    [f.filter_id for f in entry.filters], entry_location + ("filters",)
+                yield from _iter_filter_errors(
+                    [context_filter_to_internal(f) for f in entry.filters],
+                    entry_location + ("filters",),
+                    tags,
                 )
         case ContextualLinkNone() | ContextualLinkDefault():
             targets = []
@@ -350,17 +415,44 @@ def iter_contextual_link_errors(
             )
 
 
-def _iter_duplicate_filter_errors(
-    filter_ids: Sequence[str], location: tuple[str | int, ...]
+def _iter_filter_errors(
+    filters: Sequence[ContextFilterConfig], location: tuple[str | int, ...], tags: TagConfig
 ) -> Iterator[ErrorDetails]:
-    for index, filter_id in enumerate(filter_ids):
-        if filter_id in filter_ids[:index]:
-            yield ErrorDetails(
-                type="value_error",
-                msg=f"The filter '{filter_id}' is listed more than once.",
-                loc=location + (index,),
-                input=filter_id,
-            )
+    for index, filter_config in enumerate(filters):
+        filter_id, key = filter_config["filter_id"], filter_config.get("key")
+        if filter_id not in filter_registry:
+            msg = f"The filter '{filter_id}' does not exist in this edition."
+        elif filter_config in filters[:index]:
+            of_key = f" with the key '{key}'" if key else ""
+            msg = f"The filter '{filter_id}' is listed more than once{of_key}."
+        elif key is not None and (key_error := _key_error(filter_id, key, tags)) is not None:
+            msg = key_error
+        else:
+            continue
+        yield ErrorDetails(type="value_error", msg=msg, loc=location + (index,), input=filter_id)
+    for max_count in exceeded_aux_tag_limits(f["filter_id"] for f in filters):
+        yield ErrorDetails(
+            type="value_error",
+            msg=f"A link carries at most {max_count} auxiliary tags.",
+            loc=location,
+            input=[f["filter_id"] for f in filters],
+        )
+
+
+def _key_error(filter_id: FilterName, key: str, tags: TagConfig) -> str | None:
+    """Why the key names nothing the filter takes, the way the view editor checks it."""
+    match filter_key(filter_id):
+        case LabelKey() if ":" in key:
+            # A label is parsed as key:value, so a colon would end the key early.
+            return f"The label key '{key}' must not contain a colon."
+        case TagGroupKey() if key not in {group for group, _title in tags.get_tag_group_choices()}:
+            return f"The tag group '{key}' does not exist."
+        case AuxTagKey() if key not in {
+            aux_tag for aux_tag, _title in tags.aux_tag_list.get_choices()
+        }:
+            return f"The auxiliary tag '{key}' does not exist."
+        case _:
+            return None
 
 
 def permitted_copies(

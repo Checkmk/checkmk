@@ -11,13 +11,19 @@ from cmk.gui.dashboard.api.model.context_filters import (
     AGGREGATE_HOST_FILTER_ADAPTER,
     AGGREGATE_SERVICE_FILTER_ADAPTER,
     AggregateServiceContextFilter,
+    HostAttributeContextFilter,
+    HostLabelContextFilter,
     HostNameContextFilter,
     HostStateContextFilter,
     OBJECT_HOST_FILTER_ADAPTER,
+    OBJECT_SERVICE_FILTER_ADAPTER,
     ObjectHostContextFilter,
+    ObjectServiceContextFilter,
     ServiceStateContextFilter,
+    ServiceTagContextFilter,
 )
 from cmk.gui.dashboard.api.model.contextual_link import (
+    AuxTagKeyOption,
     contextual_link_from_internal,
     contextual_link_to_internal,
     ContextualLink,
@@ -29,6 +35,8 @@ from cmk.gui.dashboard.api.model.contextual_link import (
     inheritable_contextual_link_from_internal,
     inheritable_contextual_link_to_internal,
     InheritableContextualLinkSpec,
+    LabelKeyOption,
+    TagGroupKeyOption,
     VisualLocation,
 )
 from cmk.gui.dashboard.api.model.widget_content.inventory import InventoryContent
@@ -38,6 +46,12 @@ from cmk.gui.dashboard.api.model.widget_content.state import (
     ServiceStateContent,
 )
 from cmk.gui.dashboard.type_defs import ContextFilterConfig
+from cmk.gui.views.drilldown_filters import filter_drilldown
+from cmk.gui.visuals.filter import filter_registry
+from tests.testlib.unit.gui.web_test_app import SetConfig
+
+# The options read the site config, such as whether Setup is on.
+pytestmark = pytest.mark.usefixtures("request_context")
 
 _BY_NAME = VisualLocation(type="views", name="searchhost", owner=None)
 _BUILT_IN_VIEW = VisualLocation(type="views", name="searchhost", owner=UserId.builtin())
@@ -106,6 +120,44 @@ def test_a_custom_link_round_trips_its_entries() -> None:
     )
 
 
+def test_a_custom_link_round_trips_its_keyed_filters() -> None:
+    link: ContextualLinkSpec[ObjectServiceContextFilter] = ContextualLinkCustom(
+        type="custom",
+        links=[
+            ContextualLink(
+                title="Same OS",
+                location=_BY_NAME,
+                filters=[
+                    HostLabelContextFilter(filter_id="host_labels", key="cmk/os_family"),
+                    ServiceTagContextFilter(filter_id="service_tags", key="tier"),
+                    HostAttributeContextFilter(filter_id="kubernetes_namespace"),
+                ],
+                include_context=False,
+                include_time_range=False,
+                show_filter_form=False,
+            )
+        ],
+    )
+
+    stored = contextual_link_to_internal(link)
+
+    assert stored is not None and stored["type"] == "custom"
+    assert stored["links"][0]["filters"][0] == {"filter_id": "host_labels", "key": "cmk/os_family"}
+    assert contextual_link_from_internal(stored, OBJECT_SERVICE_FILTER_ADAPTER) == link
+
+
+def test_a_label_filter_does_not_load_without_its_key() -> None:
+    with pytest.raises(ValidationError):
+        OBJECT_HOST_FILTER_ADAPTER.validate_python(ContextFilterConfig(filter_id="host_labels"))
+
+
+def test_a_label_does_not_load_as_an_aggregate_filter() -> None:
+    with pytest.raises(ValidationError):
+        AGGREGATE_HOST_FILTER_ADAPTER.validate_python(
+            ContextFilterConfig(filter_id="host_labels", key="cmk/os_family")
+        )
+
+
 def test_a_service_filter_does_not_load_as_a_host_filter() -> None:
     with pytest.raises(ValidationError):
         AGGREGATE_HOST_FILTER_ADAPTER.validate_python(ContextFilterConfig(filter_id="svcstate"))
@@ -126,8 +178,55 @@ def test_a_host_state_click_may_carry_the_host_name() -> None:
     options = HostStateContent.contextual_link_options()
 
     assert options is not None
-    assert options.filters == ["siteopt", "wato_folder", "hoststate", "opthostgroup", "host"]
+    assert options.filters[:5] == ["siteopt", "wato_folder", "hoststate", "opthostgroup", "host"]
+    assert {"site", "host_check_command_exact", "kubernetes_namespace", "host_labels"} <= set(
+        options.filters
+    )
     assert options.single_infos == ["host"]
+
+
+def test_a_host_state_click_names_the_key_of_each_keyed_filter() -> None:
+    options = HostStateContent.contextual_link_options()
+
+    assert options is not None
+    assert options.filter_keys == {
+        "host_labels": LabelKeyOption(type="label", object_type="host"),
+        "host_tags": TagGroupKeyOption(type="tag_group"),
+        "host_auxtags": AuxTagKeyOption(type="aux_tag", max_count=3),
+    }
+
+
+def test_a_service_state_click_names_whose_labels_a_label_key_names() -> None:
+    options = ServiceStateContent.contextual_link_options()
+
+    assert options is not None
+    assert options.filter_keys["service_labels"] == LabelKeyOption(
+        type="label", object_type="service"
+    )
+
+
+def test_a_click_offers_only_filters_a_drill_down_can_value() -> None:
+    # The service object's filters hold those of every other widget.
+    options = ServiceStateContent.contextual_link_options()
+
+    assert options is not None
+    assert [f for f in options.filters if filter_drilldown(f) is None] == []
+
+
+def test_a_click_offers_only_filters_this_edition_has() -> None:
+    options = ServiceStateContent.contextual_link_options()
+
+    assert options is not None
+    assert set(options.filters) <= set(filter_registry)
+
+
+def test_a_click_offers_no_filter_switched_off_on_this_site(set_config: SetConfig) -> None:
+    with set_config(wato_enabled=False):
+        options = HostStateContent.contextual_link_options()
+
+    assert options is not None
+    assert "siteopt" in options.filters
+    assert "wato_folder" not in options.filters
 
 
 def test_a_service_state_click_may_carry_the_host_and_the_service_name() -> None:

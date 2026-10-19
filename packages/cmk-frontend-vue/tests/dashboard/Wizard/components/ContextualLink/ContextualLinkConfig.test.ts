@@ -22,6 +22,7 @@ const API = `${location.protocol}//${location.host}/api/internal`
 const HOST_STATISTICS_OPTIONS: ContextualLinkOptions = {
   modes: ['default', 'inherited', 'custom'],
   filters: ['siteopt', 'wato_folder', 'hoststate', 'opthostgroup'],
+  filter_keys: {},
   single_infos: []
 }
 

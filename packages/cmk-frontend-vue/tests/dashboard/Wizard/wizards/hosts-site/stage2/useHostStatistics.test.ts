@@ -38,6 +38,7 @@ const CONSTANTS: DashboardConstants = {
       contextual_link: {
         modes: ['default', 'inherited', 'custom'],
         filters: ['siteopt', 'wato_folder', 'hoststate', 'opthostgroup'],
+        filter_keys: {},
         single_infos: []
       }
     }

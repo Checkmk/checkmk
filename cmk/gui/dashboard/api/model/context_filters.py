@@ -5,9 +5,10 @@
 
 from typing import Annotated, Literal
 
-from pydantic import Discriminator, TypeAdapter
+from pydantic import Discriminator, StringConstraints, TypeAdapter
 
 from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.type_defs import ContextFilterConfig
 
 
 @api_model
@@ -58,6 +59,79 @@ class ServiceGroupContextFilter:
     )
 
 
+@api_model
+class HostAttributeContextFilter:
+    filter_id: Literal[
+        "site",
+        "host_check_command_exact",
+        "host_ctc",
+        "opthost_contactgroup",
+        "host_address",
+        "host_ipv4_address",
+        "host_ipv6_address",
+        "hst_service_level",
+        "kubernetes_cluster",
+        "kubernetes_namespace",
+        "kubernetes_node",
+        "kubernetes_deployment",
+        "kubernetes_daemonset",
+        "kubernetes_statefulset",
+        "azure_resource_group",
+        "azure_subscription_name",
+        "azure_subscription",
+    ] = api_field(description="An attribute of the clicked host, carried by this filter.")
+
+
+@api_model
+class ServiceAttributeContextFilter:
+    filter_id: Literal[
+        "svchardstate",
+        "service_state_type",
+        "service_staleness",
+        "check_command_exact",
+        "service_ctc",
+        "optservice_contactgroup",
+        "svc_service_level",
+    ] = api_field(description="An attribute of the clicked service, carried by this filter.")
+
+
+_Key = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+
+
+@api_model
+class _KeyedContextFilter:
+    key: _Key = api_field(
+        description="The label key, tag group or auxiliary tag whose value the link carries."
+    )
+
+
+@api_model
+class HostLabelContextFilter(_KeyedContextFilter):
+    filter_id: Literal["host_labels"] = api_field(description="A label of the clicked host.")
+
+
+@api_model
+class HostTagContextFilter(_KeyedContextFilter):
+    filter_id: Literal["host_tags"] = api_field(description="A tag of the clicked host.")
+
+
+@api_model
+class HostAuxTagContextFilter(_KeyedContextFilter):
+    filter_id: Literal["host_auxtags"] = api_field(
+        description="An auxiliary tag the clicked host has."
+    )
+
+
+@api_model
+class ServiceLabelContextFilter(_KeyedContextFilter):
+    filter_id: Literal["service_labels"] = api_field(description="A label of the clicked service.")
+
+
+@api_model
+class ServiceTagContextFilter(_KeyedContextFilter):
+    filter_id: Literal["service_tags"] = api_field(description="A tag of the clicked service.")
+
+
 # Plain unions, so that a set built on another one still lists its members flat.
 _AggregateHostFilters = (
     SiteContextFilter | WatoFolderContextFilter | HostStateContextFilter | HostGroupContextFilter
@@ -72,14 +146,28 @@ type AggregateHostContextFilter = Annotated[_AggregateHostFilters, Discriminator
 # A click that yields a set of services, which also carry their hosts' filters.
 type AggregateServiceContextFilter = Annotated[_AggregateServiceFilters, Discriminator("filter_id")]
 
-# A click that yields one host: every aggregate member, plus the host itself.
-type ObjectHostContextFilter = Annotated[
-    _AggregateHostFilters | HostNameContextFilter, Discriminator("filter_id")
-]
+_ObjectHostFilters = (
+    _AggregateHostFilters
+    | HostNameContextFilter
+    | HostAttributeContextFilter
+    | HostLabelContextFilter
+    | HostTagContextFilter
+    | HostAuxTagContextFilter
+)
+
+# A click that yields one host: every aggregate member, plus the host's name, attributes, labels
+# and tags.
+type ObjectHostContextFilter = Annotated[_ObjectHostFilters, Discriminator("filter_id")]
 
 # A click that yields one service, which also carries its host's filters.
 type ObjectServiceContextFilter = Annotated[
-    _AggregateServiceFilters | HostNameContextFilter | ServiceNameContextFilter,
+    _ObjectHostFilters
+    | ServiceStateContextFilter
+    | ServiceGroupContextFilter
+    | ServiceNameContextFilter
+    | ServiceAttributeContextFilter
+    | ServiceLabelContextFilter
+    | ServiceTagContextFilter,
     Discriminator("filter_id"),
 ]
 
@@ -97,3 +185,11 @@ OBJECT_HOST_FILTER_ADAPTER: TypeAdapter[ObjectHostContextFilter] = TypeAdapter(
 OBJECT_SERVICE_FILTER_ADAPTER: TypeAdapter[ObjectServiceContextFilter] = TypeAdapter(
     ObjectServiceContextFilter
 )
+
+
+def context_filter_to_internal(context_filter: ObjectServiceContextFilter) -> ContextFilterConfig:
+    """The stored form of a filter of any set. Typed as the service object's filters, which
+    hold every other set's."""
+    if isinstance(context_filter, _KeyedContextFilter):
+        return ContextFilterConfig(filter_id=context_filter.filter_id, key=context_filter.key)
+    return ContextFilterConfig(filter_id=context_filter.filter_id)

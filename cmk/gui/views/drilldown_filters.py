@@ -9,7 +9,7 @@ from collections import Counter
 from collections.abc import Iterable, Iterator
 
 from cmk.gui.data_source import ABCDataSource
-from cmk.gui.type_defs import ContextualLinkTargetType, FilterName, InfoName
+from cmk.gui.type_defs import ContextFilterConfig, ContextualLinkTargetType, FilterName, InfoName
 from cmk.gui.visuals import info_params
 from cmk.gui.visuals.filter import Filter, filter_registry
 from cmk.gui.visuals.filter.drilldowns import AuxTagKey, Drilldown, FilterKey
@@ -53,6 +53,17 @@ def drilldown_filters(
 def _menu_order(item: tuple[FilterName, Filter]) -> tuple[int, str]:
     """The order the filter menus list the filters in."""
     return item[1].sort_index, item[1].title
+
+
+def filter_keys(filters: Iterable[ContextFilterConfig]) -> dict[FilterName, list[str]]:
+    """The configured filters, each with its keys: one filter takes all its label keys, tag
+    groups or aux tags at once."""
+    keys_by_filter: dict[FilterName, list[str]] = {}
+    for filter_config in filters:
+        keys = keys_by_filter.setdefault(filter_config["filter_id"], [])
+        if "key" in filter_config:
+            keys.append(filter_config["key"])
+    return keys_by_filter
 
 
 def filled_single_infos(filter_names: Iterable[FilterName]) -> set[InfoName]:

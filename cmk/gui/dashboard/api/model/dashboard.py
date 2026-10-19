@@ -368,6 +368,7 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
                 link,
                 ("body", "widgets", widget_id, "content", widget.content.type, "contextual_link"),
                 context.config.user_permissions(),
+                context.config.tags,
             )
 
     @abstractmethod

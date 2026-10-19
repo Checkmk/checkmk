@@ -127,8 +127,8 @@ def test_custom_resolves_one_link_per_entry_with_its_filters() -> None:
     )
 
     assert [(link.title, link.filters) for link in links] == [
-        ("Down hosts", ["hoststate"]),
-        ("Other", ["hoststate"]),
+        ("Down hosts", [{"filter_id": "hoststate"}]),
+        ("Other", [{"filter_id": "hoststate"}]),
     ]
 
 

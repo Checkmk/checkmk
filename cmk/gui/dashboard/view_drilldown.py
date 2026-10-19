@@ -12,7 +12,6 @@ from cmk.gui.http import request
 from cmk.gui.painter import CellDrilldown
 from cmk.gui.type_defs import (
     ColumnName,
-    ContextFilterConfig,
     ContextualLinkEntryConfig,
     ContextualLinkTargetType,
     FilterHTTPVariables,
@@ -24,7 +23,7 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.views.drilldown_filters import drilldown_filters, filter_drilldown
+from cmk.gui.views.drilldown_filters import drilldown_filters, filter_drilldown, filter_keys
 from cmk.gui.visuals import get_single_info_keys, missing_context_filters
 from cmk.gui.visuals.filter.drilldowns import Drilldown
 from cmk.web.utils.urls import makeuri_contextless
@@ -75,7 +74,7 @@ def column_drilldowns(
             carriable = set(drilldown_filters(data_source, location.type))
             carried = {
                 filter_name: _CarriedFilter(drilldown, keys)
-                for filter_name, keys in _filter_keys(link["filters"]).items()
+                for filter_name, keys in filter_keys(link["filters"]).items()
                 if filter_name in carriable
                 and (drilldown := filter_drilldown(filter_name)) is not None
             }
@@ -151,15 +150,6 @@ def _inherited_url(
         return None
     # The clicked object goes last, so it wins over the same filter in the context.
     return _target_url(location, {**context, **object_filters}, show_filter_form=show_filter_form)
-
-
-def _filter_keys(filters: Sequence[ContextFilterConfig]) -> dict[FilterName, list[str]]:
-    filter_keys: dict[FilterName, list[str]] = {}
-    for filter_config in filters:
-        keys = filter_keys.setdefault(filter_config["filter_id"], [])
-        if "key" in filter_config:
-            keys.append(filter_config["key"])
-    return filter_keys
 
 
 def _custom_url(

@@ -6,6 +6,7 @@
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import TypedDict
 
 from cmk.agent_based.v2 import (
@@ -20,12 +21,18 @@ from cmk.agent_based.v2 import (
 )
 
 
+class ProxyType(StrEnum):
+    VI_PROXY = "ViProxy"
+    HV_PROXY = "HvProxy"
+    GENERAL_PURPOSE_PROXY = "GeneralPurposeProxy"
+
+
 @dataclass(frozen=True, kw_only=True)
 class VeeamProxy:
     """Mirrors the VBR REST API's ProxyStateModel
     (GET /api/v1/backupInfrastructure/proxies/states)."""
 
-    type: str
+    type: ProxyType | str
     description: str
     host_name: str
     is_disabled: bool
@@ -48,7 +55,7 @@ def parse_veeam_proxies(string_table: StringTable) -> Section:
     for line in string_table:
         proxy_dict = json.loads(line[0])
         section[proxy_dict["name"]] = VeeamProxy(
-            type=proxy_dict["type"],
+            type=_parse_type(proxy_dict["type"]),
             description=proxy_dict["description"],
             host_name=proxy_dict["hostName"],
             is_disabled=proxy_dict["isDisabled"],
@@ -62,19 +69,25 @@ def discovery_veeam_proxies(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item in section)
 
 
-def _type_display_name(raw_type: str) -> str:
-    # TODO: these display names are inferred from the EProxyType enum identifiers
-    # and common Veeam terminology, not confirmed by an official description (the
-    # API reference has none). Double-check once we can verify against real data.
-    match raw_type:
-        case "ViProxy":
-            return "VMware"
-        case "HvProxy":
+def _parse_type(raw_type: str) -> ProxyType | str:
+    try:
+        return ProxyType(raw_type)
+    except ValueError:
+        return raw_type
+
+
+def _known_type_display_name(type_: ProxyType) -> str:
+    match type_:
+        case ProxyType.VI_PROXY:
+            return "VMware vSphere"
+        case ProxyType.HV_PROXY:
             return "Hyper-V"
-        case "GeneralPurposeProxy":
+        case ProxyType.GENERAL_PURPOSE_PROXY:
             return "General purpose"
-        case _:
-            return raw_type
+
+
+def _type_display_name(type_: ProxyType | str) -> str:
+    return _known_type_display_name(type_) if isinstance(type_, ProxyType) else type_
 
 
 def check_veeam_proxies(item: str, params: CheckParameters, section: Section) -> CheckResult:

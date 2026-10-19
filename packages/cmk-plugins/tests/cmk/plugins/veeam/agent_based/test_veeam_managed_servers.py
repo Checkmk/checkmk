@@ -10,6 +10,7 @@ from cmk.plugins.veeam.agent_based.veeam_managed_servers import (
     check_veeam_managed_servers,
     CheckParameters,
     discovery_veeam_managed_servers,
+    ManagedServerType,
     parse_veeam_managed_servers,
     VeeamManagedServer,
 )
@@ -52,13 +53,14 @@ def test_parse_veeam_managed_servers() -> None:
     assert section == {
         "vcenter01.tech.local": VeeamManagedServer(
             id="id-1",
-            type="WindowsHost",
+            type=ManagedServerType.WINDOWS_HOST,
             description="Managed server",
             status="Available",
             is_backup_server=True,
             is_default_mount_server=True,
         )
     }
+    assert section["vcenter01.tech.local"].type is ManagedServerType.WINDOWS_HOST
 
 
 def test_parse_veeam_managed_servers_without_status_or_roles() -> None:

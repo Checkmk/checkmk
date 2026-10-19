@@ -6,6 +6,7 @@
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import TypedDict
 
 from cmk.agent_based.v2 import (
@@ -20,12 +21,23 @@ from cmk.agent_based.v2 import (
 )
 
 
+class ProtectionGroupType(StrEnum):
+    MANUALLY_ADDED = "ManuallyAdded"
+    UNMANAGED = "Unmanaged"
+    INDIVIDUAL_COMPUTERS = "IndividualComputers"
+    AD_OBJECTS = "ADObjects"
+    CSV_FILE = "CSVFile"
+    PRE_INSTALLED_AGENTS = "PreInstalledAgents"
+    CLOUD_MACHINES = "CloudMachines"
+    MONGO_DB = "MongoDB"
+
+
 @dataclass(frozen=True, kw_only=True)
 class VeeamProtectionGroup:
     """Mirrors the VBR REST API's ProtectionGroupModel
     (GET /api/v1/agents/protectionGroups)."""
 
-    type: str
+    type: ProtectionGroupType | str
     description: str
     is_disabled: bool
     computer_count: int | None
@@ -46,7 +58,7 @@ def parse_veeam_protection_groups(string_table: StringTable) -> Section:
     for line in string_table:
         group_dict = json.loads(line[0])
         section[group_dict["name"]] = VeeamProtectionGroup(
-            type=group_dict["type"],
+            type=_parse_type(group_dict["type"]),
             description=group_dict["description"],
             is_disabled=group_dict["isDisabled"],
             # Only the IndividualComputers and ManuallyAdded models have this field.
@@ -61,27 +73,35 @@ def discovery_veeam_protection_groups(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item in section)
 
 
-def _type_display_name(raw_type: str) -> str:
-    # TODO(CMK-40441): type the EProtectionGroupType values as a Literal/StrEnum.
-    match raw_type:
-        case "ManuallyAdded":
+def _parse_type(raw_type: str) -> ProtectionGroupType | str:
+    try:
+        return ProtectionGroupType(raw_type)
+    except ValueError:
+        return raw_type
+
+
+def _known_type_display_name(type_: ProtectionGroupType) -> str:
+    match type_:
+        case ProtectionGroupType.MANUALLY_ADDED:
             return "Manually added"
-        case "Unmanaged":
+        case ProtectionGroupType.UNMANAGED:
             return "Unmanaged"
-        case "IndividualComputers":
+        case ProtectionGroupType.INDIVIDUAL_COMPUTERS:
             return "Individual computers"
-        case "ADObjects":
+        case ProtectionGroupType.AD_OBJECTS:
             return "Active Directory objects"
-        case "CSVFile":
+        case ProtectionGroupType.CSV_FILE:
             return "CSV file"
-        case "PreInstalledAgents":
+        case ProtectionGroupType.PRE_INSTALLED_AGENTS:
             return "Pre-installed agents"
-        case "CloudMachines":
+        case ProtectionGroupType.CLOUD_MACHINES:
             return "Cloud machines"
-        case "MongoDB":
+        case ProtectionGroupType.MONGO_DB:
             return "MongoDB"
-        case _:
-            return raw_type
+
+
+def _type_display_name(type_: ProtectionGroupType | str) -> str:
+    return _known_type_display_name(type_) if isinstance(type_, ProtectionGroupType) else type_
 
 
 def check_veeam_protection_groups(

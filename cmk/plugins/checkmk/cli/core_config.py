@@ -5,6 +5,7 @@
 """The core configuration commands: --nagios-config, --update, --restart and --reload."""
 
 import itertools
+import logging
 import sys
 from collections.abc import Callable
 from pathlib import Path
@@ -19,6 +20,7 @@ from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
 from cmk.base.modes.check_mk import forced_ip_lookup, host_addresses, load_checks, set_fake_dns
 from cmk.ccc import tty
+from cmk.ccc.exceptions import MKBailOut
 from cmk.ccc.store import activation_lock
 from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
@@ -125,10 +127,22 @@ def _mode_dump_nagios_config(
     return 0
 
 
+def _run_dump_nagios_config(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_dump_nagios_config(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_nagios_config = CLICommand(
     long_option="nagios-config",
     short_option="N",
-    handler_function=_mode_dump_nagios_config,
+    handler_function=_run_dump_nagios_config,
     argument=True,
     argument_descr="HOST1 HOST2...",
     argument_optional=True,
@@ -267,10 +281,20 @@ def _mode_update(
     return 0
 
 
+def _run_update(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    try:
+        return _mode_update(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_update = CLICommand(
     long_option="update",
     short_option="U",
-    handler_function=_mode_update,
+    handler_function=_run_update,
     short_help="Create core config",
     long_help=[
         (
@@ -376,10 +400,22 @@ def _mode_restart(
     return 0
 
 
+def _run_restart(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_restart(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_restart = CLICommand(
     long_option="restart",
     short_option="R",
-    handler_function=_mode_restart,
+    handler_function=_run_restart,
     argument=True,
     argument_descr="[HostA, HostB]",
     argument_optional=True,
@@ -486,10 +522,20 @@ def _mode_reload(
     return 0
 
 
+def _run_reload(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    try:
+        return _mode_reload(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_reload = CLICommand(
     long_option="reload",
     short_option="O",
-    handler_function=_mode_reload,
+    handler_function=_run_reload,
     argument=True,
     argument_descr="[HostA, HostB]",
     argument_optional=True,

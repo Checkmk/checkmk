@@ -6,6 +6,7 @@
 
 import contextlib
 import itertools
+import logging
 import sys
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
@@ -307,9 +308,21 @@ def _mode_check_discovery(
         return _write_active_check_result(ActiveCheckResult.from_subresults(*check_results))
 
 
+def _run_check_discovery(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_check_discovery(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_check_discovery = CLICommand(
     long_option="check-discovery",
-    handler_function=_mode_check_discovery,
+    handler_function=_run_check_discovery,
     argument=True,
     argument_descr="HOSTNAME",
     sub_options=[*FETCHER_OPTIONS, SNMP_BACKEND_OPTION],
@@ -596,10 +609,22 @@ def _mode_discover(
         return 1 if any_failed else 0
 
 
+def _run_discover(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_discover(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_discover = CLICommand(
     long_option="discover",
     short_option="I",
-    handler_function=_mode_discover,
+    handler_function=_run_discover,
     argument=True,
     argument_descr="[-I] HOST1 HOST2...",
     argument_optional=True,

@@ -16,7 +16,6 @@ import cmk.ccc.debug
 import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
 from cmk.ccc.exceptions import (
-    MKBailOut,
     MKGeneralException,
     MKTerminate,
     raise_mkterminate_on_sigint,
@@ -197,7 +196,7 @@ def dispatch(
         logger.error("<Interrupted>")  # noqa: TRY400
         return 1
 
-    except (MKGeneralException, MKBailOut) as e:
+    except MKGeneralException as e:
         logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if debug_enabled():
             raise

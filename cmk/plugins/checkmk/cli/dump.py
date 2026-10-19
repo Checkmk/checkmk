@@ -269,10 +269,22 @@ def _mode_dump_agent(
         return 0
 
 
+def _run_dump_agent(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_dump_agent(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_dump_agent = CLICommand(
     long_option="dump-agent",
     short_option="d",
-    handler_function=_mode_dump_agent,
+    handler_function=_run_dump_agent,
     argument=True,
     argument_descr="HOSTNAME|ADDRESS",
     sub_options=[*FETCHER_OPTIONS[:3], SNMP_BACKEND_OPTION],
@@ -371,10 +383,22 @@ def _mode_dump_hosts(
         return 0
 
 
+def _run_dump_hosts(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_dump_hosts(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_dump = CLICommand(
     long_option="dump",
     short_option="D",
-    handler_function=_mode_dump_hosts,
+    handler_function=_run_dump_hosts,
     argument=True,
     argument_descr="H1 H2...",
     argument_optional=True,

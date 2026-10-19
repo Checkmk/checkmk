@@ -5,6 +5,7 @@
 """The site maintenance commands: --flush, --update-dns-cache and --cleanup-piggyback."""
 
 import itertools
+import logging
 import os
 import time
 from pathlib import Path
@@ -14,6 +15,7 @@ from cmk.base import config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.modes.check_mk import forced_ip_lookup, host_addresses, load_checks, set_fake_dns
 from cmk.ccc import tty
+from cmk.ccc.exceptions import MKBailOut
 from cmk.checkengine.discovery import remove_autochecks_of_host
 from cmk.cli.engine.commands import write_stdout
 from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
@@ -55,9 +57,21 @@ def _mode_update_dns_cache(
     return 0
 
 
+def _run_update_dns_cache(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_update_dns_cache(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_update_dns_cache = CLICommand(
     long_option="update-dns-cache",
-    handler_function=_mode_update_dns_cache,
+    handler_function=_run_update_dns_cache,
     short_help="Update IP address lookup cache",
 )
 
@@ -207,9 +221,19 @@ def _mode_flush(
     return 0
 
 
+def _run_flush(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    try:
+        return _mode_flush(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_flush = CLICommand(
     long_option="flush",
-    handler_function=_mode_flush,
+    handler_function=_run_flush,
     argument=True,
     argument_descr="HOST1 HOST2...",
     argument_optional=True,

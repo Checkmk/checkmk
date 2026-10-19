@@ -43,5 +43,17 @@ def test_an_invalid_version_is_rejected_before_the_automation_runs() -> None:
     with pytest.raises(MKBailOut, match="--for-cmk-version"):
         # Running "restart" for real would fail without a site: the error must come first.
         cli_command_automation.handler_function(
+            Path("/nonexistent"),
+            GlobalOptions(debug=True),
+            {"for-cmk-version": "foo"},
+            ["restart"],
+        )
+
+
+def test_an_invalid_version_exits_three() -> None:
+    assert (
+        cli_command_automation.handler_function(
             Path("/nonexistent"), GlobalOptions(), {"for-cmk-version": "foo"}, ["restart"]
         )
+        == 3
+    )

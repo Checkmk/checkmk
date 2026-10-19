@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The "cmk --man" and "cmk --browse-man" commands."""
 
+import logging
 import sys
 from pathlib import Path
 
@@ -50,10 +51,20 @@ def _mode_man(_omd_root: Path, _global_options: GlobalOptions, options: Options,
     return 0
 
 
+def _run_man(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    try:
+        return _mode_man(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_man = CLICommand(
     long_option="man",
     short_option="M",
-    handler_function=_mode_man,
+    handler_function=_run_man,
     argument=True,
     argument_descr="CHECKTYPE",
     argument_optional=True,

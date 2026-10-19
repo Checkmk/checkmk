@@ -80,6 +80,18 @@ def _mode_automation(
         return 0
 
 
+def _run_automation(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_automation(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 def _for_cmk_version(options: Options) -> str:
     """The version to serialize the result for, checked before the automation runs"""
     if (for_cmk_version := option_string(options, "for-cmk-version")) is None:
@@ -93,7 +105,7 @@ def _for_cmk_version(options: Options) -> str:
 
 cli_command_automation = CLICommand(
     long_option="automation",
-    handler_function=_mode_automation,
+    handler_function=_run_automation,
     argument=True,
     argument_descr="COMMAND...",
     argument_optional=True,

@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTerminate
+from cmk.ccc.exceptions import MKGeneralException, MKTerminate
 from cmk.cli.engine.commands import Command, make_command
 from cmk.cli.engine.run import dispatch, enable_file_logging, log_level, run, Runtime
 from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
@@ -64,10 +64,6 @@ def test_an_interrupted_command_exits_one() -> None:
 
 def test_a_general_exception_exits_three() -> None:
     assert _dispatch(_raising(MKGeneralException("no such host"))) == 3
-
-
-def test_a_bail_out_exits_three() -> None:
-    assert _dispatch(_raising(MKBailOut("no such host"))) == 3
 
 
 def test_a_broken_pipe_exits_four() -> None:

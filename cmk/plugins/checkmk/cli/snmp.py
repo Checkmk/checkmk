@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The SNMP commands: --snmptranslate, --snmpwalk and --snmpget."""
 
+import logging
 import subprocess
 import sys
 from collections.abc import Iterable
@@ -237,9 +238,21 @@ def _mode_snmpwalk(
     return 0
 
 
+def _run_snmpwalk(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_snmpwalk(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_snmpwalk = CLICommand(
     long_option="snmpwalk",
-    handler_function=_mode_snmpwalk,
+    handler_function=_run_snmpwalk,
     argument=True,
     argument_descr="HOST1 HOST2...",
     argument_optional=True,
@@ -338,9 +351,21 @@ def _mode_snmpget(
     return 0
 
 
+def _run_snmpget(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_snmpget(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_snmpget = CLICommand(
     long_option="snmpget",
-    handler_function=_mode_snmpget,
+    handler_function=_run_snmpget,
     argument=True,
     argument_descr="OID [HOST1 HOST2...]",
     argument_optional=True,

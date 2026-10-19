@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The "cmk --check" command."""
 
+import logging
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -22,6 +23,7 @@ from cmk.base.modes.check_mk import (
     set_fake_dns,
     SNMP_BACKEND_OPTION,
 )
+from cmk.ccc.exceptions import MKBailOut
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.cli.engine.commands import option_names, option_string
@@ -105,9 +107,19 @@ def _mode_check(omd_root: Path, global_options: GlobalOptions, parsed: Options, 
     )
 
 
+def _run_check(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    try:
+        return _mode_check(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_check = CLICommand(
     long_option="check",
-    handler_function=_mode_check,
+    handler_function=_run_check,
     argument=True,
     argument_descr="HOST [IPADDRESS]",
     argument_optional=True,

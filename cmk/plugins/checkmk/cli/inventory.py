@@ -7,6 +7,7 @@
 import contextlib
 import dataclasses
 import itertools
+import logging
 import time
 from collections.abc import Container, Mapping, Sequence
 from pathlib import Path
@@ -322,10 +323,22 @@ def _mode_inventory(
         return 0
 
 
+def _run_inventory(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_inventory(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_inventory = CLICommand(
     long_option="inventory",
     short_option="i",
-    handler_function=_mode_inventory,
+    handler_function=_run_inventory,
     argument=True,
     argument_descr="HOST1 HOST2...",
     argument_optional=True,
@@ -536,9 +549,21 @@ def _mode_inventorize_marked_hosts(
     return 0
 
 
+def _run_inventorize_marked_hosts(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_inventorize_marked_hosts(omd_root, global_options, options, args)
+    except MKBailOut as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_inventorize_marked_hosts = CLICommand(
     long_option="inventorize-marked-hosts",
-    handler_function=_mode_inventorize_marked_hosts,
+    handler_function=_run_inventorize_marked_hosts,
     sub_options=[*FETCHER_OPTIONS, SNMP_BACKEND_OPTION],
     short_help="Run inventory for hosts which previously had no tree data",
     long_help=[

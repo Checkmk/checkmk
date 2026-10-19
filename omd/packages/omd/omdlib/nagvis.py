@@ -19,6 +19,6 @@ def write_nagvis_apache_conf(_site_name: str, site_home: Path, config: Config) -
 NAGVIS = Hook(
     name="NAGVIS",
     choices=[("on", "enable"), ("off", "disable")],
-    default=lambda _edition: "on",
+    default=lambda _edition: "off",
     activation=write_nagvis_apache_conf,
 )

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from collections.abc import Iterator
 from typing import Final
 
 import pytest
@@ -11,6 +12,7 @@ from playwright.sync_api import expect
 
 # from tests.system.gui.testlib.playwright.helpers import Keys
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
+from tests.testlib.system.site import Site
 
 
 @pytest.mark.parametrize("snapin_id", [("time"), ("speedometer")])
@@ -21,6 +23,28 @@ def test_add_remove_snapin(dashboard_page: MainDashboard, snapin_id: str) -> Non
     snapin.remove_from_sidebar()
 
 
+@pytest.fixture(name="nagvis_enabled")
+def fixture_nagvis_enabled(test_site: Site) -> Iterator[None]:
+    with test_site.omd_config("NAGVIS", "on"):
+        yield
+
+
+@pytest.fixture(name="nagvis_disabled")
+def fixture_nagvis_disabled(test_site: Site) -> Iterator[None]:
+    with test_site.omd_config("NAGVIS", "off"):
+        yield
+
+
+@pytest.mark.usefixtures("nagvis_disabled")
+def test_nagvis_snapin_explains_disabled_nagvis(dashboard_page: MainDashboard) -> None:
+    snapin = dashboard_page.sidebar.add_snapin("nagvis_maps")
+
+    expect(snapin.container.get_by_text("NagVis is disabled on this site.")).to_be_visible()
+
+    snapin.remove_from_sidebar()
+
+
+@pytest.mark.usefixtures("nagvis_enabled")
 def test_add_nagvis_snapin(dashboard_page: MainDashboard) -> None:
     """Tests the addition of the NagVis snapin to the sidebar and verifies its functionality.
 

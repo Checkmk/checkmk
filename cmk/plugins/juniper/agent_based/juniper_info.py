@@ -45,8 +45,8 @@ def inventorize_juniper_info(section: Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={
-            "serial_number": section.serial,
-            "model_name": section.model,
+            "serial": section.serial,
+            "model": section.model,
         },
     )
 

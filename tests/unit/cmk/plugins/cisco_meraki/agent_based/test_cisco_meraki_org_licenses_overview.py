@@ -265,7 +265,6 @@ def _per_device_licensing_string_table() -> StringTable:
     return [[json.dumps([co_termination, _PER_DEVICE_LICENSING_OVERVIEW])]]
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4925: ValidationError")
 def test_discover_licenses_overview_per_device_licensing() -> None:
     section = parse_licenses_overview(_per_device_licensing_string_table())
     assert list(discover_licenses_overview(section)) == [
@@ -274,7 +273,6 @@ def test_discover_licenses_overview_per_device_licensing() -> None:
     ]
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4925: ValidationError")
 def test_check_licenses_overview_per_device_licensing() -> None:
     section = parse_licenses_overview(_per_device_licensing_string_table())
     assert list(check_licenses_overview("PerDevice/456", _DEFAULT_PARAMS, section)) == [
@@ -287,7 +285,6 @@ def test_check_licenses_overview_per_device_licensing() -> None:
     ]
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4925: ValidationError")
 def test_inventorize_licenses_overview_per_device_licensing() -> None:
     section = parse_licenses_overview(_per_device_licensing_string_table())
     assert [

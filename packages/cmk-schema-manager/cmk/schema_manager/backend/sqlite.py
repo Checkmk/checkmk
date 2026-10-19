@@ -37,7 +37,30 @@ from cmk.schema_manager.revision import RevisionChain
 
 REVISION_TABLE = "_cmk_schema_revision"
 
+# Shared by every adopter so the settings cannot drift apart.
+CONNECTION_PRAGMAS: Sequence[str] = (
+    "PRAGMA foreign_keys=ON",
+    "PRAGMA synchronous=NORMAL",
+    "PRAGMA journal_mode=WAL",
+)
+
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def apply_connection_pragmas(connection: Connection) -> None:
+    for pragma in CONNECTION_PRAGMAS:
+        connection.execute(pragma)
+    # SQLite silently keeps another mode where WAL is unsupported, e.g. on
+    # some network filesystems. In-memory databases always report "memory".
+    journal_mode = connection.execute("PRAGMA journal_mode").fetchone()[0]
+    if journal_mode not in ("wal", "memory"):
+        _LOGGER.warning(
+            "The database runs in journal mode %(mode)s instead of WAL; "
+            "its filesystem may not support WAL",
+            {"mode": journal_mode},
+        )
+
 
 # Identity of each database file last connected to, keyed by path, so a
 # repeat connection can tell "somebody swapped the file" apart from normal use.
@@ -82,14 +105,17 @@ def write_transaction(connection: Connection) -> Generator[None]:
 class Sqlite(Backend[Connection]):
     """One file per database name: var/check_mk/<name>/db.sqlite3.
 
-    Connections use `sqlite3.Row`; `configure` runs on each new connection.
+    Connections use `sqlite3.Row`; `configure` runs on each new connection
+    and applies `CONNECTION_PRAGMAS` unless overridden. `busy_timeout` is
+    how many seconds a connection waits for a lock held by another one.
 
     Revisions run with foreign keys off, so one can rebuild a table. If
     they were on, a revision that adds violating rows fails before it
     commits.
     """
 
-    configure: Callable[[Connection], None] = lambda _: None
+    configure: Callable[[Connection], None] = apply_connection_pragmas
+    busy_timeout: float = 30.0
 
     def path(self, name: str) -> Path:
         return db_path(name)
@@ -130,6 +156,7 @@ class Sqlite(Backend[Connection]):
             # so writers could not take the lock up front with BEGIN
             # IMMEDIATE, and the pragmas could not be switched.
             autocommit=True,
+            timeout=self.busy_timeout,
         )
         connection.row_factory = sqlite3.Row
         try:

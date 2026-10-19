@@ -12,6 +12,7 @@ import pytest
 
 from cmk.schema_manager.backend import sqlite as sqlite_backend
 from cmk.schema_manager.backend.sqlite import (
+    apply_connection_pragmas,
     REVISION_TABLE,
     Sqlite,
     SqliteInMemory,
@@ -430,7 +431,8 @@ def test_connect_wraps_an_unwritable_location_in_backend_unavailable_error(
 
 @pytest.mark.usefixtures("omd_root")
 def test_connect_does_not_wrap_errors_raised_inside_the_block() -> None:
-    backend = Sqlite()
+    # Without pragmas, opening does not read the damaged page yet.
+    backend = Sqlite(configure=lambda _: None)
     _make_database(backend.path("db"))
     with backend.path("db").open("r+b") as damaged:
         damaged.seek(100)
@@ -438,6 +440,41 @@ def test_connect_does_not_wrap_errors_raised_inside_the_block() -> None:
 
     with pytest.raises(sqlite3.DatabaseError), backend.connect("db") as connection:
         connection.execute("SELECT * FROM t").fetchall()
+
+
+@pytest.mark.usefixtures("omd_root")
+def test_connect_applies_the_shared_pragmas_by_default() -> None:
+    with Sqlite().connect("db", create=True) as connection:
+        assert connection.execute("PRAGMA foreign_keys").fetchone()[0] == 1
+        assert connection.execute("PRAGMA synchronous").fetchone()[0] == 1  # NORMAL
+        assert connection.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
+
+
+@pytest.mark.usefixtures("omd_root")
+def test_connect_applies_the_busy_timeout() -> None:
+    with Sqlite(busy_timeout=5).connect("db", create=True) as connection:
+        assert connection.execute("PRAGMA busy_timeout").fetchone()[0] == 5000
+
+
+def test_apply_connection_pragmas_warns_when_wal_is_unavailable(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    # A temporary database does not support WAL.
+    connection = sqlite3.connect("", isolation_level=None)
+
+    apply_connection_pragmas(connection)
+
+    assert "instead of WAL" in caplog.text
+
+
+def test_apply_connection_pragmas_is_safe_on_an_in_memory_database() -> None:
+    connection = sqlite3.connect(":memory:", isolation_level=None)
+
+    apply_connection_pragmas(connection)
+    connection.execute("CREATE TABLE t (id INTEGER)")
+    connection.execute("INSERT INTO t VALUES (1)")
+
+    assert connection.execute("SELECT id FROM t").fetchone()[0] == 1
 
 
 def _recorded_revisions(connection: sqlite3.Connection) -> list[str]:

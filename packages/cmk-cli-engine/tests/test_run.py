@@ -113,6 +113,15 @@ def test_a_debugged_exception_is_raised_through() -> None:
         )
 
 
+def test_a_debugged_exception_is_not_reported() -> None:
+    reporter = FakeCrashReporter()
+
+    with pytest.raises(ValueError):
+        dispatch(_raising(ValueError("unexpected")), null_logger(), reporter, lambda: True)
+
+    assert reporter.reports == 0
+
+
 def test_the_crash_message_reaches_the_log(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.ERROR):
         _dispatch(_raising(ValueError("unexpected")))

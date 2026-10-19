@@ -206,15 +206,15 @@ def dispatch(
     except OSError as e:
         if e.errno == errno.EPIPE:
             return 4
-        logger.error(crash_reporter())  # noqa: TRY400
         if debug_enabled():
             raise
+        logger.error(crash_reporter())  # noqa: TRY400
         return 1
 
     except Exception:
-        logger.error(crash_reporter())  # noqa: TRY400
         if debug_enabled():
             raise
+        logger.error(crash_reporter())  # noqa: TRY400
         return 1
 
 

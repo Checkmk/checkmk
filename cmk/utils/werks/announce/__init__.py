@@ -11,6 +11,7 @@ from typing import NamedTuple
 from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefined
 
 from cmk.ccc.version import ReleaseType, Version
+from cmk.werks.config import RuntimeConfiguration
 from cmk.werks.models import Class, Compatibility, EditionV3, WerkV3
 from cmk.werks.utils import (
     has_content,
@@ -75,7 +76,13 @@ def get_werks_by_edition(werks: list[WerkV3], edition: EditionV3) -> WerksByEdit
 
 def main(args: argparse.Namespace) -> None:
     werks_list = load_raw_files(args.werk_dir)
-    version_werks = [werk for werk in werks_list if werk.version == args.version]
+    defines_make_version = RuntimeConfiguration(args.werk_dir.parent).get_defines_make_version()
+    version_werks: list[WerkV3] = []
+    for werk in werks_list:
+        if werk.version is None:
+            werk.version = defines_make_version
+        if werk.version == args.version:
+            version_werks.append(werk)
 
     werks = {}
     for edition in [

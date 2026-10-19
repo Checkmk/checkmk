@@ -642,9 +642,9 @@ def _exec_run(
     result = container_exec(c, cmd_list, user=user, **kwargs)
 
     if kwargs.get("stream"):
-        return result.communicate(line_prefix=b"%s: " % c.short_id.encode("ascii"))
-
-    returncode = result.poll()
+        returncode = result.communicate(line_prefix=b"%s: " % c.short_id.encode("ascii"))
+    else:
+        returncode = result.poll()
     if check and returncode != 0:
         raise RuntimeError(f"Command `{cmd_str}` returned with nonzero exit code")
     return returncode
@@ -898,17 +898,23 @@ def _prepare_virtual_environment(
 
 
 def _setup_virtual_environment(
-    container: docker.models.containers.Container, container_env: dict[str, str], user: str = ""
+    container: docker.models.containers.Container,
+    container_env: dict[str, str],
+    user: str = "",
+    check: bool = True,
 ) -> None:
     logger.info("Prepare virtual environment")
-    _exec_run(
+    returncode = _exec_run(
         container,
         ["make", ".venv"],
+        check=check,
         user=user,
         workdir="/git",
         environment=container_env,
         stream=True,
     )
+    if returncode != 0:
+        logger.warning("make .venv exited with %d, keeping the existing venv", returncode)
 
     _exec_run(container, ["test", "-d", "/git/.venv"])
 
@@ -982,7 +988,7 @@ def _reuse_persisted_virtual_environment(
     if _mirror_reachable():
         #  Only try to update when the mirror is available, otherwise continue with the current
         #  state, which is good for the most of the time.
-        _setup_virtual_environment(container, container_env, test_user)
+        _setup_virtual_environment(container, container_env, test_user, check=False)
 
 
 def _mirror_reachable() -> bool:

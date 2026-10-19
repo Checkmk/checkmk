@@ -9,6 +9,7 @@ from typing import Any, override
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.unstable import LegacyValueSpec, not_empty
 from cmk.gui.http import request
+from cmk.gui.i18n import _
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
@@ -51,10 +52,29 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
             return InvalidValue(reason="Migration failed", fallback_value={})
         return raw_value
 
-    def _prepare_request_context(self, value: dict[str, Any]) -> None:
+    def _prepare_request_context(self, value: dict[str, Any]) -> set[str]:
         assert "input_context" in value
+        file_keys: set[str] = set()
         for url_key, url_value in value.get("input_context", {}).items():
-            request.set_var(url_key, url_value)
+            if isinstance(url_value, str):
+                request.set_var(url_key, url_value)
+            else:
+                file_keys.add(url_key)
+        return file_keys
+
+    def _from_html_vars(self, varprefix: str, file_keys: set[str]) -> Any:
+        try:
+            return self.form_spec.valuespec.from_html_vars(varprefix)
+        except MKUserError as e:
+            if e.varname not in file_keys:
+                raise
+            raise MKUserError(
+                e.varname,
+                _(
+                    "File uploads are not supported in this form. "
+                    "Please paste the content instead, if the field offers it."
+                ),
+            ) from e
 
     def _create_input_and_readonly_html(self, varprefix: str, value: Any) -> tuple[str, str]:
         with output_funnel.plugged():
@@ -92,10 +112,10 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
             assert isinstance(value, dict)
             varprefix = value.get("varprefix", "")
             with request.stashed_vars():
-                self._prepare_request_context(value)
+                file_keys = self._prepare_request_context(value)
 
                 try:
-                    value_to_render = self.form_spec.valuespec.from_html_vars(varprefix)
+                    value_to_render = self._from_html_vars(varprefix, file_keys)
                 except MKUserError as e:
                     user_errors.add(e)
                     # Keep in mind that this default value is not used, but replaced by the
@@ -143,9 +163,9 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
                     value = parsed_value.value
                     assert isinstance(value, dict)
                     with request.stashed_vars(), output_funnel.plugged():
-                        self._prepare_request_context(value)
+                        file_keys = self._prepare_request_context(value)
                         varprefix = value.get("varprefix", "")
-                        value = self.form_spec.valuespec.from_html_vars(varprefix)
+                        value = self._from_html_vars(varprefix, file_keys)
                 else:
                     value = parsed_value.value
 
@@ -172,6 +192,6 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
 
         assert isinstance(parsed_value.value, dict)
         with request.stashed_vars():
-            self._prepare_request_context(parsed_value.value)
+            file_keys = self._prepare_request_context(parsed_value.value)
             varprefix = parsed_value.value.get("varprefix", "")
-            return self.form_spec.valuespec.from_html_vars(varprefix)
+            return self._from_html_vars(varprefix, file_keys)

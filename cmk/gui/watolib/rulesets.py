@@ -1448,11 +1448,6 @@ class Rule:
         if not _match_search_expression(search_options, "rule_comment", self.comment()):
             return False
 
-        if self.conditions.host_list and not _match_one_of_search_expression(
-            search_options, "rule_host_list", self.conditions.host_list[0]
-        ):
-            return False
-
         value_text = (
             self._value_text_for_search()
             if "rule_value" in search_options or "fulltext" in search_options
@@ -1465,6 +1460,11 @@ class Rule:
             return False
 
         try:
+            if self.conditions.host_list and not _match_one_of_search_expression(
+                search_options, "rule_host_list", self.conditions.host_list[0]
+            ):
+                return False
+
             if self.conditions.item_list and not _match_one_of_search_expression(
                 search_options, "rule_item_list", self.conditions.item_list[0]
             ):

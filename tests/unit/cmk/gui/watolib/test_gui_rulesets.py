@@ -791,7 +791,6 @@ def test_matches_search_with_rules(
     assert ruleset.matches_search_with_rules(search_options) == expected_result
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 4628: re.error")
 def test_matches_search_with_rules_invalid_host_regex(with_admin_login: UserId) -> None:
     # Crash group 4628: a rule's explicit host condition holds an invalid regex
     folder_tree().create_missing_folders("regex_check")

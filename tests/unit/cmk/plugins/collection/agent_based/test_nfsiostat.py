@@ -414,3 +414,23 @@ def test_mount_name_with_no_beginning_slash():
     assert item == "'10.61.241.85:ucs',"
     results = list(nfsiostat.check_nfsiostat(item=item, params={}, section=section))
     assert results[0] == Result(state=State.OK, summary="Operations: 0.54/s")
+
+
+@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4412: ValueError")
+def test_nfsiostat_parse_one_line_per_mount() -> None:
+    # Crash group 4412: the agent output contained one line per mount instead of a single line
+    stats = (
+        "ops/s rpc bklog 44.000 0.000"
+        " read: ops/s kB/s kB/op retrans avg RTT (ms) avg exe (ms)"
+        " 0.000 0.000 0.000 0 (0.0%) 0.000 0.000"
+        " write: ops/s kB/s kB/op retrans avg RTT (ms) avg exe (ms)"
+        " 0.000 0.000 0.000 0 (0.0%) 0.000 0.000"
+    )
+    section = nfsiostat.parse_nfsiostat(
+        [
+            f"nfs.example.com:/share1 mounted on /mnt/share1: {stats}".split(" "),
+            f"nfs.example.com:/share2 mounted on /mnt/share2: {stats}".split(" "),
+        ]
+    )
+    assert sorted(section) == ["'nfs.example.com:/share1',", "'nfs.example.com:/share2',"]
+    assert section["'nfs.example.com:/share2',"].op_s == 44.0

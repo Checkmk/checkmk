@@ -9,6 +9,7 @@ import { ref } from 'vue'
 export interface CmkLinkProps {
   href: string
   target?: string | undefined
+  inline?: boolean | undefined
 }
 
 defineProps<CmkLinkProps>()
@@ -23,7 +24,13 @@ defineExpose({
 </script>
 
 <template>
-  <a ref="anchorRef" :href="href" :target="target" class="cmk-link">
+  <a
+    ref="anchorRef"
+    :href="href"
+    :target="target"
+    class="cmk-link"
+    :class="{ 'cmk-link--inline': inline }"
+  >
     <slot />
   </a>
 </template>
@@ -54,5 +61,12 @@ defineExpose({
   &:focus-visible {
     outline: revert;
   }
+}
+
+.cmk-link--inline {
+  display: inline;
+  width: auto;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
 }
 </style>

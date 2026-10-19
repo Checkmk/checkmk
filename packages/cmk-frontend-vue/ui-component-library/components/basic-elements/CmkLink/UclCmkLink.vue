@@ -23,6 +23,12 @@ export const panelConfig = {
       main: 'main iframe'
     }),
     initialState: '' as TargetOption
+  },
+  inline: {
+    type: 'boolean' as const,
+    title: 'inline',
+    initialState: false,
+    help: 'Lets the link sit inside a line of text instead of taking the full width, underlined with dots on hover.'
   }
 } satisfies PanelConfigFor<typeof CmkLink>
 </script>
@@ -69,7 +75,11 @@ const propState = new PanelStateCreator<typeof CmkLink>().createRef(panelConfig)
     <UclDetailPageHeader>CmkLink</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <CmkLink :href="propState.href" :target="propState.target || undefined">
+      <CmkLink
+        :href="propState.href"
+        :target="propState.target || undefined"
+        :inline="propState.inline"
+      >
         This can be text, icons and/or other components
       </CmkLink>
 

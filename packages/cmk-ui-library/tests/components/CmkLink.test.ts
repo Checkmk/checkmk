@@ -52,3 +52,8 @@ test('exposes focus method that focuses the anchor', async () => {
   componentRef.value?.focus()
   expect(screen.getByRole('link')).toHaveFocus()
 })
+
+test('sits inside a line of text when inline', () => {
+  render(CmkLink, { props: { href: '/foo', inline: true } })
+  expect(screen.getByRole('link')).toHaveClass('cmk-link--inline')
+})

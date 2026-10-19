@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import logging
 import signal
 import subprocess
 from collections.abc import Iterator, Mapping
@@ -15,11 +16,34 @@ from tests.testlib.common.utils2 import ServiceInfo
 from tests.testlib.system.site import Site
 
 CMK_TRACK_TIMEOUT: Final = 30  # secs
+HOSTNAME_SOURCE_CENTRAL: Final = "source_central_host"
+HOSTNAME_SOURCE_REMOTE: Final = "source_remote_host"
+LOGGER = logging.getLogger(__name__)
 
 # "INFO" logs the hub's config receive and save, which is what the config sync tests
 # compare against. "DEBUG" adds every AMQP frame from pika, noisy enough to shift the
 # timing those tests measure.
 PIGGYBACK_HUB_LOG_LEVEL: Final = ""
+
+
+@contextmanager
+def setup_source_host(
+    central_site: Site, site_id_source: str, hostname_source: str
+) -> Iterator[None]:
+    host_attributes = {
+        "site": site_id_source,
+        "ipaddress": "127.0.0.1",
+        "tag_agent": "cmk-agent",
+    }
+    try:
+        LOGGER.info("Creating host '%s' in site '%s'", hostname_source, site_id_source)
+        central_site.openapi.hosts.create(
+            hostname=hostname_source, attributes=host_attributes, bake_agent=False
+        )
+        yield
+    finally:
+        LOGGER.info("Deleting host '%s' from site '%s'", hostname_source, site_id_source)
+        central_site.openapi.hosts.delete(hostname_source)
 
 
 @contextmanager

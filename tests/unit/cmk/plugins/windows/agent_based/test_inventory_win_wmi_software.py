@@ -91,7 +91,6 @@ def test_inventory_win_wmi_software(
     assert list(inventory_win_wmi_software(parse_win_wmi_software(string_table))) == expected_result
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 3833: ValueError")
 def test_parse_win_wmi_software_dotted_install_date() -> None:
     # Crash group 3833: one package reported its install date as "2021.6.1"
     section = parse_win_wmi_software(
@@ -102,5 +101,18 @@ def test_parse_win_wmi_software_dotted_install_date() -> None:
     )
     assert [(p.name, p.install_date) for p in section] == [
         ("Dotted Date Tool", int(time.mktime(time.strptime("20210601", "%Y%m%d")))),
+        ("Regular Tool", int(time.mktime(time.strptime("20170629", "%Y%m%d")))),
+    ]
+
+
+def test_parse_win_wmi_software_invalid_install_date() -> None:
+    section = parse_win_wmi_software(
+        [
+            ["Invalid Date Tool", "Vendor", "1.0", "2021.13.1", "1033"],
+            ["Regular Tool", "Vendor", "2.0", "20170629", "1033"],
+        ]
+    )
+    assert [(p.name, p.install_date) for p in section] == [
+        ("Invalid Date Tool", None),
         ("Regular Tool", int(time.mktime(time.strptime("20170629", "%Y%m%d")))),
     ]

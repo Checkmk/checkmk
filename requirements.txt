@@ -6332,6 +6332,7 @@ time-machine==3.5.1 \
     #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
     #   -r non-free/packages/cmk-dcd/dev-requirements.in
     #   -r non-free/packages/cmk-liveproxyd/dev-requirements.in
+    #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r non-free/packages/cmk-mknotifyd/dev-requirements.in
     #   -r non-free/packages/cmk-otel-collector/dev-requirements.in
     #   -r non-free/packages/cmk-plugins-nonfree/dev-requirements.in

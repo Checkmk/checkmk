@@ -609,12 +609,6 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="The current status of the notification spooler. This is primarily relevant for notifications in distributed environments.",
         encryption=CheckmkFileEncryption.none,
     ),
-    "network-flow.log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity.sensitive,
-        description="The log file of the flow aggregator.",
-        encryption=CheckmkFileEncryption.none,
-    ),
     "notify.log": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,

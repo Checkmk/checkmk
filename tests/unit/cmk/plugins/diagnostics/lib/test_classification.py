@@ -148,8 +148,7 @@ def test_diagnostics_get_checkmk_file_info_by_name(
         ("mkeventd.log", CheckmkFileSensitivity.sensitive),
         ("mknotifyd.log", CheckmkFileSensitivity.sensitive),
         ("mknotifyd.state", CheckmkFileSensitivity.sensitive),
-        ("network-flow.log", CheckmkFileSensitivity.sensitive),
-        ("network-flow.log.2.gz", CheckmkFileSensitivity.sensitive),
+        ("mkeventd.log.2.gz", CheckmkFileSensitivity.sensitive),
         ("notify.log", CheckmkFileSensitivity.sensitive),
         ("rrdcached.log", CheckmkFileSensitivity.sensitive),
         ("web.log", CheckmkFileSensitivity.sensitive),
@@ -170,13 +169,13 @@ def test_ai_control_plane_settings_are_named_in_the_classification() -> None:
 @pytest.mark.parametrize(
     "file_name, keep",
     [
-        ("network-flow.log", True),
-        ("network-flow.log.1", True),
-        ("network-flow.log.2.gz", True),
+        ("mkeventd.log", True),
+        ("mkeventd.log.1", True),
+        ("mkeventd.log.2.gz", True),
         ("apache/access_log.1", True),
         ("mknotifyd.state", True),
         ("update.log.2.gz", True),
-        ("network-flow.pid", False),
+        ("mkeventd.pid", False),
     ],
 )
 def test_diagnostics_log_file_map_keeps_rotations(file_name: str, keep: bool) -> None:

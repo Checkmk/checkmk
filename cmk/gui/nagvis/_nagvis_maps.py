@@ -28,6 +28,8 @@ from cmk.web.utils.urls import makeuri_contextless
 # Relative prefix used for the "Edit" footnote link (from check_mk/ to nagvis/).
 _NAGVIS_URL_PREFIX = "../nagvis/"
 
+_NAGVIS_DEPRECATION_WERK = 22512
+
 
 def _is_nagvis_url(nagvis_url: str, site_url_prefix: str) -> bool:
     """Only allow embedding of NagVis pages into the chrome wrapper.
@@ -42,6 +44,13 @@ def _is_nagvis_url(nagvis_url: str, site_url_prefix: str) -> bool:
 def _is_nagvis_enabled(omd_root: Path) -> bool:
     # The NAGVIS hook links this file only while NagVis is on
     return (omd_root / "etc/apache/conf.d/nagvis.conf").exists()
+
+
+def _deprecation_note() -> tuple[str, str]:
+    return (
+        _("Deprecated, see Werk #%(id)d") % {"id": _NAGVIS_DEPRECATION_WERK},
+        makeuri_contextless(request, [("werk", _NAGVIS_DEPRECATION_WERK)], filename="werk.py"),
+    )
 
 
 def _nagvis_page_url(nagvis_url: str) -> str:
@@ -72,16 +81,22 @@ class NagVisMaps(SidebarSnapin):
     @override
     def show(self, config: Config) -> None:
         if not _is_nagvis_enabled(paths.omd_root):
-            html.show_message(
-                _(
-                    "NagVis is disabled on this site. To enable it, run "
-                    '"omd stop", "omd config set NAGVIS on" and "omd start" as site user. '
-                    "NagVis is deprecated, consider using Checkmk Maps instead."
-                )
-            )
+            self._show_disabled_hint()
             return
         html.div(_("Loading maps..."), class_="loading")
         html.call_ts_function(function_name="fetch_nagvis_snapin_contents")
+
+    def _show_disabled_hint(self) -> None:
+        html.open_div(class_=["success", "nagvis_disabled"])
+        html.p(_("NagVis is disabled"), class_="title")
+        html.p(_("To enable it, run as site user:"))
+        html.pre("omd stop\nomd config set NAGVIS on\nomd start")
+        html.p(_("Consider using Checkmk Maps instead."), class_="hint")
+        text, url = _deprecation_note()
+        html.open_p(class_="hint")
+        html.a(text, href=url)
+        html.close_p()
+        html.close_div()
 
     @override
     def page_handlers(self) -> PageHandlers:

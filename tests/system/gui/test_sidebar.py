@@ -39,7 +39,7 @@ def fixture_nagvis_disabled(test_site: Site) -> Iterator[None]:
 def test_nagvis_snapin_explains_disabled_nagvis(dashboard_page: MainDashboard) -> None:
     snapin = dashboard_page.sidebar.add_snapin("nagvis_maps")
 
-    expect(snapin.container.get_by_text("NagVis is disabled on this site.")).to_be_visible()
+    expect(snapin.container.get_by_text("NagVis is disabled", exact=True)).to_be_visible()
 
     snapin.remove_from_sidebar()
 

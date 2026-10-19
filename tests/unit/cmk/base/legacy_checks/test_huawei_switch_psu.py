@@ -14,8 +14,8 @@ from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.huawei_switch_psu import (
     check_huawei_switch_psu,
     discover_huawei_switch_psu,
-    parse_huawei_switch_psu,
 )
+from cmk.plugins.huawei.lib import parse_huawei_switch_psu
 
 
 @pytest.mark.parametrize(

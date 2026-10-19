@@ -15,8 +15,8 @@ from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.huawei_switch_stack import (
     check_huawei_switch_stack,
     inventory_huawei_switch_stack,
-    parse_huawei_switch_stack,
 )
+from cmk.plugins.huawei.lib import parse_huawei_switch_stack
 
 
 @pytest.mark.parametrize(
@@ -35,7 +35,8 @@ from cmk.base.legacy_checks.huawei_switch_stack import (
     ],
 )
 def test_inventory_huawei_switch_stack(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: Sequence[StringTable],
+    expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]],
 ) -> None:
     """Test discovery function for huawei_switch_stack check."""
     parsed = parse_huawei_switch_stack(string_table)
@@ -79,7 +80,10 @@ def test_inventory_huawei_switch_stack(
     ],
 )
 def test_check_huawei_switch_stack(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Mapping[str, Any],
+    string_table: Sequence[StringTable],
+    expected_results: Sequence[Any],
 ) -> None:
     """Test check function for huawei_switch_stack check."""
     parsed = parse_huawei_switch_stack(string_table)

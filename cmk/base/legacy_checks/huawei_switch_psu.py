@@ -8,10 +8,9 @@
 from collections.abc import Iterable, Mapping
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
 from cmk.plugins.huawei.lib import (
     HUAWEI_ENTERPRISE,
-    parse_huawei_physical_entity_values,
+    parse_huawei_switch_psu,
     Section,
 )
 
@@ -23,10 +22,6 @@ huawei_switch_hw_oper_state_map = {
     "3": "enabled",
     "4": "offline",
 }
-
-
-def parse_huawei_switch_psu(string_table: list[StringTable]) -> Section:
-    return parse_huawei_physical_entity_values(string_table, "power card")
 
 
 def discover_huawei_switch_psu(section: Section) -> Iterable[tuple[str, dict]]:

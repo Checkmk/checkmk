@@ -8,7 +8,14 @@ import pytest
 from cmk.checkengine.plugins import AgentBasedPlugins, ParsedSectionName, SectionName
 from cmk.fetchers._snmpscan import _evaluate_snmp_detection as evaluate_snmp_detection
 
-_CHECKS = ["huawei_switch_cpu", "huawei_switch_mem"]
+_CHECKS = [
+    "huawei_switch_cpu",
+    "huawei_switch_fan",
+    "huawei_switch_mem",
+    "huawei_switch_psu",
+    "huawei_switch_stack",
+    "huawei_switch_temp",
+]
 
 
 def _detected(plugins: AgentBasedPlugins, check: str, sys_object_id: str) -> list[str]:

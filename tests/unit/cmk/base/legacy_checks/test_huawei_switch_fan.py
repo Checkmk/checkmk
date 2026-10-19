@@ -15,8 +15,8 @@ from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.huawei_switch_fan import (
     check_huawei_switch_fan,
     inventory_huawei_switch_fan,
-    parse_huawei_switch_fan,
 )
+from cmk.plugins.huawei.lib import parse_huawei_switch_fan
 
 
 @pytest.mark.parametrize(

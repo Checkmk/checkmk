@@ -14,6 +14,7 @@ def test_builtin_autocompleters_registered() -> None:
     expected = [
         "add_to_dashboard_choices",
         "allgroups",
+        "aux_tags",
         "available_graph_templates",
         "bi_aggregation_groups",
         "check_cmd",

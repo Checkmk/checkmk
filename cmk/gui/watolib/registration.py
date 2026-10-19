@@ -281,6 +281,7 @@ def _register_form_specs() -> None:
 
 def _register_autocompleters(autocompleter_registry: AutocompleterRegistry) -> None:
     from ._autocompleters import (
+        aux_tag_autocompleter,
         check_types_autocompleter,
         hostgroup_autocompleter,
         tag_group_autocompleter,
@@ -290,4 +291,5 @@ def _register_autocompleters(autocompleter_registry: AutocompleterRegistry) -> N
     autocompleter_registry.register_autocompleter("allgroups", hostgroup_autocompleter)
     autocompleter_registry.register_autocompleter("tag_groups", tag_group_autocompleter)
     autocompleter_registry.register_autocompleter("tag_groups_opt", tag_group_opt_autocompleter)
+    autocompleter_registry.register_autocompleter("aux_tags", aux_tag_autocompleter)
     autocompleter_registry.register_autocompleter("check_types", check_types_autocompleter)

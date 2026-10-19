@@ -35,3 +35,4 @@ export type ContextFilterIdOf<C extends LinkedContent> = Extract<
 export type VisualLocation = components['schemas']['VisualLocation']
 export type ConfigurableMode = components['schemas']['ConfigurableLinkMode']
 export type ContextualLinkOptions = components['schemas']['ContextualLinkOptions']
+export type FilterKeyOption = NonNullable<ContextualLinkOptions['filter_keys'][string]>

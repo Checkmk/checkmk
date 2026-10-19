@@ -11,7 +11,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import assert_never
 
-from ._fetch import fetch_evaluation_context, FetchDataProtocol
+from ._fetch import FetchDataProtocol, fetched_time_range
 from ._fetched import MACRO_SERIES_ID, SeriesAttributes
 from ._graph import FixedRange, Graph, MinimalRange, Region, Rule, VerticalRange
 from ._quantity import (
@@ -22,7 +22,7 @@ from ._quantity import (
     first_value,
 )
 from ._timeseries import ConsolidationFunction, fitted, TimeRange, TimeSeries
-from ._title import evaluate_title
+from ._title import evaluate_title, title_metrics
 from ._units import CurveAttributes
 
 
@@ -325,10 +325,17 @@ def evaluate_graphs(
     graphs: Sequence[Graph],
     fetch_data: FetchDataProtocol,
 ) -> Sequence[EvaluatedGraph]:
-    context = fetch_evaluation_context(
-        consolidation_function=consolidation_function,
-        time_range=time_range,
-        graphs=graphs,
-        fetch_data=fetch_data,
+    metrics = list(
+        dict.fromkeys(
+            metric
+            for graph in graphs
+            for metric in (*graph.metrics(), *title_metrics(graph.title, graph.metrics()))
+        )
+    )
+    fetched = fetch_data(
+        metrics, consolidation_function=consolidation_function, time_range=time_range
+    )
+    context = EvaluationContext(
+        time_range=fetched_time_range(fetched, fallback=time_range), fetched=fetched
     )
     return [_evaluate_graph(graph, context) for graph in graphs]

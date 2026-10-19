@@ -7,9 +7,8 @@ from collections.abc import Mapping, Sequence
 from typing import Protocol
 
 from ._fetched import FetchedData
-from ._graph import Graph
 from ._naming import MetricName, Service
-from ._quantity import EvaluationContext, MetricProtocol
+from ._quantity import MetricProtocol
 from ._timeseries import ConsolidationFunction, TimeRange
 
 
@@ -38,20 +37,4 @@ def fetched_time_range(
             if data.time_series is not None
         ),
         fallback,
-    )
-
-
-def fetch_evaluation_context(
-    *,
-    consolidation_function: ConsolidationFunction,
-    time_range: TimeRange,
-    graphs: Sequence[Graph],
-    fetch_data: FetchDataProtocol,
-) -> EvaluationContext:
-    metrics = list(dict.fromkeys(metric for graph in graphs for metric in graph.metrics()))
-    fetched = fetch_data(
-        metrics, consolidation_function=consolidation_function, time_range=time_range
-    )
-    return EvaluationContext(
-        time_range=fetched_time_range(fetched, fallback=time_range), fetched=fetched
     )

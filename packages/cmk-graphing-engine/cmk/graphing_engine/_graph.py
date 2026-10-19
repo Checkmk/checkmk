@@ -9,7 +9,6 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
 from ._quantity import Bound, Curve, fetch_leaves, MetricProtocol, QuantityProtocol
-from ._title import title_metrics
 from ._units import CurveAttributes
 
 
@@ -97,12 +96,13 @@ class Graph:
                 yield region.upper
 
     def metrics(self) -> Sequence[MetricProtocol]:
-        drawn = [
-            metric
-            for quantity in itertools.chain(
-                (curve.quantity for curve in self.curves()),
-                self._bound_quantities(),
+        return list(
+            dict.fromkeys(
+                metric
+                for quantity in itertools.chain(
+                    (curve.quantity for curve in self.curves()),
+                    self._bound_quantities(),
+                )
+                for metric in fetch_leaves(quantity)
             )
-            for metric in fetch_leaves(quantity)
-        ]
-        return list(dict.fromkeys([*drawn, *title_metrics(self.title, drawn)]))
+        )

@@ -11,6 +11,7 @@ import pytest
 from cmk.gui.graphing._valuespecs import (
     migrate_graph_render_options,
     migrate_graph_render_options_title_format,
+    PageVsAutocomplete,
 )
 
 
@@ -77,3 +78,16 @@ def test_migrate_graph_render_options(
     entry: Mapping[str, object], result: Mapping[str, Sequence[str]]
 ) -> None:
     assert migrate_graph_render_options(entry) == result
+
+
+@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 3678: KeyError")
+@pytest.mark.usefixtures("request_context")
+def test_unit_autocompleter_without_metric_uses_fallback_unit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Crash group 3678: the AJAX request carried no "metric" key at all
+    def unit_choice(api_request: dict[str, object]) -> object:
+        monkeypatch.setattr(PageVsAutocomplete, "webapi_request", lambda self: api_request)
+        return PageVsAutocomplete().page()
+
+    assert unit_choice({}) == unit_choice({"metric": ""})

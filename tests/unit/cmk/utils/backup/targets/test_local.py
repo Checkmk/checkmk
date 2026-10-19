@@ -60,7 +60,6 @@ class TestLocalTarget:
                 },
             ).check_ready()
 
-    @pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 3971: JSONDecodeError")
     def test_list_backups_skips_unreadable_backup_info(self, tmp_path: Path) -> None:
         # Crash group 3971: an interrupted backup left an empty mkbackup.info behind
         (tmp_path / "broken").mkdir()

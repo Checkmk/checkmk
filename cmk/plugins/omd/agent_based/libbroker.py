@@ -74,9 +74,14 @@ class Parser(Generic[_Section]):
 
     def _parse(self, string_table: StringTable) -> Generator[SectionItem]:
         for (word,) in string_table:
-            parsed_word = json.loads(word)
+            try:
+                parsed_word = json.loads(word)
+            except json.JSONDecodeError:
+                continue
             if isinstance(parsed_word, dict) and "error" in parsed_word:
                 raise MKRabbitMQError(parsed_word["error"])
+            if not isinstance(parsed_word, list):
+                continue
 
             for node in parsed_word:
                 yield self._callback(node)

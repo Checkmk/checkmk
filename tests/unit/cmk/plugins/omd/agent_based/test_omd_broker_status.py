@@ -57,10 +57,17 @@ from cmk.plugins.omd.agent_based.omd_broker_status import (
                 ['[{"name": "rabbit-heute@localhost", "mem_used":  1000000000}]'],
             ],
             {"heute": BrokerStatus(memory=1000000000)},
-            marks=pytest.mark.xfail(
-                strict=True, raises=ValueError, reason="Crash group 4173: JSONDecodeError"
-            ),
             id="html error page of another site",
+        ),
+        pytest.param(
+            [
+                ["404"],
+                ['"Not Found"'],
+                ["null"],
+                ['[{"name": "rabbit-heute@localhost", "mem_used":  1000000000}]'],
+            ],
+            {"heute": BrokerStatus(memory=1000000000)},
+            id="valid json that is not broker data",
         ),
     ],
 )

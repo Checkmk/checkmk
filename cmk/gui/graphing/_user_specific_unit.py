@@ -9,10 +9,9 @@ from dataclasses import dataclass
 
 from cmk.graphing_engine import (
     NonConvertibleUnit,
-    temperature_conversion,
     TemperatureUnit,
     Unit,
-    UnitConversion,
+    unit_conversion,
 )
 from cmk.gui.logged_in import LoggedInUser
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat as SharedUnitFormat
@@ -31,12 +30,7 @@ def user_unit_format(
     unit: Unit | NonConvertibleUnit, temperature_unit: TemperatureUnit
 ) -> tuple[SharedUnitFormat, Callable[[float], float]]:
     unit_format = unit_to_unit_format(unit)
-    noop_conversion = UnitConversion(symbol=unit_format.symbol, converter=lambda v: v)
-    conversion = (
-        temperature_conversion(unit_format.symbol, temperature_unit, noop_conversion)
-        if isinstance(unit, Unit)
-        else noop_conversion
-    )
+    conversion = unit_conversion(unit, temperature_unit)
     return (
         SharedUnitFormat(
             notation=unit_format.notation,

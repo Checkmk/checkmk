@@ -6,9 +6,8 @@
 from collections.abc import Callable
 
 from cmk.graphing_engine._data._temperature import (
-    temperature_conversion,
     TemperatureUnit,
-    UnitConversion,
+    unit_conversion,
 )
 from cmk.graphing_engine._data._timeseries import mapped_series
 from cmk.graphing_engine._data._units import NonConvertibleUnit, Unit
@@ -27,10 +26,7 @@ from ._graphs import (
 def _conversion_of(
     unit: Unit | NonConvertibleUnit, temperature_unit: TemperatureUnit
 ) -> Callable[[float], float]:
-    unconverted = UnitConversion(symbol=unit.notation.symbol, converter=lambda value: value)
-    if isinstance(unit, NonConvertibleUnit):
-        return unconverted.converter
-    return temperature_conversion(unit.notation.symbol, temperature_unit, unconverted).converter
+    return unit_conversion(unit, temperature_unit).converter
 
 
 def _converted_curve(curve: EvaluatedCurve, temperature_unit: TemperatureUnit) -> EvaluatedCurve:

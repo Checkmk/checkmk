@@ -13,7 +13,7 @@ from ._data._fetched import (
 from ._data._naming import (
     MetricName,
 )
-from ._data._temperature import temperature_conversion, TemperatureUnit, UnitConversion
+from ._data._temperature import TemperatureUnit, unit_conversion, UnitConversion
 from ._data._timeseries import (
     constant_time_series,
     mapped_series,
@@ -173,7 +173,7 @@ __all__ = [
     "PredictionGraphContext",
     "PredictionTexts",
     "converted_graph",
-    "temperature_conversion",
+    "unit_conversion",
     "TemperatureUnit",
     "UnitConversion",
     "sort_registered_graph_plugins",

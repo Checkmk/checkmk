@@ -42,7 +42,7 @@ def _user_permissions() -> UserPermissions:
 @request_memoize()
 def _instances() -> pagetypes.OverridableInstances[MapPage]:
     """Load all maps (built-ins + every user's) once per request."""
-    return MapPage.load(_user_permissions())
+    return MapPage.load()
 
 
 def get_permitted_maps(user_permissions: UserPermissions | None = None) -> list[MapPage]:
@@ -93,7 +93,7 @@ def _own_instances(owner: UserId) -> pagetypes.OverridableInstances[MapPage]:
     true owner.
     """
     own = pagetypes.OverridableInstances[MapPage]()
-    for page in MapPage.load(_user_permissions()).instances():
+    for page in MapPage.load().instances():
         if page.owner() == owner:
             own.add_instance((owner, page.name()), page)
     return own

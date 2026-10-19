@@ -117,7 +117,7 @@ def view_menu_items(user_permissions: UserPermissions) -> list[VisualMenuItem]:
         if not issubclass(page_type, pagetypes.PageRenderer):
             continue
 
-        for page in page_type.load(user_permissions).pages(user_permissions):
+        for page in page_type.load().pages(user_permissions):
             if page._show_in_sidebar():  # noqa: SLF001
                 visual = page.to_visual()
                 visual["hidden"] = False  # Is currently not configurable for pagetypes

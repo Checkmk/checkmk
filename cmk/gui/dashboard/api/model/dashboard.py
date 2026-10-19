@@ -56,7 +56,7 @@ class DashboardTitle:
 # TODO: replace with proper icon lookup once it has been properly migrated
 #  the misleading all_icons currently does not contain all icons
 #  alternatively the existing IconSelector should get adjusted to retrieve the correct list
-# type IconName = Annotated[str, AfterValidator(RegistryConverter(lambda x: all_icons()).validate)]
+# type IconName = Annotated[str, AfterValidator(RegistryConverter(lambda: all_icons()).validate)]
 
 
 @api_model

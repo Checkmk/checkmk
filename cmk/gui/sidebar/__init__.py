@@ -346,12 +346,10 @@ class UserSidebarConfig:
 
         # Remove not existing (e.g. legacy) snapins
         user_config["snapins"] = [
-            e
-            for e in user_config["snapins"]
-            if e["snapin_type_id"] in all_snapins(user_permissions)
+            e for e in user_config["snapins"] if e["snapin_type_id"] in all_snapins()
         ]
 
-        user_config = self._from_config(user_config, user_permissions)
+        user_config = self._from_config(user_config)
 
         # Remove entries the user is not allowed for
         user_config["snapins"] = [
@@ -394,12 +392,10 @@ class UserSidebarConfig:
         if self._user.may("general.configure_sidebar"):
             self._user.set_sidebar_configuration(self._to_config())
 
-    def _from_config(
-        self, cfg: dict[str, Any], user_permissions: UserPermissions
-    ) -> dict[str, Any]:
+    def _from_config(self, cfg: dict[str, Any]) -> dict[str, Any]:
         return {
             "fold": cfg["fold"],
-            "snapins": [UserSidebarSnapin.from_config(e, user_permissions) for e in cfg["snapins"]],
+            "snapins": [UserSidebarSnapin.from_config(e) for e in cfg["snapins"]],
         }
 
     def _to_config(self) -> dict[str, Any]:
@@ -418,16 +414,14 @@ class UserSidebarSnapin:
     """An instance of a snapin that is configured in the users sidebar"""
 
     @staticmethod
-    def from_config(cfg: dict[str, Any], user_permissions: UserPermissions) -> UserSidebarSnapin:
+    def from_config(cfg: dict[str, Any]) -> UserSidebarSnapin:
         """Construct a UserSidebarSnapin object from the persisted data structure"""
-        snapin_class = all_snapins(user_permissions)[cfg["snapin_type_id"]]
+        snapin_class = all_snapins()[cfg["snapin_type_id"]]
         return UserSidebarSnapin(snapin_class, SnapinVisibility(cfg["visibility"]))
 
     @staticmethod
-    def from_snapin_type_id(
-        snapin_type_id: str, user_permissions: UserPermissions
-    ) -> UserSidebarSnapin:
-        return UserSidebarSnapin(all_snapins(user_permissions)[snapin_type_id])
+    def from_snapin_type_id(snapin_type_id: str) -> UserSidebarSnapin:
+        return UserSidebarSnapin(all_snapins()[snapin_type_id])
 
     def __init__(
         self,
@@ -1018,7 +1012,7 @@ def page_add_snapin(ctx: PageContext) -> None:
     used_snapins = _used_snapins(ctx.config, user_permissions)
 
     html.open_div(class_=["add_snapin"])
-    for name, snapin_class in sorted(all_snapins(user_permissions).items()):
+    for name, snapin_class in sorted(all_snapins().items()):
         if name in used_snapins:
             continue
         if not snapin_class.may_see(user_permissions):
@@ -1032,9 +1026,7 @@ def page_add_snapin(ctx: PageContext) -> None:
 
         html.open_div(class_=["snapin_preview"])
         html.div("", class_=["clickshield"])
-        SidebarRenderer().render_snapin(
-            ctx.config, UserSidebarSnapin.from_snapin_type_id(name, user_permissions)
-        )
+        SidebarRenderer().render_snapin(ctx.config, UserSidebarSnapin.from_snapin_type_id(name))
         html.close_div()
         html.div(snapin_class.description(), class_=["description"])
         html.close_div()
@@ -1075,7 +1067,7 @@ class AjaxGetAvialableSnapins(AjaxPage):
         def get_snapin_content(name: str) -> str:
             with output_funnel.plugged():
                 try:
-                    snapin = UserSidebarSnapin.from_snapin_type_id(name, user_permissions)
+                    snapin = UserSidebarSnapin.from_snapin_type_id(name)
                     html.open_div(class_=["sidebar-add-sidebar-snapin__preview-content"])
                     snapin.snapin_type().show(ctx.config)
                     html.close_div()
@@ -1108,7 +1100,7 @@ class AjaxGetAvialableSnapins(AjaxPage):
                     description=snapin_class.description(),
                 )
             )
-            for name, snapin_class in sorted(all_snapins(user_permissions).items())
+            for name, snapin_class in sorted(all_snapins().items())
             if name not in used_snapins and snapin_class.may_see(user_permissions)
         ]
 
@@ -1123,7 +1115,7 @@ class AjaxAddSnapin(AjaxPage):
         addname = request.var("name")
 
         user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
-        if addname is None or addname not in all_snapins(user_permissions):
+        if addname is None or addname not in all_snapins():
             raise MKUserError(None, _("Invalid sidebar element %(addname)s") % {"addname": addname})
 
         if addname in _used_snapins(ctx.config, user_permissions):
@@ -1132,7 +1124,7 @@ class AjaxAddSnapin(AjaxPage):
             )
 
         user_config = UserSidebarConfig(user, ctx.config.sidebar, user_permissions)
-        snapin = UserSidebarSnapin.from_snapin_type_id(addname, user_permissions)
+        snapin = UserSidebarSnapin.from_snapin_type_id(addname)
         user_config.add_snapin(snapin)
         user_config.save()
 
@@ -1152,11 +1144,11 @@ class AjaxAddSnapin(AjaxPage):
 # TODO: This is snapin specific. Move this handler to the snapin file
 def ajax_set_snapin_site(ctx: PageContext) -> None:
     response.set_content_type("application/json")
-    ident = request.var("ident")
-    if ident not in all_snapins(UserPermissions.from_config(ctx.config, all_permissions())):
+    ident = ctx.request.var("ident")
+    if ident not in all_snapins():
         raise MKUserError(None, _("Invalid ident"))
 
-    site = request.var("site")
+    site = ctx.request.var("site")
     site_choices = dict([(SiteId(""), _("All sites"))] + get_configured_site_choices())
 
     if site not in site_choices:

@@ -128,7 +128,7 @@ def _only_test_snapins(monkeypatch: pytest.MonkeyPatch) -> None:
     the code under test here."""
     monkeypatch.setattr(
         "cmk.gui.sidebar.all_snapins",
-        lambda user_permissions: {"quiet": QuietSnapin, "noisy": NoisySnapin},  # noqa: ARG005
+        lambda: {"quiet": QuietSnapin, "noisy": NoisySnapin},
     )
 
 

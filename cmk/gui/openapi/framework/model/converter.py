@@ -27,7 +27,6 @@ from cmk.gui.openapi.framework.model.validation_context import validation_contex
 from cmk.gui.permissions import all_permissions
 from cmk.gui.site_config import distributed_setup_remote_sites
 from cmk.gui.userdb import connection_choices, get_saml_connections
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import groups_io, tags
 from cmk.gui.watolib.hosts_and_folders import FolderTree, Host, make_folder_tree
 from cmk.gui.watolib.passwords import load_passwords, password_id_in_use
@@ -115,15 +114,13 @@ def folder_tree_of(info: ValidationInfo[object]) -> FolderTree:
 
 @dataclass(slots=True)
 class RegistryConverter[T]:
-    registry_or_getter: Mapping[str, T] | Callable[[UserPermissions], Mapping[str, T]]
+    registry_or_getter: Mapping[str, T] | Callable[[], Mapping[str, T]]
     custom_error_message: str | None = None
 
     @property
     def _registry(self) -> Mapping[str, T]:
         if not isinstance(self.registry_or_getter, Mapping):
-            self.registry_or_getter = self.registry_or_getter(
-                UserPermissions.from_config(active_config, all_permissions())
-            )
+            self.registry_or_getter = self.registry_or_getter()
 
         return self.registry_or_getter
 

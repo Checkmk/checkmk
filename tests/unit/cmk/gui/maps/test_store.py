@@ -39,7 +39,7 @@ def test_save_and_reload_round_trip(
 
     # A fresh load reads it back from disk (bypassing the request-memoized
     # instances).
-    reloaded = MapPage.load(_user_permissions())
+    reloaded = MapPage.load()
     assert reloaded.has_instance((owner, "map1"))
     page = reloaded.instance((owner, "map1"))
     assert page.config.map_spec["objects"] == [{"id": "o1"}, {"id": "o2"}]
@@ -65,7 +65,7 @@ def test_write_does_not_drop_a_map_stored_after_the_memoized_load(
     # Memoize this request's instance set (it now contains "first" only)...
     store.get_permitted_maps()
     # ...then let a concurrent request store another map straight to disk.
-    concurrent = MapPage.load(_user_permissions())
+    concurrent = MapPage.load()
     concurrent.add_instance(
         (owner, "second"), MapPage(map_config_from_spec(owner, "second", _map("second")))
     )
@@ -76,7 +76,7 @@ def test_write_does_not_drop_a_map_stored_after_the_memoized_load(
     else:
         store.delete_map(owner, "first")
 
-    on_disk = MapPage.load(_user_permissions())
+    on_disk = MapPage.load()
     assert on_disk.has_instance((owner, "second")), "the concurrently stored map was lost"
 
 
@@ -159,10 +159,10 @@ def test_delete_map_round_trip(
 ) -> None:
     owner = with_admin_login
     store.save_map(owner, "map1", _map("map1"), public=False)
-    assert MapPage.load(_user_permissions()).has_instance((owner, "map1"))
+    assert MapPage.load().has_instance((owner, "map1"))
 
     store.delete_map(owner, "map1")
-    assert not MapPage.load(_user_permissions()).has_instance((owner, "map1"))
+    assert not MapPage.load().has_instance((owner, "map1"))
 
 
 def test_map_hidden_from_the_menu_stays_permitted(

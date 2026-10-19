@@ -74,9 +74,7 @@ def get_context_page_menu_dropdowns(
 
     topics = {
         p.name(): p
-        for p in pagetypes.PagetypeTopics.load(user_permissions).permitted_instances_sorted(
-            user_permissions
-        )
+        for p in pagetypes.PagetypeTopics.load().permitted_instances_sorted(user_permissions)
     }
 
     # First gather a flat list of all visuals to be linked to

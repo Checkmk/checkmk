@@ -115,7 +115,7 @@ def test_dashlet_title_of_an_unknown_snapin() -> None:
 
 
 def test_snapin_instance_of_a_known_snapin() -> None:
-    instance = SnapinWidgetIFramePage._get_snapin_instance("tactical_overview", USER_PERMISSIONS)  # noqa: SLF001
+    instance = SnapinWidgetIFramePage._get_snapin_instance("tactical_overview")  # noqa: SLF001
 
     assert instance.type_name() == "tactical_overview"
 
@@ -124,7 +124,7 @@ def test_snapin_instance_of_an_unknown_snapin() -> None:
     """The widget name comes from the dashboard configuration, which may still reference a
     snap-in that was removed - that has to be a user error, not a crash."""
     with pytest.raises(MKUserError, match="does not exist"):
-        SnapinWidgetIFramePage._get_snapin_instance("no_such_snapin", USER_PERMISSIONS)  # noqa: SLF001
+        SnapinWidgetIFramePage._get_snapin_instance("no_such_snapin")  # noqa: SLF001
 
 
 def test_scrollbar_wraps_its_body() -> None:

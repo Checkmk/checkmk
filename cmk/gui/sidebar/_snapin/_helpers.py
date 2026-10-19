@@ -233,9 +233,7 @@ def make_main_menu(
 ) -> list[NavItemTopic]:
     topics = {
         p.name(): p
-        for p in pagetypes.PagetypeTopics.load(user_permissions).permitted_instances_sorted(
-            user_permissions
-        )
+        for p in pagetypes.PagetypeTopics.load().permitted_instances_sorted(user_permissions)
     }
 
     by_topic: dict[pagetypes.PagetypeTopics, list[NavItemTopicEntry]] = {}

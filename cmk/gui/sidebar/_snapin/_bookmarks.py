@@ -230,7 +230,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
         return sorted(
             {
                 (topic, topic)
-                for instance in BookmarkList.load(user_permissions).instances_sorted()
+                for instance in BookmarkList.load().instances_sorted()
                 if instance.is_permitted(user_permissions)
                 for topic, _bookmarks in instance.bookmarks_by_topic()
             }
@@ -338,7 +338,7 @@ class Bookmarks(SidebarSnapin):
         self, user_permissions: UserPermissions
     ) -> list[tuple[str, list[BookmarkSpec]]]:
         topics: dict[str, list[BookmarkSpec]] = {}
-        instances = BookmarkList.load(user_permissions)
+        instances = BookmarkList.load()
         for instance in instances.instances_sorted():
             if instance.is_permitted(user_permissions):
                 for topic, bookmarks in instance.bookmarks_by_topic():
@@ -357,7 +357,7 @@ class Bookmarks(SidebarSnapin):
 
     def _add_bookmark(self, title: str, url: str, user_permissions: UserPermissions) -> None:
         assert user.id is not None
-        instances = BookmarkList.load(user_permissions)
+        instances = BookmarkList.load()
 
         if not instances.has_instance((user.id, "my_bookmarks")):
             BookmarkList.add_default_bookmark_list(instances, user.ident)

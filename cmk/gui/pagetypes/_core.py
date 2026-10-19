@@ -935,7 +935,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         return page_dicts_by_instance_id
 
     @classmethod
-    def load(cls, _user_permissions: UserPermissions) -> OverridableInstances[Self]:
+    def load(cls) -> OverridableInstances[Self]:
         instances = OverridableInstances[Self]()
 
         # First load built-in pages. Set username to ''
@@ -962,7 +962,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         """The permissions of the public instances of this page type"""
         # The publish permissions are static ones, so the registry is sufficient here
         user_permissions = UserPermissions.from_config(active_config, permission_registry)
-        for instance in cls.load(user_permissions).instances():
+        for instance in cls.load().instances():
             # Skip the permission for the fallback topic.
             # Otherwise, users can disable it leading to a crashed GUI
             if instance.name() == cls.default_topic():
@@ -1022,7 +1022,7 @@ class ListPage[T: Overridable](Page):
     @override
     def page(self, ctx: PageContext) -> None:
         user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
-        instances = self._type.load(user_permissions)
+        instances = self._type.load()
         self._type.need_overriding_permission("edit")
 
         title_plural = self._type.phrase("title_plural")
@@ -1287,9 +1287,8 @@ class EditPage[T_OverridableConfig: OverridableConfig, T: Overridable](Page):
         """Page for editing an existing page, or creating a new one"""
         back_url = request.get_url_input("back", self._type.list_url())
 
-        instances = self._type.load(
-            user_permissions := UserPermissions.from_config(ctx.config, all_permissions())
-        )
+        user_permissions = UserPermissions.from_config(ctx.config, all_permissions())
+        instances = self._type.load()
         self._type.need_overriding_permission("edit")
 
         raw_mode = request.get_ascii_input_mandatory("mode", "edit")
@@ -1793,7 +1792,7 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
         if not cls.may_contain(added_type):
             return []
 
-        pages = cls.load(user_permissions).pages(user_permissions)
+        pages = cls.load().pages(user_permissions)
         if not pages:
             return []
 
@@ -1867,7 +1866,7 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
         cls.need_overriding_permission("edit")
 
         need_sidebar_reload = False
-        instances = cls.load(user_permissions)
+        instances = cls.load()
         page = instances.find_page(page_name, user_permissions)
         if page is None:
             raise MKGeneralException(
@@ -2457,7 +2456,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
 
     @classmethod
     def choices(cls, user_permissions: UserPermissions) -> list[tuple[str, str]]:
-        instances = cls.load(user_permissions)
+        instances = cls.load()
         return [
             (p.name(), p.title())
             for p in sorted(instances.instances(), key=lambda p: p.sort_index())
@@ -2467,7 +2466,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
     @classmethod
     def get_topic(cls, topic_id: str, user_permissions: UserPermissions) -> PagetypeTopics:
         """Returns either the requested topic or fallback to "other"."""
-        instances = PagetypeTopics.load(user_permissions)
+        instances = PagetypeTopics.load()
         other_page = instances.find_page("other", user_permissions)
         # should never happen
         if not other_page:

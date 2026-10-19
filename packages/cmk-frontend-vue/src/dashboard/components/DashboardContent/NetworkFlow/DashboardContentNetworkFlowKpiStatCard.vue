@@ -8,6 +8,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { computed } from 'vue'
 
+import { chartColorCss } from '@/dashboard/components/CmkDonutChart/colors'
 import CmkKpiStatCard, {
   type KpiDelta,
   type KpiDeltaConfig,
@@ -20,7 +21,6 @@ import type {
   NetworkFlowKpiStatCardContent
 } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
-import { chartColorCss } from '@/network-flow/colors'
 
 import WidgetFigureFrame from '../figures/WidgetFigureFrame.vue'
 import type { ContentProps } from '../types.ts'

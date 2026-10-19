@@ -11,10 +11,10 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { computed } from 'vue'
 
+import { CHART_COLOR_CSS } from '@/dashboard/components/CmkDonutChart/colors'
 import KpiSparkLine from '@/dashboard/components/CmkKpiStatCard/KpiSparkLine.vue'
 import CmkRankedTable from '@/dashboard/components/CmkRankedTable'
 import type { RankedTableColumn, RankedTableRow } from '@/dashboard/components/CmkRankedTable'
-import { CHART_COLOR_CSS } from '@/network-flow/colors'
 
 import type { ComputedNetworkFlowHost } from '../api/context'
 

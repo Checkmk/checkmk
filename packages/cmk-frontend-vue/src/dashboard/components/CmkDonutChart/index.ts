@@ -3,8 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { Page } from '@ucl/_ucl/types/page'
+import CmkDonutChart from './CmkDonutChart.vue'
 
-import UclCmkDonutChart from './CmkDonutChart/UclCmkDonutChart.vue'
-
-export const pages: Array<Page> = [new Page('CmkDonutChart', UclCmkDonutChart)]
+export default CmkDonutChart
+export type { ChartColor } from './colors'
+export type { CmkDonutChartProps, DonutLegendMode, DonutLegendRow, DonutSlice } from './types'

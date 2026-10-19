@@ -8,6 +8,8 @@ import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
+import { CHART_COLOR_CSS } from '@/dashboard/components/CmkDonutChart/colors'
+import { formatDelta } from '@/dashboard/components/CmkDonutChart/delta'
 import CmkRankedTable from '@/dashboard/components/CmkRankedTable'
 import type {
   RankedTableCell,
@@ -15,8 +17,7 @@ import type {
   RankedTableRow
 } from '@/dashboard/components/CmkRankedTable'
 import type { NetworkFlowDonutContent } from '@/dashboard/types/widget'
-import { CHART_COLOR_CSS } from '@/network-flow/colors'
-import { formatBytes, formatDelta } from '@/network-flow/format'
+import { formatBytes } from '@/network-flow/format'
 
 import type { ComputedNetworkFlowDonutOtherBreakdown } from '../api/context'
 

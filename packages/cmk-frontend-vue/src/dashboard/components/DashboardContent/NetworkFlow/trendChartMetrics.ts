@@ -3,9 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { CATEGORICAL_PALETTE, chartColorHex } from '@/dashboard/components/CmkDonutChart/colors'
 import type { NetworkFlowTrendChartContent } from '@/dashboard/types/widget.ts'
 import type { Metric } from '@/graphing'
-import { CATEGORICAL_PALETTE, chartColorHex } from '@/network-flow/colors'
 
 /**
  * The series values are throughput, rendered in the mockups' unit style

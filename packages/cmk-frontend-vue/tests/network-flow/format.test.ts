@@ -5,18 +5,7 @@
  */
 import { expect, test } from 'vitest'
 
-import { formatDelta, formatDuration, previousWindowLabel } from '@/network-flow/format'
-
-test('signs a change and calls growth out of nothing new', () => {
-  // The figure is unsigned: the arrow drawn beside it carries the direction.
-  expect(formatDelta(90, 60)).toEqual({ ratio: 0.5, text: '50.0%' })
-  expect(formatDelta(60, 90)).toEqual({ ratio: -1 / 3, text: '33.3%' })
-  // Neither has a ratio to point an arrow along.
-  expect(formatDelta(90, 0)).toEqual({ ratio: null, text: 'new' })
-  expect(formatDelta(0, 0)).toEqual({ ratio: null, text: '–' })
-  // No change is no arrow, not an arrow pointing nowhere.
-  expect(formatDelta(90, 90)).toEqual({ ratio: 0, text: '0.0%' })
-})
+import { formatDuration, previousWindowLabel } from '@/network-flow/format'
 
 test('writes a window length the way Checkmk does', () => {
   expect(formatDuration(45)).toBe('45 s')

@@ -9,10 +9,10 @@ import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { type PieArcDatum, arc, pie } from 'd3-shape'
 import { computed, ref, useId } from 'vue'
 
-import { chartColorCss } from '../colors'
-import { DASH, formatDelta, noDelta } from '../format'
 import DonutLegendCompact from './DonutLegendCompact.vue'
 import DonutLegendTable from './DonutLegendTable.vue'
+import { chartColorCss } from './colors'
+import { DASH, formatDelta, noDelta } from './delta'
 import type { CmkDonutChartProps, DonutLegendRow, DonutSlice } from './types'
 import { type SliceAngles, useDonutTween } from './useDonutTween'
 
@@ -201,21 +201,21 @@ const legendRows = computed<DonutLegendRow[]>(() => {
 
 <template>
   <div
-    class="network-flow-cmk-donut-chart"
-    :class="{ 'network-flow-cmk-donut-chart--chips-only': props.legendMode === 'compact' }"
+    class="db-cmk-donut-chart"
+    :class="{ 'db-cmk-donut-chart--chips-only': props.legendMode === 'compact' }"
   >
     <!-- The layout is a child of the container rather than the container
          itself: an element cannot be styled by a query against its own box. -->
-    <div class="network-flow-cmk-donut-chart__layout">
-      <div class="network-flow-cmk-donut-chart__figure">
+    <div class="db-cmk-donut-chart__layout">
+      <div class="db-cmk-donut-chart__figure">
         <svg
-          class="network-flow-cmk-donut-chart__svg"
+          class="db-cmk-donut-chart__svg"
           :viewBox="`${-SIZE / 2} ${-SIZE / 2} ${SIZE} ${SIZE}`"
           preserveAspectRatio="xMidYMid meet"
         >
           <circle
             v-if="!segments.length"
-            class="network-flow-cmk-donut-chart__empty-track"
+            class="db-cmk-donut-chart__empty-track"
             :r="TRACK_RADIUS"
             :stroke-width="TRACK_STROKE"
             fill="none"
@@ -228,11 +228,8 @@ const legendRows = computed<DonutLegendRow[]>(() => {
               cy="0"
               :r="OUTER_RADIUS"
             >
-              <stop
-                :offset="RING_INNER_OFFSET"
-                class="network-flow-cmk-donut-chart__shading-stop--inner"
-              />
-              <stop offset="100%" class="network-flow-cmk-donut-chart__shading-stop--outer" />
+              <stop :offset="RING_INNER_OFFSET" class="db-cmk-donut-chart__shading-stop--inner" />
+              <stop offset="100%" class="db-cmk-donut-chart__shading-stop--outer" />
             </radialGradient>
           </defs>
           <!-- Slice and shading share a group so that hovering, focusing and
@@ -242,10 +239,10 @@ const legendRows = computed<DonutLegendRow[]>(() => {
           <g
             v-for="segment in segments"
             :key="segment.key"
-            class="network-flow-cmk-donut-chart__segment"
+            class="db-cmk-donut-chart__segment"
             :class="{
-              'network-flow-cmk-donut-chart__segment--dimmed': isDimmed(segment.key),
-              'network-flow-cmk-donut-chart__segment--leaving': segment.leaving
+              'db-cmk-donut-chart__segment--dimmed': isDimmed(segment.key),
+              'db-cmk-donut-chart__segment--leaving': segment.leaving
             }"
             role="button"
             :tabindex="segment.leaving ? -1 : 0"
@@ -260,27 +257,27 @@ const legendRows = computed<DonutLegendRow[]>(() => {
             @keydown.space.prevent="activate(segment, $event.currentTarget)"
           >
             <path
-              class="network-flow-cmk-donut-chart__slice"
+              class="db-cmk-donut-chart__slice"
               :d="segment.path"
               :fill="segment.color"
               :stroke-opacity="segment.dividerOpacity"
             />
             <!-- Its own layer, so the slice keeps its flat palette colour. -->
             <path
-              class="network-flow-cmk-donut-chart__shading"
+              class="db-cmk-donut-chart__shading"
               :d="segment.path"
               :fill="`url(#${shadingId})`"
             />
           </g>
         </svg>
-        <div v-if="segments.length" class="network-flow-cmk-donut-chart__center">
+        <div v-if="segments.length" class="db-cmk-donut-chart__center">
           <!-- Both readings are on screen while one takes over from the other,
                so they are stacked rather than played one after the next. -->
-          <Transition name="network-flow-cmk-donut-chart__center-reading">
-            <div :key="center.key" class="network-flow-cmk-donut-chart__center-reading">
-              <span class="network-flow-cmk-donut-chart__center-label">{{ center.label }}</span>
-              <span class="network-flow-cmk-donut-chart__center-value">{{ center.value }}</span>
-              <span class="network-flow-cmk-donut-chart__center-share">{{ center.share }}</span>
+          <Transition name="db-cmk-donut-chart__center-reading">
+            <div :key="center.key" class="db-cmk-donut-chart__center-reading">
+              <span class="db-cmk-donut-chart__center-label">{{ center.label }}</span>
+              <span class="db-cmk-donut-chart__center-value">{{ center.value }}</span>
+              <span class="db-cmk-donut-chart__center-share">{{ center.share }}</span>
             </div>
           </Transition>
         </div>
@@ -291,7 +288,7 @@ const legendRows = computed<DonutLegendRow[]>(() => {
            they are what was asked for, so the table is not built for nothing. -->
       <DonutLegendTable
         v-if="props.legendMode === 'table'"
-        class="network-flow-cmk-donut-chart__legend--table"
+        class="db-cmk-donut-chart__legend--table"
         :rows="legendRows"
         :previous-label="props.previousLabel"
         :highlighted="highlighted"
@@ -300,7 +297,7 @@ const legendRows = computed<DonutLegendRow[]>(() => {
         @drill="emit('sliceActivate', $event)"
       />
       <DonutLegendCompact
-        class="network-flow-cmk-donut-chart__legend--chips"
+        class="db-cmk-donut-chart__legend--chips"
         :rows="legendRows"
         :highlighted="highlighted"
         @toggle="toggleHidden"
@@ -312,13 +309,13 @@ const legendRows = computed<DonutLegendRow[]>(() => {
 </template>
 
 <style scoped>
-.network-flow-cmk-donut-chart {
+.db-cmk-donut-chart {
   /* Past this the ring stops reading as a ring. */
-  --nf-donut-figure-min: 80px;
+  --db-donut-figure-min: 80px;
 
   /* Not in cqw: this element is the container, so its own cq units would
      resolve against whatever box lies outside it. */
-  --nf-donut-gap: 0.75em;
+  --db-donut-gap: 0.75em;
 
   width: 100%;
   height: 100%;
@@ -329,21 +326,21 @@ const legendRows = computed<DonutLegendRow[]>(() => {
 
   /* Named, so the legend can ask about the widget rather than about whatever
      container happens to be nearest. */
-  container: nf-donut / size;
+  container: db-donut / size;
 }
 
 /* Side by side, which is what a widget wider than it is tall has the room for. */
-.network-flow-cmk-donut-chart__layout {
-  --nf-donut-figure-size: min(40cqw, 100cqh);
+.db-cmk-donut-chart__layout {
+  --db-donut-figure-size: min(40cqw, 100cqh);
 
   display: flex;
-  gap: var(--nf-donut-gap);
+  gap: var(--db-donut-gap);
   align-items: center;
   width: 100%;
   height: 100%;
 }
 
-.network-flow-cmk-donut-chart__legend--chips {
+.db-cmk-donut-chart__legend--chips {
   display: none;
 }
 
@@ -351,9 +348,9 @@ const legendRows = computed<DonutLegendRow[]>(() => {
    moves on top of the table, where the height it takes is height the widget had
    nothing else to do with. Bounded by what it leaves the table below it, so it
    no longer competes for a width the table has none to spare of. */
-@container nf-donut (aspect-ratio < 1.2) or (width < 26em) {
-  .network-flow-cmk-donut-chart__layout {
-    --nf-donut-figure-size: min(100cqw, 45cqh);
+@container db-donut (aspect-ratio < 1.2) or (width < 26em) {
+  .db-cmk-donut-chart__layout {
+    --db-donut-figure-size: min(100cqw, 45cqh);
 
     flex-direction: column;
     justify-content: center;
@@ -362,23 +359,23 @@ const legendRows = computed<DonutLegendRow[]>(() => {
   /* In a column the basis governs the height, and giving that up is what makes
      the ring an ellipse. Qualified, so it outranks the figure's own rule
      wherever that lands in the sheet. */
-  .network-flow-cmk-donut-chart__layout .network-flow-cmk-donut-chart__figure {
+  .db-cmk-donut-chart__layout .db-cmk-donut-chart__figure {
     flex: 0 0 auto;
   }
 }
 
 /* Past here a table is a header and one row: the names alone say more, and the
    volume is one hover away in the middle of the ring. */
-@container nf-donut (width < 16em) or (height < 18em) {
-  .network-flow-cmk-donut-chart__layout {
-    --nf-donut-figure-size: min(100cqw, 62cqh);
+@container db-donut (width < 16em) or (height < 18em) {
+  .db-cmk-donut-chart__layout {
+    --db-donut-figure-size: min(100cqw, 62cqh);
   }
 
-  .network-flow-cmk-donut-chart__legend--table {
+  .db-cmk-donut-chart__legend--table {
     display: none;
   }
 
-  .network-flow-cmk-donut-chart__legend--chips {
+  .db-cmk-donut-chart__legend--chips {
     display: block;
   }
 }
@@ -386,11 +383,11 @@ const legendRows = computed<DonutLegendRow[]>(() => {
 /* Shrinkable, and the legend below states the width its numbers need, so the
    browser takes the difference out of the ring rather than out of the names.
    The ratio keeps it round once flex has had its way with the width. */
-.network-flow-cmk-donut-chart__figure {
+.db-cmk-donut-chart__figure {
   position: relative;
   flex: 0 1 auto;
-  width: var(--nf-donut-figure-size);
-  min-width: var(--nf-donut-figure-min);
+  width: var(--db-donut-figure-size);
+  min-width: var(--db-donut-figure-min);
   aspect-ratio: 1;
 
   /* A container of its own, so what is written in the hole is measured against
@@ -399,72 +396,72 @@ const legendRows = computed<DonutLegendRow[]>(() => {
 }
 
 /* Asked for outright, so it answers to no query. */
-.network-flow-cmk-donut-chart--chips-only .network-flow-cmk-donut-chart__layout {
-  --nf-donut-figure-size: min(100cqw, 62cqh);
+.db-cmk-donut-chart--chips-only .db-cmk-donut-chart__layout {
+  --db-donut-figure-size: min(100cqw, 62cqh);
 
   flex-direction: column;
   justify-content: center;
 }
 
-.network-flow-cmk-donut-chart--chips-only .network-flow-cmk-donut-chart__figure {
+.db-cmk-donut-chart--chips-only .db-cmk-donut-chart__figure {
   flex: 0 0 auto;
 }
 
-.network-flow-cmk-donut-chart--chips-only .network-flow-cmk-donut-chart__legend--chips {
+.db-cmk-donut-chart--chips-only .db-cmk-donut-chart__legend--chips {
   display: block;
 }
 
-.network-flow-cmk-donut-chart__svg {
+.db-cmk-donut-chart__svg {
   width: 100%;
   height: 100%;
 }
 
-.network-flow-cmk-donut-chart__segment {
+.db-cmk-donut-chart__segment {
   cursor: pointer;
   transition:
     opacity 120ms,
     filter 120ms;
 }
 
-.network-flow-cmk-donut-chart__segment:hover,
-.network-flow-cmk-donut-chart__segment:focus-visible {
+.db-cmk-donut-chart__segment:hover,
+.db-cmk-donut-chart__segment:focus-visible {
   filter: drop-shadow(0 2px 5px var(--ring-shading-color-lift));
 }
 
-.network-flow-cmk-donut-chart__segment--dimmed {
+.db-cmk-donut-chart__segment--dimmed {
   opacity: 0.5;
 }
 
-.network-flow-cmk-donut-chart__segment--leaving {
+.db-cmk-donut-chart__segment--leaving {
   pointer-events: none;
 }
 
 /* The divider takes the colour of the surface behind the chart. */
-.network-flow-cmk-donut-chart__slice {
+.db-cmk-donut-chart__slice {
   stroke: var(--db-content-bg-color);
   stroke-width: 1.5;
 }
 
-.network-flow-cmk-donut-chart__shading {
+.db-cmk-donut-chart__shading {
   pointer-events: none;
 }
 
-.network-flow-cmk-donut-chart__shading-stop--inner {
+.db-cmk-donut-chart__shading-stop--inner {
   stop-color: var(--ring-shading-color-inner);
   stop-opacity: var(--ring-shading-opacity-inner);
 }
 
-.network-flow-cmk-donut-chart__shading-stop--outer {
+.db-cmk-donut-chart__shading-stop--outer {
   stop-color: var(--ring-shading-color-outer);
   stop-opacity: var(--ring-shading-opacity-outer);
 }
 
-.network-flow-cmk-donut-chart__empty-track {
+.db-cmk-donut-chart__empty-track {
   stroke: var(--ux-theme-4);
 }
 
 /* Covers the whole figure, so it has to let the pointer through. */
-.network-flow-cmk-donut-chart__center {
+.db-cmk-donut-chart__center {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -479,7 +476,7 @@ const legendRows = computed<DonutLegendRow[]>(() => {
 
 /* Filling its box rather than flowing in it, so the outgoing reading is out of
    the layout and the incoming one does not start beneath it. */
-.network-flow-cmk-donut-chart__center-reading {
+.db-cmk-donut-chart__center-reading {
   position: absolute;
   inset: 0;
   display: flex;
@@ -489,26 +486,26 @@ const legendRows = computed<DonutLegendRow[]>(() => {
   justify-content: center;
 }
 
-.network-flow-cmk-donut-chart__center-reading-enter-active,
-.network-flow-cmk-donut-chart__center-reading-leave-active {
+.db-cmk-donut-chart__center-reading-enter-active,
+.db-cmk-donut-chart__center-reading-leave-active {
   transition: opacity 180ms ease-out;
 }
 
-.network-flow-cmk-donut-chart__center-reading-enter-from,
-.network-flow-cmk-donut-chart__center-reading-leave-to {
+.db-cmk-donut-chart__center-reading-enter-from,
+.db-cmk-donut-chart__center-reading-leave-to {
   opacity: 0;
 }
 
 /* Long enough for the transition to still be one, short enough to read as the
    snap the reader asked for. */
 @media (prefers-reduced-motion: reduce) {
-  .network-flow-cmk-donut-chart__center-reading-enter-active,
-  .network-flow-cmk-donut-chart__center-reading-leave-active {
+  .db-cmk-donut-chart__center-reading-enter-active,
+  .db-cmk-donut-chart__center-reading-leave-active {
     transition-duration: 1ms;
   }
 }
 
-.network-flow-cmk-donut-chart__center-value {
+.db-cmk-donut-chart__center-value {
   max-width: 100%;
   overflow: hidden;
   font-size: 1.6em;
@@ -518,7 +515,7 @@ const legendRows = computed<DonutLegendRow[]>(() => {
   white-space: nowrap;
 }
 
-.network-flow-cmk-donut-chart__center-label {
+.db-cmk-donut-chart__center-label {
   max-width: 100%;
   overflow: hidden;
   font-size: 0.85em;
@@ -530,7 +527,7 @@ const legendRows = computed<DonutLegendRow[]>(() => {
 }
 
 /* Kept in the layout even when empty, so the block does not jump. */
-.network-flow-cmk-donut-chart__center-share {
+.db-cmk-donut-chart__center-share {
   min-height: 1em;
   font-size: 0.85em;
   color: var(--font-color-muted);

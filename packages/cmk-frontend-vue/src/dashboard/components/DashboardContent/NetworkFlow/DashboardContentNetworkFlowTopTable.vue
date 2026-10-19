@@ -6,13 +6,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, inject } from 'vue'
 
+import { chartColorCss } from '@/dashboard/components/CmkDonutChart/colors'
 import CmkRankedTable from '@/dashboard/components/CmkRankedTable'
 import type { RankedTableColumn, RankedTableRow } from '@/dashboard/components/CmkRankedTable'
 import { useWidgetData } from '@/dashboard/composables/useWidgetData'
 import { explicitWidgetSource } from '@/dashboard/composables/useWidgetSource'
 import type { NetworkFlowTopTableContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
-import { chartColorCss } from '@/network-flow/colors'
 import { autonomousSystemSlideInKey, hostSlideInKey } from '@/network-flow/slide-ins/injectionKeys'
 
 import WidgetFigureFrame from '../figures/WidgetFigureFrame.vue'

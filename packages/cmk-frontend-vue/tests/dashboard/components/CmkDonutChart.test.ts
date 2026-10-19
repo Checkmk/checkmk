@@ -6,8 +6,8 @@
 import { fireEvent, render, within } from '@testing-library/vue'
 import { nextTick } from 'vue'
 
-import CmkDonutChart from '@/network-flow/CmkDonutChart/CmkDonutChart.vue'
-import type { DonutSlice } from '@/network-flow/CmkDonutChart/types'
+import CmkDonutChart from '@/dashboard/components/CmkDonutChart/CmkDonutChart.vue'
+import type { DonutSlice } from '@/dashboard/components/CmkDonutChart/types'
 
 const SLICES: DonutSlice[] = [
   { key: 'tls', label: 'TLS', value: 90, color: 'blue' },
@@ -47,7 +47,7 @@ async function advanceTween(): Promise<void> {
 }
 
 function slicePaths(container: Element): (string | null)[] {
-  return [...container.querySelectorAll('.network-flow-cmk-donut-chart__slice')].map((el) =>
+  return [...container.querySelectorAll('.db-cmk-donut-chart__slice')].map((el) =>
     el.getAttribute('d')
   )
 }
@@ -59,24 +59,24 @@ function renderChart(slices: DonutSlice[] = SLICES) {
   const result = render(CmkDonutChart, { props: { slices, formatValue: (value) => `${value} B` } })
   return {
     ...result,
-    ...within(result.container.querySelector<HTMLElement>('.network-flow-donut-legend-table')!)
+    ...within(result.container.querySelector<HTMLElement>('.db-donut-legend-table')!)
   }
 }
 
 test('renders one arc segment and one legend entry per slice', () => {
   const { container } = renderChart()
 
-  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__slice')).toHaveLength(2)
+  expect(container.querySelectorAll('.db-cmk-donut-chart__slice')).toHaveLength(2)
   // The empty-track circle is only rendered when there are no slices.
   expect(container.querySelectorAll('circle')).toHaveLength(0)
-  expect(container.querySelectorAll('.network-flow-donut-legend-table__row')).toHaveLength(2)
+  expect(container.querySelectorAll('.db-donut-legend-table__row')).toHaveLength(2)
 })
 
 test('reads the volume of every category off the legend', () => {
   const { container } = renderChart()
 
-  const values = [...container.querySelectorAll('.network-flow-donut-legend-table__td--value')].map(
-    (el) => el.textContent?.trim()
+  const values = [...container.querySelectorAll('.db-donut-legend-table__td--value')].map((el) =>
+    el.textContent?.trim()
   )
   expect(values).toEqual(['90 B', '60 B'])
 })
@@ -222,15 +222,15 @@ function renderCompactChart() {
 test('lays out both legends, so the widget can pick one by its own size', () => {
   const { container } = renderChart()
 
-  expect(container.querySelector('.network-flow-donut-legend-table')).not.toBeNull()
-  expect(container.querySelector('.network-flow-donut-legend-compact')).not.toBeNull()
+  expect(container.querySelector('.db-donut-legend-table')).not.toBeNull()
+  expect(container.querySelector('.db-donut-legend-compact')).not.toBeNull()
 })
 
 test('drops the table for a row of chips when the legend is compact', () => {
   const { container } = renderCompactChart()
 
   expect(container.querySelector('table')).toBeNull()
-  expect(container.querySelectorAll('.network-flow-donut-legend-compact__chip')).toHaveLength(2)
+  expect(container.querySelectorAll('.db-donut-legend-compact__chip')).toHaveLength(2)
 })
 
 test('opens the breakdown from the remainder chip as well', async () => {
@@ -268,27 +268,21 @@ test('hides and highlights from a chip just as from a table row', async () => {
   await fireEvent.click(getByLabelText('Hide Other in the chart'))
   await advanceTween()
 
-  const chips = [...container.querySelectorAll('.network-flow-donut-legend-compact__chip')]
-  expect(chips[1]).toHaveClass('network-flow-donut-legend-compact__chip--hidden')
-  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment')).toHaveLength(1)
+  const chips = [...container.querySelectorAll('.db-donut-legend-compact__chip')]
+  expect(chips[1]).toHaveClass('db-donut-legend-compact__chip--hidden')
+  expect(container.querySelectorAll('.db-cmk-donut-chart__segment')).toHaveLength(1)
 
   await fireEvent.mouseEnter(chips[0]!)
 
-  expect(container.querySelector('.network-flow-cmk-donut-chart__center-label')).toHaveTextContent(
-    'TLS'
-  )
+  expect(container.querySelector('.db-cmk-donut-chart__center-label')).toHaveTextContent('TLS')
 })
 
 test('shows the total of the ring in the center, not the top slice', () => {
   const { container } = renderChart()
 
   // 90 + 60, rendered by the caller's formatter.
-  expect(container.querySelector('.network-flow-cmk-donut-chart__center-value')).toHaveTextContent(
-    '150 B'
-  )
-  expect(container.querySelector('.network-flow-cmk-donut-chart__center-label')).toHaveTextContent(
-    'Volume'
-  )
+  expect(container.querySelector('.db-cmk-donut-chart__center-value')).toHaveTextContent('150 B')
+  expect(container.querySelector('.db-cmk-donut-chart__center-label')).toHaveTextContent('Volume')
 })
 
 test('lets the caller caption the center', () => {
@@ -296,7 +290,7 @@ test('lets the caller caption the center', () => {
     props: { slices: SLICES, formatValue: String, centerLabel: 'Throughput' }
   })
 
-  expect(container.querySelector('.network-flow-cmk-donut-chart__center-label')).toHaveTextContent(
+  expect(container.querySelector('.db-cmk-donut-chart__center-label')).toHaveTextContent(
     'Throughput'
   )
 })
@@ -304,9 +298,9 @@ test('lets the caller caption the center', () => {
 test('colors each arc segment with its slice color', () => {
   const { container } = renderChart()
 
-  const fills = [
-    ...container.querySelectorAll<SVGPathElement>('.network-flow-cmk-donut-chart__slice')
-  ].map((el) => el.getAttribute('fill'))
+  const fills = [...container.querySelectorAll<SVGPathElement>('.db-cmk-donut-chart__slice')].map(
+    (el) => el.getAttribute('fill')
+  )
   // The named colors resolve to their series colour tokens.
   expect(fills).toEqual(['var(--series-color-9)', 'var(--series-color-11)'])
 })
@@ -316,26 +310,24 @@ test('draws a lone slice as a closed ring', () => {
 
   // A closed ring is all arcs; the straight edges of a segment would show up
   // as line commands.
-  expect(
-    container.querySelector('.network-flow-cmk-donut-chart__slice')!.getAttribute('d')
-  ).not.toContain('L')
+  expect(container.querySelector('.db-cmk-donut-chart__slice')!.getAttribute('d')).not.toContain(
+    'L'
+  )
 })
 
 test('renders an empty track and no center when there are no slices', () => {
   const { container } = renderChart([])
 
-  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__slice')).toHaveLength(0)
+  expect(container.querySelectorAll('.db-cmk-donut-chart__slice')).toHaveLength(0)
   expect(container.querySelectorAll('circle')).toHaveLength(1)
-  expect(container.querySelector('.network-flow-cmk-donut-chart__empty-track')).not.toBeNull()
-  expect(container.querySelector('.network-flow-cmk-donut-chart__center')).toBeNull()
+  expect(container.querySelector('.db-cmk-donut-chart__empty-track')).not.toBeNull()
+  expect(container.querySelector('.db-cmk-donut-chart__center')).toBeNull()
 })
 
 test('overlays every slice with the shared shading gradient', () => {
   const { container } = renderChart()
 
-  const shading = [
-    ...container.querySelectorAll<SVGPathElement>('.network-flow-cmk-donut-chart__shading')
-  ]
+  const shading = [...container.querySelectorAll<SVGPathElement>('.db-cmk-donut-chart__shading')]
   expect(shading).toHaveLength(2)
   const gradientId = container.querySelector('radialGradient')!.getAttribute('id')
   expect(gradientId).toMatch(/^donut-shading-/)
@@ -348,8 +340,8 @@ test('overlays every slice with the shared shading gradient', () => {
 test('names every slice for assistive technology', () => {
   const { container } = renderChart()
 
-  const labels = [...container.querySelectorAll('.network-flow-cmk-donut-chart__segment')].map(
-    (el) => el.getAttribute('aria-label')
+  const labels = [...container.querySelectorAll('.db-cmk-donut-chart__segment')].map((el) =>
+    el.getAttribute('aria-label')
   )
   expect(labels).toEqual(['TLS, 90 B, 60.0%', 'Other, 60 B, 40.0%'])
 })
@@ -358,37 +350,31 @@ test('dims the other slices while one is pointed at', async () => {
   const { container } = renderChart()
 
   const [tls, other] = [
-    ...container.querySelectorAll('.network-flow-cmk-donut-chart__segment')
+    ...container.querySelectorAll('.db-cmk-donut-chart__segment')
   ] as HTMLElement[]
   await fireEvent.mouseEnter(tls!)
 
-  expect(tls).not.toHaveClass('network-flow-cmk-donut-chart__segment--dimmed')
-  expect(other).toHaveClass('network-flow-cmk-donut-chart__segment--dimmed')
+  expect(tls).not.toHaveClass('db-cmk-donut-chart__segment--dimmed')
+  expect(other).toHaveClass('db-cmk-donut-chart__segment--dimmed')
 
   await fireEvent.mouseLeave(tls!)
-  expect(other).not.toHaveClass('network-flow-cmk-donut-chart__segment--dimmed')
+  expect(other).not.toHaveClass('db-cmk-donut-chart__segment--dimmed')
 })
 
 test('hands the center over to the slice being pointed at', async () => {
   const { container } = renderChart()
 
-  const tls = container.querySelector('.network-flow-cmk-donut-chart__segment')!
+  const tls = container.querySelector('.db-cmk-donut-chart__segment')!
   await fireEvent.focus(tls)
 
-  expect(container.querySelector('.network-flow-cmk-donut-chart__center-label')).toHaveTextContent(
-    'TLS'
-  )
-  expect(container.querySelector('.network-flow-cmk-donut-chart__center-value')).toHaveTextContent(
-    '90 B'
-  )
-  expect(container.querySelector('.network-flow-cmk-donut-chart__center-share')).toHaveTextContent(
+  expect(container.querySelector('.db-cmk-donut-chart__center-label')).toHaveTextContent('TLS')
+  expect(container.querySelector('.db-cmk-donut-chart__center-value')).toHaveTextContent('90 B')
+  expect(container.querySelector('.db-cmk-donut-chart__center-share')).toHaveTextContent(
     '60.0% of shown'
   )
 
   await fireEvent.blur(tls)
-  expect(container.querySelector('.network-flow-cmk-donut-chart__center-value')).toHaveTextContent(
-    '150 B'
-  )
+  expect(container.querySelector('.db-cmk-donut-chart__center-value')).toHaveTextContent('150 B')
 })
 
 test('hands the center over as a new reading, so the two can fade across', async () => {
@@ -397,10 +383,10 @@ test('hands the center over as a new reading, so the two can fade across', async
   // second one alongside the first rather than rewrite the text in place.
   const { container } = renderChart()
 
-  const before = container.querySelector('.network-flow-cmk-donut-chart__center-reading')
-  await fireEvent.mouseEnter(container.querySelector('.network-flow-cmk-donut-chart__segment')!)
+  const before = container.querySelector('.db-cmk-donut-chart__center-reading')
+  await fireEvent.mouseEnter(container.querySelector('.db-cmk-donut-chart__segment')!)
 
-  const after = container.querySelector('.network-flow-cmk-donut-chart__center-reading')
+  const after = container.querySelector('.db-cmk-donut-chart__center-reading')
   expect(after).not.toBe(before)
   expect(after).toHaveTextContent('TLS')
 })
@@ -408,32 +394,28 @@ test('hands the center over as a new reading, so the two can fade across', async
 test('leaves the center reading alone when a refresh does not change what it is about', async () => {
   const { container, rerender } = renderChart()
 
-  const before = container.querySelector('.network-flow-cmk-donut-chart__center-reading')
+  const before = container.querySelector('.db-cmk-donut-chart__center-reading')
   await rerender({ slices: SLICES, formatValue: (value: number) => `${value} B` })
 
-  expect(container.querySelector('.network-flow-cmk-donut-chart__center-reading')).toBe(before)
+  expect(container.querySelector('.db-cmk-donut-chart__center-reading')).toBe(before)
 })
 
 test('raises the highlight from the legend as well as from the ring', async () => {
   const { container } = renderChart()
 
-  const legendRows = [...container.querySelectorAll('.network-flow-donut-legend-table__row')]
+  const legendRows = [...container.querySelectorAll('.db-donut-legend-table__row')]
   await fireEvent.mouseEnter(legendRows[1]!)
 
-  expect(container.querySelector('.network-flow-cmk-donut-chart__center-label')).toHaveTextContent(
-    'Other'
-  )
-  expect(legendRows[1]).toHaveClass('network-flow-donut-legend-table__row--highlighted')
-  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment--dimmed')).toHaveLength(
-    1
-  )
+  expect(container.querySelector('.db-cmk-donut-chart__center-label')).toHaveTextContent('Other')
+  expect(legendRows[1]).toHaveClass('db-donut-legend-table__row--highlighted')
+  expect(container.querySelectorAll('.db-cmk-donut-chart__segment--dimmed')).toHaveLength(1)
 })
 
 test('activates the slice with a breakdown by click and by keyboard', async () => {
   const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
   const { container, emitted } = renderChart(slices)
 
-  const other = container.querySelectorAll('.network-flow-cmk-donut-chart__segment')[1]!
+  const other = container.querySelectorAll('.db-cmk-donut-chart__segment')[1]!
   await fireEvent.click(other)
   await fireEvent.keyDown(other, { key: 'Enter' })
   await fireEvent.keyDown(other, { key: ' ' })
@@ -445,7 +427,7 @@ test('focuses the arc it activates', async () => {
   const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
   const { container } = renderChart(slices)
 
-  const other = container.querySelectorAll('.network-flow-cmk-donut-chart__segment')[1]!
+  const other = container.querySelectorAll('.db-cmk-donut-chart__segment')[1]!
   await fireEvent.click(other)
 
   // Whatever the activation opens has to know where to hand the keyboard back.
@@ -456,7 +438,7 @@ test('puts every slice in the tab order, not just the one with a breakdown', () 
   const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
   const { container } = renderChart(slices)
 
-  for (const segment of container.querySelectorAll('.network-flow-cmk-donut-chart__segment')) {
+  for (const segment of container.querySelectorAll('.db-cmk-donut-chart__segment')) {
     expect(segment).toHaveAttribute('role', 'button')
     expect(segment).toHaveAttribute('tabindex', '0')
   }
@@ -467,7 +449,7 @@ test('reports the activation of a slice with nothing behind it too', async () =>
   // which slice was picked.
   const { container, emitted } = renderChart()
 
-  const tls = container.querySelector('.network-flow-cmk-donut-chart__segment')!
+  const tls = container.querySelector('.db-cmk-donut-chart__segment')!
   await fireEvent.keyDown(tls, { key: 'Enter' })
 
   expect(emitted('sliceActivate')).toEqual([['tls']])
@@ -480,17 +462,15 @@ test('recomputes the ring and the total when a category is hidden', async () => 
   await advanceTween()
 
   // The hidden category leaves the ring, and the total drops to what is left.
-  expect(container.querySelector('.network-flow-cmk-donut-chart__center-value')).toHaveTextContent(
-    '90 B'
-  )
-  expect(container.querySelector('.network-flow-cmk-donut-chart__center-share')).toHaveTextContent(
+  expect(container.querySelector('.db-cmk-donut-chart__center-value')).toHaveTextContent('90 B')
+  expect(container.querySelector('.db-cmk-donut-chart__center-share')).toHaveTextContent(
     '1 of 2 shown'
   )
-  const values = [...container.querySelectorAll('.network-flow-donut-legend-table__td--value')].map(
-    (el) => el.textContent?.trim()
+  const values = [...container.querySelectorAll('.db-donut-legend-table__td--value')].map((el) =>
+    el.textContent?.trim()
   )
   expect(values).toEqual(['90 B', '–'])
-  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment')).toHaveLength(1)
+  expect(container.querySelectorAll('.db-cmk-donut-chart__segment')).toHaveLength(1)
 })
 
 test('keeps the hidden row reachable so it can be brought back', async () => {
@@ -499,16 +479,14 @@ test('keeps the hidden row reachable so it can be brought back', async () => {
   await fireEvent.click(getByLabelText('Hide Other in the chart'))
   await advanceTween()
 
-  const otherRow = container.querySelectorAll('.network-flow-donut-legend-table__row')[1]
-  expect(otherRow).toHaveClass('network-flow-donut-legend-table__row--hidden')
+  const otherRow = container.querySelectorAll('.db-donut-legend-table__row')[1]
+  expect(otherRow).toHaveClass('db-donut-legend-table__row--hidden')
 
   await fireEvent.click(getByLabelText('Show Other in the chart'))
   await advanceTween()
 
-  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment')).toHaveLength(2)
-  expect(container.querySelector('.network-flow-cmk-donut-chart__center-share')).toHaveTextContent(
-    ''
-  )
+  expect(container.querySelectorAll('.db-cmk-donut-chart__segment')).toHaveLength(2)
+  expect(container.querySelector('.db-cmk-donut-chart__center-share')).toHaveTextContent('')
 })
 
 test('lets a leaving slice collapse before it is dropped', async () => {
@@ -518,10 +496,10 @@ test('lets a leaving slice collapse before it is dropped', async () => {
   await nextTick()
 
   // Still drawn while it shrinks.
-  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment')).toHaveLength(2)
+  expect(container.querySelectorAll('.db-cmk-donut-chart__segment')).toHaveLength(2)
 
   await advanceTween()
-  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment')).toHaveLength(1)
+  expect(container.querySelectorAll('.db-cmk-donut-chart__segment')).toHaveLength(1)
 })
 
 test('keeps a collapsing slice out of reach while it is drawn', async () => {
@@ -533,8 +511,8 @@ test('keeps a collapsing slice out of reach while it is drawn', async () => {
   await fireEvent.click(getByLabelText('Hide Other in the chart'))
   await nextTick()
 
-  const collapsing = container.querySelectorAll('.network-flow-cmk-donut-chart__segment')[1]!
-  expect(collapsing).toHaveClass('network-flow-cmk-donut-chart__segment--leaving')
+  const collapsing = container.querySelectorAll('.db-cmk-donut-chart__segment')[1]!
+  expect(collapsing).toHaveClass('db-cmk-donut-chart__segment--leaving')
   expect(collapsing).toHaveAttribute('aria-hidden', 'true')
   expect(collapsing).toHaveAttribute('tabindex', '-1')
 
@@ -559,9 +537,7 @@ test('does not claim to hold anything back once the hidden category is gone', as
   await rerender({ slices: SLICES.slice(0, 1) })
   await advanceTween()
 
-  expect(
-    container.querySelector('.network-flow-cmk-donut-chart__center-share')
-  ).toBeEmptyDOMElement()
+  expect(container.querySelector('.db-cmk-donut-chart__center-share')).toBeEmptyDOMElement()
 })
 
 test('shows the empty track once every category is hidden', async () => {
@@ -571,8 +547,8 @@ test('shows the empty track once every category is hidden', async () => {
   await fireEvent.click(getByLabelText('Hide Other in the chart'))
   await advanceTween()
 
-  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment')).toHaveLength(0)
-  expect(container.querySelector('.network-flow-cmk-donut-chart__empty-track')).not.toBeNull()
+  expect(container.querySelectorAll('.db-cmk-donut-chart__segment')).toHaveLength(0)
+  expect(container.querySelector('.db-cmk-donut-chart__empty-track')).not.toBeNull()
 })
 
 test('does not fade the ring when a hidden category is pointed at', async () => {
@@ -581,15 +557,11 @@ test('does not fade the ring when a hidden category is pointed at', async () => 
   await fireEvent.click(getByLabelText('Hide Other in the chart'))
   await advanceTween()
 
-  const otherRow = container.querySelectorAll('.network-flow-donut-legend-table__row')[1]!
+  const otherRow = container.querySelectorAll('.db-donut-legend-table__row')[1]!
   await fireEvent.mouseEnter(otherRow)
 
-  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment--dimmed')).toHaveLength(
-    0
-  )
-  expect(container.querySelector('.network-flow-cmk-donut-chart__center-value')).toHaveTextContent(
-    '90 B'
-  )
+  expect(container.querySelectorAll('.db-cmk-donut-chart__segment--dimmed')).toHaveLength(0)
+  expect(container.querySelector('.db-cmk-donut-chart__center-value')).toHaveTextContent('90 B')
 })
 
 test('eases the arcs into their new sizes instead of snapping', async () => {
@@ -616,5 +588,5 @@ test('lands immediately when the reader asks for reduced motion', async () => {
   await nextTick()
 
   expect(frames.size).toBe(0)
-  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment')).toHaveLength(1)
+  expect(container.querySelectorAll('.db-cmk-donut-chart__segment')).toHaveLength(1)
 })

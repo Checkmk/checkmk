@@ -4,8 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkDonutChart, { type DonutSlice } from '@/network-flow/CmkDonutChart'
-import { formatBytes } from '@/network-flow/format'
+import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
+
+import CmkDonutChart, { type DonutSlice } from '@/dashboard/components/CmkDonutChart'
+
+const bytes = new SIFormatter('B', { type: 'strict', digits: 2 })
+const formatBytes = (value: number): string => bytes.render(value)
 
 const slices: DonutSlice[] = [
   { key: 'tls', label: 'TLS', value: 4_720_000_000, color: 'blue' },

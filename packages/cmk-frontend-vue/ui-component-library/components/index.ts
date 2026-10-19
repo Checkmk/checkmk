@@ -15,7 +15,6 @@ import UclIcons from '../foundations/Icons/UclIcons.vue'
 import { pages as globalSettingsPages } from '../global-settings'
 import { pages as graphingPages } from '../graphing'
 import { pages as monitoringPages } from '../monitoring'
-import { pages as networkFlowPages } from '../network-flow'
 import { pages as telemetryMetricsPages } from '../telemetry-metrics'
 import { pages as twoFactorAuthPages } from '../two-factor-authentication'
 import UclCmkBadge from './basic-elements/CmkBadge/UclCmkBadge.vue'
@@ -237,7 +236,6 @@ export const roots = [
     new Folder('Graphing', graphingPages),
     new Folder('Telemetry metrics', telemetryMetricsPages),
     new Folder('Monitoring', monitoringPages),
-    new Folder('Network flow', networkFlowPages),
     new Folder('Two Factor Authentication', twoFactorAuthPages)
   ])
 ]

@@ -7,6 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, inject } from 'vue'
 
+import CmkDonutChart, { type DonutSlice } from '@/dashboard/components/CmkDonutChart'
+import { CATEGORICAL_PALETTE } from '@/dashboard/components/CmkDonutChart/colors'
 import { useWidgetData } from '@/dashboard/composables/useWidgetData'
 import { explicitWidgetSource } from '@/dashboard/composables/useWidgetSource'
 import type {
@@ -15,8 +17,6 @@ import type {
   NetworkFlowDonutContent
 } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
-import CmkDonutChart, { type DonutSlice } from '@/network-flow/CmkDonutChart'
-import { CATEGORICAL_PALETTE } from '@/network-flow/colors'
 import { formatBytes, previousWindowLabel } from '@/network-flow/format'
 import { donutOtherBreakdownSlideInKey } from '@/network-flow/slide-ins/injectionKeys'
 

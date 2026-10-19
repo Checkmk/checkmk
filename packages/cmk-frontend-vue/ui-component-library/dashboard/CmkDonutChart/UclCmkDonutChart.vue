@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { BoolPropDef, NumberPropDef } from '@ucl/_ucl/types/prop-def'
 
-import type { DonutLegendMode } from '@/network-flow/CmkDonutChart'
+import type { DonutLegendMode } from '@/dashboard/components/CmkDonutChart'
 
 export const panelConfig = {
   legendMode: {
@@ -80,14 +80,17 @@ import {
   UclDetailPageLayout,
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
+import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { computed } from 'vue'
 
-import CmkDonutChart, { type DonutSlice } from '@/network-flow/CmkDonutChart'
-import { formatBytes } from '@/network-flow/format'
+import CmkDonutChart, { type DonutSlice } from '@/dashboard/components/CmkDonutChart'
 
 import codeExample from './UclCmkDonutChartCodeExample.vue?raw'
 
 defineProps<{ screenshotMode: boolean }>()
+
+const bytes = new SIFormatter('B', { type: 'strict', digits: 2 })
+const formatBytes = (value: number): string => bytes.render(value)
 
 const propState = new PanelStateCreator<typeof CmkDonutChart, 'slices' | 'formatValue'>().createRef(
   panelConfig

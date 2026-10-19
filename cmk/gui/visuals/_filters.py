@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Callable, Container, Iterable, Mapping
+from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from functools import partial
 from typing import Literal, override
 
@@ -41,6 +41,7 @@ from ._livestatus import get_only_sites_from_context
 from .filter import (
     AjaxDropdownFilter,
     CheckboxRowFilter,
+    drilldowns,
     DualListFilter,
     Filter,
     FilterGroup,
@@ -65,6 +66,16 @@ from .filter.components import (
     TagFilterComponent,
     TextInput,
 )
+
+_HOSTGROUP_PROBLEMS: Mapping[str, ColumnName] = {
+    "hostgroups_having_hosts_down": "hostgroup_num_hosts_down",
+    "hostgroups_having_hosts_unreach": "hostgroup_num_hosts_unreach",
+    "hostgroups_having_hosts_pending": "hostgroup_num_hosts_pending",
+    "hostgroups_having_services_warn": "hostgroup_num_services_warn",
+    "hostgroups_having_services_crit": "hostgroup_num_services_crit",
+    "hostgroups_having_services_pending": "hostgroup_num_services_pending",
+    "hostgroups_having_services_unknown": "hostgroup_num_services_unknown",
+}
 
 
 def register(page_registry: PageRegistry, filter_registry: FilterRegistry) -> None:
@@ -167,6 +178,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             ),
             description=_l("Exact match, used for linking"),
             is_show_more=True,
+            drilldown=drilldowns.text("host", "host_name"),
         )
     )
 
@@ -215,6 +227,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             ),
             description=_l("Exact match, used for linking"),
             is_show_more=True,
+            drilldown=drilldowns.text("service", "service_description"),
         )
     )
 
@@ -483,6 +496,7 @@ def register_host_and_service_group_filters(filter_registry: FilterRegistry) -> 
             ),
             group_type="host",
             group=FilterGroup.HOST_PROPERTIES,
+            drilldown=drilldowns.single_item("opthost_group", "host_groups"),
         )
     )
 
@@ -501,6 +515,7 @@ def register_host_and_service_group_filters(filter_registry: FilterRegistry) -> 
             ),
             group_type="service",
             group=FilterGroup.SERVICE_IS,
+            drilldown=drilldowns.single_item("optservice_group", "service_groups"),
         )
     )
 
@@ -610,6 +625,7 @@ def register_group_table_filters(filter_registry: FilterRegistry) -> None:
                 column="hostgroup_name",
                 op="=",
             ),
+            drilldown=drilldowns.text("hostgroup", "hostgroup_name"),
         )
     )
 
@@ -627,6 +643,7 @@ def register_group_table_filters(filter_registry: FilterRegistry) -> None:
                 column="servicegroup_name",
                 op="=",
             ),
+            drilldown=drilldowns.text("servicegroup", "servicegroup_name"),
         )
     )
 
@@ -680,6 +697,7 @@ def register_group_table_filters(filter_registry: FilterRegistry) -> None:
                 request_var="servicegroup_name",
                 op="=",
             ),
+            drilldown=drilldowns.text("servicegroup_name", "servicegroup_name"),
         )
     )
 
@@ -699,6 +717,17 @@ def register_group_table_filters(filter_registry: FilterRegistry) -> None:
     )
 
 
+def _hostgroup_problems(
+    row: drilldowns.RowValues, _keys: Sequence[str]
+) -> FilterHTTPVariables | None:
+    problems = {
+        variable: "on"
+        for variable, column in _HOSTGROUP_PROBLEMS.items()
+        if isinstance(count := row.get(column), int) and count > 0
+    }
+    return problems or None
+
+
 # TODO: I would be great to split this in two filters for host & service kind of problems
 class _FilterHostgroupProblems(CheckboxRowFilter):
     def __init__(self) -> None:
@@ -716,6 +745,9 @@ class _FilterHostgroupProblems(CheckboxRowFilter):
                 ident="hostsgroups_having_problems",
                 options=self.host_problems + self.svc_problems,
                 livestatus_query=query_filters.hostgroup_problems_filter,
+            ),
+            drilldown=drilldowns.Drilldown(
+                columns=list(_HOSTGROUP_PROBLEMS.values()), variables=_hostgroup_problems
             ),
         )
 
@@ -745,6 +777,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
                 livestatus_query=partial(query_filters.service_state_filter, ""),
             ),
             group=FilterGroup.SERVICE_STATE,
+            drilldown=drilldowns.state("st", "service"),
         )
     )
 
@@ -774,6 +807,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
                 livestatus_query=query_filters.host_state_filter,
             ),
             group=FilterGroup.HOST_STATE,
+            drilldown=drilldowns.state("hst", "host"),
         )
     )
 
@@ -1214,6 +1248,27 @@ def register_downtime_filters(filter_registry: FilterRegistry) -> None:
     )
 
 
+def _log_contact_name(
+    row: drilldowns.RowValues, _keys: Sequence[str]
+) -> FilterHTTPVariables | None:
+    # The column lists the notified contacts separated by commas.
+    if (contacts := drilldowns.value(row, "log_contact_name")) is None or "," in contacts:
+        return None
+    return {"log_contact_name": contacts}
+
+
+def _log_state(row: drilldowns.RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
+    if (log_type := drilldowns.value(row, "log_type")) is None or (
+        state := drilldowns.value(row, "log_state")
+    ) is None:
+        return None
+    if "SERVICE " in log_type:
+        return {f"logst_s{state}": "on"}
+    if "HOST " in log_type:
+        return {f"logst_h{state}": "on"}
+    return None
+
+
 def register_log_filters(filter_registry: FilterRegistry) -> None:
     filter_registry.register(
         FilterTime(
@@ -1234,6 +1289,7 @@ def register_log_filters(filter_registry: FilterRegistry) -> None:
                 options=query_filters.log_class_options(),
                 livestatus_query=query_filters.log_class_filter,
             ),
+            drilldown=drilldowns.checked_option("logclass", "log_class"),
         )
     )
 
@@ -1285,6 +1341,9 @@ def register_log_filters(filter_registry: FilterRegistry) -> None:
             description=_l("Exact match, used for linking"),
             info="log",
             query_filter=query_filters.TextQuery(ident="log_contact_name", op="~"),
+            drilldown=drilldowns.Drilldown(
+                columns=["log_contact_name"], variables=_log_contact_name
+            ),
         )
     )
 
@@ -1369,6 +1428,7 @@ class _FilterLogState(CheckboxRowFilter):
                 options=self.host_states + self.service_states,
                 livestatus_query=query_filters.log_alerts_filter,
             ),
+            drilldown=drilldowns.Drilldown(columns=["log_type", "log_state"], variables=_log_state),
         )
 
     @override
@@ -1393,6 +1453,7 @@ class TagFilter(Filter):
         query_filter: query_filters.TagsQuery,
         is_show_more: bool = False,
         group: FilterGroup | None = None,
+        drilldown: drilldowns.Drilldown | None = None,
     ):
         self.query_filter = query_filter
         super().__init__(
@@ -1404,6 +1465,7 @@ class TagFilter(Filter):
             link_columns=[],
             is_show_more=is_show_more,
             group=group,
+            drilldown=drilldown,
         )
 
     @override
@@ -1426,6 +1488,18 @@ class TagFilter(Filter):
         return dict(request.itervars(self.query_filter.var_prefix))
 
 
+def _aux_tags(row: drilldowns.RowValues, keys: Sequence[str]) -> FilterHTTPVariables | None:
+    # An auxiliary tag sits among the host's tags with itself as its group.
+    tags = row.get("host_tags")
+    if (
+        not keys
+        or not isinstance(tags, Mapping)
+        or any(tags.get(aux_tag) != aux_tag for aux_tag in keys)
+    ):
+        return None
+    return {f"host_auxtags_{index}": aux_tag for index, aux_tag in enumerate(keys)}
+
+
 class _FilterHostAuxTags(Filter):
     def __init__(self) -> None:
         self.query_filter = query_filters.AuxTagsQuery(object_type="host")
@@ -1437,6 +1511,11 @@ class _FilterHostAuxTags(Filter):
             htmlvars=self.query_filter.request_vars,
             link_columns=[],
             is_show_more=True,
+            drilldown=drilldowns.Drilldown(
+                columns=["host_tags"],
+                variables=_aux_tags,
+                key=drilldowns.AuxTagKey(max_count=self.query_filter.count),
+            ),
         )
 
     @override
@@ -1505,6 +1584,7 @@ class LabelGroupFilter(Filter):
             info=self.query_filter.object_type,
             htmlvars=[f"{self.query_filter.ident}_count"],
             link_columns=[],
+            drilldown=drilldowns.labels(object_type),
         )
 
     @override
@@ -1534,6 +1614,7 @@ def register_tag_and_label_filters(filter_registry: FilterRegistry) -> None:
             query_filter=query_filters.TagsQuery(
                 object_type="host", tags=lambda: active_config.tags
             ),
+            drilldown=drilldowns.tags("host"),
         )
     )
 
@@ -1544,6 +1625,7 @@ def register_tag_and_label_filters(filter_registry: FilterRegistry) -> None:
                 object_type="service", tags=lambda: active_config.tags
             ),
             is_show_more=True,
+            drilldown=drilldowns.tags("service"),
         )
     )
 

@@ -15,7 +15,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.visuals.filter import Filter, FilterOption, FilterRegistry
+from cmk.gui.visuals.filter import drilldowns, Filter, FilterOption, FilterRegistry
 from cmk.gui.visuals.filter.components import (
     Checkbox,
     Dropdown,
@@ -53,6 +53,7 @@ def register(filter_registry: FilterRegistry) -> None:
             sort_index=120,
             what="name",
             how="exact",
+            drilldown=drilldowns.text("aggr_name", "aggr_name"),
         )
     )
 
@@ -124,6 +125,8 @@ class _FilterAggrGroup(Filter):
             info=self.column,
             htmlvars=[self.column],
             link_columns=[self.column],
+            # Not the group tree filter, which matches paths only: a row's group may be a name.
+            drilldown=drilldowns.text(self.column, self.column),
         )
 
     @override
@@ -280,6 +283,7 @@ class BITextFilter(Filter):
         what: str,
         how: str = "regex",
         suffix: str = "",
+        drilldown: drilldowns.Drilldown | None = None,
     ) -> None:
         self.how = how
         self.column = "aggr_" + what
@@ -290,6 +294,7 @@ class BITextFilter(Filter):
             info="aggr",
             htmlvars=[self.column + suffix],
             link_columns=[self.column],
+            drilldown=drilldown,
         )
 
     @override
@@ -418,6 +423,22 @@ class _FilterAggrService(Filter):
         }
 
 
+def _bi_state(prefix: str, column: str) -> drilldowns.Drilldown:
+    def variables(row: drilldowns.RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
+        if column not in row:
+            return None
+        match row[column]:
+            case {"state": int(state)}:
+                return {f"{prefix}_filled": "1", f"{prefix}{state}": "on"}
+            # Only the assumed-state filter has an option for an unset state.
+            case None if prefix == "bias":
+                return {f"{prefix}_filled": "1", f"{prefix}n": "on"}
+            case _:
+                return None
+
+    return drilldowns.Drilldown(columns=[column], variables=variables)
+
+
 class BIStatusFilter(Filter):
     # TODO: Rename "what"
     def __init__(self, ident: str, title: str | LazyString, sort_index: int, what: str) -> None:
@@ -437,6 +458,7 @@ class BIStatusFilter(Filter):
             info="aggr",
             htmlvars=vars_,
             link_columns=[],
+            drilldown=_bi_state(self.prefix, self.column),
         )
 
     @override

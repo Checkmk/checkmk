@@ -110,6 +110,7 @@ py_library(
         "//cmk/gui/inventory",
         "//cmk/gui/ldap_integration",
         "//cmk/gui/mkeventd",
+        "//cmk/gui/monitor/hosts",
         "//cmk/gui/oauth",
         "//cmk/gui/painter",
         "//cmk/gui/plugins/wato",

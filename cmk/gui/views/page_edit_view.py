@@ -81,6 +81,7 @@ from cmk.gui.views.inventory import (
     TableWithView,
 )
 from cmk.gui.visuals.filter import filter_registry
+from cmk.gui.visuals.filter.drilldowns import AuxTagKey, FilterKey, LabelKey, TagGroupKey
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.inventory.trees import SDPath
@@ -88,7 +89,12 @@ from cmk.ruleset_matcher.tags import TagConfig
 from cmk.web.utils.autocompleter_config import AutocompleterConfig, AutocompleterParams
 from cmk.web.utils.icons import DynamicIconName
 
-from .drilldown_filters import drilldown_filters, filled_single_infos
+from .drilldown_filters import (
+    drilldown_filters,
+    exceeded_aux_tag_limits,
+    filled_single_infos,
+    filter_key,
+)
 from .layout import layout_registry
 from .sorter import all_sorters, ParameterizedSorter, Sorter
 from .store import get_all_views, get_permitted_views
@@ -631,6 +637,10 @@ def _get_vs_link_or_tooltip_elements(
 type _RawVSDrilldownFilter = FilterName | tuple[FilterName, str]
 
 
+def _raw_filter_name(raw: _RawVSDrilldownFilter) -> FilterName:
+    return raw if isinstance(raw, str) else raw[0]
+
+
 class _RawVSCustomDrilldown(TypedDict):
     target: VisualName
     filters: list[_RawVSDrilldownFilter]
@@ -1033,7 +1043,7 @@ def _custom_drilldown_valuespec(
                             (
                                 filter_name,
                                 _filter_title(filter_name),
-                                _filter_key_valuespec(filter_name, tags),
+                                _filter_key_valuespec(filter_key(filter_name), tags),
                             )
                             for filter_name in filters
                         ],
@@ -1067,7 +1077,7 @@ def _validate_named_target(
 ) -> None:
     if value["include_context"]:
         return
-    filter_names = [raw if isinstance(raw, str) else raw[0] for raw in value["filters"]]
+    filter_names = [_raw_filter_name(raw) for raw in value["filters"]]
     if not set(target_single_infos.get(value["target"], ())) <= filled_single_infos(filter_names):
         raise MKUserError(
             f"{varprefix}_p_filters",
@@ -1095,23 +1105,20 @@ class _LabelKeyAutocompleterConfig(AutocompleterConfig):
         return {"object_type": self._object_type, **super().params}
 
 
-def _filter_key_valuespec(filter_name: FilterName, tags: TagConfig) -> ValueSpec | None:
+def _filter_key_valuespec(key: FilterKey | None, tags: TagConfig) -> ValueSpec | None:
     """The label key, tag group or auxiliary tag a filter needs, if any."""
-    match filter_name:
-        case "host_labels" | "service_labels":
+    match key:
+        case LabelKey(object_type=object_type):
             return AjaxDropdownChoice(
                 title=_("Label key"),
-                autocompleter=_LabelKeyAutocompleterConfig(
-                    object_type="host" if filter_name == "host_labels" else "service"
-                ),
+                autocompleter=_LabelKeyAutocompleterConfig(object_type=object_type),
                 validate=_validate_label_key,
             )
-        # The service tag filter resolves its group through the tag config, like the host one.
-        case "host_tags" | "service_tags":
+        case TagGroupKey():
             return DropdownChoice(title=_("Tag group"), choices=tags.get_tag_group_choices())
-        case "host_auxtags":
+        case AuxTagKey():
             return DropdownChoice(title=_("Auxiliary tag"), choices=tags.aux_tag_list.get_choices())
-        case _:
+        case None:
             return None
 
 
@@ -1129,13 +1136,11 @@ def _validate_filters(value: Sequence[object], varprefix: str) -> None:
             varprefix,
             _("Add each filter only once, and a label or tag filter only once per key."),
         )
-    aux_tag_field_count = sum(
-        1 for variable in filter_registry["host_auxtags"].htmlvars if not variable.endswith("_neg")
-    )
-    aux_tags = [raw for raw in value if isinstance(raw, tuple) and raw[0] == "host_auxtags"]
-    if len(aux_tags) > aux_tag_field_count:
+    for max_count in exceeded_aux_tag_limits(
+        _raw_filter_name(raw) for raw in value if isinstance(raw, str | tuple)
+    ):
         raise MKUserError(
-            varprefix, _("Add up to %(count)d auxiliary tags.") % {"count": aux_tag_field_count}
+            varprefix, _("Add up to %(count)d auxiliary tags.") % {"count": max_count}
         )
 
 

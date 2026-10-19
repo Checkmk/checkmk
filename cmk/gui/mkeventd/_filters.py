@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from functools import partial
 from typing import override
 
@@ -14,6 +14,7 @@ from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row
 from cmk.gui.visuals.filter import (
     AjaxDropdownFilter,
     CheckboxRowFilter,
+    drilldowns,
     Filter,
     FilterGroup,
     FilterGroupCombo,
@@ -39,6 +40,7 @@ def register(filter_registry: FilterRegistry) -> None:
             sort_index=200,
             info="event",
             query_filter=query_filters.TextQuery(ident="event_id", op="="),
+            drilldown=drilldowns.text("event_id", "event_id"),
         )
     )
 
@@ -48,6 +50,7 @@ def register(filter_registry: FilterRegistry) -> None:
             sort_index=200,
             info="event",
             query_filter=query_filters.TextQuery(ident="event_rule_id", op="="),
+            drilldown=drilldowns.text("event_rule_id", "event_rule_id"),
         )
     )
 
@@ -123,6 +126,7 @@ def register(filter_registry: FilterRegistry) -> None:
             sort_index=201,
             info="event",
             query_filter=query_filters.EventHostQuery(),
+            drilldown=drilldowns.text("event_host", "event_host"),
         )
     )
 
@@ -184,6 +188,9 @@ def register(filter_registry: FilterRegistry) -> None:
                 filter_code=query_filters.column_flag("event_host_in_downtime"),
             ),
             is_show_more=False,
+            drilldown=drilldowns.Drilldown(
+                columns=["event_host_in_downtime"], variables=_event_host_in_downtime
+            ),
         )
     )
 
@@ -206,6 +213,7 @@ def register(filter_registry: FilterRegistry) -> None:
                 options=query_filters.svc_state_min_options("event_state_"),
                 livestatus_query=partial(query_filters.options_toggled_filter, "event_state"),
             ),
+            drilldown=drilldowns.checked_option("event_state_", "event_state"),
         )
     )
 
@@ -219,6 +227,7 @@ def register(filter_registry: FilterRegistry) -> None:
                 options=[("event_phase_" + var, title) for var, title in phase_names.items()],
                 livestatus_query=partial(query_filters.options_toggled_filter, "event_phase"),
             ),
+            drilldown=drilldowns.checked_option("event_phase_", "event_phase"),
         )
     )
 
@@ -232,6 +241,7 @@ def register(filter_registry: FilterRegistry) -> None:
                 options=[("event_priority_%d" % e[0], e[1]) for e in syslog_priorities],
                 livestatus_query=partial(query_filters.options_toggled_filter, "event_priority"),
             ),
+            drilldown=drilldowns.checked_option("event_priority_", "event_priority"),
         )
     )
 
@@ -245,6 +255,7 @@ def register(filter_registry: FilterRegistry) -> None:
                 options=[("history_what_%s" % k, k) for k in action_whats],
                 livestatus_query=partial(query_filters.options_toggled_filter, "history_what"),
             ),
+            drilldown=drilldowns.checked_option("history_what_", "history_what"),
         )
     )
 
@@ -284,6 +295,7 @@ def register(filter_registry: FilterRegistry) -> None:
             info="event",
             autocompleter=AutocompleterConfig(ident="syslog_facilities", strict=True),
             query_filter=query_filters.TextQuery(ident="event_facility", op="="),
+            drilldown=drilldowns.text("event_facility", "event_facility"),
         )
     )
 
@@ -327,6 +339,31 @@ def register(filter_registry: FilterRegistry) -> None:
     )
 
 
+def _event_host_in_downtime(
+    row: drilldowns.RowValues, _keys: Sequence[str]
+) -> FilterHTTPVariables | None:
+    match row.get("event_host_in_downtime"):
+        case int(in_downtime):
+            return {"is_event_host_in_downtime": "1" if in_downtime else "0"}
+        case _:
+            return None
+
+
+def _event_contact_group(
+    row: drilldowns.RowValues, _keys: Sequence[str]
+) -> FilterHTTPVariables | None:
+    column = (
+        "event_contact_groups"
+        if row.get("event_contact_groups_precedence") == "rule"
+        else "host_contact_groups"
+    )
+    match row.get(column):
+        case [str(group)]:
+            return {"optevent_effective_contact_group": group}
+        case _:
+            return None
+
+
 # TODO: Cleanup as a dropdown visual Filter later on
 class _FilterOptEventEffectiveContactgroup(FilterGroupCombo):
     def __init__(self) -> None:
@@ -336,6 +373,14 @@ class _FilterOptEventEffectiveContactgroup(FilterGroupCombo):
             group_type="event_effective_contact",
             autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="contact"),
             query_filter=query_filters.OptEventEffectiveContactgroupQuery(),
+            drilldown=drilldowns.Drilldown(
+                columns=[
+                    "event_contact_groups",
+                    "event_contact_groups_precedence",
+                    "host_contact_groups",
+                ],
+                variables=_event_contact_group,
+            ),
         )
 
     @override

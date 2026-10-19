@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from functools import partial
 
 from cmk.gui.data_source import data_source_registry
@@ -23,8 +24,9 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.views.drilldown_filters import drilldown_filters, ROW_FILTERS
+from cmk.gui.views.drilldown_filters import drilldown_filters, filter_drilldown
 from cmk.gui.visuals import get_single_info_keys, missing_context_filters
+from cmk.gui.visuals.filter.drilldowns import Drilldown
 from cmk.web.utils.urls import makeuri_contextless
 
 from .api.model.contextual_link import (
@@ -38,6 +40,12 @@ _PAGE_BY_TARGET_TYPE: Mapping[ContextualLinkTargetType, tuple[str, str]] = {
     "views": ("view.py", "view_name"),
     "dashboards": ("dashboard.py", "name"),
 }
+
+
+@dataclass(frozen=True)
+class _CarriedFilter:
+    drilldown: Drilldown
+    keys: Sequence[str]
 
 
 def column_drilldowns(
@@ -65,20 +73,25 @@ def column_drilldowns(
         link_context = context if link["include_context"] else {}
         if link["filters"]:
             carriable = set(drilldown_filters(data_source, location.type))
-            filter_keys = _filter_keys([f for f in link["filters"] if f["filter_id"] in carriable])
-            if not filter_keys:
+            carried = {
+                filter_name: _CarriedFilter(drilldown, keys)
+                for filter_name, keys in _filter_keys(link["filters"]).items()
+                if filter_name in carriable
+                and (drilldown := filter_drilldown(filter_name)) is not None
+            }
+            if not carried:
                 continue
             drilldowns[index] = CellDrilldown(
                 columns=[
                     column
-                    for filter_name in filter_keys
-                    for column in ROW_FILTERS[filter_name].columns
+                    for carried_filter in carried.values()
+                    for column in carried_filter.drilldown.columns
                 ],
                 url=partial(
                     _custom_url,
                     location,
                     link_context,
-                    filter_keys,
+                    carried,
                     set(get_single_info_keys(target["single_infos"])),
                     show_filter_form=link["show_filter_form"],
                 ),
@@ -152,18 +165,18 @@ def _filter_keys(filters: Sequence[ContextFilterConfig]) -> dict[FilterName, lis
 def _custom_url(
     location: VisualLocation,
     context: VisualContext,
-    filter_keys: Mapping[FilterName, Sequence[str]],
+    carried: Mapping[FilterName, _CarriedFilter],
     single_info_keys: set[FilterName],
     row: Row,
     *,
     show_filter_form: bool,
 ) -> str | None:
-    carried = {
+    valued = {
         filter_name: variables
-        for filter_name, keys in filter_keys.items()
-        if (variables := ROW_FILTERS[filter_name].variables(row, keys)) is not None
+        for filter_name, carried_filter in carried.items()
+        if (variables := carried_filter.drilldown.variables(row, carried_filter.keys)) is not None
     }
-    filters = {**context, **carried}
+    filters = {**context, **valued}
     if missing_context_filters(single_info_keys, filters):
         return None
     return _target_url(location, filters, show_filter_form=show_filter_form)

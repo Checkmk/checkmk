@@ -12,10 +12,16 @@ from cmk.gui.type_defs import FilterHTTPVariables, FilterName
 from cmk.gui.views.drilldown_filters import (
     drilldown_filters,
     filled_single_infos,
-    ROW_FILTERS,
-    RowValues,
 )
 from cmk.gui.visuals.filter import filter_registry
+from cmk.gui.visuals.filter.drilldowns import (
+    AuxTagKey,
+    Drilldown,
+    FilterKey,
+    LabelKey,
+    RowValues,
+    TagGroupKey,
+)
 from tests.testlib.unit.gui.web_test_app import SetConfig
 
 _HOST_ROW: RowValues = {
@@ -31,6 +37,19 @@ _HOST_ROW: RowValues = {
 
 
 _REGISTERING_ONLY_THE_COUNT = {"host_labels", "service_labels"}
+
+# The filters only some editions register; any other unregistered name is a misspelling.
+_EDITION_ONLY_FILTERS = {"customer"}
+
+
+def _drilldown(filter_name: FilterName) -> Drilldown:
+    if (filter_ := filter_registry.get(filter_name)) is None:
+        if filter_name not in _EDITION_ONLY_FILTERS:
+            pytest.fail(f"No filter is registered as {filter_name}")
+        pytest.skip(f"This edition registers no filter {filter_name}")
+    assert filter_.drilldown is not None
+    return filter_.drilldown
+
 
 _VALUED_CASES = [
     pytest.param("siteopt", _HOST_ROW, [], {"site": "heute"}, id="site"),
@@ -255,18 +274,19 @@ _VALUED_CASES = [
 ]
 
 
+@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize("filter_name, row, keys, expected", _VALUED_CASES)
-def test_row_filters_value_the_filter_from_the_row(
+def test_drilldowns_value_the_filter_from_the_row(
     filter_name: FilterName,
     row: RowValues,
     keys: Sequence[str],
     expected: FilterHTTPVariables,
 ) -> None:
-    assert ROW_FILTERS[filter_name].variables(row, keys) == expected
+    assert _drilldown(filter_name).variables(row, keys) == expected
 
 
-def test_row_filters_combine_label_keys_in_one_group() -> None:
-    variables = ROW_FILTERS["host_labels"].variables(_HOST_ROW, ["cmk/os_family", "env"])
+def test_drilldowns_combine_label_keys_in_one_group() -> None:
+    variables = _drilldown("host_labels").variables(_HOST_ROW, ["cmk/os_family", "env"])
 
     assert variables is not None
     assert (variables["host_labels_1_vs_1_vs"], variables["host_labels_1_vs_2_vs"]) == (
@@ -308,25 +328,45 @@ def test_row_filters_combine_label_keys_in_one_group() -> None:
         pytest.param("service", {"service_description": ""}, [], id="empty service"),
     ],
 )
-def test_row_filters_drop_a_filter_the_row_has_no_value_for(
+def test_drilldowns_drop_a_filter_the_row_has_no_value_for(
     filter_name: FilterName, row: RowValues, keys: Sequence[str]
 ) -> None:
-    assert ROW_FILTERS[filter_name].variables(row, keys) is None
-
-
-def test_row_filters_each_have_a_valued_case() -> None:
-    assert {case.values[0] for case in _VALUED_CASES} == set(ROW_FILTERS)
+    assert _drilldown(filter_name).variables(row, keys) is None
 
 
 @pytest.mark.parametrize(
+    "filter_name, key",
+    [
+        pytest.param("host_labels", LabelKey("host"), id="host label"),
+        pytest.param("service_labels", LabelKey("service"), id="service label"),
+        pytest.param("host_tags", TagGroupKey(), id="host tag"),
+        pytest.param("service_tags", TagGroupKey(), id="service tag"),
+        pytest.param("host_auxtags", AuxTagKey(max_count=3), id="aux tag"),
+        pytest.param("host", None, id="unkeyed"),
+    ],
+)
+def test_drilldowns_name_the_key_a_filter_takes(
+    filter_name: FilterName, key: FilterKey | None
+) -> None:
+    assert _drilldown(filter_name).key == key
+
+
+def test_drilldowns_each_have_a_valued_case() -> None:
+    assert {
+        filter_name
+        for filter_name, filter_ in filter_registry.items()
+        if filter_.drilldown is not None
+    } <= {case.values[0] for case in _VALUED_CASES}
+
+
+@pytest.mark.usefixtures("request_context")
+@pytest.mark.parametrize(
     "filter_name, row, keys", [pytest.param(*case.values[:3], id=case.id) for case in _VALUED_CASES]
 )
-def test_row_filters_set_only_variables_the_filter_reads(
+def test_drilldowns_set_only_variables_the_filter_reads(
     filter_name: FilterName, row: RowValues, keys: Sequence[str]
 ) -> None:
-    if filter_name not in filter_registry:
-        pytest.skip(f"This edition registers no filter {filter_name}")
-    variables = ROW_FILTERS[filter_name].variables(row, keys)
+    variables = _drilldown(filter_name).variables(row, keys)
     filter_variables = set(filter_registry[filter_name].htmlvars)
 
     assert variables is not None
@@ -336,22 +376,17 @@ def test_row_filters_set_only_variables_the_filter_reads(
         assert set(variables) <= filter_variables
 
 
-def test_row_filters_name_registered_filters() -> None:
-    # Only an edition's own filter may be missing; any other gap is a misspelled name.
-    assert set(ROW_FILTERS) - set(filter_registry) <= {"customer"}
-
-
 @pytest.mark.usefixtures("request_context")
 def test_drilldown_filters_offer_a_dashboard_only_host_filters() -> None:
     assert drilldown_filters(data_source_registry["hosts"](), "dashboards") == [
-        "siteopt",
         "wato_folder",
         "host",
-        "hoststate",
         "opthostgroup",
+        "hoststate",
         "host_labels",
-        "host_tags",
         "host_auxtags",
+        "host_tags",
+        "siteopt",
     ]
 
 
@@ -383,8 +418,8 @@ def test_drilldown_filters_offer_no_log_filter_on_a_stats_query() -> None:
 @pytest.mark.usefixtures("request_context")
 def test_drilldown_filters_offer_only_group_filters_on_a_group_view() -> None:
     assert drilldown_filters(data_source_registry["hostgroups"](), "views") == [
-        "hostgroup",
         "hostsgroups_having_problems",
+        "hostgroup",
     ]
 
 

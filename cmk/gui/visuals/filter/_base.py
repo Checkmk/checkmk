@@ -38,6 +38,7 @@ from .components import (
     StaticText,
     TextInput,
 )
+from .drilldowns import Drilldown
 
 
 class FilterGroup(Enum):
@@ -78,6 +79,7 @@ class Filter(abc.ABC):
         description: None | str | LazyString = None,
         is_show_more: bool = False,
         group: FilterGroup | None = None,
+        drilldown: Drilldown | None = None,
     ) -> None:
         """
         info:          The datasource info this filter needs to work. If this
@@ -92,6 +94,9 @@ class Filter(abc.ABC):
                        the proper information. In most cases, this is just []. Only
                        a few filters are useful for linking (such as the host_name and
                        service_description filters with exact match)
+        drilldown:     How a drill-down values the filter from the clicked row; None if
+                       none carries it. Unlike request_vars_from_row, it reports a missing
+                       value, takes keys and names its columns.
         """
         self.ident = ident
         self._title = title
@@ -102,6 +107,7 @@ class Filter(abc.ABC):
         self._description = description
         self.is_show_more = is_show_more
         self.group = group
+        self.drilldown = drilldown
 
     @property
     def title(self) -> str:
@@ -194,6 +200,7 @@ class FilterOption(Filter):
         query_filter: query_filters.SingleOptionQuery,
         is_show_more: bool = False,
         group: FilterGroup | None = None,
+        drilldown: Drilldown | None = None,
     ):
         self.query_filter = query_filter
         super().__init__(
@@ -205,6 +212,7 @@ class FilterOption(Filter):
             link_columns=[],
             is_show_more=is_show_more,
             group=group,
+            drilldown=drilldown,
         )
 
     @override
@@ -428,6 +436,7 @@ class InputTextFilter(Filter):
         description: None | str | LazyString = None,
         is_show_more: bool = False,
         group: FilterGroup | None = None,
+        drilldown: Drilldown | None = None,
     ):
         self.query_filter = query_filter
 
@@ -441,6 +450,7 @@ class InputTextFilter(Filter):
             description=description,
             is_show_more=is_show_more,
             group=group,
+            drilldown=drilldown,
         )
         self._show_heading = show_heading
 
@@ -493,6 +503,7 @@ class CheckboxRowFilter(Filter):
         query_filter: query_filters.MultipleOptionsQuery,
         is_show_more: bool = False,
         group: FilterGroup | None = None,
+        drilldown: Drilldown | None = None,
     ) -> None:
         super().__init__(
             ident=query_filter.ident,
@@ -503,6 +514,7 @@ class CheckboxRowFilter(Filter):
             link_columns=[],
             is_show_more=is_show_more,
             group=group,
+            drilldown=drilldown,
         )
         self.query_filter = query_filter
 

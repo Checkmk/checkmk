@@ -5,21 +5,26 @@
 
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
+from functools import lru_cache
 from typing import override
 
 from cmk.gui import site_config, sites
 from cmk.gui.config import active_config, RequestCacheConfig
 from cmk.gui.i18n import _, _l
+from cmk.gui.monitor.hosts import folder_path_from_filename
 from cmk.gui.type_defs import ChoiceMapping, ColumnName, FilterHeader, FilterHTTPVariables
 from cmk.gui.valuespec import DualListChoice, ValueSpec
-from cmk.gui.visuals.filter import Filter, FilterGroup, FilterRegistry
+from cmk.gui.visuals.filter import drilldowns, Filter, FilterGroup, FilterRegistry
 from cmk.gui.visuals.filter.components import Dropdown, DualList, FilterComponent, StaticText
 from cmk.livestatus_client import lq_logic
 from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.speaklater import LazyString
 
 from ._folder_titles import FOLDER_TITLES
+
+# The hosts of one folder share their file, and a view may have thousands of rows.
+_folder_path = lru_cache(maxsize=1024)(folder_path_from_filename)
 
 
 def register(filter_registry: FilterRegistry) -> None:
@@ -32,6 +37,7 @@ def register(filter_registry: FilterRegistry) -> None:
             htmlvars=["wato_folder"],
             link_columns=[],
             group=FilterGroup.FOLDER,
+            drilldown=drilldowns.Drilldown(columns=["host_filename"], variables=_folder),
         ),
     )
 
@@ -63,6 +69,14 @@ def _wato_folders_to_lq_regex(path: str) -> str:
     return f"{op} {path_regex}"
 
 
+def _folder(row: drilldowns.RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
+    if (filename := drilldowns.value(row, "host_filename")) is None or (
+        folder := _folder_path(filename)
+    ) is None:
+        return None
+    return {"wato_folder": folder}
+
+
 class FilterWatoFolder(Filter):
     def __init__(
         self,
@@ -73,6 +87,7 @@ class FilterWatoFolder(Filter):
         htmlvars: list[str],
         link_columns: list[ColumnName],
         group: FilterGroup | None = None,
+        drilldown: drilldowns.Drilldown | None = None,
     ) -> None:
         super().__init__(
             ident=ident,
@@ -82,6 +97,7 @@ class FilterWatoFolder(Filter):
             htmlvars=htmlvars,
             link_columns=link_columns,
             group=group,
+            drilldown=drilldown,
         )
 
     @override

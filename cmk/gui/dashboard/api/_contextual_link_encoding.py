@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.gui.type_defs import FilterHTTPVariables, FilterName
-from cmk.gui.views.drilldown_filters import ROW_FILTERS
+from cmk.gui.views.drilldown_filters import filter_drilldown
 from cmk.livestatus_client import LivestatusColumn
 
 from .model.contextual_link import VisualLocation
@@ -79,7 +79,8 @@ def clicked_object_values(
     return {
         filter_name: variables
         for filter_name in ("hoststate", "svcstate", "wato_folder")
-        if (variables := ROW_FILTERS[filter_name].variables(row, [])) is not None
+        if (drilldown := filter_drilldown(filter_name)) is not None
+        and (variables := drilldown.variables(row, [])) is not None
     }
 
 

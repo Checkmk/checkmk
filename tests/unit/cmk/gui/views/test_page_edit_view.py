@@ -322,16 +322,22 @@ def test_view_editor_column_spec_with_drilldown_accepts(
 
 
 @pytest.mark.parametrize(
-    "datasource, painter, drilldown, field",
+    "datasource, painter, drilldown, field, message",
     [
         pytest.param(
-            "hosts", "alias", _link(("views", "service")), "link_spec", id="unfillable view"
+            "hosts",
+            "alias",
+            _link(("views", "service")),
+            "link_spec",
+            "Please select something else",
+            id="unfillable view",
         ),
         pytest.param(
             "hostgroups",
             "hg_name",
             _link(("views", "allhosts")),
             "link_spec",
+            "is not allowed here",
             id="inherited without hosts",
         ),
         pytest.param(
@@ -339,6 +345,7 @@ def test_view_editor_column_spec_with_drilldown_accepts(
             "event_id",
             _link(("dashboards", "main"), ContextFilterConfig(filter_id="event_state")),
             "filters",
+            "is not allowed here",
             id="view-only filter to a dashboard",
         ),
         pytest.param(
@@ -350,6 +357,7 @@ def test_view_editor_column_spec_with_drilldown_accepts(
                 include_context=False,
             ),
             "filters",
+            "The target page shows a single object",
             id="target object named by nothing",
         ),
         pytest.param(
@@ -357,6 +365,7 @@ def test_view_editor_column_spec_with_drilldown_accepts(
             "alias",
             _link(("views", "not_a_view"), ContextFilterConfig(filter_id="wato_folder")),
             "target",
+            "Please select something else",
             id="unknown target",
         ),
         pytest.param(
@@ -368,6 +377,7 @@ def test_view_editor_column_spec_with_drilldown_accepts(
                 ContextFilterConfig(filter_id="wato_folder"),
             ),
             "filters",
+            "Add each filter only once",
             id="filter twice",
         ),
         pytest.param(
@@ -375,6 +385,7 @@ def test_view_editor_column_spec_with_drilldown_accepts(
             "alias",
             _link(("views", "allhosts"), ContextFilterConfig(filter_id="host_labels", key="")),
             "filters",
+            "Please enter a label key",
             id="label filter without a key",
         ),
         pytest.param(
@@ -384,6 +395,7 @@ def test_view_editor_column_spec_with_drilldown_accepts(
                 ("views", "allhosts"), ContextFilterConfig(filter_id="host_labels", key="os:family")
             ),
             "filters",
+            "must not contain a colon",
             id="label key with a colon",
         ),
         pytest.param(
@@ -391,6 +403,7 @@ def test_view_editor_column_spec_with_drilldown_accepts(
             "alias",
             _link(("views", "allhosts"), ContextFilterConfig(filter_id="host_tags", key="nope")),
             "filters",
+            "Please select something else",
             id="tag group the tag config lacks",
         ),
         pytest.param(
@@ -398,6 +411,7 @@ def test_view_editor_column_spec_with_drilldown_accepts(
             "alias",
             _link(("views", "allhosts"), ContextFilterConfig(filter_id="service_tags", key="nope")),
             "filters",
+            "Please select something else",
             id="service tag group the tag config lacks",
         ),
         pytest.param(
@@ -405,6 +419,7 @@ def test_view_editor_column_spec_with_drilldown_accepts(
             "alias",
             _link(("views", "allhosts"), ContextFilterConfig(filter_id="host_auxtags", key="nope")),
             "filters",
+            "Please select something else",
             id="aux tag the tag config lacks",
         ),
         pytest.param(
@@ -415,6 +430,7 @@ def test_view_editor_column_spec_with_drilldown_accepts(
                 *(ContextFilterConfig(filter_id="host_auxtags", key=f"aux{i}") for i in range(4)),
             ),
             "filters",
+            "Add up to 3 auxiliary tags",
             id="more aux tags than the target reads",
         ),
     ],
@@ -426,6 +442,7 @@ def test_view_editor_column_spec_with_drilldown_rejects(
     painter: str,
     drilldown: ContextualLinkEntryConfig,
     field: str,
+    message: str,
 ) -> None:
     vs = view_editor_column_spec("columns", datasource, tagged_painter_context, with_drilldown=True)
 
@@ -433,6 +450,7 @@ def test_view_editor_column_spec_with_drilldown_rejects(
         vs.validate_value(_columns(painter, drilldown), "columns")
 
     assert field in (excinfo.value.varname or "")
+    assert message in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("request_context")

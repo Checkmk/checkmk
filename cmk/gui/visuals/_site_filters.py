@@ -20,7 +20,7 @@ from cmk.web.utils.choices import Choice
 from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.speaklater import LazyString
 
-from .filter import Filter, FilterGroup, FilterRegistry
+from .filter import drilldowns, Filter, FilterGroup, FilterRegistry
 from .filter.components import DualList, DynamicDropdown, FilterComponent, StaticText
 
 
@@ -40,6 +40,7 @@ def register(
             ),
             description=_l("Optional selection of a site"),
             heading_info=site_filter_heading_info,
+            drilldown=drilldowns.text("site", "site"),
         )
     )
 
@@ -71,6 +72,7 @@ class SiteFilter(Filter):
         description: None | str | LazyString = None,
         is_show_more: bool = False,
         heading_info: Callable[[FilterHTTPVariables], str | None],
+        drilldown: drilldowns.Drilldown | None = None,
     ) -> None:
         super().__init__(
             ident=query_filter.ident,
@@ -82,6 +84,7 @@ class SiteFilter(Filter):
             description=description,
             is_show_more=is_show_more,
             group=FilterGroup.SITE,
+            drilldown=drilldown,
         )
         self.query_filter = query_filter
         self._heading_info = heading_info

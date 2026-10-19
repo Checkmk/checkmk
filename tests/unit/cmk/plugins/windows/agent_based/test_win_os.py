@@ -49,7 +49,6 @@ def test_inventorize_win_os(section: win_os.Section) -> None:
     ]
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4510: ValueError")
 def test_parse_win_os_duplicate_row() -> None:
     # Crash group 4510: the agent reported the operating system row twice
     row = [

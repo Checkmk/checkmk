@@ -374,6 +374,19 @@ class _TimePeriodsUnavailable(MKGeneralException):
     pass
 
 
+def _timeout_causing(exception: BaseException) -> MKTimeout | None:
+    """Returns the timeout which caused an exception, e.g. one the Livestatus client turned into an
+    error of its own"""
+    seen: set[int] = set()
+    cause: BaseException | None = exception
+    while cause is not None and id(cause) not in seen:
+        if isinstance(cause, MKTimeout):
+            return cause
+        seen.add(id(cause))
+        cause = cause.__cause__ or cause.__context__
+    return None
+
+
 class _SiteTimePeriods:
     """Tells whether time periods of a site are active, giving up after the first failed query"""
 
@@ -390,6 +403,9 @@ class _SiteTimePeriods:
         except MKTimeout:
             raise
         except Exception as e:
+            # The Livestatus client turns e.g. a request timeout into an error of its own.
+            if (timeout := _timeout_causing(e)) is not None:
+                raise timeout from None
             self._error = str(e)
             raise _TimePeriodsUnavailable(self._error) from e
 
@@ -447,6 +463,8 @@ class EventSimulator:
             self._event["host"] = HostName(
                 cmk.ccc.translations.translate(hostname_translation, event["host"])
             )
+        except MKTimeout:
+            raise
         except Exception:
             self._event["host"] = HostName("")
         self._site_config = site_configs[event["site"]]

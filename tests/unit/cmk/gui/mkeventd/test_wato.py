@@ -28,7 +28,7 @@ from cmk.gui.mkeventd.wato import MatchOutcome
 from cmk.gui.search.matchers import MatchItem, MatchItemConfig
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.config_domain_name import config_domain_registry, EVENT_CONSOLE
-from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
+from cmk.livestatus_client import SingleSiteConnection, SiteConfiguration, SiteConfigurations
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.fake_site import no_site_configuration
 
@@ -592,13 +592,48 @@ def _request_timeout_after(seconds: float) -> Iterator[None]:
         signal.signal(signal.SIGALRM, previous_handler)
 
 
+# Matching this pattern against this text takes seconds because of catastrophic backtracking, much
+# longer than the request timeouts below, but a test still ends if its timeout doesn't work.
+_SLOW_PATTERN = "(a+)+$"
+_SLOW_TEXT = "a" * 26 + "b"
+
+
 def test_request_timeout_while_matching_a_rule_aborts_the_request() -> None:
-    # Matching this text takes ages because of catastrophic backtracking.
-    simulator = _simulator(simulated_site=SiteId("remote"), text="a" * 40 + "b")
-    rule = ec.Rule(id="rule", match="(a+)+$")
+    simulator = _simulator(simulated_site=SiteId("remote"), text=_SLOW_TEXT)
+    rule = ec.Rule(id="rule", match=_SLOW_PATTERN)
 
     with _request_timeout_after(0.01), pytest.raises(RequestTimeout):
         simulator.match_rule(_rule_pack(), rule)
+
+
+def test_request_timeout_while_translating_the_host_name_aborts_the_request() -> None:
+    hostname_translation = TranslationOptions(regex=[(_SLOW_PATTERN, "translated")])
+
+    with _request_timeout_after(0.01), pytest.raises(RequestTimeout):
+        _simulator(
+            simulated_site=SiteId("remote"),
+            host=HostName(_SLOW_TEXT),
+            hostname_translation=hostname_translation,
+        )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_request_timeout_while_looking_up_time_periods_aborts_the_request(
+    mock_livestatus: MockLiveStatusConnection, monkeypatch: MonkeyPatch
+) -> None:
+    def receive_data_timing_out(_self: object, _size: int, _timeout: float | None = None) -> bytes:
+        raise RequestTimeout("Your request timed out.")
+
+    # The Livestatus client turns this into an error of its own.
+    monkeypatch.setattr(SingleSiteConnection, "receive_data", receive_data_timing_out)
+    mock_livestatus.add_table("timeperiods", [{"name": "workhours", "in": 1}], site=omd_site())
+    mock_livestatus.expect_query("GET timeperiods\nColumns: name in", sites=[omd_site()])
+
+    with mock_livestatus(expect_status_query=False), pytest.raises(RequestTimeout):
+        _simulate(
+            ec.Rule(id="rule", match_timeperiod=ec.TimeperiodName("workhours")),
+            simulated_site=omd_site(),
+        )
 
 
 def test_simulator_leaves_the_rule_unchanged() -> None:

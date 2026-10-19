@@ -11,8 +11,7 @@ from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefiniti
 
 # mypy: disable-error-code="var-annotated"
 from cmk.agent_based.v2 import OIDEnd, render, SNMPTree
-from cmk.base.check_legacy_includes.huawei_switch import huawei_item_dict_from_entities
-from cmk.plugins.huawei.lib import DETECT_HUAWEI_SWITCH
+from cmk.plugins.huawei.lib import HUAWEI_ENTERPRISE, huawei_item_dict_from_entities
 
 check_info = {}
 
@@ -55,9 +54,9 @@ def check_huawei_switch_fan(item, params, parsed):
 
 check_info["huawei_switch_fan"] = LegacyCheckDefinition(
     name="huawei_switch_fan",
-    detect=DETECT_HUAWEI_SWITCH,
+    detect=HUAWEI_ENTERPRISE.switch_detect,
     fetch=SNMPTree(
-        base=".1.3.6.1.4.1.2011.5.25.31.1.1.10.1",
+        base=HUAWEI_ENTERPRISE.subtree("5.25.31.1.1.10.1"),
         oids=[OIDEnd(), "5", "6"],
     ),
     parse_function=parse_huawei_switch_fan,

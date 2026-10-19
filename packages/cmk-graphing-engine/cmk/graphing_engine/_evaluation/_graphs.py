@@ -46,7 +46,6 @@ class EvaluatedCurve:
 class EvaluatedStack:
     members: Sequence[EvaluatedCurve]
     inverse: bool
-    reference: EvaluatedCurve | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -249,7 +248,6 @@ def _fitted_stack(stack: EvaluatedStack, time_range: TimeRange) -> EvaluatedStac
     return EvaluatedStack(
         members=[_fitted_curve(member, time_range) for member in stack.members],
         inverse=stack.inverse,
-        reference=None if stack.reference is None else _fitted_curve(stack.reference, time_range),
     )
 
 
@@ -276,16 +274,8 @@ def _evaluate_graph(graph: Graph, context: EvaluationContext) -> EvaluatedGraph:
             ],
             omit_zero=graph.omit_zero_curves,
         )
-        reference = None
-        if group.reference is not None:
-            references = _evaluate_curve(
-                group.reference, inverse=group.inverse, seen=seen, context=context
-            )
-            reference = references[0] if references else None
         if members:
-            stacks.append(
-                EvaluatedStack(members=members, inverse=group.inverse, reference=reference)
-            )
+            stacks.append(EvaluatedStack(members=members, inverse=group.inverse))
     lines = [
         EvaluatedLine(curve=line_curve, inverse=line.inverse)
         for line in graph.lines

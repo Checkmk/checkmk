@@ -109,7 +109,6 @@ def _graph_to_json(graph: EvaluatedGraph) -> Mapping[str, object]:
             {
                 "members": [_curve_to_json(member) for member in stack.members],
                 "inverse": stack.inverse,
-                "reference": _curve_to_json(stack.reference),
             }
             for stack in graph.stacks
         ],
@@ -268,11 +267,9 @@ def _vertical_range(raw: object) -> EvaluatedVerticalRange | None:
 
 def _stack(raw: object) -> EvaluatedStack:
     fields = ensure_type(raw, dict)
-    reference = fields["reference"]
     return EvaluatedStack(
         members=[_curve(member) for member in ensure_type(fields["members"], list)],
         inverse=ensure_type(fields["inverse"], bool),
-        reference=None if reference is None else _curve(reference),
     )
 
 

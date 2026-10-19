@@ -105,10 +105,7 @@ def _stack_extents(
     """Each member's (bottom, top, has_value) at the running sum it is drawn at, so that the axis
     bounds follow the drawn areas."""
     sign = _mirroring_sign(stack.inverse)
-    bottom = (
-        _values(stack.reference, sign=sign) if stack.reference is not None else np.zeros(len(times))
-    )
-    bottom = np.where(np.isnan(bottom), 0.0, bottom)
+    bottom = np.zeros(len(times))
     extents: list[
         tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.bool_]]
     ] = []

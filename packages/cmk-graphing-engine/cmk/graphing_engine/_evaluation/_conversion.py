@@ -49,9 +49,6 @@ def _converted_stack(stack: EvaluatedStack, temperature_unit: TemperatureUnit) -
     return EvaluatedStack(
         members=[_converted_curve(member, temperature_unit) for member in stack.members],
         inverse=stack.inverse,
-        reference=(
-            None if stack.reference is None else _converted_curve(stack.reference, temperature_unit)
-        ),
     )
 
 

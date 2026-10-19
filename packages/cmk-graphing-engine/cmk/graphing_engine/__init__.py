@@ -60,7 +60,6 @@ from ._evaluation._graphs import (
 )
 from ._graphs._drawn_curves import (
     drawn_curves,
-    drawn_curves_with_references,
     DrawnCurve,
     DrawnLineType,
 )
@@ -278,7 +277,6 @@ __all__ = [
     "build_matched_graphs",
     "evaluate_graphs",
     "drawn_curves",
-    "drawn_curves_with_references",
     "DrawnCurve",
     "DrawnLineType",
     "evaluate_perfometer",

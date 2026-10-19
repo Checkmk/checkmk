@@ -7,7 +7,7 @@ from typing import assert_never
 from cmk.graphing_engine import (
     ConsolidationFunction,
     converted_graph,
-    drawn_curves_with_references,
+    drawn_curves,
     DrawnCurve,
     EvaluatedCurve,
     EvaluatedGraph,
@@ -112,10 +112,8 @@ def _series_attributes_to_api(attributes: SeriesAttributes) -> list[ApiMetricAtt
 
 def _render_to_api(drawn: DrawnCurve[EvaluatedCurve]) -> ApiMetricRender:
     if drawn.stack is None:
-        return ApiLineRender(shape="line", inverse=drawn.mirrored, hidden=drawn.hidden)
-    return ApiAreaRender(
-        shape="area", stack=drawn.stack, inverse=drawn.mirrored, hidden=drawn.hidden
-    )
+        return ApiLineRender(shape="line", inverse=drawn.mirrored, hidden=False)
+    return ApiAreaRender(shape="area", stack=drawn.stack, inverse=drawn.mirrored, hidden=False)
 
 
 def curve_to_api_metric(
@@ -158,7 +156,7 @@ def evaluated_to_response(
         time_range=api_time_range_from_engine(converted.time_range),
         metrics=[
             curve_to_api_metric(drawn, temperature_unit)
-            for drawn in drawn_curves_with_references(converted.stacks, converted.lines)
+            for drawn in drawn_curves(converted.stacks, converted.lines)
         ],
         horizontal_lines=horizontal_lines_to_api(converted, temperature_unit),
         shaded_regions=shaded_regions_to_api(converted),

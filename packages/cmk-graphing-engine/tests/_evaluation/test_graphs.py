@@ -110,27 +110,6 @@ def test_evaluate_graph_keeps_stacks_and_lines_with_their_direction() -> None:
     )
 
 
-def test_evaluate_graph_evaluates_the_stack_reference_baseline() -> None:
-    floor, band = _metric("floor"), _metric("band")
-    graph = Graph(
-        name="g",
-        title="g",
-        kind="test",
-        stacks=[
-            Stack(members=[_curve(band, "band")], inverse=False, reference=_curve(floor, "floor"))
-        ],
-    )
-    metric_data = {floor: _data(value=1.0), band: _data(value=2.0)}
-    time_series = {floor: _time_series(1.0), band: _time_series(2.0)}
-
-    # The reference baseline is part of the graph's metrics (so it gets fetched) ...
-    assert floor in graph.metrics()
-    # ... and is evaluated onto EvaluatedStack.reference, separate from the drawn members.
-    [stack] = _evaluate_graph(graph, _context(metric_data, time_series)).stacks
-    assert [member.attributes.title for member in stack.members] == ["band"]
-    assert stack.reference is not None and stack.reference.attributes.title == "floor"
-
-
 def test_evaluate_graph_drops_curves_of_missing_metrics() -> None:
     a = _metric("a")
     graph = Graph(

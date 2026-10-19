@@ -97,7 +97,6 @@ def _rich_graphs() -> Sequence[Graph]:
                         Curve(quantity=Sum((_METRIC, _METRIC_CF)), attributes=decimal),
                     ],
                     inverse=True,
-                    reference=Curve(quantity=Constant(5), attributes=scientific),
                 )
             ],
             lines=[

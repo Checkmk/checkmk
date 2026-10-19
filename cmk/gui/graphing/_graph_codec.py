@@ -369,18 +369,13 @@ class GraphCodec:
         return {
             "members": [self._curve_to_json(member) for member in stack.members],
             "inverse": stack.inverse,
-            "reference": (
-                None if stack.reference is None else self._curve_to_json(stack.reference)
-            ),
         }
 
     def _stack_from_json(self, data: object) -> Stack:
         data = _as_mapping(data)
-        reference = data["reference"]
         return Stack(
             members=[self._curve_from_json(member) for member in _as_list(data["members"])],
             inverse=ensure_type(data["inverse"], bool),
-            reference=None if reference is None else self._curve_from_json(reference),
         )
 
     def _line_to_json(self, line: Line) -> Mapping[str, object]:

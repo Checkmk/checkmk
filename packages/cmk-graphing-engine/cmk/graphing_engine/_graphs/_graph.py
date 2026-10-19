@@ -42,7 +42,6 @@ type VerticalRange = MinimalRange | FixedRange
 class Stack:
     members: Sequence[Curve]
     inverse: bool
-    reference: Curve | None = None
 
 
 @dataclass(frozen=True)
@@ -94,8 +93,6 @@ class Graph:
     def curves(self) -> Iterator[Curve]:
         for stack in self.stacks:
             yield from stack.members
-            if stack.reference is not None:
-                yield stack.reference
         for line in self.lines:
             yield line.curve
         for rule in self.rules:

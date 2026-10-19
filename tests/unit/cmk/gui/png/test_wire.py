@@ -61,7 +61,6 @@ def test_graphs_survive_the_trip_to_the_rendering_process() -> None:
             EvaluatedStack(
                 members=[_curve("a", [1.0, None, 3.0])],
                 inverse=False,
-                reference=_curve("base", [0.5, 0.5, None]),
             )
         ],
         lines=[EvaluatedLine(curve=_curve("c", [4.0, 5.0, None]), inverse=True)],

@@ -141,7 +141,6 @@ TEMPLATE_KIND: Final = "template"
 def _assert_uniform_unit(graph: Graph) -> None:
     drawn = [
         *(member for stack in graph.stacks for member in stack.members),
-        *(stack.reference for stack in graph.stacks if stack.reference is not None),
         *(line.curve for line in graph.lines),
     ]
     units = {curve.attributes.unit for curve in drawn}

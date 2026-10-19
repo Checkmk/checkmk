@@ -4096,6 +4096,7 @@ tzlocal==5.4.3 \
     --hash=sha256:3a8c9bc18cf47e1dcde252ea0e6a72a6cde320a400b6ac6db1f1f8cccd553c00
     # via
     #   -c requirements.txt
+    #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   exchangelib
 uritemplate==4.2.0 \
     --hash=sha256:480c2ed180878955863323eea31b0ede668795de182617fef9c6ca09e6ec9d0e \

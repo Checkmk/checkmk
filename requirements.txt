@@ -5860,7 +5860,9 @@ tzdata==2026.2 \
 tzlocal==5.4.3 \
     --hash=sha256:24ce97bb58e2a973f7640ec2553ab4e6f6d5a0d0d1aa9dc43bca21d89e1feb82 \
     --hash=sha256:3a8c9bc18cf47e1dcde252ea0e6a72a6cde320a400b6ac6db1f1f8cccd553c00
-    # via exchangelib
+    # via
+    #   -r non-free/packages/cmk-ai-control-plane/requirements.in
+    #   exchangelib
 ujson==5.13.0 \
     --hash=sha256:02200035bc80e830f076ffc1b329a94c295aee6d9de8c9043647cb9a7bd4f76f \
     --hash=sha256:0354d6b50b0d153ed7c629845b18a953d0c727b7e768fd94a94e0602abfa1f29 \

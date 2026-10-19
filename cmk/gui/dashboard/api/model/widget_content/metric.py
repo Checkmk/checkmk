@@ -37,6 +37,7 @@ from cmk.gui.openapi.framework.model.common_fields import (
 from cmk.gui.type_defs import GraphLegendStyle
 
 from ..context_filters import (
+    OBJECT_HOST_FILTER_ADAPTER,
     OBJECT_SERVICE_FILTER_ADAPTER,
     ObjectHostContextFilter,
     ObjectServiceContextFilter,
@@ -46,9 +47,6 @@ from ..contextual_link import (
     contextual_link_from_internal,
     contextual_link_to_internal,
     ContextualLinkSpec,
-    inheritable_contextual_link_from_internal,
-    inheritable_contextual_link_to_internal,
-    InheritableContextualLinkSpec,
 )
 from ._base import BaseWidgetContent
 
@@ -485,8 +483,8 @@ class TopListContent(_BaseMetricContent):
         description="Display highest or lowest values."
     )
     limit_to: int = api_field(description="Limit the number of entries in the top list.")
-    # Both cells of a row name its host, so a target restricted to a single host fits either.
-    contextual_link: InheritableContextualLinkSpec[ObjectHostContextFilter] = api_field(
+    # Host filters only: both cells name the row's host, but the host cell names no service.
+    contextual_link: ContextualLinkSpec[ObjectHostContextFilter] = api_field(
         description="Where a click on a host or service name leads."
     )
 
@@ -504,8 +502,8 @@ class TopListContent(_BaseMetricContent):
             display_range=_metric_display_range_from_internal(config["display_range"]),
             ranking_order=config["ranking_order"],
             limit_to=config["limit_to"],
-            contextual_link=inheritable_contextual_link_from_internal(
-                config.get("contextual_link")
+            contextual_link=contextual_link_from_internal(
+                config.get("contextual_link"), OBJECT_HOST_FILTER_ADAPTER
             ),
         )
 
@@ -519,7 +517,7 @@ class TopListContent(_BaseMetricContent):
             ranking_order=self.ranking_order,
             limit_to=self.limit_to,
         )
-        if (link := inheritable_contextual_link_to_internal(self.contextual_link)) is not None:
+        if (link := contextual_link_to_internal(self.contextual_link)) is not None:
             config["contextual_link"] = link
         return config
 

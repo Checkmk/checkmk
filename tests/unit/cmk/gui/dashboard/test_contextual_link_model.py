@@ -17,7 +17,6 @@ from cmk.gui.dashboard.api.model.context_filters import (
     HostStateContextFilter,
     OBJECT_HOST_FILTER_ADAPTER,
     OBJECT_SERVICE_FILTER_ADAPTER,
-    ObjectHostContextFilter,
     ObjectServiceContextFilter,
     ServiceStateContextFilter,
     ServiceTagContextFilter,
@@ -28,13 +27,8 @@ from cmk.gui.dashboard.api.model.contextual_link import (
     contextual_link_to_internal,
     ContextualLink,
     ContextualLinkCustom,
-    ContextualLinkDefault,
     ContextualLinkInherited,
-    ContextualLinkNone,
     ContextualLinkSpec,
-    inheritable_contextual_link_from_internal,
-    inheritable_contextual_link_to_internal,
-    InheritableContextualLinkSpec,
     LabelKeyOption,
     TagGroupKeyOption,
     VisualLocation,
@@ -246,11 +240,13 @@ def test_an_inventory_click_may_carry_the_host_name_in_a_custom_link() -> None:
     assert options.single_infos == ["host"]
 
 
-def test_a_top_list_offers_its_built_in_and_an_inherited_link_without_filters() -> None:
+def test_a_top_list_offers_a_custom_link_with_the_filters_of_its_host() -> None:
     options = TopListContent.contextual_link_options()
 
     assert options is not None
-    assert (options.modes, options.filters) == (["default", "inherited"], [])
+    assert options.modes == ["default", "inherited", "custom"]
+    assert {"host", "host_labels", "wato_folder"} <= set(options.filters)
+    assert "service" not in options.filters
 
 
 def test_a_top_list_click_names_its_host() -> None:
@@ -258,21 +254,3 @@ def test_a_top_list_click_names_its_host() -> None:
 
     assert options is not None
     assert options.single_infos == ["host"]
-
-
-@pytest.mark.parametrize(
-    "link",
-    [
-        ContextualLinkNone(type="none"),
-        ContextualLinkDefault(type="default"),
-        _inherited(_OWNED_DASHBOARD),
-    ],
-    ids=["none", "default", "inherited"],
-)
-def test_an_inheritable_link_round_trips(
-    link: InheritableContextualLinkSpec[ObjectHostContextFilter],
-) -> None:
-    assert (
-        inheritable_contextual_link_from_internal(inheritable_contextual_link_to_internal(link))
-        == link
-    )

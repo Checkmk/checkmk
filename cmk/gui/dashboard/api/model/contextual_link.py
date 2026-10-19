@@ -136,12 +136,6 @@ type ContextualLinkSpec[F] = Annotated[
     Discriminator("type"),
 ]
 
-# The link of a widget whose clicks lead to its built-in target, a target the user picks, or
-# nowhere. F names the objects its click names, as the filter set of `ContextualLinkSpec` does.
-type InheritableContextualLinkSpec[F] = Annotated[
-    ContextualLinkNone | ContextualLinkDefault | ContextualLinkInherited, Discriminator("type")
-]
-
 type AnyContextualLinkSpec = (
     ContextualLinkSpec[AggregateHostContextFilter]
     | ContextualLinkSpec[AggregateServiceContextFilter]
@@ -288,21 +282,6 @@ def contextual_link_to_internal(
             assert_never(unreachable)
 
 
-def inheritable_contextual_link_to_internal(
-    link: ContextualLinkNone | ContextualLinkDefault | ContextualLinkInherited,
-) -> ContextualLinkNoneConfig | ContextualLinkInheritedConfig | None:
-    """The stored form of a link that may not be custom; None for a `default` link."""
-    match link:
-        case ContextualLinkNone():
-            return ContextualLinkNoneConfig(type="none")
-        case ContextualLinkInherited():
-            return _inherited_to_internal(link)
-        case ContextualLinkDefault():
-            return None
-        case unreachable:
-            assert_never(unreachable)
-
-
 def _inherited_to_internal(link: ContextualLinkInherited) -> ContextualLinkInheritedConfig:
     return ContextualLinkInheritedConfig(
         type="inherited",
@@ -339,17 +318,6 @@ def contextual_link_from_internal[F](
             ],
         )
     assert_never(config)
-
-
-def inheritable_contextual_link_from_internal(
-    config: ContextualLinkNoneConfig | ContextualLinkInheritedConfig | None,
-) -> ContextualLinkNone | ContextualLinkDefault | ContextualLinkInherited:
-    """The API form of a stored link that may not be custom."""
-    if config is None:
-        return ContextualLinkDefault(type="default")
-    if config["type"] == "none":
-        return ContextualLinkNone(type="none")
-    return _inherited_from_internal(config)
 
 
 def _inherited_from_internal(config: ContextualLinkInheritedConfig) -> ContextualLinkInherited:

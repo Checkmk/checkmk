@@ -1257,7 +1257,11 @@ void ConfigInfo::initFolders(
         auto data = folders_.getData();
         wtools::ProtectPathFromUserAccess(data.parent_path(), commands);
         wtools::ProtectPathFromUserAccess(data, commands);
-        wtools::ExecuteCommands(L"all", commands, wtools::ExecuteMode::async);
+        // Must be synchronous: the commands are run by cmd.exe from a script
+        // in the service temp folder, and that folder is wiped again later
+        // during startup. An asynchronous run loses the race and leaves the
+        // data folder unprotected.
+        wtools::ExecuteCommands(L"all", commands, wtools::ExecuteMode::sync);
     }
 
     if (folders_.getData().empty()) {

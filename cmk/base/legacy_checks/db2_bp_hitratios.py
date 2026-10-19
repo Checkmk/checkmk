@@ -6,6 +6,8 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from collections.abc import Sequence
+
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
@@ -57,8 +59,14 @@ def parse_db2_bp_hitratios(string_table):
     return databases
 
 
+def _has_header(lines: Sequence[Sequence[str]]) -> bool:
+    return bool(lines) and lines[0][0] == "BP_NAME"
+
+
 def inventory_db2_bp_hitratios(parsed):
     for key, values in parsed.items():
+        if not _has_header(values):
+            continue
         for field in values[1:]:
             if not field[0].startswith("IBMSYSTEMBP"):
                 yield f"{key}:{field[0]}", {}
@@ -69,6 +77,11 @@ def check_db2_bp_hitratios(item, _no_params, parsed):
     db = parsed.get(db_instance)
     if not db:
         raise IgnoreResultsError("Login into database failed")
+
+    if not _has_header(db):
+        message = " ".join(word for line in db for word in line)
+        yield 3, f"Cannot read buffer pool hit ratios: {message}"
+        return
 
     headers = db[0]
     for line in db[1:]:

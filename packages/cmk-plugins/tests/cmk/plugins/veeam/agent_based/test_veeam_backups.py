@@ -16,6 +16,7 @@ from cmk.plugins.veeam.agent_based.veeam_backups import (
     discovery_veeam_backups,
     monitoring_state,
     parse_veeam_backups,
+    Unparsable,
 )
 
 PARAMS: CheckParameters = {"age": ("fixed", (20.0, 40.0))}
@@ -260,11 +261,13 @@ def test_check_veeam_backups_unparsable_duration_is_omitted() -> None:
         pytest.param("2 GB/s", 2_000_000_000.0, id="gigabytes"),
         pytest.param("18.3 mb/s", 18_300_000.0, id="lowercase"),
         pytest.param("N/A", None, id="not available"),
-        pytest.param("fast", None, id="garbage"),
+        pytest.param("fast", Unparsable("fast"), id="garbage"),
         pytest.param(None, None, id="missing"),
     ],
 )
-def test_parse_processing_rate(processing_rate: str | None, expected: float | None) -> None:
+def test_parse_processing_rate(
+    processing_rate: str | None, expected: float | Unparsable | None
+) -> None:
     progress: dict[str, object] = (
         {} if processing_rate is None else {"processingRate": processing_rate}
     )
@@ -284,8 +287,7 @@ def test_parse_veeam_backups() -> None:
             transferred_size=None,
             duration=None,
             processing_rate=None,
-            processing_rate_raw=None,
-            end_time=END_TIME,
+            end_time=datetime.datetime.fromisoformat(END_TIME).timestamp(),
         )
     }
 

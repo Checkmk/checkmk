@@ -33,6 +33,14 @@ from cmk.plugins.veeam.lib import (
 )
 
 
+@dataclass(frozen=True)
+class Unparsable:
+    """A value the API sent in an unexpected format, kept so that it can be surfaced
+    instead of silently disappearing like an absent one."""
+
+    raw: str
+
+
 @dataclass(frozen=True, kw_only=True)
 class BackupTask:
     """Mirrors the VBR REST API's BackupTaskSessionModel (GET /api/v1/taskSessions),
@@ -51,11 +59,8 @@ class BackupTask:
     read_size: int | None
     transferred_size: int | None
     duration: float | None
-    processing_rate: float | None
-    processing_rate_raw: str | None
-    """The unparsed `processingRate` string, kept so an unexpected format (as opposed
-    to the expected "N/A") can still be surfaced instead of silently disappearing."""
-    end_time: str | None
+    processing_rate: float | Unparsable | None
+    end_time: float | Unparsable | None
 
 
 Section = Mapping[str, BackupTask]
@@ -83,11 +88,21 @@ _RATE_UNIT_FACTORS = {
 }
 
 
-def _parse_processing_rate_bps(processing_rate: str | None) -> float | None:
-    if processing_rate is None or (match := _RATE_PATTERN.match(processing_rate)) is None:
+def _parse_processing_rate_bps(processing_rate: str | None) -> float | Unparsable | None:
+    if not processing_rate or processing_rate.upper() == "N/A":
         return None
+    if (match := _RATE_PATTERN.match(processing_rate)) is None:
+        return Unparsable(processing_rate)
     factor = _RATE_UNIT_FACTORS[(match["unit"] or "B").upper()]
     return float(match["value"]) * factor
+
+
+def _parse_end_time(end_time: str | None) -> float | Unparsable | None:
+    if end_time is None:
+        return None
+    if (epoch := parse_iso8601_epoch(end_time)) is None:
+        return Unparsable(end_time)
+    return epoch
 
 
 def parse_veeam_backups(string_table: StringTable) -> Section:
@@ -97,7 +112,6 @@ def parse_veeam_backups(string_table: StringTable) -> Section:
         progress = task_dict.get("progress") or {}
         result = task_dict.get("result") or {}
         duration = progress.get("duration")
-        processing_rate_raw = progress.get("processingRate")
         section[sanitize_name(task_dict["jobName"])] = BackupTask(
             state=task_dict["state"],
             result=result.get("result", "None"),
@@ -106,9 +120,8 @@ def parse_veeam_backups(string_table: StringTable) -> Section:
             read_size=progress.get("readSize"),
             transferred_size=progress.get("transferredSize"),
             duration=parse_dotnet_timespan_seconds(duration) if duration is not None else None,
-            processing_rate=_parse_processing_rate_bps(processing_rate_raw),
-            processing_rate_raw=processing_rate_raw,
-            end_time=task_dict.get("endTime"),
+            processing_rate=_parse_processing_rate_bps(progress.get("processingRate")),
+            end_time=_parse_end_time(task_dict.get("endTime")),
         )
     return section
 
@@ -171,18 +184,18 @@ def check_veeam_backups(
     elif size_info:
         yield Result(state=State.OK, notice=f"Size ({', '.join(size_info)})")
 
-    if task.processing_rate is not None:
+    if isinstance(task.processing_rate, Unparsable):
+        yield Result(
+            state=State.OK,
+            notice=f"Average speed: unparsable value ({task.processing_rate.raw})",
+        )
+    elif task.processing_rate is not None:
         yield from check_levels(
             task.processing_rate,
             metric_name="backup_avgspeed",
             render_func=render.iobandwidth,
             label="Average speed",
             notice_only=True,
-        )
-    elif task.processing_rate_raw and task.processing_rate_raw.upper() != "N/A":
-        yield Result(
-            state=State.OK,
-            notice=f"Average speed: unparsable value ({task.processing_rate_raw})",
         )
 
     if task.state in _TERMINAL_STATES and task.duration is not None:
@@ -196,17 +209,14 @@ def check_veeam_backups(
 
 
 def _check_last_backup(
-    raw_end_time: str | None, levels_upper: LevelsT[float], now: float
+    end_time: float | Unparsable | None, levels_upper: LevelsT[float], now: float
 ) -> CheckResult:
-    if raw_end_time is None:
+    if end_time is None:
         yield from check_backup_age(None, levels_upper)
-    elif (end_time := parse_iso8601_epoch(raw_end_time)) is None:
-        # TODO: confirm whether this branch is ever actually reachable once we can
-        # test against real API responses. If it is, move the parsing into the
-        # parse function instead of guessing here.
+    elif isinstance(end_time, Unparsable):
         yield Result(
             state=State.UNKNOWN,
-            summary=f"FAILED TO PARSE -> End time: ({raw_end_time})",
+            summary=f"FAILED TO PARSE -> End time: ({end_time.raw})",
         )
     elif (age := now - end_time) < 0:
         yield Result(state=State.UNKNOWN, summary="Last backup: end time is in the future")

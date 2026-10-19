@@ -5,12 +5,9 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-import pytest
-
 from cmk.base.legacy_checks.emcvnx_info import check_emcvnx_info, parse_emcvnx_info
 
 
-@pytest.mark.xfail(strict=True, raises=IndexError, reason="Crash group 4478: IndexError")
 def test_check_emcvnx_info_cli_error_only() -> None:
     # Crash group 4478: naviseccli printed only an error message
     parsed = parse_emcvnx_info([["Unknown exception while executing cli command"]])

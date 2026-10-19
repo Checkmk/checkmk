@@ -48,6 +48,9 @@ def preparse_emcvnx_info(info):  # pylint: disable=too-many-branches
                 preparsed.pop()
                 continue
             elif value is None:  # append in case of a line continuation
+                if not preparsed:
+                    errors.add(key)
+                    continue
                 value = key
                 old_key, old_value = preparsed[-1]
                 preparsed[-1] = (old_key, ", ".join([old_value, value]))

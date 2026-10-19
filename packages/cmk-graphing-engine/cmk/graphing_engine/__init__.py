@@ -13,6 +13,7 @@ from ._data._fetched import (
 from ._data._naming import (
     MetricName,
 )
+from ._data._temperature import temperature_conversion, TemperatureUnit, UnitConversion
 from ._data._timeseries import (
     constant_time_series,
     mapped_series,
@@ -157,6 +158,9 @@ from ._rrd._performance_data import (
 from ._rrd._resample import resample
 
 __all__ = [
+    "temperature_conversion",
+    "TemperatureUnit",
+    "UnitConversion",
     "sort_registered_graph_plugins",
     "drawn_segments",
     "DrawnSegment",

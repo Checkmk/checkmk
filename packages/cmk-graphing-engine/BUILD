@@ -17,6 +17,7 @@ py_library(
         "cmk/graphing_engine/_data/__init__.py",
         "cmk/graphing_engine/_data/_fetched.py",
         "cmk/graphing_engine/_data/_naming.py",
+        "cmk/graphing_engine/_data/_temperature.py",
         "cmk/graphing_engine/_data/_timeseries.py",
         "cmk/graphing_engine/_data/_units.py",
         "cmk/graphing_engine/_evaluation/__init__.py",

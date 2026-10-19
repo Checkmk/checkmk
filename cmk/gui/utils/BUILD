@@ -102,6 +102,7 @@ py_library(
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
+        "//packages/cmk-graphing-engine",
         "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-ruleset-matcher",

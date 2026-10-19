@@ -3,109 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._api_plugins import ApiGraph, ApiPerfometer
-from ._display import (
-    FALLBACK_UNIT,
-    metric_display_attributes,
-    parse_color,
-    parse_unit,
-    scalar_attributes,
-    split_predict_prefix,
-)
-from ._drawn_curves import (
-    drawn_curves,
-    drawn_curves_with_references,
-    DrawnCurve,
-    DrawnLineType,
-)
-from ._fetch import (
-    FetchDataProtocol,
-    fetched_time_range,
-    FetchMetricNamesProtocol,
-)
-from ._fetched import (
+from ._data._fetched import (
     FetchedData,
     MACRO_SERIES_ID,
     PerformanceData,
     ScalarKind,
     SeriesAttributes,
 )
-from ._graph import (
-    FixedRange,
-    Graph,
-    Line,
-    MinimalRange,
-    Region,
-    Rule,
-    Stack,
-    VerticalRange,
-)
-from ._graph_evaluate import (
-    evaluate_graphs,
-    EvaluatedCurve,
-    EvaluatedGraph,
-    EvaluatedLine,
-    EvaluatedRegion,
-    EvaluatedRule,
-    EvaluatedStack,
-    EvaluatedVerticalRange,
-    VerticalRangeKind,
-)
-from ._graph_matching import (
-    build_matched_graphs,
-    GraphRequest,
-    RequestedGraph,
-    RequestedMetric,
-)
-from ._naming import (
-    HostName,
+from ._data._naming import (
     MetricName,
-    rrd_metric_name,
-    Service,
-    ServiceName,
-    SiteID,
 )
-from ._perfometer_evaluate import (
-    evaluate_perfometer,
-    EvaluatedBidirectional,
-    EvaluatedFocusBound,
-    EvaluatedFocusRange,
-    EvaluatedPerfometer,
-    EvaluatedPerfometerLayout,
-    EvaluatedSegment,
-    EvaluatedStacked,
-    FocusBoundKind,
-)
-from ._quantities import (
-    Constant,
-    Difference,
-    Fraction,
-    PredictionCurveKind,
-    PredictionMetric,
-    Product,
-    RRDMetric,
-    ScalarOf,
-    Sum,
-)
-from ._quantity import (
-    Bound,
-    Curve,
-    EvaluatedQuantity,
-    EvaluationContext,
-    FanOutQuantity,
-    fetch_leaves,
-    last_present,
-    MetricProtocol,
-    QuantityProtocol,
-)
-from ._timeseries import (
-    ConsolidationFunction,
+from ._data._timeseries import (
     constant_time_series,
     TimeRange,
     TimeSeries,
     timestamps,
 )
-from ._units import (
+from ._data._units import (
     AutoPrecision,
     CurveAttributes,
     DecimalNotation,
@@ -123,6 +37,101 @@ from ._units import (
     StrictPrecision,
     TimeNotation,
     Unit,
+)
+from ._evaluation._fetch import (
+    FetchDataProtocol,
+    fetched_time_range,
+)
+from ._evaluation._graphs import (
+    evaluate_graphs,
+    EvaluatedCurve,
+    EvaluatedGraph,
+    EvaluatedLine,
+    EvaluatedRegion,
+    EvaluatedRule,
+    EvaluatedStack,
+    EvaluatedVerticalRange,
+    VerticalRangeKind,
+)
+from ._graphs._drawn_curves import (
+    drawn_curves,
+    drawn_curves_with_references,
+    DrawnCurve,
+    DrawnLineType,
+)
+from ._graphs._graph import (
+    Bound,
+    Curve,
+    FixedRange,
+    Graph,
+    Line,
+    MinimalRange,
+    Region,
+    Rule,
+    Stack,
+    VerticalRange,
+)
+from ._perfometers._evaluation import (
+    evaluate_perfometer,
+    EvaluatedBidirectional,
+    EvaluatedFocusBound,
+    EvaluatedFocusRange,
+    EvaluatedPerfometer,
+    EvaluatedPerfometerLayout,
+    EvaluatedSegment,
+    EvaluatedStacked,
+    FocusBoundKind,
+)
+from ._plugins._display import (
+    FALLBACK_UNIT,
+    metric_display_attributes,
+    parse_color,
+    parse_unit,
+    scalar_attributes,
+)
+from ._plugins._matching import (
+    build_matched_graphs,
+    GraphRequest,
+    RequestedGraph,
+    RequestedMetric,
+)
+from ._plugins._types import (
+    ApiGraph,
+    ApiPerfometer,
+)
+from ._quantities._expressions import (
+    Constant,
+    Difference,
+    Fraction,
+    Product,
+    Sum,
+)
+from ._quantities._quantity import (
+    EvaluatedQuantity,
+    EvaluationContext,
+    FanOutQuantity,
+    fetch_leaves,
+    last_present,
+    MetricProtocol,
+    QuantityProtocol,
+)
+from ._rrd._fetch import (
+    FetchMetricNamesProtocol,
+)
+from ._rrd._metrics import (
+    ConsolidationFunction,
+    PredictionCurveKind,
+    PredictionMetric,
+    RRDMetric,
+    ScalarOf,
+)
+from ._rrd._naming import (
+    HostName,
+    rrd_metric_name,
+    Service,
+    ServiceName,
+    SiteID,
+    split_predict_prefix,
 )
 
 __all__ = [

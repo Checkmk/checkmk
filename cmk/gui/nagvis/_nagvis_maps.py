@@ -7,6 +7,7 @@
 # mypy: disable-error-code="no-any-return"
 
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any, override
 
 from cmk.ccc.site import url_prefix
@@ -21,6 +22,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.sidebar import footnotelinks, PageHandlers, SidebarSnapin
+from cmk.utils import paths
 from cmk.web.utils.urls import makeuri_contextless
 
 # Relative prefix used for the "Edit" footnote link (from check_mk/ to nagvis/).
@@ -35,6 +37,11 @@ def _is_nagvis_url(nagvis_url: str, site_url_prefix: str) -> bool:
     (``/<site>/nagvis/...``).
     """
     return nagvis_url.startswith((_NAGVIS_URL_PREFIX, f"{site_url_prefix}nagvis/"))
+
+
+def _is_nagvis_enabled(omd_root: Path) -> bool:
+    # The NAGVIS hook links this file only while NagVis is on
+    return (omd_root / "etc/apache/conf.d/nagvis.conf").exists()
 
 
 def _nagvis_page_url(nagvis_url: str) -> str:
@@ -64,6 +71,15 @@ class NagVisMaps(SidebarSnapin):
 
     @override
     def show(self, config: Config) -> None:
+        if not _is_nagvis_enabled(paths.omd_root):
+            html.show_message(
+                _(
+                    "NagVis is disabled on this site. To enable it, run "
+                    '"omd stop", "omd config set NAGVIS on" and "omd start" as site user. '
+                    "NagVis is deprecated, consider using Checkmk Maps instead."
+                )
+            )
+            return
         html.div(_("Loading maps..."), class_="loading")
         html.call_ts_function(function_name="fetch_nagvis_snapin_contents")
 

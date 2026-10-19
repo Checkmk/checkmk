@@ -73,12 +73,8 @@ def test_password_changes_reach_core() -> None:
 
 
 def test_password_changes_reach_ai_control_plane() -> None:
-    if cmk_version.edition(paths.omd_root) not in {
-        cmk_version.Edition.PRO,
-        cmk_version.Edition.ULTIMATE,
-        cmk_version.Edition.ULTIMATEMT,
-    }:
-        pytest.skip("Community and Cloud have no AI control plane effect")
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
+        pytest.skip("Community has no AI control plane")
 
     missing = _password_changes_missing("ai-control-plane", "add", "edit", "delete")
 

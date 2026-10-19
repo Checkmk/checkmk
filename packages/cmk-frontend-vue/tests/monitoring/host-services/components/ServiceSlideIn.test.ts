@@ -85,6 +85,7 @@ function makeOverview(overrides: Partial<ServiceOverview> = {}): ServiceOverview
       'view.py?view_name=service&site=local&host=web-server-01&service=CPU+load',
     legacy_service_parameters_link:
       'wato.py?mode=object_parameters&host=web-server-01&service=CPU+load',
+    legacy_service_discovery_link: null,
     legacy_service_graphs_link:
       'view.py?view_name=service_graphs&site=local&host=web-server-01&service=CPU+load',
     contact_groups: ['all'],

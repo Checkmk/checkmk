@@ -1653,25 +1653,31 @@ class TestMonitorServiceOverview:
         assert [mode["icon_name"] for mode in resp.json["modes"]] == expected_icons
 
     @staticmethod
-    def _get_overview_parameters_link(
-        clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+    def _get_overview_link(
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        field: str = "legacy_service_parameters_link",
+        service_name: str | None = None,
     ) -> str | None:
-        mock_livestatus.add_table("services", [_OVERVIEW_SERVICE_ROW])
+        service_name = service_name or _SERVICE_DESCRIPTION
+        mock_livestatus.add_table(
+            "services", [{**_OVERVIEW_SERVICE_ROW, "description": service_name}]
+        )
         mock_livestatus.expect_query(
             [
                 "GET services",
                 f"Columns: {_SERVICE_OVERVIEW_COLUMNS}",
                 f"Filter: host_name = {_HOSTNAME}",
-                f"Filter: description = {_SERVICE_DESCRIPTION}",
+                f"Filter: description = {service_name}",
                 "And: 2",
             ],
             sites=[_SITE_ID],
         )
         with mock_livestatus(expect_status_query=True):
             resp = clients.MonitorHosts.get_service_overview(
-                hostname=_HOSTNAME, site_id=_SITE_ID, service_name=_SERVICE_DESCRIPTION
+                hostname=_HOSTNAME, site_id=_SITE_ID, service_name=service_name
             )
-        link: str | None = resp.json["legacy_service_parameters_link"]
+        link: str | None = resp.json[field]
         return link
 
     @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -1682,7 +1688,7 @@ class TestMonitorServiceOverview:
     ) -> None:
         clients.HostConfig.create(_HOSTNAME, folder="/")
 
-        assert self._get_overview_parameters_link(clients, mock_livestatus) == (
+        assert self._get_overview_link(clients, mock_livestatus) == (
             f"wato.py?mode=object_parameters&host={_HOSTNAME}&service=CPU+load"
         )
 
@@ -1691,7 +1697,7 @@ class TestMonitorServiceOverview:
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
-        assert self._get_overview_parameters_link(clients, mock_livestatus) is None
+        assert self._get_overview_link(clients, mock_livestatus) is None
 
     @pytest.mark.usefixtures("suppress_remote_automation_calls")
     def test_no_parameters_link_while_setup_is_disabled(
@@ -1703,7 +1709,70 @@ class TestMonitorServiceOverview:
         clients.HostConfig.create(_HOSTNAME, folder="/")
 
         with set_config(wato_enabled=False):
-            assert self._get_overview_parameters_link(clients, mock_livestatus) is None
+            assert self._get_overview_link(clients, mock_livestatus) is None
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_links_discovery_of_a_host_setup_grants(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        assert self._get_overview_link(
+            clients,
+            mock_livestatus,
+            field="legacy_service_discovery_link",
+            service_name="Check_MK Discovery",
+        ) == (f"wato.py?mode=inventory&host={_HOSTNAME}")
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_no_discovery_link_for_other_services(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        assert (
+            self._get_overview_link(clients, mock_livestatus, field="legacy_service_discovery_link")
+            is None
+        )
+
+    def test_no_discovery_link_for_a_host_setup_does_not_grant(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        assert (
+            self._get_overview_link(
+                clients,
+                mock_livestatus,
+                field="legacy_service_discovery_link",
+                service_name="Check_MK Discovery",
+            )
+            is None
+        )
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_no_discovery_link_while_setup_is_disabled(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        set_config: SetConfig,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        with set_config(wato_enabled=False):
+            assert (
+                self._get_overview_link(
+                    clients,
+                    mock_livestatus,
+                    field="legacy_service_discovery_link",
+                    service_name="Check_MK Discovery",
+                )
+                is None
+            )
 
     @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
     def test_passive_service_has_no_next_check(

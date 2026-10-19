@@ -41,6 +41,17 @@ def service_parameters_link(service: ServiceOverview) -> str:
     )
 
 
+_DISCOVERY_SERVICE_NAMES = frozenset({"Check_MK Discovery", "Check_MK inventory"})
+
+
+def service_discovery_link(service: ServiceOverview) -> str | None:
+    return (
+        "wato.py?" + urlencode([("mode", "inventory"), ("host", service.host_name)])
+        if service.name in _DISCOVERY_SERVICE_NAMES
+        else None
+    )
+
+
 def host_view_link(view_name: str, service: ServiceOverview) -> str:
     return "view.py?" + urlencode(
         [

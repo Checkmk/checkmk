@@ -39,7 +39,12 @@ from .._models import (
 from .._repositories import HostServicesRepository
 from ._family import MONITOR_SERVICES_FAMILY
 from ._modes import build_host_modes, build_service_modes, ServiceModeInfo
-from ._urls import host_view_link, service_parameters_link, service_view_link
+from ._urls import (
+    host_view_link,
+    service_discovery_link,
+    service_parameters_link,
+    service_view_link,
+)
 
 
 @api_model
@@ -100,6 +105,14 @@ class ServiceOverviewResponse:
         ),
         example="wato.py?mode=object_parameters&host=web-server-01&service=CPU+utilization",
     )
+    legacy_service_discovery_link: str | None = api_field(
+        description=(
+            "URL to the Setup page running the service discovery of this service's host. Null for "
+            "all but the discovery service, while Setup is disabled, for users who may not see "
+            "Setup's hosts, and for users Setup refuses the host."
+        ),
+        example="wato.py?mode=inventory&host=web-server-01",
+    )
     legacy_service_graphs_link: str = api_field(
         description="URL to the legacy view holding this service's graphs",
         example=(
@@ -156,7 +169,9 @@ class ServiceOverviewResponse:
     )
 
     @classmethod
-    def from_domain(cls, service: ServiceOverview, *, may_see_parameters: bool) -> Self:
+    def from_domain(
+        cls, service: ServiceOverview, *, may_see_parameters: bool, may_run_discovery: bool
+    ) -> Self:
         def read[T](value: T | None, name: str) -> T:
             """The overview reads every column, so a missing one is a bug, not an omission."""
             if value is None:
@@ -179,6 +194,9 @@ class ServiceOverviewResponse:
             legacy_service_parameters_link=(
                 service_parameters_link(service) if may_see_parameters else None
             ),
+            legacy_service_discovery_link=(
+                service_discovery_link(service) if may_run_discovery else None
+            ),
             legacy_service_graphs_link=service_view_link("service_graphs", service),
             contact_groups=read(service.contact_groups, "contact_groups"),
             summary=service.summary,
@@ -200,6 +218,7 @@ def _handle_get_service_overview(
     service_name: str,
     site_id: str,
     may_see_parameters: bool = False,
+    may_run_discovery: bool = False,
 ) -> ServiceOverviewResponse:
     try:
         service = host_services_repo.get_overview(
@@ -215,7 +234,9 @@ def _handle_get_service_overview(
             ),
         ) from None
 
-    return ServiceOverviewResponse.from_domain(service, may_see_parameters=may_see_parameters)
+    return ServiceOverviewResponse.from_domain(
+        service, may_see_parameters=may_see_parameters, may_run_discovery=may_run_discovery
+    )
 
 
 def make_endpoint_get_service_overview(setup_folders: SetupFolderSource) -> VersionedEndpoint:
@@ -237,6 +258,16 @@ def make_endpoint_get_service_overview(setup_folders: SetupFolderSource) -> Vers
         api_context: ApiContext,
     ) -> ServiceOverviewResponse:
         """Show the overview for a single service of a host."""
+        user = api_context.user
+        may_see_parameters = user.may("wato.rulesets")
+        may_run_discovery = user.may("wato.use") and (
+            user.may("wato.seeall") or user.may("wato.hosts")
+        )
+        may_open_host_in_setup = (
+            api_context.config.wato_enabled
+            and (may_see_parameters or may_run_discovery)
+            and setup_folders(api_context.config, user).may_read_host(hostname, None)
+        )
         with sites.only_sites(site_id):
             host_services_repo = LiveStatusHostServicesRepository(connection=sites.live())
 
@@ -245,11 +276,8 @@ def make_endpoint_get_service_overview(setup_folders: SetupFolderSource) -> Vers
                 hostname=hostname,
                 service_name=service_name,
                 site_id=site_id,
-                may_see_parameters=api_context.config.wato_enabled
-                and api_context.user.may("wato.rulesets")
-                and setup_folders(api_context.config, api_context.user).may_read_host(
-                    hostname, None
-                ),
+                may_see_parameters=may_see_parameters and may_open_host_in_setup,
+                may_run_discovery=may_run_discovery and may_open_host_in_setup,
             )
 
     return VersionedEndpoint(
@@ -268,6 +296,9 @@ def make_endpoint_get_service_overview(setup_folders: SetupFolderSource) -> Vers
                         permissions.OkayToIgnorePerm("bi.see_all"),
                         permissions.OkayToIgnorePerm("mkeventd.seeall"),
                         permissions.OkayToIgnorePerm("wato.rulesets"),
+                        permissions.OkayToIgnorePerm("wato.use"),
+                        permissions.OkayToIgnorePerm("wato.seeall"),
+                        permissions.OkayToIgnorePerm("wato.hosts"),
                         # Read while asking Setup whether the user may open the host.
                         permissions.OkayToIgnorePerm("wato.see_all_folders"),
                         permissions.OkayToIgnorePerm("general.see_crash_reports"),

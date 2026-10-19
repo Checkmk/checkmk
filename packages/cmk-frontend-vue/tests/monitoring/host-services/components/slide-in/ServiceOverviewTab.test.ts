@@ -34,6 +34,7 @@ function makeOverview(overrides: Partial<ServiceOverview> = {}): ServiceOverview
     legacy_host_status_link: HOST_LINK,
     legacy_service_status_link: SERVICE_LINK,
     legacy_service_parameters_link: PARAMETERS_LINK,
+    legacy_service_discovery_link: null,
     legacy_service_graphs_link: GRAPHS_LINK,
     contact_groups: ['all'],
     summary: 'OK - load average: 0.10, 0.05, 0.01',

@@ -106,13 +106,11 @@ _STRING_TABLE_SQL_ERROR: StringTable = [
 ]
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 4696: error line discovered")
 def test_discover_db2_bp_hitratios_sql_error() -> None:
     parsed = parse_db2_bp_hitratios(_STRING_TABLE_SQL_ERROR)
     assert not list(discover_db2_bp_hitratios(parsed))
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4696: ValueError")
 def test_check_db2_bp_hitratios_sql_error() -> None:
     parsed = parse_db2_bp_hitratios(_STRING_TABLE_SQL_ERROR)
     assert list(check_db2_bp_hitratios('db2inst1:DEVRU:"NULLID.SQLC2P31"', parsed)) == [

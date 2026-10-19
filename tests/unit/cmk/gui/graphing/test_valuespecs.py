@@ -5,15 +5,20 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
+import json
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
 import pytest
 
+from cmk.gui.config import Config
 from cmk.gui.graphing._valuespecs import (
     migrate_graph_render_options,
     migrate_graph_render_options_title_format,
+    PageVsAutocomplete,
 )
+from cmk.gui.http import request
+from cmk.gui.pages import PageContext
 
 
 @pytest.mark.parametrize(
@@ -79,3 +84,19 @@ def test_migrate_graph_render_options(
     entry: Mapping[str, object], result: Mapping[str, Sequence[str]]
 ) -> None:
     assert migrate_graph_render_options(entry) == result
+
+
+@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 3678: KeyError")
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_unit_autocompleter_without_metric_uses_fallback_unit(load_config: Config) -> None:
+    # Crash group 3678: the AJAX request carried no "metric" key at all
+    def unit_choice(api_request: dict[str, object]) -> object:
+        request.set_var("request", json.dumps(api_request))
+        return PageVsAutocomplete().page(
+            PageContext(
+                config=load_config,
+                request=request,
+            )
+        )
+
+    assert unit_choice({}) == unit_choice({"metric": ""})

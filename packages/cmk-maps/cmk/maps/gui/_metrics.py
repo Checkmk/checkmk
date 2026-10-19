@@ -54,6 +54,7 @@ from cmk.graphing_engine import (
     RRDMetric,
     Service,
     SiteID,
+    sort_registered_graph_plugins,
     TimeRange,
     translated_names_and_scales,
 )
@@ -68,7 +69,6 @@ from cmk.gui.graphing import (
     evaluated_perfometer,
     EvaluatedMetric,
     perfometer_label,
-    sort_registered_graph_plugins,
     unit_to_unit_format,
 )
 from cmk.gui.i18n import translate_to_current_language

@@ -25,6 +25,7 @@ from cmk.graphing_engine import (
     HostName,
     RRDMetric,
     ServiceName,
+    sort_registered_graph_plugins,
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
@@ -45,7 +46,6 @@ from ._graph_dispatch import (
     legacy_graph_id,
 )
 from ._graph_specification import AnnotatedHostName, GraphSpecification, StoredGraphSpecification
-from ._graphs_order import sort_registered_graph_plugins
 from ._plugins import registered_graphs, registered_metrics, registered_translations
 from ._source import RRDFetchData, RRDFetchMetricNames
 

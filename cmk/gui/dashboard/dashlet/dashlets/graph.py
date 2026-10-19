@@ -15,7 +15,12 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import translations as translations_v1
-from cmk.graphing_engine import ApiGraph, ConsolidationFunction, TimeRange
+from cmk.graphing_engine import (
+    ApiGraph,
+    ConsolidationFunction,
+    sort_registered_graph_plugins,
+    TimeRange,
+)
 from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui import sites
@@ -39,7 +44,6 @@ from cmk.gui.graphing import (
     registered_translations,
     resolve_graph_id_from_index,
     RRDFetchMetricNames,
-    sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
 from cmk.gui.i18n import _

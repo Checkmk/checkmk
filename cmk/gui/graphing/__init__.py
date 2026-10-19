@@ -77,7 +77,6 @@ from ._graph_templates import (
     TEMPLATE_KIND,
     TemplateGraphSpecification,
 )
-from ._graphs_order import sort_registered_graph_plugins
 from ._legacy_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
 from ._line_types import line_type_with_mirroring, LineType
 from ._metric_data import (
@@ -293,7 +292,6 @@ __all__ = [
     "RRDFetchMetricNames",
     "RRDFetchTimeSeries",
     "serialize_graphs",
-    "sort_registered_graph_plugins",
     "STATIC_INTERACTION",
     "stored_time_range_seconds",
     "SumDelta",

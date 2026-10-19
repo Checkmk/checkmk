@@ -33,6 +33,7 @@ py_library(
         "cmk/graphing_engine/_plugins/_display.py",
         "cmk/graphing_engine/_plugins/_graphs.py",
         "cmk/graphing_engine/_plugins/_matching.py",
+        "cmk/graphing_engine/_plugins/_order.py",
         "cmk/graphing_engine/_plugins/_quantities.py",
         "cmk/graphing_engine/_plugins/_translations.py",
         "cmk/graphing_engine/_plugins/_types.py",

@@ -15,9 +15,7 @@ from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing.v2_unstable import (
     entry_point_prefixes as entry_point_prefixes_v2_unstable,
 )
-from cmk.graphing_engine import ApiGraph, ApiPerfometer
-
-from ._graphs_order import sort_registered_graph_plugins
+from cmk.graphing_engine import ApiGraph, ApiPerfometer, sort_registered_graph_plugins
 
 type GraphingPlugins = DiscoveredPlugins[
     metrics_v1.Metric | ApiPerfometer | ApiGraph | translations_v1.Translation

@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import { computed } from 'vue'
 
+import ContextualLinkChooser from '../ContextualLinkChooser.vue'
 import type {
   CmkRankedTableProps,
   RankedTableCell,
@@ -71,7 +72,8 @@ function truncates(column: RankedTableColumn): boolean {
 
 /** Links carry their own tooltip, so only plain text cells get one on the cell. */
 function plainTextTooltip(column: RankedTableColumn, row: RankedTableRow): string | undefined {
-  const isPlain = cell(column, row).href === undefined
+  const { href, choices } = cell(column, row)
+  const isPlain = href === undefined && choices === undefined
   return truncates(column) && isPlain ? cellText(column, row) : undefined
 }
 
@@ -133,6 +135,19 @@ const gridTemplateColumns = computed(() =>
               </span>
               <span class="db-cmk-ranked-table__bar-value">{{ cellText(column, row) }}</span>
             </div>
+            <ContextualLinkChooser
+              v-else-if="cell(column, row).choices !== undefined"
+              :entries="cell(column, row).choices!"
+            >
+              <CmkButton
+                class="db-cmk-ranked-table__link"
+                variant="text"
+                size="small"
+                :title="cellText(column, row)"
+              >
+                <span class="db-cmk-ranked-table__text">{{ cellText(column, row) }}</span>
+              </CmkButton>
+            </ContextualLinkChooser>
             <CmkButton
               v-else-if="cell(column, row).href !== undefined"
               class="db-cmk-ranked-table__link"

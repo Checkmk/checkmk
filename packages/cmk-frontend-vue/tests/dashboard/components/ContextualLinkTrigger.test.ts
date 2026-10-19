@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
@@ -63,11 +64,19 @@ describe('ContextualLinkTrigger', () => {
     expect(screen.queryByRole('link')).toBeNull()
   })
 
-  it('points its anchor at the first of several links', () => {
+  it('offers each of several links by its title', async () => {
     renderTrigger([SEARCHHOST, SEARCHSVC])
 
-    expect(screen.getByRole('link', { name: 'Down' }).getAttribute('href')).toContain(
-      'view_name=searchhost'
+    await userEvent.click(screen.getByText('Down'))
+    await screen.findByRole('menu')
+
+    expect(screen.getByRole('menuitem', { name: 'All hosts' })).toHaveAttribute(
+      'href',
+      'view.py?view_name=searchhost&hst1=on&filled_in=filter&_show_filter_form=1'
+    )
+    expect(screen.getByRole('menuitem', { name: 'All services' })).toHaveAttribute(
+      'href',
+      'view.py?view_name=searchsvc&filled_in=filter&_show_filter_form=1'
     )
   })
 })

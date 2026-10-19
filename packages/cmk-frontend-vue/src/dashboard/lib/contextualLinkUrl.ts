@@ -45,6 +45,25 @@ export function contextualLinkUrl(
   return `${page}?${params.toString()}`
 }
 
+export interface ContextualLinkEntry {
+  title: string
+  href: string
+}
+
+/** Each link of an element with its URL, in the order the widget offers them. */
+export function contextualLinkEntries(
+  links: ResolvedLink[],
+  linkProperties: LinkProperties,
+  effectiveContext: VisualContext
+): ContextualLinkEntry[] {
+  return links.flatMap((link, index) => {
+    const properties = linkProperties.links[index]
+    return properties === undefined
+      ? []
+      : [{ title: link.title, href: contextualLinkUrl(link, properties, effectiveContext) }]
+  })
+}
+
 /** The URL of the first contextual link, or null if the widget links nowhere. */
 export function firstContextualLinkUrl(
   links: ResolvedLink[],

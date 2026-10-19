@@ -118,7 +118,13 @@ def _compute_widget_graphs(
 
     return {
         "graphs": [
-            asdict(ApiDiscoveredGraph.from_built(built, temperature_unit))
+            # we empty the query-carrying fields on shared dashboards to not leak query information
+            {
+                **asdict(ApiDiscoveredGraph.from_built(built, temperature_unit)),
+                "internal": "",
+                "add_to_specification": None,
+                "add_type": None,
+            }
             for built in discovered.graphs
         ],
         "no_data_message": discovered.no_data_message,
@@ -135,8 +141,9 @@ def compute_widget_graphs(
     """Discover the graph shells of the dashboard's client-side rendered graph widgets.
 
     The browser of a shared dashboard never sees the filter values, so it cannot discover the
-    graphs itself. Errors are kept per widget so that one unresolvable graph does not take the
-    whole dashboard down.
+    graphs itself. Nor does it see the serialized graphs or their add-to specifications, which
+    carry the queries: `internal`, `add_to_specification` and `add_type` are empty. Errors are
+    kept per widget so that one unresolvable graph does not take the whole dashboard down.
     """
     dashboard_context = board.get("context")
     return {

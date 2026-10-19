@@ -71,7 +71,7 @@ Interfaces
 For ingestion of OTel metrics, the collector uses ClickHouse's native interface (via TLS).
 For querying, we use ClickHouse's HTTP interface (via `ClickHouse Connect <https://clickhouse.com/docs/integrations/python>`_).
 On-premise, this is always HTTPS. In the cloud deployment, encryption is provided by the service mesh rather than ClickHouse itself, so the connection to ClickHouse uses HTTP.
-Every read carries its origin, the site and Checkmk user, as JSON in the ClickHouse setting ``log_comment``, which the query log records on every server the read reaches.
+Every read carries its origin, the site, Checkmk component and user, as JSON in the ClickHouse setting ``log_comment``, which the query log records on every server the read reaches.
 
 Risks and technical debts
 =========================

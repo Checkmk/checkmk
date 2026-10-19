@@ -26,7 +26,7 @@ from cmk.base.notify import (
 )
 from cmk.ccc import store
 from cmk.ccc import version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException, raise_mkterminate_on_sigint
+from cmk.ccc.exceptions import MKGeneralException, MKTerminate, raise_mkterminate_on_sigint
 from cmk.ccc.version import Edition
 from cmk.ccc.version import edition as edition_of_site
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
@@ -86,6 +86,9 @@ def _mode_notify(
 def _run_notify(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
     try:
         return _mode_notify(omd_root, global_options, options, args)
+    except MKTerminate:
+        logging.getLogger("cmk.base").error("<Interrupted>")  # noqa: TRY400
+        return 1
     except MKGeneralException as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:

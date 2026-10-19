@@ -10,7 +10,6 @@ from typing import NoReturn
 
 import pytest
 
-from cmk.ccc.exceptions import raise_mkterminate_on_sigint
 from cmk.cli.engine.commands import (
     _pager_environment,
     Command,
@@ -70,7 +69,7 @@ def test_an_interrupt_leaves_the_pager_to_clean_up_after_itself(
 ) -> None:
     monkeypatch.setenv("PAGER", "sh -c 'kill -INT $PPID; sleep 1; cat'")
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
-    raise_mkterminate_on_sigint()
+    signal.signal(signal.SIGINT, signal.default_int_handler)
 
     write_paged("the help\n")
 

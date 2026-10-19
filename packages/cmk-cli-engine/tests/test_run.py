@@ -5,14 +5,21 @@
 
 import errno
 import logging
-from collections.abc import Callable, Sequence
+import signal
+from collections.abc import Callable, Iterator, Sequence
 from pathlib import Path
 
 import pytest
 
-from cmk.ccc.exceptions import MKTerminate
 from cmk.cli.engine.commands import Command, make_command
-from cmk.cli.engine.run import dispatch, enable_file_logging, log_level, run, Runtime
+from cmk.cli.engine.run import (
+    dispatch,
+    enable_file_logging,
+    interrupt_on_sigint,
+    log_level,
+    run,
+    Runtime,
+)
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 
 from ._logger import null_logger
@@ -43,7 +50,7 @@ class Recorder:
         self.calls.append(args[0] if len(args) == 1 else args)
 
 
-def _raising(exception: Exception) -> Callable[[], int]:
+def _raising(exception: BaseException) -> Callable[[], int]:
     def command() -> int:
         raise exception
 
@@ -59,7 +66,7 @@ def test_the_exit_status_of_a_command_that_succeeds_is_its_own() -> None:
 
 
 def test_an_interrupted_command_exits_one() -> None:
-    assert _dispatch(_raising(MKTerminate())) == 1
+    assert _dispatch(_raising(KeyboardInterrupt())) == 1
 
 
 def test_a_broken_pipe_exits_four() -> None:
@@ -123,7 +130,7 @@ def test_the_crash_message_reaches_the_log(caplog: pytest.LogCaptureFixture) -> 
 
 def test_an_interruption_says_so_in_the_log(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.ERROR):
-        _dispatch(_raising(MKTerminate()))
+        _dispatch(_raising(KeyboardInterrupt()))
 
     assert "<Interrupted>" in caplog.text
 
@@ -302,6 +309,23 @@ def test_the_help_names_the_commands_there_are() -> None:
     _run(["cmk", "--help"], _runtime([_command(lambda *_args: 0)], page=paged))
 
     assert "--demo" in str(paged.calls[0])
+
+
+@pytest.fixture(name="ignored_sigint")
+def _ignored_sigint() -> Iterator[None]:
+    previous = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGINT, previous)
+
+
+@pytest.mark.usefixtures("ignored_sigint")
+def test_an_ignored_interrupt_signal_interrupts_again() -> None:
+    interrupt_on_sigint()
+
+    with pytest.raises(KeyboardInterrupt):
+        signal.raise_signal(signal.SIGINT)
 
 
 def test_the_command_line_takes_the_interrupt_signal() -> None:

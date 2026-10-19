@@ -5,6 +5,7 @@
 
 import errno
 import logging
+import signal
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -15,10 +16,6 @@ from typing import Final, override, Self
 import cmk.ccc.debug
 import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
-from cmk.ccc.exceptions import (
-    MKTerminate,
-    raise_mkterminate_on_sigint,
-)
 from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.cli.engine.call import call
@@ -163,13 +160,17 @@ _LOG_FILE_OPTION: Final = Option(
 )
 
 
+def interrupt_on_sigint() -> None:
+    signal.signal(signal.SIGINT, signal.default_int_handler)
+
+
 @dataclass(frozen=True, kw_only=True)
 class Runtime:
     """What the command line reaches for besides its arguments, injectable one by one"""
 
     discover: Callable[[], Sequence[Command]] = discover_commands
     start_tracing: Callable[[Path], None] = start_tracing
-    on_sigint: Callable[[], None] = raise_mkterminate_on_sigint
+    on_sigint: Callable[[], None] = interrupt_on_sigint
     crash_reporter_for: Callable[[Path, Sequence[str], Mapping[str, str]], CrashReporter] = (
         saving_crash_reporter
     )
@@ -192,7 +193,7 @@ def dispatch(
     try:
         return command()
 
-    except MKTerminate:
+    except KeyboardInterrupt:
         logger.error("<Interrupted>")  # noqa: TRY400
         return 1
 

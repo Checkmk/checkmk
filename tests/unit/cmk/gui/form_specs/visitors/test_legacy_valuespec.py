@@ -45,3 +45,22 @@ def test_legacy_valuespec_rerenders_invalid_input_under_posted_varprefix() -> No
     assert isinstance(data, dict)
     assert data["varprefix"] == "posted"
     assert 'name="posted"' in data["input_html"]
+
+
+@pytest.mark.xfail(strict=True, raises=TypeError, reason="Crash groups 4397, 4107, 4224: TypeError")
+@pytest.mark.usefixtures("request_context")
+def test_legacy_valuespec_ignores_file_inputs_sent_as_objects() -> None:
+    # Crash groups 4397/4107/4224: the frontend sends file inputs as {} in input_context
+    visitor = get_visitor(
+        LegacyValueSpec.wrap(TextInput()),
+        VisitorOptions(migrate_values=True, mask_values=False),
+    )
+
+    assert (
+        visitor.to_disk(
+            RawFrontendData(
+                {"varprefix": "posted", "input_context": {"posted": "foo", "posted_upload": {}}}
+            )
+        )
+        == "foo"
+    )

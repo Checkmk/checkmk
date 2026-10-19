@@ -52,6 +52,7 @@ def register(
             description=_l("Selection of site is enforced, use this filter for joining"),
             is_show_more=True,
             heading_info=site_filter_heading_info,
+            drilldown=drilldowns.text("site", "site"),
         )
     )
 

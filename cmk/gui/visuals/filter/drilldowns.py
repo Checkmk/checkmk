@@ -78,9 +78,41 @@ def single_item(variable: str, column: ColumnName) -> Drilldown:
     return Drilldown(columns=[column], variables=variables)
 
 
-def state(prefix: str, object_type: ObjectType) -> Drilldown:
-    name = "host_name" if object_type == "host" else "service_description"
-    column = f"{object_type}_state"
+def check_command(variable: str, column: ColumnName) -> Drilldown:
+    # The filter matches the command with any arguments.
+    def variables(row: RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
+        if (cell := value(row, column)) is None:
+            return None
+        return {variable: cell.split("!", 1)[0]}
+
+    return Drilldown(columns=[column], variables=variables)
+
+
+def mapping_value(row: RowValues, column: ColumnName, key: str) -> str | None:
+    """The value under the key of a mapping column, such as a custom variable or a label."""
+    mapping = row.get(column)
+    if not isinstance(mapping, Mapping) or not (cell := mapping.get(key)):
+        return None
+    return str(cell)
+
+
+def host_label_value(variable: str, label: str) -> Drilldown:
+    def variables(row: RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
+        cell = mapping_value(row, "host_labels", label)
+        return None if cell is None else {variable: cell}
+
+    return Drilldown(columns=["host_labels"], variables=variables)
+
+
+def object_name(object_type: ObjectType) -> ColumnName:
+    return "host_name" if object_type == "host" else "service_description"
+
+
+def state(
+    prefix: str, object_type: ObjectType, state_column: ColumnName | None = None
+) -> Drilldown:
+    name = object_name(object_type)
+    column = state_column or f"{object_type}_state"
     has_been_checked = f"{object_type}_has_been_checked"
 
     def variables(row: RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
@@ -92,6 +124,17 @@ def state(prefix: str, object_type: ObjectType) -> Drilldown:
         return {f"{prefix}{int(str(row[column]))}": "on"}
 
     return Drilldown(columns=[name, column, has_been_checked], variables=variables)
+
+
+def state_type(object_type: ObjectType) -> Drilldown:
+    name, column = object_name(object_type), f"{object_type}_state_type"
+
+    def variables(row: RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
+        if value(row, name) is None or (cell := value(row, column)) is None:
+            return None
+        return {f"is_{column}": cell}
+
+    return Drilldown(columns=[name, column], variables=variables)
 
 
 def labels(object_type: ObjectType) -> Drilldown:

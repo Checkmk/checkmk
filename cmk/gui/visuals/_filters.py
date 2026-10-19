@@ -296,6 +296,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
                 column="host_check_command",
             ),
             group=FilterGroup.HOST_CHECK_COMMAND,
+            drilldown=drilldowns.check_command("host_check_command_exact", "host_check_command"),
         )
     )
 
@@ -326,8 +327,29 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
                 column="service_check_command",
             ),
             group=FilterGroup.SERVICE_CHECK_COMMAND,
+            drilldown=drilldowns.check_command("check_command_exact", "service_check_command"),
         )
     )
+
+
+def _exact_address(variable: str, address: str | None) -> FilterHTTPVariables | None:
+    return None if address is None else {variable: address, f"{variable}_prefix": "no"}
+
+
+def _primary_address(variable: str) -> drilldowns.Drilldown:
+    def variables(row: drilldowns.RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
+        return _exact_address(variable, drilldowns.value(row, "host_address"))
+
+    return drilldowns.Drilldown(columns=["host_address"], variables=variables)
+
+
+def _custom_variable_address(variable: str, custom_variable: str) -> drilldowns.Drilldown:
+    def variables(row: drilldowns.RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
+        return _exact_address(
+            variable, drilldowns.mapping_value(row, "host_custom_variables", custom_variable)
+        )
+
+    return drilldowns.Drilldown(columns=["host_custom_variables"], variables=variables)
 
 
 class IPAddressFilter(Filter):
@@ -340,6 +362,7 @@ class IPAddressFilter(Filter):
         link_columns: list[str],
         is_show_more: bool = False,
         group: FilterGroup | None = None,
+        drilldown: drilldowns.Drilldown | None = None,
     ):
         self.query_filter = query_filter
         super().__init__(
@@ -351,6 +374,7 @@ class IPAddressFilter(Filter):
             link_columns=link_columns,
             is_show_more=is_show_more,
             group=group,
+            drilldown=drilldown,
         )
 
     @override
@@ -393,6 +417,7 @@ def register_host_address_filters(filter_registry: FilterRegistry) -> None:
             ),
             is_show_more=True,
             group=FilterGroup.HOST_PROPERTIES,
+            drilldown=_primary_address("host_address"),
         )
     )
 
@@ -406,6 +431,7 @@ def register_host_address_filters(filter_registry: FilterRegistry) -> None:
                 what="ipv4",
             ),
             group=FilterGroup.HOST_PROPERTIES,
+            drilldown=_custom_variable_address("host_ipv4_address", "ADDRESS_4"),
         )
     )
 
@@ -419,9 +445,12 @@ def register_host_address_filters(filter_registry: FilterRegistry) -> None:
                 what="ipv6",
             ),
             group=FilterGroup.HOST_PROPERTIES,
+            drilldown=_custom_variable_address("host_ipv6_address", "ADDRESS_6"),
         )
     )
 
+    # No drill-down for the address family filters: on a service view they match the service's
+    # tags, not its host's.
     filter_registry.register(
         FilterOption(
             title=_l("Host address family (primary)"),
@@ -536,6 +565,7 @@ def register_contact_filters(filter_registry: FilterRegistry) -> None:
             ),
             group_type="host_contact",
             group=FilterGroup.HOST_CONTACT,
+            drilldown=drilldowns.single_item("opthost_contact_group", "host_contact_groups"),
         )
     )
 
@@ -554,6 +584,7 @@ def register_contact_filters(filter_registry: FilterRegistry) -> None:
             ),
             group_type="service_contact",
             group=FilterGroup.SERVICE_CONTACT,
+            drilldown=drilldowns.single_item("optservice_contact_group", "service_contact_groups"),
         )
     )
 
@@ -565,6 +596,7 @@ def register_contact_filters(filter_registry: FilterRegistry) -> None:
             query_filter=query_filters.TextQuery(ident="host_ctc", column="host_contacts", op=">="),
             is_show_more=True,
             group=FilterGroup.HOST_CONTACT,
+            drilldown=drilldowns.single_item("host_ctc", "host_contacts"),
         )
     )
 
@@ -591,6 +623,7 @@ def register_contact_filters(filter_registry: FilterRegistry) -> None:
             ),
             is_show_more=True,
             group=FilterGroup.SERVICE_CONTACT,
+            drilldown=drilldowns.single_item("service_ctc", "service_contacts"),
         )
     )
 
@@ -765,6 +798,17 @@ class _FilterHostgroupProblems(CheckboxRowFilter):
         )
 
 
+def _service_staleness(
+    row: drilldowns.RowValues, _keys: Sequence[str]
+) -> FilterHTTPVariables | None:
+    if drilldowns.value(row, "service_description") is None or not isinstance(
+        staleness := row.get("service_staleness"), int | float
+    ):
+        return None
+    stale = staleness >= active_config.staleness_threshold
+    return {"is_service_staleness": "1" if stale else "0"}
+
+
 def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> None:
     filter_registry.register(
         CheckboxRowFilter(
@@ -793,6 +837,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
                 livestatus_query=partial(query_filters.service_state_filter, "hd"),
             ),
             group=FilterGroup.SERVICE_STATE,
+            drilldown=drilldowns.state("hdst", "service", "service_last_hard_state"),
         )
     )
 
@@ -825,6 +870,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
         )
     )
 
+    # No drill-down: on a service view the filter matches the service's state type.
     filter_state_type_with_register(
         filter_registry=filter_registry,
         ident="host_state_type",
@@ -841,6 +887,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
         sort_index=217,
         info="service",
         group=FilterGroup.SERVICE_STATE,
+        drilldown=drilldowns.state_type("service"),
     )
 
     filter_registry.register(
@@ -897,6 +944,10 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
             ),
             is_show_more=True,
             group=FilterGroup.SERVICE_IS,
+            drilldown=drilldowns.Drilldown(
+                columns=["service_description", "service_staleness"],
+                variables=_service_staleness,
+            ),
         )
     )
 
@@ -909,6 +960,7 @@ def filter_state_type_with_register(
     sort_index: int,
     info: str,
     group: FilterGroup | None = None,
+    drilldown: drilldowns.Drilldown | None = None,
 ) -> None:
     filter_registry.register(
         FilterOption(
@@ -922,6 +974,7 @@ def filter_state_type_with_register(
             ),
             is_show_more=True,
             group=group,
+            drilldown=drilldown,
         )
     )
 
@@ -1677,6 +1730,9 @@ def filter_kubernetes_register(
                 object_type=object_name,
             ),
             group=group,
+            drilldown=drilldowns.host_label_value(
+                f"kubernetes_{object_name}", f"cmk/kubernetes/{object_name}"
+            ),
         )
     )
 

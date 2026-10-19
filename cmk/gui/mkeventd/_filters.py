@@ -364,6 +364,17 @@ def _event_contact_group(
             return None
 
 
+def _service_level(ident: str, info: str) -> drilldowns.Drilldown:
+    column = f"{info}_custom_variables"
+
+    def variables(row: drilldowns.RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
+        if (level := drilldowns.mapping_value(row, column, "EC_SL")) is None:
+            return None
+        return {f"{ident}_lower": level, f"{ident}_upper": level}
+
+    return drilldowns.Drilldown(columns=[column], variables=variables)
+
+
 # TODO: Cleanup as a dropdown visual Filter later on
 class _FilterOptEventEffectiveContactgroup(FilterGroupCombo):
     def __init__(self) -> None:
@@ -407,6 +418,7 @@ class FilterECServiceLevelRange(Filter):
             link_columns=[],
             is_show_more=True,
             group=group,
+            drilldown=_service_level(ident, info),
         )
 
     @staticmethod

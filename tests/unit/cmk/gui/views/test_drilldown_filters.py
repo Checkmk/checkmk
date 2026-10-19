@@ -39,7 +39,12 @@ _HOST_ROW: RowValues = {
 _REGISTERING_ONLY_THE_COUNT = {"host_labels", "service_labels"}
 
 # The filters only some editions register; any other unregistered name is a misspelling.
-_EDITION_ONLY_FILTERS = {"customer"}
+_EDITION_ONLY_FILTERS = {
+    "customer",
+    "azure_resource_group",
+    "azure_subscription_name",
+    "azure_subscription",
+}
 
 
 def _drilldown(filter_name: FilterName) -> Drilldown:
@@ -53,6 +58,7 @@ def _drilldown(filter_name: FilterName) -> Drilldown:
 
 _VALUED_CASES = [
     pytest.param("siteopt", _HOST_ROW, [], {"site": "heute"}, id="site"),
+    pytest.param("site", _HOST_ROW, [], {"site": "heute"}, id="site (enforced)"),
     pytest.param("host", _HOST_ROW, [], {"host": "web01"}, id="host"),
     pytest.param("hoststate", _HOST_ROW, [], {"hst1": "on"}, id="host state"),
     pytest.param(
@@ -86,6 +92,125 @@ _VALUED_CASES = [
         id="host tags",
     ),
     pytest.param("host_auxtags", _HOST_ROW, ["tcp"], {"host_auxtags_0": "tcp"}, id="aux tag"),
+    pytest.param(
+        "host_check_command_exact",
+        {"host_check_command": "check-mk-host-ping!-w 200.00,80.00%"},
+        [],
+        {"host_check_command_exact": "check-mk-host-ping"},
+        id="host check command without its arguments",
+    ),
+    pytest.param(
+        "host_ctc", {"host_contacts": ["alice"]}, [], {"host_ctc": "alice"}, id="host contact"
+    ),
+    pytest.param(
+        "opthost_contactgroup",
+        {"host_contact_groups": ["ops"]},
+        [],
+        {"opthost_contact_group": "ops"},
+        id="host contact group",
+    ),
+    pytest.param(
+        "host_address",
+        {"host_address": "10.0.0.1"},
+        [],
+        {"host_address": "10.0.0.1", "host_address_prefix": "no"},
+        id="primary address",
+    ),
+    pytest.param(
+        "host_ipv4_address",
+        {"host_custom_variables": {"ADDRESS_4": "10.0.0.1"}},
+        [],
+        {"host_ipv4_address": "10.0.0.1", "host_ipv4_address_prefix": "no"},
+        id="IPv4 address",
+    ),
+    pytest.param(
+        "host_ipv6_address",
+        {"host_custom_variables": {"ADDRESS_6": "fe80::1"}},
+        [],
+        {"host_ipv6_address": "fe80::1", "host_ipv6_address_prefix": "no"},
+        id="IPv6 address",
+    ),
+    pytest.param(
+        "hst_service_level",
+        {"host_custom_variables": {"EC_SL": "10"}},
+        [],
+        {"hst_service_level_lower": "10", "hst_service_level_upper": "10"},
+        id="host service level",
+    ),
+    *(
+        pytest.param(
+            f"kubernetes_{name}",
+            {"host_labels": {f"cmk/kubernetes/{name}": "k"}},
+            [],
+            {f"kubernetes_{name}": "k"},
+            id=f"Kubernetes {name}",
+        )
+        for name in ("cluster", "namespace", "node", "deployment", "daemonset", "statefulset")
+    ),
+    *(
+        pytest.param(
+            f"azure_{name}",
+            {"host_labels": {f"cmk/azure/{name}": "a"}},
+            [],
+            {f"azure_{name}": "a"},
+            id=f"Azure {name}",
+        )
+        for name in ("resource_group", "subscription_name", "subscription")
+    ),
+    pytest.param(
+        "svchardstate",
+        {
+            "service_description": "CPU load",
+            "service_state": 0,
+            "service_last_hard_state": 2,
+            "service_has_been_checked": 1,
+        },
+        [],
+        {"hdst2": "on"},
+        id="service hard state",
+    ),
+    pytest.param(
+        "service_state_type",
+        {"service_description": "CPU load", "service_state_type": 0},
+        [],
+        {"is_service_state_type": "0"},
+        id="service state type",
+    ),
+    pytest.param(
+        "service_staleness",
+        {"service_description": "CPU load", "service_staleness": 2.5},
+        [],
+        {"is_service_staleness": "1"},
+        id="stale service",
+    ),
+    pytest.param(
+        "check_command_exact",
+        {"service_check_command": "check_mk-cpu_loads"},
+        [],
+        {"check_command_exact": "check_mk-cpu_loads"},
+        id="service check command",
+    ),
+    pytest.param(
+        "service_ctc",
+        {"service_contacts": ["alice"]},
+        [],
+        {"service_ctc": "alice"},
+        id="service contact",
+    ),
+    pytest.param(
+        "optservice_contactgroup",
+        {"service_contact_groups": ["ops"]},
+        [],
+        {"optservice_contact_group": "ops"},
+        id="service contact group",
+    ),
+    pytest.param(
+        "svc_service_level",
+        {"service_custom_variables": {"EC_SL": "20"}},
+        [],
+        {"svc_service_level_lower": "20", "svc_service_level_upper": "20"},
+        id="service service level",
+    ),
     pytest.param(
         "log_state",
         {"log_type": "SERVICE ALERT", "log_state": 2},
@@ -326,6 +451,17 @@ def test_drilldowns_combine_label_keys_in_one_group() -> None:
             id="service of a host row",
         ),
         pytest.param("service", {"service_description": ""}, [], id="empty service"),
+        pytest.param("host_ctc", {"host_contacts": ["alice", "bob"]}, [], id="several contacts"),
+        pytest.param("hst_service_level", {"host_custom_variables": {}}, [], id="no service level"),
+        pytest.param(
+            "kubernetes_cluster", {"host_labels": {"env": "prod"}}, [], id="no Kubernetes label"
+        ),
+        pytest.param(
+            "service_staleness",
+            {"service_description": "", "service_staleness": 0.0},
+            [],
+            id="staleness of a host row",
+        ),
     ],
 )
 def test_drilldowns_drop_a_filter_the_row_has_no_value_for(
@@ -381,13 +517,35 @@ def test_drilldown_filters_offer_a_dashboard_only_host_filters() -> None:
     assert drilldown_filters(data_source_registry["hosts"](), "dashboards") == [
         "wato_folder",
         "host",
+        "host_ipv4_address",
+        "host_ipv6_address",
+        "host_address",
         "opthostgroup",
+        "opthost_contactgroup",
+        "host_ctc",
+        "host_check_command_exact",
         "hoststate",
         "host_labels",
         "host_auxtags",
         "host_tags",
+        "hst_service_level",
         "siteopt",
+        "site",
+        "kubernetes_cluster",
+        "kubernetes_daemonset",
+        "kubernetes_deployment",
+        "kubernetes_namespace",
+        "kubernetes_node",
+        "kubernetes_statefulset",
     ]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_drilldown_filters_offer_no_host_filter_that_reads_a_service_column() -> None:
+    filters = drilldown_filters(data_source_registry["services"](), "views")
+
+    assert {"host_state_type", "address_family", "address_families"}.isdisjoint(filters)
+    assert "service_state_type" in filters
 
 
 @pytest.mark.usefixtures("request_context")

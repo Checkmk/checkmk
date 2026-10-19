@@ -41,6 +41,15 @@ pkg_files(
 )
 
 pkg_files(
+    name = "locale_de_mo",
+    srcs = ["@nagvis//:nagvis_de_DE_mo"],
+    renames = {
+        "@nagvis//:nagvis_de_DE_mo": "share/nagvis/htdocs/frontend/nagvis-js/locale/de_DE/LC_MESSAGES/nagvis.mo",
+    },
+    tags = ["manual"],
+)
+
+pkg_files(
     name = "doc_general",
     srcs = [
         "@nagvis//:doc_general_fg",
@@ -177,6 +186,7 @@ pkg_tar(
         "doc_en",
         "doc_general",
         "general",
+        "locale_de_mo",
         "nagvis_ini_skel",
         "omd_hook",
         "share",

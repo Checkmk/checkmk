@@ -743,6 +743,7 @@ http_archive(
     patches = [
         "//omd/packages/nagvis/patches:0001-global.php.dif",
         "//omd/packages/nagvis/patches:0002-cmkadmin.dif",
+        "//omd/packages/nagvis/patches:0003-deprecation-note.dif",
     ],
     sha256 = "21218c27662442432ba0a7fc701a051025639c9b9f6682e424b548d0dbc88c55",
     strip_prefix = "nagvis-1.10.6",

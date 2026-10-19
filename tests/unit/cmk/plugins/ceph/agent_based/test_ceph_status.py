@@ -100,3 +100,9 @@ def test_check_ceph_status_osds(value_store: dict[str, object]) -> None:
         Result(state=State.OK, summary="Health: OK"),
         Result(state=State.OK, summary="Epoch rate (15 minutes 0 seconds average): 0.00"),
     ]
+
+
+@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4310: JSONDecodeError")
+def test_parse_ceph_status_empty_section() -> None:
+    # Crash group 4310: the agent sent the section header without any content
+    assert not ceph_status.parse_ceph_status([])

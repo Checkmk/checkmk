@@ -96,9 +96,6 @@ STRINGTABLE: StringTable = [
                 ],
             ],
             {"heute": [Queue(vhost="/", name="cmk.intersite.heute_remote_1", messages=1)]},
-            marks=pytest.mark.xfail(
-                strict=True, raises=ValueError, reason="Crash group 4141: JSONDecodeError"
-            ),
             id="html error page of another site",
         ),
     ],

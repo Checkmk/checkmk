@@ -56,7 +56,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.type_defs import RequireConfirmation
 from cmk.gui.http import request
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     get_search_expression,
@@ -417,10 +417,17 @@ class RuleMatch:
 
 
 @dataclass(frozen=True)
+class UnknownMatch(ec.MatchFailure):
+    """The simulator can't tell whether a rule matches, unlike the Event Console of the site"""
+
+
+@dataclass(frozen=True)
 class RulePackMatch:
     matching_rules: int
     # Like in the Event Console, the first matching rule decides what happens.
     first_match: RuleMatch | None
+    # One of these rules before the first match might match and decide instead.
+    unknown_matches: Sequence[UnknownMatch]
 
 
 class EventSimulator:
@@ -483,28 +490,52 @@ class EventSimulator:
         except Exception as e:
             return ec.MatchFailure(reason=_("Cannot compile the rule: %(error)s") % {"error": e})
         try:
-            return self._rule_matcher.event_rule_matches(rule, self._event)
+            return self._match_compiled_rule(rule)
         except MKTimeout:
             raise
         except Exception as e:
-            # Failed time period queries are logged already, other errors are unexpected.
-            if not isinstance(e, _TimePeriodsUnavailable):
-                log.logger.exception(
-                    "Cannot match rule %(pack)s/%(rule_id)s against the simulated event",
-                    {"pack": rule["pack"], "rule_id": rule["id"]},
-                )
+            log.logger.exception(
+                "Cannot match rule %(pack)s/%(rule_id)s against the simulated event",
+                {"pack": rule["pack"], "rule_id": rule["id"]},
+            )
             return ec.MatchFailure(reason=_("Cannot match the rule: %(error)s") % {"error": e})
+
+    def _match_compiled_rule(self, rule: ec.Rule) -> ec.MatchResult:
+        try:
+            return self._rule_matcher.event_rule_matches(rule, self._event)
+        except _TimePeriodsUnavailable as e:
+            # The Event Console of the site knows its time periods, though, so the simulator can
+            # only tell whether the rule matches if that doesn't depend on them. The failed query is
+            # logged already.
+            if_active = self._match_assuming_time_periods(rule, active=True)
+            if_inactive = self._match_assuming_time_periods(rule, active=False)
+            if isinstance(if_active, ec.MatchSuccess) is isinstance(if_inactive, ec.MatchSuccess):
+                return if_active
+            return UnknownMatch(
+                reason=_("Cannot look up the time periods: %(error)s") % {"error": e}
+            )
+
+    def _match_assuming_time_periods(self, rule: ec.Rule, *, active: bool) -> ec.MatchResult:
+        """Matches the rule as if all time periods were active or all were inactive"""
+        return ec.RuleMatcher(
+            logger=None,
+            omd_site_id=self._event["site"],
+            is_active_time_period=lambda _name: active,
+        ).event_rule_matches(rule, self._event)
 
     def match_rule_pack(self, rule_pack: ec.ECRulePack) -> RulePackMatch:
         matching_rules = 0
         first_match: RuleMatch | None = None
+        unknown_matches: list[UnknownMatch] = []
         for rule in rule_pack["rules"]:
             result = self.match_rule(rule_pack, rule)
             if isinstance(result, ec.MatchSuccess):
                 matching_rules += 1
                 if first_match is None:
                     first_match = RuleMatch(result, match_outcome(rule, result))
-        return RulePackMatch(matching_rules, first_match)
+            elif isinstance(result, UnknownMatch) and first_match is None:
+                unknown_matches.append(result)
+        return RulePackMatch(matching_rules, first_match, tuple(unknown_matches))
 
 
 def hostname_translation_of_site(
@@ -2447,6 +2478,18 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                                 icon = StaticIcon(IconNames.checkmark)
                                 have_match = True
                     html.static_icon(icon, title=msg)
+                    if unknown_matches := pack_match.unknown_matches:
+                        html.static_icon(
+                            StaticIcon(IconNames.warning),
+                            title=ungettext(
+                                "This might be wrong, because the simulator cannot tell whether "
+                                "%(count)d rule of this pack matches: %(reason)s",
+                                "This might be wrong, because the simulator cannot tell whether "
+                                "%(count)d rules of this pack match: %(reason)s",
+                                len(unknown_matches),
+                            )
+                            % {"count": len(unknown_matches), "reason": unknown_matches[0].reason},
+                        )
 
                 table.cell(_("ID"), id_)
                 table.cell(_("Title"), rule_pack["title"])
@@ -2808,7 +2851,15 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     )
                 elif simulator:
                     result = simulator.match_rule(self._rule_pack, rule)
-                    if not isinstance(result, ec.MatchSuccess):
+                    if isinstance(result, UnknownMatch):
+                        html.static_icon(
+                            StaticIcon(IconNames.warning),
+                            title=_(
+                                "The simulator cannot tell whether this rule matches: %(reason)s"
+                            )
+                            % {"reason": result.reason},
+                        )
+                    elif not isinstance(result, ec.MatchSuccess):
                         html.static_icon(
                             StaticIcon(IconNames.hyphen),
                             title=_("Rule does not match: %(reason)s") % {"reason": result.reason},

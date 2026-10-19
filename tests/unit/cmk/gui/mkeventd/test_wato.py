@@ -192,9 +192,9 @@ def test_missing_connection_to_a_site_disabled_in_the_site_status_snapin_is_expl
             simulated_site=SiteId("disabled"),
         )
 
-    assert result == ec.MatchFailure(
-        reason="Cannot match the rule: The GUI has no Livestatus connection to site disabled, "
-        'because the site is disabled in the "Site status" snap-in.'
+    assert result == mkeventd_wato.UnknownMatch(
+        reason="Cannot look up the time periods: The GUI has no Livestatus connection to site "
+        'disabled, because the site is disabled in the "Site status" snap-in.'
     )
 
 
@@ -218,7 +218,7 @@ def test_simulated_event_uses_time_periods_of_the_simulated_site(
 
 
 @pytest.mark.usefixtures("request_context")
-def test_rule_does_not_match_without_a_connection_to_the_simulated_site(
+def test_match_is_unknown_without_a_connection_to_the_simulated_site(
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     with mock_livestatus(expect_status_query=True):
@@ -227,9 +227,43 @@ def test_rule_does_not_match_without_a_connection_to_the_simulated_site(
             simulated_site=SiteId("unconnected"),
         )
 
-    assert result == ec.MatchFailure(
-        reason="Cannot match the rule: The GUI has no Livestatus connection to site unconnected."
+    assert result == mkeventd_wato.UnknownMatch(
+        reason="Cannot look up the time periods: The GUI has no Livestatus connection to site "
+        "unconnected."
     )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_rule_does_not_match_without_a_connection_if_its_time_period_does_not_decide(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    with mock_livestatus(expect_status_query=True):
+        result = _simulate(
+            ec.Rule(
+                id="rule", match="no such text", match_timeperiod=ec.TimeperiodName("workhours")
+            ),
+            simulated_site=SiteId("unconnected"),
+        )
+
+    assert result == ec.MatchFailure(reason="did not match, message text does not match")
+
+
+@pytest.mark.usefixtures("request_context")
+def test_inverted_rule_matches_without_a_connection_if_its_time_period_does_not_decide(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    with mock_livestatus(expect_status_query=True):
+        result = _simulate(
+            ec.Rule(
+                id="rule",
+                match="no such text",
+                match_timeperiod=ec.TimeperiodName("workhours"),
+                invert_matching=True,
+            ),
+            simulated_site=SiteId("unconnected"),
+        )
+
+    assert isinstance(result, ec.MatchSuccess)
 
 
 @pytest.mark.usefixtures("request_context")
@@ -263,8 +297,9 @@ def test_simulator_gives_up_on_time_periods_after_the_first_failed_query(
 
     assert caplog.messages.count("Cannot update time period information.") == 1
     assert results == 2 * [
-        ec.MatchFailure(
-            reason="Cannot match the rule: The GUI has no Livestatus connection to site unconnected."
+        mkeventd_wato.UnknownMatch(
+            reason="Cannot look up the time periods: The GUI has no Livestatus connection to site "
+            "unconnected."
         )
     ]
 
@@ -505,6 +540,42 @@ def test_unexpected_errors_while_matching_a_rule_are_logged(
     assert "Cannot match rule pack/rule against the simulated event" in caplog.messages
 
 
+@pytest.mark.usefixtures("request_context")
+def test_unexpected_errors_while_matching_a_rule_without_time_periods_are_logged(
+    mock_livestatus: MockLiveStatusConnection, caplog: pytest.LogCaptureFixture
+) -> None:
+    # Nobody validates rule packs written by hand or shipped in an MKP.
+    rule = ec.Rule(
+        id="rule",
+        match_priority=5,  # type: ignore[typeddict-item]
+        match_timeperiod=ec.TimeperiodName("workhours"),
+    )
+
+    with mock_livestatus(expect_status_query=True):
+        _simulate(rule, simulated_site=SiteId("unconnected"))
+
+    assert "Cannot match rule pack/rule against the simulated event" in caplog.messages
+
+
+@pytest.mark.usefixtures("request_context")
+def test_rule_pack_match_has_the_unknown_matches_before_its_first_match(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    unknown_rule = ec.Rule(id="unknown", match_timeperiod=ec.TimeperiodName("workhours"))
+
+    with mock_livestatus(expect_status_query=True):
+        pack_match = _simulator(simulated_site=SiteId("unconnected")).match_rule_pack(
+            _rule_pack(unknown_rule, _MATCHING_RULE, unknown_rule)
+        )
+
+    assert pack_match.unknown_matches == (
+        mkeventd_wato.UnknownMatch(
+            reason="Cannot look up the time periods: The GUI has no Livestatus connection to site "
+            "unconnected."
+        ),
+    )
+
+
 @contextmanager
 def _request_timeout_after(seconds: float) -> Iterator[None]:
     """Times out the request like the GUI does, but after less than a second"""
@@ -545,7 +616,9 @@ def test_disabled_rules_do_not_match_in_a_rule_pack() -> None:
         _rule_pack(disabled_rule)
     )
 
-    assert pack_match == mkeventd_wato.RulePackMatch(matching_rules=0, first_match=None)
+    assert pack_match == mkeventd_wato.RulePackMatch(
+        matching_rules=0, first_match=None, unknown_matches=()
+    )
 
 
 def test_rules_of_a_disabled_rule_pack_do_not_match() -> None:

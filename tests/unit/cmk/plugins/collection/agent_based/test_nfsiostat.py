@@ -419,7 +419,6 @@ def test_mount_name_with_no_beginning_slash():
     assert results[0] == Result(state=State.OK, summary="Operations: 0.54/s")
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4412: ValueError")
 def test_nfsiostat_parse_one_line_per_mount() -> None:
     # Crash group 4412: the agent output contained one line per mount instead of a single line
     stats = (

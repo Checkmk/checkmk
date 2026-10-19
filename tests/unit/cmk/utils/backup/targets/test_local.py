@@ -12,6 +12,7 @@ import pytest
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.utils.backup.targets import TargetId
 from cmk.utils.backup.targets.local import LocalTarget
+from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
 
 
 class TestLocalTarget:
@@ -58,3 +59,19 @@ class TestLocalTarget:
                     "is_mountpoint": False,
                 },
             ).check_ready()
+
+    @pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 3971: JSONDecodeError")
+    def test_list_backups_skips_unreadable_backup_info(self, tmp_path: Path) -> None:
+        # Crash group 3971: an interrupted backup left an empty mkbackup.info behind
+        (tmp_path / "broken").mkdir()
+        (tmp_path / "broken" / BACKUP_INFO_FILENAME).write_text("")
+
+        assert not list(
+            LocalTarget(
+                TargetId(""),
+                {
+                    "path": str(tmp_path),
+                    "is_mountpoint": False,
+                },
+            ).list_backups()
+        )

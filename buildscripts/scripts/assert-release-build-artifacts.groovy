@@ -56,15 +56,15 @@ void main() {
                         ]
                     ) {
                         withEnv(["PYTHONUNBUFFERED=1"]) {
-                            def additional_args = is_rc_build ? "--skip-docker" : "";
+                            def additional_args = is_rc_build ? "--skip_docker" : "";
                             def result = sh(
                                 script: """python3 \
                                 buildscripts/scripts/assert_build_artifacts.py \
                                 --editions_file "${checkout_dir}/editions.yml" \
+                                ${additional_args} \
                                 assert_build_artifacts \
                                 --version "${cmk_version_rc_aware}" \
-                                --use_case "${use_case}" \
-                                ${additional_args}
+                                --use_case "${use_case}"
                                 """,
                                 returnStatus: true,
                             );

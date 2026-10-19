@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping
 from pathlib import Path
@@ -82,7 +83,7 @@ class RemoteTarget(ABC, Generic[TRemoteParams, TRemoteStorage]):
         for key in (el for el in remote_objects if BACKUP_INFO_FILENAME == el.name):
             try:
                 yield str(key.parent), load_backup_info(self._get_file(key))
-            except UnrecognizedBackupTypeError:
+            except (UnrecognizedBackupTypeError, json.JSONDecodeError):
                 continue
 
     def get_backup(self, backup_id: str) -> Backup:

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import errno
+import json
 import os
 import shutil
 from collections.abc import Iterator
@@ -76,7 +77,7 @@ class LocalTarget:
                 if backup_id.is_dir():
                     try:
                         yield backup_id.name, load_backup_info(backup_id / BACKUP_INFO_FILENAME)
-                    except (FileNotFoundError, UnrecognizedBackupTypeError):
+                    except (FileNotFoundError, UnrecognizedBackupTypeError, json.JSONDecodeError):
                         continue
             except PermissionError:
                 continue

@@ -30,7 +30,7 @@ from cmk.base.modes.check_mk import (
     set_fake_dns,
     SNMP_BACKEND_OPTION,
 )
-from cmk.ccc.exceptions import MKBailOut, OnError
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher_abc import Mode as FetchMode
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
@@ -274,7 +274,7 @@ def _run_dump_agent(
 ) -> int:
     try:
         return _mode_dump_agent(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
@@ -388,7 +388,7 @@ def _run_dump_hosts(
 ) -> int:
     try:
         return _mode_dump_hosts(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise

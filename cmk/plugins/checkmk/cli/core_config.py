@@ -20,7 +20,7 @@ from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
 from cmk.base.modes.check_mk import forced_ip_lookup, host_addresses, load_checks, set_fake_dns
 from cmk.ccc import tty
-from cmk.ccc.exceptions import MKBailOut
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.store import activation_lock
 from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
@@ -132,7 +132,7 @@ def _run_dump_nagios_config(
 ) -> int:
     try:
         return _mode_dump_nagios_config(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
@@ -284,7 +284,7 @@ def _mode_update(
 def _run_update(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
     try:
         return _mode_update(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
@@ -405,7 +405,7 @@ def _run_restart(
 ) -> int:
     try:
         return _mode_restart(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
@@ -525,7 +525,7 @@ def _mode_reload(
 def _run_reload(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
     try:
         return _mode_reload(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise

@@ -10,6 +10,7 @@
 import dataclasses
 import enum
 import itertools
+import logging
 import sys
 from collections.abc import Iterable, Mapping, Sequence
 from contextlib import suppress
@@ -20,6 +21,7 @@ from cmk.base import config
 from cmk.base.config import ConfigCache
 from cmk.base.modes.check_mk import load_checks
 from cmk.ccc import tty
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.checkengine.plugin_backend import (
     filter_relevant_raw_sections,
@@ -102,10 +104,22 @@ def _mode_list_hosts(
     return 0
 
 
+def _run_list_hosts(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_list_hosts(omd_root, global_options, options, args)
+    except MKGeneralException as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_list_hosts = CLICommand(
     long_option="list-hosts",
     short_option="l",
-    handler_function=_mode_list_hosts,
+    handler_function=_run_list_hosts,
     argument=True,
     argument_descr="G1 G2...",
     argument_optional=True,
@@ -171,9 +185,21 @@ def _mode_list_tag(
     return 0
 
 
+def _run_list_tag(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_list_tag(omd_root, global_options, options, args)
+    except MKGeneralException as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_list_tag = CLICommand(
     long_option="list-tag",
-    handler_function=_mode_list_tag,
+    handler_function=_run_list_tag,
     argument=True,
     argument_descr="TAG1 TAG2...",
     argument_optional=True,
@@ -282,9 +308,21 @@ def _mode_list_checks(
     return 0
 
 
+def _run_list_checks(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_list_checks(omd_root, global_options, options, args)
+    except MKGeneralException as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_list_checks = CLICommand(
     long_option="list-checks",
     short_option="L",
-    handler_function=_mode_list_checks,
+    handler_function=_run_list_checks,
     short_help="List all available Check_MK checks",
 )

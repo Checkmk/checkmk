@@ -26,7 +26,7 @@ from cmk.base.notify import (
 )
 from cmk.ccc import store
 from cmk.ccc import version as cmk_version
-from cmk.ccc.exceptions import raise_mkterminate_on_sigint
+from cmk.ccc.exceptions import MKGeneralException, raise_mkterminate_on_sigint
 from cmk.ccc.version import Edition
 from cmk.ccc.version import edition as edition_of_site
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
@@ -83,6 +83,16 @@ def _mode_notify(
     return exit_status or 0
 
 
+def _run_notify(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    try:
+        return _mode_notify(omd_root, global_options, options, args)
+    except MKGeneralException as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 def _do_notify_via_automation(options: dict[str, bool], args: list[str]) -> int | None:
     log_to_stdout = False
     if options.get("log-to-stdout"):
@@ -125,7 +135,7 @@ def _do_notify_via_automation(options: dict[str, bool], args: list[str]) -> int 
 
 cli_command_notify = CLICommand(
     long_option="notify",
-    handler_function=_mode_notify,
+    handler_function=_run_notify,
     argument=True,
     argument_descr="MODE",
     argument_optional=True,

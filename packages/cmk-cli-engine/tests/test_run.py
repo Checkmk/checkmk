@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.ccc.exceptions import MKGeneralException, MKTerminate
+from cmk.ccc.exceptions import MKTerminate
 from cmk.cli.engine.commands import Command, make_command
 from cmk.cli.engine.run import dispatch, enable_file_logging, log_level, run, Runtime
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
@@ -60,10 +60,6 @@ def test_the_exit_status_of_a_command_that_succeeds_is_its_own() -> None:
 
 def test_an_interrupted_command_exits_one() -> None:
     assert _dispatch(_raising(MKTerminate())) == 1
-
-
-def test_a_general_exception_exits_three() -> None:
-    assert _dispatch(_raising(MKGeneralException("no such host"))) == 3
 
 
 def test_a_broken_pipe_exits_four() -> None:
@@ -375,7 +371,7 @@ def test_the_profile_is_written_below_the_site() -> None:
 def test_the_profile_is_written_even_when_the_command_raises() -> None:
     written = Recorder()
 
-    with pytest.raises(MKGeneralException):
+    with pytest.raises(ValueError):
         _run(
             ["cmk", "--demo"],
             _runtime([_command(_failing)], debug_enabled=lambda: True, write_profile=written),
@@ -385,4 +381,4 @@ def test_the_profile_is_written_even_when_the_command_raises() -> None:
 
 
 def _failing(_omd_root: Path, _options: GlobalOptions, _sub_options: Options, _args: Args) -> int:
-    raise MKGeneralException("no such host")
+    raise ValueError("no such host")

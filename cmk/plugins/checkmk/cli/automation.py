@@ -85,7 +85,7 @@ def _run_automation(
 ) -> int:
     try:
         return _mode_automation(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise

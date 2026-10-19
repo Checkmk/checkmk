@@ -109,9 +109,21 @@ def _mode_snmptranslate(
     return 0
 
 
+def _run_snmptranslate(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_snmptranslate(omd_root, global_options, options, args)
+    except MKGeneralException as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_snmptranslate = CLICommand(
     long_option="snmptranslate",
-    handler_function=_mode_snmptranslate,
+    handler_function=_run_snmptranslate,
     argument=True,
     argument_descr="HOST",
     short_help="Do snmptranslate on walk",
@@ -243,7 +255,7 @@ def _run_snmpwalk(
 ) -> int:
     try:
         return _mode_snmpwalk(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
@@ -356,7 +368,7 @@ def _run_snmpget(
 ) -> int:
     try:
         return _mode_snmpget(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise

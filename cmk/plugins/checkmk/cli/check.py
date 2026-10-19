@@ -23,7 +23,7 @@ from cmk.base.modes.check_mk import (
     set_fake_dns,
     SNMP_BACKEND_OPTION,
 )
-from cmk.ccc.exceptions import MKBailOut
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.cli.engine.commands import option_names, option_string
@@ -110,7 +110,7 @@ def _mode_check(omd_root: Path, global_options: GlobalOptions, parsed: Options, 
 def _run_check(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
     try:
         return _mode_check(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise

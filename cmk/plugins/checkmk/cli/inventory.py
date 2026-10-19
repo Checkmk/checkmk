@@ -43,7 +43,7 @@ from cmk.base.modes.check_mk import (
     SNMP_BACKEND_OPTION,
 )
 from cmk.ccc.config_path import VersionedConfigPath
-from cmk.ccc.exceptions import MKBailOut, MKTimeout, OnError
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine import inventory
@@ -328,7 +328,7 @@ def _run_inventory(
 ) -> int:
     try:
         return _mode_inventory(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
@@ -554,7 +554,7 @@ def _run_inventorize_marked_hosts(
 ) -> int:
     try:
         return _mode_inventorize_marked_hosts(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise

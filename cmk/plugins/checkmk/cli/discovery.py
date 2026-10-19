@@ -57,7 +57,7 @@ from cmk.base.modes.check_mk import (
 )
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.cpu_tracking import CPUTracker
-from cmk.ccc.exceptions import MKBailOut, OnError
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.checkengine.checking import make_timing_results
 from cmk.checkengine.discovery import (
@@ -313,7 +313,7 @@ def _run_check_discovery(
 ) -> int:
     try:
         return _mode_check_discovery(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
@@ -614,7 +614,7 @@ def _run_discover(
 ) -> int:
     try:
         return _mode_discover(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise

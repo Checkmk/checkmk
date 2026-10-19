@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 import cmk.ccc.debug
-from cmk.ccc.exceptions import MKBailOut
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.licensing.basics.finder import blocked_feature_files
@@ -54,7 +54,7 @@ def _mode_man(_omd_root: Path, _global_options: GlobalOptions, options: Options,
 def _run_man(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
     try:
         return _mode_man(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
@@ -103,9 +103,21 @@ def _mode_browse_man(
     return 0
 
 
+def _run_browse_man(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_browse_man(omd_root, global_options, options, args)
+    except MKGeneralException as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_browse_man = CLICommand(
     long_option="browse-man",
     short_option="m",
-    handler_function=_mode_browse_man,
+    handler_function=_run_browse_man,
     short_help="Open interactive manpage browser",
 )

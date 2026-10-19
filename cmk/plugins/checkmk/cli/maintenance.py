@@ -15,7 +15,7 @@ from cmk.base import config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.modes.check_mk import forced_ip_lookup, host_addresses, load_checks, set_fake_dns
 from cmk.ccc import tty
-from cmk.ccc.exceptions import MKBailOut
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.checkengine.discovery import remove_autochecks_of_host
 from cmk.cli.engine.commands import write_stdout
 from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
@@ -62,7 +62,7 @@ def _run_update_dns_cache(
 ) -> int:
     try:
         return _mode_update_dns_cache(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
@@ -100,9 +100,21 @@ def _mode_cleanup_piggyback(
     return 0
 
 
+def _run_cleanup_piggyback(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_cleanup_piggyback(omd_root, global_options, options, args)
+    except MKGeneralException as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_cleanup_piggyback = CLICommand(
     long_option="cleanup-piggyback",
-    handler_function=_mode_cleanup_piggyback,
+    handler_function=_run_cleanup_piggyback,
     short_help="Cleanup outdated piggyback files",
 )
 
@@ -224,7 +236,7 @@ def _mode_flush(
 def _run_flush(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
     try:
         return _mode_flush(omd_root, global_options, options, args)
-    except MKBailOut as e:
+    except (MKBailOut, MKGeneralException) as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise

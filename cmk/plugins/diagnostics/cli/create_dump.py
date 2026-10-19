@@ -8,6 +8,7 @@ The dump itself is built by cmk.base.diagnostics; this only turns the command
 line into a selection of diagnostics plug-ins.
 """
 
+import logging
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -135,9 +136,21 @@ def _mode_create_diagnostics_dump(
     return 0
 
 
+def _run_create_diagnostics_dump(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> int:
+    try:
+        return _mode_create_diagnostics_dump(omd_root, global_options, options, args)
+    except MKGeneralException as e:
+        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
+        if global_options.debug:
+            raise
+        return 3
+
+
 cli_command_create_diagnostics_dump = CLICommand(
     long_option="create-diagnostics-dump",
-    handler_function=_mode_create_diagnostics_dump,
+    handler_function=_run_create_diagnostics_dump,
     sub_options=[
         CLIOption(
             long_option="list",

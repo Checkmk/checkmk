@@ -239,7 +239,6 @@ class TestPredictionStore:
         assert not too_old_minute.exists()
         assert stillok_minute.exists()
 
-    @pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4827: ValidationError")
     def test_iter_all_valid_predictions_skips_unreadable_meta(self, tmp_path: Path) -> None:
         # Crash group 4827: an empty prediction meta file crashed every predictive check
         store = PredictionStore(HostName("foo"), "bar")
@@ -248,7 +247,6 @@ class TestPredictionStore:
 
         assert not list(store.iter_all_valid_predictions(time.time()))
 
-    @pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4827: ValidationError")
     def test_iter_all_valid_predictions_skips_unreadable_data(self, tmp_path: Path) -> None:
         now = int(time.time())
         meta = PredictionInfo(

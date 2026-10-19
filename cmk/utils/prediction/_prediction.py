@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import Literal, NamedTuple, Protocol, Self
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.ccc.hostaddress import HostName
@@ -134,7 +134,7 @@ class PredictionStore:
         for info_path in self.iter_all_metadata_files():
             try:
                 meta = PredictionInfo.model_validate_json(info_path.read_text())
-            except FileNotFoundError:
+            except (FileNotFoundError, ValidationError):
                 continue
 
             if not meta.valid_interval[0] <= now < meta.valid_interval[1]:
@@ -146,7 +146,7 @@ class PredictionStore:
                 if info_path.stat().st_mtime <= data_path.stat().st_mtime:
                     yield meta, PredictionData.model_validate_json(data_path.read_text())
                     continue
-            except FileNotFoundError:
+            except (FileNotFoundError, ValidationError):
                 pass
 
             yield meta, None

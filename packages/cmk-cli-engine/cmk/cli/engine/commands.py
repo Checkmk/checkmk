@@ -16,7 +16,6 @@ from contextlib import contextmanager, suppress
 from typing import Final, override
 
 from cmk.ccc import tty
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.cli.internal import (
     CLICommand,
     CLIOption,
@@ -148,7 +147,7 @@ def parse_sub_options(
                 )
 
             if a and not option.argument:
-                raise MKGeneralException("No argument to %s expected." % o)
+                raise ValueError("No argument to %s expected." % o)
 
             if option.repeat:
                 if option.argument:
@@ -164,7 +163,7 @@ def parse_sub_options(
                 try:
                     val = option.argument_conv(a)
                 except ValueError:
-                    raise MKGeneralException("%s: Invalid argument" % o)
+                    raise ValueError("%s: Invalid argument" % o)
 
             options[option.name] = val
 
@@ -182,7 +181,7 @@ def option_string(parsed: Mapping[OptionName, object], name: OptionName) -> str 
         case str() as value:
             return value
         case value:
-            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+            raise TypeError(f"--{name}: invalid argument {value!r}")
 
 
 def option_strings(parsed: Mapping[OptionName, object], name: OptionName) -> Sequence[str]:
@@ -193,9 +192,9 @@ def option_strings(parsed: Mapping[OptionName, object], name: OptionName) -> Seq
             strings = tuple(element for element in value if isinstance(element, str))
             if len(strings) == len(value):
                 return strings
-            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+            raise TypeError(f"--{name}: invalid argument {value!r}")
         case value:
-            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+            raise TypeError(f"--{name}: invalid argument {value!r}")
 
 
 def option_count(parsed: Mapping[OptionName, object], name: OptionName) -> int:
@@ -203,7 +202,7 @@ def option_count(parsed: Mapping[OptionName, object], name: OptionName) -> int:
         case int() as value:
             return value
         case value:
-            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+            raise TypeError(f"--{name}: invalid argument {value!r}")
 
 
 def option_names[NameT](
@@ -214,9 +213,9 @@ def option_names[NameT](
             names = frozenset(element for element in value if isinstance(element, type_))
             if len(names) == len(value):
                 return names
-            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+            raise TypeError(f"--{name}: invalid argument {value!r}")
         case value:
-            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+            raise TypeError(f"--{name}: invalid argument {value!r}")
 
 
 class Command(Option):
@@ -437,9 +436,9 @@ def _map_options(commands: Sequence[Command]) -> Mapping[OptionName, Command]:
             if name is None:
                 continue
             if name in reserved:
-                raise MKGeneralException(f"{name!r} is the help, not the command {command.name!r}")
+                raise ValueError(f"{name!r} is the help, not the command {command.name!r}")
             if (other := mapped.get(name)) is not None:
-                raise MKGeneralException(
+                raise ValueError(
                     f"{name!r} is claimed by the commands {other.name!r} and {command.name!r}"
                 )
             mapped[name] = command

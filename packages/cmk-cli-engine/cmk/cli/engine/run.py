@@ -248,12 +248,20 @@ def run(
         runtime.enable_profiling()
         runtime.logger.debug("Enabled profiling")
 
+    logger = runtime.logger.getChild("base")
+
     def command() -> int:
         if isinstance(parsed, ShowHelp):
             runtime.page(commands.help())
             return 0
         runtime.start_tracing(omd_root)
-        sub_options = parse_sub_options(parsed.command.sub_options, parsed.options)
+        try:
+            sub_options = parse_sub_options(parsed.command.sub_options, parsed.options)
+        except ValueError as e:
+            logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if runtime.debug_enabled():
+                raise
+            return 3
         return call(
             omd_root,
             parsed.command,
@@ -267,7 +275,7 @@ def run(
     try:
         return dispatch(
             command,
-            runtime.logger.getChild("base"),
+            logger,
             runtime.crash_reporter_for(omd_root, argv, environ),
             runtime.debug_enabled,
         )

@@ -184,6 +184,7 @@ def _runtime(
     write_profile: Callable[[Path], None] = lambda _path: None,
     page: Callable[[str], None] = lambda _text: None,
     write: Callable[[str], None] = lambda _text: None,
+    logger: logging.Logger = null_logger(),
 ) -> Runtime:
     return Runtime(
         discover=lambda: commands,
@@ -196,7 +197,7 @@ def _runtime(
         write_profile=write_profile,
         page=page,
         write=write,
-        logger=null_logger(),
+        logger=logger,
     )
 
 
@@ -237,6 +238,30 @@ def test_a_sub_option_reaches_the_command_converted() -> None:
 
 def test_a_command_reports_its_own_exit_status() -> None:
     assert _run(["cmk", "--demo"], _runtime([_command(lambda *_args: 2)])) == 2
+
+
+def test_a_sub_option_argument_the_conversion_rejects_exits_three() -> None:
+    command = _numbered(lambda *_args: 0)
+
+    assert _run(["cmk", "--demo", "--number", "x"], _runtime([command])) == 3
+
+
+def test_a_sub_option_argument_the_conversion_rejects_is_logged(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    runtime = _runtime([_numbered(lambda *_args: 0)], logger=logging.getLogger("cmk.test"))
+
+    with caplog.at_level(logging.ERROR):
+        _run(["cmk", "--demo", "--number", "x"], runtime)
+
+    assert caplog.messages == ["--number: Invalid argument"]
+
+
+def test_a_sub_option_argument_the_conversion_rejects_is_raised_through_under_debug() -> None:
+    runtime = _runtime([_numbered(lambda *_args: 0)], debug_enabled=lambda: True)
+
+    with pytest.raises(ValueError, match="--number: Invalid argument"):
+        _run(["cmk", "--demo", "--number", "x"], runtime)
 
 
 def test_a_command_is_handed_the_site_root() -> None:

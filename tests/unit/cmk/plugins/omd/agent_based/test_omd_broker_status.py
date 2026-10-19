@@ -49,6 +49,19 @@ from cmk.plugins.omd.agent_based.omd_broker_status import (
             id="partially present data",
         ),
         pytest.param([], {}, id="empty list (e.g. broker not running)"),
+        pytest.param(
+            [
+                ['<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">'],
+                ["<title>404 Not Found</title>"],
+                ["</body></html>"],
+                ['[{"name": "rabbit-heute@localhost", "mem_used":  1000000000}]'],
+            ],
+            {"heute": BrokerStatus(memory=1000000000)},
+            marks=pytest.mark.xfail(
+                strict=True, raises=ValueError, reason="Crash group 4173: JSONDecodeError"
+            ),
+            id="html error page of another site",
+        ),
     ],
 )
 def test_parse_omd_broker_status(

@@ -75,8 +75,6 @@ import type {
   WidgetSpec
 } from '@/dashboard/types/widget'
 import { type CloneResult, dashboardAPI, urlHandler } from '@/dashboard/utils.ts'
-import NetworkFlowSlideIns from '@/network-flow/slide-ins/NetworkFlowSlideIns.vue'
-import { useNetworkFlowSlideIns } from '@/network-flow/slide-ins/useNetworkFlowSlideIns'
 import { PageHeader } from '@/page-header'
 
 import CloneSuccessAlert from './components/CloneSuccessAlert.vue'
@@ -125,9 +123,6 @@ useProvideVisualInfos()
 
 // So far, this is only needed and used by the DashboardContentNtop component
 provide(urlParamsKey, props.url_params)
-
-// The network flow detail slide-ins, opened from the flow widgets nested below.
-const networkFlowSlideIns = useNetworkFlowSlideIns()
 
 const dashboardsManager = useDashboardsManager()
 useProvideDashboardConstants(dashboardsManager.constants)
@@ -179,10 +174,7 @@ const widgetTitles = useComputeWidgetTitles(
   dashboardFilters.baseFilters,
   dashboardWidgets.widgetCores
 )
-const dashboardWidgetWorkflows = getDashboardWidgetWorkflows(
-  props.available_features.ntop_active,
-  props.available_features.network_flow_active
-)
+const dashboardWidgetWorkflows = getDashboardWidgetWorkflows(props.available_features.ntop_active)
 
 useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApplied, () => {
   openDashboardFilterSettings.value = true
@@ -817,7 +809,6 @@ const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(
           @cancel="openDashboardSettings = false"
           @save="updateDashboardSettings"
         />
-        <NetworkFlowSlideIns :slide-ins="networkFlowSlideIns" />
       </div>
       <div class="db-app__content">
         <template v-if="dashboardsManager.isInitialized.value && !loadingError">

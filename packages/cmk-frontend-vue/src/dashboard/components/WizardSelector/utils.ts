@@ -78,13 +78,6 @@ export function widgetTypeToSelectorMatcher(
       return 'ntop'
     }
 
-    case 'network_flow_top_table':
-    case 'network_flow_donut':
-    case 'network_flow_kpi_stat_card':
-    case 'network_flow_trend_chart': {
-      return 'network_flow'
-    }
-
     case 'monitoring_table': {
       return null
     }
@@ -98,7 +91,7 @@ export function widgetTypeToSelectorMatcher(
 }
 
 export function wizardSlideInSize(wizard: string): 'small' | 'medium' | 'large' {
-  if (['other', 'ntop', 'network_flow'].includes(wizard)) {
+  if (['other', 'ntop'].includes(wizard)) {
     return 'small'
   }
   if (wizard === 'views') {

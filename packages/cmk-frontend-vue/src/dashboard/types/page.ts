@@ -55,7 +55,6 @@ export interface DashboardPageProperties {
   available_features: {
     dashboard_features: DashboardFeatures
     ntop_active: boolean
-    network_flow_active: boolean
   }
   permissions: DashboardPermissions
   logged_in_user: string

@@ -22,7 +22,6 @@ import EventsWizard from '../Wizard/wizards/events/EventsWizard.vue'
 import HostsSiteWizard from '../Wizard/wizards/hosts-site/HostsSiteWizard.vue'
 import HwSwInventoryWizard from '../Wizard/wizards/hw_sw_inventory/HwSwInventoryWizard.vue'
 import MetricsWizard from '../Wizard/wizards/metrics/MetricsWizard.vue'
-import NetworkFlowWizard from '../Wizard/wizards/network-flow/NetworkFlowWizard.vue'
 import NtopWizard from '../Wizard/wizards/ntop/NtopWizard.vue'
 import OtherWizard from '../Wizard/wizards/other/OtherWizard.vue'
 import ServicesOverviewWizard from '../Wizard/wizards/services/ServicesOverviewWizard.vue'
@@ -206,17 +205,6 @@ const handleAddEditWidget = (
 
       <NtopWizard
         v-if="selectedWizard === 'ntop'"
-        :edit-widget-spec="editWidgetSpec"
-        @go-back="handleGoBack"
-        @close="handleClose"
-        @add-widget="handleAddEditWidget"
-      />
-
-      <NetworkFlowWizard
-        v-if="selectedWizard === 'network_flow'"
-        :dashboard-key="dashboardKey"
-        :tick="tick"
-        :range="range"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
         @close="handleClose"

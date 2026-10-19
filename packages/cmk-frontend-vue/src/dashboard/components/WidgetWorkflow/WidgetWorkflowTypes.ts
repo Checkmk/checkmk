@@ -41,10 +41,7 @@ export function findParentWorkflowKey(
   return null
 }
 
-export function getDashboardWidgetWorkflows(
-  ntopActive: boolean = false,
-  networkFlowActive: boolean = false
-): WorkflowCatalog {
+export function getDashboardWidgetWorkflows(ntopActive: boolean = false): WorkflowCatalog {
   const workflows: WorkflowCatalog = {
     metrics_graphs: {
       title: _t('Metrics & graphs'),
@@ -122,13 +119,6 @@ export function getDashboardWidgetWorkflows(
       icon: 'ntop'
     }
   }
-  if (networkFlowActive) {
-    workflows['network_flow'] = {
-      title: _t('Network flow monitoring'),
-      subtitle: _t('Visualize network flow traffic, applications and autonomous systems'),
-      icon: 'network-topology'
-    }
-  }
   return workflows
 }
 
@@ -142,8 +132,7 @@ export const DASHBOARD_WIDGET_WORKFLOW_KEYS = [
   'alerts_notifications',
   'event_stats',
   'other',
-  'ntop',
-  'network_flow'
+  'ntop'
 ] as const
 
 export type DashboardWidgetWorkflowKey = (typeof DASHBOARD_WIDGET_WORKFLOW_KEYS)[number]

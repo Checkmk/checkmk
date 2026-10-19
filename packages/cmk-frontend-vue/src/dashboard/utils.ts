@@ -35,26 +35,17 @@ import type {
   Barplot,
   BarplotContent,
   ComputedMonitoringTable,
-  ComputedNetworkFlowDonut,
-  ComputedNetworkFlowKpiStatCard,
-  ComputedNetworkFlowTopTable,
-  ComputedNetworkFlowTrendChart,
   ComputedSingleMetric,
   ComputedTopList,
   ComputedWidgetResponse,
   ComputedWidgetSpecResponse,
   EffectiveWidgetFilterContext,
-  ExplicitWidgetContent,
   Gauge,
   GaugeContent,
   HostOrServiceState,
   InventoryAttribute,
   InventoryContent,
   MonitoringTableContent,
-  NetworkFlowDonutContent,
-  NetworkFlowKpiStatCardContent,
-  NetworkFlowTopTableContent,
-  NetworkFlowTrendChartContent,
   ResponsiveGridWidgetLayouts,
   SingleMetricContent,
   SiteOverview,
@@ -468,48 +459,6 @@ export const dashboardAPI = {
       await client.POST('/domain-types/dashboard/actions/compute-timeline-count/invoke', {
         ...CONTENT_TYPE_HEADER,
         headers,
-        body
-      })
-    )
-  },
-  computeNetworkFlowTopTable: async (body: {
-    source: ExplicitWidgetContent<NetworkFlowTopTableContent>
-  }): Promise<ComputedWidgetResponse<ComputedNetworkFlowTopTable>> => {
-    return unwrap(
-      await client.POST('/domain-types/dashboard/actions/compute-network-flow-top-table/invoke', {
-        ...CONTENT_TYPE_HEADER,
-        body
-      })
-    )
-  },
-  computeNetworkFlowDonut: async (body: {
-    source: ExplicitWidgetContent<NetworkFlowDonutContent>
-  }): Promise<ComputedWidgetResponse<ComputedNetworkFlowDonut>> => {
-    return unwrap(
-      await client.POST('/domain-types/dashboard/actions/compute-network-flow-donut/invoke', {
-        ...CONTENT_TYPE_HEADER,
-        body
-      })
-    )
-  },
-  computeNetworkFlowKpiStatCard: async (body: {
-    source: ExplicitWidgetContent<NetworkFlowKpiStatCardContent>
-  }): Promise<ComputedWidgetResponse<ComputedNetworkFlowKpiStatCard>> => {
-    return unwrap(
-      await client.POST(
-        '/domain-types/dashboard/actions/compute-network-flow-kpi-stat-card/invoke',
-        { ...CONTENT_TYPE_HEADER, body }
-      )
-    )
-  },
-  computeNetworkFlowTrendChart: async (body: {
-    source: ExplicitWidgetContent<NetworkFlowTrendChartContent>
-    // Set once the graph was zoomed or panned; without it the time filter decides the window.
-    requested_time_range?: { start: number; end: number }
-  }): Promise<ComputedWidgetResponse<ComputedNetworkFlowTrendChart>> => {
-    return unwrap(
-      await client.POST('/domain-types/dashboard/actions/compute-network-flow-trend-chart/invoke', {
-        ...CONTENT_TYPE_HEADER,
         body
       })
     )

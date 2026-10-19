@@ -16,10 +16,6 @@ import DashboardContentStaticText from './DashboardContentStaticText.vue'
 import DashboardContentTimeSeriesGraph from './DashboardContentTimeSeriesGraph.vue'
 import DashboardContentTimeline from './DashboardContentTimeline.vue'
 import DashboardContentUserMessages from './DashboardContentUserMessages.vue'
-import DashboardContentNetworkFlowDonut from './NetworkFlow/DashboardContentNetworkFlowDonut.vue'
-import DashboardContentNetworkFlowKpiStatCard from './NetworkFlow/DashboardContentNetworkFlowKpiStatCard.vue'
-import DashboardContentNetworkFlowTopTable from './NetworkFlow/DashboardContentNetworkFlowTopTable.vue'
-import DashboardContentNetworkFlowTrendChart from './NetworkFlow/DashboardContentNetworkFlowTrendChart.vue'
 import DashboardContentAlertOverview from './figures/DashboardContentAlertOverview.vue'
 import DashboardContentBarplot from './figures/DashboardContentBarplot.vue'
 import DashboardContentGauge from './figures/DashboardContentGauge.vue'
@@ -69,14 +65,6 @@ function contentToComponent(content: WidgetContent): Component {
       return DashboardContentTopList
     case contentType === 'single_metric':
       return DashboardContentSingleMetric
-    case contentType === 'network_flow_top_table':
-      return DashboardContentNetworkFlowTopTable
-    case contentType === 'network_flow_donut':
-      return DashboardContentNetworkFlowDonut
-    case contentType === 'network_flow_kpi_stat_card':
-      return DashboardContentNetworkFlowKpiStatCard
-    case contentType === 'network_flow_trend_chart':
-      return DashboardContentNetworkFlowTrendChart
     case contentType === 'user_messages':
       return DashboardContentUserMessages
     case contentType === 'sidebar_element':

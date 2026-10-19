@@ -516,10 +516,7 @@ def test_piggyback_hub_disabled_remote_site(
             central_site, remote_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
         )
 
-        with (
-            set_omd_config_piggyback_hub(central_site, "off"),
-            set_omd_config_piggyback_hub(remote_site, "off"),
-        ):
+        with set_omd_config_piggyback_hub(remote_site, "off"):
             assert not _piggybacked_service_gets_updated(
                 central_site, remote_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
             )

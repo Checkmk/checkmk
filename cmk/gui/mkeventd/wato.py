@@ -9,7 +9,6 @@
 # mypy: disable-error-code="type-arg"
 import abc
 import ast
-import enum
 import io
 import re
 import socket
@@ -395,26 +394,10 @@ class _SiteTimePeriods:
             raise _TimePeriodsUnavailable(self._error) from e
 
 
-class MatchOutcome(enum.Enum):
-    """What the Event Console does with a message when a rule matches it"""
-
-    NEW_EVENT = enum.auto()
-    CANCEL_EVENTS = enum.auto()
-    DROP_MESSAGE = enum.auto()
-    SKIP_PACK = enum.auto()
-
-
-def match_outcome(rule: ec.Rule, result: ec.MatchSuccess) -> MatchOutcome:
-    # Like the Event Console, look at the rule type first, even for cancelling matches.
-    if drop := rule.get("drop"):
-        return MatchOutcome.SKIP_PACK if drop == "skip_pack" else MatchOutcome.DROP_MESSAGE
-    return MatchOutcome.CANCEL_EVENTS if result.cancelling else MatchOutcome.NEW_EVENT
-
-
 @dataclass(frozen=True)
 class RuleMatch:
     result: ec.MatchSuccess
-    outcome: MatchOutcome
+    outcome: ec.MatchOutcome
 
 
 @dataclass(frozen=True)
@@ -440,18 +423,9 @@ class EventSimulator:
         site_configs: SiteConfigurations,
         hostname_translation: cmk.ccc.translations.TranslationOptions,
     ) -> None:
-        # Like the Event Console, match against the translated host name, or an empty one if the
-        # translation fails, e.g. because of an invalid regular expression, or if the translated
-        # host name is invalid.
+        # Like the Event Console, match against the translated host name.
         self._event = event.copy()
-        try:
-            self._event["host"] = HostName(
-                cmk.ccc.translations.translate(hostname_translation, event["host"])
-            )
-        except MKTimeout:
-            raise
-        except Exception:
-            self._event["host"] = HostName("")
+        self._event["host"] = ec.translate_event_host(hostname_translation, event["host"])
         self._site_config = site_configs[event["site"]]
         self._rule_matcher = ec.RuleMatcher(
             logger=None,
@@ -466,12 +440,6 @@ class EventSimulator:
         return cls(event, site_configs, hostname_translation_of_site(event["site"], site_configs))
 
     def match_rule(self, rule_pack: ec.ECRulePack, rule: ec.Rule) -> ec.MatchResult:
-        # The Event Console ignores disabled rule packs and disabled rules.
-        if rule_pack["disabled"]:
-            return ec.MatchFailure(reason=_("The rule pack is disabled."))
-        if rule.get("disabled"):
-            return ec.MatchFailure(reason=_("The rule is disabled."))
-
         if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT:
             rule_customer_id = (
                 rule_pack["customer"]
@@ -482,18 +450,18 @@ class EventSimulator:
             if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
                 return ec.MatchFailure(reason=_("Wrong customer"))
 
-        rule = rule.copy()
-        rule["pack"] = rule_pack["id"]
         # The Event Console ignores rules it can't compile, and errors while matching mean no match.
         # A request timeout must still abort the page, though.
         try:
-            ec.compile_rule(rule)
+            active_rule = ec.compile_active_rule(rule_pack, rule)
         except MKTimeout:
             raise
         except Exception as e:
             return ec.MatchFailure(reason=_("Cannot compile the rule: %(error)s") % {"error": e})
+        if isinstance(active_rule, str):
+            return ec.MatchFailure(reason=active_rule)
         try:
-            return self._rule_matcher.event_rule_matches(rule, self._event)
+            return self._rule_matcher.event_rule_matches(active_rule, self._event)
         except MKTimeout:
             raise
         except _TimePeriodsUnavailable as e:
@@ -505,7 +473,7 @@ class EventSimulator:
         except Exception as e:
             log.logger.exception(
                 "Cannot match rule %(pack)s/%(rule_id)s against the simulated event",
-                {"pack": rule["pack"], "rule_id": rule["id"]},
+                {"pack": active_rule["pack"], "rule_id": active_rule["id"]},
             )
             return ec.MatchFailure(reason=_("Cannot match the rule: %(error)s") % {"error": e})
 
@@ -518,7 +486,7 @@ class EventSimulator:
             if isinstance(result, ec.MatchSuccess):
                 matching_rules += 1
                 if first_match is None:
-                    first_match = RuleMatch(result, match_outcome(rule, result))
+                    first_match = RuleMatch(result, ec.match_outcome(rule, result))
             elif isinstance(result, UnknownMatch) and first_match is None:
                 unknown_matches.append(result)
         return RulePackMatch(matching_rules, first_match, tuple(unknown_matches))
@@ -527,7 +495,7 @@ class EventSimulator:
         """Tells whether a rule of the rule packs decides what happens, like in the Event Console"""
         return any(
             (first_match := self.match_rule_pack(rule_pack).first_match) is not None
-            and first_match.outcome is not MatchOutcome.SKIP_PACK
+            and first_match.outcome is not ec.MatchOutcome.SKIP_PACK
             for rule_pack in rule_packs
         )
 
@@ -2391,13 +2359,13 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                             _("Number of matching rules in this pack: %d")
                             % pack_match.matching_rules
                         )
-                        if first_match.outcome is MatchOutcome.SKIP_PACK:
+                        if first_match.outcome is ec.MatchOutcome.SKIP_PACK:
                             msg += _(", the first match skips this rule pack")
                             icon = StaticIcon(IconNames.hyphen)
                         else:
-                            if first_match.outcome is MatchOutcome.CANCEL_EVENTS:
+                            if first_match.outcome is ec.MatchOutcome.CANCEL_EVENTS:
                                 msg += _(", first match is a cancelling match")
-                            elif first_match.outcome is MatchOutcome.DROP_MESSAGE:
+                            elif first_match.outcome is ec.MatchOutcome.DROP_MESSAGE:
                                 msg += _(", first match drops the message")
                             if groups := message_match_groups_text(first_match.result):
                                 msg += _(", match groups of decisive match: %s") % groups
@@ -2463,15 +2431,15 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         return found_packs
 
 
-def _rule_match_text(outcome: MatchOutcome) -> str:
+def _rule_match_text(outcome: ec.MatchOutcome) -> str:
     match outcome:
-        case MatchOutcome.NEW_EVENT:
+        case ec.MatchOutcome.NEW_EVENT:
             return _("This rule matches.")
-        case MatchOutcome.CANCEL_EVENTS:
+        case ec.MatchOutcome.CANCEL_EVENTS:
             return _("This rule does a cancelling match.")
-        case MatchOutcome.DROP_MESSAGE:
+        case ec.MatchOutcome.DROP_MESSAGE:
             return _("This rule matches and drops the message.")
-        case MatchOutcome.SKIP_PACK:
+        case ec.MatchOutcome.SKIP_PACK:
             return _("This rule matches and skips the rest of this rule pack.")
 
 
@@ -2785,7 +2753,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                             msg = _("This rule matches, but is overruled by a previous match.")
                             icon = StaticIcon(IconNames.checkmark_plus)
                         else:
-                            msg = _rule_match_text(match_outcome(rule, result))
+                            msg = _rule_match_text(ec.match_outcome(rule, result))
                             icon = StaticIcon(IconNames.checkmark)
                             have_match = True
                         if groups := message_match_groups_text(result):

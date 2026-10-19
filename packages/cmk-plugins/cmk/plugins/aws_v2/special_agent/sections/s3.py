@@ -347,6 +347,56 @@ class S3(AWSSectionCloudwatch):
         return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
 
 
+def _rows_by_bucket(
+    rows: Sequence[Mapping[str, Any]],
+) -> Mapping[str, Sequence[Mapping[str, Any]]]:
+    rows_by_bucket: dict[str, list[Mapping[str, Any]]] = {}
+    for row in rows:
+        rows_by_bucket.setdefault(row["Label"], []).append(row)
+    return rows_by_bucket
+
+
+class S3Bucket(AWSSection):
+    @property
+    @override
+    def name(self) -> str:
+        return "s3_bucket"
+
+    @property
+    @override
+    def cache_interval(self) -> int:
+        return int(get_seconds_since_midnight(NOW))
+
+    @override
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        colleague = self._received_results.get("s3")
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents([], 0.0)
+
+    @override
+    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
+        (colleague_contents,) = args
+        return colleague_contents.content
+
+    @override
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    @override
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.S3Bucket(bucket_name, self._region)),
+                bucket_rows,
+                {"cmk/aws/service": "s3"},
+            )
+            for bucket_name, bucket_rows in _rows_by_bucket(computed_content.content).items()
+        ]
+
+
 class S3Requests(AWSSectionCloudwatch):
     @property
     @override
@@ -427,4 +477,11 @@ class S3Requests(AWSSectionCloudwatch):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.S3Bucket(bucket_name, self._region)),
+                bucket_rows,
+                {"cmk/aws/service": "s3"},
+            )
+            for bucket_name, bucket_rows in _rows_by_bucket(computed_content.content).items()
+        ]

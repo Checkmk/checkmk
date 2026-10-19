@@ -23,7 +23,13 @@ from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
 # Needed to monkeypatch NOW in the s3 module
 from cmk.plugins.aws_v2.special_agent.sections import s3 as s3_module
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
-from cmk.plugins.aws_v2.special_agent.sections.s3 import S3, S3Limits, S3Requests, S3Summary
+from cmk.plugins.aws_v2.special_agent.sections.s3 import (
+    S3,
+    S3Bucket,
+    S3Limits,
+    S3Requests,
+    S3Summary,
+)
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, S3BucketTaggingIB, S3ListBucketsIB
 
@@ -57,7 +63,7 @@ class FakeS3Client:
         return {}
 
 
-S3Sections = tuple[S3Limits, S3Summary, S3, S3Requests]
+S3Sections = tuple[S3Limits, S3Summary, S3, S3Bucket, S3Requests]
 
 
 class CreateS3Sections(Protocol):
@@ -96,13 +102,15 @@ def get_s3_sections(monkeypatch: pytest.MonkeyPatch) -> CreateS3Sections:
         # TODO: FakeS3Client shoud actually subclass S3Client, etc.
         s3_limits = S3Limits(fake_s3_client, region, config, distributor)
         s3_summary = S3Summary(fake_s3_client, region, config, distributor)
-        s3 = S3(fake_cloudwatch_client, region, config)
+        s3 = S3(fake_cloudwatch_client, region, config, distributor)
+        s3_bucket = S3Bucket(fake_cloudwatch_client, region, config)
         s3_requests = S3Requests(fake_cloudwatch_client, region, config)
 
         distributor.add(s3_limits.name, s3_summary)
         distributor.add(s3_summary.name, s3)
+        distributor.add(s3.name, s3_bucket)
         distributor.add(s3_summary.name, s3_requests)
-        return s3_limits, s3_summary, s3, s3_requests
+        return s3_limits, s3_summary, s3, s3_bucket, s3_requests
 
     return _create_s3_sections
 
@@ -134,7 +142,7 @@ def test_agent_aws_s3_limits(
     tags: OverallTags,
     amount_buckets: int,  # noqa: ARG001
 ) -> None:
-    s3_limits, _s3_summary, _s3, _s3_requests = get_s3_sections(names, tags)
+    s3_limits, _s3_summary, _s3, _s3_bucket, _s3_requests = get_s3_sections(names, tags)
     s3_limits_results = s3_limits.run().results
 
     assert s3_limits.name == "s3_limits"
@@ -159,7 +167,7 @@ def test_agent_aws_s3_summary(
     tags: OverallTags,
     amount_buckets: int,
 ) -> None:
-    s3_limits, s3_summary, _s3, _s3_requests = get_s3_sections(names, tags)
+    s3_limits, s3_summary, _s3, _s3_bucket, _s3_requests = get_s3_sections(names, tags)
     s3_limits.run()
     s3_summary_results = s3_summary.run().results
 
@@ -181,7 +189,7 @@ def test_agent_aws_s3(
     tags: OverallTags,
     amount_buckets: int,
 ) -> None:
-    s3_limits, s3_summary, s3, _s3_requests = get_s3_sections(names, tags)
+    s3_limits, s3_summary, s3, _s3_bucket, _s3_requests = get_s3_sections(names, tags)
     _s3_limits_results = s3_limits.run().results
     _s3_summary_results = s3_summary.run().results
     s3_results = s3.run().results
@@ -207,7 +215,7 @@ def test_agent_aws_s3_requests(
     tags: OverallTags,
     amount_buckets: int,
 ) -> None:
-    s3_limits, s3_summary, _s3, s3_requests = get_s3_sections(names, tags)
+    s3_limits, s3_summary, _s3, _s3_bucket, s3_requests = get_s3_sections(names, tags)
     _s3_limits_results = s3_limits.run().results
     _s3_summary_results = s3_summary.run().results
     s3_requests_results = s3_requests.run().results
@@ -216,15 +224,12 @@ def test_agent_aws_s3_requests(
     assert s3_requests.period == 600
     assert s3_requests.name == "s3_requests"
 
-    if amount_buckets:
-        assert len(s3_requests_results) == 1
-
-        s3_requests_result = s3_requests_results[0]
-        assert s3_requests_result.piggyback_hostname is SOURCE_HOST
-
-        # Y (len results) == 16 (metrics) * X (buckets)
-        assert len(s3_requests_result.content) == 16 * amount_buckets
+    assert len(s3_requests_results) == amount_buckets
+    for s3_requests_result in s3_requests_results:
+        # 16 metrics per bucket
+        assert len(s3_requests_result.content) == 16
         for row in s3_requests_result.content:
+            assert s3_requests_result.piggyback_hostname == f"{row['Label']}_region"
             if row.get("Name") in ["Name-0", "Name-1", "Name-2"]:
                 assert row.get("LocationConstraint") == "region"
             assert "Tagging" in row
@@ -237,7 +242,7 @@ def test_agent_aws_s3_summary_without_limits(
     tags: OverallTags,
     amount_buckets: int,
 ) -> None:
-    _s3_limits, s3_summary, _s3, _s3_requests = get_s3_sections(names, tags)
+    _s3_limits, s3_summary, _s3, _s3_bucket, _s3_requests = get_s3_sections(names, tags)
     s3_summary_results = s3_summary.run().results
 
     assert s3_summary.name == "s3_summary"
@@ -259,7 +264,7 @@ def test_agent_aws_s3_without_limits(
     tags: OverallTags,
     amount_buckets: int,
 ) -> None:
-    _s3_limits, s3_summary, s3, _s3_requests = get_s3_sections(names, tags)
+    _s3_limits, s3_summary, s3, _s3_bucket, _s3_requests = get_s3_sections(names, tags)
     s3_summary.run()
     s3_results = s3.run().results
 
@@ -285,7 +290,7 @@ def test_agent_aws_s3_requests_without_limits(
     tags: OverallTags,
     amount_buckets: int,
 ) -> None:
-    s3_limits, s3_summary, _s3, s3_requests = get_s3_sections(names, tags)
+    s3_limits, s3_summary, _s3, _s3_bucket, s3_requests = get_s3_sections(names, tags)
     s3_summary.run()
     s3_requests_results = s3_requests.run().results
 
@@ -296,15 +301,12 @@ def test_agent_aws_s3_requests_without_limits(
     assert s3_limits.cache_interval == 55800
     assert s3_limits.period == 172800
 
-    if amount_buckets:
-        assert len(s3_requests_results) == 1
-
-        s3_requests_result = s3_requests_results[0]
-        assert s3_requests_result.piggyback_hostname is SOURCE_HOST
-
-        # Y (len results) == 16 (metrics) * X (buckets)
-        assert len(s3_requests_result.content) == 16 * amount_buckets
+    assert len(s3_requests_results) == amount_buckets
+    for s3_requests_result in s3_requests_results:
+        # 16 metrics per bucket
+        assert len(s3_requests_result.content) == 16
         for row in s3_requests_result.content:
+            assert s3_requests_result.piggyback_hostname == f"{row['Label']}_region"
             if row.get("Name") in ["Name-0", "Name-1", "Name-2"]:
                 assert row.get("LocationConstraint") == "region"
             assert "Tagging" in row
@@ -326,7 +328,7 @@ def test_agent_aws_s3_filters_tags(
     tag_import: TagsOption,
     expected_tags: dict[str, list[str]],
 ) -> None:
-    _s3_limits, s3_summary, _s3, _s3_requests = get_s3_sections(tag_import=tag_import)
+    _s3_limits, s3_summary, _s3, _s3_bucket, _s3_requests = get_s3_sections(tag_import=tag_import)
     s3_summary_results = s3_summary.run().results
 
     assert s3_summary_results
@@ -334,3 +336,43 @@ def test_agent_aws_s3_filters_tags(
         assert result.content
         for row in result.content:
             assert list(row["TagsForCmkLabels"].keys()) == expected_tags.get(row["Name"], [])
+
+
+def test_agent_aws_s3_puts_each_bucket_on_its_own_host(
+    get_s3_sections: CreateS3Sections,
+) -> None:
+    _s3_limits, s3_summary, s3, s3_bucket, _s3_requests = get_s3_sections()
+    s3_summary.run()
+    s3.run()
+
+    s3_bucket_results = s3_bucket.run().results
+
+    assert {
+        result.piggyback_hostname: {row["Label"] for row in result.content}
+        for result in s3_bucket_results
+    } == {f"Name-{i}_region": {f"Name-{i}"} for i in range(3)}
+
+
+def test_agent_aws_s3_labels_bucket_hosts_as_s3(
+    get_s3_sections: CreateS3Sections,
+) -> None:
+    _s3_limits, s3_summary, s3, s3_bucket, s3_requests = get_s3_sections()
+    s3_summary.run()
+    s3.run()
+
+    results = [*s3_bucket.run().results, *s3_requests.run().results]
+
+    assert results
+    assert all(result.piggyback_host_labels == {"cmk/aws/service": "s3"} for result in results)
+
+
+def test_agent_aws_s3_creates_no_bucket_host_without_buckets(
+    get_s3_sections: CreateS3Sections,
+) -> None:
+    _s3_limits, s3_summary, s3, s3_bucket, _s3_requests = get_s3_sections(names=["Uuuups"])
+    s3_summary.run()
+    s3.run()
+
+    s3_bucket_results = s3_bucket.run().results
+
+    assert not s3_bucket_results

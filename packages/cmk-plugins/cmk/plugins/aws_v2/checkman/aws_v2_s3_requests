@@ -26,5 +26,6 @@ item:
  Name of the bucket
 
 discovery:
- One service is created for each bucket if all required metrics
+ Each bucket is a piggyback host with the name {<bucket name>_<region>}.
+ One service is created on this host if all required metrics
  (AllRequests) are given.

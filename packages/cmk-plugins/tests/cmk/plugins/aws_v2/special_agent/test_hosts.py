@@ -23,6 +23,7 @@ from cmk.plugins.aws_v2.special_agent.hosts import (
     HostedResource,
     LoadBalancerV2,
     PiggybackResource,
+    S3Bucket,
     SOURCE_HOST,
     target_host,
     TargetHost,
@@ -107,6 +108,7 @@ def test_ec2_instance_without_a_name_has_no_host(
         pytest.param(
             GlacierVault("vault", "eu-central-1"), "vault_eu-central-1", id="glacier vault"
         ),
+        pytest.param(S3Bucket("bucket", "eu-central-1"), "bucket_eu-central-1", id="s3 bucket"),
     ],
 )
 def test_resource_goes_to_a_host_of_its_own(resource: PiggybackResource, expected: str) -> None:

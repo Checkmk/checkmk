@@ -62,7 +62,14 @@ from .sections.elbv2 import (
 from .sections.glacier import Glacier, GlacierLimits, GlacierSummary
 from .sections.rds import RDS, RDSLimits, RDSSummary
 from .sections.route53 import Route53Cloudwatch, Route53HealthChecks
-from .sections.s3 import ResultDistributorS3Limits, S3, S3Limits, S3Requests, S3Summary
+from .sections.s3 import (
+    ResultDistributorS3Limits,
+    S3,
+    S3Bucket,
+    S3Limits,
+    S3Requests,
+    S3Summary,
+)
 from .sections.sns import SNS, SNSLimits, SNSSMS, SNSSummary, SNSTopicsFetcher
 from .sections.wafv2 import WAFV2Limits, WAFV2Summary, WAFV2WebACL
 
@@ -104,6 +111,8 @@ def datetime_serializer(obj):
 # '-- S3Summary
 #     |
 #     |-- S3
+#     |   |
+#     |   '-- S3Bucket
 #     |
 #     '-- S3Requests
 
@@ -646,14 +655,17 @@ class AWSSectionsGeneric(AWSSections):
             s3_summary = S3Summary(s3_client, region, config, distributor)
 
             s3_limits_distributor.add("s3_limits", s3_summary)
-            s3 = S3(cloudwatch_client, region, config)
+            s3 = S3(cloudwatch_client, region, config, distributor)
             distributor.add(s3_summary.name, s3)
+            s3_bucket = S3Bucket(cloudwatch_client, region, config)
+            distributor.add(s3.name, s3_bucket)
             s3_requests = S3Requests(cloudwatch_client, region, config)
             distributor.add(s3_summary.name, s3_requests)
             if config.service_config.get("s3_limits") and s3_limits:
                 self._sections.append(s3_limits)
             self._sections.append(s3_summary)
             self._sections.append(s3)
+            self._sections.append(s3_bucket)
             if config.service_config["s3_requests"]:
                 self._sections.append(s3_requests)
 

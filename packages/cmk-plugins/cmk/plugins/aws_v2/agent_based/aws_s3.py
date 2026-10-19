@@ -85,10 +85,16 @@ agent_section_aws_v2_s3 = AgentSection(
     parse_function=parse_aws_s3,
 )
 
+agent_section_aws_v2_s3_bucket = AgentSection(
+    name="aws_v2_s3_bucket",
+    parse_function=parse_aws_s3,
+)
+
 
 check_plugin_aws_v2_s3 = CheckPlugin(
     name="aws_v2_s3",
     service_name="AWS/S3 Objects %s",
+    sections=["aws_v2_s3_bucket"],
     discovery_function=discover_aws_s3,
     check_function=check_aws_s3_objects,
     check_ruleset_name="aws_v2_s3_buckets_objects",

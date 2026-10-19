@@ -106,9 +106,15 @@ class GlacierVault:
     region: str
 
 
+@dataclass(frozen=True)
+class S3Bucket:
+    name: str
+    region: str
+
+
 # Each of these resources always goes to a piggyback host of its own.
 PiggybackResource = (
-    ClassicLoadBalancer | LoadBalancerV2 | DynamoDBTable | WAFV2WebACL | GlacierVault
+    ClassicLoadBalancer | LoadBalancerV2 | DynamoDBTable | WAFV2WebACL | GlacierVault | S3Bucket
 )
 
 HostedResource = AccountScope | EBSAttachment | CloudFrontDistribution | PiggybackResource
@@ -144,6 +150,8 @@ def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost | No
             return _cloudfront_distribution_host(resource, naming)
         case GlacierVault():
             return _glacier_vault_host(resource)
+        case S3Bucket():
+            return _s3_bucket_host(resource)
         case _:
             assert_never(resource)
 
@@ -218,6 +226,10 @@ def _cloudfront_distribution_host(
 
 def _glacier_vault_host(vault: GlacierVault) -> TargetHost:
     return _hostname_from_name_and_region(vault.name, vault.region)
+
+
+def _s3_bucket_host(bucket: S3Bucket) -> TargetHost:
+    return _hostname_from_name_and_region(bucket.name, bucket.region)
 
 
 def _hostname_from_name_and_region(name: str, region: str) -> TargetHost:

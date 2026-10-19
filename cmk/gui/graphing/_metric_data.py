@@ -327,8 +327,8 @@ def _forward_fill(time_series: TimeSeries, time_range: TimeRange) -> Sequence[fl
     source = time_series.time_range
     last = len(time_series.values) - 1
     return [
-        time_series.values[max(0, min((timestamp - source.start) // source.step, last))]
-        for timestamp in range(time_range.start, time_range.end, time_range.step)
+        time_series.values[max(0, min((timestamp - source.start - 1) // source.step, last))]
+        for timestamp in timestamps(time_range)
     ]
 
 

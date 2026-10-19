@@ -298,6 +298,18 @@ def test_a_finer_grid_forward_fills_the_points_it_has() -> None:
     assert list(resampled.values) == [1.0, 1.0, 1.0, 2.0, 2.0, 2.0]
 
 
+def test_a_finer_grid_has_as_many_points_as_its_timestamps() -> None:
+    series = _series(0, 60, 30, [1.0, 2.0])
+    resampled = resample(series, TimeRange(start=0, end=65, step=10), ConsolidationFunction.MAX)
+    assert list(resampled.values) == [1.0, 1.0, 1.0, 2.0, 2.0, 2.0]
+
+
+def test_a_shifted_finer_grid_reads_the_bucket_each_point_ends_in() -> None:
+    series = _series(0, 60, 30, [1.0, 2.0])
+    resampled = resample(series, TimeRange(start=5, end=55, step=10), ConsolidationFunction.MAX)
+    assert list(resampled.values) == [1.0, 1.0, 2.0, 2.0, 2.0]
+
+
 def test_an_empty_series_becomes_a_gap_on_the_requested_grid() -> None:
     resampled = resample(
         _series(0, 30, 10, []), TimeRange(start=0, end=60, step=20), ConsolidationFunction.MAX

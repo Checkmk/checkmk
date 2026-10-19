@@ -49,6 +49,7 @@ sites:
 #     disabled: false                        # true: the site is left out
 #     global_settings: {debug_log: true}     # written into the site, needs sudo
 #     contact_groups: {cg_ops: Operations}
+#     host_groups: {hg_web: Web servers}      # members come from a host_groups rule
 #     roles:
 #       viewer: {base: user, alias: Read-only, permissions: {bi.see_all: "yes"}}
 #     users:
@@ -254,7 +255,7 @@ the copy-out command (`sudo cp -a ... && sudo chown -R "$USER" ...`).
 
 Where a container is expected, a string is evaluated **once, at load time**
 as a Python expression. Positions: `sites`; per site `hosts`, `roles`,
-`contact_groups`, `users`, `rules`, `global_settings`, `bi_config` and its
+`contact_groups`, `host_groups`, `users`, `rules`, `global_settings`, `bi_config` and its
 `packs` / `rules` / `aggregations`; per host `services` and `attributes`; any
 string item of a `services` list. Leaf values (summary, alias, `value_raw`)
 are never evaluated.
@@ -381,30 +382,30 @@ The error under `fail` names the value and the layer that set it.
 
 ## Running it
 
-| Option                                | Does                                                                                                                                                                                       |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `playbook`                            | the YAML file, or the name of a shipped example (`01-minimal`, a unique prefix like `01` does); optional with `--enroll`, `--init` and `--rm`                                              |
-| `--only-site SITE`                    | apply this site only; repeatable                                                                                                                                                           |
-| `--only-host HOST`                    | apply this host only, the site's other settings still apply; repeatable                                                                                                                    |
-| `--skip FEATURE`                      | leave out one kind of thing: `agent`, `bi`, `contact_groups`, `dumps`, `global_settings`, `remotes`, `roles`, `rules`, `shadow`, `users`, `walks`; repeatable, each is reported as skipped |
-| `--protect SITE`                      | never stop, remove or re-version this site - not by the revert, not by `--rm`; repeatable                                                                                                  |
-| `--log-file FILE`                     | append every line with the wall-clock time, debug lines and request timings included                                                                                                       |
-| `--phase NAME`                        | run this phase only; repeatable                                                                                                                                                            |
-| `--list-phases`                       | print `name<TAB>sites<TAB>description` and exit; needs no omd                                                                                                                              |
-| `--on-conflict {fail,overwrite,skip}` | overrides the playbook                                                                                                                                                                     |
-| `--seed VALUE`                        | overrides the playbook's seed                                                                                                                                                              |
-| `-n`, `--dry-run`                     | real probes, every write printed as `~`, nothing changed, no pauses, no verify                                                                                                             |
-| `--verify-only`                       | no install, create or start; replay the generators and compare                                                                                                                             |
-| `--report FILE`                       | the rows (phase, site, kind, ident, action, note) as JSON                                                                                                                                  |
-| `--dump-root DIR`                     | the zeug_cmk checkout for bare dump names                                                                                                                                                  |
-| `--config FILE`                       | read defaults from FILE instead of `~/.config/cmk-up.toml`                                                                                                                                 |
-| `--enroll FILE`                       | write this machine as a playbook; honours `--only-site`, `--user`, `--secret`, `--all`, `-n`                                                                                               |
-| `--from-crash SOURCE`                 | with `--enroll`: a crash directory, the support tarball, or a `crash.info`                                                                                                                 |
-| `--all`                               | `--enroll`: include what a fresh site ships                                                                                                                                                |
-| `--user`, `--secret`                  | `--enroll`: REST credentials for every site, default `cmkadmin` / `cmk`                                                                                                                    |
-| `--version`                           | print cmk-werk-zeug's version (`(local checkout)` when run from one) and quit                                                                                                              |
-| `--init [FILE]`                       | write a playbook to start from; default `scenario.yaml`                                                                                                                                    |
-| `--rm sites\|all`, `--hauweg`         | wipe the machine, see below; `--hauweg` is `--rm=all`                                                                                                                                      |
+| Option                                | Does                                                                                                                                                                                                      |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `playbook`                            | the YAML file, or the name of a shipped example (`01-minimal`, a unique prefix like `01` does); optional with `--enroll`, `--init` and `--rm`                                                             |
+| `--only-site SITE`                    | apply this site only; repeatable                                                                                                                                                                          |
+| `--only-host HOST`                    | apply this host only, the site's other settings still apply; repeatable                                                                                                                                   |
+| `--skip FEATURE`                      | leave out one kind of thing: `agent`, `bi`, `contact_groups`, `dumps`, `global_settings`, `host_groups`, `remotes`, `roles`, `rules`, `shadow`, `users`, `walks`; repeatable, each is reported as skipped |
+| `--protect SITE`                      | never stop, remove or re-version this site - not by the revert, not by `--rm`; repeatable                                                                                                                 |
+| `--log-file FILE`                     | append every line with the wall-clock time, debug lines and request timings included                                                                                                                      |
+| `--phase NAME`                        | run this phase only; repeatable                                                                                                                                                                           |
+| `--list-phases`                       | print `name<TAB>sites<TAB>description` and exit; needs no omd                                                                                                                                             |
+| `--on-conflict {fail,overwrite,skip}` | overrides the playbook                                                                                                                                                                                    |
+| `--seed VALUE`                        | overrides the playbook's seed                                                                                                                                                                             |
+| `-n`, `--dry-run`                     | real probes, every write printed as `~`, nothing changed, no pauses, no verify                                                                                                                            |
+| `--verify-only`                       | no install, create or start; replay the generators and compare                                                                                                                                            |
+| `--report FILE`                       | the rows (phase, site, kind, ident, action, note) as JSON                                                                                                                                                 |
+| `--dump-root DIR`                     | the zeug_cmk checkout for bare dump names                                                                                                                                                                 |
+| `--config FILE`                       | read defaults from FILE instead of `~/.config/cmk-up.toml`                                                                                                                                                |
+| `--enroll FILE`                       | write this machine as a playbook; honours `--only-site`, `--user`, `--secret`, `--all`, `-n`                                                                                                              |
+| `--from-crash SOURCE`                 | with `--enroll`: a crash directory, the support tarball, or a `crash.info`                                                                                                                                |
+| `--all`                               | `--enroll`: include what a fresh site ships                                                                                                                                                               |
+| `--user`, `--secret`                  | `--enroll`: REST credentials for every site, default `cmkadmin` / `cmk`                                                                                                                                   |
+| `--version`                           | print cmk-werk-zeug's version (`(local checkout)` when run from one) and quit                                                                                                                             |
+| `--init [FILE]`                       | write a playbook to start from; default `scenario.yaml`                                                                                                                                                   |
+| `--rm sites\|all`, `--hauweg`         | wipe the machine, see below; `--hauweg` is `--rm=all`                                                                                                                                                     |
 
 Switches, each with a `--no-` form (`--keep` / `--no-keep`):
 

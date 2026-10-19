@@ -54,7 +54,7 @@ Read both before writing a playbook.
    reports, diagnostics dumps, screenshots). A crash report attached → also
    run B on it and merge.
 2. Extract: version/edition/core, topology (remotes, clusters, parents),
-   hosts and their data, rules and their values, users/roles/contact groups,
+   hosts and their data, rules and their values, users/roles/contact/host groups,
    BI, global settings, the steps to reproduce and the expected vs. observed
    behaviour. Steps → phases.
 3. Write the playbook following the rules above.

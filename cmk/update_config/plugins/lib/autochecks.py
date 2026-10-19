@@ -14,6 +14,7 @@ from cmk.checkengine.discovery import AutochecksStore
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.plugin_backend import get_check_plugin
 from cmk.checkengine.plugins import AutocheckEntry, CheckPlugin, CheckPluginName
+from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.update_config.plugins.lib.replaced_check_plugins import ALL_REPLACED_CHECK_PLUGINS
 from cmk.utils import paths
@@ -219,7 +220,18 @@ def _get_ruleset(
 def _apply_rulesets_migration(
     params: LegacyCheckParameters, ruleset: Ruleset, plugin_name: CheckPluginName
 ) -> Mapping[str, object]:
-    new_params = ruleset.rulespec.valuespec.transform_value(params) if params else {}
+    if not params:
+        return {}
+
+    # The form spec visitor rejects keys the legacy transform keeps, so it is only the fallback
+    try:
+        valuespec = ruleset.rulespec.valuespec
+    except NotImplementedError:
+        new_params = get_visitor(
+            ruleset.rulespec.form_spec, VisitorOptions(migrate_values=True, mask_values=False)
+        ).to_disk(RawDiskData(params))
+    else:
+        new_params = valuespec.transform_value(params)
 
     if not (isinstance(new_params, dict) and all(isinstance(k, str) for k in new_params)):
         raise TypeError(

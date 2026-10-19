@@ -6,6 +6,7 @@
 # mypy: disable-error-code="comparison-overlap"
 
 from collections.abc import Sequence
+from functools import partial
 from typing import override
 
 import pytest
@@ -14,17 +15,27 @@ from pytest import MonkeyPatch
 import cmk.ccc.version as cmk_version
 import cmk.gui.watolib.rulespecs
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.unstable.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+)
+from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
 from cmk.gui.plugins.wato.utils import TimeperiodValuespec
 from cmk.gui.search import MatchItem
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
+from cmk.gui.utils.rule_specs.legacy_converter import (
+    convert_to_legacy_valuespec,
+    GENERATED_GROUP_PREFIX,
+)
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.rule_match_item_generator import MatchItemGeneratorRules
 from cmk.gui.watolib.rulespecs import (
+    CheckParameterRulespecWithoutItem,
+    FormSpecDefinition,
     get_rulegroup,
     HostRulespec,
     main_module_from_rulespec_group_name,
+    ManualCheckParameterRulespec,
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
@@ -32,6 +43,8 @@ from cmk.gui.watolib.rulespecs import (
     RulespecRegistry,
     RulespecSubGroup,
 )
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import FormSpec, Integer
 from cmk.utils import paths
 
 
@@ -522,3 +535,61 @@ def test_match_item_generator_rules_follows_a_language_switch(monkeypatch: Monke
     assert titles() == ["Title en"]
     language = "de"
     assert titles() == ["Title de"]
+
+
+class _CheckParametersGroup(RulespecGroup):
+    @property
+    @override
+    def name(self) -> str:
+        return "check_parameters_group"
+
+    @property
+    @override
+    def title(self) -> str:
+        return "Check parameters group"
+
+    @property
+    @override
+    def help(self) -> str:
+        return ""
+
+
+def _unconvertible_form_spec() -> FormSpec[object]:
+    return TransformDataForLegacyFormatOrRecomposeFunction(
+        wrapped_form_spec=Integer(title=Title("Parameters")),
+        from_disk=lambda value: value,
+        to_disk=lambda value: value,
+    )
+
+
+def _check_parameter_rulespec[T](form_spec: FormSpec[T]) -> CheckParameterRulespecWithoutItem:
+    return CheckParameterRulespecWithoutItem(
+        check_group_name="some_check_group",
+        group=_CheckParametersGroup,
+        parameter_valuespec=partial(convert_to_legacy_valuespec, form_spec, lambda s: s),
+        create_manual_check=False,
+        form_spec_definition=FormSpecDefinition(lambda: form_spec, None),
+    )
+
+
+def test_rulespec_has_valuespec_if_its_form_spec_converts() -> None:
+    assert _check_parameter_rulespec(Integer(title=Title("Parameters"))).has_valuespec
+
+
+def test_rulespec_has_no_valuespec_if_its_form_spec_does_not_convert() -> None:
+    assert not _check_parameter_rulespec(_unconvertible_form_spec()).has_valuespec
+
+
+def test_manual_check_parameter_value_model_does_not_need_a_valuespec() -> None:
+    form_spec = _unconvertible_form_spec()
+    rulespec = ManualCheckParameterRulespec(
+        group=_CheckParametersGroup,
+        check_group_name="some_check_group",
+        parameter_valuespec=partial(convert_to_legacy_valuespec, form_spec, lambda s: s),
+        form_spec_definition=FormSpecDefinition(lambda: form_spec, None),
+    )
+
+    parameter_value_model = rulespec.parameter_value_model
+
+    assert isinstance(parameter_value_model, TimeSpecific)
+    assert parameter_value_model.parameter_form is form_spec

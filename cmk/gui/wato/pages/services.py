@@ -35,6 +35,11 @@ from cmk.gui.background_job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs import (
+    get_visitor,
+    RawDiskData,
+    VisitorOptions,
+)
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -73,6 +78,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeuri_contextless
 from cmk.gui.view_utils import format_plugin_output, LabelRenderType, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
+from cmk.gui.wato.pages.rulesets import render_value_model_readonly
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
@@ -90,7 +96,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulesets import may_edit_ruleset
-from cmk.gui.watolib.rulespecs import rulespec_registry
+from cmk.gui.watolib.rulespecs import Rulespec, rulespec_registry
 from cmk.gui.watolib.services import (
     checkbox_id,
     checkbox_service,
@@ -110,6 +116,7 @@ from cmk.gui.watolib.services import (
     UpdateType,
 )
 from cmk.gui.watolib.utils import mk_repr
+from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing.setup import (
     AgentDownload,
     AgentDownloadServerPerSite,
@@ -440,6 +447,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         renderer = DiscoveryPageRenderer(
             host,
             api_request.discovery_options,
+            rulespec_registry,
         )
         if (
             api_request.update_source is not None
@@ -766,10 +774,13 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
 
 class DiscoveryPageRenderer:
-    def __init__(self, host: Host, options: DiscoveryOptions) -> None:
+    def __init__(
+        self, host: Host, options: DiscoveryOptions, rulespecs: Mapping[str, Rulespec]
+    ) -> None:
         super().__init__()
         self._host = host
         self._options = options
+        self._rulespecs = rulespecs
 
     def render(
         self,
@@ -1560,7 +1571,7 @@ class DiscoveryPageRenderer:
 
     def _show_check_parameters(self, entry: CheckPreviewEntry, *, debug: bool) -> None:
         varname = self._get_ruleset_name(entry)
-        if not varname or varname not in rulespec_registry:
+        if not varname or varname not in self._rulespecs:
             return
 
         params = entry.effective_parameters
@@ -1569,7 +1580,7 @@ class DiscoveryPageRenderer:
             # For instance: Ruleset requires a key, but discovered parameters are empty.
             return
 
-        rulespec = rulespec_registry[varname]
+        rulespec = self._rulespecs[varname]
         try:
             if isinstance(params, dict) and "tp_computed_params" in params:
                 html.write_text_permissive(
@@ -1578,10 +1589,16 @@ class DiscoveryPageRenderer:
                 )
                 html.br()
                 params = params["tp_computed_params"]["params"]
-            rulespec.valuespec.validate_datatype(params, "")
-            rulespec.valuespec.validate_value(params, "")
-            paramtext = rulespec.valuespec.value_to_html(params)
-            html.write_html(HTML.with_escaping(paramtext))
+            # A readonly form spec embeds its whole spec in each table row, so the compact
+            # valuespec rendering is used wherever the ruleset converts to one.
+            try:
+                valuespec = rulespec.valuespec
+            except NotImplementedError:
+                self._show_form_spec_parameters(rulespec.form_spec, params)
+            else:
+                valuespec.validate_datatype(params, "")
+                valuespec.validate_value(params, "")
+                html.write_html(HTML.with_escaping(valuespec.value_to_html(params)))
         except Exception as e:
             if debug:
                 err = traceback.format_exc()
@@ -1592,6 +1609,13 @@ class DiscoveryPageRenderer:
             paramtext += _("Parameters:")
             paramtext += "<pre>%s</pre>" % (pprint.pformat(params))
             html.write_text_permissive(paramtext)
+
+    @staticmethod
+    def _show_form_spec_parameters(form_spec: FormSpec, params: object) -> None:
+        visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
+        if messages := visitor.validate(RawDiskData(params)):
+            raise ValueError(", ".join(f"{'.'.join(m.location)}: {m.message}" for m in messages))
+        html.write_html(HTML.with_escaping(render_value_model_readonly(form_spec, params)))
 
     def _show_discovered_labels(
         self,

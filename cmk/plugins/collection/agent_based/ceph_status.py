@@ -27,7 +27,9 @@ from cmk.agent_based.v2 import (
 Section = Mapping
 
 
-def parse_ceph_status(string_table: StringTable) -> Section:
+def parse_ceph_status(string_table: StringTable) -> Section | None:
+    if not string_table:
+        return None
     joined_lines = [" ".join(line) for line in string_table]
     section = json.loads("".join(joined_lines))
 

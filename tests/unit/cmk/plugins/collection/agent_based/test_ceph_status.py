@@ -6,8 +6,6 @@
 
 from functools import lru_cache
 
-import pytest
-
 from cmk.agent_based.v2 import get_value_store, Result, State
 from cmk.plugins.collection.agent_based import ceph_status
 
@@ -60,12 +58,16 @@ STRING_TABLE_OSDS = [
 
 @lru_cache
 def section1() -> ceph_status.Section:
-    return ceph_status.parse_ceph_status(STRING_TABLE_1)
+    section = ceph_status.parse_ceph_status(STRING_TABLE_1)
+    assert section is not None
+    return section
 
 
 @lru_cache
 def section_osds() -> ceph_status.Section:
-    return ceph_status.parse_ceph_status(STRING_TABLE_OSDS)
+    section = ceph_status.parse_ceph_status(STRING_TABLE_OSDS)
+    assert section is not None
+    return section
 
 
 def test_check_ceph_status(initialised_item_state: None) -> None:
@@ -94,7 +96,6 @@ def test_check_ceph_status_osds(initialised_item_state: None) -> None:
     ]
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4310: JSONDecodeError")
 def test_parse_ceph_status_empty_section() -> None:
     # Crash group 4310: the agent sent the section header without any content
     assert ceph_status.parse_ceph_status([]) is None

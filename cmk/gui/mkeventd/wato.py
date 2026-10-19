@@ -523,6 +523,14 @@ class EventSimulator:
                 unknown_matches.append(result)
         return RulePackMatch(matching_rules, first_match, tuple(unknown_matches))
 
+    def has_decisive_match(self, rule_packs: Iterable[ec.ECRulePack]) -> bool:
+        """Tells whether a rule of the rule packs decides what happens, like in the Event Console"""
+        return any(
+            (first_match := self.match_rule_pack(rule_pack).first_match) is not None
+            and first_match.outcome is not MatchOutcome.SKIP_PACK
+            for rule_pack in rule_packs
+        )
+
 
 def hostname_translation_of_site(
     site_id: SiteId, site_configs: SiteConfigurations
@@ -2710,9 +2718,12 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
         # Show content of the rule pack
         with table_element(title=_("Rules"), css="ruleset", limit=None) as table:
-            have_match = False
             hits = _get_rule_stats_from_ec()
             simulator = EventSimulator.for_event(event, site_configs) if event else None
+            # A match in a previous rule pack overrules the matches in this one.
+            have_match = simulator is not None and simulator.has_decisive_match(
+                self._rule_packs[: self._rule_pack_nr]
+            )
             for nr, rule in enumerate(rules):
                 table.row(css=["matches_search"] if rule in found_rules else [])
                 delete_url = make_confirm_delete_link(

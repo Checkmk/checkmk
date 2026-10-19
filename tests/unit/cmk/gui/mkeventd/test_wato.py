@@ -502,6 +502,26 @@ def test_rule_pack_match_counts_all_matching_rules() -> None:
     assert pack_match.matching_rules == 2
 
 
+@pytest.mark.parametrize(
+    "rule_packs, decides",
+    [
+        pytest.param([], False, id="no rule packs"),
+        pytest.param([_rule_pack(_NON_MATCHING_RULE)], False, id="no match"),
+        pytest.param(
+            [_rule_pack(_NON_MATCHING_RULE), _rule_pack(_MATCHING_RULE)], True, id="match"
+        ),
+        pytest.param([_rule_pack(_SKIPPING_RULE, _MATCHING_RULE)], False, id="skipped match"),
+        pytest.param([_rule_pack(_MATCHING_RULE, disabled=True)], False, id="disabled rule pack"),
+    ],
+)
+def test_a_rule_of_the_rule_packs_decides_unless_its_rule_pack_is_skipped(
+    rule_packs: list[ec.ECRulePackSpec], decides: bool
+) -> None:
+    simulator = _simulator(simulated_site=SiteId("remote"))
+
+    assert simulator.has_decisive_match(rule_packs) is decides
+
+
 def test_rule_with_an_invalid_regular_expression_does_not_match() -> None:
     result = _simulate(ec.Rule(id="rule", match="disk (("), simulated_site=SiteId("remote"))
 

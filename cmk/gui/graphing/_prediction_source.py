@@ -5,12 +5,13 @@
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, override, Protocol
+from typing import override, Protocol
 
 from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.ccc.hostaddress import HostName as CoreHostName
 from cmk.ccc.site import SiteId
 from cmk.graphing_engine import (
+    Direction,
     fetched_time_range,
     FetchedData,
     HostName,
@@ -31,8 +32,6 @@ from cmk.utils.servicename import ServiceName as CoreServiceName
 
 from ._prediction_query import PredictionQuerier, PredictionQuerierProtocol
 from ._source import RRDFetchData
-
-type Direction = Literal["upper", "lower"]
 
 _CURVE_KINDS_OF: Mapping[
     Direction, tuple[PredictionCurveKind, PredictionCurveKind, PredictionCurveKind]

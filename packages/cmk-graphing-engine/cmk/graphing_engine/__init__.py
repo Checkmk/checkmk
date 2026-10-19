@@ -102,6 +102,14 @@ from ._plugins._matching import (
     RequestedMetric,
 )
 from ._plugins._order import sort_registered_graph_plugins
+from ._plugins._prediction import (
+    build_prediction_graph,
+    Direction,
+    PREDICTION_KIND,
+    prediction_window_of,
+    PredictionGraphContext,
+    PredictionTexts,
+)
 from ._plugins._translations import (
     map_metric_names,
     mapped_performance_data,
@@ -159,6 +167,12 @@ from ._rrd._performance_data import (
 from ._rrd._resample import resample
 
 __all__ = [
+    "build_prediction_graph",
+    "Direction",
+    "PREDICTION_KIND",
+    "prediction_window_of",
+    "PredictionGraphContext",
+    "PredictionTexts",
     "converted_graph",
     "temperature_conversion",
     "TemperatureUnit",

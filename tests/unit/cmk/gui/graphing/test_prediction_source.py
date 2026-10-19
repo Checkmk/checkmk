@@ -10,6 +10,7 @@ from typing import Literal
 from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
 from cmk.graphing_engine import (
     ConsolidationFunction,
+    Direction,
     FetchedData,
     HostName,
     MetricName,
@@ -30,7 +31,6 @@ from cmk.gui.graphing._prediction_source import (
     _LoadedPredictions,
     _PredictionKey,
     _sample_prediction_curves,
-    Direction,
     PredictionFetchData,
 )
 from cmk.gui.graphing._source import PerformanceDataRow, RRDFetchTimeSeries

@@ -11,8 +11,8 @@ import pytest
 
 from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.graphing_engine import Direction
 from cmk.gui.graphing._prediction_page import _predictions_of, _selected_title
-from cmk.gui.graphing._prediction_source import Direction
 from cmk.gui.http import request as request_
 from cmk.utils.prediction import PredictionData
 

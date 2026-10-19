@@ -42,6 +42,7 @@ from ._data._units import (
     TimeNotation,
     Unit,
 )
+from ._evaluation._conversion import converted_graph
 from ._evaluation._fetch import (
     FetchDataProtocol,
     fetched_time_range,
@@ -158,6 +159,7 @@ from ._rrd._performance_data import (
 from ._rrd._resample import resample
 
 __all__ = [
+    "converted_graph",
     "temperature_conversion",
     "TemperatureUnit",
     "UnitConversion",

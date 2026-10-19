@@ -5,7 +5,7 @@
 import datetime
 import io
 import traceback
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Iterator, Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -19,16 +19,15 @@ from matplotlib.text import Text
 from matplotlib.transforms import Bbox, blended_transform_factory, ScaledTranslation
 
 from cmk.graphing_engine import (
+    converted_graph,
     drawn_curves,
     EvaluatedCurve,
     EvaluatedGraph,
-    EvaluatedLine,
     EvaluatedRegion,
     EvaluatedRule,
     EvaluatedStack,
     EvaluatedVerticalRange,
     last_present,
-    mapped_series,
     TimeRange,
     TimeSeries,
     timestamps,
@@ -504,87 +503,21 @@ def _plot_legend_table(
         add_marker(marker_x, marker_y(row), region.attributes.color)
 
 
-def _converted_curve(curve: EvaluatedCurve, temperature_unit: TemperatureUnit) -> EvaluatedCurve:
-    conversion = user_specific_unit(curve.attributes.unit, temperature_unit).conversion
-    return EvaluatedCurve(
-        id=curve.id,
-        attributes=curve.attributes,
-        value=None if curve.value is None else conversion(curve.value),
-        time_series=mapped_series(curve.time_series, conversion),
-        source_id=curve.source_id,
-        series_attributes=curve.series_attributes,
-    )
-
-
-def _converted_stack(stack: EvaluatedStack, temperature_unit: TemperatureUnit) -> EvaluatedStack:
-    return EvaluatedStack(
-        members=[_converted_curve(member, temperature_unit) for member in stack.members],
-        inverse=stack.inverse,
-        reference=(
-            None if stack.reference is None else _converted_curve(stack.reference, temperature_unit)
-        ),
-    )
-
-
-def _converted_rule(rule: EvaluatedRule, temperature_unit: TemperatureUnit) -> EvaluatedRule:
-    conversion = user_specific_unit(rule.attributes.unit, temperature_unit).conversion
-    return EvaluatedRule(
-        id=rule.id,
-        attributes=rule.attributes,
-        value=conversion(rule.value),
-        inverse=rule.inverse,
-    )
-
-
-def _converted_region(
-    region: EvaluatedRegion, temperature_unit: TemperatureUnit
-) -> EvaluatedRegion:
-    conversion = user_specific_unit(region.attributes.unit, temperature_unit).conversion
-    return EvaluatedRegion(
-        id=region.id,
-        attributes=region.attributes,
-        lower=None if region.lower is None else mapped_series(region.lower, conversion),
-        upper=None if region.upper is None else mapped_series(region.upper, conversion),
-    )
-
-
-def _converted_vertical_range(
-    vertical_range: EvaluatedVerticalRange | None, conversion: Callable[[float], float]
-) -> EvaluatedVerticalRange | None:
-    if vertical_range is None:
-        return None
-    return EvaluatedVerticalRange(
-        range_kind=vertical_range.range_kind,
-        lower=None if vertical_range.lower is None else conversion(vertical_range.lower),
-        upper=None if vertical_range.upper is None else conversion(vertical_range.upper),
-    )
-
-
-def _graph_in_user_unit(
-    graph: EvaluatedGraph,
-    axis_conversion: Callable[[float], float],
-    temperature_unit: TemperatureUnit,
-    requested_vertical_range: EvaluatedVerticalRange | None,
+def _with_requested_vertical_range(
+    graph: EvaluatedGraph, requested_vertical_range: EvaluatedVerticalRange | None
 ) -> EvaluatedGraph:
+    if requested_vertical_range is None:
+        return graph
+    # A requested range comes from the browser, which shows it already converted.
     return EvaluatedGraph(
         name=graph.name,
         title=graph.title,
         time_range=graph.time_range,
-        # A requested range comes from the browser, which shows it already converted.
-        vertical_range=(
-            _converted_vertical_range(graph.vertical_range, axis_conversion)
-            if requested_vertical_range is None
-            else requested_vertical_range
-        ),
-        stacks=[_converted_stack(stack, temperature_unit) for stack in graph.stacks],
-        lines=[
-            EvaluatedLine(
-                curve=_converted_curve(line.curve, temperature_unit), inverse=line.inverse
-            )
-            for line in graph.lines
-        ],
-        rules=[_converted_rule(rule, temperature_unit) for rule in graph.rules],
-        regions=[_converted_region(region, temperature_unit) for region in graph.regions],
+        vertical_range=requested_vertical_range,
+        stacks=graph.stacks,
+        lines=graph.lines,
+        rules=graph.rules,
+        regions=graph.regions,
     )
 
 
@@ -594,10 +527,8 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
         if png_graph.y_axis_unit is None
         else user_specific_unit(png_graph.y_axis_unit, temperature_unit)
     )
-    graph = _graph_in_user_unit(
-        png_graph.graph,
-        (lambda value: value) if axis is None else axis.conversion,
-        temperature_unit,
+    graph = _with_requested_vertical_range(
+        converted_graph(png_graph.graph, temperature_unit, png_graph.y_axis_unit),
         png_graph.requested_vertical_range,
     )
     formatter = None if axis is None else axis.formatter

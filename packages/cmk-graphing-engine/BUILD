@@ -21,6 +21,7 @@ py_library(
         "cmk/graphing_engine/_data/_timeseries.py",
         "cmk/graphing_engine/_data/_units.py",
         "cmk/graphing_engine/_evaluation/__init__.py",
+        "cmk/graphing_engine/_evaluation/_conversion.py",
         "cmk/graphing_engine/_evaluation/_fetch.py",
         "cmk/graphing_engine/_evaluation/_graphs.py",
         "cmk/graphing_engine/_evaluation/_title.py",

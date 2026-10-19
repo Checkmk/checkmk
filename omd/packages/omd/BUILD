@@ -211,6 +211,7 @@ py_library(
         "omdlib/mcp.py",
         "omdlib/mkeventd.py",
         "omdlib/multisite.py",
+        "omdlib/nagvis.py",
         "omdlib/opentelemetry.py",
         "omdlib/options.py",
         "omdlib/options_legacy.py",

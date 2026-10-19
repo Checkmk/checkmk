@@ -56,6 +56,7 @@ def test_hooks(site: Site) -> None:
 
     if not site.edition.is_cloud_edition():
         hooks += [
+            "NAGVIS",
             "TRACE_RECEIVE",
             "TRACE_RECEIVE_ADDRESS",
             "TRACE_RECEIVE_PORT",

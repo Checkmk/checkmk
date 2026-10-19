@@ -1,4 +1,4 @@
-load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "pkg_mkdirs", "strip_prefix")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "strip_prefix")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("//bazel/rules:pkg.bzl", "pkg_tar")
 
@@ -82,7 +82,6 @@ pkg_files(
 pkg_files(
     name = "skel_etc",
     srcs = [
-        "skel/etc/apache/conf.d/nagvis.conf",
         "skel/etc/nagvis/apache.conf",
         "skel/etc/nagvis/conf.d/omd.ini.php",
         "@nagvis//:etc/conf.d/demo.ini.php",
@@ -94,6 +93,14 @@ pkg_files(
     },
     strip_prefix = strip_prefix.from_pkg(""),
     tags = ["manual"],
+)
+
+pkg_files(
+    name = "omd_hook",
+    srcs = ["NAGVIS.hook"],
+    attributes = pkg_attributes(mode = "0644"),
+    prefix = "lib/omd/hooks",
+    renames = {"NAGVIS.hook": "NAGVIS"},
 )
 
 pkg_mkdirs(
@@ -171,6 +178,7 @@ pkg_tar(
         "doc_general",
         "general",
         "nagvis_ini_skel",
+        "omd_hook",
         "share",
         "skel_etc",
         "skel_etc_dirs",

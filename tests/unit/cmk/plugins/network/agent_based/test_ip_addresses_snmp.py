@@ -345,7 +345,6 @@ def test_parse_ip_addresses_without_prefix() -> None:
     ]
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash groups 4602, 4720: ValueError")
 def test_parse_ip_addresses_skips_invalid_address_row() -> None:
     # Crash groups 4602/4720: one ipAddrTable row holds no valid IPv4 address/netmask
     assert parse_ip_addresses(

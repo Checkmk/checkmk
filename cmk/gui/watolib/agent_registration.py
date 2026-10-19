@@ -5,6 +5,7 @@
 
 import json
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import override
 from uuid import UUID
 
@@ -20,6 +21,7 @@ from cmk.gui.watolib.automations import (
 )
 from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
+from cmk.utils.security_event import log_security_event, SecurityEvent
 
 
 def remove_tls_registration(
@@ -73,8 +75,45 @@ class AutomationRemoveTLSRegistration(AutomationCommand[Sequence[HostName]]):
         _remove_tls_registration(api_request)
 
 
+class UUIDAlreadyLinkedError(MKGeneralException):
+    pass
+
+
+@dataclass
+class LinkedUUIDRefusedEvent(SecurityEvent):
+    def __init__(
+        self, *, host_name: HostName | None, uuid: UUID, linked_host_name: HostName
+    ) -> None:
+        super().__init__(
+            "registration of a linked UUID refused",
+            {
+                "host_name": None if host_name is None else str(host_name),
+                "uuid": str(uuid),
+                "linked_host_name": str(linked_host_name),
+            },
+            SecurityEvent.Domain.auth,
+        )
+
+
+def link_uuid_of_existing_host(host_name: HostName, uuid: UUID, *, push_configured: bool) -> None:
+    """Called by the REST endpoints of the registration of an existing host. The REST framework
+    holds the configuration lock of the site while the check reads the UUID links of the site."""
+    verify_uuid_is_not_linked(uuid, host_name=host_name)
+    link_uuid_of_registration(host_name, uuid, push_configured=push_configured)
+
+
 def link_uuid_of_registration(host_name: HostName, uuid: UUID, *, push_configured: bool) -> None:
     _uuid_link_manager().create_link(host_name, uuid, push_configured=push_configured)
+
+
+def verify_uuid_is_not_linked(uuid: UUID, *, host_name: HostName | None) -> None:
+    if (linked_host_name := _uuid_link_manager().linked_host_name(uuid)) is not None:
+        log_security_event(
+            LinkedUUIDRefusedEvent(
+                host_name=host_name, uuid=uuid, linked_host_name=linked_host_name
+            )
+        )
+        raise UUIDAlreadyLinkedError(f"The UUID {uuid} is already linked to a host.")
 
 
 def _uuid_link_manager() -> UUIDLinkManager:

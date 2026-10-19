@@ -30,7 +30,7 @@ from cmk.gui.token_auth import (
     TokenUseAlreadyConsumed,
     UnknownToken,
 )
-from cmk.gui.watolib.agent_registration import link_uuid_of_registration
+from cmk.gui.watolib.agent_registration import link_uuid_of_existing_host, UUIDAlreadyLinkedError
 from cmk.utils.agent_registration import HostAgentConnectionMode
 
 from .models.request_models import RegisterHost
@@ -79,11 +79,15 @@ def register_host_via_token_v1(
         with get_token_store().agent_registration_use(
             api_context.token.token_id, "host_registration", datetime.now(UTC)
         ):
-            link_uuid_of_registration(
+            link_uuid_of_existing_host(
                 host_name,
                 body.uuid,
                 push_configured=connection_mode is HostAgentConnectionMode.PUSH,
             )
+    except UUIDAlreadyLinkedError as exc:
+        raise ProblemException(
+            status=HTTPStatus.CONFLICT, title="UUID already linked", detail=str(exc)
+        ) from exc
     except TokenUseAlreadyConsumed:
         raise _token_already_used()
     except UnknownToken, TokenExpired, TokenRevoked:
@@ -114,6 +118,10 @@ ENDPOINT_REGISTER_HOST_VIA_TOKEN = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(),
     doc=EndpointDoc(family=HOST_CONFIG_FAMILY.name, group="Checkmk Internal"),
-    versions={APIVersion.INTERNAL: EndpointHandler(handler=register_host_via_token_v1)},
+    versions={
+        APIVersion.INTERNAL: EndpointHandler(
+            handler=register_host_via_token_v1, additional_status_codes=[HTTPStatus.CONFLICT]
+        )
+    },
     allowed_tokens={"agent_registration"},
 )

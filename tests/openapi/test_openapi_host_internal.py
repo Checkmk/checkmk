@@ -25,6 +25,19 @@ _HOST_CONFIG_INTERNAL_BASE = urljoin(_API_BASE, "objects/host_config_internal/")
 _URL_REGISTER = urljoin(_HOST_CONFIG_INTERNAL_BASE, "example.com/actions/register/invoke")
 
 
+def _uuid_link_manager() -> UUIDLinkManager:
+    return UUIDLinkManager(
+        received_outputs_dir=received_outputs_dir,
+        data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
+    )
+
+
+def _links() -> dict[UUID, HostName]:
+    return {link.uuid: link.hostname for link in _uuid_link_manager()}
+
+
 @pytest.mark.usefixtures("with_host")
 def test_openapi_host_register_ok(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     uuid = UUID("1409ac78-6548-4138-9285-12484409ddf2")
@@ -102,3 +115,43 @@ def test_openapi_host_register_wrong_site(aut_user_auth_wsgi_app: WebTestAppForC
         content_type='application/json; charset="utf-8"',
     )
     assert any("attributes.site" in key for key in resp.json["fields"])
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_register_refuses_a_uuid_that_is_linked_to_another_host(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    """CMK-40803 AC-1"""
+    uuid = UUID("1409ac78-6548-4138-9285-12484409ddf2")
+    _uuid_link_manager().create_link(HostName("heute"), uuid, push_configured=False)
+
+    aut_user_auth_wsgi_app.call_method(
+        "put",
+        _URL_REGISTER,
+        params=json.dumps({"uuid": str(uuid)}),
+        status=HTTPStatus.CONFLICT,
+        headers={"Accept": "application/json"},
+        content_type="application/json; charset=utf-8",
+    )
+
+    assert _links() == {uuid: HostName("heute")}
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_register_refuses_a_uuid_that_is_linked_to_the_same_host(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    """CMK-40803 AC-1"""
+    uuid = UUID("1409ac78-6548-4138-9285-12484409ddf2")
+    _uuid_link_manager().create_link(HostName("example.com"), uuid, push_configured=False)
+
+    aut_user_auth_wsgi_app.call_method(
+        "put",
+        _URL_REGISTER,
+        params=json.dumps({"uuid": str(uuid)}),
+        status=HTTPStatus.CONFLICT,
+        headers={"Accept": "application/json"},
+        content_type="application/json; charset=utf-8",
+    )
+
+    assert _links() == {uuid: HostName("example.com")}

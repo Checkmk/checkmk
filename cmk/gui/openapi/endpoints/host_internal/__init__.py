@@ -30,7 +30,7 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.watolib.agent_registration import link_uuid_of_registration
+from cmk.gui.watolib.agent_registration import link_uuid_of_existing_host, UUIDAlreadyLinkedError
 from cmk.gui.watolib.hosts_and_folders import FolderTree, Host, make_folder_tree
 from cmk.utils.agent_registration import (
     connection_mode_from_host_config,
@@ -78,10 +78,12 @@ permission_registry.register(
         HTTPStatus.FORBIDDEN,
         HTTPStatus.NOT_FOUND,
         HTTPStatus.METHOD_NOT_ALLOWED,
+        HTTPStatus.CONFLICT,
     ],
     status_descriptions={
         HTTPStatus.FORBIDDEN: "You do not have the permissions to register this host.",
         HTTPStatus.METHOD_NOT_ALLOWED: "This host cannot be registered on this site.",
+        HTTPStatus.CONFLICT: "The UUID is already linked to a host.",
     },
     path_params=[
         {
@@ -123,9 +125,14 @@ def register_host(params: Mapping[str, Any]) -> Response:
 
 
 def _link_registration(host: Host, uuid: UUID, connection_mode: HostAgentConnectionMode) -> None:
-    link_uuid_of_registration(
-        host.name(), uuid, push_configured=connection_mode is HostAgentConnectionMode.PUSH
-    )
+    try:
+        link_uuid_of_existing_host(
+            host.name(), uuid, push_configured=connection_mode is HostAgentConnectionMode.PUSH
+        )
+    except UUIDAlreadyLinkedError as exc:
+        raise ProblemException(
+            status=HTTPStatus.CONFLICT, title="UUID already linked", detail=str(exc)
+        ) from exc
 
 
 def _verified_host(tree: FolderTree, host_name: HostName) -> Host:

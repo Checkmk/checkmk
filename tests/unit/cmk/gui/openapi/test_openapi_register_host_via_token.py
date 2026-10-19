@@ -130,6 +130,24 @@ class TestRegisterHostViaToken:
         resp.assert_status_code(HTTPStatus.FORBIDDEN)
         assert "different host" in resp.json["detail"]
 
+    def test_a_uuid_that_is_already_linked_is_refused_without_consuming_a_use(
+        self, clients: ClientRegistry
+    ) -> None:
+        """CMK-40803 AC-1"""
+        uuid = str(uuid4())
+        clients.HostConfig.register("example.com", uuid)
+        token = _issue_token("heute")
+
+        resp = clients.HostConfig.register_via_token(
+            "heute", f"0:{token.token_id}", uuid, expect_ok=False
+        )
+
+        resp.assert_status_code(HTTPStatus.CONFLICT)
+        assert _links() == {UUID(uuid): HostName("example.com")}
+        stored = get_token_store().verify(f"0:{token.token_id}", now=dt.datetime.now(dt.UTC))
+        assert isinstance(stored.details, AgentRegistrationToken)
+        assert stored.details.host_registration_completed_at is None
+
     def test_of_two_registrations_with_one_token_only_the_first_links_its_uuid(
         self, clients: ClientRegistry
     ) -> None:

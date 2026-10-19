@@ -139,7 +139,12 @@ def ip_info_20_from(
                 return None
             if _raw_address == "0.0.0.0":  # storage-isilon-onefs
                 return None
-            interface_ip = AugmentedIPInterface.from_ip_address(f"{_raw_address}/{_raw_netmask}")
+            try:
+                interface_ip = AugmentedIPInterface.from_ip_address(
+                    f"{_raw_address}/{_raw_netmask}"
+                )
+            except ValueError:
+                return None
         case _:
             return None
 

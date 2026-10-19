@@ -131,10 +131,10 @@ def parse_huawei_physical_entity_values(
     return huawei_item_dict_from_entities(entities_per_member, multiple_entities_per_member)
 
 
-def huawei_item_dict_from_entities(
-    entities_per_member: Mapping[int, Sequence[HuaweiPhysicalEntityValue]],
+def huawei_item_dict_from_entities[T](
+    entities_per_member: Mapping[int, Sequence[T]] | Mapping[str, Sequence[T]],
     multiple_entities_per_member: bool = True,
-) -> Mapping[str, HuaweiPhysicalEntityValue]:
+) -> Mapping[str, T]:
     """
     Converts a dictionary of the form:
     {
@@ -156,7 +156,7 @@ def huawei_item_dict_from_entities(
     Where 'item name' has the form {stack_memer_number}/{entity_number} if multiple_entites_per_member is True.
     Otherwise it is expected that each member has only one entity and 'item name' is just {stack_member_number}.
     """
-    items = {}
+    items: dict[str, T] = {}
     for member_number, entities in entities_per_member.items():
         for entity_idx, entity in enumerate(entities):
             item_name = str(member_number)
@@ -167,3 +167,53 @@ def huawei_item_dict_from_entities(
 
             items[item_name] = entity
     return items
+
+
+def parse_huawei_switch_psu(string_table: Sequence[StringTable]) -> Section:
+    return parse_huawei_physical_entity_values(string_table, "power card")
+
+
+class HuaweiFanData(NamedTuple):
+    fan_present: bool
+    fan_speed: float
+
+
+def parse_huawei_switch_fan(string_table: StringTable) -> Mapping[str, HuaweiFanData]:
+    entities_per_member: dict[str, list[HuaweiFanData]] = {}
+    for line in string_table:
+        member_number = line[0].partition(".")[0]
+        fan_present = line[2] == "1"
+
+        try:
+            fan_speed = float(line[1])
+        except TypeError:
+            continue
+
+        entities_per_member.setdefault(member_number, []).append(
+            HuaweiFanData(fan_present=fan_present, fan_speed=fan_speed)
+        )
+
+    return huawei_item_dict_from_entities(entities_per_member)
+
+
+huawei_switch_stack_unknown_role = "unknown"
+
+
+def parse_huawei_switch_stack(string_table: Sequence[StringTable]) -> Mapping[str, str]:
+    stack_role_names = {
+        "1": "master",
+        "2": "standby",
+        "3": "slave",
+    }
+
+    stack_enabled_info, stack_role_info = string_table
+    if not stack_enabled_info or stack_enabled_info[0][0] != "1":
+        return {}
+
+    parsed: dict[str, str] = {}
+    for line in stack_role_info:
+        member_number = line[0]
+        stack_role = stack_role_names.get(line[1], huawei_switch_stack_unknown_role)
+        parsed[member_number] = stack_role
+
+    return parsed

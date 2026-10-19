@@ -4,37 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import collections
-
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 
 # mypy: disable-error-code="var-annotated"
 from cmk.agent_based.v2 import OIDEnd, render, SNMPTree
-from cmk.plugins.lib.huawei import HUAWEI_ENTERPRISE, huawei_item_dict_from_entities
+from cmk.plugins.lib.huawei import HUAWEI_ENTERPRISE, parse_huawei_switch_fan
 
 check_info = {}
-
-HuaweiFanData = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
-    "HuaweiFanData", "fan_present fan_speed"
-)
-
-
-def parse_huawei_switch_fan(string_table):
-    entities_per_member = {}
-    for line in string_table:
-        member_number = line[0].partition(".")[0]
-        fan_present = line[2] == "1"
-
-        try:
-            fan_speed = float(line[1])
-        except TypeError:
-            continue
-
-        entities_per_member.setdefault(member_number, []).append(
-            HuaweiFanData(fan_present=fan_present, fan_speed=fan_speed)
-        )
-
-    return huawei_item_dict_from_entities(entities_per_member)
 
 
 def inventory_huawei_switch_fan(parsed):

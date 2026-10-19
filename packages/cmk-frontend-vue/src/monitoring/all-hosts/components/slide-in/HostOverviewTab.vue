@@ -37,11 +37,15 @@ const tagChips = computed(() => toTagItems(props.data.tags))
 const contactGroupChips = computed(() => toNameItems(props.data.contact_groups))
 
 const lastCheck = computed(() =>
-  formatDisplayTimestamp(props.data.last_check, props.displayOptions)
+  props.data.last_check === null
+    ? '–'
+    : formatDisplayTimestamp(props.data.last_check, props.displayOptions)
 )
 
 const age = computed(() =>
-  formatDisplayTimestamp(props.data.last_state_change, props.displayOptions)
+  props.data.last_state_change === null
+    ? '–'
+    : formatDisplayTimestamp(props.data.last_state_change, props.displayOptions)
 )
 </script>
 

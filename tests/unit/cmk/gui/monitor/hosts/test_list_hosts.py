@@ -165,3 +165,31 @@ def test_list_hosts_rejects_a_site_condition_inside_or_without_querying_livestat
             headers={"Accept": "application/json", "Content-Type": "application/json"},
             status=HTTPStatus.BAD_REQUEST,
         )
+
+
+def test_handle_list_hosts_reports_no_timestamps_for_a_pending_host() -> None:
+    hosts = [
+        HostFactory.build(name="pending-host", last_check=0, last_state_change=0),
+        HostFactory.build(name="checked-host", last_check=1752405510, last_state_change=1752405540),
+    ]
+    host_repo = get_fake_host_repository(hosts=hosts)
+
+    response = _handle_list_hosts(
+        host_repo,
+        host_repo.count_total(),
+        fields=frozenset({HostOptionalField.LAST_CHECK, HostOptionalField.LAST_STATE_CHANGE}),
+    )
+
+    timestamps = {host.name: (host.last_check, host.last_state_change) for host in response.hosts}
+    assert timestamps == {
+        "pending-host": (None, None),
+        "checked-host": (1752405510, 1752405540),
+    }
+
+
+def test_handle_list_hosts_omits_timestamps_that_were_not_asked_for() -> None:
+    host_repo = get_fake_host_repository(hosts=[HostFactory.build(last_check=0)])
+
+    response = _handle_list_hosts(host_repo, host_repo.count_total(), fields=frozenset())
+
+    assert isinstance(response.hosts[0].last_check, ApiOmitted)

@@ -18,8 +18,8 @@ function numberValue(value: number | undefined): string {
   return value === undefined ? '' : String(value)
 }
 
-function timestampValue(unixSeconds: number | undefined): string {
-  return unixSeconds === undefined ? '' : renderDateAndTime(unixSeconds)
+function timestampValue(unixSeconds: number | null | undefined): string {
+  return unixSeconds === undefined || unixSeconds === null ? '' : renderDateAndTime(unixSeconds)
 }
 
 function itemsValue(items: LabelCellItem[]): string {

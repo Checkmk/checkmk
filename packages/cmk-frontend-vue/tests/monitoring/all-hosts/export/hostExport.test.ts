@@ -98,6 +98,12 @@ describe('HostExport', () => {
     expect(await csvOf(hostExport)).toBe('"last_check"\n"2026-01-05 09:03:07"\n')
   })
 
+  test('leaves the timestamps of a host that has never been checked empty', async () => {
+    const hostExport = new HostExport(['last_check'], [makeHost({ last_check: null })])
+
+    expect(await csvOf(hostExport)).toBe('"last_check"\n""\n')
+  })
+
   test('keeps a spreadsheet from running a value as a formula', async () => {
     const hostExport = new HostExport(['alias'], [makeHost({ alias: '=HYPERLINK("x")' })])
 

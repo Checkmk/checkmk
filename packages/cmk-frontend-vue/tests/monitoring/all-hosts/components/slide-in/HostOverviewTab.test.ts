@@ -94,3 +94,14 @@ test('names the timestamps as ages even when they show a point in time', () => {
   expect(screen.getByText('Check age')).toHaveAttribute('title', 'Age of the check')
   expect(screen.getByText('State age')).toHaveAttribute('title', 'Age of the state')
 })
+
+test('dashes out the timestamps of a host that has never been checked', () => {
+  render(HostOverviewTab, {
+    props: {
+      data: makeData({ last_check: null, last_state_change: null }),
+      displayOptions: DISPLAY_OPTIONS
+    }
+  })
+
+  expect(screen.getAllByText('–')).toHaveLength(2)
+})

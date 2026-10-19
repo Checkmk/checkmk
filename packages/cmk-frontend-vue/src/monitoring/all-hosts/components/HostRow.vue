@@ -100,12 +100,16 @@ const hostGroups = computed(() => toNameItems(props.row.groups ?? []))
 const lastCheck = computed(() =>
   props.row.last_check === undefined
     ? undefined
-    : formatDisplayTimestamp(props.row.last_check, props.displayOptions)
+    : props.row.last_check === null
+      ? '–'
+      : formatDisplayTimestamp(props.row.last_check, props.displayOptions)
 )
 const lastStateChange = computed(() =>
   props.row.last_state_change === undefined
     ? undefined
-    : formatDisplayTimestamp(props.row.last_state_change, props.displayOptions)
+    : props.row.last_state_change === null
+      ? '–'
+      : formatDisplayTimestamp(props.row.last_state_change, props.displayOptions)
 )
 </script>
 

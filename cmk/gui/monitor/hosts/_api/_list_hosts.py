@@ -142,13 +142,19 @@ class HostEntry:
         example="Data center Munich / Rack 1",
         default_factory=ApiOmitted,
     )
-    last_check: UnixTimestamp | ApiOmitted = api_field(
-        description="Unix timestamp of the host's last check",
+    last_check: UnixTimestamp | None | ApiOmitted = api_field(
+        description=(
+            "Unix timestamp of the host's last check. Null for hosts that have never been "
+            "checked, i.e. those still pending their first check."
+        ),
         example=1752405510,
         default_factory=ApiOmitted,
     )
-    last_state_change: UnixTimestamp | ApiOmitted = api_field(
-        description="Unix timestamp of the host's last state change",
+    last_state_change: UnixTimestamp | None | ApiOmitted = api_field(
+        description=(
+            "Unix timestamp of the host's last state change. Null for hosts that have never "
+            "been checked, i.e. those still pending their first check."
+        ),
         example=1752405540,
         default_factory=ApiOmitted,
     )
@@ -224,6 +230,17 @@ class HostEntry:
             """Return the value only if it was asked for and therefore actually read."""
             return value if field in fields and value is not None else ApiOmitted()
 
+        def included_timestamp(
+            field: HostOptionalField, value: UnixTimestamp | None
+        ) -> UnixTimestamp | None | ApiOmitted:
+            """Like :func:`included`, but null for a host that was never checked.
+
+            Livestatus reports 0 for both timestamps of such a host.
+            """
+            if field not in fields or value is None:
+                return ApiOmitted()
+            return value or None
+
         return cls(
             name=host.name,
             state=host.state_label,
@@ -243,8 +260,10 @@ class HostEntry:
                 HostOptionalField.NUM_SERVICES_PENDING, host.num_services_pending
             ),
             folder=included(HostOptionalField.FOLDER, host.folder),
-            last_check=included(HostOptionalField.LAST_CHECK, host.last_check),
-            last_state_change=included(HostOptionalField.LAST_STATE_CHANGE, host.last_state_change),
+            last_check=included_timestamp(HostOptionalField.LAST_CHECK, host.last_check),
+            last_state_change=included_timestamp(
+                HostOptionalField.LAST_STATE_CHANGE, host.last_state_change
+            ),
             labels=included(HostOptionalField.LABELS, host.labels),
             tags=included(HostOptionalField.TAGS, host.tags),
             contacts=included(HostOptionalField.CONTACTS, host.contacts),

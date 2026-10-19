@@ -109,6 +109,12 @@ test('renders alias, folder and formatted timestamps in their cells', () => {
   expect(screen.getByTitle(renderDateAndTime(host.last_state_change!))).toBeInTheDocument()
 })
 
+test('dashes out the timestamps of a host that has never been checked', () => {
+  mountRow(makeHost({ last_check: null, last_state_change: null }))
+
+  expect(screen.getAllByText('–')).toHaveLength(2)
+})
+
 test('emits open with the host when the name cell button is clicked', async () => {
   const host = makeHost()
   const onOpen = vi.fn()

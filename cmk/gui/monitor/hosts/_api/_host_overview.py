@@ -150,12 +150,18 @@ class HostOverviewResponse:
         ),
         example=[],
     )
-    last_check: UnixTimestamp = api_field(
-        description="Unix timestamp of the host's last check",
+    last_check: UnixTimestamp | None = api_field(
+        description=(
+            "Unix timestamp of the host's last check. Null for hosts that have never been "
+            "checked, i.e. those still pending their first check."
+        ),
         example=1752405510,
     )
-    last_state_change: UnixTimestamp = api_field(
-        description="Unix timestamp of the host's last state change",
+    last_state_change: UnixTimestamp | None = api_field(
+        description=(
+            "Unix timestamp of the host's last state change. Null for hosts that have never "
+            "been checked, i.e. those still pending their first check."
+        ),
         example=1752405540,
     )
     customer: str | None = api_field(
@@ -234,8 +240,9 @@ class HostOverviewResponse:
                 pending=read(host.num_services_pending, "num_services_pending"),
             ),
             modes=build_host_modes(host),
-            last_check=read(host.last_check, "last_check"),
-            last_state_change=read(host.last_state_change, "last_state_change"),
+            # Livestatus reports 0 for both timestamps of a host that was never checked.
+            last_check=read(host.last_check, "last_check") or None,
+            last_state_change=read(host.last_state_change, "last_state_change") or None,
             customer=customer,
             folder=read(host.folder, "folder"),
             contact_groups=read(host.contact_groups, "contact_groups"),

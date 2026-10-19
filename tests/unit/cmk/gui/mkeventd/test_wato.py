@@ -330,6 +330,21 @@ def test_hostname_translation_of_a_site_is_its_site_specific_one() -> None:
 
 
 @pytest.mark.usefixtures("request_context")
+def test_site_specific_hostname_translation_does_not_need_the_global_settings() -> None:
+    global_settings_file = config_domain_registry[EVENT_CONSOLE].config_file(site_specific=False)
+    global_settings_file.parent.mkdir(parents=True, exist_ok=True)
+    global_settings_file.write_text("this is no valid Python (\n")
+    site_config = _site_configuration(SiteId("remote"))
+    site_config["globals"] = {"hostname_translation": TranslationOptions(drop_domain=True)}
+
+    translation = mkeventd_wato.hostname_translation_of_site(
+        SiteId("remote"), SiteConfigurations({SiteId("remote"): site_config})
+    )
+
+    assert translation == TranslationOptions(drop_domain=True)
+
+
+@pytest.mark.usefixtures("request_context")
 def test_hostname_translation_of_a_site_without_a_site_specific_one_is_the_global_one() -> None:
     config_domain_registry[EVENT_CONSOLE].save(
         {"hostname_translation": TranslationOptions(drop_domain=True)}

@@ -142,7 +142,6 @@ from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupWATO,
 )
 from cmk.gui.watolib.global_settings import (
-    effective_site_value,
     make_pending_changes,
 )
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
@@ -518,16 +517,18 @@ def hostname_translation_of_site(
         return ec.load_config_to_activate(ec.create_paths(cmk.utils.paths.omd_root))[
             "hostname_translation"
         ]
-    # The host name translation is a global setting of the Event Console only. With its defaults,
-    # effective_site_value() doesn't need the ones of all configuration domains, which would e.g.
-    # run an automation of the core.
+    site_globals = load_site_globals(site_configs, site_id)
+    if "hostname_translation" in site_globals:
+        return cast(cmk.ccc.translations.TranslationOptions, site_globals["hostname_translation"])
+    # Without a site-specific setting, the site inherits the global one, which in turn falls back to
+    # the built-in default. The host name translation is a global setting of the Event Console only,
+    # so don't determine the defaults of all configuration domains, which would e.g. run an
+    # automation of the core.
     ec_domain = config_domain_registry[EVENT_CONSOLE]
-    translation, _origin = effective_site_value(
-        load_site_globals(site_configs, site_id),
-        "hostname_translation",
-        global_settings={**ec_domain.default_globals(), **ec_domain.load()},
+    return cast(
+        cmk.ccc.translations.TranslationOptions,
+        {**ec_domain.default_globals(), **ec_domain.load()}["hostname_translation"],
     )
-    return cast(cmk.ccc.translations.TranslationOptions, translation)
 
 
 def message_match_groups_text(result: ec.MatchSuccess) -> str:

@@ -5,14 +5,15 @@
 
 import logging
 import time
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator
 from contextlib import contextmanager
 
 import pytest
 
-from cmk.piggyback.backend._paths import payload_dir, source_status_dir
-from cmk.piggyback.hub import RELATIVE_CONFIG_PATH
+from cmk.piggyback.backend._paths import source_status_dir
 from tests.system.multisite.cmk.piggyback.piggyback_test_helper import (
+    cleanup_hosts,
+    cleanup_piggyback_files,
     CMK_TRACK_TIMEOUT,
     create_local_check,
     discovered_service_phases,
@@ -22,58 +23,17 @@ from tests.system.multisite.cmk.piggyback.piggyback_test_helper import (
     piggybacked_data_gets_updated,
     piggybacked_service_discovered,
     piggybacked_service_name,
+    record_config_mtimes,
+    schedule_check_and_discover,
     set_omd_config_piggyback_hub,
+    setup_piggyback_host_and_check,
+    wait_for_config_redistributed,
 )
 from tests.system.multisite.utils import await_broker_ready
 from tests.testlib.common.utils import wait_until
 from tests.testlib.system.site import Site
 
 LOGGER = logging.getLogger(__name__)
-
-
-@contextmanager
-def _setup_piggyback_host(
-    central_site: Site, site_id_target: str, hostname_piggyback: str
-) -> Iterator[None]:
-    try:
-        LOGGER.info("Creating piggyback host '%s' in site '%s'", hostname_piggyback, site_id_target)
-        central_site.openapi.hosts.create(
-            hostname=hostname_piggyback,
-            attributes={
-                "site": site_id_target,
-                "tag_address_family": "no-ip",
-                "tag_agent": "no-agent",
-                "tag_piggyback": "piggyback",
-            },
-        )
-        central_site.openapi.changes.activate_and_wait_for_completion()
-        yield
-    finally:
-        LOGGER.info(
-            "Deleting piggyback host '%s' from site '%s'", hostname_piggyback, site_id_target
-        )
-        central_site.openapi.hosts.delete(hostname_piggyback)
-        central_site.openapi.changes.activate_and_wait_for_completion()
-
-
-@contextmanager
-def _setup_piggyback_host_and_check(
-    source_site: Site, site_id_target: str, hostname_source: str, hostname_piggyback: str
-) -> Iterator[None]:
-    with (
-        create_local_check(
-            source_site,
-            [hostname_source],
-            [hostname_piggyback],
-        ),
-        _setup_piggyback_host(source_site, site_id_target, hostname_piggyback),
-    ):
-        yield
-
-
-def _schedule_check_and_discover(site: Site, hostname_source: str, hostname_piggyback: str) -> None:
-    site.schedule_check(hostname_source, "Check_MK")
-    site.openapi.service_discovery.run_discovery_and_wait_for_completion(hostname_piggyback)
 
 
 @pytest.mark.medium_test_chain
@@ -83,10 +43,10 @@ def test_piggyback_services_source_remote(piggyback_env_two_site_setup: tuple[Si
     """
     central_site, remote_site = piggyback_env_two_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_source_remote"
-    with _setup_piggyback_host_and_check(
+    with setup_piggyback_host_and_check(
         central_site, remote_site.id, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
     ):
-        _schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
+        schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
         piggybacked_service_discovered(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
 
 
@@ -100,16 +60,16 @@ def test_piggyback_services_source_remote_diff_customer(
     """
     central_site, remote_site = piggyback_env_two_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_source_remote"
-    with _setup_piggyback_host_and_check(
+    with setup_piggyback_host_and_check(
         central_site, remote_site.id, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
     ):
-        _schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
+        schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
         assert piggybacked_data_gets_updated(
             central_site, remote_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
         )
 
         with _change_remote_site_customer(central_site, remote_site, "customer1"):
-            _schedule_check_and_discover(
+            schedule_check_and_discover(
                 central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
             )
             assert not piggybacked_data_gets_updated(
@@ -120,7 +80,7 @@ def test_piggyback_services_source_remote_diff_customer(
                 raise_timeout=False,
             )
 
-        _schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
+        schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
         assert piggybacked_data_gets_updated(
             central_site, remote_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
         )
@@ -145,7 +105,7 @@ def test_piggyback_services_remote_remote_diff_customer(
             _HOSTNAME_PIGGYBACKED
         )
 
-    with _setup_piggyback_host_and_check(
+    with setup_piggyback_host_and_check(
         central_site, remote_site_2.id, HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED
     ):
         # both remote sites on "provider" customer, data flows from remote_site to remote_site_2
@@ -172,11 +132,6 @@ def test_piggyback_services_remote_remote_diff_customer(
                 )
 
 
-def _piggybackhub_conf_mtime_ms(site: Site) -> int | None:
-    path = site.root / RELATIVE_CONFIG_PATH
-    return site.file_timestamp_ms(path) if site.file_exists(path) else None
-
-
 @contextmanager
 def _change_remote_site_customer(
     central_site: Site, remote_site: Site, new_customer: str
@@ -194,53 +149,6 @@ def _change_remote_site_customer(
         central_site.openapi.changes.activate_and_wait_for_completion()
 
 
-def _wait_for_conf_redistributed(site: Site, previous_mtime_ms: int, timeout: int) -> None:
-    """
-    Wait until piggyback_hub.conf has been rewritten on site.
-
-    The hub rewrites the config whenever it receives a config message, so its
-    modification time advances on every redistribution.
-
-    Do not compare inodes here: the hub writes to a temporary file and renames it over
-    the target, and the allocator hands the inode freed by one write straight back to
-    the next one, so after an even number of rewrites the inode is back to the value it
-    had before (CMK-35803).
-    """
-
-    LOGGER.info(
-        "Waiting for piggyback_hub.conf on %s to pass mtime %d ms", site.id, previous_mtime_ms
-    )
-
-    def _conf_rewritten() -> bool:
-        current_mtime_ms = _piggybackhub_conf_mtime_ms(site)
-        return current_mtime_ms is not None and current_mtime_ms > previous_mtime_ms
-
-    wait_until(
-        _conf_rewritten,
-        timeout=timeout,
-        interval=1,
-        condition_name=f"piggyback_hub.conf redistributed for site {site.id}",
-    )
-
-
-def _record_config_mtimes(sites: Sequence[Site]) -> dict[str, int]:
-    """Snapshot piggyback_hub.conf mtimes before triggering a redistribution."""
-    mtimes_ms = {}
-    for site in sites:
-        mtime_ms = _piggybackhub_conf_mtime_ms(site)
-        assert mtime_ms is not None, f"piggyback_hub.conf should exist for site {site.id}"
-        mtimes_ms[site.id] = mtime_ms
-    LOGGER.info("Recorded piggyback_hub.conf mtimes: %s", mtimes_ms)
-    return mtimes_ms
-
-
-def _wait_for_config_redistributed(
-    sites: Sequence[Site], previous_mtimes_ms: Mapping[str, int], timeout: int = 60
-) -> None:
-    for site in sites:
-        _wait_for_conf_redistributed(site, previous_mtimes_ms[site.id], timeout)
-
-
 @pytest.mark.skip_if_not_edition("ultimatemt")
 def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site: Site) -> None:
     """
@@ -249,23 +157,23 @@ def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site
     """
 
     _HOSTNAME_PIGGYBACKED = "piggybacked_host"
-    with _setup_piggyback_host_and_check(
+    with setup_piggyback_host_and_check(
         central_site, remote_site.id, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
     ):
-        _schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
+        schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
         central_site.openapi.changes.activate_and_wait_for_completion()
 
         # same "provider" customer
         # record the initial config file state
-        config_mtimes_ms = _record_config_mtimes([central_site, remote_site])
+        config_mtimes_ms = record_config_mtimes([central_site, remote_site])
 
         with _change_remote_site_customer(central_site, remote_site, "customer1"):
             # service are NOT updated anymore (tested elsewhere), but config file is
-            _wait_for_config_redistributed([central_site, remote_site], config_mtimes_ms)
-            config_mtimes_ms = _record_config_mtimes([central_site, remote_site])
+            wait_for_config_redistributed([central_site, remote_site], config_mtimes_ms)
+            config_mtimes_ms = record_config_mtimes([central_site, remote_site])
 
         # After restoring customer, data distribution resumes, so config file is updated again
-        _wait_for_config_redistributed([central_site, remote_site], config_mtimes_ms)
+        wait_for_config_redistributed([central_site, remote_site], config_mtimes_ms)
 
 
 @pytest.mark.skip_if_not_edition("ultimatemt")
@@ -280,7 +188,7 @@ def test_config_sync_source_remote_remote_diff_customer(
     """
     central_site, remote_site, remote_site_2 = piggyback_env_three_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_two_remotes_both_customer"
-    with _setup_piggyback_host_and_check(
+    with setup_piggyback_host_and_check(
         central_site, remote_site_2.id, HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED
     ):
         remote_site.schedule_check(HOSTNAME_SOURCE_REMOTE, "Check_MK")
@@ -290,22 +198,22 @@ def test_config_sync_source_remote_remote_diff_customer(
 
         # Initially both sites on "provider" customer - data flows from remote_site to remote_site_2
         # record the initial config file state
-        config_mtimes_ms = _record_config_mtimes(piggyback_env_three_site_setup)
+        config_mtimes_ms = record_config_mtimes(piggyback_env_three_site_setup)
 
         # Change customer on one remote sites; data must stop flowing, config updates must continue
         with _change_remote_site_customer(central_site, remote_site, "customer1"):
             # all sites get config updates
-            _wait_for_config_redistributed(piggyback_env_three_site_setup, config_mtimes_ms)
-            config_mtimes_ms = _record_config_mtimes(piggyback_env_three_site_setup)
+            wait_for_config_redistributed(piggyback_env_three_site_setup, config_mtimes_ms)
+            config_mtimes_ms = record_config_mtimes(piggyback_env_three_site_setup)
 
             # now change customer on the other remote site as well
             with _change_remote_site_customer(central_site, remote_site_2, "customer1"):
                 # all sites get config updates
-                _wait_for_config_redistributed(piggyback_env_three_site_setup, config_mtimes_ms)
-                config_mtimes_ms = _record_config_mtimes(piggyback_env_three_site_setup)
+                wait_for_config_redistributed(piggyback_env_three_site_setup, config_mtimes_ms)
+                config_mtimes_ms = record_config_mtimes(piggyback_env_three_site_setup)
 
         # all sites get config updates
-        _wait_for_config_redistributed(piggyback_env_three_site_setup, config_mtimes_ms)
+        wait_for_config_redistributed(piggyback_env_three_site_setup, config_mtimes_ms)
 
 
 def test_renaming_a_piggybacked_host_redistributes_config(
@@ -325,15 +233,15 @@ def test_renaming_a_piggybacked_host_redistributes_config(
         ),
     ):
         # record the initial config file state
-        config_mtimes_ms = _record_config_mtimes([central_site, remote_site])
+        config_mtimes_ms = record_config_mtimes([central_site, remote_site])
 
         with _create_and_rename_host(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED):
             # config distribution is triggered on both sites after renaming
-            _wait_for_config_redistributed([central_site, remote_site], config_mtimes_ms)
-            config_mtimes_ms = _record_config_mtimes([central_site, remote_site])
+            wait_for_config_redistributed([central_site, remote_site], config_mtimes_ms)
+            config_mtimes_ms = record_config_mtimes([central_site, remote_site])
 
         # config distribution is triggered on both sites after deleting the host
-        _wait_for_config_redistributed([central_site, remote_site], config_mtimes_ms)
+        wait_for_config_redistributed([central_site, remote_site], config_mtimes_ms)
 
 
 @pytest.mark.medium_test_chain
@@ -345,7 +253,7 @@ def test_piggyback_services_remote_remote(
     """
     central_site, remote_site, remote_site_2 = piggyback_env_three_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_remote_remote"
-    with _setup_piggyback_host_and_check(
+    with setup_piggyback_host_and_check(
         central_site, remote_site_2.id, HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED
     ):
         # Wait for the data from remote_1 to actually arrive to remote_2 before running
@@ -384,7 +292,7 @@ def test_piggyback_services_remote_remote_central_ph_off(
     """
     central_site, remote_site, remote_site_2 = piggyback_env_three_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_remote_remote"
-    with _setup_piggyback_host_and_check(
+    with setup_piggyback_host_and_check(
         central_site, remote_site_2.id, HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED
     ):
         assert piggybacked_data_gets_updated(
@@ -429,32 +337,6 @@ def _create_and_rename_host(
         source_site.openapi.changes.activate_and_wait_for_completion()
 
 
-@contextmanager
-def _cleanup_piggyback_files(
-    sites: Sequence[Site],
-    *,
-    piggybacked_hosts: Sequence[str] = (),
-    source_hosts: Sequence[str] = (),
-) -> Iterator[None]:
-    try:
-        yield
-    finally:
-        for site in sites:
-            for hostname in piggybacked_hosts:
-                site.delete_dir(payload_dir(site.root) / hostname)
-            for hostname in source_hosts:
-                site.delete_file(source_status_dir(site.root) / hostname)
-
-
-@contextmanager
-def _cleanup_hosts(central_site: Site, *hostnames: str) -> Iterator[None]:
-    try:
-        yield
-    finally:
-        central_site.openapi.hosts.bulk_delete(list(hostnames), ignore_missing=True)
-        central_site.openapi.changes.activate_and_wait_for_completion()
-
-
 def _rename_host(central_site: Site, hostname_old: str, hostname_new: str) -> str:
     summary = central_site.openapi.hosts.rename_and_wait_for_completion(
         hostname_old=hostname_old, hostname_new=hostname_new, etag="*"
@@ -471,11 +353,11 @@ def test_renaming_a_piggybacked_host_keeps_its_piggybacked_service(
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_to_rename"
     _HOSTNAME_RENAMED = "piggybacked_host_renamed"
     with (
-        _cleanup_piggyback_files(
+        cleanup_piggyback_files(
             (central_site, remote_site),
             piggybacked_hosts=(_HOSTNAME_PIGGYBACKED, _HOSTNAME_RENAMED),
         ),
-        _cleanup_hosts(central_site, _HOSTNAME_PIGGYBACKED, _HOSTNAME_RENAMED),
+        cleanup_hosts(central_site, _HOSTNAME_PIGGYBACKED, _HOSTNAME_RENAMED),
         create_local_check(central_site, [HOSTNAME_SOURCE_CENTRAL], [_HOSTNAME_PIGGYBACKED]),
     ):
         central_site.openapi.hosts.create(
@@ -488,7 +370,7 @@ def test_renaming_a_piggybacked_host_keeps_its_piggybacked_service(
             },
         )
         central_site.openapi.changes.activate_and_wait_for_completion()
-        _schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
+        schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
         central_site.openapi.changes.activate_and_wait_for_completion()
 
         summary = _rename_host(central_site, _HOSTNAME_PIGGYBACKED, _HOSTNAME_RENAMED)
@@ -509,13 +391,13 @@ def test_renaming_a_source_host_keeps_delivering_the_piggybacked_service(
     _HOSTNAME_RENAMED = "source_central_host_renamed"
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_source_renamed"
     with (
-        _cleanup_piggyback_files(
+        cleanup_piggyback_files(
             (central_site,),
             piggybacked_hosts=(_HOSTNAME_PIGGYBACKED,),
             source_hosts=(_HOSTNAME_SOURCE, _HOSTNAME_RENAMED),
         ),
-        _cleanup_hosts(central_site, _HOSTNAME_SOURCE, _HOSTNAME_RENAMED),
-        _setup_piggyback_host_and_check(
+        cleanup_hosts(central_site, _HOSTNAME_SOURCE, _HOSTNAME_RENAMED),
+        setup_piggyback_host_and_check(
             central_site, central_site.id, _HOSTNAME_SOURCE, _HOSTNAME_PIGGYBACKED
         ),
     ):
@@ -529,7 +411,7 @@ def test_renaming_a_source_host_keeps_delivering_the_piggybacked_service(
             bake_agent=False,
         )
         central_site.openapi.changes.activate_and_wait_for_completion()
-        _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE, _HOSTNAME_PIGGYBACKED)
+        schedule_check_and_discover(central_site, _HOSTNAME_SOURCE, _HOSTNAME_PIGGYBACKED)
         central_site.openapi.changes.activate_and_wait_for_completion()
 
         summary = _rename_host(central_site, _HOSTNAME_SOURCE, _HOSTNAME_RENAMED)
@@ -584,10 +466,10 @@ def test_piggyback_hub_disabled_globally(piggyback_env_two_site_setup: tuple[Sit
     """
     central_site, remote_site = piggyback_env_two_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_hub_disabled"
-    with _setup_piggyback_host_and_check(
+    with setup_piggyback_host_and_check(
         central_site, remote_site.id, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
     ):
-        _schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
+        schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
         central_site.openapi.changes.activate_and_wait_for_completion()
 
         assert _piggybacked_service_gets_updated(
@@ -622,10 +504,10 @@ def test_piggyback_hub_disabled_remote_site(
     """
     central_site, remote_site = piggyback_env_two_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_hub_disabled_remote_site"
-    with _setup_piggyback_host_and_check(
+    with setup_piggyback_host_and_check(
         central_site, remote_site.id, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
     ):
-        _schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
+        schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
         central_site.openapi.changes.activate_and_wait_for_completion()
 
         assert _piggybacked_service_gets_updated(
@@ -665,11 +547,11 @@ def test_piggyback_services_move_host(
     """
     central_site, remote_site, remote_site_2 = piggyback_env_three_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_move_host"
-    with _setup_piggyback_host_and_check(
+    with setup_piggyback_host_and_check(
         central_site, remote_site.id, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
     ):
         _move_host(central_site, remote_site_2.id, _HOSTNAME_PIGGYBACKED)
-        _schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
+        schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
         assert not piggybacked_data_gets_updated(
             central_site,
             remote_site,
@@ -695,10 +577,10 @@ def test_piggyback_host_removal(
     """
     central_site, remote_site = piggyback_env_two_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_removal"
-    with _setup_piggyback_host_and_check(
+    with setup_piggyback_host_and_check(
         central_site, remote_site.id, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
     ):
-        _schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
+        schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
         assert piggybacked_data_gets_updated(
             central_site, remote_site, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
         )
@@ -727,10 +609,10 @@ def test_piggyback_status_file_deletion_transport(
     # given
     piggybacked_host_name = "remote_host_removal"
 
-    with _setup_piggyback_host_and_check(
+    with setup_piggyback_host_and_check(
         central_site, remote_site.id, HOSTNAME_SOURCE_CENTRAL, piggybacked_host_name
     ):
-        _schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, piggybacked_host_name)
+        schedule_check_and_discover(central_site, HOSTNAME_SOURCE_CENTRAL, piggybacked_host_name)
         assert piggybacked_data_gets_updated(
             central_site, remote_site, HOSTNAME_SOURCE_CENTRAL, piggybacked_host_name
         )

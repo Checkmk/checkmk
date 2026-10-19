@@ -72,7 +72,11 @@ class NamingConvention(Enum):
     private_dns_name = "private_dns_name"
 
 
-CloudFrontHostAssignment = Literal["aws_host", "domain_host"]
+class CloudFrontHostAssignment(Enum):
+    """Where the data of a CloudFront distribution goes. The values are those of the rule."""
+
+    account = "aws_host"
+    origin_domain = "domain_host"
 
 
 @dataclass(frozen=True)
@@ -103,7 +107,7 @@ class AWSConfig:
         piggyback_naming_convention: NamingConvention,
         tags_option: TagsOption = TagsImportPatternOption.import_all,
         *,
-        cloudfront_host_assignment: CloudFrontHostAssignment = "aws_host",
+        cloudfront_host_assignment: CloudFrontHostAssignment = CloudFrontHostAssignment.account,
     ) -> None:
         self.hostname = hostname
         self._overall_tags = self._prepare_tags(overall_tags)

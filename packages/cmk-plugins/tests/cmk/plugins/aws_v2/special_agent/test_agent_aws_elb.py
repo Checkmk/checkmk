@@ -17,6 +17,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.elb import (
     ELB,
@@ -187,7 +188,7 @@ def test_agent_aws_elb_limits(
     assert elb_limits.name == "elb_limits"
     assert len(elb_limits_results) == 4
     for result in elb_limits_results:
-        if result.piggyback_hostname == "":
+        if result.piggyback_hostname is SOURCE_HOST:
             assert len(result.content) == 1
         else:
             assert len(result.content) == 2
@@ -201,7 +202,7 @@ def test_agent_aws_elb_limits_go_to_the_account_first_then_to_each_load_balancer
     elb_limits_results = elb_limits.run().results
 
     assert [result.piggyback_hostname for result in elb_limits_results] == [
-        "",
+        SOURCE_HOST,
         "DNSName-0",
         "DNSName-1",
         "DNSName-2",
@@ -242,7 +243,7 @@ def test_agent_aws_elb_summary(
     if found_instances:
         assert len(elb_summary_results) == 1
         elb_summary_result = elb_summary_results[0]
-        assert elb_summary_result.piggyback_hostname == ""
+        assert elb_summary_result.piggyback_hostname is SOURCE_HOST
         assert len(elb_summary_result.content) == len(found_instances)
 
     else:
@@ -267,7 +268,7 @@ def test_agent_aws_elb_labels(
     assert elb_labels.name == "elb_generic_labels"
     assert len(elb_labels_results) == len(found_instances_with_labels)
     for result in elb_labels_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
 
 
 @pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elb_params)
@@ -288,7 +289,7 @@ def test_agent_aws_elb_health(
     assert elb_health.name == "elb_health"
     assert len(elb_health_results) == len(found_instances)
     for result in elb_health_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
 
 
 @pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elb_params)
@@ -309,7 +310,7 @@ def test_agent_aws_elb(
     assert elb.name == "elb"
     assert len(elb_results) == len(found_instances)
     for result in elb_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
         # 13 metrics
         assert len(result.content) == 13
 
@@ -332,7 +333,7 @@ def test_agent_aws_elb_summary_without_limits(
     if found_instances:
         assert len(elb_summary_results) == 1
         elb_summary_result = elb_summary_results[0]
-        assert elb_summary_result.piggyback_hostname == ""
+        assert elb_summary_result.piggyback_hostname is SOURCE_HOST
         assert len(elb_summary_result.content) == len(found_instances)
 
     else:
@@ -356,7 +357,7 @@ def test_agent_aws_elb_labels_without_limits(
     assert elb_labels.name == "elb_generic_labels"
     assert len(elb_labels_results) == len(found_instances_with_labels)
     for result in elb_labels_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
 
 
 @pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elb_params)
@@ -376,7 +377,7 @@ def test_agent_aws_elb_health_without_limits(
     assert elb_health.name == "elb_health"
     assert len(elb_health_results) == len(found_instances)
     for result in elb_health_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
 
 
 @pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elb_params)
@@ -396,7 +397,7 @@ def test_agent_aws_elb_without_limits(
     assert elb.name == "elb"
     assert len(elb_results) == len(found_instances)
     for result in elb_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
         # 13 metrics
         assert len(result.content) == 13
 

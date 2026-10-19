@@ -284,7 +284,7 @@ class EBSSummary(AWSSection):
             v["InstanceId"]: k for k, v in col_instances.items()
         }
 
-        content_by_piggyback_hosts: dict[str, list[str]] = {}
+        content_by_piggyback_hosts: dict[hosts.TargetHost | None, list[str]] = {}
         for vol in raw_content.content.values():
             vol["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(vol.get("Tags", []))
 
@@ -367,7 +367,7 @@ class EBS(AWSSectionCloudwatch):
                     continue
                 metric: Metric = {
                     "Id": self._create_id_for_metric_data_query(idx, metric_name),
-                    "Label": instance_name,
+                    "Label": self._metric_label(instance_name),
                     "MetricStat": {
                         "Metric": {
                             "Namespace": "AWS/EBS",
@@ -388,13 +388,25 @@ class EBS(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
+    # CloudWatch returns the label, the DataCache keeps it, and the EBS check uses it as
+    # the item. So the volumes of instances that are not monitored keep the empty label.
+    def _metric_label(self, host: hosts.TargetHost | None) -> str:
+        if host is None or host == self._target_host(hosts.EBSAttachment(None)):
+            return ""
+        return host
+
+    def _host_of_metric_label(self, label: str) -> hosts.TargetHost | None:
+        return self._target_host(hosts.EBSAttachment(hosts.TargetHost(label) if label else None))
+
     @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-        content_by_piggyback_hosts: dict[str, list[str]] = {}
+        content_by_piggyback_hosts: dict[hosts.TargetHost | None, list[str]] = {}
         for row in raw_content.content:
-            content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
+            content_by_piggyback_hosts.setdefault(
+                self._host_of_metric_label(row["Label"]), []
+            ).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     @override

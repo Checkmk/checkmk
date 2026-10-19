@@ -3,34 +3,44 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
-from cmk.plugins.aws_v2.special_agent.config import HostNaming, NamingConvention
+from cmk.plugins.aws_v2.special_agent.config import (
+    CloudFrontHostAssignment,
+    HostNaming,
+    NamingConvention,
+)
 from cmk.plugins.aws_v2.special_agent.hosts import (
     AccountScope,
     ClassicLoadBalancer,
     CloudFrontDistribution,
     DynamoDBTable,
     EBSAttachment,
-    EC2Instance,
+    ec2_instance_hosts,
     GlacierVault,
     HostedResource,
     LoadBalancerV2,
+    PiggybackResource,
     SOURCE_HOST,
     target_host,
     TargetHost,
     WAFV2WebACL,
 )
 
-DEFAULT_NAMING = HostNaming(ec2=NamingConvention.ip_region_instance, cloudfront="aws_host")
-DOMAIN_HOST_NAMING = HostNaming(ec2=NamingConvention.ip_region_instance, cloudfront="domain_host")
-
-INSTANCE = EC2Instance(
-    instance_id="i-0abc",
-    private_ip_address="10.0.0.1",
-    private_dns_name="ip-10-0-0-1.ec2.internal",
-    region="eu-central-1",
+DEFAULT_NAMING = HostNaming(
+    ec2=NamingConvention.ip_region_instance, cloudfront=CloudFrontHostAssignment.account
 )
+DOMAIN_HOST_NAMING = HostNaming(
+    ec2=NamingConvention.ip_region_instance, cloudfront=CloudFrontHostAssignment.origin_domain
+)
+
+INSTANCE = {
+    "InstanceId": "i-0abc",
+    "PrivateIpAddress": "10.0.0.1",
+    "PrivateDnsName": "ip-10-0-0-1.ec2.internal",
+}
 
 
 @pytest.mark.parametrize(
@@ -49,9 +59,9 @@ INSTANCE = EC2Instance(
 def test_ec2_instance_host_follows_the_naming_convention(
     convention: NamingConvention, expected: str
 ) -> None:
-    naming = HostNaming(ec2=convention, cloudfront="aws_host")
+    naming = HostNaming(ec2=convention, cloudfront=CloudFrontHostAssignment.account)
 
-    assert target_host(INSTANCE, naming) == expected
+    assert list(ec2_instance_hosts([INSTANCE], "eu-central-1", naming)) == [(expected, INSTANCE)]
 
 
 @pytest.mark.parametrize(
@@ -59,27 +69,27 @@ def test_ec2_instance_host_follows_the_naming_convention(
     [
         pytest.param(
             NamingConvention.private_dns_name,
-            EC2Instance("i-0abc", "10.0.0.1", None, "eu-central-1"),
+            {"InstanceId": "i-0abc", "PrivateIpAddress": "10.0.0.1"},
             id="no dns name",
         ),
         pytest.param(
             NamingConvention.private_dns_name,
-            EC2Instance("i-0abc", "10.0.0.1", "", "eu-central-1"),
+            {"InstanceId": "i-0abc", "PrivateIpAddress": "10.0.0.1", "PrivateDnsName": ""},
             id="empty dns name",
         ),
         pytest.param(
             NamingConvention.ip_region_instance,
-            EC2Instance("i-0abc", None, "ip-10-0-0-1.ec2.internal", "eu-central-1"),
+            {"InstanceId": "i-0abc", "PrivateDnsName": "ip-10-0-0-1.ec2.internal"},
             id="no ip address",
         ),
     ],
 )
 def test_ec2_instance_without_a_name_has_no_host(
-    convention: NamingConvention, instance: EC2Instance
+    convention: NamingConvention, instance: Mapping[str, object]
 ) -> None:
-    naming = HostNaming(ec2=convention, cloudfront="aws_host")
+    naming = HostNaming(ec2=convention, cloudfront=CloudFrontHostAssignment.account)
 
-    assert target_host(instance, naming) is None
+    assert not list(ec2_instance_hosts([instance], "eu-central-1", naming))
 
 
 @pytest.mark.parametrize(
@@ -99,7 +109,7 @@ def test_ec2_instance_without_a_name_has_no_host(
         ),
     ],
 )
-def test_resource_goes_to_a_host_of_its_own(resource: HostedResource, expected: str) -> None:
+def test_resource_goes_to_a_host_of_its_own(resource: PiggybackResource, expected: str) -> None:
     assert target_host(resource, DEFAULT_NAMING) == expected
 
 
@@ -120,7 +130,7 @@ def test_ebs_attachment_goes_to_the_host_of_its_monitored_instance() -> None:
     ],
 )
 def test_resource_goes_to_the_source_host(resource: HostedResource) -> None:
-    assert target_host(resource, DEFAULT_NAMING) == SOURCE_HOST
+    assert target_host(resource, DEFAULT_NAMING) is SOURCE_HOST
 
 
 def test_cloudfront_distribution_goes_to_its_origin_domain_host_when_assigned() -> None:
@@ -137,4 +147,4 @@ def test_cloudfront_distribution_without_origin_goes_to_the_source_host(
 ) -> None:
     distribution = CloudFrontDistribution(origin_domain)
 
-    assert target_host(distribution, DOMAIN_HOST_NAMING) == SOURCE_HOST
+    assert target_host(distribution, DOMAIN_HOST_NAMING) is SOURCE_HOST

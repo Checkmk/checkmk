@@ -17,6 +17,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.rds import RDS, RDSLimits, RDSSummary
 
@@ -183,7 +184,7 @@ def test_agent_aws_rds_limits(
     assert len(rds_limits_results) == 1
 
     rds_limits_result = rds_limits_results[0]
-    assert rds_limits_result.piggyback_hostname == ""
+    assert rds_limits_result.piggyback_hostname is SOURCE_HOST
     assert len(rds_limits_result.content) == 15
 
 
@@ -204,7 +205,7 @@ def test_agent_aws_rds_summary(
     if found_instances:
         assert len(rds_summary_results) == 1
         rds_summary_result = rds_summary_results[0]
-        assert rds_summary_result.piggyback_hostname == ""
+        assert rds_summary_result.piggyback_hostname is SOURCE_HOST
         assert len(rds_summary_result.content) == len(found_instances)
     else:
         assert len(rds_summary_results) == 0
@@ -228,7 +229,7 @@ def test_agent_aws_rds(
     if found_instances:
         assert len(rds_results) == 1
         rds_result = rds_results[0]
-        assert rds_result.piggyback_hostname == ""
+        assert rds_result.piggyback_hostname is SOURCE_HOST
         # 21 (metrics) * X (DBs) == Y (len results)
         assert len(rds_result.content) == 21 * len(found_instances)
     else:

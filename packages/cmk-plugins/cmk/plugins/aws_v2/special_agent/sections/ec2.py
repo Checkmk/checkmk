@@ -483,13 +483,11 @@ class EC2Summary(AWSSection):
 
     def _format_instances(self, instances):
         formatted_instances = {}
-        for inst in instances:
-            host = hosts.target_host(
-                hosts.EC2Instance.from_api(inst, self._region), self._config.host_naming
-            )
-            if host is not None:
-                inst["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(inst.get("Tags", []))
-                formatted_instances[host] = inst
+        for host, inst in hosts.ec2_instance_hosts(
+            instances, self._region, self._config.host_naming
+        ):
+            inst["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(inst.get("Tags", []))
+            formatted_instances[host] = inst
         return formatted_instances
 
     @override

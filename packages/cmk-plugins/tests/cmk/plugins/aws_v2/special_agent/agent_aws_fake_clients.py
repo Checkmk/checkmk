@@ -3028,6 +3028,9 @@ class FakeCloudwatchClient:
     ) -> Mapping[str, Any]:
         results = []
         for query in MetricDataQueries:
+            # botocore rejects a label that is not a string, for example None.
+            if not isinstance(query["Label"], str):
+                raise TypeError(f"Invalid type for parameter Label: {query['Label']!r}")
             results.append(
                 {
                     "Id": query["Id"],

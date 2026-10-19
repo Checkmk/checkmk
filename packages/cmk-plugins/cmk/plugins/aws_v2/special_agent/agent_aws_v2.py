@@ -30,6 +30,7 @@ from .config import (
     AGENT,
     AwsAccessError,
     AWSConfig,
+    CloudFrontHostAssignment,
     LOGGER,
     NamingConvention,
     TagsImportPatternOption,
@@ -522,7 +523,11 @@ def _configure_aws(args: argparse.Namespace) -> AWSConfig:
         (args.overall_tag_keys, args.overall_tag_values),
         args.piggyback_naming_convention,
         args.tag_key_pattern,
-        cloudfront_host_assignment=args.cloudfront_host_assignment or "aws_host",
+        cloudfront_host_assignment=(
+            CloudFrontHostAssignment.origin_domain
+            if args.cloudfront_host_assignment == CloudFrontHostAssignment.origin_domain.value
+            else CloudFrontHostAssignment.account
+        ),
     )
     for service_key, service_names, service_tags, service_limits in [
         ("ec2", args.ec2_names, (args.ec2_tag_keys, args.ec2_tag_values), args.ec2_limits),

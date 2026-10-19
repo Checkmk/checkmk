@@ -17,6 +17,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.ec2 import (
     EC2,
@@ -208,7 +209,7 @@ def test_agent_aws_ec2_limits(
     assert len(ec2_limits_results) == 1
 
     for result in ec2_limits_results:
-        assert result.piggyback_hostname == ""
+        assert result.piggyback_hostname is SOURCE_HOST
         for limit in result.content:
             assert limit.key in [
                 "vpc_elastic_ip_addresses",
@@ -261,7 +262,7 @@ def test_agent_aws_ec2_summary(
         assert len(ec2_summary_results) == 1
 
         result = ec2_summary_results[0]
-        assert result.piggyback_hostname == ""
+        assert result.piggyback_hostname is SOURCE_HOST
         assert len(result.content) == found_ec2
 
     else:
@@ -308,7 +309,7 @@ def test_agent_aws_ec2_security_groups(
     assert len(ec2_security_groups_results) == found_ec2
 
     for result in ec2_security_groups_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
 
 
 @pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
@@ -331,7 +332,7 @@ def test_agent_aws_ec2(
     assert len(ec2_results) == found_ec2
 
     for result in ec2_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
 
         # 11 metrics
         assert len(result.content) == 11
@@ -350,7 +351,7 @@ def test_agent_aws_ec2_summary_without_limits(
     assert len(ec2_summary_results) == 1
 
     result = ec2_summary_results[0]
-    assert result.piggyback_hostname == ""
+    assert result.piggyback_hostname is SOURCE_HOST
     assert len(result.content) == 3
 
 
@@ -382,7 +383,7 @@ def test_agent_aws_ec2_security_groups_without_limits(
     assert len(ec2_security_groups_results) == 3
 
     for result in ec2_security_groups_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
 
 
 def test_agent_aws_ec2_without_limits(get_ec2_sections: EC2Sections) -> None:
@@ -397,7 +398,7 @@ def test_agent_aws_ec2_without_limits(get_ec2_sections: EC2Sections) -> None:
     assert len(ec2_results) == 3
 
     for result in ec2_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
 
         # 11 metrics
         assert len(result.content) == 11

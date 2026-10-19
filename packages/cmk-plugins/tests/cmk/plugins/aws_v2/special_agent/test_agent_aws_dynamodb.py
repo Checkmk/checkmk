@@ -17,6 +17,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.dynamodb import (
     DynamoDBLimits,
@@ -209,7 +210,7 @@ def test_agent_aws_dynamodb_limits(
 
     provisioned_table_names = _get_provisioned_table_names(dynamodb_limits_content)
     for result in dynamodb_limits_results:
-        if result.piggyback_hostname == "":
+        if result.piggyback_hostname is SOURCE_HOST:
             assert len(result.content) == 3  # additionally number of tables
         else:
             assert len(result.content) == 2
@@ -230,7 +231,7 @@ def _test_summary(
     if found_instances:
         assert len(dynamodb_summary_results) == 1
         dynamodb_summary_results = dynamodb_summary_results[0]
-        assert dynamodb_summary_results.piggyback_hostname == ""
+        assert dynamodb_summary_results.piggyback_hostname is SOURCE_HOST
         assert len(dynamodb_summary_results.content) == len(found_instances)
 
     else:
@@ -271,7 +272,7 @@ def _test_table(
     assert dynamodb_table.name == "dynamodb_table"
     assert len(dynamodb_table_results) == len(found_instances)
     for result in dynamodb_table_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
         assert len(result.content) == 13  # 12 metrics + provisioned throughput
 
 

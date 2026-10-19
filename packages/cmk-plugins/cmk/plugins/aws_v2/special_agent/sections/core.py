@@ -17,14 +17,14 @@ import re
 from collections import defaultdict
 from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
-from typing import Any, Literal, NamedTuple, NotRequired, override, TypedDict
+from typing import Any, Literal, NamedTuple, NotRequired, overload, override, TypedDict
 
 from botocore.client import BaseClient
 from pydantic import BaseModel
 
 from ..config import AGENT, AWSConfig, LOGGER, RawTags, Tags, TagsImportPatternOption
 from ..data_cache import DataCache
-from ..hosts import AccountScope, HostedResource, target_host, TargetHost
+from ..hosts import AccountScope, HostedResource, PiggybackResource, target_host, TargetHost
 
 NOW = datetime.now()
 
@@ -166,7 +166,8 @@ class AWSSectionResults(NamedTuple):
 
 
 class AWSSectionResult(NamedTuple):
-    piggyback_hostname: TargetHost
+    piggyback_hostname: TargetHost | None
+    """A piggyback host, or None for SOURCE_HOST."""
     content: Any
     piggyback_host_labels: Mapping[str, str] | None = None
 
@@ -292,7 +293,13 @@ class AWSSection(DataCache):
             )
         return period
 
-    def _target_host(self, resource: HostedResource) -> TargetHost:
+    @overload
+    def _target_host(self, resource: PiggybackResource) -> TargetHost: ...
+
+    @overload
+    def _target_host(self, resource: HostedResource) -> TargetHost | None: ...
+
+    def _target_host(self, resource: HostedResource) -> TargetHost | None:
         return target_host(resource, self._config.host_naming)
 
     def _send(self, content: AWSComputedContent) -> None:
@@ -445,7 +452,7 @@ class AWSSectionLimits(AWSSection):
     ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._quota_client = quota_client
-        self._limits: dict[TargetHost, list[AWSRegionLimit]] = {}
+        self._limits: dict[TargetHost | None, list[AWSRegionLimit]] = {}
 
     def _add_limit(
         self,

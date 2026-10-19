@@ -14,11 +14,13 @@ from dateutil.tz import tzutc
 
 from cmk.plugins.aws_v2.special_agent.config import (
     AWSConfig,
+    CloudFrontHostAssignment,
     NamingConvention,
     OverallTags,
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
 from cmk.plugins.aws_v2.special_agent.sections.cloudfront import CloudFront, CloudFrontSummary
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 
@@ -247,7 +249,11 @@ def get_cloudfront_sections() -> CloudFrontSections:
             ([], []),
             NamingConvention.ip_region_instance,
             tag_import,
-            cloudfront_host_assignment="domain_host" if assign_to_domain_host else "aws_host",
+            cloudfront_host_assignment=(
+                CloudFrontHostAssignment.origin_domain
+                if assign_to_domain_host
+                else CloudFrontHostAssignment.account
+            ),
         ).for_account("123456789012")
         config.add_single_service_config("cloudfront_names", names)
         config.add_service_tags("cloudfront_tags", tags)
@@ -306,7 +312,7 @@ def test_agent_aws_cloudfront_summary(
     if found_distributions:
         assert len(cloudfront_summary_results) == 1
         cloudfront_summary_result = cloudfront_summary_results[0]
-        assert cloudfront_summary_result.piggyback_hostname == ""
+        assert cloudfront_summary_result.piggyback_hostname is SOURCE_HOST
         assert [e["Id"] for e in cloudfront_summary_result.content] == found_distributions
     else:
         assert len(cloudfront_summary_results) == 0
@@ -331,7 +337,9 @@ def test_agent_aws_cloudfront(
     if found_distributions:
         assert len(cloudfront_results) == 1
         cloudfront_result = cloudfront_results[0]
-        assert cloudfront_result.piggyback_hostname == (PIGGYBACK_HOSTNAME if use_piggyback else "")
+        assert cloudfront_result.piggyback_hostname == (
+            PIGGYBACK_HOSTNAME if use_piggyback else SOURCE_HOST
+        )
         assert {e["Label"] for e in cloudfront_result.content} == set(found_distributions)
         # We are retrieving 6 metrics for each CloudFront distribution
         assert len(cloudfront_result.content) == 6 * len(found_distributions)

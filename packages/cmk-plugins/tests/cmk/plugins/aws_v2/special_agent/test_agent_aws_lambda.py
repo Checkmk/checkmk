@@ -20,6 +20,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
 from cmk.plugins.aws_v2.special_agent.runner import _create_lamdba_sections
 from cmk.plugins.aws_v2.special_agent.sections.aws_lambda import (
     LambdaCloudwatch,
@@ -189,7 +190,7 @@ def test_agent_aws_lambda_summary(
     assert lambda_summary.name == "lambda_summary"
     assert len(lambda_summary_results) == 1
     for result in lambda_summary_results:
-        assert result.piggyback_hostname == ""
+        assert result.piggyback_hostname is SOURCE_HOST
         assert [lambda_function["FunctionName"] for lambda_function in result.content] == expected
 
 

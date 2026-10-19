@@ -5,23 +5,25 @@
 
 """The one place that decides which host the data of an AWS resource goes to.
 
-Every section asks target_host for the host of its results. Data about the AWS account
+Every section asks target_host for the host of its results, or ec2_instance_hosts for
+the hosts of EC2 instances. Data about the AWS account
 or a region as a whole goes to the source host, the host that runs the special agent.
 Some resources get a piggyback host of their own. Each resource type has its own host
 name function below.
 """
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
-from typing import assert_never, NewType, overload, Self
+from typing import assert_never, Final, NewType, overload, Self
 
 from pydantic import BaseModel, Field
 
 from .config import CloudFrontHostAssignment, HostNaming, NamingConvention
 
 TargetHost = NewType("TargetHost", str)
+"""The name of a piggyback host."""
 
-SOURCE_HOST = TargetHost("")
+SOURCE_HOST: Final = None
 """The host that runs the special agent. The agent writes no piggyback header for it."""
 
 
@@ -100,37 +102,30 @@ class GlacierVault:
     region: str
 
 
-# Every resource type except EC2Instance always has a host.
-HostedResource = (
-    AccountScope
-    | EBSAttachment
-    | ClassicLoadBalancer
-    | LoadBalancerV2
-    | DynamoDBTable
-    | WAFV2WebACL
-    | CloudFrontDistribution
-    | GlacierVault
+# Each of these resources always goes to a piggyback host of its own.
+PiggybackResource = (
+    ClassicLoadBalancer | LoadBalancerV2 | DynamoDBTable | WAFV2WebACL | GlacierVault
 )
 
-
-@overload
-def target_host(resource: EC2Instance, naming: HostNaming) -> TargetHost | None: ...
+HostedResource = AccountScope | EBSAttachment | CloudFrontDistribution | PiggybackResource
 
 
 @overload
-def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost: ...
+def target_host(resource: PiggybackResource, naming: HostNaming) -> TargetHost: ...
 
 
-def target_host(resource: EC2Instance | HostedResource, naming: HostNaming) -> TargetHost | None:
+@overload
+def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost | None: ...
+
+
+def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost | None:
     """Decide the host that the data of an AWS resource goes to.
 
-    None means that the EC2 instance has no host name. The agent then skips it.
+    None is SOURCE_HOST.
     """
     match resource:
         case AccountScope():
             return SOURCE_HOST
-        case EC2Instance():
-            return _ec2_instance_host(resource, naming.ec2)
         case EBSAttachment():
             return _ebs_attachment_host(resource)
         case ClassicLoadBalancer():
@@ -147,6 +142,19 @@ def target_host(resource: EC2Instance | HostedResource, naming: HostNaming) -> T
             return _glacier_vault_host(resource)
         case _:
             assert_never(resource)
+
+
+def ec2_instance_hosts[T: Mapping[str, object]](
+    instances: Iterable[T], region: str, naming: HostNaming
+) -> Iterator[tuple[TargetHost, T]]:
+    """Pair the EC2 instances of the API with their hosts.
+
+    The agent does not monitor an instance without a host name, so it is left out.
+    """
+    for instance in instances:
+        host = _ec2_instance_host(EC2Instance.from_api(instance, region), naming.ec2)
+        if host is not None:
+            yield host, instance
 
 
 def _ec2_instance_host(instance: EC2Instance, convention: NamingConvention) -> TargetHost | None:
@@ -170,7 +178,7 @@ def _ec2_instance_host(instance: EC2Instance, convention: NamingConvention) -> T
             assert_never(convention)
 
 
-def _ebs_attachment_host(attachment: EBSAttachment) -> TargetHost:
+def _ebs_attachment_host(attachment: EBSAttachment) -> TargetHost | None:
     return SOURCE_HOST if attachment.instance_host is None else attachment.instance_host
 
 
@@ -192,8 +200,8 @@ def _wafv2_web_acl_host(web_acl: WAFV2WebACL) -> TargetHost:
 
 def _cloudfront_distribution_host(
     distribution: CloudFrontDistribution, assignment: CloudFrontHostAssignment
-) -> TargetHost:
-    if assignment == "domain_host" and distribution.origin_domain:
+) -> TargetHost | None:
+    if assignment is CloudFrontHostAssignment.origin_domain and distribution.origin_domain:
         return TargetHost(distribution.origin_domain)
     return SOURCE_HOST
 

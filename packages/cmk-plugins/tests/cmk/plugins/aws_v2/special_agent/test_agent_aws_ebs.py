@@ -17,6 +17,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.ebs import EBS, EBSLimits, EBSSummary
 from cmk.plugins.aws_v2.special_agent.sections.ec2 import EC2Summary
@@ -172,7 +173,7 @@ def test_agent_aws_ebs_limits(
     assert len(ebs_limits_results) == 1
 
     ebs_limits_result = ebs_limits_results[0]
-    assert ebs_limits_result.piggyback_hostname == ""
+    assert ebs_limits_result.piggyback_hostname is SOURCE_HOST
     assert len(ebs_limits_result.content) == 10
 
     for limit in ebs_limits_result.content:
@@ -273,11 +274,11 @@ def test_agent_aws_ebs_without_limits(get_ebs_sections: EBSSections) -> None:
         pytest.param(
             "VolumeId-0", "PrivateIpAddress-0-region-InstanceId-0", id="monitored instance"
         ),
-        pytest.param("VolumeId-2", "", id="instance not monitored"),
+        pytest.param("VolumeId-2", SOURCE_HOST, id="instance not monitored"),
     ],
 )
 def test_agent_aws_ebs_volume_goes_to_its_instance_host_if_the_instance_is_monitored(
-    get_ebs_sections: EBSSections, volume_id: str, expected_host: str
+    get_ebs_sections: EBSSections, volume_id: str, expected_host: str | None
 ) -> None:
     ec2_summary, _ebs_limits, ebs_summary, _ebs = get_ebs_sections(None, (None, None))
     ec2_summary.run()
@@ -290,6 +291,22 @@ def test_agent_aws_ebs_volume_goes_to_its_instance_host_if_the_instance_is_monit
         for volume in result.content
     }
     assert host_by_volume[volume_id] == expected_host
+
+
+def test_agent_aws_ebs_metrics_of_an_unmonitored_instance_keep_the_empty_label(
+    get_ebs_sections: EBSSections,
+) -> None:
+    ec2_summary, _ebs_limits, ebs_summary, ebs = get_ebs_sections(None, (None, None))
+    ec2_summary.run()
+    ebs_summary.run()
+
+    ebs_results = ebs.run().results
+
+    assert {
+        result.piggyback_hostname: {row["Label"] for row in result.content}
+        for result in ebs_results
+        if result.piggyback_hostname is SOURCE_HOST
+    } == {SOURCE_HOST: {""}}
 
 
 def test_agent_aws_ebs_drops_volumes_without_attachments(get_ebs_sections: EBSSections) -> None:

@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.gui import visuals
 from cmk.gui.dashboard.dashlet import StatsDashletConfig
 from cmk.gui.dashboard.store import (
     _internal_dashboard_to_runtime_dashboard,
@@ -16,7 +17,8 @@ from cmk.gui.dashboard.store import (
     migrate_dashboard_config,
 )
 from cmk.gui.dashboard.type_defs import ViewDashletConfig
-from cmk.gui.type_defs import DashboardEmbeddedViewSpec
+from cmk.gui.type_defs import DashboardEmbeddedViewSpec, ViewSpec
+from cmk.gui.views.store import ViewStore
 
 
 def _make_dashboard(**overrides: object) -> MaybeOldDashboardConfig:
@@ -641,13 +643,106 @@ class TestClampTimelineWindow:
         assert result["widgets"]["w1"]["time_range"] == time_range  # type: ignore[typeddict-item]
 
 
+def _legacy_view_link(title: str, view_name: str, filter_ids: list[str]) -> dict[str, object]:
+    return {
+        "type": "custom",
+        "links": [
+            {
+                "title": title,
+                "location": ("views", view_name),
+                "filters": [{"filter_id": filter_id} for filter_id in filter_ids],
+                "include_context": False,
+                "include_time_range": False,
+                "show_filter_form": False,
+            }
+        ],
+    }
+
+
+def _save_host_view_copy(owner: UserId, name: str, title: str) -> None:
+    host_view = ViewStore.load_all_views()[(UserId.builtin(), "host")]
+    copy: ViewSpec = {**host_view, "owner": owner, "name": name, "title": title, "packaged": False}
+    visuals.save("views", {(owner, name): copy}, owner)
+
+
+@pytest.mark.usefixtures("load_config", "request_context")
 class TestMigrateInventoryLink:
-    def test_a_stored_link_spec_becomes_an_inherited_link(self) -> None:
+    @pytest.mark.parametrize(
+        "view_name, link",
+        [
+            pytest.param(
+                "host",
+                _legacy_view_link("Services of host", "host", ["siteopt", "host"]),
+                id="a view of single hosts carries the site and the host",
+            ),
+            pytest.param(
+                "allhosts",
+                _legacy_view_link("All hosts", "allhosts", ["siteopt"]),
+                id="a view of all hosts carries the site only",
+            ),
+            pytest.param(
+                "servicedesc",
+                _legacy_view_link("All services with this description", "servicedesc", []),
+                id="a view without a site hint carries nothing from the host",
+            ),
+        ],
+    )
+    def test_a_stored_link_to_a_view_carries_what_the_legacy_link_did(
+        self, view_name: str, link: dict[str, object]
+    ) -> None:
         dashboard = _responsive_dashboard(
             {
                 "type": "inventory",
                 "inventory_path": ".hardware.cpu.cores",
-                "link_spec": ("views", "host"),
+                "link_spec": ("views", view_name),
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"] == {
+            "type": "inventory",
+            "inventory_path": ".hardware.cpu.cores",
+            "contextual_link": link,
+        }
+
+    @pytest.mark.parametrize(
+        "view_name",
+        [
+            pytest.param("mine", id="a view only the owner has"),
+            pytest.param("host", id="a copy that shadows the built-in view"),
+        ],
+    )
+    def test_a_stored_link_to_the_dashboard_owners_view_reads_that_copy(
+        self, with_user_login: UserId, view_name: str
+    ) -> None:
+        _save_host_view_copy(with_user_login, view_name, "Mine")
+        dashboard = _responsive_dashboard(
+            {
+                "type": "inventory",
+                "inventory_path": ".hardware.cpu.cores",
+                "link_spec": ("views", view_name),
+            }
+        )
+        dashboard["owner"] = with_user_login
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"] == {
+            "type": "inventory",
+            "inventory_path": ".hardware.cpu.cores",
+            "contextual_link": _legacy_view_link("Mine", view_name, ["siteopt", "host"]),
+        }
+
+    def test_a_stored_link_to_another_users_view_becomes_an_inherited_link(
+        self, with_user_login: UserId
+    ) -> None:
+        _save_host_view_copy(with_user_login, "theirs", "Private title")
+        dashboard = _responsive_dashboard(
+            {
+                "type": "inventory",
+                "inventory_path": ".hardware.cpu.cores",
+                "link_spec": ("views", "theirs"),
             }
         )
 
@@ -658,7 +753,35 @@ class TestMigrateInventoryLink:
             "inventory_path": ".hardware.cpu.cores",
             "contextual_link": {
                 "type": "inherited",
-                "location": ("views", "host"),
+                "location": ("views", "theirs"),
+                "include_context": False,
+                "include_time_range": False,
+                "show_filter_form": False,
+            },
+        }
+
+    @pytest.mark.parametrize(
+        "target",
+        [
+            pytest.param(("dashboards", "main"), id="a dashboard"),
+            pytest.param(("views", "no_such_view"), id="a deleted view"),
+        ],
+    )
+    def test_a_stored_link_to_an_unread_target_becomes_an_inherited_link(
+        self, target: tuple[str, str]
+    ) -> None:
+        dashboard = _responsive_dashboard(
+            {"type": "inventory", "inventory_path": ".hardware.cpu.cores", "link_spec": target}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"] == {
+            "type": "inventory",
+            "inventory_path": ".hardware.cpu.cores",
+            "contextual_link": {
+                "type": "inherited",
+                "location": target,
                 "include_context": False,
                 "include_time_range": False,
                 "show_filter_form": False,

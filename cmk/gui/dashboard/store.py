@@ -20,10 +20,16 @@ from cmk.gui.http import request
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import all_permissions, Permission
-from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec
+from cmk.gui.type_defs import (
+    ColumnSpec,
+    DashboardEmbeddedViewSpec,
+    SorterSpec,
+    ViewName,
+    ViewSpec,
+)
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import TimerangeValue
-from cmk.gui.views.store import internal_view_to_runtime_view
+from cmk.gui.views.store import get_all_views, internal_view_to_runtime_view
 from cmk.gui.watolib.profile_replication import start_profile_replication_job
 from cmk.utils import paths
 
@@ -33,9 +39,10 @@ from .builtin_dashboards import (
 )
 from .dashlet.registry import dashlet_registry
 from .event_bar_chart_window import clamp_event_bar_chart_window, EVENT_BAR_CHART_TYPES
-from .legacy_visual_link import contextual_link_from_legacy_target
+from .legacy_visual_link import contextual_link_from_legacy_target, contextual_link_from_legacy_view
 from .metadata import dashboard_uses_relative_grid
 from .type_defs import (
+    ContextualLinkConfig,
     DashboardConfig,
     DashboardName,
     DashletConfig,
@@ -255,7 +262,9 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
         widget_id: _clamp_timeline_window(
             _migrate_timeline_time_range(
                 _migrate_alert_overview_time_range(
-                    _migrate_inventory_link(_migrate_metric_time_range(widget))
+                    _migrate_inventory_link(
+                        _migrate_metric_time_range(widget), dashboard.get("owner")
+                    )
                 )
             )
         )
@@ -325,16 +334,30 @@ def _clamp_timeline_window(widget: DashletConfig) -> DashletConfig:
     return cast(DashletConfig, {**widget, "render_mode": render_mode})
 
 
-def _migrate_inventory_link(widget: DashletConfig) -> DashletConfig:
+def _migrate_inventory_link(widget: DashletConfig, owner: UserId | None) -> DashletConfig:
     if widget["type"] != "inventory":
         return widget
+    link: ContextualLinkConfig
     match cast(dict[str, object], widget).get("link_spec"):
+        case ("views", str() as view_name) if (view := _view_copy(view_name, owner)) is not None:
+            link = contextual_link_from_legacy_view(view)
+        # A target dashboard can't be read while the dashboards load, nor can a deleted view.
         case (("views" | "dashboards") as target_type, str() as target_name):
             link = contextual_link_from_legacy_target((target_type, target_name))
         case _:
             return widget
     migrated = {key: value for key, value in widget.items() if key != "link_spec"}
     return cast(DashletConfig, {**migrated, "contextual_link": link})
+
+
+def _view_copy(name: ViewName, owner: UserId | None) -> ViewSpec | None:
+    """The dashboard owner's copy of that view, else the built-in one, as the legacy link opened
+    it for the owner. Not another user's: the link would show its title to everyone who sees the
+    dashboard."""
+    views = get_all_views()
+    if owner is not None and (view := views.get((owner, name))) is not None:
+        return view
+    return views.get((UserId.builtin(), name))
 
 
 def _migrate_widgets(

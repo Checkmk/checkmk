@@ -201,8 +201,7 @@ Component                  May import
 =========================  =====================================================
 
 That ``cmk.maps.gui`` imports ``cmk.gui`` internals is not an exception granted
-to Maps: there is no clean public ``cmk.gui`` API, and ``cmk.network_flow.gui``
-is set up the same way.
+to Maps: there is no clean public ``cmk.gui`` API.
 
 Division of responsibility
 --------------------------

@@ -199,65 +199,6 @@ class TopListDashletConfig(DashletConfig):
     contextual_link: NotRequired[ContextualLinkNoneConfig | ContextualLinkInheritedConfig]
 
 
-NetworkFlowTopTableDimension = Literal[
-    "local_hosts", "remote_hosts", "applications", "autonomous_systems"
-]
-NetworkFlowAccent = Literal["blue", "magenta", "green", "yellow", "orange", "purple", "red"]
-
-
-class NetworkFlowTopTableDashletConfig(DashletConfig):
-    dimension: NetworkFlowTopTableDimension
-    accent: NetworkFlowAccent
-    limit_to: int
-
-
-NetworkFlowDonutDimension = Literal["applications", "protocols"]
-NetworkFlowDonutLegendMode = Literal["table", "compact"]
-
-
-class NetworkFlowDonutDashletConfig(DashletConfig):
-    dimension: NetworkFlowDonutDimension
-    limit_to: int
-    # Absent from every donut stored before the legend became configurable.
-    legend_mode: NotRequired[NetworkFlowDonutLegendMode]
-    # Absent from every donut stored before the comparison existed.
-    show_delta: NotRequired[bool]
-
-
-NetworkFlowKpiStatCardMetric = Literal[
-    "total_bytes",
-    "ingress_bytes",
-    "egress_bytes",
-    "active_hosts",
-    "total_flows",
-    "active_asn",
-    "peak_throughput",
-    "avg_throughput",
-    "tracked_hosts",
-]
-
-
-NetworkFlowKpiStatCardSparkHeightMode = Literal["band", "full"]
-
-
-class NetworkFlowKpiStatCardDashletConfig(DashletConfig):
-    metric: NetworkFlowKpiStatCardMetric
-    accent: NetworkFlowAccent
-    show_delta: bool
-    spark_height_mode: NotRequired[NetworkFlowKpiStatCardSparkHeightMode]
-
-
-NetworkFlowTrendChartDimension = Literal["applications", "autonomous_systems", "total_bandwidth"]
-NetworkFlowTrendChartDisplayMode = Literal["lines", "stacked_area"]
-
-
-class NetworkFlowTrendChartDashletConfig(DashletConfig):
-    dimension: NetworkFlowTrendChartDimension
-    display_mode: NetworkFlowTrendChartDisplayMode
-    limit_to: int
-    show_legend: bool
-
-
 class StatsDashletConfig(DashletConfig):
     contextual_link: NotRequired[ContextualLinkConfig]
 

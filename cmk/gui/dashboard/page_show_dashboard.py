@@ -28,7 +28,6 @@ from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals import visual_page_breadcrumb
 from cmk.gui.visuals._filter_context import requested_context_from_request
-from cmk.gui.watolib.config_domain_name import config_domain_registry, ConfigDomainRegistry
 from cmk.licensing.registry import get_licensing_user_effect
 from cmk.utils import paths
 from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
@@ -149,7 +148,6 @@ def page_dashboard_app(ctx: PageContext) -> None:
         "available_features": {
             "dashboard_features": dashboard_features,
             "ntop_active": ntop_connection().is_active(),
-            "network_flow_active": _network_flow_active(config_domain_registry),
         },
         "permissions": _dashboard_permissions(),
         "logged_in_user": user.id,
@@ -178,29 +176,6 @@ def _dashboard_permissions() -> dict[str, bool]:
         # false on community, which does not register the permission
         "edit_custom_graph": user.may("general.edit_custom_graph"),
     }
-
-
-def _network_flow_active(registry: ConfigDomainRegistry) -> bool:
-    """Whether network flow monitoring is turned on (Ultimate feature).
-
-    The ``network_flow`` setting lives in its own config domain (written to
-    ``network_flow.d``), not in the GUI's ``active_config``, so it has to be read through
-    the config domain. Kept edition-agnostic on purpose: the domain is only registered by
-    the Ultimate feature, so it is simply absent elsewhere and we treat that as inactive.
-    """
-    domain = registry.get("network_flow")
-    if domain is None:
-        return False
-    settings = {
-        **domain.default_globals(),
-        **domain.load(),
-        **domain.load(site_specific=True),
-    }
-    match settings.get("network_flow"):
-        case ("enabled", _):
-            return True
-        case _:
-            return False
 
 
 def _get_default_dashboard_name() -> str:

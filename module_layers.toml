@@ -50,8 +50,6 @@ data_backend = ["cmk.data_backend"]
 
 mkp_tool = ["cmk.mkp_tool"]
 
-network_flow = ["cmk.network_flow"]
-
 plugin_apis = [
   "cmk.agent_based.internal",
   "cmk.automations.internal",
@@ -861,7 +859,7 @@ allows = [
 allows = ["@ccc", "cmk.utils"]
 
 # GUI integration for Maps. Lives in the cmk-maps package but imports cmk.gui
-# internals (there is no clean cmk.gui public API); mirrors cmk.network_flow.gui.
+# internals (there is no clean cmk.gui public API).
 [components."cmk.maps.gui"]
 allows = [
   "@ccc",
@@ -937,22 +935,6 @@ allows = [
   "cmk.shared_typing.aggregation",
   "cmk.shared_typing.attribute_filter",
   "cmk.shared_typing.consolidation",
-]
-
-[components."cmk.network_flow"]
-allows = ["@ccc"]
-
-[components."cmk.network_flow.gui"]
-allows = [
-  "cmk.web.utils",
-  "@ccc",
-  "@livestatus_client",
-  "@network_flow",
-  "cmk.gui",
-  "cmk.gui_plugins.internal",
-  "cmk.rulesets",
-  "cmk.shared_typing",
-  "cmk.utils",
 ]
 
 [components."cmk.telemetry"]
@@ -1090,7 +1072,6 @@ allows = [
   "cmk.data_backend.telemetry_metrics.gui",
   "cmk.maps.gui",
   "cmk.maps.rest_api",
-  "cmk.network_flow.gui",
   "cmk.otel_collector",
   "cmk.telemetry.gui",
 ]
@@ -1883,9 +1864,6 @@ allows = []
 
 [components."cmk.testlib.data_backend"]
 allows = ["@ccc", "@crypto", "cmk.data_backend"]
-
-[components."cmk.testlib.network_flow"]
-allows = ["@network_flow", "cmk.network_flow.gui"]
 
 [components."cmk.testlib.otel_collector"]
 allows = ["cmk.otel_collector"]

@@ -199,7 +199,6 @@ annotated-types==0.8.0 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-data-backend/requirements.in
-    #   -r non-free/packages/cmk-network-flow/requirements.in
     #   pydantic
 anthropic==1.15.0 \
     --hash=sha256:10189a7993c5c71a0a2d4bb80020ca6a2fd27679f51e627405da37251d15ff49 \
@@ -795,7 +794,6 @@ clickhouse-connect==1.11.0 \
     # via
     #   -c requirements.txt
     #   -r non-free/packages/cmk-data-backend/requirements.in
-    #   -r non-free/packages/cmk-network-flow/requirements.in
 contourpy==1.4.0 \
     --hash=sha256:018227e134b73090b06f911e773a526c77c9af426be29065500ce096a5accd4c \
     --hash=sha256:072a702e2e178f4fcf96f04775d0c059e4c917925abf0d3208ebb6865df3c23d \
@@ -3485,7 +3483,6 @@ pydantic==2.14.1 \
     #   -r non-free/packages/cmk-licensing-nonfree/requirements.in
     #   -r non-free/packages/cmk-liveproxyd/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
-    #   -r non-free/packages/cmk-network-flow/requirements.in
     #   -r non-free/packages/cmk-otel-collector/requirements.in
     #   -r non-free/packages/cmk-plugins-nonfree/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in

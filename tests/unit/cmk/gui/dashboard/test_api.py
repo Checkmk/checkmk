@@ -17,13 +17,9 @@ from cmk.gui.dashboard.api.model.widget import WidgetTitle
 from cmk.gui.dashboard.api.model.widget_content import _CONTENT_TYPES, content_from_internal
 from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
 from cmk.gui.dashboard.api.model.widget_content.graph import EmbeddedCustomGraphContent
-from cmk.gui.dashboard.api.model.widget_content.network_flow import NetworkFlowDonutContent
 from cmk.gui.dashboard.api.model.widget_content.url import URLContent
 from cmk.gui.dashboard.dashlet.dashlets.custom_url import URLDashletConfig
-from cmk.gui.dashboard.type_defs import (
-    EmbeddedCustomGraphDashletConfig,
-    NetworkFlowDonutDashletConfig,
-)
+from cmk.gui.dashboard.type_defs import EmbeddedCustomGraphDashletConfig
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
 from cmk.gui.views.icon.registry import all_icons
@@ -75,18 +71,6 @@ def test_widget_title_from_internal_sanitizes_title_url(
         assert isinstance(result.url, ApiOmitted)
     else:
         assert result.url == expected_url
-
-
-def test_donut_content_defaults_of_a_stored_widget() -> None:
-    """A donut stored before these options existed keeps the table and no comparison."""
-    config: NetworkFlowDonutDashletConfig = {
-        "type": "network_flow_donut",
-        "dimension": "applications",
-        "limit_to": 6,
-    }
-    content = NetworkFlowDonutContent.from_internal(config)
-    assert content.legend_mode == "table"
-    assert content.show_delta is False
 
 
 def test_url_content_defaults_of_a_stored_widget() -> None:

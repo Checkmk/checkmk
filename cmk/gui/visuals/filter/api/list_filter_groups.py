@@ -46,7 +46,6 @@ _FILTER_GROUP_TITLES: Mapping[FilterGroup, str] = {
     FilterGroup.SERVICE_STATE: "Service state",
     FilterGroup.AGENT: "Agent",
     FilterGroup.CLOUD: "Cloud",
-    FilterGroup.NETWORK_FLOW: "Network flow",
     FilterGroup.NOTIFICATIONS: "Notifications",
     FilterGroup.OTHER: "Other",
 }

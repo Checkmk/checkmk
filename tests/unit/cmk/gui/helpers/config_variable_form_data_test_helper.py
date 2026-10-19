@@ -895,19 +895,6 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
     "mkeventd_service_levels": {
         "[add]": (0, ""),
     },
-    "network_flow": {
-        "disabled": None,
-        "enabled": {
-            "dns_mode": 3,
-            "flow_source_endpoints": [],
-            "local_networks": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],
-            "retention_days": 30,
-        },
-        "enabled.flow_source_endpoints[add]": NoSaveableDefault(),
-        "enabled.flow_source_endpoints[add].connect": NoSaveableDefault(),
-        "enabled.flow_source_endpoints[add].listen": NoSaveableDefault(),
-        "enabled.local_networks[add]": NoSaveableDefault(),
-    },
     "notification_fallback_email": {
         "[enable]": NoSaveableDefault(),
     },
@@ -1339,7 +1326,6 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
     ),
     "mkeventd_notify_remotehost": None,
     "mkeventd_service_levels": [],
-    "network_flow": ("disabled", None),
     "notification_fallback_email": "",
     "notification_fallback_format": ("asciimail", {}),
     "notification_spooler_config": {
@@ -2346,72 +2332,6 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
         CaseFail("not-a-list", "10"),
     ],
     "multisite_draw_ruleicon": CHECKBOX_CASES,
-    "network_flow": [
-        CasePass("disabled", ("disabled", None)),
-        CasePass(
-            "configured",
-            (
-                "enabled",
-                {
-                    "flow_source_endpoints": [
-                        ("connect", "collector.example.com:9995"),
-                        ("listen", 9996),
-                    ],
-                    "local_networks": ["10.0.0.0/8"],
-                    "dns_mode": 0,
-                    "retention_days": 30,
-                },
-            ),
-        ),
-        CaseFail(
-            "endpoint-missing-port",
-            (
-                "enabled",
-                {
-                    "flow_source_endpoints": [("connect", "collector.example.com")],
-                    "local_networks": [],
-                    "dns_mode": 0,
-                    "retention_days": 30,
-                },
-            ),
-        ),
-        CaseFail(
-            "endpoint-port-not-a-number",
-            (
-                "enabled",
-                {
-                    "flow_source_endpoints": [("connect", "collector.example.com:abc")],
-                    "local_networks": [],
-                    "dns_mode": 0,
-                    "retention_days": 30,
-                },
-            ),
-        ),
-        CaseFail(
-            "endpoint-port-out-of-range",
-            (
-                "enabled",
-                {
-                    "flow_source_endpoints": [("connect", "collector.example.com:70000")],
-                    "local_networks": [],
-                    "dns_mode": 0,
-                    "retention_days": 30,
-                },
-            ),
-        ),
-        CaseFail(
-            "empty-endpoints",
-            (
-                "enabled",
-                {
-                    "flow_source_endpoints": [],
-                    "local_networks": [],
-                    "dns_mode": 0,
-                    "retention_days": 30,
-                },
-            ),
-        ),
-    ],
     "notification_backlog": UNBOUNDED_INTEGER_CASES,
     "notification_bulk_interval": MIN_ONE_AGE_CASES,
     "notification_fallback_email": [

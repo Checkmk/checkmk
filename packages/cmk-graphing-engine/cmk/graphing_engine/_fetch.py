@@ -9,7 +9,7 @@ from typing import Protocol
 from ._fetched import FetchedData
 from ._naming import MetricName, Service
 from ._quantity import MetricProtocol
-from ._timeseries import ConsolidationFunction, TimeRange
+from ._timeseries import TimeRange
 
 
 class FetchMetricNamesProtocol(Protocol):
@@ -21,7 +21,6 @@ class FetchDataProtocol(Protocol):
         self,
         metrics: Sequence[MetricProtocol],
         *,
-        consolidation_function: ConsolidationFunction,
         time_range: TimeRange,
     ) -> Mapping[MetricProtocol, Sequence[FetchedData]]: ...
 

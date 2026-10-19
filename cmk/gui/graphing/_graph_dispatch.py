@@ -36,7 +36,7 @@ def legacy_graph_id(graph: Graph, registered_graphs: Sequence[ApiGraph]) -> str:
     return f"METRIC_{graph.name}"
 
 
-def _consolidation_function_of(options: Mapping[str, object]) -> ConsolidationFunction:
+def consolidation_function_of(options: Mapping[str, object]) -> ConsolidationFunction:
     return ensure_type(options["consolidation_function"], ConsolidationFunction)
 
 
@@ -50,15 +50,11 @@ def edge_neighbours_at_served_step_of(options: Mapping[str, object]) -> bool:
 
 @dataclass(frozen=True, kw_only=True)
 class CommonGraphOptions:
-    consolidation_function: ConsolidationFunction
     time_range: TimeRange
 
     @classmethod
     def from_request_options(cls, options: Mapping[str, object]) -> CommonGraphOptions:
-        return cls(
-            consolidation_function=_consolidation_function_of(options),
-            time_range=_time_range_of(options),
-        )
+        return cls(time_range=_time_range_of(options))
 
 
 @dataclass(frozen=True, kw_only=True)

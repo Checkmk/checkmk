@@ -36,6 +36,7 @@ from ._graph_choices import GraphPluginChoice
 from ._graph_codec import GraphCodec
 from ._graph_dispatch import (
     CommonGraphOptions,
+    consolidation_function_of,
     edge_neighbours_at_served_step_of,
     EvaluatedGraphs,
     FetchDataWithDiagnosticsProtocol,
@@ -204,13 +205,13 @@ class _EvaluateTemplateGraphs:
                 debug=active_config.debug,
                 registered_translations=registered_translations(),
                 edge_neighbours_at_served_step=edge_neighbours_at_served_step_of(options),
+                consolidation_function=consolidation_function_of(options),
             ),
         )
 
     def __call__(self, graph: Graph) -> EvaluatedGraphs:
         return EvaluatedGraphs(
             graphs=evaluate_graphs(
-                consolidation_function=self.options.consolidation_function,
                 time_range=self.options.time_range,
                 graphs=[graph],
                 fetch_data=self.fetch_data,

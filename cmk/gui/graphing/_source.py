@@ -344,6 +344,7 @@ def _grouped_by_site(
 @dataclass(frozen=True)
 class RRDFetchData:
     debug: bool
+    consolidation_function: ConsolidationFunction
     registered_translations: Sequence[translations_v1.Translation] = ()
     # Where the two reads this fetch is built on come from. The defaults are the monitoring core;
     # what the fetch does with the data - translate it, resolve the columns a metric is drawn from,
@@ -358,7 +359,6 @@ class RRDFetchData:
         self,
         metrics: Sequence[MetricProtocol],
         *,
-        consolidation_function: ConsolidationFunction,
         time_range: TimeRange,
     ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
         rrd_metrics = [metric for metric in metrics if isinstance(metric, RRDMetric)]
@@ -368,7 +368,6 @@ class RRDFetchData:
             rrd_metrics,
             raw_performance_data,
             site_of_service,
-            consolidation_function=consolidation_function,
             time_range=time_range,
         )
         return assemble_fetched_data(rrd_metrics, performance_data, time_series)
@@ -402,7 +401,6 @@ class RRDFetchData:
         raw_performance_data: Mapping[tuple[EngineSiteID | None, Service], RawPerformanceData],
         site_of_service: Mapping[Service, EngineSiteID],
         *,
-        consolidation_function: ConsolidationFunction,
         time_range: TimeRange,
     ) -> Mapping[RRDMetric, TimeSeries]:
         originals_by_metric: dict[
@@ -415,7 +413,7 @@ class RRDFetchData:
             # A metric that already carries its site keeps it; otherwise use the site resolved while
             # fetching the performance data, so the RRD fetch is scoped to it.
             site_id = metric.site_id or site_of_service.get(service)
-            function = metric.consolidation_function or consolidation_function
+            function = metric.consolidation_function or self.consolidation_function
             originals_by_metric[metric] = (
                 function,
                 [

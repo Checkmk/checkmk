@@ -174,9 +174,8 @@ def test_fetch_data_of_a_host_metric_reads_the_hosts_table(
     )
 
     with mock_livestatus():
-        [fetched] = RRDFetchData(debug=False)(
+        [fetched] = RRDFetchData(debug=False, consolidation_function=ConsolidationFunction.MAX)(
             [metric],
-            consolidation_function=ConsolidationFunction.MAX,
             time_range=TimeRange(start=0, end=30, step=10),
         )[metric]
 
@@ -275,9 +274,10 @@ def _drawn(
         fetch_metric_names=_FakeMetricNames(metric_name),
     )
     [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(consolidation_function=ConsolidationFunction.MAX, time_range=_RANGE),
+        CommonGraphOptions(time_range=_RANGE),
         RRDFetchData(
             debug=True,
+            consolidation_function=ConsolidationFunction.MAX,
             registered_translations=[
                 translations.Translation(
                     name="t",
@@ -461,12 +461,12 @@ def _fetched_with_edge_neighbours(
     with time_machine.travel(_NOW, tick=False):
         [fetched] = RRDFetchData(
             debug=False,
+            consolidation_function=ConsolidationFunction.MAX,
             performance_data_source=performance_data,
             time_series_source=rrd,
             edge_neighbours_at_served_step=True,
         )(
             [_EDGE_METRIC],
-            consolidation_function=ConsolidationFunction.MAX,
             time_range=_HALF_HOUR_A_WEEK_AGO,
         )[_EDGE_METRIC]
     return fetched
@@ -532,11 +532,11 @@ def test_a_fetch_without_edge_neighbours_asks_for_exactly_the_range() -> None:
 
     RRDFetchData(
         debug=False,
+        consolidation_function=ConsolidationFunction.MAX,
         performance_data_source=_EDGE_PERFORMANCE_DATA,
         time_series_source=rrd,
     )(
         [_EDGE_METRIC],
-        consolidation_function=ConsolidationFunction.MAX,
         time_range=_HALF_HOUR_A_WEEK_AGO,
     )
 

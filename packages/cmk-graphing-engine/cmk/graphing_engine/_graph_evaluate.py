@@ -21,7 +21,7 @@ from ._quantity import (
     FanOutQuantity,
     first_value,
 )
-from ._timeseries import ConsolidationFunction, fitted, TimeRange, TimeSeries
+from ._timeseries import fitted, TimeRange, TimeSeries
 from ._title import evaluate_title, title_metrics
 from ._units import CurveAttributes
 
@@ -320,7 +320,6 @@ def _evaluate_graph(graph: Graph, context: EvaluationContext) -> EvaluatedGraph:
 
 def evaluate_graphs(
     *,
-    consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
     graphs: Sequence[Graph],
     fetch_data: FetchDataProtocol,
@@ -332,9 +331,7 @@ def evaluate_graphs(
             for metric in (*graph.metrics(), *title_metrics(graph.title, graph.metrics()))
         )
     )
-    fetched = fetch_data(
-        metrics, consolidation_function=consolidation_function, time_range=time_range
-    )
+    fetched = fetch_data(metrics, time_range=time_range)
     context = EvaluationContext(
         time_range=fetched_time_range(fetched, fallback=time_range), fetched=fetched
     )

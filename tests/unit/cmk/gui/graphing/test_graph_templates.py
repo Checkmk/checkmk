@@ -14,7 +14,6 @@ from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title
 from cmk.graphing_engine import (
-    ConsolidationFunction,
     FetchedData,
     HostName,
     MetricName,
@@ -72,7 +71,6 @@ class _FakeRRDFetchData:
         self,
         metrics: Sequence[MetricProtocol],
         *,
-        consolidation_function: ConsolidationFunction,  # noqa: ARG002
         time_range: TimeRange,
     ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
         self.requested_ranges.append(time_range)
@@ -122,7 +120,6 @@ def test_template_lifecycle_discover_and_update() -> None:
 
     evaluate = _EvaluateTemplateGraphs(
         CommonGraphOptions(
-            consolidation_function=ConsolidationFunction.MAX,
             time_range=_DISCOVERY_RANGE,
         ),
         fetch_data,

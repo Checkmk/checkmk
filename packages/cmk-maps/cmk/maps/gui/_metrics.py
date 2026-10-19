@@ -41,7 +41,6 @@ from cmk.graphing_engine import (
     ApiGraph,
     ApiPerfometer,
     build_matched_graphs,
-    ConsolidationFunction,
     evaluate_graphs,
     FetchedData,
     Graph,
@@ -373,7 +372,6 @@ def _graph_title(graph: Graph, evaluated: Mapping[MetricName, EvaluatedMetric]) 
     def _readings(
         metrics: Sequence[MetricProtocol],
         *,
-        consolidation_function: ConsolidationFunction,  # noqa: ARG001
         time_range: TimeRange,  # noqa: ARG001
     ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
         return {
@@ -383,7 +381,6 @@ def _graph_title(graph: Graph, evaluated: Mapping[MetricName, EvaluatedMetric]) 
         }
 
     return evaluate_graphs(
-        consolidation_function=ConsolidationFunction.MAX,
         time_range=TimeRange(start=0, end=0, step=0),
         graphs=[graph],
         fetch_data=_readings,

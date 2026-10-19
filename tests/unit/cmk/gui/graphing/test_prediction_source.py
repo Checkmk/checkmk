@@ -161,12 +161,13 @@ def _fetch(
 ) -> tuple[Mapping[MetricProtocol, Sequence[FetchedData]], PredictionFetchData]:
     fetch = PredictionFetchData(
         debug=False,
+        consolidation_function=ConsolidationFunction.MAX,
         performance_data_source=_FakeRRDPerformanceData(),
         time_series_source=_FakeRRDTimeSeries(observed, observed_range),
         prediction_source=_FakePredictionSource(loaded, raises=raises, unreadable=unreadable),
     )
     return (
-        fetch(metrics, consolidation_function=ConsolidationFunction.MAX, time_range=_RANGE),
+        fetch(metrics, time_range=_RANGE),
         fetch,
     )
 
@@ -297,7 +298,12 @@ def test_every_predicted_metric_of_a_service_is_read_in_one_go() -> None:
 
 
 def test_the_real_time_series_source_is_the_production_default() -> None:
-    assert isinstance(PredictionFetchData(debug=False).time_series_source, RRDFetchTimeSeries)
+    assert isinstance(
+        PredictionFetchData(
+            debug=False, consolidation_function=ConsolidationFunction.MAX
+        ).time_series_source,
+        RRDFetchTimeSeries,
+    )
 
 
 def _key(service_name: ServiceName, metric: MetricName = _METRIC) -> _PredictionKey:

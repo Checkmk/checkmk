@@ -12,7 +12,6 @@ from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
     build_matched_graphs,
-    ConsolidationFunction,
     Constant,
     Curve,
     Difference,
@@ -177,7 +176,6 @@ class _FakeRRDFetchData:
         self,
         metrics: Sequence[MetricProtocol],
         *,
-        consolidation_function: ConsolidationFunction,  # noqa: ARG002
         time_range: TimeRange,  # noqa: ARG002
     ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
         result: dict[MetricProtocol, Sequence[FetchedData]] = {}
@@ -218,7 +216,6 @@ def _discover(
 def _evaluate(discovered: Graph, fetch_data: _FakeRRDFetchData) -> EvaluatedGraph:
     # Resolve the structure's display, then run the sole update entry point over a fresh fetch.
     [evaluated] = evaluate_graphs(
-        consolidation_function=ConsolidationFunction.AVERAGE,
         time_range=_time_range(),
         graphs=[discovered],
         fetch_data=fetch_data,

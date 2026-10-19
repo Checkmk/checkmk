@@ -11,7 +11,6 @@ from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.ccc.hostaddress import HostName as CoreHostName
 from cmk.ccc.site import SiteId
 from cmk.graphing_engine import (
-    ConsolidationFunction,
     fetched_time_range,
     FetchedData,
     HostName,
@@ -228,14 +227,9 @@ class PredictionFetchData(RRDFetchData):
         self,
         metrics: Sequence[MetricProtocol],
         *,
-        consolidation_function: ConsolidationFunction,
         time_range: TimeRange,
     ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
-        fetched = dict(
-            super().__call__(
-                metrics, consolidation_function=consolidation_function, time_range=time_range
-            )
-        )
+        fetched = dict(super().__call__(metrics, time_range=time_range))
         predictions = [metric for metric in metrics if isinstance(metric, PredictionMetric)]
         if not predictions:
             return fetched

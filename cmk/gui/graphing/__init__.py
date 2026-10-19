@@ -34,6 +34,7 @@ from ._graph_codec import (
 )
 from ._graph_dispatch import (
     CommonGraphOptions,
+    consolidation_function_of,
     edge_neighbours_at_served_step_of,
     evaluate_built_graphs,
     EvaluatedGraphs,
@@ -208,6 +209,7 @@ __all__ = [
     "evaluated_to_graph_spec",
     "EvaluatedGraphs",
     "EvaluatedMetric",
+    "consolidation_function_of",
     "edge_neighbours_at_served_step_of",
     "FetchDataWithDiagnosticsProtocol",
     "FetchDiagnostics",

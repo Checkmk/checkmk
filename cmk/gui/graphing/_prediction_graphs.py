@@ -32,6 +32,7 @@ from cmk.gui.i18n import _, translate_to_current_language
 from ._graph_codec import GraphCodec
 from ._graph_dispatch import (
     CommonGraphOptions,
+    consolidation_function_of,
     edge_neighbours_at_served_step_of,
     EvaluatedGraphs,
     FetchDataWithDiagnosticsProtocol,
@@ -206,13 +207,13 @@ class _EvaluatePrediction:
                 debug=active_config.debug,
                 registered_translations=registered_translations(),
                 edge_neighbours_at_served_step=edge_neighbours_at_served_step_of(options),
+                consolidation_function=consolidation_function_of(options),
             ),
         )
 
     def __call__(self, graph: Graph) -> EvaluatedGraphs:
         return EvaluatedGraphs(
             graphs=evaluate_graphs(
-                consolidation_function=self.options.consolidation_function,
                 time_range=prediction_window_of(graph) or self.options.time_range,
                 graphs=[graph],
                 fetch_data=self.fetch_data,

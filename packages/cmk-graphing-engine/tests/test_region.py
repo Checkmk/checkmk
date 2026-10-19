@@ -5,7 +5,6 @@
 
 from cmk.graphing_engine import (
     AutoPrecision,
-    ConsolidationFunction,
     Constant,
     Curve,
     CurveAttributes,
@@ -35,7 +34,6 @@ def _graph_of(region: Region) -> Graph:
 
 def _evaluate(region: Region, fetch_data: _FakeRRDFetchData) -> EvaluatedGraph:
     return evaluate_graphs(
-        consolidation_function=ConsolidationFunction.MAX,
         time_range=_TR,
         graphs=[_graph_of(region)],
         fetch_data=fetch_data,

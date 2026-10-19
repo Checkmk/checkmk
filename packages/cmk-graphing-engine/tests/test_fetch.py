@@ -77,10 +77,8 @@ def _fetched(value: float | None, series: TimeSeries | None) -> Sequence[Fetched
 def _update(
     *graphs: Graph,
     fetch_data: _FakeRRDFetchData,
-    consolidation_function: ConsolidationFunction = ConsolidationFunction.AVERAGE,
 ) -> Sequence[EvaluatedGraph]:
     return evaluate_graphs(
-        consolidation_function=consolidation_function,
         time_range=_time_range(),
         graphs=graphs,
         fetch_data=fetch_data,

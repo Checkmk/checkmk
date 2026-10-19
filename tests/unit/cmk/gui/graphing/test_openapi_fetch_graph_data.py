@@ -376,7 +376,6 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
             self,
             metrics: Sequence[MetricProtocol],
             *,
-            consolidation_function: ConsolidationFunction,  # noqa: ARG002
             time_range: TimeRange,
         ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
             return {
@@ -391,9 +390,7 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
             }
 
     [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(
-            consolidation_function=ConsolidationFunction.AVERAGE, time_range=time_range
-        ),
+        CommonGraphOptions(time_range=time_range),
         _FetchData(),
     )(graph).graphs
     response = evaluated_to_response(
@@ -452,7 +449,6 @@ def test_evaluated_to_response_keeps_a_metric_whose_rrd_holds_no_series() -> Non
             self,
             metrics: Sequence[MetricProtocol],
             *,
-            consolidation_function: ConsolidationFunction,  # noqa: ARG002
             time_range: TimeRange,  # noqa: ARG002
         ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
             return {
@@ -467,9 +463,7 @@ def test_evaluated_to_response_keeps_a_metric_whose_rrd_holds_no_series() -> Non
             }
 
     [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(
-            consolidation_function=ConsolidationFunction.AVERAGE, time_range=time_range
-        ),
+        CommonGraphOptions(time_range=time_range),
         _FetchData(),
     )(graph).graphs
     response = evaluated_to_response(
@@ -521,7 +515,6 @@ def test_evaluated_to_response_converts_the_values_to_the_users_temperature_unit
             self,
             metrics: Sequence[MetricProtocol],
             *,
-            consolidation_function: ConsolidationFunction,  # noqa: ARG002
             time_range: TimeRange,
         ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
             return {
@@ -536,9 +529,7 @@ def test_evaluated_to_response_converts_the_values_to_the_users_temperature_unit
             }
 
     [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(
-            consolidation_function=ConsolidationFunction.AVERAGE, time_range=time_range
-        ),
+        CommonGraphOptions(time_range=time_range),
         _FetchData(),
     )(graph).graphs
     response = evaluated_to_response(
@@ -585,7 +576,6 @@ def test_evaluated_to_response_leaves_a_non_temperature_unit_alone() -> None:
             self,
             metrics: Sequence[MetricProtocol],
             *,
-            consolidation_function: ConsolidationFunction,  # noqa: ARG002
             time_range: TimeRange,
         ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
             return {
@@ -600,9 +590,7 @@ def test_evaluated_to_response_leaves_a_non_temperature_unit_alone() -> None:
             }
 
     [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(
-            consolidation_function=ConsolidationFunction.AVERAGE, time_range=time_range
-        ),
+        CommonGraphOptions(time_range=time_range),
         _FetchData(),
     )(graph).graphs
     response = evaluated_to_response(

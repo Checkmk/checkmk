@@ -84,10 +84,7 @@ from ._metric_data import (
     evaluated_metrics,
     EvaluatedMetric,
     merge_rrd_columns,
-    reverse_translated_names,
     rrd_column_names,
-    translate_metric_names,
-    translated_names_and_scales,
 )
 from ._metric_query import (
     AttributeGroup,
@@ -297,7 +294,6 @@ __all__ = [
     "render_graph_error_html",
     "resolve_graph_id_from_index",
     "resolve_size",
-    "reverse_translated_names",
     "rrd_column_names",
     "RRDFetchData",
     "RRDFetchMetricNames",
@@ -312,8 +308,6 @@ __all__ = [
     "TEMPLATE_KIND",
     "TemplateGraphSpecification",
     "to_cmk_time_series_graph",
-    "translate_metric_names",
-    "translated_names_and_scales",
     "unit_to_unit_format",
     "user_first_day_of_week",
     "unit_from_specification",

@@ -24,6 +24,7 @@ from cmk.graphing_engine import (
     StandardScientificNotation,
     StrictPrecision,
     TimeNotation,
+    translate_metric_names,
     Unit,
 )
 from cmk.graphing_engine import MetricName as EngineMetricName
@@ -63,7 +64,6 @@ from cmk.web.utils.unit_formatter import NotationFormatter, TimeFormatter
 
 from ._decoding import ensure_type
 from ._graph_display_config import GraphDisplayConfigHTML
-from ._metric_data import translate_metric_names
 from ._metric_spec import registered_metric_ids_and_titles
 from ._plugins import registered_metrics
 from ._user_specific_unit import get_temperature_unit, user_specific_unit

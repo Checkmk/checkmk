@@ -25,13 +25,13 @@ from cmk.graphing_engine import (
     parse_performance_data,
     Service,
     ServiceName,
+    translate_performance_data,
     Unit,
 )
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
-from ._metric_data import translate_performance_data
 from ._user_specific_unit import user_specific_unit
 
 

@@ -53,6 +53,7 @@ from cmk.graphing_engine import (
     Service,
     SiteID,
     TimeRange,
+    translated_names_and_scales,
 )
 from cmk.graphing_engine import (
     HostName as EngineHostName,
@@ -68,7 +69,6 @@ from cmk.gui.graphing import (
     EvaluatedMetric,
     perfometer_label,
     sort_registered_graph_plugins,
-    translated_names_and_scales,
     unit_to_unit_format,
 )
 from cmk.gui.i18n import translate_to_current_language

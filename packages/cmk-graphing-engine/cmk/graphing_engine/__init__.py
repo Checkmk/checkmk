@@ -98,6 +98,16 @@ from ._plugins._matching import (
     RequestedGraph,
     RequestedMetric,
 )
+from ._plugins._translations import (
+    map_metric_names,
+    mapped_performance_data,
+    reverse_translated_names,
+    rrd_originals,
+    RRDOriginal,
+    translate_metric_names,
+    translate_performance_data,
+    translated_names_and_scales,
+)
 from ._plugins._types import (
     ApiGraph,
     ApiPerfometer,
@@ -145,6 +155,14 @@ from ._rrd._performance_data import (
 from ._rrd._resample import resample
 
 __all__ = [
+    "map_metric_names",
+    "mapped_performance_data",
+    "reverse_translated_names",
+    "rrd_originals",
+    "RRDOriginal",
+    "translate_metric_names",
+    "translate_performance_data",
+    "translated_names_and_scales",
     "parse_check_command",
     "parse_performance_data",
     "RawPerformanceData",

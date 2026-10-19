@@ -234,6 +234,8 @@ void main() {
                             status: result_str,
                             triggered_build_url: url_str,
                             test_result_path: item.JENKINS_TEST_RESULT_PATH,
+                            // a job other than test-gerrit-single publishes its own test report
+                            own_test_report: !relative_job_name.endsWith("/cv/test-gerrit-single"),
                         ];
                     }
                     update_result_table(current_description, analyse_mapping);
@@ -415,7 +417,8 @@ String job_result_row(Map args) {
         issue_link = "<a href='${currentBuild.absoluteUrl}/${args.unique_parser_name}'>issues</a>";
     }
     if (args.test_result_path && args.triggered_build_url) {
-        test_result_link = "<a href='${currentBuild.absoluteUrl}/${args.test_result_path}'>test report</a>";
+        def report_build_url = args.own_test_report ? args.triggered_build_url : currentBuild.absoluteUrl;
+        test_result_link = "<a href='${report_build_url}/${args.test_result_path}'>test report</a>";
     }
 
     def totalSeconds = args.duration.days * 86400 + args.duration.hours * 3600 + args.duration.minutes * 60 + args.duration.seconds;

@@ -175,7 +175,6 @@ def test_the_font_size_takes_its_default_from_the_caller() -> None:
     assert elements["font_size"].default_value() == 11.0
 
 
-@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 3678: KeyError")
 @pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_unit_autocompleter_without_metric_uses_fallback_unit(load_config: Config) -> None:
     # Crash group 3678: the AJAX request carried no "metric" key at all

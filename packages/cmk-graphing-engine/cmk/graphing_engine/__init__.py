@@ -15,6 +15,9 @@ from ._data._naming import (
 )
 from ._data._timeseries import (
     constant_time_series,
+    mapped_series,
+    merge_series,
+    scaled_series,
     TimeRange,
     TimeSeries,
     timestamps,
@@ -133,8 +136,13 @@ from ._rrd._naming import (
     SiteID,
     split_predict_prefix,
 )
+from ._rrd._resample import resample
 
 __all__ = [
+    "mapped_series",
+    "merge_series",
+    "resample",
+    "scaled_series",
     "GraphRequest",
     "RequestedGraph",
     "RequestedMetric",

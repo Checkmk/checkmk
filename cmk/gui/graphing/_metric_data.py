@@ -11,7 +11,6 @@ import re
 # naming the RRD columns a metric may live in, and merging their values into one series.
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from statistics import fmean
 from typing import assert_never
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -19,13 +18,15 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
     ConsolidationFunction,
+    mapped_series,
+    merge_series,
     metric_display_attributes,
     MetricName,
     PerformanceData,
+    scaled_series,
     split_predict_prefix,
     TimeRange,
     TimeSeries,
-    timestamps,
 )
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.type_defs import ColumnName
@@ -285,91 +286,6 @@ def translate_performance_data(
         name: _performance_data(columns[-1])
         for name, columns in _translated_columns(specs, raw_values).items()
     }
-
-
-def _aggregate(
-    values: Sequence[float | None], consolidation_function: ConsolidationFunction
-) -> float | None:
-    present = [value for value in values if value is not None]
-    if not present:
-        return None
-    match consolidation_function:
-        case ConsolidationFunction.MIN:
-            return min(present)
-        case ConsolidationFunction.MAX:
-            return max(present)
-        case ConsolidationFunction.AVERAGE:
-            return fmean(present)
-
-
-def _downsample(
-    time_series: TimeSeries,
-    time_range: TimeRange,
-    consolidation_function: ConsolidationFunction,
-) -> Sequence[float | None]:
-    desired = timestamps(time_range)
-    resampled: list[float | None] = []
-    bucket: list[float | None] = []
-    index = 0
-    for timestamp, value in zip(timestamps(time_series.time_range), time_series.values):
-        if index < len(desired) and timestamp > desired[index]:
-            resampled.append(_aggregate(bucket, consolidation_function))
-            bucket = []
-            index += 1
-        bucket.append(value)
-    if (missing := len(desired) - len(resampled)) > 0:
-        resampled.append(_aggregate(bucket, consolidation_function))
-        resampled += [None] * (missing - 1)
-    return resampled
-
-
-def _forward_fill(time_series: TimeSeries, time_range: TimeRange) -> Sequence[float | None]:
-    source = time_series.time_range
-    last = len(time_series.values) - 1
-    return [
-        time_series.values[max(0, min((timestamp - source.start - 1) // source.step, last))]
-        for timestamp in timestamps(time_range)
-    ]
-
-
-def resample(
-    time_series: TimeSeries,
-    time_range: TimeRange,
-    consolidation_function: ConsolidationFunction,
-) -> TimeSeries:
-    if time_series.time_range == time_range:
-        return time_series
-    if not time_series.values or time_series.time_range.step <= 0:
-        return TimeSeries(time_range=time_range, values=[None] * len(timestamps(time_range)))
-    values = (
-        _downsample(time_series, time_range, consolidation_function)
-        if time_range.step >= time_series.time_range.step
-        else _forward_fill(time_series, time_range)
-    )
-    return TimeSeries(time_range=time_range, values=values)
-
-
-def mapped_series(time_series: TimeSeries, transform: Callable[[float], float]) -> TimeSeries:
-    return TimeSeries(
-        time_range=time_series.time_range,
-        values=[None if value is None else transform(value) for value in time_series.values],
-    )
-
-
-def scaled_series(time_series: TimeSeries, scale: float) -> TimeSeries:
-    if scale == 1.0:
-        return time_series
-    return mapped_series(time_series, lambda value: value * scale)
-
-
-def merge_series(time_series: Sequence[TimeSeries], time_range: TimeRange) -> TimeSeries:
-    return TimeSeries(
-        time_range=time_range,
-        values=[
-            next((value for value in point if value is not None), None)
-            for point in zip(*(member.values for member in time_series))
-        ],
-    )
 
 
 # The step the columns are requested with. RRD answers with the grid it actually holds, which is

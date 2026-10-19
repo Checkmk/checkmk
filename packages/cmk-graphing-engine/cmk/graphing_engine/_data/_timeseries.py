@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 
@@ -37,3 +37,26 @@ def constant_time_series(value: float | None, time_range: TimeRange) -> TimeSeri
     # The same value at every point of the range - the shape a quantity without a fetched series of
     # its own draws on: a constant, a threshold, or a present-but-all-None curve.
     return TimeSeries(time_range=time_range, values=[value] * len(timestamps(time_range)))
+
+
+def mapped_series(time_series: TimeSeries, transform: Callable[[float], float]) -> TimeSeries:
+    return TimeSeries(
+        time_range=time_series.time_range,
+        values=[None if value is None else transform(value) for value in time_series.values],
+    )
+
+
+def scaled_series(time_series: TimeSeries, scale: float) -> TimeSeries:
+    if scale == 1.0:
+        return time_series
+    return mapped_series(time_series, lambda value: value * scale)
+
+
+def merge_series(time_series: Sequence[TimeSeries], time_range: TimeRange) -> TimeSeries:
+    return TimeSeries(
+        time_range=time_range,
+        values=[
+            next((value for value in point if value is not None), None)
+            for point in zip(*(member.values for member in time_series))
+        ],
+    )

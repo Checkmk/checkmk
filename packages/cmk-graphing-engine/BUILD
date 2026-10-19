@@ -42,6 +42,7 @@ py_library(
         "cmk/graphing_engine/_rrd/_fetch.py",
         "cmk/graphing_engine/_rrd/_metrics.py",
         "cmk/graphing_engine/_rrd/_naming.py",
+        "cmk/graphing_engine/_rrd/_resample.py",
     ],
     data = [":py_typed"],
     imports = ["."],

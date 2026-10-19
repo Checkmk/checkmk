@@ -28,12 +28,13 @@ from cmk.graphing_engine import (
     EvaluatedStack,
     EvaluatedVerticalRange,
     last_present,
+    mapped_series,
     TimeRange,
     TimeSeries,
     timestamps,
     VerticalRangeKind,
 )
-from cmk.gui.graphing import mapped_series, user_specific_unit
+from cmk.gui.graphing import user_specific_unit
 from cmk.gui.png._size import ex_to_inches, legend_height_ex
 from cmk.gui.png._wire import PngGraph, PngOptions, PngTexts, RenderingFailure
 from cmk.gui.utils.temperature_unit import TemperatureUnit

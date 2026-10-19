@@ -16,10 +16,13 @@ from cmk.graphing_engine import (
     ConsolidationFunction,
     FetchedData,
     HostName,
+    merge_series,
     MetricName,
     MetricProtocol,
     PerformanceData,
+    resample,
     RRDMetric,
+    scaled_series,
     Service,
     ServiceName,
     TimeRange,
@@ -34,11 +37,8 @@ from cmk.livestatus_client import LivestatusColumn, lqencode, MKLivestatusNotFou
 from ._edge_neighbours import expected_served_step, with_edge_neighbours
 from ._metric_data import (
     map_metric_names,
-    merge_series,
-    resample,
     rrd_column_name,
     rrd_originals,
-    scaled_series,
     translate_performance_data,
 )
 from ._performance_data import parse_performance_data, RawPerformanceData

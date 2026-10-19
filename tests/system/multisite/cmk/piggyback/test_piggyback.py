@@ -150,12 +150,14 @@ def _change_remote_site_customer(
 
 
 @pytest.mark.skip_if_not_edition("ultimatemt")
-def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site: Site) -> None:
+def test_config_sync_source_remote_diff_customer(
+    piggyback_env_two_site_setup: tuple[Site, Site],
+) -> None:
     """
     - Changing the customer of the remote site do not block piggyback hub config file distribution.
     - Restoring the customer to the original value keeps piggyback hub config file distribution.
     """
-
+    central_site, remote_site = piggyback_env_two_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host"
     with setup_piggyback_host_and_check(
         central_site, remote_site.id, HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED

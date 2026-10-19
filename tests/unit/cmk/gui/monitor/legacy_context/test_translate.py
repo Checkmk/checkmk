@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from typing import override
 
 from cmk.ccc.site import SiteId
-from cmk.gui.monitor.table_widget import (
+from cmk.gui.monitor.legacy_context import (
     ContextFilter,
     ContextFilterTranslation,
     ContextFilterTranslator,

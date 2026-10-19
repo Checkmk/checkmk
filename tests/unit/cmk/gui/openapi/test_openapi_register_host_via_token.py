@@ -11,15 +11,26 @@ revoked once both uses are consumed.
 
 import datetime as dt
 from http import HTTPStatus
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from dateutil.relativedelta import relativedelta
+from werkzeug.datastructures import ETags
 
+import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
+from cmk.gui.logged_in import LoggedInNobody
+from cmk.gui.openapi.api_endpoints.host_config_internal.models.request_models import RegisterHost
+from cmk.gui.openapi.api_endpoints.host_config_internal.register_host_via_token import (
+    register_host_via_token_v1,
+)
+from cmk.gui.openapi.framework import ApiContext, APIVersion
+from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.token_auth import AgentRegistrationToken, AuthToken, get_token_store
 from cmk.gui.token_auth._store import TokenRevoked
+from cmk.utils.agent_registration import UUIDLinkManager
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
@@ -29,6 +40,33 @@ def _issue_token(host_name: str) -> AuthToken:
         issuer=UserId("issuer"),
         now=dt.datetime.now(dt.UTC),
         valid_for=relativedelta(days=1),
+    )
+
+
+def _links() -> dict[UUID, HostName]:
+    return {
+        link.uuid: link.hostname
+        for link in UUIDLinkManager(
+            received_outputs_dir=cmk.utils.paths.received_outputs_dir,
+            data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
+            r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
+            uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
+        )
+    }
+
+
+def _register_with_authenticated_token(token: AuthToken) -> None:
+    register_host_via_token_v1(
+        ApiContext.new(
+            config=Config(),
+            version=APIVersion.INTERNAL,
+            etag_if_match=ETags(),
+            host_url="http://localhost/",
+            user=LoggedInNobody(),
+            token=token,
+        ),
+        HostName("heute"),
+        RegisterHost(uuid=uuid4()),
     )
 
 
@@ -91,3 +129,40 @@ class TestRegisterHostViaToken:
 
         resp.assert_status_code(HTTPStatus.FORBIDDEN)
         assert "different host" in resp.json["detail"]
+
+    def test_of_two_registrations_with_one_token_only_the_first_links_its_uuid(
+        self, clients: ClientRegistry
+    ) -> None:
+        """CMK-40803 AC-3: The second registration holds the token as its authentication read it, before the first registration consumed the use."""
+        token_as_both_authentications_read_it = _issue_token("heute")
+        first_uuid = uuid4()
+        clients.HostConfig.register_via_token(
+            "heute", f"0:{token_as_both_authentications_read_it.token_id}", str(first_uuid)
+        )
+
+        with pytest.raises(ProblemException):
+            _register_with_authenticated_token(token_as_both_authentications_read_it)
+
+        assert _links() == {first_uuid: HostName("heute")}
+
+    def test_a_token_deleted_after_the_authentication_is_rejected(self) -> None:
+        token = _issue_token("heute")
+        get_token_store().delete(token.token_id)
+
+        with pytest.raises(ProblemException) as exc_info:
+            _register_with_authenticated_token(token)
+
+        assert exc_info.value.code == HTTPStatus.UNAUTHORIZED
+
+    def test_a_token_expired_after_the_authentication_is_rejected(self) -> None:
+        token = get_token_store().issue(
+            token_details=AgentRegistrationToken(host_name=HostName("heute")),
+            issuer=UserId("issuer"),
+            now=dt.datetime.now(dt.UTC) - dt.timedelta(days=2),
+            valid_for=relativedelta(days=1),
+        )
+
+        with pytest.raises(ProblemException) as exc_info:
+            _register_with_authenticated_token(token)
+
+        assert exc_info.value.code == HTTPStatus.UNAUTHORIZED

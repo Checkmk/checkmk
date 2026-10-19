@@ -22,7 +22,14 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model.converter import TypedPlainValidator
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.token_auth import AgentRegistrationToken, get_token_store, TokenUseAlreadyConsumed
+from cmk.gui.token_auth import (
+    AgentRegistrationToken,
+    get_token_store,
+    TokenExpired,
+    TokenRevoked,
+    TokenUseAlreadyConsumed,
+    UnknownToken,
+)
 from cmk.gui.watolib.agent_registration import link_uuid_of_registration
 from cmk.utils.agent_registration import HostAgentConnectionMode
 
@@ -67,18 +74,24 @@ def register_host_via_token_v1(
             title="Forbidden",
             detail="The token was issued for a different host.",
         )
-    if api_context.token.details.host_registration_completed_at is not None:
-        raise _token_already_used()
     connection_mode = api_context.token.details.connection_mode
-    link_uuid_of_registration(
-        host_name, body.uuid, push_configured=connection_mode is HostAgentConnectionMode.PUSH
-    )
     try:
-        get_token_store().consume_agent_registration_use(
+        with get_token_store().agent_registration_use(
             api_context.token.token_id, "host_registration", datetime.now(UTC)
-        )
+        ):
+            link_uuid_of_registration(
+                host_name,
+                body.uuid,
+                push_configured=connection_mode is HostAgentConnectionMode.PUSH,
+            )
     except TokenUseAlreadyConsumed:
         raise _token_already_used()
+    except UnknownToken, TokenExpired, TokenRevoked:
+        raise ProblemException(
+            status=HTTPStatus.UNAUTHORIZED,
+            title="Authentication required",
+            detail="The token is no longer valid.",
+        )
     return ConnectionMode(connection_mode=connection_mode)
 
 

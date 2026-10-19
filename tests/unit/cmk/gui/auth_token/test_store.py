@@ -345,6 +345,97 @@ def test_consume_agent_registration_use_does_not_extend_validity(tmp_path: Path)
     assert token.valid_until == some_time + datetime.timedelta(minutes=5)
 
 
+class _ActionFailed(Exception):
+    pass
+
+
+def test_agent_registration_use_is_consumed_after_its_block_succeeds(tmp_path: Path) -> None:
+    store = TokenStore(tmp_path / "store.json")
+    token = _issue_agent_registration_token(store)
+
+    with store.agent_registration_use(token.token_id, "host_registration", some_time):
+        pass
+
+    stored = store.verify(f"0:{token.token_id}", now=some_time)
+    assert isinstance(stored.details, AgentRegistrationToken)
+    assert stored.details.host_registration_completed_at == some_time
+
+
+def test_agent_registration_use_stores_nothing_if_its_block_raises(tmp_path: Path) -> None:
+    store = TokenStore(tmp_path / "store.json")
+    token = _issue_agent_registration_token(store)
+
+    with (
+        pytest.raises(_ActionFailed),
+        store.agent_registration_use(token.token_id, "host_registration", some_time),
+    ):
+        raise _ActionFailed
+
+    stored = store.verify(f"0:{token.token_id}", now=some_time)
+    assert stored.details == token.details
+    assert stored.valid_until == token.valid_until
+
+
+def test_a_consumed_agent_registration_use_does_not_run_its_block(tmp_path: Path) -> None:
+    store = TokenStore(tmp_path / "store.json")
+    token = _issue_agent_registration_token(store)
+    with store.agent_registration_use(token.token_id, "host_registration", some_time):
+        pass
+    blocks_run: list[AgentRegistrationUse] = []
+
+    with (
+        pytest.raises(TokenUseAlreadyConsumed),
+        store.agent_registration_use(token.token_id, "host_registration", some_time),
+    ):
+        blocks_run.append("host_registration")
+
+    assert not blocks_run
+
+
+def test_an_expired_agent_registration_token_does_not_run_its_block(tmp_path: Path) -> None:
+    store = TokenStore(tmp_path / "store.json")
+    token = _issue_agent_registration_token(store, valid_for=relativedelta(minutes=5))
+    blocks_run: list[AgentRegistrationUse] = []
+
+    with (
+        pytest.raises(TokenExpired),
+        store.agent_registration_use(
+            token.token_id, "host_registration", some_time + datetime.timedelta(minutes=6)
+        ),
+    ):
+        blocks_run.append("host_registration")
+
+    assert not blocks_run
+
+
+def test_a_revoked_agent_registration_token_does_not_run_its_block(tmp_path: Path) -> None:
+    store = TokenStore(tmp_path / "store.json")
+    token = _issue_agent_registration_token(store)
+    store.revoke(token.token_id)
+    blocks_run: list[AgentRegistrationUse] = []
+
+    with (
+        pytest.raises(TokenRevoked),
+        store.agent_registration_use(token.token_id, "host_registration", some_time),
+    ):
+        blocks_run.append("host_registration")
+
+    assert not blocks_run
+
+
+def test_an_agent_registration_use_leaves_the_other_use_available(tmp_path: Path) -> None:
+    store = TokenStore(tmp_path / "store.json")
+    token = _issue_agent_registration_token(store)
+    with store.agent_registration_use(token.token_id, "host_registration", some_time):
+        pass
+    blocks_run: list[AgentRegistrationUse] = []
+
+    with store.agent_registration_use(token.token_id, "updater_registration", some_time):
+        blocks_run.append("updater_registration")
+
+    assert blocks_run == ["updater_registration"]
+
+
 def test_deserialize_agent_registration_token_without_usage_fields(tmp_path: Path) -> None:
     """Tokens persisted before the usage tracking was added must still deserialize"""
     path = tmp_path / "store.json"

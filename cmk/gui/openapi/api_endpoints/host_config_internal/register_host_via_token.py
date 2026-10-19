@@ -30,7 +30,11 @@ from cmk.gui.token_auth import (
     TokenUseAlreadyConsumed,
     UnknownToken,
 )
-from cmk.gui.watolib.agent_registration import link_uuid_of_existing_host, UUIDAlreadyLinkedError
+from cmk.gui.watolib.agent_registration import (
+    link_uuid_of_existing_host,
+    UUIDAlreadyLinkedError,
+    UUIDOfOpenRequestError,
+)
 from cmk.utils.agent_registration import HostAgentConnectionMode
 
 from .models.request_models import RegisterHost
@@ -84,9 +88,9 @@ def register_host_via_token_v1(
                 body.uuid,
                 push_configured=connection_mode is HostAgentConnectionMode.PUSH,
             )
-    except UUIDAlreadyLinkedError as exc:
+    except (UUIDAlreadyLinkedError, UUIDOfOpenRequestError) as exc:
         raise ProblemException(
-            status=HTTPStatus.CONFLICT, title="UUID already linked", detail=str(exc)
+            status=HTTPStatus.CONFLICT, title="UUID already in use", detail=str(exc)
         ) from exc
     except TokenUseAlreadyConsumed:
         raise _token_already_used()

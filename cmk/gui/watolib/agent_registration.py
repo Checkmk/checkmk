@@ -19,7 +19,7 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
     do_remote_automation,
 )
-from cmk.utils.agent_registration import UUIDLinkManager
+from cmk.utils.agent_registration import get_r4r_filepath, UUIDLinkManager
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.security_event import log_security_event, SecurityEvent
 
@@ -79,6 +79,10 @@ class UUIDAlreadyLinkedError(MKGeneralException):
     pass
 
 
+class UUIDOfOpenRequestError(MKGeneralException):
+    pass
+
+
 @dataclass
 class LinkedUUIDRefusedEvent(SecurityEvent):
     def __init__(
@@ -95,10 +99,29 @@ class LinkedUUIDRefusedEvent(SecurityEvent):
         )
 
 
+@dataclass
+class UUIDOfOpenRequestRefusedEvent(SecurityEvent):
+    def __init__(self, *, host_name: HostName, uuid: UUID) -> None:
+        super().__init__(
+            "registration of a UUID with an open request refused",
+            {"host_name": str(host_name), "uuid": str(uuid)},
+            SecurityEvent.Domain.auth,
+        )
+
+
 def link_uuid_of_existing_host(host_name: HostName, uuid: UUID, *, push_configured: bool) -> None:
     """Called by the REST endpoints of the registration of an existing host. The REST framework
-    holds the configuration lock of the site while the check reads the UUID links of the site."""
+    holds the configuration lock of the site while the checks read the UUID links of the site and
+    the requests in requests-for-registration/NEW and PENDING."""
     verify_uuid_is_not_linked(uuid, host_name=host_name)
+    if any(
+        get_r4r_filepath(request_dir, uuid).exists()
+        for request_dir in (cmk.utils.paths.r4r_new_dir, cmk.utils.paths.r4r_pending_dir)
+    ):
+        log_security_event(UUIDOfOpenRequestRefusedEvent(host_name=host_name, uuid=uuid))
+        raise UUIDOfOpenRequestError(
+            f"The UUID {uuid} belongs to an open request of the automatic registration."
+        )
     link_uuid_of_registration(host_name, uuid, push_configured=push_configured)
 
 

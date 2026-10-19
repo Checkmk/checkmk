@@ -10,6 +10,7 @@ revoked once both uses are consumed.
 """
 
 import datetime as dt
+import json
 from http import HTTPStatus
 from uuid import UUID, uuid4
 
@@ -30,7 +31,8 @@ from cmk.gui.openapi.framework import ApiContext, APIVersion
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.token_auth import AgentRegistrationToken, AuthToken, get_token_store
 from cmk.gui.token_auth._store import TokenRevoked
-from cmk.utils.agent_registration import UUIDLinkManager
+from cmk.utils.agent_registration import get_r4r_filepath, UUIDLinkManager
+from tests.testlib.unit.fake_site import LoggedSecurityEvent
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
@@ -144,6 +146,38 @@ class TestRegisterHostViaToken:
 
         resp.assert_status_code(HTTPStatus.CONFLICT)
         assert _links() == {UUID(uuid): HostName("example.com")}
+        stored = get_token_store().verify(f"0:{token.token_id}", now=dt.datetime.now(dt.UTC))
+        assert isinstance(stored.details, AgentRegistrationToken)
+        assert stored.details.host_registration_completed_at is None
+
+    def test_a_uuid_of_an_open_request_is_refused_without_consuming_a_use(
+        self, clients: ClientRegistry, security_events: list[LoggedSecurityEvent]
+    ) -> None:
+        """CMK-40803 AC-5"""
+        uuid = uuid4()
+        cmk.utils.paths.r4r_pending_dir.mkdir(parents=True)
+        get_r4r_filepath(cmk.utils.paths.r4r_pending_dir, uuid).write_text(
+            json.dumps(
+                {
+                    "uuid": str(uuid),
+                    "username": "my-username",
+                    "agent_labels": {},
+                    "agent_cert": "cert",
+                }
+            )
+        )
+        token = _issue_token("heute")
+
+        resp = clients.HostConfig.register_via_token(
+            "heute", f"0:{token.token_id}", str(uuid), expect_ok=False
+        )
+
+        resp.assert_status_code(HTTPStatus.CONFLICT)
+        assert [
+            event.details
+            for event in security_events
+            if event.summary == "registration of a UUID with an open request refused"
+        ] == [{"host_name": "heute", "uuid": str(uuid)}]
         stored = get_token_store().verify(f"0:{token.token_id}", now=dt.datetime.now(dt.UTC))
         assert isinstance(stored.details, AgentRegistrationToken)
         assert stored.details.host_registration_completed_at is None

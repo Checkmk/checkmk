@@ -246,6 +246,39 @@ def test_match_is_unknown_without_a_connection_to_the_simulated_site(
 
 
 @pytest.mark.usefixtures("request_context")
+def test_rule_does_not_match_without_a_connection_if_its_time_period_does_not_decide(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    with mock_livestatus(expect_status_query=True):
+        result = _simulate(
+            ec.Rule(
+                id="rule", match="no such text", match_timeperiod=ec.TimeperiodName("workhours")
+            ),
+            simulated_site=SiteId("unconnected"),
+        )
+
+    assert result == ec.MatchFailure(reason="did not match, message text does not match")
+
+
+@pytest.mark.usefixtures("request_context")
+def test_inverted_rule_matches_without_a_connection_if_its_time_period_does_not_decide(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    with mock_livestatus(expect_status_query=True):
+        result = _simulate(
+            ec.Rule(
+                id="rule",
+                match="no such text",
+                match_timeperiod=ec.TimeperiodName("workhours"),
+                invert_matching=True,
+            ),
+            simulated_site=SiteId("unconnected"),
+        )
+
+    assert isinstance(result, ec.MatchSuccess)
+
+
+@pytest.mark.usefixtures("request_context")
 def test_simulator_queries_time_periods_once_for_all_rules(
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
@@ -535,6 +568,23 @@ def test_unexpected_errors_while_matching_a_rule_are_logged(
     rule = ec.Rule(id="rule", match_priority=5)  # type: ignore[typeddict-item]
 
     _simulate(rule, simulated_site=SiteId("remote"))
+
+    assert "Cannot match rule pack/rule against the simulated event" in caplog.messages
+
+
+@pytest.mark.usefixtures("request_context")
+def test_unexpected_errors_while_matching_a_rule_without_time_periods_are_logged(
+    mock_livestatus: MockLiveStatusConnection, caplog: pytest.LogCaptureFixture
+) -> None:
+    # Nobody validates rule packs written by hand or shipped in an MKP.
+    rule = ec.Rule(
+        id="rule",
+        match_priority=5,  # type: ignore[typeddict-item]
+        match_timeperiod=ec.TimeperiodName("workhours"),
+    )
+
+    with mock_livestatus(expect_status_query=True):
+        _simulate(rule, simulated_site=SiteId("unconnected"))
 
     assert "Cannot match rule pack/rule against the simulated event" in caplog.messages
 

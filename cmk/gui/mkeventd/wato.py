@@ -461,21 +461,38 @@ class EventSimulator:
         if isinstance(active_rule, str):
             return ec.MatchFailure(reason=active_rule)
         try:
-            return self._rule_matcher.event_rule_matches(active_rule, self._event)
+            return self._match_compiled_rule(active_rule)
         except MKTimeout:
             raise
-        except _TimePeriodsUnavailable as e:
-            # The Event Console of the site knows its time periods, though. The failed query is
-            # logged already.
-            return UnknownMatch(
-                reason=_("Cannot look up the time periods: %(error)s") % {"error": e}
-            )
         except Exception as e:
             log.logger.exception(
                 "Cannot match rule %(pack)s/%(rule_id)s against the simulated event",
                 {"pack": active_rule["pack"], "rule_id": active_rule["id"]},
             )
             return ec.MatchFailure(reason=_("Cannot match the rule: %(error)s") % {"error": e})
+
+    def _match_compiled_rule(self, rule: ec.Rule) -> ec.MatchResult:
+        try:
+            return self._rule_matcher.event_rule_matches(rule, self._event)
+        except _TimePeriodsUnavailable as e:
+            # The Event Console of the site knows its time periods, though, so the simulator can
+            # only tell whether the rule matches if that doesn't depend on them. The failed query is
+            # logged already.
+            if_active = self._match_assuming_time_periods(rule, active=True)
+            if_inactive = self._match_assuming_time_periods(rule, active=False)
+            if isinstance(if_active, ec.MatchSuccess) is isinstance(if_inactive, ec.MatchSuccess):
+                return if_active
+            return UnknownMatch(
+                reason=_("Cannot look up the time periods: %(error)s") % {"error": e}
+            )
+
+    def _match_assuming_time_periods(self, rule: ec.Rule, *, active: bool) -> ec.MatchResult:
+        """Matches the rule as if all time periods were active or all were inactive"""
+        return ec.RuleMatcher(
+            logger=None,
+            omd_site_id=self._event["site"],
+            is_active_time_period=lambda _name: active,
+        ).event_rule_matches(rule, self._event)
 
     def match_rule_pack(self, rule_pack: ec.ECRulePack) -> RulePackMatch:
         matching_rules = 0

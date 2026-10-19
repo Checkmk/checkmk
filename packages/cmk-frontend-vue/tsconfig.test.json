@@ -8,6 +8,7 @@
       "@/lib/i18nString": ["weaki18nString.d.ts"],
       "@/*": ["./src/*"],
       "@demo/*": ["./demo/*"],
+      "@tests/*": ["./tests/*"],
       "*": ["./node_modules/*", "../../bazel-bin/packages/cmk-frontend-vue/node_modules/*"]
     }
   }

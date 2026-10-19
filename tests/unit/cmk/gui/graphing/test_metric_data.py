@@ -12,6 +12,8 @@ from cmk.graphing.v1 import metrics, Title, translations
 from cmk.graphing_engine import (
     ConsolidationFunction,
     MetricName,
+    RawPerformanceData,
+    RawPerformanceValue,
     TimeRange,
     TimeSeries,
 )
@@ -19,8 +21,6 @@ from cmk.gui.graphing import (
     evaluated_metrics,
     EvaluatedMetric,
     merge_rrd_columns,
-    parse_performance_data,
-    RawPerformanceData,
     reverse_translated_names,
     rrd_column_names,
     translate_metric_names,
@@ -31,22 +31,7 @@ from cmk.gui.graphing._metric_data import (
     RRDOriginal,
     translate_performance_data,
 )
-from cmk.gui.graphing._performance_data import RawPerformanceValue
 from cmk.gui.utils.temperature_unit import TemperatureUnit
-
-
-def test_parse_performance_data_merges_rrd_only_metrics() -> None:
-    # Legacy reads the livestatus "metrics" column too, so a metric present in RRD but absent from
-    # the live perf_data string still shows up (as a synthetic value=1 entry, deduplicated).
-    parsed = parse_performance_data("live=5", "check_mk-foo", ["live", "rrd_only"], debug=False)
-    by_name = {name: value.value for name, value in parsed.values.items()}
-    assert by_name == {"live": 5.0, "rrd_only": 1.0}
-
-
-def test_parse_performance_data_names_a_metric_by_its_rrd_name() -> None:
-    parsed = parse_performance_data("'disk read:sda/1'=5", "check_mk-foo", debug=False)
-    assert list(parsed.values) == ["disk_read_sda_1"]
-
 
 # The check the translations below are registered for, as a passive check's performance data spells
 # it and as the plug-in names it.

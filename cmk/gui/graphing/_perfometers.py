@@ -22,6 +22,7 @@ from cmk.graphing_engine import (
     EvaluatedStacked,
     FocusBoundKind,
     HostName,
+    parse_performance_data,
     Service,
     ServiceName,
     Unit,
@@ -31,7 +32,6 @@ from cmk.gui.log import logger
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 from ._metric_data import translate_performance_data
-from ._performance_data import parse_performance_data
 from ._user_specific_unit import user_specific_unit
 
 
@@ -344,7 +344,7 @@ def evaluated_perfometer(
 ) -> EvaluatedPerfometerLayout | None:
     if not (perf_data_string := perf_data_string.strip()):
         return None
-    raw = parse_performance_data(perf_data_string, check_command, debug=debug)
+    raw = parse_performance_data(perf_data_string, check_command, debug=debug, logger=logger)
     if not raw.values:
         return None
     return evaluate_perfometer(

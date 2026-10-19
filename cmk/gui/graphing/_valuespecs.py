@@ -18,6 +18,7 @@ from cmk.graphing_engine import (
     FALLBACK_UNIT,
     IECNotation,
     metric_display_attributes,
+    parse_performance_data,
     parse_unit,
     SINotation,
     StandardScientificNotation,
@@ -30,6 +31,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, translate_to_current_language
+from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.type_defs import GraphTitleFormatVS, VisualContext
@@ -63,7 +65,6 @@ from ._decoding import ensure_type
 from ._graph_display_config import GraphDisplayConfigHTML
 from ._metric_data import translate_metric_names
 from ._metric_spec import registered_metric_ids_and_titles
-from ._performance_data import parse_performance_data
 from ._plugins import registered_metrics
 from ._user_specific_unit import get_temperature_unit, user_specific_unit
 
@@ -610,6 +611,7 @@ def metrics_of_query(
             ensure_type(row["service_perf_data"], str),
             ensure_type(row["service_check_command"], str),
             debug=active_config.debug,
+            logger=logger,
         )
         yield from _metric_choices(
             raw.check_command,

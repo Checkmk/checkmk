@@ -136,9 +136,19 @@ from ._rrd._naming import (
     SiteID,
     split_predict_prefix,
 )
+from ._rrd._performance_data import (
+    parse_check_command,
+    parse_performance_data,
+    RawPerformanceData,
+    RawPerformanceValue,
+)
 from ._rrd._resample import resample
 
 __all__ = [
+    "parse_check_command",
+    "parse_performance_data",
+    "RawPerformanceData",
+    "RawPerformanceValue",
     "mapped_series",
     "merge_series",
     "resample",

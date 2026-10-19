@@ -4,13 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import logging
 import re
 import shlex
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
-from cmk.graphing_engine import MetricName, rrd_metric_name
-from cmk.gui.log import logger
+from cmk.graphing_engine._data._naming import MetricName
+
+from ._naming import rrd_metric_name
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -97,7 +99,7 @@ def parse_check_command(check_command: str) -> str:
 
 
 def _parse_perf_data(
-    perf_data_string: str, check_command: str, *, debug: bool
+    perf_data_string: str, check_command: str, *, debug: bool, logger: logging.Logger
 ) -> tuple[Mapping[MetricName, RawPerformanceValue], str]:
     check_command = parse_check_command(check_command)
 
@@ -141,15 +143,17 @@ def parse_performance_data(
     rrd_metrics: Sequence[str] = (),
     *,
     debug: bool,
+    logger: logging.Logger,
 ) -> RawPerformanceData:
     raw_perf_data, normalized_check_command = _parse_perf_data(
-        perf_data_string, check_command, debug=debug
+        perf_data_string, check_command, debug=debug, logger=logger
     )
     if rrd_metrics:
         rrd_only, _command = _parse_perf_data(
             " ".join(f'"{m}"=1' if " " in m else f"{m}=1" for m in rrd_metrics if "," not in m),
             check_command,
             debug=debug,
+            logger=logger,
         )
         raw_perf_data = {
             **raw_perf_data,

@@ -22,24 +22,23 @@ from cmk.graphing_engine import (
     merge_series,
     metric_display_attributes,
     MetricName,
+    parse_performance_data,
     PerformanceData,
+    RawPerformanceData,
+    RawPerformanceValue,
     scaled_series,
     split_predict_prefix,
     TimeRange,
     TimeSeries,
 )
 from cmk.gui.i18n import _, translate_to_current_language
+from cmk.gui.log import logger
 from cmk.gui.type_defs import ColumnName
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.livestatus_client.tables.services import Services
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 from cmk.web.utils.unit_formatter import notation_formatter, NotationFormatter
 
-from ._performance_data import (
-    parse_performance_data,
-    RawPerformanceData,
-    RawPerformanceValue,
-)
 from ._user_specific_unit import (
     user_specific_unit,
     user_unit_format,
@@ -395,7 +394,7 @@ def evaluated_metrics(
     temperature_unit: TemperatureUnit,
     debug: bool,
 ) -> Mapping[MetricName, EvaluatedMetric]:
-    raw = parse_performance_data(perf_data_string, check_command, debug=debug)
+    raw = parse_performance_data(perf_data_string, check_command, debug=debug, logger=logger)
     evaluated = {}
     for name, performance_data in translate_performance_data(
         raw.check_command, raw.values, registered_translations

@@ -19,6 +19,7 @@ from cmk.graphing_engine import (
     MetricName,
     MetricProtocol,
     PerformanceData,
+    RawPerformanceValue,
     RRDMetric,
     ScalarKind,
     ScalarOf,
@@ -41,7 +42,6 @@ from cmk.gui.graphing._graph_templates import (
     MKGraphMixedUnitsError,
     StoredTemplateGraphSpecification,
 )
-from cmk.gui.graphing._performance_data import RawPerformanceValue
 
 _SERVICE = Service(
     host_name=HostName("h"), service_name=ServiceName("svc"), site_id=SiteID("mysite")

@@ -129,11 +129,6 @@ from ._perfometers import (
     perfometer_label,
     perfometer_sort_value,
 )
-from ._performance_data import (
-    parse_check_command,
-    parse_performance_data,
-    RawPerformanceData,
-)
 from ._plugin_loading import register_plugins
 from ._plugins import (
     registered_graphs,
@@ -277,9 +272,7 @@ __all__ = [
     "MKGraphNotFound",
     "PageHostServiceGraphPopup",
     "PageVsAutocomplete",
-    "parse_check_command",
     "parse_graph_specification",
-    "parse_performance_data",
     "perfometer_label",
     "perfometer_sort_value",
     "perfometers_from_api",
@@ -293,7 +286,6 @@ __all__ = [
     "QueryDataTimeSeries",
     "QueryDataValue",
     "QueryLimitReached",
-    "RawPerformanceData",
     "registered_graphs",
     "register_plugins",
     "registered_metric_ids_and_titles",

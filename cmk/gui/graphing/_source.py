@@ -19,7 +19,9 @@ from cmk.graphing_engine import (
     merge_series,
     MetricName,
     MetricProtocol,
+    parse_performance_data,
     PerformanceData,
+    RawPerformanceData,
     resample,
     RRDMetric,
     scaled_series,
@@ -32,6 +34,7 @@ from cmk.graphing_engine import (
     SiteID as EngineSiteID,
 )
 from cmk.gui import sites
+from cmk.gui.log import logger
 from cmk.livestatus_client import LivestatusColumn, lqencode, MKLivestatusNotFoundError
 
 from ._edge_neighbours import expected_served_step, with_edge_neighbours
@@ -41,7 +44,6 @@ from ._metric_data import (
     rrd_originals,
     translate_performance_data,
 )
-from ._performance_data import parse_performance_data, RawPerformanceData
 
 HOST_PSEUDO_SERVICE: Final = ServiceName("_HOST_")
 
@@ -134,7 +136,11 @@ class RRDFetchMetricNameMapping:
                     service, values = query.parse_row(row, EngineSiteID(str(row_site)))
                     perf_data_string, rrd_metrics, check_command = values
                     raw = parse_performance_data(
-                        perf_data_string, check_command, rrd_metrics, debug=self.debug
+                        perf_data_string,
+                        check_command,
+                        rrd_metrics,
+                        debug=self.debug,
+                        logger=logger,
                     )
                     result[service] = map_metric_names(
                         raw.check_command, list(raw.values), self.registered_translations
@@ -495,7 +501,7 @@ class RRDFetchData:
             # on two sites keeps a distinct entry per site.
             for row in self.performance_data_source(site_services, only_site=group_site):
                 result[(group_site, row.service)] = parse_performance_data(
-                    row.perf_data, row.check_command, debug=self.debug
+                    row.perf_data, row.check_command, debug=self.debug, logger=logger
                 )
                 site_of_service[row.service] = row.site_id
         return result, site_of_service

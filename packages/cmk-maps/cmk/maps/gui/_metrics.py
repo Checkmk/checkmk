@@ -46,6 +46,7 @@ from cmk.graphing_engine import (
     Graph,
     MetricName,
     MetricProtocol,
+    parse_performance_data,
     parse_unit,
     RequestedGraph,
     RRDMetric,
@@ -65,13 +66,13 @@ from cmk.gui.graphing import (
     evaluated_metrics,
     evaluated_perfometer,
     EvaluatedMetric,
-    parse_performance_data,
     perfometer_label,
     sort_registered_graph_plugins,
     translated_names_and_scales,
     unit_to_unit_format,
 )
 from cmk.gui.i18n import translate_to_current_language
+from cmk.gui.log import logger
 from cmk.gui.theme import Theme
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
@@ -480,7 +481,9 @@ def metric_info(
     """
     if not perf_data_str.strip():
         return MetricInfo(perfometer=None, metrics={})
-    raw_performance_data = parse_performance_data(perf_data_str, check_command, debug=debug)
+    raw_performance_data = parse_performance_data(
+        perf_data_str, check_command, debug=debug, logger=logger
+    )
     names_and_scales = translated_names_and_scales(
         raw_performance_data.check_command,
         list(raw_performance_data.values),

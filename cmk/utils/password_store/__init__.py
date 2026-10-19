@@ -18,6 +18,7 @@ from ._pwstore import active_secrets_path_site as active_secrets_path_site
 from ._pwstore import ad_hoc_password_id as ad_hoc_password_id
 from ._pwstore import extract as extract
 from ._pwstore import extract_formspec_password as extract_formspec_password
+from ._pwstore import FormSpecPassword as FormSpecPassword
 from ._pwstore import generate_ad_hoc_secrets_path as generate_ad_hoc_secrets_path
 from ._pwstore import is_ad_hoc_password_id as is_ad_hoc_password_id
 from ._pwstore import load as load

@@ -144,10 +144,13 @@ def is_ad_hoc_password_id(password_id: str) -> bool:
     return _AD_HOC_PASSWORD_ID.fullmatch(password_id) is not None
 
 
-def extract_formspec_password(
-    password: tuple[Literal["cmk_postprocessed"], Literal["stored_password"], tuple[str, str]]
-    | tuple[Literal["cmk_postprocessed"], Literal["explicit_password"], tuple[str, str]],
-) -> str:
+FormSpecPassword = (
+    tuple[Literal["cmk_postprocessed"], Literal["explicit_password"], tuple[str, str]]
+    | tuple[Literal["cmk_postprocessed"], Literal["stored_password"], tuple[str, str]]
+)
+
+
+def extract_formspec_password(password: FormSpecPassword) -> str:
     match password:
         case ("cmk_postprocessed", "explicit_password", (password_id, password_value)):
             # This is a password that was entered in the GUI, so we can return it directly.

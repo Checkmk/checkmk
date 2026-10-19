@@ -435,7 +435,7 @@ def _unit_choice_from_unit_info(unit_info_: UnitInfo) -> _UnitChoice:
 
 class PageVsAutocomplete(AjaxPage):
     def page(self) -> PageResult:
-        if metric_name := self.webapi_request()["metric"]:
+        if metric_name := self.webapi_request().get("metric"):
             metric_spec = get_metric_spec(metric_name)
             unit_choice_for_metric = (
                 _unit_choice_from_unit_spec(metric_spec.unit_spec)

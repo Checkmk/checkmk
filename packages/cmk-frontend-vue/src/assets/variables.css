@@ -206,6 +206,7 @@
     --border-color-separator: var(--color-mid-grey-10);
     --border-shade-mix: 70%;
     --border-color-hairline: rgb(0 0 0 / 12%);
+    --border-color-table: var(--color-conference-grey-10);
 
     /* Status */
     --color-warning: rgb(255 208 0);
@@ -399,6 +400,7 @@
     --border-color-separator: var(--color-mid-grey-100);
     --border-shade-mix: 100%;
     --border-color-hairline: rgb(255 255 255 / 12%);
+    --border-color-table: var(--color-white-0);
 
     /* Status */
     --color-warning: var(--color-yellow-50);

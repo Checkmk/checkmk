@@ -53,6 +53,9 @@ from ._graph_evaluate import (
 )
 from ._graph_matching import (
     build_matched_graphs,
+    GraphRequest,
+    RequestedGraph,
+    RequestedMetric,
 )
 from ._naming import (
     HostName,
@@ -123,6 +126,9 @@ from ._units import (
 )
 
 __all__ = [
+    "GraphRequest",
+    "RequestedGraph",
+    "RequestedMetric",
     "ApiGraph",
     "ApiPerfometer",
     "FALLBACK_UNIT",

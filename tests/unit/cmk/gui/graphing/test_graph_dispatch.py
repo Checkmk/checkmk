@@ -13,6 +13,9 @@ from cmk.graphing_engine import (
     ConsolidationFunction,
     EvaluatedGraph,
     Graph,
+    MetricName,
+    RequestedGraph,
+    RequestedMetric,
     TimeRange,
 )
 from cmk.gui.graphing import (
@@ -25,7 +28,7 @@ from cmk.gui.graphing import (
     QueryLimitReached,
 )
 from cmk.gui.graphing._graph_codec import community_graph_codec
-from cmk.gui.graphing._graph_dispatch import evaluate_graphs, serialize_graphs
+from cmk.gui.graphing._graph_dispatch import evaluate_graphs, graph_request_of, serialize_graphs
 
 _KIND = "dispatch_test"
 
@@ -131,3 +134,11 @@ def test_every_graph_is_evaluated_under_the_requested_options() -> None:
 def test_a_graph_of_an_unregistered_kind_is_refused() -> None:
     with pytest.raises(KeyError):
         evaluate_built_graphs([Graph(name="a", title="t", kind="not_registered")], _OPTIONS)
+
+
+def test_a_metric_graph_id_requests_the_metric() -> None:
+    assert graph_request_of("METRIC_mem_used") == RequestedMetric(MetricName("mem_used"))
+
+
+def test_a_plain_graph_id_requests_the_graph() -> None:
+    assert graph_request_of("mem_used") == RequestedGraph("mem_used")

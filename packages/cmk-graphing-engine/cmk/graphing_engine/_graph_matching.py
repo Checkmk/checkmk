@@ -5,6 +5,7 @@
 
 import itertools
 from collections.abc import Callable, Container, Mapping, Sequence
+from dataclasses import dataclass
 
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
@@ -23,8 +24,6 @@ from ._graph_from_api import (
 from ._naming import MetricName, Service
 from ._quantities import rrd_metric_of, RRDMetric, ScalarOf
 from ._quantity import Curve, fetch_leaves
-
-_METRIC_PREFIX = "METRIC_"
 
 
 def _matches(
@@ -119,16 +118,17 @@ _FALLBACK_SCALAR_KINDS = (
 )
 
 
-def _matches_graph_name(graph: Graph, graph_name: str) -> bool:
-    # Legacy configs and autocompleters identify single-metric graphs as "METRIC_<name>", while the
-    # engine names the corresponding fallback graphs after the bare metric name.
-    return graph.name == graph_name or graph.name == graph_name.removeprefix(_METRIC_PREFIX)
+@dataclass(frozen=True)
+class RequestedGraph:
+    name: str
 
 
-def _requested_single_metric(graph_name: str | None) -> MetricName | None:
-    if graph_name is None or not graph_name.startswith(_METRIC_PREFIX):
-        return None
-    return MetricName(graph_name.removeprefix(_METRIC_PREFIX))
+@dataclass(frozen=True)
+class RequestedMetric:
+    metric_name: MetricName
+
+
+type GraphRequest = RequestedGraph | RequestedMetric
 
 
 def build_matched_graphs(
@@ -139,7 +139,7 @@ def build_matched_graphs(
     registered_graphs: Sequence[ApiGraph],
     registered_metrics: Mapping[str, metrics_v1.Metric],
     quantity_builder: QuantityBuilderProtocol = build_single_quantity,
-    graph_name: str | None = None,
+    request: GraphRequest | None = None,
 ) -> Sequence[Graph]:
     names_by_service = fetch_metric_names()
     # The metric-name fetch returns the services tagged with their resolved site; build from those so
@@ -153,7 +153,7 @@ def build_matched_graphs(
     def _collect(base: Graph) -> None:
         # Discard non-requested graphs the moment their name is known, before the predictive-line
         # work, rather than building every graph and filtering afterwards.
-        if graph_name is not None and not _matches_graph_name(base, graph_name):
+        if isinstance(request, RequestedGraph) and base.name != request.name:
             return
         # A predictive line is a single-service concept; a graph over multiple services has none (nor
         # rules or a quantity range bound, which the parse already left out).
@@ -211,9 +211,9 @@ def build_matched_graphs(
 
     # A single-metric request names no plug-in, and a plug-in graph drawing that metric claims it,
     # which keeps the loop below from reaching it. Answer such a request on its own.
-    if (single_metric := _requested_single_metric(graph_name)) is not None:
-        if single_metric in available:
-            _collect(_single_metric_graph(single_metric))
+    if isinstance(request, RequestedMetric):
+        if request.metric_name in available:
+            _collect(_single_metric_graph(request.metric_name))
         return matched_graphs
 
     for plugin in registered_graphs:

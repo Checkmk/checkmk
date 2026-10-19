@@ -15,12 +15,18 @@ from cmk.graphing_engine import (
     EvaluatedGraph,
     FetchDataProtocol,
     Graph,
+    GraphRequest,
+    MetricName,
+    RequestedGraph,
+    RequestedMetric,
     TimeRange,
 )
 
 from ._decoding import ensure_type
 from ._graph_codec import GraphCodec
 from ._source import FetchDiagnostics
+
+_METRIC_PREFIX = "METRIC_"
 
 
 def legacy_graph_id(graph: Graph, registered_graphs: Sequence[ApiGraph]) -> str:
@@ -29,11 +35,17 @@ def legacy_graph_id(graph: Graph, registered_graphs: Sequence[ApiGraph]) -> str:
     A fallback single-metric graph must carry the "METRIC_" prefix legacy stores it under; without
     it the legacy recipe lookup finds neither a plug-in nor the metric.
     """
-    if graph.name.startswith("METRIC_") or any(
+    if graph.name.startswith(_METRIC_PREFIX) or any(
         registered.name == graph.name for registered in registered_graphs
     ):
         return graph.name
-    return f"METRIC_{graph.name}"
+    return f"{_METRIC_PREFIX}{graph.name}"
+
+
+def graph_request_of(graph_id: str) -> GraphRequest:
+    if graph_id.startswith(_METRIC_PREFIX):
+        return RequestedMetric(MetricName(graph_id.removeprefix(_METRIC_PREFIX)))
+    return RequestedGraph(graph_id)
 
 
 def consolidation_function_of(options: Mapping[str, object]) -> ConsolidationFunction:

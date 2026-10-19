@@ -40,6 +40,7 @@ from ._graph_dispatch import (
     edge_neighbours_at_served_step_of,
     EvaluatedGraphs,
     FetchDataWithDiagnosticsProtocol,
+    graph_request_of,
     GraphDispatcher,
     legacy_graph_id,
 )
@@ -173,7 +174,9 @@ def build_template_graphs(
         kind=TEMPLATE_KIND,
         registered_graphs=registered_graphs,
         registered_metrics=registered_metrics,
-        graph_name=specification.graph_id,
+        request=(
+            None if specification.graph_id is None else graph_request_of(specification.graph_id)
+        ),
     )
     for graph in graphs:
         _assert_uniform_unit(graph)

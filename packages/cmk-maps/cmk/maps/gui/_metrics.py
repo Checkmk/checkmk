@@ -47,6 +47,7 @@ from cmk.graphing_engine import (
     MetricName,
     MetricProtocol,
     parse_unit,
+    RequestedGraph,
     RRDMetric,
     Service,
     SiteID,
@@ -353,7 +354,7 @@ def _matched_graphs(
         kind=_GRAPH_KIND,
         registered_graphs=[plugin],
         registered_metrics=engine.registered_metric_plugins,
-        graph_name=plugin.name,
+        request=RequestedGraph(plugin.name),
     )
 
 

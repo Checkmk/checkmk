@@ -26,7 +26,6 @@ seccomp !chroot
 # Disable potentially dangerous features
 nodvd
 nosound
-no3d
 notv
 nou2f
 novideo

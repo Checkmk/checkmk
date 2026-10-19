@@ -18,7 +18,6 @@ from cmk.graphing_engine._data._units import CurveAttributes
 from cmk.graphing_engine._plugins._quantities import (
     attributes_of_quantity,
     parse_quantity,
-    QuantityContext,
     scalar_kind_of,
 )
 from cmk.graphing_engine._plugins._types import (
@@ -92,14 +91,12 @@ type _ApiFocusBound = (
 _NO_TIME_SERIES: Final = TimeRange(start=0, end=0, step=0)
 
 
-def _value_of(
-    quantity: ApiQuantity, quantity_context: QuantityContext, context: EvaluationContext
-) -> float | None:
-    return first_value(context.evaluate(parse_quantity(quantity, quantity_context)))
+def _value_of(quantity: ApiQuantity, service: Service, context: EvaluationContext) -> float | None:
+    return first_value(context.evaluate(parse_quantity(quantity, service)))
 
 
 def _evaluate_focus_bound(
-    bound: _ApiFocusBound, quantity_context: QuantityContext, context: EvaluationContext
+    bound: _ApiFocusBound, service: Service, context: EvaluationContext
 ) -> EvaluatedFocusBound | None:
     match bound:
         case perfometers_v1.Closed() | perfometers_v2_unstable.Closed():
@@ -110,27 +107,30 @@ def _evaluate_focus_bound(
             assert_never(bound)
     if isinstance(bound.value, int | float):
         return EvaluatedFocusBound(bound_kind=bound_kind, value=float(bound.value))
-    if (value := _value_of(bound.value, quantity_context, context)) is None:
+    if (value := _value_of(bound.value, service, context)) is None:
         return None
     return EvaluatedFocusBound(bound_kind=bound_kind, value=value)
 
 
 def _evaluate_bar(
     bar: ApiPerfometerBar,
-    quantity_context: QuantityContext,
+    service: Service,
+    localizer: Callable[[str], str],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
     context: EvaluationContext,
 ) -> EvaluatedPerfometer | None:
-    lower = _evaluate_focus_bound(bar.focus_range.lower, quantity_context, context)
-    upper = _evaluate_focus_bound(bar.focus_range.upper, quantity_context, context)
+    lower = _evaluate_focus_bound(bar.focus_range.lower, service, context)
+    upper = _evaluate_focus_bound(bar.focus_range.upper, service, context)
     if lower is None or upper is None:
         return None
     segments = []
     for segment in bar.segments:
-        if (value := _value_of(segment, quantity_context, context)) is None:
+        if (value := _value_of(segment, service, context)) is None:
             return None
         segments.append(
             EvaluatedSegment(
-                value=value, attributes=attributes_of_quantity(segment, quantity_context)
+                value=value,
+                attributes=attributes_of_quantity(segment, localizer, registered_metrics),
             )
         )
     if not segments:
@@ -144,21 +144,23 @@ def _evaluate_bar(
 
 def _evaluate_plugin(
     plugin: ApiPerfometer,
-    quantity_context: QuantityContext,
+    service: Service,
+    localizer: Callable[[str], str],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
     context: EvaluationContext,
 ) -> EvaluatedPerfometerLayout | None:
     match plugin:
         case perfometers_v1.Perfometer() | perfometers_v2_unstable.Perfometer():
-            return _evaluate_bar(plugin, quantity_context, context)
+            return _evaluate_bar(plugin, service, localizer, registered_metrics, context)
         case perfometers_v1.Bidirectional() | perfometers_v2_unstable.Bidirectional():
-            left = _evaluate_bar(plugin.left, quantity_context, context)
-            right = _evaluate_bar(plugin.right, quantity_context, context)
+            left = _evaluate_bar(plugin.left, service, localizer, registered_metrics, context)
+            right = _evaluate_bar(plugin.right, service, localizer, registered_metrics, context)
             if left is None or right is None:
                 return None
             return EvaluatedBidirectional(name=plugin.name, left=left, right=right)
         case perfometers_v1.Stacked() | perfometers_v2_unstable.Stacked():
-            lower = _evaluate_bar(plugin.lower, quantity_context, context)
-            upper = _evaluate_bar(plugin.upper, quantity_context, context)
+            lower = _evaluate_bar(plugin.lower, service, localizer, registered_metrics, context)
+            upper = _evaluate_bar(plugin.upper, service, localizer, registered_metrics, context)
             if lower is None or upper is None:
                 return None
             return EvaluatedStacked(name=plugin.name, lower=lower, upper=upper)
@@ -236,9 +238,9 @@ def evaluate_perfometer(
         return None
     return _evaluate_plugin(
         plugin,
-        QuantityContext(
-            service=service, localizer=localizer, registered_metrics=registered_metrics
-        ),
+        service,
+        localizer,
+        registered_metrics,
         EvaluationContext(
             time_range=_NO_TIME_SERIES,
             fetched={

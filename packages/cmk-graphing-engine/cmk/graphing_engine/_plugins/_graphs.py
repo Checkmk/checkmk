@@ -15,7 +15,7 @@ from cmk.graphing_engine._graphs._graph import Bound, Curve, Graph, Line, Minima
 from cmk.graphing_engine._quantities._quantity import QuantityProtocol
 from cmk.graphing_engine._rrd._naming import Service
 
-from ._quantities import attributes_of_quantity, parse_quantity, QuantityContext
+from ._quantities import attributes_of_quantity, parse_quantity
 from ._types import ApiGraph, ApiQuantity, is_scalar, metric_names_in_quantity
 
 
@@ -37,37 +37,34 @@ class _ParseContext:
     localizer: Callable[[str], str]
     registered_metrics: Mapping[str, metrics_v1.Metric]
 
-    def _of(self, service: Service) -> QuantityContext:
-        return QuantityContext(service, self.localizer, self.registered_metrics)
-
-    def single_object(self) -> QuantityContext | None:
+    def single_object(self) -> Service | None:
         # A rule names one object's thresholds; over several matched ones there is none to name them
         # against, so no rule is built.
-        return self._of(self.services[0]) if len(self.services) == 1 else None
+        return self.services[0] if len(self.services) == 1 else None
 
-    def object_for(self, bound: ApiQuantity) -> QuantityContext | None:
+    def object_for(self, bound: ApiQuantity) -> Service | None:
         # A bound naming a metric is read from one object; over several matched ones there is none, so
         # that end is left to auto-scale. A bound of constants alone is read without one.
         if any(metric_names_in_quantity(bound)):
             return self.single_object()
-        return self._of(self.services[0])
+        return self.services[0]
 
     def attributes(self, quantity: ApiQuantity) -> CurveAttributes:
-        return attributes_of_quantity(quantity, self._of(self.services[0]))
+        return attributes_of_quantity(quantity, self.localizer, self.registered_metrics)
 
     def drawn(self, quantity: ApiQuantity) -> QuantityProtocol:
         # Built once per matched object and combined, so an operation only ever takes that object's
         # operands - never a quantity spanning the objects, which cannot be an operand.
         return self.quantity_builder(
-            [parse_quantity(quantity, self._of(service)) for service in self.services]
+            [parse_quantity(quantity, service) for service in self.services]
         )
 
 
 def _parse_bound(bound: int | float | ApiQuantity, context: _ParseContext) -> Bound | None:
     if isinstance(bound, int | float):
         return bound
-    object_context = context.object_for(bound)
-    return None if object_context is None else parse_quantity(bound, object_context)
+    service = context.object_for(bound)
+    return None if service is None else parse_quantity(bound, service)
 
 
 def _parse_range(

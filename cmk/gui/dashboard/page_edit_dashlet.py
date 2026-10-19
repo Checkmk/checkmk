@@ -48,6 +48,16 @@ DashletInputFunc = Callable[[DashletConfig], None]
 DashletHandleInputFunc = Callable[[DashletId, DashletConfig, DashletConfig], DashletConfig]
 
 
+def _keys_not_managed_by_editor(dashlet_spec: DashletConfig) -> DashletConfig:
+    return DashletConfig(
+        {
+            "type": dashlet_spec["type"],
+            "size": dashlet_spec["size"],
+            "position": dashlet_spec["position"],
+        }
+    )
+
+
 class EditDashletPage(Page):
     def __init__(self) -> None:
         if not user.may("general.edit_dashboards"):
@@ -167,14 +177,7 @@ class EditDashletPage(Page):
 
         if request.var("_save") and transactions.transaction_valid():
             try:
-                # Take over keys not managed by the edit dialog
-                new_dashlet_spec = DashletConfig(
-                    {
-                        "type": dashlet_spec["type"],
-                        "size": dashlet_spec["size"],
-                        "position": dashlet_spec["position"],
-                    }
-                )
+                new_dashlet_spec = _keys_not_managed_by_editor(dashlet_spec)
 
                 general_properties = vs_general.from_html_vars("general")
                 vs_general.validate_value(general_properties, "general")

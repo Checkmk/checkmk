@@ -6,11 +6,10 @@
 import enum
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import assert_never
+from typing import assert_never, Final
 
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers as perfometers_v1
-from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
 
 from ._api_plugins import (
@@ -19,20 +18,20 @@ from ._api_plugins import (
     ApiQuantity,
     ApiScalar,
     metric_names_in_quantity,
-    operands_of,
     quantities_of_perfometer,
     scalars_in_quantity,
 )
-from ._fetched import PerformanceData, value_of
+from ._fetched import FetchedData, PerformanceData, value_of
 from ._naming import MetricName, Service
-from ._operations import (
-    op_difference,
-    op_fraction,
-    op_product,
-    op_sum,
-    Operator,
+from ._quantities import rrd_metric_of
+from ._quantity import EvaluationContext, first_value
+from ._quantity_from_api import (
+    attributes_of_quantity,
+    parse_quantity,
+    QuantityContext,
+    scalar_kind_of,
 )
-from ._quantity_from_api import attributes_of_quantity, QuantityContext, scalar_kind_of
+from ._timeseries import TimeRange
 from ._units import CurveAttributes
 
 
@@ -90,73 +89,17 @@ type _ApiFocusBound = (
 )
 
 
-@dataclass(frozen=True)
-class _Value:
-    value: float | None
-
-
-type _ApiOperation = (
-    metrics_v1.Sum | metrics_v1.Product | metrics_v1.Difference | metrics_v1.Fraction
-)
-
-
-def _operator_of(operation: _ApiOperation) -> Operator:
-    match operation:
-        case metrics_v1.Sum():
-            return op_sum
-        case metrics_v1.Product():
-            return op_product
-        case metrics_v1.Difference():
-            return op_difference
-        case metrics_v1.Fraction():
-            return op_fraction
-        case _:
-            assert_never(operation)
+_NO_TIME_SERIES: Final = TimeRange(start=0, end=0, step=0)
 
 
 def _value_of(
-    quantity: ApiQuantity, performance_data: Mapping[MetricName, PerformanceData]
-) -> _Value | None:
-    match quantity:
-        case str():
-            data = performance_data.get(MetricName(quantity))
-            return None if data is None or data.value is None else _Value(data.value)
-        case metrics_v1.Constant():
-            return _Value(float(quantity.value))
-        case (
-            metrics_v2_unstable.LowerWarningOf()
-            | metrics_v2_unstable.LowerCriticalOf()
-            | metrics_v1.WarningOf()
-            | metrics_v1.CriticalOf()
-            | metrics_v1.MinimumOf()
-            | metrics_v1.MaximumOf()
-        ):
-            data = performance_data.get(MetricName(quantity.metric_name))
-            return None if data is None else _Value(value_of(data, scalar_kind_of(quantity)))
-        case (
-            metrics_v1.Sum()
-            | metrics_v1.Product()
-            | metrics_v1.Difference()
-            | metrics_v1.Fraction()
-        ):
-            operands = [_value_of(operand, performance_data) for operand in operands_of(quantity)]
-            present = [operand.value for operand in operands if operand is not None]
-            if not operands or len(present) != len(operands):
-                return None
-            return _Value(_operator_of(quantity)(present))
-        case _:
-            assert_never(quantity)
-
-
-def _value_of_quantity(
-    quantity: ApiQuantity, performance_data: Mapping[MetricName, PerformanceData]
+    quantity: ApiQuantity, quantity_context: QuantityContext, context: EvaluationContext
 ) -> float | None:
-    evaluated = _value_of(quantity, performance_data)
-    return None if evaluated is None else evaluated.value
+    return first_value(context.evaluate(parse_quantity(quantity, quantity_context)))
 
 
 def _evaluate_focus_bound(
-    bound: _ApiFocusBound, performance_data: Mapping[MetricName, PerformanceData]
+    bound: _ApiFocusBound, quantity_context: QuantityContext, context: EvaluationContext
 ) -> EvaluatedFocusBound | None:
     match bound:
         case perfometers_v1.Closed() | perfometers_v2_unstable.Closed():
@@ -167,26 +110,28 @@ def _evaluate_focus_bound(
             assert_never(bound)
     if isinstance(bound.value, int | float):
         return EvaluatedFocusBound(bound_kind=bound_kind, value=float(bound.value))
-    if (value := _value_of_quantity(bound.value, performance_data)) is None:
+    if (value := _value_of(bound.value, quantity_context, context)) is None:
         return None
     return EvaluatedFocusBound(bound_kind=bound_kind, value=value)
 
 
 def _evaluate_bar(
     bar: ApiPerfometerBar,
-    display: QuantityContext,
-    performance_data: Mapping[MetricName, PerformanceData],
+    quantity_context: QuantityContext,
+    context: EvaluationContext,
 ) -> EvaluatedPerfometer | None:
-    lower = _evaluate_focus_bound(bar.focus_range.lower, performance_data)
-    upper = _evaluate_focus_bound(bar.focus_range.upper, performance_data)
+    lower = _evaluate_focus_bound(bar.focus_range.lower, quantity_context, context)
+    upper = _evaluate_focus_bound(bar.focus_range.upper, quantity_context, context)
     if lower is None or upper is None:
         return None
     segments = []
     for segment in bar.segments:
-        if (value := _value_of_quantity(segment, performance_data)) is None:
+        if (value := _value_of(segment, quantity_context, context)) is None:
             return None
         segments.append(
-            EvaluatedSegment(value=value, attributes=attributes_of_quantity(segment, display))
+            EvaluatedSegment(
+                value=value, attributes=attributes_of_quantity(segment, quantity_context)
+            )
         )
     if not segments:
         return None
@@ -199,21 +144,21 @@ def _evaluate_bar(
 
 def _evaluate_plugin(
     plugin: ApiPerfometer,
-    display: QuantityContext,
-    performance_data: Mapping[MetricName, PerformanceData],
+    quantity_context: QuantityContext,
+    context: EvaluationContext,
 ) -> EvaluatedPerfometerLayout | None:
     match plugin:
         case perfometers_v1.Perfometer() | perfometers_v2_unstable.Perfometer():
-            return _evaluate_bar(plugin, display, performance_data)
+            return _evaluate_bar(plugin, quantity_context, context)
         case perfometers_v1.Bidirectional() | perfometers_v2_unstable.Bidirectional():
-            left = _evaluate_bar(plugin.left, display, performance_data)
-            right = _evaluate_bar(plugin.right, display, performance_data)
+            left = _evaluate_bar(plugin.left, quantity_context, context)
+            right = _evaluate_bar(plugin.right, quantity_context, context)
             if left is None or right is None:
                 return None
             return EvaluatedBidirectional(name=plugin.name, left=left, right=right)
         case perfometers_v1.Stacked() | perfometers_v2_unstable.Stacked():
-            lower = _evaluate_bar(plugin.lower, display, performance_data)
-            upper = _evaluate_bar(plugin.upper, display, performance_data)
+            lower = _evaluate_bar(plugin.lower, quantity_context, context)
+            upper = _evaluate_bar(plugin.upper, quantity_context, context)
             if lower is None or upper is None:
                 return None
             return EvaluatedStacked(name=plugin.name, lower=lower, upper=upper)
@@ -294,5 +239,13 @@ def evaluate_perfometer(
         QuantityContext(
             service=service, localizer=localizer, registered_metrics=registered_metrics
         ),
-        performance_data,
+        EvaluationContext(
+            time_range=_NO_TIME_SERIES,
+            fetched={
+                rrd_metric_of(service, metric_name): [
+                    FetchedData(performance_data=data, time_series=None)
+                ]
+                for metric_name, data in performance_data.items()
+            },
+        ),
     )

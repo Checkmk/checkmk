@@ -208,7 +208,7 @@ class NagVisMaps(SidebarSnapin):
         return title
 
     def _show_footnote_links(self) -> None:
-        footnotelinks([(_("Edit"), _nagvis_page_url(_NAGVIS_URL_PREFIX))])
+        footnotelinks([(_("Edit"), _nagvis_page_url(_NAGVIS_URL_PREFIX)), _deprecation_note()])
 
     def _show_tree(self, api_request: Mapping[str, Any]) -> None:
         html.open_ul()

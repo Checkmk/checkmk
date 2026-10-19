@@ -71,6 +71,11 @@ def test_add_nagvis_snapin(dashboard_page: MainDashboard) -> None:
         snapin.error_message, message="Nagvis error message is visible, but should not be"
     ).not_to_be_visible()
 
+    expect(
+        snapin.get_button("Deprecated, see Werk #22512"),
+        message="Nagvis deprecation note is not visible",
+    ).to_be_visible()
+
     # Check that the nagvis snapin edit button is visible and clickable
     nagvis_maps_edit_button = snapin.get_button("Edit")
     expect(nagvis_maps_edit_button, message="Nagvis 'Edit' button is not visible").to_be_visible()

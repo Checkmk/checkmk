@@ -9,8 +9,10 @@ import pytest
 
 from cmk.gui.wato._check_mk_configuration import (
     _migrate_piggybacked_host_files,
+    ConfigVariableTrustedCertificateAuthorities,
     Snmpv3Contexts,
 )
+from cmk.gui.watolib.config_domains import ConfigDomainCACertificates, ConfigDomainCore
 
 
 @pytest.mark.parametrize(
@@ -152,3 +154,11 @@ def test_snmpv3_contexts_rule_moves_the_default_context_first() -> None:
     )
 
     assert rule_value == (None, ["", "vrf1", "mgmt"], "stop_on_timeout")
+
+
+def test_trusted_cas_change_activates_the_core() -> None:
+    """The core snapshots the trusted CA bundle into every helper config serial, and relays
+    receive that serial. Without a core activation a new CA never reaches them."""
+    domain_idents = [d.ident() for d in ConfigVariableTrustedCertificateAuthorities.all_domains()]
+    assert domain_idents[0] == ConfigDomainCACertificates.ident()
+    assert ConfigDomainCore.ident() in domain_idents

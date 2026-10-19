@@ -1846,6 +1846,8 @@ ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
     ),
 )
 
+ConfigVariableTrustedCertificateAuthorities.add_config_domain_affected_by_change(ConfigDomainCore)
+
 ConfigVariableSiteSubjectAlternativeNames = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainSiteCertificate,

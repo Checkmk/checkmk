@@ -26,6 +26,10 @@ pub const CONFIG_FILE: &str = "cmk-agent-ctl.toml";
 // bakery plugins cannot write one file.
 pub const UPDATER_CONFIG_FILE: &str = "cmk-agent-ctl-update.toml";
 pub const UPDATER_STATE_FILE: &str = "agent-update-state.json";
+/// The outcome of one run of the privileged install step, written by it and
+/// read by the controller. Linux only: no other platform has that step.
+#[cfg(unix)]
+pub const INSTALL_RESULT_FILE: &str = "agent-install-result.json";
 /// Directory holding a verified agent package until the installer has taken it.
 pub const UPDATER_PACKAGE_DIR: &str = "update";
 #[cfg(unix)]

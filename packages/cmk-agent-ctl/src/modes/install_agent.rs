@@ -11,13 +11,15 @@
 //! package against the trust anchors of the update configuration that
 //! `CMK_AGENT_CTL_UPDATE_CONFIG` names, and hands it to `dpkg` or `rpm`.
 //!
-//! Still missing: the `InstallResult` answer. Until then the outcome of a run
-//! reaches the journal of the unit instance and the exit code, and the
-//! controller settles it by comparing hashes on its next cycle.
+//! What a run made of the package goes into the install result file of the
+//! controller, next to the journal of the unit instance and the exit code.
+//! Still missing: sending the same result back over the connection. Until
+//! then the controller reads the file, or settles the outcome by comparing
+//! hashes on a later cycle.
 
 use crate::constants;
 use crate::types::AgentHash;
-use crate::updater::{InstallRequest, TrustAnchors};
+use crate::updater::{InstallRequest, InstallResult, TrustAnchors};
 use anyhow::{bail, Context, Result as AnyhowResult};
 use nix::fcntl::{fcntl, FcntlArg, SealFlag};
 use nix::sys::memfd::{memfd_create, MemFdCreateFlag};
@@ -34,6 +36,10 @@ use std::process::{Command, Output, Stdio};
 /// file is written by the agent user and root reads all of it into memory to
 /// verify its signature.
 const MAX_PACKAGE_BYTES: u64 = 128 * 1024 * 1024;
+
+/// Permissions of the install result: root writes it, the controller reads it
+/// as the agent user.
+const RESULT_FILE_MODE: u32 = 0o644;
 
 /// The package managers an agent package can be installed with.
 ///
@@ -84,6 +90,10 @@ impl PackageManager {
 struct AcceptedPackage {
     path: PathBuf,
     manager: PackageManager,
+
+    /// Hash of the package, read off its file name, which the result carries
+    /// back to the controller.
+    hash: AgentHash,
 }
 
 impl AcceptedPackage {
@@ -107,10 +117,15 @@ impl AcceptedPackage {
             .file_stem()
             .and_then(|stem| stem.to_str())
             .with_context(|| format!("The package {path:?} has no file name"))?;
-        hash.parse::<AgentHash>()
+        let hash = hash
+            .parse::<AgentHash>()
             .with_context(|| format!("The package {path:?} is not named after an agent hash"))?;
         let manager = PackageManager::of(&path)?;
-        Ok(AcceptedPackage { path, manager })
+        Ok(AcceptedPackage {
+            path,
+            manager,
+            hash,
+        })
     }
 
     /// Read this package and check it against `anchors`.
@@ -252,26 +267,127 @@ impl VerifiedPackage {
 /// # Arguments
 ///
 /// * `package_dir` - the download directory the package has to lie in
+/// * `result_path` - where the outcome is written for the controller
 ///
 /// # Errors
 ///
 /// If the request cannot be read, if the update configuration cannot be found,
 /// if the package is refused, or if the package manager fails. The error
 /// carries what the package manager said, because that is the only diagnostic
-/// an operator gets.
-pub fn install_agent(package_dir: &Path) -> AnyhowResult<()> {
+/// an operator gets. A result that cannot be written is not one of them: the
+/// installation has happened either way.
+pub fn install_agent(package_dir: &Path, result_path: &Path) -> AnyhowResult<()> {
     let request = InstallRequest::read(std::io::stdin().lock())?;
     log::info!(
         "Install request for {:?}, carrying {} signature(s)",
         request.package,
         request.signatures.len()
     );
-    let anchors = TrustAnchors::load(&update_config_path()?)?;
+    let config_path = update_config_path()?;
     let accepted = AcceptedPackage::accept(&request.package, package_dir)?;
-    let package = accepted.verify(&anchors, &request.signatures)?;
+    install_and_report(accepted, &config_path, &request.signatures, result_path)
+}
+
+/// Install `accepted` and write what became of it to `result_path`.
+///
+/// Everything an [`InstallResult`] can report happens from here on: a package
+/// the anchors refuse and a package manager that failed are outcomes the
+/// controller has to tell apart, and both differ from a step that never ran.
+/// What comes before, in [`install_agent`], stays unreported, because the
+/// result is keyed by a hash that only an accepted package has.
+///
+/// # Arguments
+///
+/// * `accepted` - the package, consumed because only a verified one goes on
+/// * `config_path` - the root-owned update configuration named by the unit
+/// * `signatures` - the signatures the request carried
+/// * `result_path` - where the outcome is written for the controller
+///
+/// # Errors
+///
+/// Whatever [`verify_and_run`] failed with, reported before it is returned.
+fn install_and_report(
+    accepted: AcceptedPackage,
+    config_path: &Path,
+    signatures: &[crate::agent_receiver_api::AgentSignature],
+    result_path: &Path,
+) -> AnyhowResult<()> {
+    let hash = accepted.hash.clone();
+    let outcome = verify_and_run(accepted, config_path, signatures);
+    report_result(result_path, &InstallResult::of(hash, &outcome, now()));
+    outcome
+}
+
+/// Verify `accepted` against the anchors of `config_path` and install it.
+///
+/// # Arguments
+///
+/// * `accepted` - the package, consumed because only a verified one goes on
+/// * `config_path` - the root-owned update configuration named by the unit
+/// * `signatures` - the signatures the request carried
+///
+/// # Errors
+///
+/// If the anchors cannot be loaded, if none of them covers the package, or if
+/// the package manager fails.
+fn verify_and_run(
+    accepted: AcceptedPackage,
+    config_path: &Path,
+    signatures: &[crate::agent_receiver_api::AgentSignature],
+) -> AnyhowResult<()> {
+    let anchors = TrustAnchors::load(config_path)?;
+    let package = accepted.verify(&anchors, signatures)?;
     let outcome = run_package_manager(&package);
     remove_package(&package.path);
     outcome
+}
+
+/// Unix time in seconds, for the timestamp of the result.
+///
+/// A clock that stands before the epoch counts as zero. The installation has
+/// happened, and the controller compares hashes rather than timestamps.
+fn now() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |since| since.as_secs())
+}
+
+/// Write `result` where the controller looks for it, and keep going when that
+/// fails: the package manager has run either way, and a later cycle settles
+/// the outcome by comparing hashes.
+fn report_result(path: &Path, result: &InstallResult) {
+    match write_result(path, result) {
+        Ok(()) => log::info!("Wrote the install result to {path:?}"),
+        Err(error) => log::warn!("Could not write the install result to {path:?}: {error:#}"),
+    }
+}
+
+/// Write `result` to `path` through a new temporary file and a rename.
+///
+/// The directory belongs to the agent user, who can plant anything where root
+/// is about to write. `create_new` opens no file that exists, a symlink
+/// included, so the write lands in a file of this run; the random name keeps a
+/// planted one from failing every later run, and the rename replaces what sits
+/// at `path` instead of following it.
+///
+/// # Errors
+///
+/// If the temporary file cannot be created or written, or not be moved into
+/// place. Nothing of it stays behind in that case.
+fn write_result(path: &Path, result: &InstallResult) -> AnyhowResult<()> {
+    let temporary = path.with_extension(format!("{:016x}.tmp", rand::random::<u64>()));
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(RESULT_FILE_MODE)
+        .open(&temporary)
+        .with_context(|| format!("Cannot create {temporary:?}"))?;
+    file.write_all(&serde_json::to_vec_pretty(result)?)
+        .and_then(|()| std::fs::rename(&temporary, path))
+        .inspect_err(|_| {
+            let _ = std::fs::remove_file(&temporary);
+        })
+        .with_context(|| format!("Cannot write the install result to {path:?}"))
 }
 
 /// The update configuration the installer unit named.
@@ -567,6 +683,90 @@ mod tests {
             std::fs::read(package.install_path()).unwrap(),
             b"package",
             "the sealed copy is what gets installed"
+        );
+    }
+
+    /// A refusal is an outcome of its own: the controller has to tell it from
+    /// an install step that never ran, so the result carries it.
+    #[test]
+    fn test_a_refused_package_is_reported() {
+        let dir = package_dir(&format!("{HASH}.deb"));
+        let accepted =
+            AcceptedPackage::accept(&dir.path().join(format!("{HASH}.deb")), dir.path()).unwrap();
+        let result_path = dir.path().join("agent-install-result.json");
+
+        let outcome =
+            install_and_report(accepted, &dir.path().join("absent.toml"), &[], &result_path);
+
+        assert!(outcome.is_err());
+        let result: InstallResult =
+            serde_json::from_slice(&std::fs::read(&result_path).unwrap()).unwrap();
+        assert_eq!(result.aghash, HASH.parse().unwrap());
+        assert!(!result.success);
+        assert!(result.error.unwrap().contains("No updater configuration"));
+    }
+
+    fn a_result() -> InstallResult {
+        InstallResult {
+            aghash: HASH.parse().unwrap(),
+            success: true,
+            error: None,
+            finished: 1_760_000_000,
+        }
+    }
+
+    /// What the controller finds afterwards: the result, and nothing of the
+    /// temporary file the write went through.
+    #[test]
+    fn test_write_the_install_result() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let path = dir.path().join("agent-install-result.json");
+
+        write_result(&path, &a_result()).unwrap();
+
+        assert_eq!(
+            serde_json::from_slice::<InstallResult>(&std::fs::read(&path).unwrap()).unwrap(),
+            a_result()
+        );
+        assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 1);
+    }
+
+    /// The directory belongs to the agent user, who can point the result at a
+    /// file root would then overwrite. The link is replaced, not followed.
+    #[test]
+    fn test_a_link_at_the_install_result_is_replaced() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let elsewhere = dir.path().join("elsewhere");
+        std::fs::write(&elsewhere, b"untouched").unwrap();
+        let path = dir.path().join("agent-install-result.json");
+        std::os::unix::fs::symlink(&elsewhere, &path).unwrap();
+
+        write_result(&path, &a_result()).unwrap();
+
+        assert_eq!(std::fs::read(&elsewhere).unwrap(), b"untouched");
+        assert!(!std::fs::symlink_metadata(&path)
+            .unwrap()
+            .file_type()
+            .is_symlink());
+    }
+
+    /// One file, holding the last run's outcome.
+    #[test]
+    fn test_the_install_result_replaces_the_one_before() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let path = dir.path().join("agent-install-result.json");
+        write_result(&path, &a_result()).unwrap();
+        let failed = InstallResult {
+            success: false,
+            error: Some(String::from("Installing failed: exit status: 1")),
+            ..a_result()
+        };
+
+        write_result(&path, &failed).unwrap();
+
+        assert_eq!(
+            serde_json::from_slice::<InstallResult>(&std::fs::read(&path).unwrap()).unwrap(),
+            failed
         );
     }
 

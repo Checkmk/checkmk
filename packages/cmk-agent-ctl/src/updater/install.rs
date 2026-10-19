@@ -12,6 +12,7 @@
 use super::backend::UpdaterConfig;
 use super::verification;
 use crate::agent_receiver_api::AgentSignature;
+use crate::types::AgentHash;
 use anyhow::{bail, Context, Result as AnyhowResult};
 use serde::{Deserialize, Serialize};
 use std::io::Read;
@@ -125,6 +126,49 @@ pub fn hand_over(socket: &Path, request: &InstallRequest) -> AnyhowResult<()> {
         );
     }
     Ok(())
+}
+
+/// What the privileged install step made of the package it was handed.
+///
+/// The step writes it where the controller looks for it, because installing
+/// an agent restarts the controller: the run that asked is usually gone
+/// before the step is over, and a later one reads the file instead.
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+pub struct InstallResult {
+    /// Hash of the package, taken from its file name.
+    pub aghash: AgentHash,
+
+    /// Whether the package manager succeeded.
+    pub success: bool,
+
+    /// Why it did not, absent on success.
+    pub error: Option<String>,
+
+    /// Unix time in seconds at which the step ended.
+    pub finished: u64,
+}
+
+impl InstallResult {
+    /// The result of an install step of `aghash` that ended with `outcome`.
+    ///
+    /// Pure: the clock belongs to the caller, so this says what is written and
+    /// nothing else, and a test needs no clock to pin it.
+    ///
+    /// # Arguments
+    ///
+    /// * `aghash` - hash of the package the step worked on
+    /// * `outcome` - what the step returned
+    /// * `finished` - Unix time in seconds at which it returned
+    pub fn of(aghash: AgentHash, outcome: &AnyhowResult<()>, finished: u64) -> InstallResult {
+        InstallResult {
+            aghash,
+            success: outcome.is_ok(),
+            // `{:#}` carries the context chain, which is where the reason is:
+            // the error itself names the package manager, not what it said.
+            error: outcome.as_ref().err().map(|error| format!("{error:#}")),
+            finished,
+        }
+    }
 }
 
 /// The certificates the privileged install step accepts a package under.
@@ -356,6 +400,36 @@ mod tests {
         let (socket, _installer) = installer_listening(&dir, b"{\"success\": true}\n");
 
         assert!(hand_over(&socket, &an_install_request()).is_ok());
+    }
+
+    const FINISHED: u64 = 1_760_000_000;
+
+    #[test]
+    fn test_the_result_of_an_install_that_worked() {
+        assert_eq!(
+            InstallResult::of("0123456789abcdef".parse().unwrap(), &Ok(()), FINISHED),
+            InstallResult {
+                aghash: "0123456789abcdef".parse().unwrap(),
+                success: true,
+                error: None,
+                finished: FINISHED,
+            }
+        );
+    }
+
+    /// The controller shows this text to an operator, so it carries the whole
+    /// chain and not only the outermost error.
+    #[test]
+    fn test_the_result_of_an_install_that_failed() {
+        let outcome = Err(anyhow::anyhow!("exit status: 1").context("Installing failed"));
+
+        let result = InstallResult::of("0123456789abcdef".parse().unwrap(), &outcome, FINISHED);
+
+        assert!(!result.success);
+        assert_eq!(
+            result.error,
+            Some(String::from("Installing failed: exit status: 1"))
+        );
     }
 
     /// A host whose installer unit is not there: the package was spooled, and

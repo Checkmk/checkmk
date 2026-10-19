@@ -46,7 +46,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
     // works on the agent package alone.
     #[cfg(unix)]
     if let cli::Mode::InstallAgent = cli.mode {
-        return install_agent(&paths.updater_package_dir);
+        return install_agent(&paths.updater_package_dir, &paths.install_result_path);
     }
 
     configuration::migrate::migrate_registered_connections(&paths.registry_path)?;

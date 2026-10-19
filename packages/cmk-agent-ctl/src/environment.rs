@@ -39,6 +39,11 @@ pub struct PathResolver {
     /// Holds a verified agent package until the installer has taken it. Written
     /// by the controller, read by the privileged installer.
     pub updater_package_dir: PathBuf,
+
+    /// What the privileged install step made of the package it was handed.
+    /// Written by that step as root, read by the controller. Linux only.
+    #[cfg(unix)]
+    pub install_result_path: PathBuf,
 }
 
 impl PathResolver {
@@ -78,6 +83,8 @@ impl PathResolver {
             // `$MK_LIBDIR/update` on Windows: `MK_LIBDIR` is the agent's user
             // directory (`agents/wnx/src/engine/cfg.cpp`), which is `home_dir`.
             updater_package_dir: home_dir.join(constants::UPDATER_PACKAGE_DIR),
+            #[cfg(unix)]
+            install_result_path: home_dir.join(constants::INSTALL_RESULT_FILE),
         }
     }
 
@@ -98,6 +105,7 @@ impl PathResolver {
             updater_state_path: runtime_dir.join(constants::UPDATER_STATE_FILE),
             agent_info_path: agent_dir.join(constants::AGENT_INFO_FILE),
             updater_package_dir: runtime_dir.join(constants::UPDATER_PACKAGE_DIR),
+            install_result_path: runtime_dir.join(constants::INSTALL_RESULT_FILE),
         }
     }
 }

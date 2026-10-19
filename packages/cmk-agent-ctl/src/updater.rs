@@ -33,7 +33,7 @@ pub use backend::{
     AgentInfo, CheckOutcome, FetchOutcome, SignatureCheck, UpdateSource, UpdateState, Updater,
     UpdaterConfig,
 };
-pub use install::{InstallRequest, TrustAnchors};
+pub use install::{InstallRequest, InstallResult, TrustAnchors};
 
 #[cfg(windows)]
 mod platform;

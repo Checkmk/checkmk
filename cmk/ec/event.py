@@ -16,6 +16,9 @@ from dateutil.tz import tzlocal
 
 from livestatus import SiteId
 
+from cmk.ccc.exceptions import MKTimeout
+
+import cmk.utils.translations
 from cmk.utils.hostaddress import HostAddress, HostName
 
 # State transitions (probably incomplete):
@@ -492,3 +495,22 @@ def scrub_string(s: str) -> str:
 
 
 _scrub_string_unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}
+
+
+def translate_event_host(
+    translation: cmk.utils.translations.TranslationOptions,
+    host_name: str,
+    logger: Logger | None = None,
+) -> HostName:
+    """Translates the host name of an event like the Event Console. The translated host name is empty
+    if the translation fails, e.g. because of an invalid regular expression, or if the translated
+    host name is invalid. A given logger logs why.
+    """
+    try:
+        return cmk.utils.translations.translate_hostname(translation, host_name)
+    except MKTimeout:  # e.g. the request timeout of the GUI
+        raise
+    except Exception:
+        if logger:
+            logger.exception('Unable to parse host "%s"', host_name)
+        return HostName("")

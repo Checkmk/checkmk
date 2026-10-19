@@ -27,11 +27,15 @@ from .defaults import default_config as default_config
 from .defaults import default_rule_pack as default_rule_pack
 from .event import Event as Event
 from .event import EventPhase as EventPhase
+from .event import translate_event_host as translate_event_host
 from .mkp import mkp_callbacks as mkp_callbacks
 from .mkp import mkp_rule_pack_dir as mkp_rule_pack_dir
 from .mkp import rule_pack_dir as rule_pack_dir
+from .rule_matcher import compile_active_rule as compile_active_rule
 from .rule_matcher import compile_rule as compile_rule
+from .rule_matcher import match_outcome as match_outcome
 from .rule_matcher import MatchFailure as MatchFailure
+from .rule_matcher import MatchOutcome as MatchOutcome
 from .rule_matcher import MatchResult as MatchResult
 from .rule_matcher import MatchSuccess as MatchSuccess
 from .rule_matcher import RuleMatcher as RuleMatcher

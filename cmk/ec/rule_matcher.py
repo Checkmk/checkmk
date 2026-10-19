@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import enum
 import ipaddress
 import re
 from collections.abc import Callable
@@ -17,7 +18,14 @@ from livestatus import SiteId
 import cmk.utils.regex
 from cmk.utils.timeperiod import TimeperiodName
 
-from .config import MatchGroups, Rule, StatePatterns, TextMatchResult, TextPattern
+from .config import (
+    ECRulePack,
+    MatchGroups,
+    Rule,
+    StatePatterns,
+    TextMatchResult,
+    TextPattern,
+)
 from .event import Event
 
 
@@ -35,6 +43,22 @@ class MatchFailure:
 class MatchSuccess:
     cancelling: bool
     match_groups: MatchGroups
+
+
+class MatchOutcome(enum.Enum):
+    """What the Event Console does with a message when a rule matches it"""
+
+    NEW_EVENT = enum.auto()
+    CANCEL_EVENTS = enum.auto()
+    DROP_MESSAGE = enum.auto()
+    SKIP_PACK = enum.auto()
+
+
+def match_outcome(rule: Rule, result: MatchSuccess) -> MatchOutcome:
+    # Look at the rule type first, even for cancelling matches.
+    if drop := rule.get("drop"):
+        return MatchOutcome.SKIP_PACK if drop == "skip_pack" else MatchOutcome.DROP_MESSAGE
+    return MatchOutcome.CANCEL_EVENTS if result.cancelling else MatchOutcome.NEW_EVENT
 
 
 MatchResult = MatchFailure | MatchSuccess
@@ -121,6 +145,23 @@ def compile_rule(rule: Rule) -> None:
         compile_state_pattern(state_patterns, "1")
         compile_state_pattern(state_patterns, "0")
         rule["state"] = ("text_pattern", state_patterns)
+
+
+def compile_active_rule(rule_pack: ECRulePack, rule: Rule) -> Rule | str:
+    """Returns a compiled copy of the rule like the Event Console applies it, or why it ignores the
+    rule. The Event Console ignores rules which can't be compiled, e.g. because of an invalid regular
+    expression, too: Compiling them raises an exception.
+    """
+    if rule_pack["disabled"]:
+        return "The rule pack is disabled."
+    if rule.get("disabled"):
+        return "The rule is disabled."
+    rule = rule.copy()  # keep original intact because of slave replication
+    # Store information about rule pack right within the rule. This is needed
+    # for debug output and also for skipping rule packs
+    rule["pack"] = rule_pack["id"]
+    compile_rule(rule)
+    return rule
 
 
 def match(pattern: TextPattern | None, text: str, complete: bool) -> TextMatchResult:

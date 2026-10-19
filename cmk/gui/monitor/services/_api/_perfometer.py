@@ -5,10 +5,9 @@
 from collections.abc import Sequence
 from typing import Self
 
+from cmk.graphing_engine import drawn_segments, DrawnSegment
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
-    drawn_segments,
-    DrawnSegment,
     evaluated_perfometer,
     get_temperature_unit,
     perfometer_label,
@@ -85,7 +84,7 @@ class ServicePerfometer:
             return None
 
         return cls._from_bars(
-            drawn_segments(evaluated),
+            drawn_segments(evaluated, logger=logger),
             label=perfometer_label(
                 evaluated,
                 get_temperature_unit(user, active_config.default_temperature_unit),

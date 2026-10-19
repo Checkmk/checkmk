@@ -7,17 +7,15 @@ from collections.abc import Mapping, Sequence
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics as metrics_v1
-from cmk.graphing_engine import ApiPerfometer
+from cmk.graphing_engine import ApiPerfometer, drawn_segments, DrawnSegment, perfometer_sort_value
 from cmk.gui.graphing import (
-    drawn_segments,
-    DrawnSegment,
     evaluated_perfometer,
     perfometer_label,
-    perfometer_sort_value,
     registered_translations,
 )
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.html import HTML
@@ -50,7 +48,7 @@ class Perfometer:
             return None, None
         return (
             perfometer_label(self._evaluated, temperature_unit),
-            _render_metricometer(drawn_segments(self._evaluated), background_color),
+            _render_metricometer(drawn_segments(self._evaluated, logger=logger), background_color),
         )
 
     def sort_value(self) -> tuple[str, float]:

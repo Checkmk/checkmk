@@ -120,11 +120,8 @@ from ._metric_query import (
 from ._metric_spec import registered_metric_ids_and_titles
 from ._metric_visitor import MetricVisitor
 from ._perfometers import (
-    drawn_segments,
-    DrawnSegment,
     evaluated_perfometer,
     perfometer_label,
-    perfometer_sort_value,
 )
 from ._plugin_loading import register_plugins
 from ._plugins import (
@@ -189,8 +186,6 @@ __all__ = [
     "default_time_range_seconds",
     "discover_template_graphs",
     "DiscoveredGraphs",
-    "drawn_segments",
-    "DrawnSegment",
     "empty_graph_spec",
     "EngineDisplayOptions",
     "ensure_type",
@@ -271,7 +266,6 @@ __all__ = [
     "PageVsAutocomplete",
     "parse_graph_specification",
     "perfometer_label",
-    "perfometer_sort_value",
     "perfometers_from_api",
     "prediction_graph_dispatcher",
     "QuantityCodec",

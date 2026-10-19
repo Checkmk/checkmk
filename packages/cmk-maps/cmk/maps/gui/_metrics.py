@@ -41,6 +41,8 @@ from cmk.graphing_engine import (
     ApiGraph,
     ApiPerfometer,
     build_matched_graphs,
+    drawn_segments,
+    DrawnSegment,
     evaluate_graphs,
     FetchedData,
     Graph,
@@ -62,8 +64,6 @@ from cmk.graphing_engine import (
     ServiceName as EngineServiceName,
 )
 from cmk.gui.graphing import (
-    drawn_segments,
-    DrawnSegment,
     evaluated_metrics,
     evaluated_perfometer,
     EvaluatedMetric,
@@ -225,7 +225,7 @@ def _side_payload(
         registered_translations=engine.registered_translations,
         debug=engine.debug,
     )
-    if evaluated is None or not (rows := drawn_segments(evaluated)):
+    if evaluated is None or not (rows := drawn_segments(evaluated, logger=logger)):
         return None
     return PerfometerSide(
         title=_first_segment_title(side, metrics),
@@ -264,7 +264,7 @@ def _perfometer_payload(
         registered_translations=engine.registered_translations,
         debug=engine.debug,
     )
-    if evaluated is None or not (rows := drawn_segments(evaluated)):
+    if evaluated is None or not (rows := drawn_segments(evaluated, logger=logger)):
         return None
 
     # The engine leaves the trailing padding segment colourless; the wire model

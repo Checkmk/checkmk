@@ -85,6 +85,7 @@ from ._perfometers._evaluation import (
     EvaluatedStacked,
     FocusBoundKind,
 )
+from ._perfometers._geometry import drawn_segments, DrawnSegment, perfometer_sort_value
 from ._plugins._display import (
     FALLBACK_UNIT,
     metric_display_attributes,
@@ -155,6 +156,9 @@ from ._rrd._performance_data import (
 from ._rrd._resample import resample
 
 __all__ = [
+    "drawn_segments",
+    "DrawnSegment",
+    "perfometer_sort_value",
     "map_metric_names",
     "mapped_performance_data",
     "reverse_translated_names",

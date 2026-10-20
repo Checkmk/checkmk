@@ -69,7 +69,7 @@ cc_test(
     ]),
     deps = [
         ":livestatus_base",
-        "@googletest//:gtest_main",
+        "@googletest//:gtest",
         "@re2",
     ],
 )

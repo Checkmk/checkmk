@@ -26,6 +26,7 @@ from cmk.graphing_engine import (
     RRDMetric,
     ServiceName,
     sort_registered_graph_plugins,
+    TimeRange,
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
@@ -36,7 +37,6 @@ from ._built_graphs import BuiltGraph, DiscoveredGraphs
 from ._graph_choices import GraphPluginChoice
 from ._graph_codec import GraphCodec
 from ._graph_dispatch import (
-    CommonGraphOptions,
     consolidation_function_of,
     edge_neighbours_at_served_step_of,
     EvaluatedGraphs,
@@ -44,6 +44,7 @@ from ._graph_dispatch import (
     graph_request_of,
     GraphDispatcher,
     legacy_graph_id,
+    time_range_of,
 )
 from ._graph_specification import AnnotatedHostName, GraphSpecification, StoredGraphSpecification
 from ._plugins import registered_graphs, registered_metrics, registered_translations
@@ -196,13 +197,13 @@ def build_template_graphs(
 
 @dataclass(frozen=True)
 class _EvaluateTemplateGraphs:
-    options: CommonGraphOptions
+    time_range: TimeRange
     fetch_data: FetchDataWithDiagnosticsProtocol
 
     @classmethod
     def make(cls, options: Mapping[str, object]) -> Self:
         return cls(
-            CommonGraphOptions.from_request_options(options),
+            time_range_of(options),
             RRDFetchData(
                 debug=active_config.debug,
                 registered_translations=registered_translations(),
@@ -214,7 +215,7 @@ class _EvaluateTemplateGraphs:
     def __call__(self, graph: Graph) -> EvaluatedGraphs:
         return EvaluatedGraphs(
             graphs=evaluate_graphs(
-                time_range=self.options.time_range,
+                time_range=self.time_range,
                 graphs=[graph],
                 fetch_data=self.fetch_data,
             ),

@@ -52,21 +52,12 @@ def consolidation_function_of(options: Mapping[str, object]) -> ConsolidationFun
     return ensure_type(options["consolidation_function"], ConsolidationFunction)
 
 
-def _time_range_of(options: Mapping[str, object]) -> TimeRange:
+def time_range_of(options: Mapping[str, object]) -> TimeRange:
     return ensure_type(options["time_range"], TimeRange)
 
 
 def edge_neighbours_at_served_step_of(options: Mapping[str, object]) -> bool:
     return ensure_type(options.get("edge_neighbours_at_served_step", False), bool)
-
-
-@dataclass(frozen=True, kw_only=True)
-class CommonGraphOptions:
-    time_range: TimeRange
-
-    @classmethod
-    def from_request_options(cls, options: Mapping[str, object]) -> CommonGraphOptions:
-        return cls(time_range=_time_range_of(options))
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -43,7 +43,6 @@ from cmk.graphing_engine import (
     Unit,
 )
 from cmk.gui.graphing import (
-    CommonGraphOptions,
     edge_neighbours_at_served_step_of,
     EvaluatedGraphs,
     FetchDiagnostics,
@@ -390,7 +389,7 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
             }
 
     [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(time_range=time_range),
+        time_range,
         _FetchData(),
     )(graph).graphs
     response = evaluated_to_response(
@@ -463,7 +462,7 @@ def test_evaluated_to_response_keeps_a_metric_whose_rrd_holds_no_series() -> Non
             }
 
     [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(time_range=time_range),
+        time_range,
         _FetchData(),
     )(graph).graphs
     response = evaluated_to_response(
@@ -529,7 +528,7 @@ def test_evaluated_to_response_converts_the_values_to_the_users_temperature_unit
             }
 
     [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(time_range=time_range),
+        time_range,
         _FetchData(),
     )(graph).graphs
     response = evaluated_to_response(
@@ -590,7 +589,7 @@ def test_evaluated_to_response_leaves_a_non_temperature_unit_alone() -> None:
             }
 
     [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(time_range=time_range),
+        time_range,
         _FetchData(),
     )(graph).graphs
     response = evaluated_to_response(

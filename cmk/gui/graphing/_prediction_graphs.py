@@ -12,18 +12,19 @@ from cmk.graphing_engine import (
     Graph,
     prediction_window_of,
     PredictionTexts,
+    TimeRange,
 )
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 
 from ._graph_codec import GraphCodec
 from ._graph_dispatch import (
-    CommonGraphOptions,
     consolidation_function_of,
     edge_neighbours_at_served_step_of,
     EvaluatedGraphs,
     FetchDataWithDiagnosticsProtocol,
     GraphDispatcher,
+    time_range_of,
 )
 from ._plugins import registered_translations
 from ._prediction_source import PredictionFetchData
@@ -44,13 +45,13 @@ def prediction_texts() -> PredictionTexts:
 
 @dataclass(frozen=True)
 class _EvaluatePrediction:
-    options: CommonGraphOptions
+    time_range: TimeRange
     fetch_data: FetchDataWithDiagnosticsProtocol
 
     @classmethod
     def make(cls, options: Mapping[str, object]) -> Self:
         return cls(
-            CommonGraphOptions.from_request_options(options),
+            time_range_of(options),
             PredictionFetchData(
                 debug=active_config.debug,
                 registered_translations=registered_translations(),
@@ -62,7 +63,7 @@ class _EvaluatePrediction:
     def __call__(self, graph: Graph) -> EvaluatedGraphs:
         return EvaluatedGraphs(
             graphs=evaluate_graphs(
-                time_range=prediction_window_of(graph) or self.options.time_range,
+                time_range=prediction_window_of(graph) or self.time_range,
                 graphs=[graph],
                 fetch_data=self.fetch_data,
             ),

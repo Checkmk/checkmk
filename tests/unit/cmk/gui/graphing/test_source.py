@@ -30,7 +30,6 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.graphing import (
     build_template_graphs,
-    CommonGraphOptions,
     HOST_PSEUDO_SERVICE,
     RRDFetchData,
     RRDFetchMetricNames,
@@ -274,7 +273,7 @@ def _drawn(
         fetch_metric_names=_FakeMetricNames(metric_name),
     )
     [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(time_range=_RANGE),
+        _RANGE,
         RRDFetchData(
             debug=True,
             consolidation_function=ConsolidationFunction.MAX,

@@ -19,13 +19,13 @@ from cmk.graphing_engine import (
     TimeRange,
 )
 from cmk.gui.graphing import (
-    CommonGraphOptions,
     evaluate_built_graphs,
     EvaluatedGraphs,
     FetchDiagnostics,
     graph_dispatcher_registry,
     GraphDispatcher,
     QueryLimitReached,
+    time_range_of,
 )
 from cmk.gui.graphing._graph_codec import COMMUNITY_GRAPH_CODEC
 from cmk.gui.graphing._graph_dispatch import evaluate_graphs, graph_request_of, serialize_graphs
@@ -42,15 +42,15 @@ _OPTIONS: Mapping[str, object] = {
 class _RecordingEvaluate:
     # Stands in for a graph kind's evaluation: it reports the graph it was handed back as the
     # evaluated result and as a diagnostic, so a test can tell what reached it.
-    options: CommonGraphOptions
+    time_range: TimeRange
     diagnostics: FetchDiagnostics = field(default_factory=FetchDiagnostics)
 
     @classmethod
     def make(cls, options: Mapping[str, object]) -> Self:
-        return cls(CommonGraphOptions.from_request_options(options))
+        return cls(time_range_of(options))
 
     def __call__(self, graph: Graph) -> EvaluatedGraphs:
-        self.diagnostics.errors.append(f"{graph.name} at step {self.options.time_range.step}")
+        self.diagnostics.errors.append(f"{graph.name} at step {self.time_range.step}")
         self.diagnostics.limits_reached.append(
             QueryLimitReached(metric_name=graph.name, max_series=1)
         )
@@ -59,7 +59,7 @@ class _RecordingEvaluate:
                 EvaluatedGraph(
                     name=graph.name,
                     title=graph.title,
-                    time_range=self.options.time_range,
+                    time_range=self.time_range,
                     vertical_range=None,
                     stacks=[],
                     lines=[],

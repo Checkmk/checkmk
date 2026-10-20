@@ -30,7 +30,6 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.graphing import (
     build_template_graphs,
-    CommonGraphOptions,
     FetchDiagnostics,
     parse_graph_specification,
     TemplateGraphSpecification,
@@ -118,9 +117,7 @@ def test_template_lifecycle_discover_and_update() -> None:
     assert fetch_data.requested_ranges == []
 
     evaluate = _EvaluateTemplateGraphs(
-        CommonGraphOptions(
-            time_range=_DISCOVERY_RANGE,
-        ),
+        _DISCOVERY_RANGE,
         fetch_data,
     )
     evaluated = [one for graph in graphs for one in evaluate(graph).graphs]

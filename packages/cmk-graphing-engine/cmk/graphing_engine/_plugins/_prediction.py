@@ -40,18 +40,6 @@ _REFERENCE_OF_DIRECTION: Final[Sequence[tuple[Direction, PredictionCurveKind]]] 
 )
 
 
-def _observed_metric(
-    site_id: SiteID, host_name: HostName, service_name: ServiceName, metric_name: MetricName
-) -> RRDMetric:
-    return RRDMetric(
-        site_id=site_id,
-        host_name=host_name,
-        service_name=service_name,
-        metric_name=metric_name,
-        consolidation_function=ConsolidationFunction.MAX,
-    )
-
-
 @dataclass(frozen=True, kw_only=True)
 class PredictionTexts:
     prediction: str
@@ -166,8 +154,12 @@ def build_prediction_graph(
     texts: PredictionTexts,
     localizer: Callable[[str], str],
 ) -> Graph:
-    observed = _observed_metric(
-        context.site_id, context.host_name, context.service_name, context.metric_name
+    observed = RRDMetric(
+        site_id=context.site_id,
+        host_name=context.host_name,
+        service_name=context.service_name,
+        metric_name=context.metric_name,
+        consolidation_function=ConsolidationFunction.MAX,
     )
     display = metric_display_attributes(str(context.metric_name), localizer, metrics)
     observed_curve = Curve(

@@ -11,7 +11,7 @@ import pytest
 
 from cmk.ccc import debug
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.cli.internal import GlobalOptions
+from cmk.cli.internal import ExitCode, GlobalOptions
 from cmk.plugins.checkmk.cli.snmp import cli_command_snmptranslate, cli_command_snmpwalk
 
 
@@ -29,7 +29,7 @@ def _without_debug() -> Iterator[None]:
 def test_a_missing_walk_name_exits_three() -> None:
     assert (
         cli_command_snmptranslate.handler_function(Path("/nonexistent"), GlobalOptions(), {}, [""])
-        == 3
+        == ExitCode.UNKNOWN
     )
 
 
@@ -52,7 +52,7 @@ def test_oids_and_extra_oids_together_exit_three() -> None:
         cli_command_snmpwalk.handler_function(
             Path("/nonexistent"), GlobalOptions(), {"oid": ("1.3",), "extraoid": ("1.4",)}, []
         )
-        == 3
+        == ExitCode.UNKNOWN
     )
 
 

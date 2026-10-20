@@ -26,7 +26,14 @@ from cmk.base.diagnostics import (
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 from cmk.cli.engine.commands import option_string
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
+from cmk.cli.internal import (
+    Args,
+    CLICommand,
+    CLIOption,
+    ExitCode,
+    GlobalOptions,
+    Options,
+)
 from cmk.diagnostics.engine import DumpSelection, resolve_selection
 from cmk.diagnostics.internal import DiagnosticsPlugin, Sensitivity, Topic
 
@@ -106,7 +113,7 @@ def _print_available_plugins(catalogue: Mapping[str, DiagnosticsPlugin]) -> None
 
 def _mode_create_diagnostics_dump(
     _omd_root: Path, _global_options: GlobalOptions, parsed: Options, _args: Args
-) -> int:
+) -> ExitCode:
     options = _cli_selection(parsed)
 
     with exit_on_config_file_load_error():
@@ -117,7 +124,7 @@ def _mode_create_diagnostics_dump(
 
     if options.list_plugins:
         _print_available_plugins(catalogue)
-        return 0
+        return ExitCode.SUCCESS
 
     dump = create_diagnostics_dump_v2(
         omd_root=cmk.utils.paths.omd_root,
@@ -134,12 +141,12 @@ def _mode_create_diagnostics_dump(
         )
     else:
         logger.message("No dump")
-    return 0
+    return ExitCode.SUCCESS
 
 
 def _run_create_diagnostics_dump(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # exit_on_config_file_load_error() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -149,7 +156,7 @@ def _run_create_diagnostics_dump(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_create_diagnostics_dump = CLICommand(

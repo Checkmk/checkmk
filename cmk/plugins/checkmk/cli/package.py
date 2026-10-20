@@ -7,16 +7,16 @@
 import sys
 from pathlib import Path
 
-from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
+from cmk.cli.internal import Args, CLICommand, ExitCode, GlobalOptions, Options
 
 _DEPRECATION_MSG = "This command is no longer supported. Please use `mkp%s` instead."
 
 
 def _fail_with_deprecation_msg(
     _omd_root: Path, _global_options: GlobalOptions, _options: Options, argv: Args
-) -> int:
+) -> ExitCode:
     sys.stdout.write(_DEPRECATION_MSG % " ".join(("", *argv)) + "\n")
-    return 1
+    return ExitCode.FAILURE
 
 
 cli_command_package = CLICommand(

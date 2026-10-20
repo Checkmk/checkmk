@@ -54,6 +54,7 @@ from cmk.base.modes.check_mk import (
     parse_snmp_backend,
     set_fake_dns,
     SNMP_BACKEND_OPTION,
+    state_exit_code,
 )
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.cpu_tracking import CPUTracker
@@ -74,7 +75,14 @@ from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.cli.engine.commands import option_count, option_names, option_string
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
+from cmk.cli.internal import (
+    Args,
+    CLICommand,
+    CLIOption,
+    ExitCode,
+    GlobalOptions,
+    Options,
+)
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import ip_lookup
@@ -100,7 +108,7 @@ def _write_active_check_result(check_result: ActiveCheckResult) -> ServiceState:
 
 def _mode_check_discovery(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     raw_host_name = args[0]
@@ -124,8 +132,10 @@ def _mode_check_discovery(
     if hostname not in hosts_config.all_configured_hosts:
         # There is no configuration to discover from, hence no data source to contact.
         # Such a host must not be reported as "all up to date".
-        return _write_active_check_result(
-            ActiveCheckResult(state=3, summary=f"Unknown host: {hostname}")
+        return state_exit_code(
+            _write_active_check_result(
+                ActiveCheckResult(state=3, summary=f"Unknown host: {hostname}")
+            )
         )
 
     host_tags = loading_result.host_tags
@@ -305,12 +315,14 @@ def _mode_check_discovery(
         if error_handler.result is not None:
             check_results = (error_handler.result,)
 
-        return _write_active_check_result(ActiveCheckResult.from_subresults(*check_results))
+        return state_exit_code(
+            _write_active_check_result(ActiveCheckResult.from_subresults(*check_results))
+        )
 
 
 def _run_check_discovery(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -320,7 +332,7 @@ def _run_check_discovery(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_check_discovery = CLICommand(
@@ -394,7 +406,7 @@ def _preprocess_hostnames(
 
 def _mode_discover(
     omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args
-) -> int:
+) -> ExitCode:
     app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     options = _discovery_options(parsed)
@@ -609,12 +621,12 @@ def _mode_discover(
             )
             any_failed |= not succeeded
 
-        return 1 if any_failed else 0
+        return ExitCode.FAILURE if any_failed else ExitCode.SUCCESS
 
 
 def _run_discover(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -624,7 +636,7 @@ def _run_discover(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_discover = CLICommand(

@@ -13,23 +13,35 @@ import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk import trace
+from cmk.automations.engine import AutomationError
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout
 from cmk.cli.engine.commands import option_string
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
+from cmk.cli.internal import (
+    Args,
+    CLICommand,
+    CLIOption,
+    ExitCode,
+    GlobalOptions,
+    Options,
+)
 from cmk.profiling import backend as profiling
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer()
 
 
+def _automation_error_exit_code(error: AutomationError) -> ExitCode:
+    match error:
+        case AutomationError.KNOWN_ERROR:
+            return ExitCode.FAILURE
+        case AutomationError.UNKNOWN_ERROR:
+            return ExitCode.ERROR
+
+
 def _mode_automation(
     omd_root: Path, _global_options: GlobalOptions, options: Options, args: Args
-) -> int:
-    from cmk.automations.engine import (
-        AutomationError,
-        Automations,
-        discover_automations,
-    )
+) -> ExitCode:
+    from cmk.automations.engine import Automations, discover_automations
     from cmk.automations.internal import AutomationID
     from cmk.base import config
     from cmk.ccc import debug
@@ -62,28 +74,28 @@ def _mode_automation(
             logger.error("Loading the configuration failed: %(error)s", {"error": e})  # noqa: TRY400
             if debug.enabled():
                 raise
-            return AutomationError.KNOWN_ERROR
+            return _automation_error_exit_code(AutomationError.KNOWN_ERROR)
         except Exception:
             logger.exception("Loading the configuration failed")
             if debug.enabled():
                 raise
-            return AutomationError.UNKNOWN_ERROR
+            return _automation_error_exit_code(AutomationError.UNKNOWN_ERROR)
 
         try:
             result = automations.execute(name, automation_args)
         finally:
             profiling.output_profile(cmk.utils.paths.profiles_dir)
         if isinstance(result, AutomationError):
-            return result
+            return _automation_error_exit_code(result)
         with suppress(IOError):
             sys.stdout.write(result.serialize(for_cmk_version) + "\n")
             sys.stdout.flush()
-        return 0
+        return ExitCode.SUCCESS
 
 
 def _run_automation(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # exit_on_config_file_load_error() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -93,7 +105,7 @@ def _run_automation(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 def _for_cmk_version(options: Options) -> str:

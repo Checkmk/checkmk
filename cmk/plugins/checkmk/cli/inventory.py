@@ -57,7 +57,14 @@ from cmk.checkengine.plugins import InventoryPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.cli.engine.commands import option_names, option_string
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
+from cmk.cli.internal import (
+    Args,
+    CLICommand,
+    CLIOption,
+    ExitCode,
+    GlobalOptions,
+    Options,
+)
 from cmk.inventory.paths import InventoryPaths
 from cmk.inventory.store import InventoryStore
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
@@ -102,7 +109,7 @@ def _inventory_options(parsed: Mapping[str, object]) -> InventoryOptions:
 
 def _mode_inventory(
     omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args
-) -> int:
+) -> ExitCode:
     app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     options = _inventory_options(parsed)
@@ -320,12 +327,12 @@ def _mode_inventory(
                 section.section_error("%s" % e)
             finally:
                 cmk.ccc.cleanup.cleanup_globals()
-        return 0
+        return ExitCode.SUCCESS
 
 
 def _run_inventory(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -335,7 +342,7 @@ def _run_inventory(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_inventory = CLICommand(
@@ -370,7 +377,7 @@ cli_command_inventory = CLICommand(
 
 def _mode_inventorize_marked_hosts(
     omd_root: Path, global_options: GlobalOptions, options: Options, _args: Args
-) -> int:
+) -> ExitCode:
     app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     file_cache_options = handle_fetcher_options(options)
@@ -381,7 +388,7 @@ def _mode_inventorize_marked_hosts(
 
     if not (queue := AutoQueue(InventoryPaths(cmk.utils.paths.omd_root).auto_dir)):
         console.verbose("Autoinventory: No hosts marked by inventory check")
-        return 0
+        return ExitCode.SUCCESS
 
     # We do not resolve the `latest` link here, as any given serial might be removed by the core.
     latest_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
@@ -498,7 +505,7 @@ def _mode_inventorize_marked_hosts(
 
     if queue.oldest() is None:
         console.verbose("Autoinventory: No hosts marked by inventory check")
-        return 0
+        return ExitCode.SUCCESS
 
     console.verbose("Autoinventory: Inventorize all hosts marked by inventory check:")
     try:
@@ -549,12 +556,12 @@ def _mode_inventorize_marked_hosts(
                 )
     except (MKTimeout, TimeoutError) as exc:
         console.verbose_no_lf(str(exc))
-    return 0
+    return ExitCode.SUCCESS
 
 
 def _run_inventorize_marked_hosts(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -564,7 +571,7 @@ def _run_inventorize_marked_hosts(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_inventorize_marked_hosts = CLICommand(

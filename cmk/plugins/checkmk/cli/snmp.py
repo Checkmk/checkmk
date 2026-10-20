@@ -35,7 +35,14 @@ from cmk.checkengine.snmplib import (
     walk_all_contexts_for_export,
 )
 from cmk.cli.engine.commands import option_strings
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
+from cmk.cli.internal import (
+    Args,
+    CLICommand,
+    CLIOption,
+    ExitCode,
+    GlobalOptions,
+    Options,
+)
 from cmk.utils import ip_lookup
 from cmk.utils.log import console
 
@@ -57,7 +64,7 @@ def _make_local_mibs_dir(omd_root: Path) -> Path:
 
 def _mode_snmptranslate(
     _omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
-) -> int:
+) -> ExitCode:
     walk_filename = args[0]
     if not walk_filename:
         raise MKGeneralException("Please provide the name of a SNMP walk file")
@@ -106,19 +113,19 @@ def _mode_snmptranslate(
         sys.stdout.buffer.write(b" --> ")
         sys.stdout.buffer.write(element_translated.strip())
         sys.stdout.buffer.write(b"\n")
-    return 0
+    return ExitCode.SUCCESS
 
 
 def _run_snmptranslate(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     try:
         return _mode_snmptranslate(omd_root, global_options, options, args)
     except MKGeneralException as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_snmptranslate = CLICommand(
@@ -206,7 +213,7 @@ def _make_backend(snmp_config: SNMPHostConfig) -> SNMPBackend:
 
 def _mode_snmpwalk(
     _omd_root: Path, global_options: GlobalOptions, options: Options, hostnames: Args
-) -> int:
+) -> ExitCode:
     set_fake_dns(global_options.fake_dns)
     oids = option_strings(options, "oid")
     extra_oids = option_strings(options, "extraoid")
@@ -247,12 +254,12 @@ def _mode_snmpwalk(
             walk_options,
             backend=_make_backend(snmp_config),
         )
-    return 0
+    return ExitCode.SUCCESS
 
 
 def _run_snmpwalk(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -262,7 +269,7 @@ def _run_snmpwalk(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_snmpwalk = CLICommand(
@@ -317,7 +324,7 @@ cli_command_snmpwalk = CLICommand(
 
 def _mode_snmpget(
     _omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     set_fake_dns(global_options.fake_dns)
     if not args:
         raise MKBailOut("You need to specify an OID.")
@@ -363,12 +370,12 @@ def _mode_snmpget(
         backend = _make_backend(snmp_config)
         value = get_single_oid(oid, single_oid_cache={}, backend=backend)
         sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")
-    return 0
+    return ExitCode.SUCCESS
 
 
 def _run_snmpget(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -378,7 +385,7 @@ def _run_snmpget(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_snmpget = CLICommand(

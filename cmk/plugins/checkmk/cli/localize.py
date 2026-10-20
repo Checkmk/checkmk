@@ -12,7 +12,7 @@ from pathlib import Path
 import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKException
-from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
+from cmk.cli.internal import Args, CLICommand, ExitCode, GlobalOptions, Options
 from cmk.utils.log import VERBOSE
 
 __all__ = ["cli_command_localize"]
@@ -33,9 +33,8 @@ domain = "multisite"
 
 def _mode_localize(
     _omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
-) -> int:
-    do_localize(list(args))
-    return 0
+) -> ExitCode:
+    return do_localize(list(args))
 
 
 cli_command_localize = CLICommand(
@@ -106,10 +105,10 @@ Available commands are:
     )
 
 
-def do_localize(args: list[str]) -> None:
+def do_localize(args: list[str]) -> ExitCode:
     if len(args) == 0:
         _localize_usage()
-        sys.exit(1)
+        return ExitCode.FAILURE
 
     command = args[0]
 
@@ -140,7 +139,7 @@ def do_localize(args: list[str]) -> None:
         except LocalizeException as e:
             # Expected CLI error, the traceback adds no value here.
             logger.error("%(error)s", {"error": e})  # noqa: TRY400
-            sys.exit(1)
+            return ExitCode.FAILURE
     else:
         allc = sorted(commands.keys())
         allc = [tty.bold + c + tty.normal for c in allc]
@@ -148,7 +147,8 @@ def do_localize(args: list[str]) -> None:
             "Invalid localize command. Allowed are: %(commands)s and %(last_command)s.",
             {"commands": ", ".join(allc[:-1]), "last_command": allc[-1]},
         )
-        sys.exit(1)
+        return ExitCode.FAILURE
+    return ExitCode.SUCCESS
 
 
 def _write_alias(lang: LanguageName, alias: str | None) -> None:

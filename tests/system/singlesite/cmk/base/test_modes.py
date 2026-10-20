@@ -218,7 +218,7 @@ def test_list_checks(execute: Execute) -> None:
 def test_dump_agent_missing_arg(execute: Execute) -> None:
     for opt in ["--dump-agent", "-d"]:
         p = execute(["cmk", opt])
-        assert p.returncode == 1, on_failure(p)
+        assert p.returncode == 3, on_failure(p)
 
 
 def test_dump_agent_error(execute: Execute) -> None:

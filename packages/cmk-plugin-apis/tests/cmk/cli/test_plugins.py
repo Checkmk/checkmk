@@ -10,6 +10,7 @@ from cmk.cli.internal import (
     CLICommand,
     CLIOption,
     entry_point_prefixes,
+    ExitCode,
     GlobalOptions,
     Options,
 )
@@ -21,8 +22,8 @@ def test_entry_point_prefixes() -> None:
 
 def _print_version(
     _app: object, _global_optoins: GlobalOptions, _options: Options, _args: Args
-) -> int:
-    return 0
+) -> ExitCode:
+    return ExitCode.SUCCESS
 
 
 def test_command_is_named_after_its_long_option() -> None:

@@ -30,7 +30,14 @@ from cmk.ccc import version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, raise_mkterminate_on_sigint
 from cmk.ccc.version import Edition
 from cmk.ccc.version import edition as edition_of_site
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
+from cmk.cli.internal import (
+    Args,
+    CLICommand,
+    CLIOption,
+    ExitCode,
+    GlobalOptions,
+    Options,
+)
 from cmk.utils import timeperiod
 from cmk.utils.http_proxy_config import make_http_proxy_getter
 
@@ -41,20 +48,24 @@ def _notify_flags(parsed: Mapping[str, object]) -> dict[str, bool]:
     return dict.fromkeys(parsed, True)
 
 
+def _notification_exit_code(returncode: object) -> ExitCode:
+    match returncode:
+        case None | 0:
+            return ExitCode.SUCCESS
+        case 1:
+            return ExitCode.FAILURE
+        case _:
+            return ExitCode.ERROR
+
+
 def _mode_notify(
     omd_root: Path, _global_options: GlobalOptions, parsed: Options, args: Args
-) -> int:
+) -> ExitCode:
     options = _notify_flags(parsed)
     edition = edition_of_site(omd_root)
     community_edition = edition is Edition.COMMUNITY
     if not community_edition and "spoolfile" in args:
-        return (
-            _do_notify_via_automation(
-                options=options,
-                args=list(args),
-            )
-            or 0
-        )
+        return _do_notify_via_automation(options=options, args=list(args))
 
     if keepalive := not community_edition and "keepalive" in options:
         raise_mkterminate_on_sigint()
@@ -81,10 +92,12 @@ def _mode_notify(
             livestatus.get_optional_timeperiods_active_map, logger.warning
         ),
     )
-    return exit_status or 0
+    return _notification_exit_code(exit_status)
 
 
-def _run_notify(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+def _run_notify(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> ExitCode:
     if global_options.debug:
         # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -92,15 +105,15 @@ def _run_notify(omd_root: Path, global_options: GlobalOptions, options: Options,
         return _mode_notify(omd_root, global_options, options, args)
     except MKTerminate:
         logging.getLogger("cmk.base").error("<Interrupted>")  # noqa: TRY400
-        return 1
+        return ExitCode.INTERRUPTED
     except MKGeneralException as e:
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
-def _do_notify_via_automation(options: dict[str, bool], args: list[str]) -> int | None:
+def _do_notify_via_automation(options: dict[str, bool], args: list[str]) -> ExitCode:
     log_to_stdout = False
     if options.get("log-to-stdout"):
         args.insert(0, "--log-to-stdout")
@@ -119,25 +132,25 @@ def _do_notify_via_automation(options: dict[str, bool], args: list[str]) -> int 
             "The automation-helper service is required for the notification spooler. "
             "Please make sure all site services are started."
         )
-        return 1
+        return ExitCode.FAILURE
     except Exception:
         logger.exception("Error running automation call 'notify'")
-        return 1
+        return ExitCode.FAILURE
 
     try:
         data = ast.literal_eval(result.output)
     except SyntaxError, ValueError, TypeError:
         logger.exception("Could not parse automation result %(output)r", {"output": result.output})
-        return 2
+        return ExitCode.ERROR
 
     if isinstance(data, dict):
         if log_to_stdout:
             sys.stdout.write(data["output"])
             sys.stdout.flush()
-        return data.get("exit_code")
+        return _notification_exit_code(data.get("exit_code"))
 
     logger.error("Unexpected automation result format: %(data)r", {"data": data})
-    return 2
+    return ExitCode.ERROR
 
 
 cli_command_notify = CLICommand(

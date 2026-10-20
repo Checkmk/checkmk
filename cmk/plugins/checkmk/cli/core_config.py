@@ -22,7 +22,7 @@ from cmk.base.modes.check_mk import forced_ip_lookup, host_addresses, load_check
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.store import activation_lock
-from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
+from cmk.cli.internal import Args, CLICommand, ExitCode, GlobalOptions, Options
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import config_warnings, ip_lookup, timeperiod
@@ -41,7 +41,7 @@ from cmk.utils.log import console
 
 def _mode_dump_nagios_config(
     omd_root: Path, global_options: GlobalOptions, _options: Options, raw_host_names: Args
-) -> int:
+) -> ExitCode:
     app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     args = host_addresses(raw_host_names)
@@ -124,12 +124,12 @@ def _mode_dump_nagios_config(
         timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
         get_relay_id=lambda host_name: config.get_relay_id(label_manager.labels_of_host(host_name)),
     )
-    return 0
+    return ExitCode.SUCCESS
 
 
 def _run_dump_nagios_config(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -139,7 +139,7 @@ def _run_dump_nagios_config(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_nagios_config = CLICommand(
@@ -199,7 +199,7 @@ def _make_configured_notify_relay(
 
 def _mode_update(
     omd_root: Path, global_options: GlobalOptions, _options: Options, _args: Args
-) -> int:
+) -> ExitCode:
     app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     plugins = load_checks()
@@ -277,14 +277,16 @@ def _mode_update(
         console.error(f"Configuration Error: {e}", file=sys.stderr)
         if cmk.ccc.debug.enabled():
             raise
-        sys.exit(1)
+        return ExitCode.FAILURE
 
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
-    return 0
+    return ExitCode.SUCCESS
 
 
-def _run_update(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+def _run_update(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> ExitCode:
     if global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -294,7 +296,7 @@ def _run_update(omd_root: Path, global_options: GlobalOptions, options: Options,
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_update = CLICommand(
@@ -327,7 +329,7 @@ cli_command_update = CLICommand(
 
 def _mode_restart(
     omd_root: Path, global_options: GlobalOptions, _options: Options, raw_host_names: Args
-) -> int:
+) -> ExitCode:
     app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     args = host_addresses(raw_host_names)
@@ -403,12 +405,12 @@ def _mode_restart(
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
-    return 0
+    return ExitCode.SUCCESS
 
 
 def _run_restart(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -418,7 +420,7 @@ def _run_restart(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_restart = CLICommand(
@@ -452,7 +454,7 @@ cli_command_restart = CLICommand(
 
 def _mode_reload(
     omd_root: Path, global_options: GlobalOptions, _options: Options, raw_host_names: Args
-) -> int:
+) -> ExitCode:
     app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     args = host_addresses(raw_host_names)
@@ -528,10 +530,12 @@ def _mode_reload(
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
-    return 0
+    return ExitCode.SUCCESS
 
 
-def _run_reload(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+def _run_reload(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> ExitCode:
     if global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -541,7 +545,7 @@ def _run_reload(omd_root: Path, global_options: GlobalOptions, options: Options,
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_reload = CLICommand(

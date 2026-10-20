@@ -23,12 +23,20 @@ from cmk.base.modes.check_mk import (
     run_checking,
     set_fake_dns,
     SNMP_BACKEND_OPTION,
+    state_exit_code,
 )
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.cli.engine.commands import option_names, option_string
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
+from cmk.cli.internal import (
+    Args,
+    CLICommand,
+    CLIOption,
+    ExitCode,
+    GlobalOptions,
+    Options,
+)
 from cmk.server_side_calls_backend import load_secrets_file
 
 # .
@@ -67,7 +75,9 @@ def _checking_options(parsed: Mapping[str, object]) -> CheckingOptions:
     return options
 
 
-def _mode_check(omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args) -> int:
+def _mode_check(
+    omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args
+) -> ExitCode:
     app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     options = _checking_options(parsed)
@@ -79,7 +89,7 @@ def _mode_check(omd_root: Path, global_options: GlobalOptions, parsed: Options, 
 
     secrets = load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
 
-    return run_checking(
+    state = run_checking(
         app,
         loaded_config,
         ruleset_matcher,
@@ -106,9 +116,12 @@ def _mode_check(omd_root: Path, global_options: GlobalOptions, parsed: Options, 
         ),
         trusted_ca_file=cmk.utils.paths.trusted_ca_file,
     )
+    return state_exit_code(state)
 
 
-def _run_check(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+def _run_check(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> ExitCode:
     if global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -118,7 +131,7 @@ def _run_check(omd_root: Path, global_options: GlobalOptions, options: Options, 
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_check = CLICommand(

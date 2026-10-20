@@ -7,7 +7,7 @@ from pathlib import Path
 
 from cmk import trace
 from cmk.cli.engine.commands import Argument, Arguments, Command
-from cmk.cli.internal import GlobalOptions, Options
+from cmk.cli.internal import ExitCode, GlobalOptions, Options
 
 tracer = trace.get_tracer()
 
@@ -20,7 +20,7 @@ def call(
     sub_options: Options,
     all_args: Arguments,
     trace_context: trace.Context,
-) -> int:
+) -> ExitCode:
 
     args: Arguments
     if command.argument and not command.argument_optional:

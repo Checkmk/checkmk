@@ -16,7 +16,28 @@ name must start with the prefix returned by :func:`entry_point_prefixes`.
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
+
+
+class ExitCode(Enum):
+    """The exit codes the engine and the command handlers report"""
+
+    SUCCESS = 0
+    FAILURE = 1
+    """Any failure not reported otherwise, e.g. a crashed command"""
+    ERROR = 2
+    """A command's own error, e.g. the monitoring plug-in API's CRITICAL state or an automation's unknown error"""
+    UNKNOWN = 3
+    """The command refused its command line or input: an invalid option, an unknown
+    host, a missing file. The number is the monitoring plug-in API's UNKNOWN state,
+    so a check invoked wrongly reports UNKNOWN rather than WARNING (1) or CRITICAL (2).
+    """
+    INTERRUPTED = 130
+    """128 + SIGINT, as a shell reports a command interrupted by Ctrl-C"""
+    BROKEN_PIPE = 141
+    """128 + SIGPIPE, as a shell reports a command whose reader went away"""
+
 
 type Options = Mapping[str, object]
 """The parsed sub-options of a command, keyed by their long option name.
@@ -58,7 +79,7 @@ class GlobalOptions:
     """
 
 
-type CommandHandler = Callable[[Path, GlobalOptions, Options, Args], int]
+type CommandHandler = Callable[[Path, GlobalOptions, Options, Args], ExitCode]
 """The signature of a command's handler; it returns the exit status.
 
 The first argument is the site's root directory. A command that needs more of
@@ -117,9 +138,9 @@ class CLICommand:
     Example:
     ********
 
-    >>> def greet(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    >>> def greet(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> ExitCode:
     ...     print("Hello", ", ".join(args))
-    ...     return 0
+    ...     return ExitCode.SUCCESS
     >>> cli_command_greet = CLICommand(
     ...     long_option="greet",
     ...     handler_function=greet,
@@ -172,6 +193,7 @@ __all__ = [
     "CLIOption",
     "CommandHandler",
     "entry_point_prefixes",
+    "ExitCode",
     "GlobalOptions",
     "Options",
 ]

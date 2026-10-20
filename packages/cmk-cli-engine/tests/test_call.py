@@ -9,7 +9,7 @@ from typing import Final
 
 from cmk.cli.engine.call import call
 from cmk.cli.engine.commands import Command, Option, parse_sub_options
-from cmk.cli.internal import Args, CommandHandler, GlobalOptions, Options
+from cmk.cli.internal import Args, CommandHandler, ExitCode, GlobalOptions, Options
 from cmk.trace import Context
 
 from ._logger import null_logger
@@ -23,13 +23,13 @@ _SUB_OPTIONS: Final = [Option(long_option="flag", short_help="a flag")]
 
 
 class _Recorder:
-    def __init__(self, exit_code: int = 0) -> None:
+    def __init__(self, exit_code: ExitCode = ExitCode.SUCCESS) -> None:
         self.calls: list[tuple[GlobalOptions, Options, Args]] = []
         self._exit_code = exit_code
 
     def __call__(
         self, _omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-    ) -> int:
+    ) -> ExitCode:
         self.calls.append((global_options, options, args))
         return self._exit_code
 
@@ -52,7 +52,7 @@ def _command(
     )
 
 
-def _call(command: Command, argument: str = "", *, arguments: Sequence[str] = ()) -> int:
+def _call(command: Command, argument: str = "", *, arguments: Sequence[str] = ()) -> ExitCode:
     return call(
         _OMD_ROOT,
         command,
@@ -65,7 +65,7 @@ def _call(command: Command, argument: str = "", *, arguments: Sequence[str] = ()
 
 
 def test_a_command_returns_its_handlers_exit_code() -> None:
-    assert _call(_command(_Recorder(exit_code=23))) == 23
+    assert _call(_command(_Recorder(exit_code=ExitCode.ERROR))) == ExitCode.ERROR
 
 
 def test_a_command_without_argument_receives_no_arguments() -> None:

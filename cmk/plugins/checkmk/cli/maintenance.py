@@ -19,7 +19,7 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.checkengine.discovery import remove_autochecks_of_host
 from cmk.cli.engine.commands import write_stdout
-from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
+from cmk.cli.internal import Args, CLICommand, ExitCode, GlobalOptions, Options
 from cmk.inventory.paths import InventoryPaths
 from cmk.piggyback import backend as piggyback_backend
 from cmk.utils import ip_lookup
@@ -37,7 +37,7 @@ from cmk.utils import ip_lookup
 
 def _mode_update_dns_cache(
     _omd_root: Path, global_options: GlobalOptions, _options: Options, _args: Args
-) -> int:
+) -> ExitCode:
     set_fake_dns(global_options.fake_dns)
     loading_result = config.load(validate_hosts=True)
     config_cache = loading_result.config_cache
@@ -55,12 +55,12 @@ def _mode_update_dns_cache(
             or ip_lookup.make_lookup_ip_address(ip_lookup_config)
         ),
     )
-    return 0
+    return ExitCode.SUCCESS
 
 
 def _run_update_dns_cache(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -70,7 +70,7 @@ def _run_update_dns_cache(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_update_dns_cache = CLICommand(
@@ -93,7 +93,7 @@ cli_command_update_dns_cache = CLICommand(
 
 def _mode_cleanup_piggyback(
     _omd_root: Path, _global_options: GlobalOptions, _options: Options, _args: Args
-) -> int:
+) -> ExitCode:
     loaded_config = config.load(validate_hosts=True).loaded_config
     piggyback_backend.cleanup_piggyback_files(
         now=time.time(),
@@ -101,12 +101,12 @@ def _mode_cleanup_piggyback(
         all_configured_rule_values=(r["value"] for r in loaded_config.piggybacked_host_files),
         omd_root=cmk.utils.paths.omd_root,
     )
-    return 0
+    return ExitCode.SUCCESS
 
 
 def _run_cleanup_piggyback(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -116,7 +116,7 @@ def _run_cleanup_piggyback(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_cleanup_piggyback = CLICommand(
@@ -139,7 +139,7 @@ cli_command_cleanup_piggyback = CLICommand(
 
 def _mode_flush(
     _omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
-) -> int:
+) -> ExitCode:
     hosts = host_addresses(args)
     plugins = load_checks()
     loading_result = config.load(validate_hosts=True)
@@ -237,10 +237,12 @@ def _mode_flush(
             write_stdout("(nothing)")
 
         write_stdout(tty.normal + "\n")
-    return 0
+    return ExitCode.SUCCESS
 
 
-def _run_flush(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+def _run_flush(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> ExitCode:
     if global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -250,7 +252,7 @@ def _run_flush(omd_root: Path, global_options: GlobalOptions, options: Options, 
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_flush = CLICommand(

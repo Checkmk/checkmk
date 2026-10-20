@@ -10,13 +10,22 @@ from pathlib import Path
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
+from cmk.cli.internal import (
+    Args,
+    CLICommand,
+    CLIOption,
+    ExitCode,
+    GlobalOptions,
+    Options,
+)
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.licensing.basics.finder import blocked_feature_files
 from cmk.utils.paths import omd_root
 
 
-def _mode_man(_omd_root: Path, _global_options: GlobalOptions, options: Options, args: Args) -> int:
+def _mode_man(
+    _omd_root: Path, _global_options: GlobalOptions, options: Options, args: Args
+) -> ExitCode:
     from cmk.utils import man_pages
 
     man_page_path_map = man_pages.make_man_page_path_map(
@@ -26,7 +35,7 @@ def _mode_man(_omd_root: Path, _global_options: GlobalOptions, options: Options,
     )
     if not args:
         man_pages.print_man_page_table(man_page_path_map)
-        return 0
+        return ExitCode.SUCCESS
 
     if (man_page_path := man_page_path_map.get(args[0])) is None:
         raise MKBailOut(f"No manpage for {args[0]}. Sorry.")
@@ -45,13 +54,15 @@ def _mode_man(_omd_root: Path, _global_options: GlobalOptions, options: Options,
         rendered = renderer(man_page).render_page()
     except Exception as exc:
         sys.stdout.write(f"ERROR: Invalid check manpage {args[0]}: {exc}\n")
-        return 0
+        return ExitCode.SUCCESS
 
     man_pages.write_output(rendered)
-    return 0
+    return ExitCode.SUCCESS
 
 
-def _run_man(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+def _run_man(
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+) -> ExitCode:
     if global_options.debug:
         # discover_families() is told by cmk.ccc.debug whether to raise
         cmk.ccc.debug.enable()
@@ -61,7 +72,7 @@ def _run_man(omd_root: Path, global_options: GlobalOptions, options: Options, ar
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_man = CLICommand(
@@ -93,7 +104,7 @@ cli_command_man = CLICommand(
 
 def _mode_browse_man(
     _omd_root: Path, _global_options: GlobalOptions, _options: Options, _args: Args
-) -> int:
+) -> ExitCode:
     from cmk.utils import man_pages
 
     man_pages.print_man_page_browser(
@@ -103,12 +114,12 @@ def _mode_browse_man(
             blocked_paths=blocked_feature_files(omd_root),
         )
     )
-    return 0
+    return ExitCode.SUCCESS
 
 
 def _run_browse_man(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # discover_families() is told by cmk.ccc.debug whether to raise
         cmk.ccc.debug.enable()
@@ -118,7 +129,7 @@ def _run_browse_man(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_browse_man = CLICommand(

@@ -43,7 +43,7 @@ from cmk.checkengine.parser import make_parser, NO_SELECTION, parse_raw_data, Se
 from cmk.checkengine.source_builder import SourceBuilder
 from cmk.checkengine.summarize import summarize
 from cmk.cli.engine.commands import write_stdout
-from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
+from cmk.cli.internal import Args, CLICommand, ExitCode, GlobalOptions, Options
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import ExecutableFinder, load_secrets_file
 from cmk.utils import ip_lookup, timeperiod
@@ -63,7 +63,7 @@ from cmk.utils.log import console
 
 def _mode_dump_agent(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     app = make_app(omd_root)
     set_fake_dns(global_options.fake_dns)
     raw_host_name = args[0]
@@ -266,13 +266,13 @@ def _mode_dump_agent(
 
         write_stdout(b"".join(output).decode(errors="surrogateescape"))
         if has_errors:
-            sys.exit(1)
-        return 0
+            return ExitCode.FAILURE
+        return ExitCode.SUCCESS
 
 
 def _run_dump_agent(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -282,7 +282,7 @@ def _run_dump_agent(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_dump_agent = CLICommand(
@@ -316,7 +316,7 @@ cli_command_dump_agent = CLICommand(
 
 def _mode_dump_hosts(
     _omd_root: Path, global_options: GlobalOptions, _options: Options, args: Args
-) -> int:
+) -> ExitCode:
     set_fake_dns(global_options.fake_dns)
     hostlist: Iterable[HostName] = host_addresses(args)
     logger = logging.getLogger("cmk.base.modes")  # this might go nowhere.
@@ -384,12 +384,12 @@ def _mode_dump_hosts(
                     livestatus.get_optional_timeperiods_active_map, log=logger.warning
                 ).get,
             )
-        return 0
+        return ExitCode.SUCCESS
 
 
 def _run_dump_hosts(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -399,7 +399,7 @@ def _run_dump_hosts(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_dump = CLICommand(

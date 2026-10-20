@@ -89,7 +89,7 @@ from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.checkengine.submitters import get_submitter
 from cmk.checkengine.summarize import SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
-from cmk.cli.internal import CLIOption
+from cmk.cli.internal import CLIOption, ExitCode
 from cmk.inventory.label_picker import InventorizedHostLabelsStore, LabelPickerConfig, pick_labels
 from cmk.inventory.paths import InventoryPaths
 from cmk.inventory.store import InventoryStore, make_meta
@@ -163,6 +163,18 @@ def host_address(raw_host_address: str) -> HostAddress:
 
 def host_addresses(raw_host_addresses: Sequence[str]) -> Sequence[HostAddress]:
     return [host_address(raw_host_address) for raw_host_address in raw_host_addresses]
+
+
+def state_exit_code(state: ServiceState) -> ExitCode:
+    match state:
+        case 0:
+            return ExitCode.SUCCESS
+        case 1:
+            return ExitCode.FAILURE
+        case 2:
+            return ExitCode.ERROR
+        case _:
+            return ExitCode.UNKNOWN
 
 
 def set_fake_dns(raw_address: str | None) -> None:

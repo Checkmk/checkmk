@@ -10,12 +10,13 @@ from pathlib import Path
 import pytest
 
 from cmk.automations.backends import SubprocessExecutor
+from cmk.automations.engine import AutomationError
 from cmk.automations.internal import AutomationID
 from cmk.ccc.exceptions import MKBailOut
 from cmk.cli.engine.arguments import parse, RunCommand
 from cmk.cli.engine.commands import Commands, general_options, make_command, parse_sub_options
-from cmk.cli.internal import GlobalOptions
-from cmk.plugins.checkmk.cli.automation import cli_command_automation
+from cmk.cli.internal import ExitCode, GlobalOptions
+from cmk.plugins.checkmk.cli.automation import _automation_error_exit_code, cli_command_automation
 
 
 def test_the_version_of_a_subprocess_automation_reaches_the_cli() -> None:
@@ -56,5 +57,18 @@ def test_an_invalid_version_exits_three() -> None:
         cli_command_automation.handler_function(
             Path("/nonexistent"), GlobalOptions(), {"for-cmk-version": "foo"}, ["restart"]
         )
-        == 3
+        == ExitCode.UNKNOWN
     )
+
+
+@pytest.mark.parametrize(
+    ["error", "expected"],
+    [
+        (AutomationError.KNOWN_ERROR, ExitCode.FAILURE),
+        (AutomationError.UNKNOWN_ERROR, ExitCode.ERROR),
+    ],
+)
+def test_an_automation_error_exits_with_its_value(
+    error: AutomationError, expected: ExitCode
+) -> None:
+    assert _automation_error_exit_code(error) == expected

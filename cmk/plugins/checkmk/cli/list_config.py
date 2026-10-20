@@ -34,7 +34,14 @@ from cmk.checkengine.plugins import (
 from cmk.cli.engine.commands import (
     write_stdout,
 )
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
+from cmk.cli.internal import (
+    Args,
+    CLICommand,
+    CLIOption,
+    ExitCode,
+    GlobalOptions,
+    Options,
+)
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.ruleset_matcher.tags import HostTags, TagID
 from cmk.ruleset_matcher.tuple_rulesets import hosttags_match_taglist
@@ -83,7 +90,7 @@ def _list_all_hosts(
 
 def _mode_list_hosts(
     _omd_root: Path, _global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     loading_result = config.load(validate_hosts=True)
     config_cache = loading_result.config_cache
     core_objects_config = config.CoreObjectsConfig(
@@ -101,12 +108,12 @@ def _mode_list_hosts(
     with suppress(IOError):
         sys.stdout.write("\n".join(hosts) + "\n")
         sys.stdout.flush()
-    return 0
+    return ExitCode.SUCCESS
 
 
 def _run_list_hosts(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -116,7 +123,7 @@ def _run_list_hosts(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_list_hosts = CLICommand(
@@ -174,7 +181,7 @@ def _list_all_hosts_with_tags(
 
 def _mode_list_tag(
     _omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
-) -> int:
+) -> ExitCode:
     loading_result = config.load(validate_hosts=True)
     hosts = _list_all_hosts_with_tags(
         tuple(TagID(_) for _ in args),
@@ -185,12 +192,12 @@ def _mode_list_tag(
     write_stdout("\n".join(sorted(hosts)))
     if hosts:
         write_stdout("\n")
-    return 0
+    return ExitCode.SUCCESS
 
 
 def _run_list_tag(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -200,7 +207,7 @@ def _run_list_tag(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_list_tag = CLICommand(
@@ -267,7 +274,7 @@ def _get_ds_type(
 
 def _mode_list_checks(
     _omd_root: Path, _global_options: GlobalOptions, _options: Options, _args: Args
-) -> int:
+) -> ExitCode:
     from cmk.utils import man_pages
 
     plugins = load_checks()
@@ -311,12 +318,12 @@ def _mode_list_checks(
 
     for e in sorted(table, key=lambda e: e.name):
         write_stdout(f"{e.render_tty()}\n")
-    return 0
+    return ExitCode.SUCCESS
 
 
 def _run_list_checks(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+) -> ExitCode:
     if global_options.debug:
         # load_checks() and discover_families() read cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -326,7 +333,7 @@ def _run_list_checks(
         logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
         if global_options.debug:
             raise
-        return 3
+        return ExitCode.UNKNOWN
 
 
 cli_command_list_checks = CLICommand(

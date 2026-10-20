@@ -30,6 +30,7 @@ from cmk.cli.engine.commands import (
     write_paged,
     write_stdout,
 )
+from cmk.cli.internal import ExitCode
 from cmk.crash import (
     ABCCrashReport,
     BaseDetails,
@@ -178,32 +179,32 @@ class Runtime:
 
 
 def dispatch(
-    command: Callable[[], int],
+    command: Callable[[], ExitCode],
     logger: logging.Logger,
     crash_reporter: CrashReporter,
     debug: bool,
-) -> int:
+) -> ExitCode:
     """Run the command, mapping what it raises to the exit status it earns"""
     try:
         return command()
 
     except KeyboardInterrupt:
         logger.error("<Interrupted>")  # noqa: TRY400
-        return 1
+        return ExitCode.INTERRUPTED
 
     except OSError as e:
         if e.errno == errno.EPIPE:
-            return 4
+            return ExitCode.BROKEN_PIPE
         if debug:
             raise
         logger.error(crash_reporter())  # noqa: TRY400
-        return 1
+        return ExitCode.FAILURE
 
     except Exception:
         if debug:
             raise
         logger.error(crash_reporter())  # noqa: TRY400
-        return 1
+        return ExitCode.FAILURE
 
 
 def run(
@@ -222,7 +223,7 @@ def run(
     parsed = parse(commands, argv)
     if isinstance(parsed, InvalidArguments):
         runtime.write(parsed.message)
-        return 1
+        return ExitCode.UNKNOWN.value
 
     for option, argument in parsed.options:
         if option.lstrip("-") == _LOG_FILE_OPTION.long_option:
@@ -236,10 +237,10 @@ def run(
 
     logger = runtime.logger.getChild("base")
 
-    def command() -> int:
+    def command() -> ExitCode:
         if isinstance(parsed, ShowHelp):
             runtime.page(commands.help())
-            return 0
+            return ExitCode.SUCCESS
         runtime.start_tracing(omd_root)
         try:
             sub_options = parse_sub_options(parsed.command.sub_options, parsed.options, logger)
@@ -247,7 +248,7 @@ def run(
             logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if global_options.debug:
                 raise
-            return 3
+            return ExitCode.UNKNOWN
         return call(
             omd_root,
             parsed.command,
@@ -264,6 +265,6 @@ def run(
             logger,
             runtime.crash_reporter_for(omd_root, argv, environ),
             global_options.debug,
-        )
+        ).value
     finally:
         runtime.write_profile(omd_root / "var/check_mk/web")

@@ -11,12 +11,12 @@ from cmk.ccc.version import edition
 from cmk.cli.engine.commands import (
     write_stdout,
 )
-from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
+from cmk.cli.internal import Args, CLICommand, ExitCode, GlobalOptions, Options
 
 
 def _mode_version(
     omd_root: Path, _global_options: GlobalOptions, _options: Options, _args: Args
-) -> int:
+) -> ExitCode:
     write_stdout(
         """This is %s version %s
 Copyright (C) 2009 Checkmk GmbH
@@ -42,7 +42,7 @@ Copyright (C) 2009 Checkmk GmbH
             cmk_version.__version__,
         )
     )
-    return 0
+    return ExitCode.SUCCESS
 
 
 cli_command_version = CLICommand(

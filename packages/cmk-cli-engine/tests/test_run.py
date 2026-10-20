@@ -20,7 +20,7 @@ from cmk.cli.engine.run import (
     run,
     Runtime,
 )
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
+from cmk.cli.internal import Args, CLICommand, CLIOption, ExitCode, GlobalOptions, Options
 
 from ._logger import null_logger
 
@@ -50,27 +50,29 @@ class Recorder:
         self.calls.append(args[0] if len(args) == 1 else args)
 
 
-def _raising(exception: BaseException) -> Callable[[], int]:
-    def command() -> int:
+def _raising(exception: BaseException) -> Callable[[], ExitCode]:
+    def command() -> ExitCode:
         raise exception
 
     return command
 
 
-def _dispatch(command: Callable[[], int], reporter: FakeCrashReporter | None = None) -> int:
+def _dispatch(
+    command: Callable[[], ExitCode], reporter: FakeCrashReporter | None = None
+) -> ExitCode:
     return dispatch(command, null_logger(), reporter or FakeCrashReporter(), debug=False)
 
 
 def test_the_exit_status_of_a_command_that_succeeds_is_its_own() -> None:
-    assert _dispatch(lambda: 2) == 2
+    assert _dispatch(lambda: ExitCode.ERROR) == ExitCode.ERROR
 
 
-def test_an_interrupted_command_exits_one() -> None:
-    assert _dispatch(_raising(KeyboardInterrupt())) == 1
+def test_an_interrupted_command_exits_as_interrupted() -> None:
+    assert _dispatch(_raising(KeyboardInterrupt())) == ExitCode.INTERRUPTED
 
 
-def test_a_broken_pipe_exits_four() -> None:
-    assert _dispatch(_raising(OSError(errno.EPIPE, "broken pipe"))) == 4
+def test_a_broken_pipe_exits_as_broken_pipe() -> None:
+    assert _dispatch(_raising(OSError(errno.EPIPE, "broken pipe"))) == ExitCode.BROKEN_PIPE
 
 
 def test_a_broken_pipe_is_no_crash() -> None:
@@ -82,7 +84,7 @@ def test_a_broken_pipe_is_no_crash() -> None:
 
 
 def test_any_other_os_error_exits_one() -> None:
-    assert _dispatch(_raising(OSError(errno.EACCES, "denied"))) == 1
+    assert _dispatch(_raising(OSError(errno.EACCES, "denied"))) == ExitCode.FAILURE
 
 
 def test_an_os_error_that_is_no_broken_pipe_is_reported() -> None:
@@ -94,7 +96,7 @@ def test_an_os_error_that_is_no_broken_pipe_is_reported() -> None:
 
 
 def test_an_unexpected_exception_exits_one() -> None:
-    assert _dispatch(_raising(ValueError("unexpected"))) == 1
+    assert _dispatch(_raising(ValueError("unexpected"))) == ExitCode.FAILURE
 
 
 def test_an_unexpected_exception_is_reported() -> None:
@@ -168,7 +170,7 @@ def test_file_logging_replaces_the_handlers_it_finds(tmp_path: Path) -> None:
     assert len(logger.handlers) == 1
 
 
-def _command(handler: Callable[[Path, GlobalOptions, Options, Args], int]) -> Command:
+def _command(handler: Callable[[Path, GlobalOptions, Options, Args], ExitCode]) -> Command:
     return make_command(
         CLICommand(long_option="demo", handler_function=handler, short_help="Demonstrate")
     )
@@ -206,7 +208,7 @@ def _run(argv: Sequence[str], runtime: Runtime) -> int:
         signal.signal(signal.SIGINT, previous)
 
 
-def _numbered(handler: Callable[[Path, GlobalOptions, Options, Args], int]) -> Command:
+def _numbered(handler: Callable[[Path, GlobalOptions, Options, Args], ExitCode]) -> Command:
     return make_command(
         CLICommand(
             long_option="demo",
@@ -228,9 +230,9 @@ def _numbered(handler: Callable[[Path, GlobalOptions, Options, Args], int]) -> C
 def test_a_sub_option_reaches_the_command_converted() -> None:
     seen: list[Options] = []
 
-    def remember(_omd_root: Path, _options: GlobalOptions, sub: Options, _args: Args) -> int:
+    def remember(_omd_root: Path, _options: GlobalOptions, sub: Options, _args: Args) -> ExitCode:
         seen.append(sub)
-        return 0
+        return ExitCode.SUCCESS
 
     _run(["cmk", "--demo", "--number", "5"], _runtime([_numbered(remember)]))
 
@@ -238,11 +240,11 @@ def test_a_sub_option_reaches_the_command_converted() -> None:
 
 
 def test_a_command_reports_its_own_exit_status() -> None:
-    assert _run(["cmk", "--demo"], _runtime([_command(lambda *_args: 2)])) == 2
+    assert _run(["cmk", "--demo"], _runtime([_command(lambda *_args: ExitCode.ERROR)])) == 2
 
 
 def test_a_sub_option_argument_the_conversion_rejects_exits_three() -> None:
-    command = _numbered(lambda *_args: 0)
+    command = _numbered(lambda *_args: ExitCode.SUCCESS)
 
     assert _run(["cmk", "--demo", "--number", "x"], _runtime([command])) == 3
 
@@ -250,7 +252,9 @@ def test_a_sub_option_argument_the_conversion_rejects_exits_three() -> None:
 def test_a_sub_option_argument_the_conversion_rejects_is_logged(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    runtime = _runtime([_numbered(lambda *_args: 0)], logger=logging.getLogger("cmk.test"))
+    runtime = _runtime(
+        [_numbered(lambda *_args: ExitCode.SUCCESS)], logger=logging.getLogger("cmk.test")
+    )
 
     with caplog.at_level(logging.ERROR):
         _run(["cmk", "--demo", "--number", "x"], runtime)
@@ -259,7 +263,7 @@ def test_a_sub_option_argument_the_conversion_rejects_is_logged(
 
 
 def test_a_sub_option_argument_the_conversion_rejects_is_raised_through_under_debug() -> None:
-    runtime = _runtime([_numbered(lambda *_args: 0)])
+    runtime = _runtime([_numbered(lambda *_args: ExitCode.SUCCESS)])
 
     with pytest.raises(ValueError, match="--number: Invalid argument"):
         _run(["cmk", "--debug", "--demo", "--number", "x"], runtime)
@@ -268,17 +272,17 @@ def test_a_sub_option_argument_the_conversion_rejects_is_raised_through_under_de
 def test_a_command_is_handed_the_site_root() -> None:
     seen: list[Path] = []
 
-    def remember(omd_root: Path, _options: GlobalOptions, _sub: Options, _args: Args) -> int:
+    def remember(omd_root: Path, _options: GlobalOptions, _sub: Options, _args: Args) -> ExitCode:
         seen.append(omd_root)
-        return 0
+        return ExitCode.SUCCESS
 
     _run(["cmk", "--demo"], _runtime([_command(remember)]))
 
     assert seen == [_SITE]
 
 
-def test_an_unknown_option_exits_one() -> None:
-    assert _run(["cmk", "--nonsense"], _runtime()) == 1
+def test_an_unknown_option_exits_three() -> None:
+    assert _run(["cmk", "--nonsense"], _runtime()) == 3
 
 
 def test_an_unknown_option_says_what_it_did_not_recognise() -> None:
@@ -304,7 +308,7 @@ def test_the_help_is_paged() -> None:
 def test_the_help_names_the_commands_there_are() -> None:
     paged = Recorder()
 
-    _run(["cmk", "--help"], _runtime([_command(lambda *_args: 0)], page=paged))
+    _run(["cmk", "--help"], _runtime([_command(lambda *_args: ExitCode.SUCCESS)], page=paged))
 
     assert "--demo" in str(paged.calls[0])
 
@@ -318,14 +322,14 @@ def _ignored_sigint() -> Iterator[None]:
         signal.signal(signal.SIGINT, previous)
 
 
-def _interrupting(_omd_root: Path, _options: GlobalOptions, _sub: Options, _args: Args) -> int:
+def _interrupting(_omd_root: Path, _options: GlobalOptions, _sub: Options, _args: Args) -> ExitCode:
     signal.raise_signal(signal.SIGINT)
-    return 0
+    return ExitCode.SUCCESS
 
 
 @pytest.mark.usefixtures("ignored_sigint")
 def test_an_ignored_interrupt_signal_interrupts_the_command() -> None:
-    assert _run(["cmk", "--demo"], _runtime([_command(_interrupting)])) == 1
+    assert _run(["cmk", "--demo"], _runtime([_command(_interrupting)])) == 130
 
 
 def test_the_command_line_takes_the_interrupt_signal() -> None:
@@ -339,7 +343,10 @@ def test_the_command_line_takes_the_interrupt_signal() -> None:
 def test_tracing_starts_for_the_site_when_a_command_runs() -> None:
     started = Recorder()
 
-    _run(["cmk", "--demo"], _runtime([_command(lambda *_args: 0)], start_tracing=started))
+    _run(
+        ["cmk", "--demo"],
+        _runtime([_command(lambda *_args: ExitCode.SUCCESS)], start_tracing=started),
+    )
 
     assert started.calls == [_SITE]
 
@@ -396,5 +403,7 @@ def test_the_profile_is_written_even_when_the_command_raises() -> None:
     assert len(written.calls) == 1
 
 
-def _failing(_omd_root: Path, _options: GlobalOptions, _sub_options: Options, _args: Args) -> int:
+def _failing(
+    _omd_root: Path, _options: GlobalOptions, _sub_options: Options, _args: Args
+) -> ExitCode:
     raise ValueError("no such host")

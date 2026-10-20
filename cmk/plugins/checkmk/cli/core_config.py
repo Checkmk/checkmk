@@ -272,7 +272,7 @@ def _mode_update(
             )
     except Exception as e:
         console.error(f"Configuration Error: {e}", file=sys.stderr)
-        if cmk.ccc.debug.enabled():
+        if global_options.debug:
             raise
         return ExitCode.FAILURE
 

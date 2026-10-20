@@ -269,7 +269,7 @@ def _get_ds_type(
 
 
 def _mode_list_checks(
-    _omd_root: Path, _global_options: GlobalOptions, _options: Options, _args: Args
+    _omd_root: Path, global_options: GlobalOptions, _options: Options, _args: Args
 ) -> ExitCode:
     from cmk.utils import man_pages
 
@@ -282,7 +282,7 @@ def _mode_list_checks(
     all_check_manuals = {
         n: man_pages.parse_man_page(n, p)
         for n, p in man_pages.make_man_page_path_map(
-            discover_families(raise_errors=cmk.ccc.debug.enabled()),
+            discover_families(raise_errors=global_options.debug),
             PluginGroup.CHECKMAN.value,
         ).items()
     }
@@ -300,7 +300,7 @@ def _mode_list_checks(
                 ds_type=_DSType.ACTIVE,
                 title=_get_title(name),
             )
-            for p in load_active_checks(raise_errors=cmk.ccc.debug.enabled()).values()
+            for p in load_active_checks(raise_errors=global_options.debug).values()
         ),
         *(
             _TableRow(
@@ -319,7 +319,7 @@ def _mode_list_checks(
 
 def _run_list_checks(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # load_checks() and discover_families() read cmk.ccc.debug
+        # load_checks() and parse_man_page() read cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_list_checks(context.omd_root, context.global_options, options, args)

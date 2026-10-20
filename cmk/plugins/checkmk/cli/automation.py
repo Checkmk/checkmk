@@ -40,12 +40,11 @@ def _automation_error_exit_code(error: AutomationError) -> ExitCode:
 
 
 def _mode_automation(
-    omd_root: Path, _global_options: GlobalOptions, options: Options, args: Args
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> ExitCode:
     from cmk.automations.engine import Automations, discover_automations
     from cmk.automations.internal import AutomationID
     from cmk.base import config
-    from cmk.ccc import debug
     from cmk.ccc.store import lock_checkmk_configuration
 
     if not args:
@@ -73,12 +72,12 @@ def _mode_automation(
             automations.update(omd_root, raw_config)
         except (MKGeneralException, MKTimeout) as e:
             logger.error("Loading the configuration failed: %(error)s", {"error": e})  # noqa: TRY400
-            if debug.enabled():
+            if global_options.debug:
                 raise
             return _automation_error_exit_code(AutomationError.KNOWN_ERROR)
         except Exception:
             logger.exception("Loading the configuration failed")
-            if debug.enabled():
+            if global_options.debug:
                 raise
             return _automation_error_exit_code(AutomationError.UNKNOWN_ERROR)
 

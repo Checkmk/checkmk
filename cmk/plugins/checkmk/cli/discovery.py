@@ -145,7 +145,7 @@ def _mode_check_discovery(
         label_manager,
         omd_root=cmk.utils.paths.omd_root,
         var_dir=cmk.utils.paths.var_dir,
-        debug=cmk.ccc.debug.enabled(),
+        debug=global_options.debug,
     )
 
     with ruleset_matcher.ruleset_optimizer.processed_hosts({hostname}):
@@ -422,7 +422,7 @@ def _mode_discover(
         label_manager,
         omd_root=cmk.utils.paths.omd_root,
         var_dir=cmk.utils.paths.var_dir,
-        debug=cmk.ccc.debug.enabled(),
+        debug=global_options.debug,
     )
 
     discovery_config = DiscoveryConfig(
@@ -471,7 +471,7 @@ def _mode_discover(
         except ValueError as exc:
             raise MKBailOut("Unknown SNMP backend") from exc
 
-        on_error = OnError.RAISE if cmk.ccc.debug.enabled() else OnError.WARN
+        on_error = OnError.RAISE if global_options.debug else OnError.WARN
         selected_sections, run_plugin_names = extract_plugin_selection(
             detect_plugins=options.get("detect-plugins"),
             detect_sections=options.get("detect-sections"),

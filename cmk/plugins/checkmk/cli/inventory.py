@@ -322,7 +322,7 @@ def _mode_inventory(
                     section.section_success(check_result.summary)
 
             except Exception as e:
-                if cmk.ccc.debug.enabled():
+                if global_options.debug:
                     raise
                 section.section_error("%s" % e)
             finally:

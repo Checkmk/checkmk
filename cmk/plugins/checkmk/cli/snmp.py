@@ -7,6 +7,7 @@
 import subprocess
 import sys
 from collections.abc import Iterable
+from functools import partial
 from pathlib import Path
 
 import cmk.ccc.cleanup
@@ -156,27 +157,31 @@ _SNMPWalkOptions = dict[str, list[OID]]
 
 
 def _execute_walks_for_dump(
-    oids: list[OID], *, backend: SNMPBackend
+    oids: list[OID], *, backend: SNMPBackend, debug: bool
 ) -> Iterable[list[tuple[OID, str]]]:
     for oid in oids:
         console.verbose(f'Walk on "{oid}"...')
-        yield walk_all_contexts_for_export(oid, backend=backend, on_error=_report_walk_error)
+        yield walk_all_contexts_for_export(
+            oid, backend=backend, on_error=partial(_report_walk_error, debug=debug)
+        )
 
 
-def _report_walk_error(oid: OID, context: SNMPContext, e: Exception) -> None:
+def _report_walk_error(oid: OID, context: SNMPContext, e: Exception, *, debug: bool) -> None:
     where = f"context '{context}'" if context else "default context"
     console.error(f"Error walking OID '{oid}', {where}: {e}", file=sys.stderr)
-    if cmk.ccc.debug.enabled():
+    if debug:
         raise e
 
 
-def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: Path, *, backend: SNMPBackend) -> None:
+def _do_snmpwalk_on(
+    options: _SNMPWalkOptions, filename: Path, *, backend: SNMPBackend, debug: bool
+) -> None:
     console.verbose(f"{backend.hostname}:")
 
     oids = oids_to_walk(options)
 
     with filename.open("w", encoding="utf-8") as file:
-        for rows in _execute_walks_for_dump(oids, backend=backend):
+        for rows in _execute_walks_for_dump(oids, backend=backend, debug=debug):
             for oid, value in rows:
                 file.write(f"{oid} {value}\n")
             console.verbose(f"{len(rows)} variables.")
@@ -184,7 +189,7 @@ def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: Path, *, backend: SNMPB
     console.verbose(f"Wrote fetched data to {tty.bold}{filename}{tty.normal}.")
 
 
-def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
+def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend, debug: bool) -> None:
     cmk.utils.paths.snmpwalks_dir.mkdir(parents=True, exist_ok=True)
 
     # TODO: What about SNMP management boards?
@@ -193,10 +198,11 @@ def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
             options,
             cmk.utils.paths.snmpwalks_dir / backend.hostname,
             backend=backend,
+            debug=debug,
         )
     except Exception as e:
         console.error(f"Error walking {backend.hostname}: {e}", file=sys.stderr)
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise
     cmk.ccc.cleanup.cleanup_globals()
 
@@ -251,6 +257,7 @@ def _mode_snmpwalk(
         _do_snmpwalk(
             walk_options,
             backend=_make_backend(snmp_config),
+            debug=global_options.debug,
         )
     return ExitCode.SUCCESS
 

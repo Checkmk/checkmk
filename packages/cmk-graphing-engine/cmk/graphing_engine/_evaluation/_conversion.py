@@ -12,7 +12,7 @@ from cmk.graphing_engine._data._temperature import (
 from cmk.graphing_engine._data._timeseries import mapped_series
 from cmk.graphing_engine._data._units import NonConvertibleUnit, Unit
 
-from ._graphs import (
+from ._graph_evaluation import (
     EvaluatedCurve,
     EvaluatedGraph,
     EvaluatedLine,

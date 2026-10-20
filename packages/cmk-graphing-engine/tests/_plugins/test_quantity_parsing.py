@@ -10,7 +10,7 @@ import pytest
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import ScalarKind
-from cmk.graphing_engine._plugins._quantities import scalar_kind_of
+from cmk.graphing_engine._plugins._quantity_parsing import scalar_kind_of
 from cmk.graphing_engine._plugins._types import ApiScalar
 
 

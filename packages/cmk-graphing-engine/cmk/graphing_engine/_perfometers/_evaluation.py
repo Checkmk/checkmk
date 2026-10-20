@@ -15,7 +15,7 @@ from cmk.graphing_engine._data._fetched import FetchedData, PerformanceData, val
 from cmk.graphing_engine._data._naming import MetricName
 from cmk.graphing_engine._data._timeseries import TimeRange
 from cmk.graphing_engine._data._units import CurveAttributes
-from cmk.graphing_engine._plugins._quantities import (
+from cmk.graphing_engine._plugins._quantity_parsing import (
     attributes_of_quantity,
     parse_quantity,
     scalar_kind_of,

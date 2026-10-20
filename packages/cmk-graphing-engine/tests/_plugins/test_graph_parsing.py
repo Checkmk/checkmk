@@ -37,7 +37,7 @@ from cmk.graphing_engine import (
     TimeNotation,
     Unit,
 )
-from cmk.graphing_engine._plugins._graphs import parse_graph_from_api
+from cmk.graphing_engine._plugins._graph_parsing import parse_graph_from_api
 
 
 def _id(s: str) -> str:

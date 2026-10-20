@@ -20,7 +20,7 @@ from cmk.graphing_engine._rrd._metrics import rrd_metric_of, RRDMetric, ScalarOf
 from cmk.graphing_engine._rrd._naming import PredictPrefix, Service
 
 from ._attributes import metric_attributes, scalar_attributes
-from ._graphs import build_single_quantity, parse_graph_from_api, QuantityBuilderProtocol
+from ._graph_parsing import build_single_quantity, parse_graph_from_api, QuantityBuilderProtocol
 from ._types import ApiGraph, drawn_metric_names_of_graph
 
 

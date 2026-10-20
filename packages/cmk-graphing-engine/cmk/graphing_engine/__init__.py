@@ -48,7 +48,7 @@ from ._evaluation._fetch import (
     FetchDataProtocol,
     fetched_time_range,
 )
-from ._evaluation._graphs import (
+from ._evaluation._graph_evaluation import (
     evaluate_graphs,
     EvaluatedCurve,
     EvaluatedGraph,

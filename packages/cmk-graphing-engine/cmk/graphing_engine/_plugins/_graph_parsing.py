@@ -15,7 +15,7 @@ from cmk.graphing_engine._graphs._graph import Bound, Curve, Graph, Line, Minima
 from cmk.graphing_engine._quantities._quantity import QuantityProtocol
 from cmk.graphing_engine._rrd._naming import Service
 
-from ._quantities import attributes_of_quantity, parse_quantity
+from ._quantity_parsing import attributes_of_quantity, parse_quantity
 from ._types import ApiGraph, ApiQuantity, is_scalar, metric_names_in_quantity
 
 

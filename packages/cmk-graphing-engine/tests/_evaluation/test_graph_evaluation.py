@@ -38,7 +38,7 @@ from cmk.graphing_engine import (
     Unit,
     VerticalRangeKind,
 )
-from cmk.graphing_engine._evaluation._graphs import _evaluate_graph, _resolve_series_title
+from cmk.graphing_engine._evaluation._graph_evaluation import _evaluate_graph, _resolve_series_title
 from tests._fixtures import _data, _fetched, _metric, _time_series, _TR
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))

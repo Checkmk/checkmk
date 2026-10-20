@@ -255,7 +255,7 @@ def test_openapi_endpoint_decorator_catches_status_code_exceptions(
     assert response.json["ext"]["exc_type"] == "RestAPIResponseException"
     exc = response.json["ext"]["details"]["rest_api_exception"]
     assert exc["description"] == "Unexpected status code returned: 418"
-    assert exc["detail"] == "Endpoint tests.unit.cmk.gui.openapi.test_endpoint.test"
+    assert exc["detail"] == f"Endpoint {test_endpoint_raise_status_code.endpoint.operation_id}"
     assert set(exc["ext"]["The following status codes are allowed for this endpoint"]) == {
         401,
         406,

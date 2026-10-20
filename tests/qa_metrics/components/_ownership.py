@@ -91,8 +91,7 @@ async def _resolve(ownership: CodeOwnership, paths: Sequence[Path]) -> Component
     )
     return ComponentOwnership(
         owners_by_path={
-            path: _owner_ids(await ownership.component_for_path(PurePosixPath(path)))
-            for path in paths
+            path: await ownership.components_for_path(PurePosixPath(path)) for path in paths
         },
         component_ids=frozenset(components),
     )
@@ -110,11 +109,3 @@ def _assert_usable(*, component_count: int, rule_count: int) -> None:
             f"The ownership data defines {component_count} component(s) but not one OWNERS rule, "
             "so every path would resolve to unowned."
         )
-
-
-def _owner_ids(joined: str | None) -> list[str]:
-    """Split ``component_for_path``'s ``", "``-joined ids (``None`` when unowned).
-
-    Component ids hold only ``[a-z0-9_]``, so the join is reversible.
-    """
-    return joined.split(", ") if joined else []

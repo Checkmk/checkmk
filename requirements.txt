@@ -897,9 +897,9 @@ cmk-dev-site==1.20.0 \
     --hash=sha256:95878d6e23dabefed966c660c9ddc92e74b9268445968c45b46293f45735db19 \
     --hash=sha256:bf3fa962488f19458e6de49a242a133987be1c14e7d27344d631bff58035969a
     # via cmk-werk-zeug
-cmk-werk-zeug==0.4.9 \
-    --hash=sha256:2892f3af404be4cefb4b5b3fbe390d05b1811a841b5ca5a3e9722a06980e2dc3 \
-    --hash=sha256:d5b09e4d3ddd0ea1de508886a2456a862271f53d47d508654a0f81a1dea3f906
+cmk-werk-zeug==0.4.10 \
+    --hash=sha256:2dda75d1b1f03b5558f3282362792ba552056f59208e83737eb29c48a36205a1 \
+    --hash=sha256:63d91c2ea99324022f659be78dda22596ffc0eb70ba80d6ab521d32d57e1401e
     # via -r tests/dev-requirements.in
 contourpy==1.4.0 \
     --hash=sha256:018227e134b73090b06f911e773a526c77c9af426be29065500ce096a5accd4c \

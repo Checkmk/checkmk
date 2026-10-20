@@ -48,7 +48,6 @@ def test_parse_innovaphone_priports_l1_maps_rows_by_item() -> None:
         pytest.param(["Port 1", "2", "0", "-1"], id="negative slip count"),
     ],
 )
-@pytest.mark.xfail(strict=True, reason="rows that cannot be parsed are not skipped")
 def test_parse_innovaphone_priports_l1_skips_rows_that_cannot_be_parsed(row: list[str]) -> None:
     assert parse_innovaphone_priports_l1([row, ["Port 2", "2", "0", "0"]]) == {
         "Port 2": PriPort(state=2, sigloss=0, slip=0),

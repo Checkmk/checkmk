@@ -31,13 +31,6 @@ _STATE_NAMES = {
 }
 
 
-def _saveint(value: str) -> int:
-    try:
-        return int(value)
-    except ValueError:
-        return 0
-
-
 @dataclass(frozen=True, kw_only=True)
 class PriPort:
     state: int
@@ -49,14 +42,14 @@ Section = Mapping[str, PriPort]
 
 
 def parse_innovaphone_priports_l1(string_table: StringTable) -> Section:
-    return {
-        item: PriPort(
-            state=_saveint(state),
-            sigloss=_saveint(sigloss),
-            slip=_saveint(slip),
-        )
-        for item, state, sigloss, slip in string_table
-    }
+    section: dict[str, PriPort] = {}
+    for row in string_table:
+        match row:
+            case [str(item), str(state), str(sigloss), str(slip)] if (
+                state.isdigit() and sigloss.isdigit() and slip.isdigit()
+            ):
+                section[item] = PriPort(state=int(state), sigloss=int(sigloss), slip=int(slip))
+    return section
 
 
 def discover_innovaphone_priports_l1(section: Section) -> DiscoveryResult:

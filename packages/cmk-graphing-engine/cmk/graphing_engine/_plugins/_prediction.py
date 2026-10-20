@@ -20,7 +20,7 @@ from cmk.graphing_engine._rrd._metrics import (
 )
 from cmk.graphing_engine._rrd._naming import HostName, ServiceName, SiteID
 
-from ._attributes import metric_display_attributes
+from ._attributes import metric_attributes
 
 type Direction = Literal["upper", "lower"]
 
@@ -160,18 +160,18 @@ def build_prediction_graph(
         metric_name=context.metric_name,
         consolidation_function=ConsolidationFunction.MAX,
     )
-    display = metric_display_attributes(str(context.metric_name), localizer, metrics)
+    observed_attributes = metric_attributes(str(context.metric_name), localizer, metrics)
     observed_curve = Curve(
         quantity=observed,
-        attributes=_attributes(display.title, _OBSERVED_COLOR, display),
+        attributes=_attributes(observed_attributes.title, _OBSERVED_COLOR, observed_attributes),
     )
     return Graph(
         name=f"prediction_{context.metric_name}",
         title=title,
         kind=kind,
-        regions=list(_level_regions(context, display, texts)),
+        regions=list(_level_regions(context, observed_attributes, texts)),
         lines=[
-            *([line] if (line := _prediction_line(context, display, texts)) else []),
+            *([line] if (line := _prediction_line(context, observed_attributes, texts)) else []),
             Line(curve=observed_curve, inverse=False),
         ],
     )

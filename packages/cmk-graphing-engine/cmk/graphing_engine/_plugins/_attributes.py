@@ -143,7 +143,7 @@ def _prediction_attributes(
     )
 
 
-def metric_display_attributes(
+def metric_attributes(
     metric_name: str,
     localizer: Callable[[str], str],
     registered_metrics: Mapping[str, metrics_v1.Metric],
@@ -156,7 +156,7 @@ def metric_display_attributes(
 
 
 def scalar_attributes(
-    metric_attributes: CurveAttributes,
+    attributes: CurveAttributes,
     scalar_kind: ScalarKind,
     localizer: Callable[[str], str],
 ) -> CurveAttributes:
@@ -178,7 +178,7 @@ def scalar_attributes(
         case _:
             assert_never(scalar_kind)
     return CurveAttributes(
-        title=localizer(label) % {"title": metric_attributes.title},
-        unit=metric_attributes.unit,
-        color=type_color or metric_attributes.color,
+        title=localizer(label) % {"title": attributes.title},
+        unit=attributes.unit,
+        color=type_color or attributes.color,
     )

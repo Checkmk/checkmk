@@ -24,7 +24,7 @@ from cmk.graphing_engine import (
     GraphRequest,
     HostName,
     Line,
-    metric_display_attributes,
+    metric_attributes,
     MetricName,
     MetricProtocol,
     MinimalRange,
@@ -88,7 +88,7 @@ def _rrd(name: MetricName) -> RRDMetric:
 def _metric_curve(metric: RRDMetric) -> Curve:
     return Curve(
         quantity=metric,
-        attributes=metric_display_attributes(metric.metric_name, _id, _METRICS),
+        attributes=metric_attributes(metric.metric_name, _id, _METRICS),
     )
 
 
@@ -111,7 +111,7 @@ _FALLBACK_RULE_TYPES = (
 def _fallback(name: MetricName) -> Graph:
     # The fallback single-metric graph the engine builds for an unclaimed metric: the metric as a
     # stacked curve plus the four warn / crit (and lower) threshold rules as ScalarOf quantities, each
-    # with its display resolved.
+    # with its attributes resolved.
     return Graph(
         name=name,
         title=_TITLE.localize(_id),
@@ -122,7 +122,7 @@ def _fallback(name: MetricName) -> Graph:
                 curve=Curve(
                     quantity=ScalarOf(metric=_rrd(name), scalar_kind=scalar_kind),
                     attributes=scalar_attributes(
-                        metric_display_attributes(name, _id, _METRICS), scalar_kind, _id
+                        metric_attributes(name, _id, _METRICS), scalar_kind, _id
                     ),
                 ),
                 inverse=False,
@@ -220,7 +220,7 @@ def _discover(
 
 
 def _evaluate(discovered: Graph, fetch_data: _FakeRRDFetchData) -> EvaluatedGraph:
-    # Resolve the structure's display, then run the sole update entry point over a fresh fetch.
+    # Resolve the structure's attributes, then run the sole update entry point over a fresh fetch.
     [evaluated] = evaluate_graphs(
         time_range=_time_range(),
         graphs=[discovered],

@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 
 from cmk.graphing.v1 import metrics, Title
-from cmk.graphing_engine import metric_display_attributes, split_predict_prefix
+from cmk.graphing_engine import metric_attributes, split_predict_prefix
 from cmk.graphing_engine._plugins._attributes import FALLBACK_COLOR
 
 _REGISTERED: Mapping[str, metrics.Metric] = {
@@ -32,7 +32,7 @@ _REGISTERED: Mapping[str, metrics.Metric] = {
 
 
 def _attributes(metric_name: str) -> tuple[str, str, str]:
-    attributes = metric_display_attributes(metric_name, lambda text: text, _REGISTERED)
+    attributes = metric_attributes(metric_name, lambda text: text, _REGISTERED)
     return attributes.title, attributes.unit.notation.symbol, attributes.color
 
 

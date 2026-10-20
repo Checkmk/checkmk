@@ -17,7 +17,7 @@ from cmk.graphing_engine import (
     EngineeringScientificNotation,
     FALLBACK_UNIT,
     IECNotation,
-    metric_display_attributes,
+    metric_attributes,
     parse_performance_data,
     parse_unit,
     SINotation,
@@ -472,7 +472,7 @@ class PageVsAutocomplete(AjaxPage):
         temperature_unit = get_temperature_unit(user, ctx.config.default_temperature_unit)
         if metric_name := ctx.request.get_request().get("metric"):
             unit_choice_for_metric = _unit_choice_from_unit(
-                metric_display_attributes(
+                metric_attributes(
                     metric_name, translate_to_current_language, registered_metrics()
                 ).unit,
                 temperature_unit=temperature_unit,
@@ -577,9 +577,7 @@ def _metric_choices(
     ):
         yield (
             metric_name,
-            metric_display_attributes(
-                metric_name, translate_to_current_language, registered_metrics
-            ).title,
+            metric_attributes(metric_name, translate_to_current_language, registered_metrics).title,
         )
 
 

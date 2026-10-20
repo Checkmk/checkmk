@@ -9,7 +9,7 @@ from typing import Annotated, assert_never, Literal, override, Self
 
 from pydantic import Discriminator
 
-from cmk.graphing_engine import metric_display_attributes
+from cmk.graphing_engine import metric_attributes
 from cmk.gui.dashboard.type_defs import (
     AverageScatterplotDashletConfig,
     BarplotDashletConfig,
@@ -89,7 +89,7 @@ class MetricDisplayRangeFixedModel:
         )
 
     def to_internal(self, metric_name: str) -> MetricDisplayRangeFixed:
-        unit = metric_display_attributes(
+        unit = metric_attributes(
             metric_name, translate_to_current_language, registered_metrics()
         ).unit
         return "fixed", (id_from_unit(unit), (self.minimum, self.maximum))

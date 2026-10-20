@@ -89,7 +89,7 @@ from ._perfometers._evaluation import (
 from ._perfometers._geometry import drawn_segments, DrawnSegment, perfometer_sort_value
 from ._plugins._attributes import (
     FALLBACK_UNIT,
-    metric_display_attributes,
+    metric_attributes,
     parse_color,
     parse_unit,
     scalar_attributes,
@@ -275,7 +275,7 @@ __all__ = [
     "DrawnCurve",
     "DrawnLineType",
     "evaluate_perfometer",
-    "metric_display_attributes",
+    "metric_attributes",
     "scalar_attributes",
     "parse_color",
     "parse_unit",

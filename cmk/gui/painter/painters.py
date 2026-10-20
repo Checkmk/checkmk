@@ -18,7 +18,7 @@ import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.graphing.v1 import metrics as metrics_v1
-from cmk.graphing_engine import metric_display_attributes, MetricName
+from cmk.graphing_engine import metric_attributes, MetricName
 from cmk.gui import sites
 from cmk.gui.color import render_color_icon
 from cmk.gui.config import Config
@@ -4908,7 +4908,7 @@ def _title_with_parameters(
     registered_metrics: Mapping[str, metrics_v1.Metric],
 ) -> str:
     try:
-        return metric_display_attributes(
+        return metric_attributes(
             parameters["metric"], translate_to_current_language, registered_metrics
         ).title
     except KeyError:

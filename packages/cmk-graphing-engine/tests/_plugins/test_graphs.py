@@ -61,7 +61,7 @@ _METRICS = {
 }
 
 _DECIMAL = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
-# The display attributes a registered test metric (or a threshold over one) resolves to.
+# The attributes a registered test metric (or a threshold over one) resolves to.
 _METRIC_ATTRS = CurveAttributes(title="Metric", unit=_DECIMAL, color="#28a2f3")
 _WARN_COLOR = "#ffd000"
 _CRIT_COLOR = "#ff3232"
@@ -96,7 +96,7 @@ def _rule(quantity: QuantityProtocol, attributes: CurveAttributes = _METRIC_ATTR
     return Rule(curve=_curve(quantity, attributes), inverse=False)
 
 
-# --- parse_graph_from_api -> Graph (display resolved inline) ------------------------------
+# --- parse_graph_from_api -> Graph (attributes resolved inline) ------------------------------
 
 
 def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group() -> None:
@@ -244,7 +244,7 @@ def test_parse_graph_from_api_maps_lower_warning_and_critical() -> None:
     ]
 
 
-def test_parse_graph_from_api_constants_carry_their_intrinsic_display() -> None:
+def test_parse_graph_from_api_constants_carry_their_intrinsic_attributes() -> None:
     graph = graphs_v1.Graph(
         name="g",
         title=Title("t"),
@@ -270,7 +270,7 @@ def test_parse_graph_from_api_constants_carry_their_intrinsic_display() -> None:
         ],
     )
     parsed = parse_graph_from_api(graph, [_SERVICE], _id, _METRICS, kind=_KIND)
-    # Constants are scalars, so they become horizontal rules; each carries its own intrinsic display.
+    # Constants are scalars, so they become horizontal rules; each carries its own intrinsic attributes.
     assert parsed.lines == []
     assert parsed.rules == [
         _rule(
@@ -300,7 +300,7 @@ def test_parse_graph_from_api_constants_carry_their_intrinsic_display() -> None:
     ]
 
 
-def test_parse_graph_from_api_operations_carry_their_intrinsic_display() -> None:
+def test_parse_graph_from_api_operations_carry_their_intrinsic_attributes() -> None:
     graph = graphs_v1.Graph(
         name="g",
         title=Title("t"),
@@ -410,7 +410,7 @@ def test_parse_graph_from_api_collapses_bidirectional_into_one_graph() -> None:
     )
 
 
-# --- parse_graph_from_api resolves display ------------------------------------------------------
+# --- parse_graph_from_api resolves attributes-----------------------------------------------------
 
 
 def test_parse_resolves_resolves_metric_curves_from_the_registry() -> None:

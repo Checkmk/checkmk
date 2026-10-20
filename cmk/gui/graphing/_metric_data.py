@@ -18,7 +18,7 @@ from cmk.graphing_engine import (
     mapped_performance_data,
     mapped_series,
     merge_series,
-    metric_display_attributes,
+    metric_attributes,
     MetricName,
     parse_performance_data,
     PerformanceData,
@@ -104,9 +104,7 @@ def merge_rrd_columns(
         return TimeSeries(time_range=TimeRange(start=0, end=0, step=0), values=[])
 
     unit = user_specific_unit(
-        metric_display_attributes(
-            target_metric, translate_to_current_language, registered_metrics
-        ).unit,
+        metric_attributes(target_metric, translate_to_current_language, registered_metrics).unit,
         temperature_unit,
     )
     return mapped_series(merge_series(relevant, relevant[0].time_range), unit.conversion)
@@ -154,9 +152,7 @@ def evaluated_metrics(
     for name, performance_data in translate_performance_data(
         raw.check_command, raw.values, registered_translations
     ).items():
-        attributes = metric_display_attributes(
-            name, translate_to_current_language, registered_metrics
-        )
+        attributes = metric_attributes(name, translate_to_current_language, registered_metrics)
         unit_format, conversion = user_unit_format(attributes.unit, temperature_unit)
         evaluated[name] = EvaluatedMetric(
             name=name,

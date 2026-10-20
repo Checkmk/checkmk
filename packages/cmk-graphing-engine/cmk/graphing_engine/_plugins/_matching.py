@@ -19,7 +19,7 @@ from cmk.graphing_engine._rrd._fetch import FetchMetricNamesProtocol
 from cmk.graphing_engine._rrd._metrics import rrd_metric_of, RRDMetric, ScalarOf
 from cmk.graphing_engine._rrd._naming import PredictPrefix, Service
 
-from ._attributes import metric_display_attributes, scalar_attributes
+from ._attributes import metric_attributes, scalar_attributes
 from ._graphs import build_single_quantity, parse_graph_from_api, QuantityBuilderProtocol
 from ._types import ApiGraph, drawn_metric_names_of_graph
 
@@ -79,9 +79,7 @@ def _add_predictive_lines(
                     Line(
                         curve=Curve(
                             quantity=rrd_metric_of(service, predictive),
-                            attributes=metric_display_attributes(
-                                predictive, localizer, registered_metrics
-                            ),
+                            attributes=metric_attributes(predictive, localizer, registered_metrics),
                         ),
                         inverse=inverse,
                     )
@@ -114,13 +112,13 @@ _THRESHOLD_KINDS = (
 
 
 def threshold_rules(
-    metric: RRDMetric, metric_attributes: CurveAttributes, localizer: Callable[[str], str]
+    metric: RRDMetric, attributes: CurveAttributes, localizer: Callable[[str], str]
 ) -> Sequence[Rule]:
     return [
         Rule(
             curve=Curve(
                 quantity=ScalarOf(metric=metric, scalar_kind=scalar_kind),
-                attributes=scalar_attributes(metric_attributes, scalar_kind, localizer),
+                attributes=scalar_attributes(attributes, scalar_kind, localizer),
             ),
             inverse=False,
         )
@@ -175,14 +173,14 @@ def build_matched_graphs(
             return ()
         return threshold_rules(
             rrd_metric_of(single_service, name),
-            metric_display_attributes(name, localizer, registered_metrics),
+            metric_attributes(name, localizer, registered_metrics),
             localizer,
         )
 
     def _single_metric_graph(name: MetricName) -> Graph:
         return Graph(
             name=name,
-            title=metric_display_attributes(name, localizer, registered_metrics).title,
+            title=metric_attributes(name, localizer, registered_metrics).title,
             kind=kind,
             stacks=[
                 Stack(
@@ -191,9 +189,7 @@ def build_matched_graphs(
                             quantity=quantity_builder(
                                 [rrd_metric_of(service, name) for service in resolved]
                             ),
-                            attributes=metric_display_attributes(
-                                name, localizer, registered_metrics
-                            ),
+                            attributes=metric_attributes(name, localizer, registered_metrics),
                         )
                     ],
                     inverse=False,

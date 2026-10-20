@@ -48,7 +48,7 @@ from cmk.gui.exceptions import (
     MKUserError,
 )
 from cmk.gui.http import request, Response
-from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, user
+from cmk.gui.logged_in import LoggedInNobody, LoggedInRemoteSite, LoggedInSuperUser, user
 from cmk.gui.openapi.framework import ApiContext, RawRequestData
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.handler import handle_endpoint_request
@@ -553,7 +553,8 @@ def _ensure_authenticated() -> None:
         if session.session.exc:
             raise session.session.exc
         raise MKAuthException("You need to be logged in to access this resource.")
-    if isinstance(session.session.user, LoggedInSuperUser):
+    if isinstance(session.session.user, LoggedInSuperUser | LoggedInRemoteSite):
+        # A pseudo user has no session state to check: no second factor, no password.
         return
 
     # Not defined in the case as this allows us to understand if a user go direct to 'logged_in'
@@ -815,6 +816,25 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 raise RestAPIForbiddenException(
                     title=HTTPStatus.FORBIDDEN.phrase,
                     detail="This endpoint is reserved for Checkmk.",
+                )
+
+            # A remote site reaches the endpoints that declare themselves for it, and no others.
+            # Denying by default matters: the distributed setup secret authenticates against every
+            # site, so without this an endpoint that requires no permission would accept it.
+            remote_site_only = (
+                isinstance(wsgi_endpoint, VersionedEndpointAdapter)
+                and wsgi_endpoint.endpoint.remote_site_only
+            )
+            caller_is_remote_site = isinstance(session.session.user, LoggedInRemoteSite)
+            if remote_site_only and not caller_is_remote_site:
+                raise RestAPIForbiddenException(
+                    title=HTTPStatus.FORBIDDEN.phrase,
+                    detail="This endpoint is reserved for remote sites.",
+                )
+            if caller_is_remote_site and not remote_site_only:
+                raise RestAPIForbiddenException(
+                    title=HTTPStatus.FORBIDDEN.phrase,
+                    detail="This endpoint is not available to a remote site.",
                 )
 
             return wsgi_endpoint(environ, start_response)

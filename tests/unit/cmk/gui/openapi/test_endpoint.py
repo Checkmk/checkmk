@@ -24,20 +24,40 @@ import pytest
 from flask import Flask
 
 from cmk import fields
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import hooks
 from cmk.gui.exceptions import MKAuthException, MKUnauthenticatedException
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
 from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.openapi.framework.api_config import APIVersion
+from cmk.gui.openapi.framework.registry import versioned_endpoint_registry
+from cmk.gui.openapi.framework.versioned_endpoint import (
+    EndpointDoc,
+    EndpointHandler,
+    EndpointMetadata,
+    EndpointPermissions,
+    VersionedEndpoint,
+)
 from cmk.gui.openapi.restful_objects.decorators import Endpoint, WrappedEndpoint
+from cmk.gui.openapi.restful_objects.endpoint_family import endpoint_family_registry
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 from cmk.gui.openapi.utils import ProblemException, RestAPIResponseGeneralException
+from cmk.gui.openapi.versioned_endpoint_map import _discover_endpoints
+from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.web.utils import permission_verification as permissions
+from tests.testlib.unit.fake_site import no_site_configuration
 from tests.testlib.unit.gui.common_fixtures import create_aut_user_auth_wsgi_app
+from tests.testlib.unit.gui.openapi_test_helper import clear_app_instance_caches
 from tests.testlib.unit.gui.web_test_app import CmkTestResponse, SetConfig, WebTestAppForCMK
 from tests.testlib.unit.rest_api_client import ClientRegistry, RestApiClient
+from tests.unit.cmk.gui.openapi.framework.factories import (
+    EndpointDocFactory,
+    EndpointFamilyFactory,
+    EndpointHandlerFactory,
+)
 
 TEST_TARGZ_FILE = "H4sIAAAAAAAAA+3OQQrCMBCF4aw9RbyAJDVNzxNooIXgyBjR4xvppuBCN0UK/7eYxzCzeNN8qs9qNuWaGMM7/dC7dS58b3yI3RDbDJ1pe/BnY922tRb3W01qrSlZLklHueaqounj79t9p6ZcitiHaBmPh3+XAQAAAAAAAAAAAAAAAAD87AUCVDjzACgAAA=="
 
@@ -708,3 +728,155 @@ def test_reserved_endpoint_auth(
     )
 
     assert res_.status_code == HTTPStatus.NO_CONTENT
+
+
+# ========= Authorization of a remote-site endpoint =========
+_REMOTE_SITE = SiteId("remote")
+_REMOTE_SITE_SECRET = "the-secret-of-the-remote-site"
+_REMOTE_SITE_TOKEN = "RemoteSite " + base64.b64encode(_REMOTE_SITE_SECRET.encode()).decode("ascii")
+
+
+def _remote_site_sites() -> SiteConfigurations:
+    """This site is the central site of _REMOTE_SITE, whose secret it knows"""
+    remote_site: SiteConfiguration = no_site_configuration()
+    remote_site["id"] = _REMOTE_SITE
+    remote_site["alias"] = "Remote"
+    remote_site["secret"] = _REMOTE_SITE_SECRET
+    return SiteConfigurations({_REMOTE_SITE: remote_site})
+
+
+@pytest.fixture(name="test_remote_site_endpoint")
+def install_remote_site_endpoint(fresh_app_instance: None) -> Iterator[None]:
+    """An endpoint that declares itself for a remote site, with no required permission"""
+
+    def remote_site_test() -> None:
+        return None
+
+    family = EndpointFamilyFactory.build(name="remote_site_test_family", doc_group="Monitoring")
+    endpoint_family_registry.register(family)
+    registered_versions = {
+        version: dict(endpoints)
+        for version, endpoints in versioned_endpoint_registry._versions.items()  # noqa: SLF001
+    }
+    _discover_endpoints.cache_clear()  # type: ignore[attr-defined]
+    versioned_endpoint_registry.register(
+        VersionedEndpoint(
+            metadata=EndpointMetadata(
+                path="/i_am_for_remote_sites", method="get", link_relation="help"
+            ),
+            permissions=EndpointPermissions(required=None),
+            doc=EndpointDoc(family=family.name),
+            versions={APIVersion.V1: EndpointHandler(handler=remote_site_test)},
+            remote_site_only=True,
+        )
+    )
+    try:
+        yield
+    finally:
+        versioned_endpoint_registry._versions = registered_versions  # noqa: SLF001
+        endpoint_family_registry.unregister(family.name)
+        _discover_endpoints.cache_clear()  # type: ignore[attr-defined]
+        clear_app_instance_caches()
+
+
+@pytest.mark.usefixtures("test_remote_site_endpoint")
+def test_remote_site_endpoint_accepts_a_remote_site(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, set_config: SetConfig
+) -> None:
+    with set_config(sites=_remote_site_sites()):
+        aut_user_auth_wsgi_app.call_method(
+            "get",
+            "/NO_SITE/check_mk/api/1.0/i_am_for_remote_sites",
+            "",
+            {"Accept": "application/json", "Authorization": _REMOTE_SITE_TOKEN},
+            status=HTTPStatus.NO_CONTENT,
+        )
+
+
+@pytest.mark.usefixtures("test_remote_site_endpoint")
+def test_remote_site_endpoint_rejects_a_normal_user(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, set_config: SetConfig
+) -> None:
+    with set_config(sites=_remote_site_sites()):
+        res = aut_user_auth_wsgi_app.call_method(
+            "get",
+            "/NO_SITE/check_mk/api/1.0/i_am_for_remote_sites",
+            "",
+            {"Accept": "application/json"},
+            status=HTTPStatus.FORBIDDEN,
+        )
+
+    assert res.json["detail"] == "This endpoint is reserved for remote sites."
+
+
+@pytest.mark.usefixtures("test_remote_site_endpoint")
+def test_remote_site_endpoint_rejects_the_site_internal_secret(
+    api_client: RestApiClient,
+    set_config: SetConfig,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    mocked_secret_path = tmp_path / "siteinternal.secret"
+    mocked_secret_path.write_bytes(b"unittestsecret")
+    monkeypatch.setattr(SiteInternalSecret, "path", mocked_secret_path)
+
+    with set_config(sites=_remote_site_sites()):
+        res = api_client.request(
+            method="get",
+            url="/i_am_for_remote_sites",
+            headers={
+                "Accept": "application/json",
+                "Authorization": "InternalToken dW5pdHRlc3RzZWNyZXQ=",  # unittestsecret
+            },
+            expect_ok=False,
+        )
+
+    assert res.status_code == HTTPStatus.FORBIDDEN
+    assert res.json["detail"] == "This endpoint is reserved for remote sites."
+
+
+@pytest.mark.usefixtures("test_endpoint")
+def test_a_legacy_endpoint_rejects_a_remote_site(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, set_config: SetConfig
+) -> None:
+    with set_config(sites=_remote_site_sites()):
+        res = aut_user_auth_wsgi_app.call_method(
+            "post",
+            "/NO_SITE/check_mk/api/1.0/unitest-endpoint-test-that-is-not-cleaned-up",
+            json.dumps({"permission": "one"}),
+            {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "Authorization": _REMOTE_SITE_TOKEN,
+            },
+            status=HTTPStatus.FORBIDDEN,
+        )
+
+    assert res.json["detail"] == "This endpoint is not available to a remote site."
+
+
+@pytest.mark.usefixtures("test_remote_site_endpoint")
+def test_a_secret_of_no_known_site_is_unauthorized(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    aut_user_auth_wsgi_app.call_method(
+        "get",
+        "/NO_SITE/check_mk/api/1.0/i_am_for_remote_sites",
+        "",
+        {"Accept": "application/json", "Authorization": _REMOTE_SITE_TOKEN},
+        status=HTTPStatus.UNAUTHORIZED,
+    )
+
+
+def test_an_endpoint_cannot_take_both_a_remote_site_and_a_token() -> None:
+    with pytest.raises(ValueError, match="remote_site_only"):
+        VersionedEndpoint(
+            metadata=EndpointMetadata(
+                path="/i_am_contradictory", method="get", link_relation="help"
+            ),
+            permissions=EndpointPermissions(required=None),
+            doc=EndpointDocFactory.build(),
+            versions={APIVersion.V1: EndpointHandlerFactory.build()},
+            remote_site_only=True,
+            allowed_tokens={"agent_registration"},
+        )

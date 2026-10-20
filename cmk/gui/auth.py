@@ -130,6 +130,11 @@ def check_auth(config: Config) -> tuple[Credential, AuthType]:
     return credential, selected_auth_type
 
 
+def is_rest_api_request() -> bool:
+    """Determine whether the request addresses the REST API rather than a GUI page"""
+    return re.match("/[^/]+/check_mk/api/", request.path) is not None
+
+
 def is_site_login() -> bool:
     """Determine if login is a site login for connecting central and remote
     site. This login has to be allowed even if site login on remote site is not
@@ -137,7 +142,7 @@ def is_site_login() -> bool:
     all rest-api requests, they should also be allowed in this scenario otherwise
     the agent-receiver won't work."""
 
-    if re.match("/[^/]+/check_mk/api/", request.path) is not None:
+    if is_rest_api_request():
         return True
 
     if requested_file_name(request) == "login":
@@ -447,6 +452,7 @@ def _check_internal_token(config: Config) -> SiteInternalPseudoUser | None:  # n
 # handler that authenticates the caller as a ``RemoteSitePseudoUser`` and
 # either skips user-permission checks or scopes them to the site secret.
 # Keep in sync with the ``PageEndpoint`` registrations using these names.
+# REST API requests are not covered here, see ``_check_remote_site``.
 _REMOTE_SITE_ALLOWED_PAGES: frozenset[str] = frozenset(
     {
         "register_agent",
@@ -461,7 +467,11 @@ def _check_remote_site(config: Config) -> RemoteSitePseudoUser | None:
 
     _tokenname, token = auth_header.split("RemoteSite ", maxsplit=1)
 
-    if (page_name := requested_file_name(request)) not in _REMOTE_SITE_ALLOWED_PAGES:
+    # A REST API request carries no page name, so the page list cannot decide it. The endpoint
+    # decides instead, through its ``remote_site_only`` attribute, which denies by default.
+    if not is_rest_api_request() and (
+        (page_name := requested_file_name(request)) not in _REMOTE_SITE_ALLOWED_PAGES
+    ):
         raise MKAuthException(f"RemoteSite auth for invalid page: {page_name}")
 
     with contextlib.suppress(binascii.Error):  # base64 decoding failure

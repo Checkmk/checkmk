@@ -30,6 +30,9 @@ READ_PERMISSIONS: Final[frozenset[str]] = frozenset(
         "wato.auditlog",
         # get_availability
         "general.see_availability",
+        # list_structure
+        "wato.groups",
+        "wato.hosttags",
     }
 )
 

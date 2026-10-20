@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Final, NoReturn
 
 import pytest
@@ -17,14 +16,12 @@ from cmk.cli.engine.commands import (
     Option,
     parse_sub_options,
 )
-from cmk.cli.internal import Args, GlobalOptions, Options
+from cmk.cli.internal import Args, CommandContext, Options
 
 from ._logger import null_logger
 
 
-def _unreachable(
-    _omd_root: Path, _global: GlobalOptions, _options: Options, _args: Args
-) -> NoReturn:
+def _unreachable(_context: CommandContext, _options: Options, _args: Args) -> NoReturn:
     raise AssertionError("parsing must not run the command")
 
 

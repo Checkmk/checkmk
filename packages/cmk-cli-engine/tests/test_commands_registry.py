@@ -11,7 +11,15 @@ import pytest
 from cmk import trace
 from cmk.cli.engine.call import call
 from cmk.cli.engine.commands import make_command, make_option, parse_sub_options
-from cmk.cli.internal import Args, CLICommand, CLIOption, ExitCode, GlobalOptions, Options
+from cmk.cli.internal import (
+    Args,
+    CLICommand,
+    CLIOption,
+    CommandContext,
+    ExitCode,
+    GlobalOptions,
+    Options,
+)
 
 from ._logger import null_logger
 
@@ -19,9 +27,7 @@ from ._logger import null_logger
 _OMD_ROOT: Final = Path("/omd/sites/mysite")
 
 
-def _handler(
-    _omd_root: Path, _global_options: GlobalOptions, _options: Options, _args: Args
-) -> ExitCode:
+def _handler(_context: CommandContext, _options: Options, _args: Args) -> ExitCode:
     return ExitCode.SUCCESS
 
 
@@ -78,9 +84,7 @@ def test_call_shapes_the_positional_arguments(
 ) -> None:
     seen: list[Args] = []
 
-    def _record(
-        _omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
-    ) -> ExitCode:
+    def _record(_context: CommandContext, _options: Options, args: Args) -> ExitCode:
         seen.append(args)
         return ExitCode.ERROR
 
@@ -95,9 +99,8 @@ def test_call_shapes_the_positional_arguments(
         )
     )
     exit_status = call(
-        _OMD_ROOT,
+        CommandContext(omd_root=_OMD_ROOT, global_options=GlobalOptions(), logger=null_logger()),
         command,
-        GlobalOptions(),
         "ARG" if argument else "",
         parse_sub_options(
             command.sub_options, [("--thing", "ARG" if argument else "")], null_logger()

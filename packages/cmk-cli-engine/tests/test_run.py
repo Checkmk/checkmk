@@ -20,7 +20,15 @@ from cmk.cli.engine.run import (
     run,
     Runtime,
 )
-from cmk.cli.internal import Args, CLICommand, CLIOption, ExitCode, GlobalOptions, Options
+from cmk.cli.internal import (
+    Args,
+    CLICommand,
+    CLIOption,
+    CommandContext,
+    CommandHandler,
+    ExitCode,
+    Options,
+)
 
 from ._logger import null_logger
 
@@ -170,7 +178,7 @@ def test_file_logging_replaces_the_handlers_it_finds(tmp_path: Path) -> None:
     assert len(logger.handlers) == 1
 
 
-def _command(handler: Callable[[Path, GlobalOptions, Options, Args], ExitCode]) -> Command:
+def _command(handler: CommandHandler) -> Command:
     return make_command(
         CLICommand(long_option="demo", handler_function=handler, short_help="Demonstrate")
     )
@@ -208,7 +216,7 @@ def _run(argv: Sequence[str], runtime: Runtime) -> int:
         signal.signal(signal.SIGINT, previous)
 
 
-def _numbered(handler: Callable[[Path, GlobalOptions, Options, Args], ExitCode]) -> Command:
+def _numbered(handler: CommandHandler) -> Command:
     return make_command(
         CLICommand(
             long_option="demo",
@@ -230,7 +238,7 @@ def _numbered(handler: Callable[[Path, GlobalOptions, Options, Args], ExitCode])
 def test_a_sub_option_reaches_the_command_converted() -> None:
     seen: list[Options] = []
 
-    def remember(_omd_root: Path, _options: GlobalOptions, sub: Options, _args: Args) -> ExitCode:
+    def remember(_context: CommandContext, sub: Options, _args: Args) -> ExitCode:
         seen.append(sub)
         return ExitCode.SUCCESS
 
@@ -272,13 +280,26 @@ def test_a_sub_option_argument_the_conversion_rejects_is_raised_through_under_de
 def test_a_command_is_handed_the_site_root() -> None:
     seen: list[Path] = []
 
-    def remember(omd_root: Path, _options: GlobalOptions, _sub: Options, _args: Args) -> ExitCode:
-        seen.append(omd_root)
+    def remember(context: CommandContext, _sub: Options, _args: Args) -> ExitCode:
+        seen.append(context.omd_root)
         return ExitCode.SUCCESS
 
     _run(["cmk", "--demo"], _runtime([_command(remember)]))
 
     assert seen == [_SITE]
+
+
+def test_a_command_reports_through_the_engines_logger() -> None:
+    seen: list[logging.Logger] = []
+
+    def remember(context: CommandContext, _sub: Options, _args: Args) -> ExitCode:
+        seen.append(context.logger)
+        return ExitCode.SUCCESS
+
+    logger = logging.getLogger("cmk.test")
+    _run(["cmk", "--demo"], _runtime([_command(remember)], logger=logger))
+
+    assert seen == [logger.getChild("base")]
 
 
 def test_an_unknown_option_exits_three() -> None:
@@ -322,7 +343,7 @@ def _ignored_sigint() -> Iterator[None]:
         signal.signal(signal.SIGINT, previous)
 
 
-def _interrupting(_omd_root: Path, _options: GlobalOptions, _sub: Options, _args: Args) -> ExitCode:
+def _interrupting(_context: CommandContext, _sub: Options, _args: Args) -> ExitCode:
     signal.raise_signal(signal.SIGINT)
     return ExitCode.SUCCESS
 
@@ -403,7 +424,5 @@ def test_the_profile_is_written_even_when_the_command_raises() -> None:
     assert len(written.calls) == 1
 
 
-def _failing(
-    _omd_root: Path, _options: GlobalOptions, _sub_options: Options, _args: Args
-) -> ExitCode:
+def _failing(_context: CommandContext, _sub_options: Options, _args: Args) -> ExitCode:
     raise ValueError("no such host")

@@ -30,7 +30,7 @@ from cmk.cli.engine.commands import (
     write_paged,
     write_stdout,
 )
-from cmk.cli.internal import ExitCode
+from cmk.cli.internal import CommandContext, ExitCode
 from cmk.crash import (
     ABCCrashReport,
     BaseDetails,
@@ -250,9 +250,8 @@ def run(
                 raise
             return ExitCode.UNKNOWN
         return call(
-            omd_root,
+            CommandContext(omd_root=omd_root, global_options=global_options, logger=logger),
             parsed.command,
-            global_options,
             parsed.argument,
             sub_options,
             parsed.arguments,

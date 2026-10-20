@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The SNMP commands: --snmptranslate, --snmpwalk and --snmpget."""
 
-import logging
 import subprocess
 import sys
 from collections.abc import Iterable
@@ -39,6 +38,7 @@ from cmk.cli.internal import (
     Args,
     CLICommand,
     CLIOption,
+    CommandContext,
     ExitCode,
     GlobalOptions,
     Options,
@@ -116,14 +116,12 @@ def _mode_snmptranslate(
     return ExitCode.SUCCESS
 
 
-def _run_snmptranslate(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
+def _run_snmptranslate(context: CommandContext, options: Options, args: Args) -> ExitCode:
     try:
-        return _mode_snmptranslate(omd_root, global_options, options, args)
+        return _mode_snmptranslate(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 
@@ -257,17 +255,15 @@ def _mode_snmpwalk(
     return ExitCode.SUCCESS
 
 
-def _run_snmpwalk(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
-    if global_options.debug:
+def _run_snmpwalk(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    if context.global_options.debug:
         # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
-        return _mode_snmpwalk(omd_root, global_options, options, args)
+        return _mode_snmpwalk(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 
@@ -373,17 +369,15 @@ def _mode_snmpget(
     return ExitCode.SUCCESS
 
 
-def _run_snmpget(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
-    if global_options.debug:
+def _run_snmpget(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    if context.global_options.debug:
         # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
-        return _mode_snmpget(omd_root, global_options, options, args)
+        return _mode_snmpget(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 

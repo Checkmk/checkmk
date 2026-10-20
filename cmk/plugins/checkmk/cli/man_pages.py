@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The "cmk --man" and "cmk --browse-man" commands."""
 
-import logging
 import sys
 from pathlib import Path
 
@@ -14,6 +13,7 @@ from cmk.cli.internal import (
     Args,
     CLICommand,
     CLIOption,
+    CommandContext,
     ExitCode,
     GlobalOptions,
     Options,
@@ -60,17 +60,15 @@ def _mode_man(
     return ExitCode.SUCCESS
 
 
-def _run_man(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
-    if global_options.debug:
+def _run_man(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    if context.global_options.debug:
         # discover_families() is told by cmk.ccc.debug whether to raise
         cmk.ccc.debug.enable()
     try:
-        return _mode_man(omd_root, global_options, options, args)
+        return _mode_man(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 
@@ -117,17 +115,15 @@ def _mode_browse_man(
     return ExitCode.SUCCESS
 
 
-def _run_browse_man(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
-    if global_options.debug:
+def _run_browse_man(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    if context.global_options.debug:
         # discover_families() is told by cmk.ccc.debug whether to raise
         cmk.ccc.debug.enable()
     try:
-        return _mode_browse_man(omd_root, global_options, options, args)
+        return _mode_browse_man(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 

@@ -10,7 +10,6 @@
 import dataclasses
 import enum
 import itertools
-import logging
 import sys
 from collections.abc import Iterable, Mapping, Sequence
 from contextlib import suppress
@@ -38,6 +37,7 @@ from cmk.cli.internal import (
     Args,
     CLICommand,
     CLIOption,
+    CommandContext,
     ExitCode,
     GlobalOptions,
     Options,
@@ -111,17 +111,15 @@ def _mode_list_hosts(
     return ExitCode.SUCCESS
 
 
-def _run_list_hosts(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
-    if global_options.debug:
+def _run_list_hosts(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    if context.global_options.debug:
         # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
-        return _mode_list_hosts(omd_root, global_options, options, args)
+        return _mode_list_hosts(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 
@@ -195,17 +193,15 @@ def _mode_list_tag(
     return ExitCode.SUCCESS
 
 
-def _run_list_tag(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
-    if global_options.debug:
+def _run_list_tag(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    if context.global_options.debug:
         # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
-        return _mode_list_tag(omd_root, global_options, options, args)
+        return _mode_list_tag(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 
@@ -321,17 +317,15 @@ def _mode_list_checks(
     return ExitCode.SUCCESS
 
 
-def _run_list_checks(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
-    if global_options.debug:
+def _run_list_checks(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    if context.global_options.debug:
         # load_checks() and discover_families() read cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
-        return _mode_list_checks(omd_root, global_options, options, args)
+        return _mode_list_checks(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 

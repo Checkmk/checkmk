@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
+import logging
 from dataclasses import replace
 from pathlib import Path
 from typing import Any, Final, NoReturn, override
@@ -29,7 +30,7 @@ from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.sources._sources import SNMPSource
 from cmk.cli.engine.call import call
 from cmk.cli.engine.commands import make_command
-from cmk.cli.internal import GlobalOptions, Options
+from cmk.cli.internal import CommandContext, GlobalOptions, Options
 from cmk.plugins.checkmk.cli import dump
 from cmk.plugins.checkmk.cli.dump import cli_command_dump_agent
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
@@ -152,9 +153,12 @@ class TestDumpAgent:
         _patch_fetcher_trigger(monkeypatch, raw_data)
 
         call(
-            _OMD_ROOT,
+            CommandContext(
+                omd_root=_OMD_ROOT,
+                global_options=GlobalOptions(),
+                logger=logging.getLogger(__name__),
+            ),
             make_command(cli_command_dump_agent),
-            GlobalOptions(),
             hostname,
             {},
             [],
@@ -261,9 +265,12 @@ class TestDumpAgentSnmpBackend:
 
         _patch_fetcher_trigger(monkeypatch, b"")
         call(
-            _OMD_ROOT,
+            CommandContext(
+                omd_root=_OMD_ROOT,
+                global_options=GlobalOptions(),
+                logger=logging.getLogger(__name__),
+            ),
             make_command(cli_command_dump_agent),
-            GlobalOptions(),
             hostname,
             options,
             [],

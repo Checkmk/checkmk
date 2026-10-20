@@ -6,7 +6,6 @@
 
 import contextlib
 import itertools
-import logging
 import sys
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
@@ -79,6 +78,7 @@ from cmk.cli.internal import (
     Args,
     CLICommand,
     CLIOption,
+    CommandContext,
     ExitCode,
     GlobalOptions,
     Options,
@@ -320,17 +320,15 @@ def _mode_check_discovery(
         )
 
 
-def _run_check_discovery(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
-    if global_options.debug:
+def _run_check_discovery(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    if context.global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
-        return _mode_check_discovery(omd_root, global_options, options, args)
+        return _mode_check_discovery(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 
@@ -624,17 +622,15 @@ def _mode_discover(
         return ExitCode.FAILURE if any_failed else ExitCode.SUCCESS
 
 
-def _run_discover(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
-    if global_options.debug:
+def _run_discover(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    if context.global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
-        return _mode_discover(omd_root, global_options, options, args)
+        return _mode_discover(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 

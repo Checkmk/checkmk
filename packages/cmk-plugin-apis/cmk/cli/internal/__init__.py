@@ -14,6 +14,7 @@ plug-in family (``cmk/plugins/<family>/cli/<module>.py``) and the plug-in instan
 name must start with the prefix returned by :func:`entry_point_prefixes`.
 """
 
+import logging
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
@@ -79,12 +80,23 @@ class GlobalOptions:
     """
 
 
-type CommandHandler = Callable[[Path, GlobalOptions, Options, Args], ExitCode]
-"""The signature of a command's handler; it returns the exit status.
+@dataclass(frozen=True, kw_only=True)
+class CommandContext:
+    """What the engine hands every command besides its own options and arguments.
 
-The first argument is the site's root directory. A command that needs more of
-the runtime than that builds it itself, e.g. with ``cmk.base.app.make_app()``.
-"""
+    A command that needs more of the runtime than that builds it itself, e.g.
+    with ``cmk.base.app.make_app()``.
+    """
+
+    omd_root: Path
+    """The site's root directory"""
+    global_options: GlobalOptions
+    logger: logging.Logger
+    """Where the command reports what the engine would report, e.g. its errors"""
+
+
+type CommandHandler = Callable[[CommandContext, Options, Args], ExitCode]
+"""The signature of a command's handler; it returns the exit status."""
 
 
 def _validate_argument_declaration(
@@ -138,7 +150,7 @@ class CLICommand:
     Example:
     ********
 
-    >>> def greet(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> ExitCode:
+    >>> def greet(context: CommandContext, options: Options, args: Args) -> ExitCode:
     ...     print("Hello", ", ".join(args))
     ...     return ExitCode.SUCCESS
     >>> cli_command_greet = CLICommand(
@@ -191,6 +203,7 @@ __all__ = [
     "Args",
     "CLICommand",
     "CLIOption",
+    "CommandContext",
     "CommandHandler",
     "entry_point_prefixes",
     "ExitCode",

@@ -8,7 +8,6 @@ The dump itself is built by cmk.base.diagnostics; this only turns the command
 line into a selection of diagnostics plug-ins.
 """
 
-import logging
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -30,6 +29,7 @@ from cmk.cli.internal import (
     Args,
     CLICommand,
     CLIOption,
+    CommandContext,
     ExitCode,
     GlobalOptions,
     Options,
@@ -144,17 +144,17 @@ def _mode_create_diagnostics_dump(
     return ExitCode.SUCCESS
 
 
-def _run_create_diagnostics_dump(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
-    if global_options.debug:
+def _run_create_diagnostics_dump(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    if context.global_options.debug:
         # exit_on_config_file_load_error() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
-        return _mode_create_diagnostics_dump(omd_root, global_options, options, args)
+        return _mode_create_diagnostics_dump(
+            context.omd_root, context.global_options, options, args
+        )
     except MKGeneralException as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 

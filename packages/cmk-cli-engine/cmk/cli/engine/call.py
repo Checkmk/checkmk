@@ -3,19 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
-
 from cmk import trace
 from cmk.cli.engine.commands import Argument, Arguments, Command
-from cmk.cli.internal import ExitCode, GlobalOptions, Options
+from cmk.cli.internal import CommandContext, ExitCode, Options
 
 tracer = trace.get_tracer()
 
 
 def call(
-    omd_root: Path,
+    context: CommandContext,
     command: Command,
-    global_options: GlobalOptions,
     arg: Argument,
     sub_options: Options,
     all_args: Arguments,
@@ -34,8 +31,8 @@ def call(
         f"command[{command.name}]",
         attributes={
             "cmk.base.command.name": command.name,
-            "cmk.base.command.args": repr((global_options, sub_options, args)),
+            "cmk.base.command.args": repr((context.global_options, sub_options, args)),
         },
         context=trace_context,
     ):
-        return command.handler_function(omd_root, global_options, sub_options, args)
+        return command.handler_function(context, sub_options, args)

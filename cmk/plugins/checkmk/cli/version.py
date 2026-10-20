@@ -4,19 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The "cmk --version" command."""
 
-from pathlib import Path
-
 import cmk.ccc.version as cmk_version
 from cmk.ccc.version import edition
 from cmk.cli.engine.commands import (
     write_stdout,
 )
-from cmk.cli.internal import Args, CLICommand, ExitCode, GlobalOptions, Options
+from cmk.cli.internal import Args, CLICommand, CommandContext, ExitCode, Options
 
 
-def _mode_version(
-    omd_root: Path, _global_options: GlobalOptions, _options: Options, _args: Args
-) -> ExitCode:
+def _mode_version(context: CommandContext, _options: Options, _args: Args) -> ExitCode:
     write_stdout(
         """This is %s version %s
 Copyright (C) 2009 Checkmk GmbH
@@ -38,7 +34,7 @@ Copyright (C) 2009 Checkmk GmbH
 
 """
         % (
-            edition(omd_root).title,
+            edition(context.omd_root).title,
             cmk_version.__version__,
         )
     )

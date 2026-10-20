@@ -5,16 +5,13 @@
 """The deprecated "cmk --package" command."""
 
 import sys
-from pathlib import Path
 
-from cmk.cli.internal import Args, CLICommand, ExitCode, GlobalOptions, Options
+from cmk.cli.internal import Args, CLICommand, CommandContext, ExitCode, Options
 
 _DEPRECATION_MSG = "This command is no longer supported. Please use `mkp%s` instead."
 
 
-def _fail_with_deprecation_msg(
-    _omd_root: Path, _global_options: GlobalOptions, _options: Options, argv: Args
-) -> ExitCode:
+def _fail_with_deprecation_msg(_context: CommandContext, _options: Options, argv: Args) -> ExitCode:
     sys.stdout.write(_DEPRECATION_MSG % " ".join(("", *argv)) + "\n")
     return ExitCode.FAILURE
 

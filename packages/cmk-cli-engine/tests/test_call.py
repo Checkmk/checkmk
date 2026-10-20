@@ -9,28 +9,28 @@ from typing import Final
 
 from cmk.cli.engine.call import call
 from cmk.cli.engine.commands import Command, Option, parse_sub_options
-from cmk.cli.internal import Args, CommandHandler, ExitCode, GlobalOptions, Options
+from cmk.cli.internal import Args, CommandContext, CommandHandler, ExitCode, GlobalOptions, Options
 from cmk.trace import Context
 
 from ._logger import null_logger
 
 # The engine only hands this through to the command's handler.
-_OMD_ROOT: Final = Path("/omd/sites/mysite")
-
-_GLOBAL_OPTIONS: Final = GlobalOptions(verbosity=2)
+_CONTEXT: Final = CommandContext(
+    omd_root=Path("/omd/sites/mysite"),
+    global_options=GlobalOptions(verbosity=2),
+    logger=null_logger(),
+)
 
 _SUB_OPTIONS: Final = [Option(long_option="flag", short_help="a flag")]
 
 
 class _Recorder:
     def __init__(self, exit_code: ExitCode = ExitCode.SUCCESS) -> None:
-        self.calls: list[tuple[GlobalOptions, Options, Args]] = []
+        self.calls: list[tuple[CommandContext, Options, Args]] = []
         self._exit_code = exit_code
 
-    def __call__(
-        self, _omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-    ) -> ExitCode:
-        self.calls.append((global_options, options, args))
+    def __call__(self, context: CommandContext, options: Options, args: Args) -> ExitCode:
+        self.calls.append((context, options, args))
         return self._exit_code
 
 
@@ -54,9 +54,8 @@ def _command(
 
 def _call(command: Command, argument: str = "", *, arguments: Sequence[str] = ()) -> ExitCode:
     return call(
-        _OMD_ROOT,
+        _CONTEXT,
         command,
-        _GLOBAL_OPTIONS,
         argument,
         parse_sub_options(command.sub_options, [("--flag", "")], null_logger()),
         arguments,
@@ -73,7 +72,7 @@ def test_a_command_without_argument_receives_no_arguments() -> None:
 
     _call(_command(handler), "ignored", arguments=["ignored", "too"])
 
-    assert [args for _global_options, _options, args in handler.calls] == [()]
+    assert [args for _context, _options, args in handler.calls] == [()]
 
 
 def test_a_required_argument_reaches_the_handler() -> None:
@@ -81,7 +80,7 @@ def test_a_required_argument_reaches_the_handler() -> None:
 
     _call(_command(handler, argument=True), "myhost", arguments=["myhost", "other"])
 
-    assert [args for _global_options, _options, args in handler.calls] == [["myhost"]]
+    assert [args for _context, _options, args in handler.calls] == [["myhost"]]
 
 
 def test_the_positional_arguments_reach_the_handler() -> None:
@@ -89,7 +88,7 @@ def test_the_positional_arguments_reach_the_handler() -> None:
 
     _call(_command(handler, argument=True, argument_optional=True), arguments=["host1", "host2"])
 
-    assert [args for _global_options, _options, args in handler.calls] == [["host1", "host2"]]
+    assert [args for _context, _options, args in handler.calls] == [["host1", "host2"]]
 
 
 def test_the_sub_options_reach_the_handler() -> None:
@@ -97,7 +96,7 @@ def test_the_sub_options_reach_the_handler() -> None:
 
     _call(_command(handler, sub_options=_SUB_OPTIONS))
 
-    assert [options for _global_options, options, _args in handler.calls] == [{"flag": True}]
+    assert [options for _context, options, _args in handler.calls] == [{"flag": True}]
 
 
 def test_a_command_without_sub_options_receives_none() -> None:
@@ -105,14 +104,12 @@ def test_a_command_without_sub_options_receives_none() -> None:
 
     _call(_command(handler))
 
-    assert [options for _global_options, options, _args in handler.calls] == [{}]
+    assert [options for _context, options, _args in handler.calls] == [{}]
 
 
-def test_the_global_options_reach_the_handler() -> None:
+def test_the_context_reaches_the_handler() -> None:
     handler = _Recorder()
 
     _call(_command(handler))
 
-    assert [global_options for global_options, _options, _args in handler.calls] == [
-        _GLOBAL_OPTIONS
-    ]
+    assert [context for context, _options, _args in handler.calls] == [_CONTEXT]

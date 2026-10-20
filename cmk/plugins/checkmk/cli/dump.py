@@ -43,7 +43,7 @@ from cmk.checkengine.parser import make_parser, NO_SELECTION, parse_raw_data, Se
 from cmk.checkengine.source_builder import SourceBuilder
 from cmk.checkengine.summarize import summarize
 from cmk.cli.engine.commands import write_stdout
-from cmk.cli.internal import Args, CLICommand, ExitCode, GlobalOptions, Options
+from cmk.cli.internal import Args, CLICommand, CommandContext, ExitCode, GlobalOptions, Options
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import ExecutableFinder, load_secrets_file
 from cmk.utils import ip_lookup, timeperiod
@@ -270,17 +270,15 @@ def _mode_dump_agent(
         return ExitCode.SUCCESS
 
 
-def _run_dump_agent(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
-    if global_options.debug:
+def _run_dump_agent(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    if context.global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
-        return _mode_dump_agent(omd_root, global_options, options, args)
+        return _mode_dump_agent(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 
@@ -387,17 +385,15 @@ def _mode_dump_hosts(
         return ExitCode.SUCCESS
 
 
-def _run_dump_hosts(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
-    if global_options.debug:
+def _run_dump_hosts(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    if context.global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
-        return _mode_dump_hosts(omd_root, global_options, options, args)
+        return _mode_dump_hosts(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 

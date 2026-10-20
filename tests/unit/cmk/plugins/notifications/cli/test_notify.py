@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 from pathlib import Path
 
 import pytest
 
 from cmk.ccc.version import Edition
-from cmk.cli.internal import ExitCode, GlobalOptions
+from cmk.cli.internal import CommandContext, ExitCode, GlobalOptions
 from cmk.plugins.notifications.cli.notify import _notification_exit_code, cli_command_notify
 
 
@@ -20,7 +21,13 @@ def test_spool_file_of_commercial_site_fails_without_automation_helper(
 
     assert (
         cli_command_notify.handler_function(
-            tmp_path, GlobalOptions(), {}, ["spoolfile", "/no/such/spoolfile"]
+            CommandContext(
+                omd_root=tmp_path,
+                global_options=GlobalOptions(),
+                logger=logging.getLogger(__name__),
+            ),
+            {},
+            ["spoolfile", "/no/such/spoolfile"],
         )
         == ExitCode.FAILURE
     )

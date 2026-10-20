@@ -5,7 +5,6 @@
 """The site maintenance commands: --flush, --update-dns-cache and --cleanup-piggyback."""
 
 import itertools
-import logging
 import os
 import time
 from pathlib import Path
@@ -19,7 +18,7 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.checkengine.discovery import remove_autochecks_of_host
 from cmk.cli.engine.commands import write_stdout
-from cmk.cli.internal import Args, CLICommand, ExitCode, GlobalOptions, Options
+from cmk.cli.internal import Args, CLICommand, CommandContext, ExitCode, GlobalOptions, Options
 from cmk.inventory.paths import InventoryPaths
 from cmk.piggyback import backend as piggyback_backend
 from cmk.utils import ip_lookup
@@ -58,17 +57,15 @@ def _mode_update_dns_cache(
     return ExitCode.SUCCESS
 
 
-def _run_update_dns_cache(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
-    if global_options.debug:
+def _run_update_dns_cache(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    if context.global_options.debug:
         # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
-        return _mode_update_dns_cache(omd_root, global_options, options, args)
+        return _mode_update_dns_cache(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 
@@ -104,17 +101,15 @@ def _mode_cleanup_piggyback(
     return ExitCode.SUCCESS
 
 
-def _run_cleanup_piggyback(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
-    if global_options.debug:
+def _run_cleanup_piggyback(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    if context.global_options.debug:
         # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
-        return _mode_cleanup_piggyback(omd_root, global_options, options, args)
+        return _mode_cleanup_piggyback(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 
@@ -240,17 +235,15 @@ def _mode_flush(
     return ExitCode.SUCCESS
 
 
-def _run_flush(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
-    if global_options.debug:
+def _run_flush(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    if context.global_options.debug:
         # config.load() and load_checks() read cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
-        return _mode_flush(omd_root, global_options, options, args)
+        return _mode_flush(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 

@@ -9,9 +9,9 @@ from cmk.cli.internal import (
     Args,
     CLICommand,
     CLIOption,
+    CommandContext,
     entry_point_prefixes,
     ExitCode,
-    GlobalOptions,
     Options,
 )
 
@@ -20,9 +20,7 @@ def test_entry_point_prefixes() -> None:
     assert entry_point_prefixes() == {CLICommand: "cli_command_"}
 
 
-def _print_version(
-    _app: object, _global_optoins: GlobalOptions, _options: Options, _args: Args
-) -> ExitCode:
+def _print_version(_context: CommandContext, _options: Options, _args: Args) -> ExitCode:
     return ExitCode.SUCCESS
 
 

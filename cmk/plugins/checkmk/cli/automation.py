@@ -20,6 +20,7 @@ from cmk.cli.internal import (
     Args,
     CLICommand,
     CLIOption,
+    CommandContext,
     ExitCode,
     GlobalOptions,
     Options,
@@ -93,17 +94,15 @@ def _mode_automation(
         return ExitCode.SUCCESS
 
 
-def _run_automation(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
-    if global_options.debug:
+def _run_automation(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    if context.global_options.debug:
         # exit_on_config_file_load_error() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
-        return _mode_automation(omd_root, global_options, options, args)
+        return _mode_automation(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
-        logging.getLogger("cmk.base").error("%(error)s", {"error": e})  # noqa: TRY400
-        if global_options.debug:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
             raise
         return ExitCode.UNKNOWN
 

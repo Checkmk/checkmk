@@ -23,14 +23,8 @@ from ._graph_evaluation import (
 )
 
 
-def _conversion_of(
-    unit: Unit | NonConvertibleUnit, temperature_unit: TemperatureUnit
-) -> Callable[[float], float]:
-    return unit_conversion(unit, temperature_unit).converter
-
-
 def _converted_curve(curve: EvaluatedCurve, temperature_unit: TemperatureUnit) -> EvaluatedCurve:
-    conversion = _conversion_of(curve.attributes.unit, temperature_unit)
+    conversion = unit_conversion(curve.attributes.unit, temperature_unit).converter
     return EvaluatedCurve(
         id=curve.id,
         attributes=curve.attributes,
@@ -49,7 +43,7 @@ def _converted_stack(stack: EvaluatedStack, temperature_unit: TemperatureUnit) -
 
 
 def _converted_rule(rule: EvaluatedRule, temperature_unit: TemperatureUnit) -> EvaluatedRule:
-    conversion = _conversion_of(rule.attributes.unit, temperature_unit)
+    conversion = unit_conversion(rule.attributes.unit, temperature_unit).converter
     return EvaluatedRule(
         id=rule.id,
         attributes=rule.attributes,
@@ -61,7 +55,7 @@ def _converted_rule(rule: EvaluatedRule, temperature_unit: TemperatureUnit) -> E
 def _converted_region(
     region: EvaluatedRegion, temperature_unit: TemperatureUnit
 ) -> EvaluatedRegion:
-    conversion = _conversion_of(region.attributes.unit, temperature_unit)
+    conversion = unit_conversion(region.attributes.unit, temperature_unit).converter
     return EvaluatedRegion(
         id=region.id,
         attributes=region.attributes,
@@ -95,7 +89,7 @@ def converted_graph(
             graph.vertical_range,
             (lambda value: value)
             if axis_unit is None
-            else _conversion_of(axis_unit, temperature_unit),
+            else unit_conversion(axis_unit, temperature_unit).converter,
         ),
         stacks=[_converted_stack(stack, temperature_unit) for stack in graph.stacks],
         lines=[

@@ -21,22 +21,13 @@ class UnitConversion:
     converter: Callable[[float], float]
 
 
-def _temperature_conversion(
-    symbol: str, temperature_unit: TemperatureUnit
-) -> UnitConversion | None:
-    match symbol, temperature_unit:
-        case "°C", TemperatureUnit.FAHRENHEIT:
-            return UnitConversion(symbol="°F", converter=lambda c: c * 1.8 + 32)
-        case "°F", TemperatureUnit.CELSIUS:
-            return UnitConversion(symbol="°C", converter=lambda f: (f - 32) / 1.8)
-        case _:
-            return None
-
-
 def unit_conversion(
     unit: Unit | NonConvertibleUnit, temperature_unit: TemperatureUnit
 ) -> UnitConversion:
-    unconverted = UnitConversion(symbol=unit.notation.symbol, converter=lambda value: value)
-    if isinstance(unit, NonConvertibleUnit):
-        return unconverted
-    return _temperature_conversion(unit.notation.symbol, temperature_unit) or unconverted
+    match unit, unit.notation.symbol, temperature_unit:
+        case Unit(), "°C", TemperatureUnit.FAHRENHEIT:
+            return UnitConversion(symbol="°F", converter=lambda c: c * 1.8 + 32)
+        case Unit(), "°F", TemperatureUnit.CELSIUS:
+            return UnitConversion(symbol="°C", converter=lambda f: (f - 32) / 1.8)
+        case _:
+            return UnitConversion(symbol=unit.notation.symbol, converter=lambda value: value)

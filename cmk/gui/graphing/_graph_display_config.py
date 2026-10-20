@@ -70,9 +70,6 @@ class GraphRenderOptions(BaseModel):
             )
         )
 
-    def dump_set_fields(self) -> dict[str, object]:
-        return self.model_dump(exclude_none=True)
-
 
 _DEFAULT_TITLE_FORMAT = GraphTitleFormat(
     plain=True,
@@ -94,7 +91,7 @@ class GraphDisplayConfigBase(BaseModel):
 
     @classmethod
     def from_options(cls, options: GraphRenderOptions) -> Self:
-        return cls.model_validate(options.dump_set_fields())
+        return cls.model_validate(options.model_dump(exclude_none=True))
 
 
 class GraphDisplayConfigHTML(GraphDisplayConfigBase):

@@ -82,22 +82,8 @@ def _title_format(entry: object) -> GraphTitleFormatVS:
 
 
 def migrate_graph_render_options_title_format(
-    p: (
-        Literal["plain", "add_host_name", "add_host_alias"]
-        | tuple[
-            Literal["add_title_infos", "plain"],
-            list[Literal["add_host_name", "add_host_alias", "add_service_description"]],
-        ]
-        | Sequence[GraphTitleFormatVS]
-    ),
-) -> Sequence[GraphTitleFormatVS]:
-    return migrate_graph_render_options_title_format_from_disk(p)
-
-
-def migrate_graph_render_options_title_format_from_disk(
     p: object,
 ) -> Sequence[GraphTitleFormatVS]:
-    """Same migration for FormSpec migrate hooks, which receive unvalidated disk data."""
     # ->1.5.0i2 pnp_graph reportlet
     if p == "add_host_name":
         return ["plain", "add_host_name"]
@@ -133,7 +119,7 @@ def migrate_graph_render_options(value: Mapping[str, object]) -> DictionaryModel
         migrated["title_format"] = ["plain", "add_host_name", "add_service_description"]
     #   1.5.0i2->2.0.0i1 title format DropdownChoice to ListChoice
     if isinstance(migrated.get("title_format"), str | tuple):
-        migrated["title_format"] = migrate_graph_render_options_title_format_from_disk(
+        migrated["title_format"] = migrate_graph_render_options_title_format(
             migrated["title_format"]
         )
     return migrated

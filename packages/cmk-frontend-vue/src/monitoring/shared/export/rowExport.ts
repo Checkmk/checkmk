@@ -18,6 +18,8 @@ const FORMATS = ['csv', 'json'] as const
 
 export type ExportFormat = (typeof FORMATS)[number]
 
+export const REPORT_FORMAT = 'pdf'
+
 export type ExportJsonValue = string | string[] | Record<string, string>
 
 export interface RowExportSchema<Row, Column extends string> {

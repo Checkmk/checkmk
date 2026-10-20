@@ -7,6 +7,7 @@ from typing import override
 
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
+from cmk.ccc.version import Edition as ProductEdition
 from cmk.ccc.version import edition
 from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
@@ -27,7 +28,7 @@ from cmk.gui.monitor.command import (
     MonitorCommands,
     notification_rules_url,
 )
-from cmk.gui.monitor.export import EXPORT_EVENT, MonitorExportMenu
+from cmk.gui.monitor.export import EXPORT_EVENT, MonitorReportExportMenu
 from cmk.gui.page_menu import (
     make_simple_link,
     PageMenu,
@@ -243,7 +244,10 @@ def _availability_dropdowns() -> list[PageMenuDropdown]:
 
 def _build_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     menu = PageMenu(
-        dropdowns=_availability_dropdowns() + MonitorExportMenu().dropdowns(),
+        dropdowns=_availability_dropdowns()
+        + MonitorReportExportMenu(
+            instant_reports=edition(paths.omd_root) is not ProductEdition.COMMUNITY
+        ).dropdowns(),
         breadcrumb=breadcrumb,
     )
 

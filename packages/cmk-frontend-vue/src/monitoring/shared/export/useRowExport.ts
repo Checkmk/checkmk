@@ -14,7 +14,7 @@ import {
   RowsNotLoadedError
 } from '@/monitoring/shared/services/MonitoringService'
 
-import { type ExportFormat, RowExport } from './rowExport'
+import { type ExportFormat, REPORT_FORMAT, RowExport } from './rowExport'
 
 export interface RowExportFeedback {
   variant: 'loading' | 'warning' | 'error'
@@ -33,6 +33,7 @@ export interface RowExportOptions {
   exportEvent: string
   build: () => Promise<{ file(format: ExportFormat): File }>
   texts: RowExportTexts
+  openReport?: () => void
 }
 
 export function useRowExport<T>(
@@ -73,9 +74,20 @@ export function useRowExport<T>(
         : null
   }
 
+  function openReport(): void {
+    if (options.openReport === undefined) {
+      feedback.value = { variant: 'error', text: _t('This page offers no PDF report.') }
+      return
+    }
+    feedback.value = null
+    options.openReport()
+  }
+
   function onExport(event: Event): void {
     const format: unknown = event instanceof CustomEvent ? event.detail : undefined
-    if (RowExport.isFormat(format)) {
+    if (format === REPORT_FORMAT) {
+      openReport()
+    } else if (RowExport.isFormat(format)) {
       void exportRows(format)
     }
   }

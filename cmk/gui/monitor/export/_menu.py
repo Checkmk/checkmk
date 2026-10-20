@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, Literal
+from typing import Final, Literal, override
 
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -12,7 +12,7 @@ from cmk.web.utils.icons import IconNames, StaticIcon
 
 EXPORT_EVENT: Final = "cmk-monitoring-export"
 
-type ExportFormat = Literal["csv", "json"]
+type ExportFormat = Literal["csv", "json", "pdf"]
 
 
 class MonitorExportMenu:
@@ -45,3 +45,24 @@ class MonitorExportMenu:
             ),
             name=f"export_{export_format}",
         )
+
+
+class MonitorReportExportMenu(MonitorExportMenu):
+    def __init__(self, *, instant_reports: bool) -> None:
+        self._instant_reports = instant_reports
+
+    @override
+    def _topics(self) -> list[PageMenuTopic]:
+        return [*super()._topics(), *self._report_topics()]
+
+    def _report_topics(self) -> list[PageMenuTopic]:
+        if not self._instant_reports:
+            return []
+        if not user.may("general.reporting") or not user.may("general.instant_reports"):
+            return []
+        return [
+            PageMenuTopic(
+                title=_("Reports"),
+                entries=[self._entry(_("This view as PDF"), StaticIcon(IconNames.report), "pdf")],
+            )
+        ]

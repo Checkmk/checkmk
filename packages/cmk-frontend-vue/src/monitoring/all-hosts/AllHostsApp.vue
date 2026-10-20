@@ -35,6 +35,7 @@ import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import MonitoringToolbar from '../shared/components/MonitoringToolbar.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
+import { InstantReport } from '../shared/export/instantReport'
 import { useRowExport } from '../shared/export/useRowExport'
 import { buildFilterUrlSchema } from '../shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '../shared/filterState/urlState'
@@ -172,9 +173,22 @@ const typeToFocus = useTypeToFocus(root)
 useFallbackKeys(root, () => root.value?.querySelector<HTMLElement>('.monitoring-table'))
 useContextMenuKey(root)
 
+const instantReport = new InstantReport('report_instant_all_hosts.py')
+
+function openInstantReport(): void {
+  const body = hostApi.requestBody({
+    limit: hostService.requestedLimit.value,
+    sort: hostService.sortState.value,
+    searchQuery: hostService.appliedSearchQuery.value,
+    filter: hostService.filterState.value
+  })
+  instantReport.open(hostService.exportColumns(), body)
+}
+
 const exportFeedback = useRowExport(hostService, {
   exportEvent: props.export_event,
   build: () => hostService.export(),
+  openReport: openInstantReport,
   texts: {
     exporting: _t('Exporting hosts…'),
     notLoaded: _t('The hosts could not be loaded, so nothing was exported.'),

@@ -5,7 +5,9 @@
 
 import pytest
 
-from cmk.gui.monitor.export import MonitorExportMenu
+from cmk.ccc.user import UserId
+from cmk.gui.monitor.export import MonitorExportMenu, MonitorReportExportMenu
+from tests.testlib.unit.gui.global_settings import logged_in
 
 
 @pytest.mark.usefixtures("user_without_permissions")
@@ -21,3 +23,39 @@ def test_export_dropdown_offers_csv_and_json_with_permission() -> None:
         for topic in dropdown.topics
         for entry in topic.entries
     ] == ["export_csv", "export_json"]
+
+
+@pytest.mark.usefixtures("with_user_login")
+def test_the_report_menu_offers_no_pdf_without_instant_reports() -> None:
+    assert [
+        entry.name
+        for dropdown in MonitorReportExportMenu(instant_reports=False).dropdowns()
+        for topic in dropdown.topics
+        for entry in topic.entries
+    ] == ["export_csv", "export_json"]
+
+
+def _report_entries(user_id: UserId, *permissions: str) -> list[str | None]:
+    with logged_in(user_id, "general.csv_export", *permissions):
+        return [
+            entry.name
+            for dropdown in MonitorReportExportMenu(instant_reports=True).dropdowns()
+            for topic in dropdown.topics
+            for entry in topic.entries
+        ]
+
+
+def test_the_report_menu_offers_the_pdf_where_instant_reports_exist(
+    with_user: tuple[UserId, str],
+) -> None:
+    assert _report_entries(with_user[0], "general.reporting", "general.instant_reports") == [
+        "export_csv",
+        "export_json",
+        "export_pdf",
+    ]
+
+
+def test_the_report_menu_offers_no_pdf_to_a_user_without_instant_reports(
+    with_user: tuple[UserId, str],
+) -> None:
+    assert _report_entries(with_user[0], "general.reporting") == ["export_csv", "export_json"]

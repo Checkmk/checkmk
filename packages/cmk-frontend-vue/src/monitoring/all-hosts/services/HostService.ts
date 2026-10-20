@@ -16,7 +16,7 @@ import {
 } from '@/monitoring/shared/services/MonitoringService'
 
 import { visibleHostFields } from '../columns'
-import { HostExport } from '../export/hostExport'
+import { HostExport, type HostExportColumn } from '../export/hostExport'
 
 export interface HostServiceOptions extends MonitoringServiceOptions<HostEntry> {
   /** Fields read on every fetch, whichever columns are shown, for what a row offers. */
@@ -39,10 +39,11 @@ export class HostService extends MonitoringService<HostEntry> {
 
   async export(): Promise<HostExport> {
     const hosts = await this.loadedItems()
-    return new HostExport(
-      RowExport.shownColumns(this.columns, this.columnVisibility.value, HostExport.isColumn),
-      hosts
-    )
+    return new HostExport(this.exportColumns(), hosts)
+  }
+
+  exportColumns(): HostExportColumn[] {
+    return RowExport.shownColumns(this.columns, this.columnVisibility.value, HostExport.isColumn)
   }
 
   protected async fetchBatch(signal: AbortSignal): Promise<PagedResponse<HostEntry>> {

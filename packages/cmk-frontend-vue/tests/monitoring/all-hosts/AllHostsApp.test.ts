@@ -427,3 +427,27 @@ test('exports nothing and says so when the hosts could not be loaded', async () 
   expect(downloads).toEqual([])
   expect(consoleError).toHaveBeenCalled()
 })
+
+test('posts the shown columns and the listing to the instant PDF report', async () => {
+  const posted: Record<string, string>[] = []
+  vi.spyOn(HTMLFormElement.prototype, 'submit').mockImplementation(function (
+    this: HTMLFormElement
+  ) {
+    expect(this.getAttribute('action')).toBe('report_instant_all_hosts.py')
+    posted.push(
+      Object.fromEntries(
+        [...new FormData(this).entries()].map(([key, value]) => [key, String(value)])
+      )
+    )
+  })
+  window.history.replaceState(null, '', '/monitor_all_hosts.py?cols=address')
+  mockHosts([makeHost()])
+  renderApp('pro')
+  await screen.findByRole('columnheader', { name: 'Host' })
+  await vi.waitUntil(() => postSpy.mock.calls.length > 0)
+
+  document.dispatchEvent(new CustomEvent(EXPORT_EVENT, { detail: 'pdf' }))
+
+  expect(posted[0]!.cols).toBe('state,modes,name,address')
+  expect(JSON.parse(posted[0]!.body!)).toMatchObject({ sort: ['name:asc'] })
+})

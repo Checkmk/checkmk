@@ -111,6 +111,11 @@ Interfaces
   rows are ``HostEntry``, the response model of the internal REST endpoint,
   so a change of that model also changes what these consumers get.
 * Livestatus, locally or via :doc:`arch-comp-liveproxyd` for remote sites.
+* Outside Community, the page "All hosts" links to the instant PDF report
+  of reporting with the columns it shows and the request body it sends to
+  the internal REST endpoint that lists hosts, with relative age filters
+  already resolved. Reporting turns that body into the listing with
+  ``HostListing`` from ``cmk.gui.monitor.hosts.table``.
 
 Coexistence
 -----------

@@ -16,6 +16,7 @@ from ._data._naming import (
 from ._data._temperature import TemperatureUnit, unit_conversion, UnitConversion
 from ._data._timeseries import (
     constant_time_series,
+    last_present,
     mapped_series,
     merge_series,
     scaled_series,
@@ -134,7 +135,6 @@ from ._quantities._quantity import (
     EvaluationContext,
     FanOutQuantity,
     fetch_leaves,
-    last_present,
     MetricProtocol,
     QuantityProtocol,
 )

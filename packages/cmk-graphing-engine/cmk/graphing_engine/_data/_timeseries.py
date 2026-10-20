@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 
 
@@ -60,3 +60,11 @@ def merge_series(time_series: Sequence[TimeSeries], time_range: TimeRange) -> Ti
             for point in zip(*(member.values for member in time_series))
         ],
     )
+
+
+def last_present[T](values: Iterable[T | None]) -> T | None:
+    last: T | None = None
+    for value in values:
+        if value is not None:
+            last = value
+    return last

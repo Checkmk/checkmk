@@ -3,21 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Hashable, Iterable, Mapping, Sequence
+from collections.abc import Hashable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
 
 from cmk.graphing_engine._data._fetched import FetchedData, PerformanceData, SeriesAttributes
 from cmk.graphing_engine._data._naming import MetricName
-from cmk.graphing_engine._data._timeseries import TimeRange, TimeSeries
-
-
-def last_present[T](values: Iterable[T | None]) -> T | None:
-    last: T | None = None
-    for value in values:
-        if value is not None:
-            last = value
-    return last
+from cmk.graphing_engine._data._timeseries import last_present, TimeRange, TimeSeries
 
 
 @dataclass(frozen=True, kw_only=True)

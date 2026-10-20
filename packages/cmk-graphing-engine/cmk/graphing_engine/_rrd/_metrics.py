@@ -9,11 +9,10 @@ from dataclasses import dataclass
 
 from cmk.graphing_engine._data._fetched import ScalarKind, value_of
 from cmk.graphing_engine._data._naming import MetricName
-from cmk.graphing_engine._data._timeseries import constant_time_series
+from cmk.graphing_engine._data._timeseries import constant_time_series, last_present
 from cmk.graphing_engine._quantities._quantity import (
     EvaluatedQuantity,
     EvaluationContext,
-    last_present,
     QuantityProtocol,
 )
 

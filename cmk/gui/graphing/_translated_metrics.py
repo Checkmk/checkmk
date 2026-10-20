@@ -89,6 +89,16 @@ def _parse_check_command(check_command: str) -> str:
     return parts[0]
 
 
+def _split_perf_data(perf_data_string: str, *, config: Config) -> list[str]:
+    try:
+        return shlex.split(perf_data_string)
+    except ValueError:
+        logger.exception("Failed to split perfdata '%s'", perf_data_string)
+        if config.debug:
+            raise
+        return perf_data_string.split()
+
+
 def parse_perf_data(
     perf_data_string: str, check_command: str | None = None, *, config: Config
 ) -> tuple[Perfdata, str]:
@@ -100,7 +110,7 @@ def parse_perf_data(
         check_command = _parse_check_command(check_command)
 
     # Split the perf data string into parts. Preserve quoted strings!
-    parts = shlex.split(perf_data_string)
+    parts = _split_perf_data(perf_data_string, config=config)
 
     # Try if check command is appended to performance data
     # in a PNP like style

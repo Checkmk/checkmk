@@ -66,18 +66,6 @@ def _collapse(results: Sequence[EvaluatedQuantity]) -> EvaluatedQuantity | None:
             raise ValueError("a fan-out quantity cannot be an operand of an operation")
 
 
-def _collapse_operands(
-    results: Sequence[Sequence[EvaluatedQuantity]],
-) -> Sequence[EvaluatedQuantity] | None:
-    # An operation is absent unless it has operands and every one of them is present: an empty
-    # operation and any absent operand alike make the whole operation absent (value and series).
-    operands = [_collapse(result) for result in results]
-    present = [operand for operand in operands if operand is not None]
-    if not operands or len(present) != len(operands):
-        return None
-    return present
-
-
 def _operation_ident(kind: str, operands: Sequence[QuantityProtocol]) -> str:
     return f"{kind}({','.join(operand.ident() for operand in operands)})"
 
@@ -87,9 +75,11 @@ def _evaluate_operation(
     operands: Sequence[QuantityProtocol],
     context: EvaluationContext,
 ) -> Sequence[EvaluatedQuantity]:
-    if (collapsed := _collapse_operands([context.evaluate(o) for o in operands])) is None:
+    collapsed = [_collapse(context.evaluate(operand)) for operand in operands]
+    present = [operand for operand in collapsed if operand is not None]
+    if not present or len(present) != len(collapsed):
         return []
-    return [_apply_to_operands(operator, collapsed, context)]
+    return [_apply_to_operands(operator, present, context)]
 
 
 @dataclass(frozen=True)
@@ -121,13 +111,13 @@ class Sum:
         return "sum"
 
     def ident(self) -> str:
-        return _operation_ident(self.kind(), self.summands)
+        return _operation_ident(self.kind(), self.children())
 
     def children(self) -> Sequence[QuantityProtocol]:
         return self.summands
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
-        return _evaluate_operation(op_sum, self.summands, context)
+        return _evaluate_operation(op_sum, self.children(), context)
 
 
 @dataclass(frozen=True)
@@ -138,13 +128,13 @@ class Product:
         return "product"
 
     def ident(self) -> str:
-        return _operation_ident(self.kind(), self.factors)
+        return _operation_ident(self.kind(), self.children())
 
     def children(self) -> Sequence[QuantityProtocol]:
         return self.factors
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
-        return _evaluate_operation(op_product, self.factors, context)
+        return _evaluate_operation(op_product, self.children(), context)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -156,13 +146,13 @@ class Difference:
         return "difference"
 
     def ident(self) -> str:
-        return _operation_ident(self.kind(), (self.minuend, self.subtrahend))
+        return _operation_ident(self.kind(), self.children())
 
     def children(self) -> Sequence[QuantityProtocol]:
         return (self.minuend, self.subtrahend)
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
-        return _evaluate_operation(op_difference, (self.minuend, self.subtrahend), context)
+        return _evaluate_operation(op_difference, self.children(), context)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -174,10 +164,10 @@ class Fraction:
         return "fraction"
 
     def ident(self) -> str:
-        return _operation_ident(self.kind(), (self.dividend, self.divisor))
+        return _operation_ident(self.kind(), self.children())
 
     def children(self) -> Sequence[QuantityProtocol]:
         return (self.dividend, self.divisor)
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
-        return _evaluate_operation(op_fraction, (self.dividend, self.divisor), context)
+        return _evaluate_operation(op_fraction, self.children(), context)

@@ -133,15 +133,6 @@ class TestMonitorHostsQueryParamValidation:
                     "type": "condition",
                     "field": "site_id",
                     "op": "one_of",
-                    "value": ["no-such-site"],
-                },
-                id="unknown site id",
-            ),
-            pytest.param(
-                {
-                    "type": "condition",
-                    "field": "site_id",
-                    "op": "one_of",
                     "value": [_SITE_ID, _SITE_ID],
                 },
                 id="duplicate site ids",
@@ -207,6 +198,47 @@ class TestMonitorHostsQueryParamValidation:
     ) -> None:
         resp = clients.MonitorHosts.list_all(limit=1000, filters=filters, expect_ok=False)
         assert resp.status_code == HTTPStatus.BAD_REQUEST
+
+    @pytest.mark.parametrize(
+        "filters",
+        [
+            pytest.param(
+                {
+                    "type": "condition",
+                    "field": "site_id",
+                    "op": "one_of",
+                    "value": ["no-such-site"],
+                },
+                id="unknown site id",
+            ),
+            pytest.param(
+                {
+                    "type": "and",
+                    "children": [
+                        {"type": "condition", "field": "name", "op": "contains", "value": "heute"},
+                        {
+                            "type": "not",
+                            "child": {
+                                "type": "condition",
+                                "field": "site_id",
+                                "op": "one_of",
+                                "value": ["no-such-site"],
+                            },
+                        },
+                    ],
+                },
+                id="unknown site id inside the tree",
+            ),
+        ],
+    )
+    def test_filters_with_an_unknown_site_are_rejected(
+        self,
+        clients: ClientRegistry,
+        filters: dict[str, object],
+    ) -> None:
+        resp = clients.MonitorHosts.list_all(limit=1000, filters=filters, expect_ok=False)
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
+        assert resp.json["detail"] == "Site 'no-such-site' does not exist."
 
 
 class TestMonitorHosts:
@@ -582,8 +614,8 @@ class TestMonitorHostsFilters:
         set_config: SetConfig,
     ) -> None:
         # "remote" needs to be a real configured site (not just a mock-livestatus fake site) for
-        # `SiteIdConverter.should_exist` to accept it, and for the complement (every site except
-        # "remote") to be computed against the right set of configured sites.
+        # the handler to accept it, and for the complement (every site except "remote") to be
+        # computed against the right set of configured sites.
         with set_config(sites=_site_configs([SiteId(_SITE_ID), SiteId("remote"), SiteId("local")])):
             mock_livestatus.add_table("hosts", _HOSTS)
             mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])

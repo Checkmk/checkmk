@@ -49,7 +49,12 @@ from .._site import MonitorSite, MonitorSites
 from .._table_catalog import HOST_TABLE
 from ..context_filters import HostContextFilters
 from ._family import MONITOR_HOSTS_FAMILY
-from ._filters import extract_site_scope, FilterNode, parse_as_livestatus_filter
+from ._filters import (
+    FilterNode,
+    parse_as_livestatus_filter,
+    scope_filter_by_site,
+    SiteScopedFilter,
+)
 from ._modes import build_host_modes, ModeInfo
 from ._urls import host_view_link
 from ._validators import parse_host_search_query, parse_host_sort_options
@@ -362,18 +367,34 @@ def _list_hosts(
         case _:
             limit = body.limit
 
+    return HostTable(api_context.config.sites, folders).list(
+        limit=limit,
+        query="" if isinstance(body.q, ApiOmitted) else body.q,
+        sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
+        scoped_filter=(
+            None
+            if isinstance(body.filter, ApiOmitted)
+            else _scope_and_check_sites(body.filter, api_context.config.sites)
+        ),
+        fields=_DEFAULT_FIELDS if isinstance(body.fields, ApiOmitted) else body.fields,
+    )
+
+
+def _scope_and_check_sites(node: FilterNode, site_configs: SiteConfigurations) -> SiteScopedFilter:
     try:
-        return HostTable(api_context.config.sites, folders).list(
-            limit=limit,
-            query="" if isinstance(body.q, ApiOmitted) else body.q,
-            sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
-            filter_node=None if isinstance(body.filter, ApiOmitted) else body.filter,
-            fields=_DEFAULT_FIELDS if isinstance(body.fields, ApiOmitted) else body.fields,
-        )
-    except InvalidFilterError as exc:
-        raise RestAPIRequestGeneralException(
-            status=HTTPStatus.BAD_REQUEST, title="Invalid filter", detail=str(exc)
-        ) from exc
+        scoped = scope_filter_by_site(node)
+    except ValueError as exc:
+        raise _invalid_filter(str(exc)) from exc
+    for site_id in sorted(scoped.sites or ()):
+        if site_id not in site_configs:
+            raise _invalid_filter(f"Site {site_id!r} does not exist.")
+    return scoped
+
+
+def _invalid_filter(detail: str) -> RestAPIRequestGeneralException:
+    return RestAPIRequestGeneralException(
+        status=HTTPStatus.BAD_REQUEST, title="Invalid filter", detail=detail
+    )
 
 
 class HostTable:
@@ -391,20 +412,13 @@ class HostTable:
         limit: int | None,
         query: str,
         sorters: Sequence[HostSort],
-        filter_node: FilterNode | None,
+        scoped_filter: SiteScopedFilter | None,
         fields: Set[HostOptionalField],
     ) -> HostsResponse:
-        # Validated before opening a Livestatus connection below, so a bad filter is rejected
-        # without ever needing one.
-        if filter_node is None:
+        if scoped_filter is None:
             filters, site_ids = None, None
         else:
-            try:
-                filters, site_ids = extract_site_scope(
-                    node=filter_node, all_site_ids=self._site_ids
-                )
-            except ValueError as exc:
-                raise InvalidFilterError(str(exc)) from exc
+            filters, site_ids = scoped_filter.node, scoped_filter.site_scope(self._site_ids)
 
         host_repo = LiveStatusHostRepository(
             connection=sites.live(),
@@ -454,11 +468,17 @@ class HostTable:
         self, *, columns: Sequence[str], sort: Sequence[str], limit: int, context: VisualContext
     ) -> TableRows[HostEntry]:
         translation = HostContextFilters.translate(context)
+        try:
+            scoped_filter = (
+                None if translation.node is None else scope_filter_by_site(translation.node)
+            )
+        except ValueError as exc:
+            raise InvalidFilterError(str(exc)) from exc
         response = self.list(
             limit=limit,
             query="",
             sorters=HOST_TABLE.sorters(columns, sort),
-            filter_node=translation.node,
+            scoped_filter=scoped_filter,
             fields=HOST_TABLE.fields(columns),
         )
         return TableRows(

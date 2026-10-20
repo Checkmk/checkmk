@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 import re
 from collections.abc import Callable, Mapping
 from typing import Annotated, Literal
@@ -13,7 +14,6 @@ from pydantic import AfterValidator, PlainValidator, StringConstraints
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label
 from cmk.livestatus_client import lqencode, quote_dict
 from cmk.livestatus_client.expressions import LqSafe
@@ -132,7 +132,7 @@ class SiteChoiceCondition:
     field: Literal["site_id"] = api_field(description="Site field", example="site_id")
     op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
     value: Annotated[
-        list[Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_exist)]],
+        list[SiteId],
         MinLen(1),
         AfterValidator(validate_uniqueness),
     ] = api_field(description="Site IDs to match", example=["local"])
@@ -282,15 +282,30 @@ class NotNode:
 type FilterNode = AndNode | OrNode | NotNode | ConditionNode
 
 
-def extract_site_scope(
-    node: FilterNode, all_site_ids: frozenset[SiteId]
-) -> tuple[FilterNode | None, list[SiteId] | None]:
-    """Split off the tree's 'site_id' condition, if any, as a site scope restriction.
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class SiteScopedFilter:
+    node: FilterNode | None
+    sites: frozenset[SiteId] | None
+    exclude_sites: bool
 
-    Site ID isn't a real Livestatus column, so it can't contribute a filter line; it's pushed
-    down into which sites get queried instead. Only a single 'site_id' condition is supported,
-    optionally wrapped with a 'not' condition. If a site condition is combined with the rest of
-    the tree with anything but an 'and' condition, a `ValueError` is raised.
+    def site_scope(self, all_site_ids: frozenset[SiteId]) -> list[SiteId] | None:
+        """The sites to query, or `None` for every site.
+
+        Named sites are kept even if not in `all_site_ids`; excluded ones are taken from it.
+        """
+        if self.sites is None:
+            return None
+        return list(all_site_ids - self.sites if self.exclude_sites else self.sites)
+
+
+def scope_filter_by_site(node: FilterNode) -> SiteScopedFilter:
+    """Split the tree's 'site_id' condition, if any, off the rest of the tree.
+
+    'site_id' is not a Livestatus column; it restricts which sites are queried instead.
+
+    Only a single 'site_id' condition is supported, optionally wrapped with a 'not' condition.
+    If a site condition is combined with the rest of the tree with anything but an 'and'
+    condition, a `ValueError` is raised.
 
     Additional details:
 
@@ -356,13 +371,10 @@ def extract_site_scope(
     residual = walk(node, and_only=True)
 
     if not found:
-        return residual, None
+        return SiteScopedFilter(node=residual, sites=None, exclude_sites=False)
 
     condition, negated = found[0]
-    extracted_site_ids = {SiteId(site_id) for site_id in condition.value}
-    site_ids = list(all_site_ids - extracted_site_ids if negated else extracted_site_ids)
-
-    return residual, site_ids
+    return SiteScopedFilter(node=residual, sites=frozenset(condition.value), exclude_sites=negated)
 
 
 def _no_folders() -> Mapping[str, str]:

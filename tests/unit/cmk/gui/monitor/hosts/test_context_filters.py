@@ -20,8 +20,6 @@ from cmk.gui.monitor.hosts._api._filters import (
 from cmk.gui.monitor.hosts.context_filters import HostContextFilters
 from cmk.gui.type_defs import VisualContext
 
-pytestmark = pytest.mark.usefixtures("request_context")
-
 
 # fmt: off
 @pytest.mark.parametrize(

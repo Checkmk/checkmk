@@ -12,7 +12,6 @@ from cmk.ccc.site import SiteId
 from cmk.gui.monitor.hosts._api._filters import (
     AndNode,
     BooleanCondition,
-    extract_site_scope,
     FilterNode,
     FolderCondition,
     LabelChoiceCondition,
@@ -22,6 +21,7 @@ from cmk.gui.monitor.hosts._api._filters import (
     NumericOp,
     OrNode,
     parse_as_livestatus_filter,
+    scope_filter_by_site,
     SiteChoiceCondition,
     StateChoiceCondition,
     StringCondition,
@@ -357,12 +357,7 @@ def test_query_builder_label_choice_multiple_with_and() -> None:
     assert parse_as_livestatus_filter(condition) == expected
 
 
-def test_label_choice_condition_rejects_a_newline(
-    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
-) -> None:
-    # A list-valued payload structurally matches SiteChoiceCondition.value too, so validating it
-    # against the FilterNode union also tries SiteIdConverter.should_exist, which needs a request
-    # context to read active_config - unrelated to the rejection this test is actually checking.
+def test_label_choice_condition_rejects_a_newline() -> None:
     payload = {
         "type": "condition",
         "field": "labels",
@@ -452,14 +447,10 @@ def test_query_builder_name_choice_matches_host_groups() -> None:
     assert parse_as_livestatus_filter(condition) == "Filter: groups >= linux"
 
 
-# `@api_model` classes are plain dataclasses: constructing one directly (as these tests do) never
-# runs the pydantic converters (e.g. `SiteIdConverter.should_exist`) that only fire when a request
-# body is actually parsed - see the openapi-level `test_filters_validation_errors` for that. So this
-# doesn't need to be a real configured site, and `all_site_ids` below is free to include others.
 _SITE_ID = SiteId("NO_SITE")
 
 
-def test_extract_site_scope_bare_condition() -> None:
+def test_scope_filter_by_site_bare_condition() -> None:
     condition = SiteChoiceCondition(
         type="condition",
         field="site_id",
@@ -467,13 +458,14 @@ def test_extract_site_scope_bare_condition() -> None:
         value=[_SITE_ID],
     )
 
-    residual, site_ids = extract_site_scope(condition, frozenset({_SITE_ID, SiteId("other")}))
+    scoped = scope_filter_by_site(condition)
+    residual, site_ids = scoped.node, scoped.site_scope(frozenset({_SITE_ID, SiteId("other")}))
 
     assert residual is None
     assert site_ids == [_SITE_ID]
 
 
-def test_extract_site_scope_negated_condition_is_a_complement() -> None:
+def test_scope_filter_by_site_negated_condition_is_a_complement() -> None:
     node = NotNode(
         type="not",
         child=SiteChoiceCondition(
@@ -484,13 +476,14 @@ def test_extract_site_scope_negated_condition_is_a_complement() -> None:
         ),
     )
 
-    residual, site_ids = extract_site_scope(node, frozenset({_SITE_ID, SiteId("other")}))
+    scoped = scope_filter_by_site(node)
+    residual, site_ids = scoped.node, scoped.site_scope(frozenset({_SITE_ID, SiteId("other")}))
 
     assert residual is None
     assert site_ids == [SiteId("other")]
 
 
-def test_extract_site_scope_negating_every_site_yields_empty_set() -> None:
+def test_scope_filter_by_site_negating_every_site_yields_empty_set() -> None:
     node = NotNode(
         type="not",
         child=SiteChoiceCondition(
@@ -501,12 +494,12 @@ def test_extract_site_scope_negating_every_site_yields_empty_set() -> None:
         ),
     )
 
-    _, site_ids = extract_site_scope(node, frozenset({_SITE_ID}))
+    site_ids = scope_filter_by_site(node).site_scope(frozenset({_SITE_ID}))
 
     assert site_ids == []
 
 
-def test_extract_site_scope_and_combined_with_unrelated_condition() -> None:
+def test_scope_filter_by_site_and_combined_with_unrelated_condition() -> None:
     node = AndNode(
         type="and",
         children=[
@@ -520,13 +513,14 @@ def test_extract_site_scope_and_combined_with_unrelated_condition() -> None:
         ],
     )
 
-    residual, site_ids = extract_site_scope(node, frozenset({_SITE_ID}))
+    scoped = scope_filter_by_site(node)
+    residual, site_ids = scoped.node, scoped.site_scope(frozenset({_SITE_ID}))
 
     assert residual == StringCondition(type="condition", field="name", op="contains", value="heute")
     assert site_ids == [_SITE_ID]
 
 
-def test_extract_site_scope_at_various_and_nesting_depths() -> None:
+def test_scope_filter_by_site_at_various_and_nesting_depths() -> None:
     node = AndNode(
         type="and",
         children=[
@@ -546,7 +540,8 @@ def test_extract_site_scope_at_various_and_nesting_depths() -> None:
         ],
     )
 
-    residual, site_ids = extract_site_scope(node, frozenset({_SITE_ID}))
+    scoped = scope_filter_by_site(node)
+    residual, site_ids = scoped.node, scoped.site_scope(frozenset({_SITE_ID}))
 
     assert residual == AndNode(
         type="and",
@@ -558,7 +553,7 @@ def test_extract_site_scope_at_various_and_nesting_depths() -> None:
     assert site_ids == [_SITE_ID]
 
 
-def test_extract_site_scope_leaves_a_site_free_tree_unaffected() -> None:
+def test_scope_filter_by_site_leaves_a_site_free_tree_unaffected() -> None:
     node = AndNode(
         type="and",
         children=[
@@ -567,13 +562,14 @@ def test_extract_site_scope_leaves_a_site_free_tree_unaffected() -> None:
         ],
     )
 
-    residual, site_ids = extract_site_scope(node, frozenset({_SITE_ID}))
+    scoped = scope_filter_by_site(node)
+    residual, site_ids = scoped.node, scoped.site_scope(frozenset({_SITE_ID}))
 
     assert residual == node
     assert site_ids is None
 
 
-def test_extract_site_scope_rejects_a_second_site_condition() -> None:
+def test_scope_filter_by_site_rejects_a_second_site_condition() -> None:
     node = AndNode(
         type="and",
         children=[
@@ -593,10 +589,10 @@ def test_extract_site_scope_rejects_a_second_site_condition() -> None:
     )
 
     with pytest.raises(ValueError, match="Only one"):
-        extract_site_scope(node, frozenset({_SITE_ID}))
+        scope_filter_by_site(node)
 
 
-def test_extract_site_scope_rejects_nesting_under_or() -> None:
+def test_scope_filter_by_site_rejects_nesting_under_or() -> None:
     node = OrNode(
         type="or",
         children=[
@@ -611,10 +607,10 @@ def test_extract_site_scope_rejects_nesting_under_or() -> None:
     )
 
     with pytest.raises(ValueError, match="'or'"):
-        extract_site_scope(node, frozenset({_SITE_ID}))
+        scope_filter_by_site(node)
 
 
-def test_extract_site_scope_rejects_negating_a_mixed_subtree() -> None:
+def test_scope_filter_by_site_rejects_negating_a_mixed_subtree() -> None:
     node = NotNode(
         type="not",
         child=AndNode(
@@ -632,7 +628,20 @@ def test_extract_site_scope_rejects_negating_a_mixed_subtree() -> None:
     )
 
     with pytest.raises(ValueError, match="'or'"):
-        extract_site_scope(node, frozenset({_SITE_ID}))
+        scope_filter_by_site(node)
+
+
+def test_scope_filter_by_site_keeps_a_site_that_is_gone() -> None:
+    condition = SiteChoiceCondition(
+        type="condition",
+        field="site_id",
+        op="one_of",
+        value=[_SITE_ID, SiteId("gone")],
+    )
+
+    site_ids = scope_filter_by_site(condition).site_scope(frozenset({_SITE_ID}))
+
+    assert set(site_ids or []) == {_SITE_ID, SiteId("gone")}
 
 
 @pytest.mark.parametrize(

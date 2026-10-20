@@ -176,13 +176,7 @@ useContextMenuKey(root)
 const instantReport = new InstantReport('report_instant_all_hosts.py')
 
 function openInstantReport(): void {
-  const body = hostApi.requestBody({
-    limit: hostService.requestedLimit.value,
-    sort: hostService.sortState.value,
-    searchQuery: hostService.appliedSearchQuery.value,
-    filter: hostService.filterState.value
-  })
-  instantReport.open(hostService.exportColumns(), body)
+  instantReport.open(hostService.exportColumns(), hostApi.requestBody(hostService.listingParams()))
 }
 
 const exportFeedback = useRowExport(hostService, {

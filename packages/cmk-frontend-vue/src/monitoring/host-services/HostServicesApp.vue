@@ -51,6 +51,7 @@ import { acknowledgeDefaults } from '../shared/components/action/actions/acknowl
 import { RESCHEDULE_ACTION_ID } from '../shared/components/action/actions/reschedule'
 import { downtimePresets } from '../shared/components/action/actions/scheduleDowntime'
 import { createActionRegistry } from '../shared/components/action/registry'
+import { InstantReport } from '../shared/export/instantReport'
 import { useRowExport } from '../shared/export/useRowExport'
 import { buildFilterUrlSchema } from '../shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '../shared/filterState/urlState'
@@ -265,9 +266,20 @@ const typeToFocus = useTypeToFocus(root)
 useFallbackKeys(root, () => root.value?.querySelector<HTMLElement>('.monitoring-table'))
 useContextMenuKey(root)
 
+const instantReport = new InstantReport('report_instant_host_services.py')
+
+function openInstantReport(): void {
+  instantReport.open(
+    hostServicesService.exportColumns(),
+    servicesApi.requestBody(hostServicesService.listingParams()),
+    { host: host.name, site: host.site_id }
+  )
+}
+
 const exportFeedback = useRowExport(hostServicesService, {
   exportEvent: props.export_event,
   build: () => hostServicesService.export(),
+  openReport: openInstantReport,
   texts: {
     exporting: _t('Exporting services…'),
     notLoaded: _t('The services could not be loaded, so nothing was exported.'),

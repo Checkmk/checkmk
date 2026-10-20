@@ -5,7 +5,7 @@
  */
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HostServicesApi } from '@/monitoring/host-services/api/services'
 import type { HostRef } from '@/monitoring/shared/api/types'
@@ -13,6 +13,8 @@ import type { HostRef } from '@/monitoring/shared/api/types'
 type ApiServiceEntry = components['schemas']['HostServiceEntry']
 
 const HOST: HostRef = { name: 'web-1', site_id: 'local' }
+
+const NOW = 1789625643
 
 function makeApiEntry(overrides: Partial<ApiServiceEntry> = {}): ApiServiceEntry {
   return {
@@ -177,5 +179,37 @@ describe('HostServicesApi.fetchServices', () => {
     } as never)
 
     await expect(new HostServicesApi().fetchServices(HOST)).rejects.toThrow()
+  })
+})
+
+describe('HostServicesApi.requestBody', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('is the body fetchServices sends, without the fields', () => {
+    const body = new HostServicesApi().requestBody({
+      limit: 1000,
+      sort: [{ id: 'state', desc: true }],
+      searchQuery: 'CPU'
+    })
+
+    expect(body).toEqual({ limit: 1000, sort: ['state:desc'], q: 'CPU' })
+  })
+
+  it('resolves an age filter to the absolute bound it means now', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(NOW * 1000)
+
+    const body = new HostServicesApi().requestBody({
+      filter: { type: 'age', field: 'last_check', op: 'older_than', seconds: 300 }
+    })
+
+    expect(body.filter).toEqual({
+      type: 'condition',
+      field: 'last_check',
+      op: 'lte',
+      value: NOW - 300
+    })
   })
 })

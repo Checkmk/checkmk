@@ -6,7 +6,7 @@
 import type { ColumnDef } from '@tanstack/vue-table'
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 
-import type { HostApi } from '@/monitoring/shared/api/hosts'
+import type { HostApi, HostQueryParams } from '@/monitoring/shared/api/hosts'
 import type { HostEntry, HostOptionalField } from '@/monitoring/shared/api/types'
 import { RowExport } from '@/monitoring/shared/export/rowExport'
 import {
@@ -46,13 +46,20 @@ export class HostService extends MonitoringService<HostEntry> {
     return RowExport.shownColumns(this.columns, this.columnVisibility.value, HostExport.isColumn)
   }
 
+  /** What the listing asks the endpoint for, whatever fields its rows read. */
+  listingParams(): HostQueryParams {
+    return {
+      limit: this.requestedLimit.value,
+      sort: this.sortState.value,
+      searchQuery: this.appliedSearchQuery.value,
+      filter: this.filterState.value
+    }
+  }
+
   protected async fetchBatch(signal: AbortSignal): Promise<PagedResponse<HostEntry>> {
     const response = await this.api.fetchHosts(
       {
-        limit: this.requestedLimit.value,
-        sort: this.sortState.value,
-        searchQuery: this.appliedSearchQuery.value,
-        filter: this.filterState.value,
+        ...this.listingParams(),
         fields: [
           ...visibleHostFields(this.columnVisibility.value, this.hideableColumnIds),
           ...this.rowFields

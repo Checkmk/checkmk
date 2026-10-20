@@ -21,9 +21,9 @@ import {
   type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
 
-import type { HostServicesApi } from '../api/services'
+import type { HostServicesApi, HostServicesQueryParams } from '../api/services'
 import { visibleServiceFields } from '../columns'
-import { ServiceExport } from '../export/serviceExport'
+import { ServiceExport, type ServiceExportColumn } from '../export/serviceExport'
 
 export interface HostServicesServiceOptions extends MonitoringServiceOptions<HostServiceEntry> {
   /** Fields read on the host of the page on every fetch, for what its header and slide-in offer. */
@@ -49,11 +49,21 @@ export class HostServicesService extends MonitoringService<HostServiceEntry> {
 
   async export(): Promise<ServiceExport> {
     const services = await this.loadedItems()
-    return new ServiceExport(
-      this.host.name,
-      RowExport.shownColumns(this.columns, this.columnVisibility.value, ServiceExport.isColumn),
-      services
-    )
+    return new ServiceExport(this.host.name, this.exportColumns(), services)
+  }
+
+  exportColumns(): ServiceExportColumn[] {
+    return RowExport.shownColumns(this.columns, this.columnVisibility.value, ServiceExport.isColumn)
+  }
+
+  /** What the listing asks the endpoint for, whatever fields its rows read. */
+  listingParams(): HostServicesQueryParams {
+    return {
+      limit: this.requestedLimit.value,
+      sort: this.sortState.value,
+      searchQuery: this.appliedSearchQuery.value,
+      filter: this.filterState.value
+    }
   }
 
   protected async fetchBatch(signal: AbortSignal): Promise<PagedResponse<HostServiceEntry>> {
@@ -61,10 +71,7 @@ export class HostServicesService extends MonitoringService<HostServiceEntry> {
       this.api.fetchServices(
         this.host,
         {
-          limit: this.requestedLimit.value,
-          sort: this.sortState.value,
-          searchQuery: this.appliedSearchQuery.value,
-          filter: this.filterState.value,
+          ...this.listingParams(),
           fields: visibleServiceFields(this.columnVisibility.value)
         },
         signal

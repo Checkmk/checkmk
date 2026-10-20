@@ -9,6 +9,7 @@ from urllib.parse import urlencode
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.ccc.version import Edition as ProductEdition
 from cmk.ccc.version import edition
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import Config
@@ -28,7 +29,7 @@ from cmk.gui.monitor.command import (
     MonitorCommands,
     notification_rules_url,
 )
-from cmk.gui.monitor.export import EXPORT_EVENT, MonitorExportMenu
+from cmk.gui.monitor.export import EXPORT_EVENT, MonitorReportExportMenu
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
 from cmk.gui.monitor.services._access import HOST_SERVICES_PERMISSION, LEGACY_HOST_VIEW_NAME
 from cmk.gui.monitor.services._ai_explain import ai_explain
@@ -136,7 +137,9 @@ class MonitorHostServicesPage(Page):
                 hostname=hostname,
                 site_id=site_id,
                 breadcrumb=breadcrumb,
-                export_dropdowns=MonitorExportMenu().dropdowns(),
+                export_dropdowns=MonitorReportExportMenu(
+                    instant_reports=edition(paths.omd_root) is not ProductEdition.COMMUNITY
+                ).dropdowns(),
             ),
             enable_main_page_scrollbar=False,
             debug=ctx.config.debug,

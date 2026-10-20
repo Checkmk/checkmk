@@ -121,11 +121,12 @@ Interfaces
   host" needs. The rows are ``HostServiceEntry``, the response model of
   that endpoint.
 * Livestatus, locally or via :doc:`arch-comp-liveproxyd` for remote sites.
-* Outside Community, the page "All hosts" links to the instant PDF report
-  of reporting with the columns it shows and the request body it sends to
-  the internal REST endpoint that lists hosts, with relative age filters
-  already resolved. Reporting turns that body into the listing with
-  ``HostListing`` from ``cmk.gui.monitor.hosts.table``.
+* Outside Community, the pages "All hosts" and "Services of host" link to
+  an instant PDF report of reporting with the columns they show and the
+  request body they send to their internal REST endpoint, with relative age
+  filters already resolved. Reporting turns that body into the listing with
+  ``HostListing`` from ``cmk.gui.monitor.hosts.table`` and ``ServiceListing``
+  from ``cmk.gui.monitor.services.table``.
 
 Coexistence
 -----------

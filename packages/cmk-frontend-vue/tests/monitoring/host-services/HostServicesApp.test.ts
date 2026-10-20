@@ -1280,4 +1280,41 @@ describe('export', () => {
       await screen.findByText('Exported 1 of 3 services. Show more services to export more.')
     ).toBeInTheDocument()
   })
+
+  test('posts the host, the shown columns and the listing to the instant PDF report', async () => {
+    const posted: { action: string | null; fields: Record<string, string> }[] = []
+    vi.spyOn(HTMLFormElement.prototype, 'submit').mockImplementation(function (
+      this: HTMLFormElement
+    ) {
+      posted.push({
+        action: this.getAttribute('action'),
+        fields: Object.fromEntries(
+          [...new FormData(this).entries()].map(([key, value]) => [key, String(value)])
+        )
+      })
+    })
+    window.history.replaceState(
+      null,
+      '',
+      '/monitor_host_services.py?host=web-1&site=local&cols=summary,labels'
+    )
+    mockServices([makeApiEntry()])
+    renderApp()
+    await screen.findByRole('columnheader', { name: 'Labels' })
+    await vi.waitUntil(() => servicesPost.mock.calls.length > 0)
+
+    document.dispatchEvent(new CustomEvent(EXPORT_EVENT, { detail: 'pdf' }))
+
+    const [report] = posted
+    expect([report!.action, report!.fields.host, report!.fields.site]).toEqual([
+      'report_instant_host_services.py',
+      'web-1',
+      'local'
+    ])
+    expect(report!.fields.cols).toBe('state,name,summary,labels')
+    expect(JSON.parse(report!.fields.body!)).toEqual({
+      ...servicesPost.mock.lastCall![1].body,
+      fields: undefined
+    })
+  })
 })

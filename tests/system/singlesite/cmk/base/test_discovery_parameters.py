@@ -7,9 +7,6 @@
 import pytest
 
 from cmk.checkengine.discovery import AutochecksSerializer
-from tests.system.singlesite.cmk.base.automation_helper_restart import (
-    restart_automation_helper_and_wait_until_reachable,
-)
 from tests.system.singlesite.linux_test_host import create_linux_test_host
 from tests.testlib.system.site import Site
 
@@ -62,7 +59,8 @@ check_plugin_test_check_1 = CheckPlugin(
     )
 
     site.activate_changes_and_wait_for_core_reload()
-    restart_automation_helper_and_wait_until_reachable(site)
+    # discovery runs in the automation helper, which only loads plug-ins on startup
+    site.omd("restart", "automation-helper", check=True)
 
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 
@@ -145,7 +143,8 @@ check_plugin_test_check_2 = CheckPlugin(
     )
 
     site.activate_changes_and_wait_for_core_reload()
-    restart_automation_helper_and_wait_until_reachable(site)
+    # discovery runs in the automation helper, which only loads plug-ins on startup
+    site.omd("restart", "automation-helper", check=True)
 
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 

@@ -16,6 +16,7 @@ fi
 
 PIDFILE=$OMD_ROOT/tmp/run/automation-helper.pid
 DAEMON=$OMD_ROOT/bin/cmk-automation-helper
+CLIENT=$OMD_ROOT/bin/cmk-automation-client
 THE_PID=$(cat "$PIDFILE" 2>/dev/null)
 
 process_is_running() {
@@ -28,6 +29,29 @@ await_process_stop() {
         process_is_running || return 0
         [ $((N % 10)) -eq 0 ] && printf "."
         sleep 0.1
+    done
+    return 1
+}
+
+helper_answers_health_check() {
+    "$CLIENT" --health >/dev/null 2>&1
+}
+
+await_helper_ready() {
+    # The daemon detaches before it loads the configuration, so its exit code
+    # says nothing about whether it can serve requests yet.
+    deadline=$((SECONDS + "${1}"))
+    pid_file_seen=""
+    while [ "${SECONDS}" -lt "${deadline}" ]; do
+        THE_PID=$(cat "$PIDFILE" 2>/dev/null)
+        [ -n "$THE_PID" ] && pid_file_seen="yes"
+        # The daemon removes its PID file when it exits.
+        if [ -n "$pid_file_seen" ] && ! process_is_running; then
+            return 1
+        fi
+        helper_answers_health_check && return 0
+        printf "."
+        sleep 1
     done
     return 1
 }
@@ -54,8 +78,10 @@ case "$1" in
         if process_is_running; then
             exit_successfully 'already running.'
         fi
+        # An orphaned PID file would make await_helper_ready see a dead helper.
+        rm -f "$PIDFILE"
 
-        if "$DAEMON"; then
+        if "$DAEMON" && await_helper_ready 300; then
             exit_successfully 'OK'
         else
             exit_failure 'failed'

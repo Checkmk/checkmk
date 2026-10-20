@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import subprocess
 from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
@@ -197,12 +196,12 @@ def _disable_automation_helper_reloader_and_set_worker_count_to_one(site: Site) 
         ),
     )
     site.write_file(RELATIVE_CONFIG_PATH_FOR_TESTING, adjusted_configuration.model_dump_json())
-    _restart_automation_helper_and_wait_until_reachable(site)
+    site.omd("restart", "automation-helper", check=True)
     try:
         yield
     finally:
         site.delete_file(RELATIVE_CONFIG_PATH_FOR_TESTING)
-        _restart_automation_helper_and_wait_until_reachable(site)
+        site.omd("restart", "automation-helper", check=True)
 
 
 @contextmanager
@@ -226,12 +225,12 @@ def _set_automation_helper_worker_count_to_one(site: Site) -> Generator[None]:
         reloader_config=default_configuration.reloader_config,
     )
     site.write_file(RELATIVE_CONFIG_PATH_FOR_TESTING, adjusted_configuration.model_dump_json())
-    _restart_automation_helper_and_wait_until_reachable(site)
+    site.omd("restart", "automation-helper", check=True)
     try:
         yield
     finally:
         site.delete_file(RELATIVE_CONFIG_PATH_FOR_TESTING)
-        _restart_automation_helper_and_wait_until_reachable(site)
+        site.omd("restart", "automation-helper", check=True)
 
 
 @contextmanager
@@ -274,22 +273,6 @@ def _query_analyse_service(site: Site, args: Sequence[str]) -> AnalyseServiceRes
                 _run_automation(site, "analyse-service", args)
             ).serialized_result_or_error_code
         )
-    )
-
-
-def _restart_automation_helper_and_wait_until_reachable(site: Site) -> None:
-    def health_endpoint_is_reachable() -> bool:
-        try:
-            HealthCheckResponse.model_validate_json(_query_health(site))
-        except subprocess.CalledProcessError:
-            return False
-        return True
-
-    site.omd("restart", "automation-helper", check=True)
-    wait_until(
-        health_endpoint_is_reachable,
-        timeout=10,
-        interval=0.25,
     )
 
 

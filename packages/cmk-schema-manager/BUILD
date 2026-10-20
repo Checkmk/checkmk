@@ -15,6 +15,9 @@ py_library(
     data = [":py_typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
+    deps = [
+        "//packages/cmk-plugin-apis:discover_plugins",
+    ],
 )
 
 py_library(

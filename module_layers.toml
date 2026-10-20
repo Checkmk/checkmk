@@ -1499,7 +1499,7 @@ allows = ["@ccc", "@trace"]
 allows = []
 
 [components."cmk.schema_manager"]
-allows = []
+allows = ["cmk.discover_plugins"]
 
 [components."cmk.server_side_calls"]
 allows = []

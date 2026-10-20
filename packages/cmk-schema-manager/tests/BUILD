@@ -5,6 +5,7 @@ py_cmk_test(
     size = "small",
     srcs = glob(["**/*.py"]),
     deps = [
+        "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-schema-manager",
         "//packages/cmk-schema-manager:testlib",
     ],

@@ -48,11 +48,13 @@ DashletInputFunc = Callable[[DashletConfig], None]
 DashletHandleInputFunc = Callable[[DashletId, DashletConfig, DashletConfig], DashletConfig]
 
 
-def _keys_not_managed_by_editor(dashlet_spec: DashletConfig) -> DashletConfig:
+def _keys_not_managed_by_editor(
+    dashlet_spec: DashletConfig, dashlet_type: type[Dashlet]
+) -> DashletConfig:
     return DashletConfig(
         {
             "type": dashlet_spec["type"],
-            "size": dashlet_spec["size"],
+            "size": dashlet_spec.get("size", dashlet_type.initial_size()),
             "position": dashlet_spec["position"],
         }
     )
@@ -177,7 +179,7 @@ class EditDashletPage(Page):
 
         if request.var("_save") and transactions.transaction_valid():
             try:
-                new_dashlet_spec = _keys_not_managed_by_editor(dashlet_spec)
+                new_dashlet_spec = _keys_not_managed_by_editor(dashlet_spec, dashlet_type)
 
                 general_properties = vs_general.from_html_vars("general")
                 vs_general.validate_value(general_properties, "general")

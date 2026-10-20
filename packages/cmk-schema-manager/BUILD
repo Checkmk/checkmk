@@ -23,6 +23,7 @@ py_library(
     name = "testlib",
     testonly = True,
     srcs = glob(["cmk/testlib/schema_manager/**/*.py"]),
+    data = ["cmk/testlib/schema_manager/py.typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [":cmk-schema-manager"],

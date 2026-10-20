@@ -253,6 +253,9 @@ def _mode_snmpwalk(
 def _run_snmpwalk(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    if global_options.debug:
+        # config.load() reads cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_snmpwalk(omd_root, global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -366,6 +369,9 @@ def _mode_snmpget(
 def _run_snmpget(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    if global_options.debug:
+        # config.load() reads cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_snmpget(omd_root, global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

@@ -9,6 +9,7 @@ import sys
 from contextlib import nullcontext, suppress
 from pathlib import Path
 
+import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk import trace
@@ -83,6 +84,9 @@ def _mode_automation(
 def _run_automation(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    if global_options.debug:
+        # exit_on_config_file_load_error() reads cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_automation(omd_root, global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

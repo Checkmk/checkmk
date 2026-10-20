@@ -52,6 +52,9 @@ def _mode_man(_omd_root: Path, _global_options: GlobalOptions, options: Options,
 
 
 def _run_man(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    if global_options.debug:
+        # discover_families() is told by cmk.ccc.debug whether to raise
+        cmk.ccc.debug.enable()
     try:
         return _mode_man(omd_root, global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -106,6 +109,9 @@ def _mode_browse_man(
 def _run_browse_man(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    if global_options.debug:
+        # discover_families() is told by cmk.ccc.debug whether to raise
+        cmk.ccc.debug.enable()
     try:
         return _mode_browse_man(omd_root, global_options, options, args)
     except MKGeneralException as e:

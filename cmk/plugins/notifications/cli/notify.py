@@ -14,6 +14,7 @@ import sys
 from collections.abc import Mapping
 from pathlib import Path
 
+import cmk.ccc.debug
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
 from cmk.automations.backends.helper import AutomationHelperUnavailable, HelperExecutor
@@ -84,6 +85,9 @@ def _mode_notify(
 
 
 def _run_notify(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    if global_options.debug:
+        # config.load() reads cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_notify(omd_root, global_options, options, args)
     except MKTerminate:

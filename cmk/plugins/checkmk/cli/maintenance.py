@@ -10,6 +10,7 @@ import os
 import time
 from pathlib import Path
 
+import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.base import config
 from cmk.base.configlib.servicename import make_final_service_name_config
@@ -60,6 +61,9 @@ def _mode_update_dns_cache(
 def _run_update_dns_cache(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    if global_options.debug:
+        # config.load() reads cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_update_dns_cache(omd_root, global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -103,6 +107,9 @@ def _mode_cleanup_piggyback(
 def _run_cleanup_piggyback(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    if global_options.debug:
+        # config.load() reads cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_cleanup_piggyback(omd_root, global_options, options, args)
     except MKGeneralException as e:
@@ -234,6 +241,9 @@ def _mode_flush(
 
 
 def _run_flush(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    if global_options.debug:
+        # config.load() and load_checks() read cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_flush(omd_root, global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

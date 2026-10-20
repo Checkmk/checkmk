@@ -107,6 +107,9 @@ def _mode_list_hosts(
 def _run_list_hosts(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    if global_options.debug:
+        # config.load() reads cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_list_hosts(omd_root, global_options, options, args)
     except MKGeneralException as e:
@@ -188,6 +191,9 @@ def _mode_list_tag(
 def _run_list_tag(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    if global_options.debug:
+        # config.load() reads cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_list_tag(omd_root, global_options, options, args)
     except MKGeneralException as e:
@@ -311,6 +317,9 @@ def _mode_list_checks(
 def _run_list_checks(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    if global_options.debug:
+        # load_checks() and discover_families() read cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_list_checks(omd_root, global_options, options, args)
     except MKGeneralException as e:

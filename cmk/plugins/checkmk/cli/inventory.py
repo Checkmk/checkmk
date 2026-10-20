@@ -326,6 +326,9 @@ def _mode_inventory(
 def _run_inventory(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    if global_options.debug:
+        # config.load() and load_checks() read cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_inventory(omd_root, global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -552,6 +555,9 @@ def _mode_inventorize_marked_hosts(
 def _run_inventorize_marked_hosts(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    if global_options.debug:
+        # config.load() and load_checks() read cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_inventorize_marked_hosts(omd_root, global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

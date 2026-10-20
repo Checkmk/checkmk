@@ -311,6 +311,9 @@ def _mode_check_discovery(
 def _run_check_discovery(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    if global_options.debug:
+        # config.load() and load_checks() read cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_check_discovery(omd_root, global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -612,6 +615,9 @@ def _mode_discover(
 def _run_discover(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    if global_options.debug:
+        # config.load() and load_checks() read cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_discover(omd_root, global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

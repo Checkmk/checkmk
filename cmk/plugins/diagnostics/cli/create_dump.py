@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.base.config import exit_on_config_file_load_error, load_raw_config
 from cmk.base.diagnostics import (
@@ -139,6 +140,9 @@ def _mode_create_diagnostics_dump(
 def _run_create_diagnostics_dump(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    if global_options.debug:
+        # exit_on_config_file_load_error() reads cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_create_diagnostics_dump(omd_root, global_options, options, args)
     except MKGeneralException as e:

@@ -130,6 +130,9 @@ def _mode_dump_nagios_config(
 def _run_dump_nagios_config(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    if global_options.debug:
+        # config.load() and load_checks() read cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_dump_nagios_config(omd_root, global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -282,6 +285,9 @@ def _mode_update(
 
 
 def _run_update(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    if global_options.debug:
+        # config.load() and load_checks() read cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_update(omd_root, global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -403,6 +409,9 @@ def _mode_restart(
 def _run_restart(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
+    if global_options.debug:
+        # config.load() and load_checks() read cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_restart(omd_root, global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -523,6 +532,9 @@ def _mode_reload(
 
 
 def _run_reload(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    if global_options.debug:
+        # config.load() and load_checks() read cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_reload(omd_root, global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

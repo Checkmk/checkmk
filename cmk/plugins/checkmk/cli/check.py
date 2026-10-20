@@ -8,6 +8,7 @@ import logging
 from collections.abc import Mapping
 from pathlib import Path
 
+import cmk.ccc.debug
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.base import config
@@ -108,6 +109,9 @@ def _mode_check(omd_root: Path, global_options: GlobalOptions, parsed: Options, 
 
 
 def _run_check(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    if global_options.debug:
+        # config.load() and load_checks() read cmk.ccc.debug
+        cmk.ccc.debug.enable()
     try:
         return _mode_check(omd_root, global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

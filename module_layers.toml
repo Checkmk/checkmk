@@ -202,6 +202,7 @@ allows = [
 # cmk.base.diagnostics; the automations set up the console logging it reports to.
 allows = [
   "@livestatus_client",
+  "cmk.ccc.debug",
   "cmk.ccc.hostaddress",
   "cmk.ccc.site",
   "cmk.ccc.store",

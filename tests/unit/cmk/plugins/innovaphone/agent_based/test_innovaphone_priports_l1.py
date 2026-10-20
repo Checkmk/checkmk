@@ -38,9 +38,20 @@ def test_parse_innovaphone_priports_l1_maps_rows_by_item() -> None:
     }
 
 
-def test_parse_innovaphone_priports_l1_falls_back_to_zero_for_non_integers() -> None:
-    assert parse_innovaphone_priports_l1([["Port 1", "", "not-a-number", ""]]) == {
-        "Port 1": PriPort(state=0, sigloss=0, slip=0),
+@pytest.mark.parametrize(
+    "row",
+    [
+        pytest.param([], id="empty row"),
+        pytest.param(["Port 1", "2", "0"], id="missing column"),
+        pytest.param(["Port 1", "", "0", "0"], id="empty state"),
+        pytest.param(["Port 1", "2", "not-a-number", "0"], id="signal loss not a number"),
+        pytest.param(["Port 1", "2", "0", "-1"], id="negative slip count"),
+    ],
+)
+@pytest.mark.xfail(strict=True, reason="rows that cannot be parsed are not skipped")
+def test_parse_innovaphone_priports_l1_skips_rows_that_cannot_be_parsed(row: list[str]) -> None:
+    assert parse_innovaphone_priports_l1([row, ["Port 2", "2", "0", "0"]]) == {
+        "Port 2": PriPort(state=2, sigloss=0, slip=0),
     }
 
 

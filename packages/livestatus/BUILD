@@ -125,7 +125,7 @@ cc_test(
     copts = ["-std=c++20"],
     deps = [
         ":livestatus_base",
-        "@gtest//:gtest_main",
+        "@gtest",
         "@re2",
     ],
 )

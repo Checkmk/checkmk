@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing_engine import rrd_metric_name
+from cmk.graphing_engine._rrd._naming import rrd_metric_name
 
 
 def test_rrd_metric_name_pnp_cleans_path_hostile_characters() -> None:

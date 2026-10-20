@@ -96,7 +96,6 @@ def parse_unit(unit: metrics_v1.Unit) -> Unit:
 
 FALLBACK_COLOR = _COLORS[metrics_v1.Color.GRAY]
 FALLBACK_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
-FALLBACK_ATTRIBUTES = CurveAttributes(title="", unit=FALLBACK_UNIT, color=FALLBACK_COLOR)
 
 
 def _predicted_of(metric_name: str) -> tuple[str, str] | None:

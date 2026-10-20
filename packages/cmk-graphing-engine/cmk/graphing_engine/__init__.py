@@ -64,7 +64,6 @@ from ._graphs._drawn_curves import (
     DrawnLineType,
 )
 from ._graphs._graph import (
-    Bound,
     Curve,
     FixedRange,
     Graph,
@@ -152,7 +151,6 @@ from ._rrd._metrics import (
 )
 from ._rrd._naming import (
     HostName,
-    rrd_metric_name,
     Service,
     ServiceName,
     SiteID,
@@ -204,7 +202,6 @@ __all__ = [
     "FALLBACK_UNIT",
     "MACRO_SERIES_ID",
     "AutoPrecision",
-    "Bound",
     "ConsolidationFunction",
     "constant_time_series",
     "Constant",
@@ -285,7 +282,6 @@ __all__ = [
     "parse_color",
     "parse_unit",
     "split_predict_prefix",
-    "rrd_metric_name",
     "timestamps",
     "notation_from_name",
     "notation_name",

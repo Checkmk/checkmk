@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { ColumnDef } from '@tanstack/vue-table'
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { type Ref, shallowRef } from 'vue'
 
@@ -13,6 +14,7 @@ import type {
   HostRef,
   HostServiceEntry
 } from '@/monitoring/shared/api/types'
+import { RowExport } from '@/monitoring/shared/export/rowExport'
 import {
   MonitoringService,
   type MonitoringServiceOptions,
@@ -21,6 +23,7 @@ import {
 
 import type { HostServicesApi } from '../api/services'
 import { visibleServiceFields } from '../columns'
+import { ServiceExport } from '../export/serviceExport'
 
 export interface HostServicesServiceOptions extends MonitoringServiceOptions<HostServiceEntry> {
   /** Fields read on the host of the page on every fetch, for what its header and slide-in offer. */
@@ -30,6 +33,7 @@ export interface HostServicesServiceOptions extends MonitoringServiceOptions<Hos
 export class HostServicesService extends MonitoringService<HostServiceEntry> {
   readonly hostEntry: Ref<HostEntry | null> = shallowRef<HostEntry | null>(null)
   private readonly hostFields: readonly HostOptionalField[]
+  private readonly columns: readonly ColumnDef<HostServiceEntry>[]
 
   constructor(
     private readonly api: Pick<HostServicesApi, 'fetchServices'>,
@@ -40,6 +44,16 @@ export class HostServicesService extends MonitoringService<HostServiceEntry> {
   ) {
     super('host-services-service', shortCutService, options)
     this.hostFields = options.hostFields ?? []
+    this.columns = options.columns ?? []
+  }
+
+  async export(): Promise<ServiceExport> {
+    const services = await this.loadedItems()
+    return new ServiceExport(
+      this.host.name,
+      RowExport.shownColumns(this.columns, this.columnVisibility.value, ServiceExport.isColumn),
+      services
+    )
   }
 
   protected async fetchBatch(signal: AbortSignal): Promise<PagedResponse<HostServiceEntry>> {

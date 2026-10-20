@@ -14,7 +14,9 @@ import {
   useHostServicesColumns,
   visibleServiceFields
 } from '@/monitoring/host-services/columns'
+import { ServiceExport } from '@/monitoring/host-services/export/serviceExport'
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
+import { RowExport } from '@/monitoring/shared/export/rowExport'
 import {
   MonitoringService,
   type PagedResponse
@@ -212,4 +214,12 @@ test('the actions column widens by one button width per inline action', () => {
 test('last state change comes before last check, matching the legacy view', () => {
   const ids = serviceColumns().map((column) => columnId(column as ColumnDef<never>))
   expect(ids.indexOf('last_state_change')).toBeLessThan(ids.indexOf('last_check'))
+})
+
+test('the export carries every data column of the table in table order', () => {
+  const dataColumns = serviceColumns()
+    .map(columnId)
+    .filter((id) => id !== 'select' && id !== 'actions')
+
+  expect(RowExport.shownColumns(serviceColumns(), {}, ServiceExport.isColumn)).toEqual(dataColumns)
 })

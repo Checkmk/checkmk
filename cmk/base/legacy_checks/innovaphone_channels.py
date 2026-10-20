@@ -26,6 +26,9 @@ def check_innovaphone_channels(item, params, info):
                 yield 2, f"Link: {link}, Physical: {physical}"
                 return
             idle, total = map(float, line[3:])
+            if not total:
+                yield 0, "No channels available (total: 0)"
+                return
             perc_used = (idle / total) * 100  # fixed: true-division
             perc_free = 100 - perc_used
             message = f"(used: {total - idle:.0f}, free: {idle:.0f}, total: {total:.0f})"

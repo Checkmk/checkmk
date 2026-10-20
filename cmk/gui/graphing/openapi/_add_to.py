@@ -32,7 +32,7 @@ def parse_built_graph(internal: Mapping[str, object]) -> Graph:
             title="Unknown graph kind",
             detail=f"There is no graph kind {exc}.",
         ) from exc
-    return dispatcher.deserialize(graph)
+    return dispatcher.codec.deserialize_graph(graph)
 
 
 def parse_specification(specification: Mapping[str, object]) -> GraphSpecification:

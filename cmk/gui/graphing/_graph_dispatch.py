@@ -98,12 +98,6 @@ class GraphDispatcher:
     # deserializes the common options and whatever else it alone needs from them.
     make_evaluate: Callable[[Mapping[str, object]], DispatchedEvaluateProtocol]
 
-    def serialize(self, graph: Graph) -> Mapping[str, object]:
-        return self.codec.serialize_graph(graph)
-
-    def deserialize(self, graph: Mapping[str, object]) -> Graph:
-        return self.codec.deserialize_graph(graph)
-
 
 class GraphDispatcherRegistry(Registry[GraphDispatcher]):
     @override
@@ -115,15 +109,11 @@ graph_dispatcher_registry = GraphDispatcherRegistry()
 
 
 def serialize_graphs(graphs: Sequence[Graph]) -> Mapping[str, object]:
-    return {"graphs": [graph_dispatcher_registry[graph.kind].serialize(graph) for graph in graphs]}
-
-
-def _deserialized_graphs(internal: Mapping[str, object]) -> Sequence[Graph]:
-    graphs = []
-    for serialized in ensure_type(internal["graphs"], list):
-        graph = ensure_type(serialized, dict)
-        graphs.append(graph_dispatcher_registry[ensure_type(graph["kind"], str)].deserialize(graph))
-    return graphs
+    return {
+        "graphs": [
+            graph_dispatcher_registry[graph.kind].codec.serialize_graph(graph) for graph in graphs
+        ]
+    }
 
 
 def evaluate_built_graphs(
@@ -146,6 +136,9 @@ def evaluate_graphs(
     internal: Mapping[str, object],
     options: Mapping[str, object],
 ) -> EvaluatedGraphs:
-    # The entry point of a definition that came off the wire; a caller that still holds the built
-    # graphs evaluates them directly.
-    return evaluate_built_graphs(_deserialized_graphs(internal), options)
+    graphs = []
+    for serialized in ensure_type(internal["graphs"], list):
+        graph = ensure_type(serialized, dict)
+        dispatcher = graph_dispatcher_registry[ensure_type(graph["kind"], str)]
+        graphs.append(dispatcher.codec.deserialize_graph(graph))
+    return evaluate_built_graphs(graphs, options)

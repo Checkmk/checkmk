@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterator
+
 import pytest
 
 from cmk.gui.authorization import READ_PERMISSIONS
@@ -30,17 +32,27 @@ _READ_ONLY_TOOL_ENDPOINTS = [
     ("get_inventory", "get", "/domain-types/inventory/collections/all"),
     ("read_setup_configuration", "get", "/objects/host_config/{host_name}"),
     ("read_setup_configuration", "get", "/objects/folder_config/{folder}"),
+    ("list_structure", "get", "/domain-types/folder_config/collections/all"),
+    ("list_structure", "get", "/domain-types/host_group_config/collections/all"),
+    ("list_structure", "get", "/domain-types/service_group_config/collections/all"),
+    ("list_structure", "get", "/domain-types/host_tag_group/collections/all"),
+    ("list_structure", "post", "/domain-types/host/collections/all"),
+    ("list_structure", "post", "/domain-types/service/collections/all"),
 ]
 
 
-def _declared_permissions(method: str, path: str) -> BasePerm | None:
-    """Return the set of permissions an endpoint declares (see BasePerm)."""
+def _registered_endpoints() -> Iterator[tuple[str, str, BasePerm | None]]:
+    """Yield method, path and declared permissions (see BasePerm) of every endpoint."""
     for endpoint in versioned_endpoint_registry:
-        if endpoint.metadata.method == method and endpoint.metadata.path == path:
-            return endpoint.permissions.required
+        yield endpoint.metadata.method, endpoint.metadata.path, endpoint.permissions.required
     for legacy_endpoint in endpoint_registry:
-        if legacy_endpoint.method == method and legacy_endpoint.path == path:
-            return legacy_endpoint.permissions_required
+        yield legacy_endpoint.method, legacy_endpoint.path, legacy_endpoint.permissions_required
+
+
+def _declared_permissions(method: str, path: str) -> BasePerm | None:
+    for endpoint_method, endpoint_path, required in _registered_endpoints():
+        if endpoint_method == method and endpoint_path == path:
+            return required
     raise LookupError(f"no endpoint registered for {method.upper()} {path}")
 
 
@@ -60,3 +72,19 @@ def test_read_scope_satisfies_the_endpoints_of_a_read_only_tool(
         assert required.validate(sorted(READ_PERMISSIONS)), (
             f"{tool} would be denied: {method.upper()} {path} requires {required}"
         )
+
+
+@pytest.mark.usefixtures("load_plugins")
+def test_read_scope_cannot_change_groups_or_tags() -> None:
+    without = sorted(READ_PERMISSIONS - {"wato.groups", "wato.hosttags"})
+
+    writable = [
+        f"{method.upper()} {path}"
+        for method, path, required in _registered_endpoints()
+        if method != "get"
+        and required is not None
+        and required.validate(sorted(READ_PERMISSIONS))
+        and not required.validate(without)
+    ]
+
+    assert not writable, f"the read scope would permit changing groups or tags via {writable}"

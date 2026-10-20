@@ -86,7 +86,7 @@ test('an event is listed with its icon, event, service, state information and ou
   expect(screen.getByTitle('SERVICE ALERT')).toBeInTheDocument()
   expect(screen.getByTitle('CPU load')).toBeInTheDocument()
   expect(screen.getByTitle('OK - CRITICAL')).toBeInTheDocument()
-  expect(screen.getByTitle('CRIT - load average: 12.0')).toBeInTheDocument()
+  expect(screen.getByText('CRIT - load average: 12.0')).toBeInTheDocument()
 })
 
 test('the event icon is read-only: it links nowhere', async () => {

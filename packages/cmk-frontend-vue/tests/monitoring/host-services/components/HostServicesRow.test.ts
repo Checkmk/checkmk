@@ -73,7 +73,7 @@ test('renders service name and summary in their cells', () => {
   mountRow(makeService())
 
   expect(screen.getByTitle('CPU load')).toBeInTheDocument()
-  expect(screen.getByTitle('OK - 15 min load: 0.5')).toBeInTheDocument()
+  expect(screen.getByText('OK - 15 min load: 0.5')).toBeInTheDocument()
 })
 
 test('renders one cell per column', () => {
@@ -108,10 +108,28 @@ test('renders the state markers of the summary as badges', () => {
   expect(container.querySelector('.cmk-state-tag--critical')).toHaveTextContent('CR')
 })
 
-test('keeps the whole summary readable on hover, with the markers spelled out', () => {
-  mountRow(makeService({ summary: 'load: 3.1(!), temp: 90(!!)' }))
+function summaryText(container: Element): Element {
+  return container.querySelector('[data-column-id="summary"] .monitoring-string-cell__text')!
+}
 
-  expect(screen.getByTitle('load: 3.1(WARN), temp: 90(CRIT)')).toBeInTheDocument()
+test('keeps a cut summary readable on hover, with the markers spelled out', async () => {
+  const { container } = mountRow(makeService({ summary: 'load: 3.1(!), temp: 90(!!)' }))
+  const text = summaryText(container)
+  Object.defineProperty(text, 'scrollHeight', { configurable: true, value: 90 })
+  Object.defineProperty(text, 'clientHeight', { configurable: true, value: 60 })
+
+  await fireEvent.mouseEnter(text)
+
+  expect(text).toHaveAttribute('title', 'load: 3.1(WARN), temp: 90(CRIT)')
+})
+
+test('repeats no summary on hover that fits the cell', async () => {
+  const { container } = mountRow(makeService({ summary: 'load: 3.1(!), temp: 90(!!)' }))
+  const text = summaryText(container)
+
+  await fireEvent.mouseEnter(text)
+
+  expect(text).not.toHaveAttribute('title')
 })
 
 test('renders the flapping icon next to the state badge for a flapping service', () => {

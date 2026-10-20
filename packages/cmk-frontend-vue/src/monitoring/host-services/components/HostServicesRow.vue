@@ -155,7 +155,13 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     :button="true"
     @click="emit('open', row)"
   />
-  <StringCell v-if="hasColumn('summary')" column-id="summary" :value="row.summary" state-markers />
+  <StringCell
+    v-if="hasColumn('summary')"
+    column-id="summary"
+    :value="row.summary"
+    state-markers
+    title-only-when-cut
+  />
   <StringCell
     v-if="hasColumn('last_state_change')"
     column-id="last_state_change"

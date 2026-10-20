@@ -138,7 +138,12 @@ function serviceLinkOf(event: EventEntry): CellLink | undefined {
             :linked-to="serviceLinkOf(row)"
           />
           <StringCell column-id="state_info" :value="row.state_info" />
-          <StringCell column-id="plugin_output" :value="row.plugin_output" state-markers />
+          <StringCell
+            column-id="plugin_output"
+            :value="row.plugin_output"
+            state-markers
+            title-only-when-cut
+          />
         </template>
       </MonitoringTable>
 

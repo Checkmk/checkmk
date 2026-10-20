@@ -141,4 +141,14 @@ describe('urlHandler', () => {
       expect(urlHandler.readCloneResult(cleanUrl)).toBeNull()
     })
   })
+
+  it('removes the dropped filters but keeps the carried ones', () => {
+    const url = new URL(
+      'https://example.com/site/check_mk/dashboard.py?name=main&host=web01&_dropped_filters=host_labels:no_such_key'
+    )
+
+    const cleanUrl = urlHandler.withoutDroppedFilters(url)
+
+    expect(cleanUrl.search).toBe('?name=main&host=web01')
+  })
 })

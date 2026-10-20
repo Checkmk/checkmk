@@ -539,6 +539,7 @@ const FILE_DASHBOARD = '/dashboard.py'
 const FILE_SHARED_DASHBOARD = '/shared_dashboard.py'
 
 const CLONE_RESULT_PARAM = 'clone_result'
+const DROPPED_FILTERS_PARAM = '_dropped_filters'
 const CLONE_RESULTS = ['cloned', 'cloned_as_responsive'] as const
 export type CloneResult = (typeof CLONE_RESULTS)[number]
 
@@ -622,6 +623,12 @@ export const urlHandler = {
   withoutCloneResult(url: URL): URL {
     const cleanUrl = new URL(url)
     cleanUrl.searchParams.delete(CLONE_RESULT_PARAM)
+    return cleanUrl
+  },
+
+  withoutDroppedFilters(url: URL): URL {
+    const cleanUrl = new URL(url)
+    cleanUrl.searchParams.delete(DROPPED_FILTERS_PARAM)
     return cleanUrl
   },
 

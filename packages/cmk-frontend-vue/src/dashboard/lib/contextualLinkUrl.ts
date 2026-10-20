@@ -42,6 +42,23 @@ export function contextualLinkUrl(
   }
   params.set('filled_in', 'filter')
   params.set('_show_filter_form', link.show_filter_form ? '1' : '0')
+  const dropped = Object.entries(properties).flatMap(([filterId, result]) => {
+    const missingKeys = result.missing_keys ?? []
+    // A key the clicked element lacks drops alone, while the filter carries the others.
+    if (result.status === 'encoded') {
+      return missingKeys.map((key) => `${filterId}:no_such_key:${key}`)
+    }
+    // A filter the context carries in place of the clicked element's value still travels.
+    if (filterId in filters) {
+      return []
+    }
+    return missingKeys.length > 0
+      ? missingKeys.map((key) => `${filterId}:${result.reason}:${key}`)
+      : [`${filterId}:${result.reason}`]
+  })
+  if (dropped.length > 0) {
+    params.set('_dropped_filters', dropped.join(','))
+  }
   return `${page}?${params.toString()}`
 }
 

@@ -79,6 +79,7 @@ import { PageHeader } from '@/page-header'
 
 import CloneSuccessAlert from './components/CloneSuccessAlert.vue'
 import DashboardRefreshControl from './components/DashboardRefreshControl.vue'
+import DroppedFiltersAlert from './components/DroppedFiltersAlert.vue'
 import DashboardSettingsWizard from './components/Wizard/DashboardSettingsWizard.vue'
 import DashboardSharingWizard from './components/Wizard/wizards/dashboard-sharing/DashboardSharingWizard.vue'
 
@@ -107,8 +108,9 @@ const widgetToEdit = ref<string | null>(null)
 const selectedDashboardBreadcrumb = ref<BreadcrumbItem[] | null>(null)
 const showCloneSuccessAlert = ref(false)
 const clonedAsResponsive = ref(false)
+const droppedFiltersWarning = ref<string | null>(null)
 
-watch(showCloneSuccessAlert, async () => {
+watch([showCloneSuccessAlert, droppedFiltersWarning], async () => {
   await nextTick()
   window.dispatchEvent(new Event('resize'))
 })
@@ -160,6 +162,10 @@ onBeforeMount(async () => {
       clonedAsResponsive.value = cloneResult === 'cloned_as_responsive'
       showCloneSuccessAlert.value = true
       urlHandler.updateCurrentUrl(urlHandler.withoutCloneResult(currentUrl))
+    }
+    droppedFiltersWarning.value = dashboard.filter_context.dropped_filters_warning
+    if (droppedFiltersWarning.value !== null) {
+      urlHandler.updateCurrentUrl(urlHandler.withoutDroppedFilters(new URL(window.location.href)))
     }
   }
 })
@@ -241,6 +247,7 @@ const setAsActiveDashboard = async (dashboardKey: DashboardKey, layout: Dashboar
 const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
   isDashboardEditingMode.value = false
   showCloneSuccessAlert.value = false
+  droppedFiltersWarning.value = null
 
   const key: DashboardKey = {
     name: dashboard.name,
@@ -817,6 +824,10 @@ const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(
             :has-filters="dashboardHasFilters"
             :cloned-as-responsive="clonedAsResponsive"
             @edit-filters="openDashboardFilterSettings = true"
+          />
+          <DroppedFiltersAlert
+            v-if="droppedFiltersWarning !== null"
+            :warning="droppedFiltersWarning"
           />
           <AddWidgetPage
             v-if="Object.entries(dashboardWidgets.widgetCores.value).length === 0"

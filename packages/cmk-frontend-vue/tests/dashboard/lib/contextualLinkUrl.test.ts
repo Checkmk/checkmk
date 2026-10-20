@@ -87,6 +87,56 @@ describe('contextualLinkUrl', () => {
     })
   })
 
+  it('names each dropped filter with its reason', () => {
+    const url = contextualLinkUrl(
+      SEARCHHOST,
+      {
+        ...DOWN_HOSTS,
+        host_labels: { status: 'dropped', reason: 'no_such_key', missing_keys: ['env'] },
+        opthostgroup: { status: 'dropped', reason: 'no_value' }
+      },
+      {}
+    )
+
+    expect(variablesOf(url)._dropped_filters).toBe(
+      'host_labels:no_such_key:env,opthostgroup:no_value'
+    )
+  })
+
+  it('carries the keys a filter has and names the keys it lacks', () => {
+    const url = contextualLinkUrl(
+      SEARCHHOST,
+      {
+        host_auxtags: {
+          status: 'encoded',
+          variables: { host_auxtags_0: 'ip-v4' },
+          missing_keys: ['ip-v6']
+        }
+      },
+      {}
+    )
+
+    expect(variablesOf(url)).toMatchObject({
+      host_auxtags_0: 'ip-v4',
+      _dropped_filters: 'host_auxtags:no_such_key:ip-v6'
+    })
+  })
+
+  it('names no dropped filter the effective context carries instead', () => {
+    const url = contextualLinkUrl(
+      SEARCHHOST,
+      { opthostgroup: { status: 'dropped', reason: 'no_value' } },
+      { opthostgroup: { opthost_group: 'linux' } }
+    )
+
+    expect(variablesOf(url)).toEqual({
+      view_name: 'searchhost',
+      opthost_group: 'linux',
+      filled_in: 'filter',
+      _show_filter_form: '1'
+    })
+  })
+
   it('sends _show_filter_form from the link flag', () => {
     const url = contextualLinkUrl({ ...SEARCHHOST, show_filter_form: false }, {}, {})
 

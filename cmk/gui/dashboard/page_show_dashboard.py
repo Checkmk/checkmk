@@ -24,6 +24,7 @@ from cmk.gui.ntop import ntop_connection
 from cmk.gui.pages import PageContext
 from cmk.gui.type_defs import VisualTypeName
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
+from cmk.gui.views.drilldown_filters import dropped_filters_warning
 from cmk.gui.visuals import visual_page_breadcrumb
 from cmk.gui.visuals._filter_context import requested_context_from_request
 from cmk.licensing.registry import get_licensing_user_effect
@@ -107,6 +108,7 @@ def page_dashboard_app(ctx: PageContext) -> None:
                 # determines if the requested filters should overwrite the dashboard filters or
                 # merge them with dashboard filters
                 "application_mode": "overwrite" if ctx.request.has_var("active_") else "merge",
+                "dropped_filters_warning": dropped_filters_warning(ctx.request),
             },
         }
 

@@ -27,6 +27,7 @@ export interface FilterContext {
     }
   }
   application_mode: 'overwrite' | 'merge'
+  dropped_filters_warning: string | null
 }
 
 export interface LoadedDashboardProperties {

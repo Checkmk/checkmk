@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import shlex
 from pathlib import Path
 
@@ -33,9 +34,9 @@ def test_the_version_of_a_subprocess_automation_reaches_the_cli() -> None:
     )
 
     assert isinstance(parsed, RunCommand)
-    assert parse_sub_options(parsed.command.sub_options, parsed.options) == {
-        "for-cmk-version": "2.4.0p1"
-    }
+    assert parse_sub_options(
+        parsed.command.sub_options, parsed.options, logging.getLogger(__name__)
+    ) == {"for-cmk-version": "2.4.0p1"}
     assert parsed.arguments == ["service-discovery-preview", "myhost"]
 
 

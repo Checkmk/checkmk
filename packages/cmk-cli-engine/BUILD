@@ -23,7 +23,6 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
-        "//packages/cmk-ccc:tty",
         "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-trace",

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import logging
 import os
 import shlex
 import signal
@@ -15,7 +16,6 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from typing import Final, override
 
-from cmk.ccc import tty
 from cmk.cli.internal import (
     CLICommand,
     CLIOption,
@@ -129,7 +129,7 @@ class Option:
 
 
 def parse_sub_options(
-    sub_options: Sequence[Option], all_opts: Options
+    sub_options: Sequence[Option], all_opts: Options, logger: logging.Logger
 ) -> Mapping[OptionName, object]:
     options: dict[OptionName, object] = {}
     counts: Counter[OptionName] = Counter()
@@ -141,9 +141,9 @@ def parse_sub_options(
                 continue
 
             if option.is_deprecated_option(o):
-                write_stdout(
-                    tty.format_warning(f"{o!r} is deprecated in favour of option {option.name!r}")
-                    + "\n"
+                logger.warning(
+                    "%(deprecated)r is deprecated in favour of option %(name)r",
+                    {"deprecated": o, "name": option.name},
                 )
 
             if a and not option.argument:

@@ -12,6 +12,8 @@ from cmk.cli.engine.commands import Command, Option, parse_sub_options
 from cmk.cli.internal import Args, CommandHandler, GlobalOptions, Options
 from cmk.trace import Context
 
+from ._logger import null_logger
+
 # The engine only hands this through to the command's handler.
 _OMD_ROOT: Final = Path("/omd/sites/mysite")
 
@@ -56,7 +58,7 @@ def _call(command: Command, argument: str = "", *, arguments: Sequence[str] = ()
         command,
         _GLOBAL_OPTIONS,
         argument,
-        parse_sub_options(command.sub_options, [("--flag", "")]),
+        parse_sub_options(command.sub_options, [("--flag", "")], null_logger()),
         arguments,
         Context(),
     )

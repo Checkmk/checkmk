@@ -13,6 +13,8 @@ from cmk.cli.engine.call import call
 from cmk.cli.engine.commands import make_command, make_option, parse_sub_options
 from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 
+from ._logger import null_logger
+
 # The engine only hands this through to the command's handler.
 _OMD_ROOT: Final = Path("/omd/sites/mysite")
 
@@ -56,7 +58,7 @@ def test_make_command_parses_sub_options_with_conversion() -> None:
         )
     )
     assert parse_sub_options(
-        command.sub_options, [("--oid", "iso"), ("--verbose", ""), ("--verbose", "")]
+        command.sub_options, [("--oid", "iso"), ("--verbose", ""), ("--verbose", "")], null_logger()
     ) == {
         "oid": "ISO",
         "verbose": 2,
@@ -97,7 +99,9 @@ def test_call_shapes_the_positional_arguments(
         command,
         GlobalOptions(),
         "ARG" if argument else "",
-        parse_sub_options(command.sub_options, [("--thing", "ARG" if argument else "")]),
+        parse_sub_options(
+            command.sub_options, [("--thing", "ARG" if argument else "")], null_logger()
+        ),
         ["ARG", "more"],
         trace.extract_context_from_environment({}),
     )

@@ -19,6 +19,8 @@ from cmk.cli.engine.commands import (
 )
 from cmk.cli.internal import Args, GlobalOptions, Options
 
+from ._logger import null_logger
+
 
 def _unreachable(
     _omd_root: Path, _global: GlobalOptions, _options: Options, _args: Args
@@ -114,7 +116,9 @@ def test_a_sub_option_reaches_its_command() -> None:
     parsed = parse(_COMMANDS, ["cmk", "--check", "--keepalive"])
 
     assert isinstance(parsed, RunCommand)
-    assert "keepalive" in parse_sub_options(parsed.command.sub_options, parsed.options)
+    assert "keepalive" in parse_sub_options(
+        parsed.command.sub_options, parsed.options, null_logger()
+    )
 
 
 def test_a_bare_command_shows_the_help() -> None:
@@ -160,14 +164,16 @@ def test_a_repeated_sub_option_is_counted() -> None:
 
     assert isinstance(parsed, RunCommand)
     assert parsed.command is _CHECK
-    assert parse_sub_options(parsed.command.sub_options, parsed.options) == {"counted": 2}
+    assert parse_sub_options(parsed.command.sub_options, parsed.options, null_logger()) == {
+        "counted": 2
+    }
 
 
 def test_a_repeated_sub_option_argument_is_collected() -> None:
     parsed = parse(_COMMANDS, ["cmk", "--check", "--collected=.1.1", "--collected=.1.2", "myhost"])
 
     assert isinstance(parsed, RunCommand)
-    assert parse_sub_options(parsed.command.sub_options, parsed.options) == {
+    assert parse_sub_options(parsed.command.sub_options, parsed.options, null_logger()) == {
         "collected": (".1.1", ".1.2")
     }
 
@@ -176,14 +182,18 @@ def test_a_sub_option_argument_is_converted() -> None:
     parsed = parse(_COMMANDS, ["cmk", "--check", "--converted=value", "myhost"])
 
     assert isinstance(parsed, RunCommand)
-    assert parse_sub_options(parsed.command.sub_options, parsed.options) == {"converted": "VALUE"}
+    assert parse_sub_options(parsed.command.sub_options, parsed.options, null_logger()) == {
+        "converted": "VALUE"
+    }
 
 
 def test_a_deprecated_sub_option_reaches_the_option_it_replaces() -> None:
     parsed = parse(_COMMANDS, ["cmk", "--check", "--legacy-name=value", "myhost"])
 
     assert isinstance(parsed, RunCommand)
-    assert parse_sub_options(parsed.command.sub_options, parsed.options) == {"converted": "VALUE"}
+    assert parse_sub_options(parsed.command.sub_options, parsed.options, null_logger()) == {
+        "converted": "VALUE"
+    }
 
 
 def test_one_argument_runs_the_implicit_check_command() -> None:

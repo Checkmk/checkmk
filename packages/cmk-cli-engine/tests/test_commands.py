@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import signal
 import sys
 from collections.abc import Iterator
@@ -24,6 +25,8 @@ from cmk.cli.engine.commands import (
     write_paged,
 )
 from cmk.cli.internal import GlobalOptions
+
+from ._logger import null_logger
 
 
 def test_a_redirected_help_is_written_to_stdout(capsys: pytest.CaptureFixture[str]) -> None:
@@ -88,7 +91,7 @@ def test_an_argument_to_a_flag_option_is_rejected() -> None:
     option = Option(long_option="flag", short_help="a flag")
 
     with pytest.raises(ValueError):
-        parse_sub_options([option], [("--flag", "a value")])
+        parse_sub_options([option], [("--flag", "a value")], null_logger())
 
 
 def test_an_option_argument_the_conversion_rejects_is_reported() -> None:
@@ -101,19 +104,20 @@ def test_an_option_argument_the_conversion_rejects_is_reported() -> None:
     )
 
     with pytest.raises(ValueError):
-        parse_sub_options([option], [("--number", "not a number")])
+        parse_sub_options([option], [("--number", "not a number")], null_logger())
 
 
 def test_a_deprecated_option_warns_about_the_one_it_replaces(
-    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     option = Option(
         long_option="plugins", short_help="the plugins", deprecated_long_options={"checks"}
     )
 
-    parse_sub_options([option], [("--checks", "")])
+    with caplog.at_level(logging.WARNING):
+        parse_sub_options([option], [("--checks", "")], logging.getLogger("cmk.test"))
 
-    assert "'plugins'" in capsys.readouterr().out
+    assert caplog.messages == ["'--checks' is deprecated in favour of option 'plugins'"]
 
 
 def test_a_missing_string_option_has_no_value() -> None:

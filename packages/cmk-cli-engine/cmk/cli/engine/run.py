@@ -242,7 +242,7 @@ def run(
             return 0
         runtime.start_tracing(omd_root)
         try:
-            sub_options = parse_sub_options(parsed.command.sub_options, parsed.options)
+            sub_options = parse_sub_options(parsed.command.sub_options, parsed.options, logger)
         except ValueError as e:
             logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if global_options.debug:

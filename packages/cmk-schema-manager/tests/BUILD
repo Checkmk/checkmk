@@ -15,6 +15,7 @@ py_test(
     main = "__test__.py",
     deps = [
         ":__test__",
+        "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-schema-manager",
         "//packages/cmk-schema-manager:testlib",
         requirement("pytest"),

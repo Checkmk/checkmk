@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from cmk.config.paths import BaseConfigurationMKFiles
+from cmk.config.paths import BaseConfigurationMKFiles, key_config_paths
 
 
 def test_base_configuration_mk_files_from_omd_root() -> None:
@@ -50,4 +50,22 @@ def test_iterating_without_conf_d_skips_its_files(tmp_path: Path) -> None:
     assert list(files.iterate_for_loading()) == [
         (tmp_path / "etc/check_mk/main.mk", None),
         (tmp_path / "etc/check_mk/final.mk", None),
+    ]
+
+
+def test_files_of_a_directory_sort_before_its_subdirectories_both_lexically() -> None:
+    paths = [
+        Path("/conf.d/sub/inner/q.mk"),
+        Path("/conf.d/sub/a.mk"),
+        Path("/conf.d/z.mk"),
+        Path("/conf.d/b/x.mk"),
+        Path("/conf.d/a.mk"),
+    ]
+
+    assert sorted(paths, key=key_config_paths) == [
+        Path("/conf.d/a.mk"),
+        Path("/conf.d/z.mk"),
+        Path("/conf.d/b/x.mk"),
+        Path("/conf.d/sub/a.mk"),
+        Path("/conf.d/sub/inner/q.mk"),
     ]

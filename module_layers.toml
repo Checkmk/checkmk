@@ -1856,7 +1856,7 @@ allows = [
 allows = ["@ccc", "@trace"]
 
 [components."cmk.mknotifyd"]
-allows = ["@ccc", "cmk.crash", "cmk.events"]
+allows = ["@ccc", "cmk.config", "cmk.crash", "cmk.events"]
 
 [components."cmk.data_backend.gui"]
 allows = [
@@ -1909,6 +1909,7 @@ allows = [
   "@ccc",
   "@livestatus_client",
   "@trace",
+  "cmk.config",
   "cmk.crash",
   "cmk.inventory",
   "cmk.liveproxyd.shared",

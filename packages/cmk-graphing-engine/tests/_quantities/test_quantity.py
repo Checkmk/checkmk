@@ -86,7 +86,6 @@ class _FanOut:
     """A custom quantity that expands into one labelled curve per given label."""
 
     labels: Sequence[str]
-    aggregation_kind: object | None = None
 
     def kind(self) -> str:
         return "fan_out"
@@ -103,6 +102,7 @@ class _FanOut:
                 value=float(index),
                 time_series=TimeSeries(time_range=context.time_range, values=[float(index)] * 3),
                 label_macros={"$SERIES_ID$": label},
+                fanned=True,
             )
             for index, label in enumerate(self.labels)
         ]

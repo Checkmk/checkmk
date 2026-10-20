@@ -43,6 +43,7 @@ class EvaluatedQuantity:
     time_series: TimeSeries
     label_macros: Mapping[str, str] = field(default_factory=dict)
     series_attributes: SeriesAttributes = field(default_factory=dict)
+    fanned: bool = False
 
 
 def first_value(results: Sequence[EvaluatedQuantity]) -> float | None:
@@ -57,12 +58,6 @@ class QuantityProtocol(Hashable, Protocol):
     def children(self) -> Sequence[QuantityProtocol]: ...
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]: ...
-
-
-@runtime_checkable
-class FanOutQuantity(Protocol):
-    @property
-    def aggregation_kind(self) -> object | None: ...
 
 
 @runtime_checkable

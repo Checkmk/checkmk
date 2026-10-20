@@ -24,7 +24,7 @@ from cmk.graphing_engine._graphs._graph import (
     Rule,
     VerticalRange,
 )
-from cmk.graphing_engine._quantities._quantity import EvaluationContext, FanOutQuantity, first_value
+from cmk.graphing_engine._quantities._quantity import EvaluationContext, first_value
 
 from ._fetch import FetchDataProtocol, fetched_time_range
 from ._title import evaluate_title, title_metrics
@@ -158,12 +158,14 @@ def _evaluate_curve(
     curve: Curve, *, inverse: bool, seen: Counter[str], context: EvaluationContext
 ) -> Sequence[EvaluatedCurve]:
     results = context.evaluate(curve.quantity)
-    fanned = isinstance(curve.quantity, FanOutQuantity) and curve.quantity.aggregation_kind is None
     return [
         EvaluatedCurve(
             id=_create_id(curve, inverse=inverse, seen=seen),
             attributes=_series_curve_attributes(
-                curve.attributes, index=index, fanned=fanned, label_macros=evaluated.label_macros
+                curve.attributes,
+                index=index,
+                fanned=evaluated.fanned,
+                label_macros=evaluated.label_macros,
             ),
             value=evaluated.value,
             time_series=evaluated.time_series,

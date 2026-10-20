@@ -372,7 +372,6 @@ class _FannedQuantity:
 
     series: Sequence[tuple[str, float]]
     series_attributes: Mapping[str, SeriesAttributes] = field(default_factory=dict)
-    aggregation_kind: object | None = None
 
     def kind(self) -> str:
         return "fan"
@@ -390,6 +389,7 @@ class _FannedQuantity:
                 time_series=_time_series(value),
                 label_macros={"$SERIES_ID$": label},
                 series_attributes=self.series_attributes.get(label, {}),
+                fanned=True,
             )
             for label, value in self.series
         ]

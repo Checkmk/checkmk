@@ -133,7 +133,6 @@ from ._quantities._expressions import (
 from ._quantities._quantity import (
     EvaluatedQuantity,
     EvaluationContext,
-    FanOutQuantity,
     fetch_leaves,
     MetricProtocol,
     QuantityProtocol,
@@ -224,7 +223,6 @@ __all__ = [
     "EvaluatedStacked",
     "EvaluatedVerticalRange",
     "EvaluationContext",
-    "FanOutQuantity",
     "fetch_leaves",
     "fetched_time_range",
     "last_present",

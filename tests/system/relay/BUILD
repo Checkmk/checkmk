@@ -13,7 +13,6 @@ py_library(
     deps = [
         requirement("docker"),
         requirement("pytest"),
-        "//tests/system:pkg_marker",
         "//tests/testlib/common",
         "//tests/testlib/system",
     ],

@@ -46,7 +46,6 @@ py_library(
         "//cmk/post_rename_site",
         "//cmk/utils:msi_patch",
         "//cmk/utils:redis",
-        "//tests/system:pkg_marker",
         "//tests/testlib/common",
         "//tests/testlib/pytest_helpers",
         "//tests/testlib/system",

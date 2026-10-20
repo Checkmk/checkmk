@@ -678,8 +678,6 @@ test-unit-testlib() {
     TZ="$(_random_tz)" _pytest \
         --config-file=pyproject.toml \
         --doctest-modules \
-        --override-ini="pythonpath=." \
-        --override-ini="consider_namespace_packages=true" \
         "${PYTEST_OPTS_UNIT_SKIP_SLOW[@]}" \
         -- \
         tests/testlib/

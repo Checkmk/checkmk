@@ -313,9 +313,9 @@ def accept_parameter_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpo
     endpoint_registry.unregister(test)
 
 
-@pytest.mark.usefixtures("test_endpoint_raise_status_code")
 def test_openapi_endpoint_decorator_catches_status_code_exceptions(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
+    test_endpoint_raise_status_code: WrappedEndpoint,
 ) -> None:
     """
     before this test, the Endpoint did not check for exceptions that change the
@@ -334,7 +334,7 @@ def test_openapi_endpoint_decorator_catches_status_code_exceptions(
     assert response.json["ext"]["exc_type"] == "RestAPIResponseException"
     exc = response.json["ext"]["details"]["rest_api_exception"]
     assert exc["description"] == "Unexpected status code returned: 418"
-    assert exc["detail"] == "Endpoint gui.openapi.test_endpoint.test"
+    assert exc["detail"] == f"Endpoint {test_endpoint_raise_status_code.endpoint.operation_id}"
     assert set(exc["ext"]["The following status codes are allowed for this endpoint"]) == {
         HTTPStatus.UNAUTHORIZED,
         HTTPStatus.NOT_ACCEPTABLE,

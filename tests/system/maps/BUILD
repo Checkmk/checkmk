@@ -17,7 +17,6 @@ py_library(
         # The browser fixtures and the page-object base still live in the GUI
         # suite, which is a holding area being dissolved into feature suites.
         "//tests/system/gui",
-        "//tests/system:pkg_marker",
         "//tests/testlib/common",
         "//tests/testlib/system",
     ],

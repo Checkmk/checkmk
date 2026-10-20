@@ -20,7 +20,6 @@ py_library(
     deps = [
         requirement("pytest"),
         requirement("requests"),
-        "//tests/system:pkg_marker",
         "//tests/testlib/system",
     ] + select({
         "//:gpl+nonfree_repo": [

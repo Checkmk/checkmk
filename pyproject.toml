@@ -230,6 +230,10 @@ warn_required_dynamic_aliases = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# tests.system and its non-free counterpart non-free/tests/system are namespace packages
+# (see tests/__init__.py). Keep the module names rooted at the repository for both.
+pythonpath = ["."]
+consider_namespace_packages = true
 addopts = [
   # Live logs initially look like a good idea to pin down problems in the tests
   # quickly, but with the current state of our tests it's simply too much noise.

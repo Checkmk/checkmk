@@ -19,7 +19,6 @@ py_library(
     imports = ["../../.."],
     deps = [
         requirement("pytest"),
-        "//tests/system:pkg_marker",
         "//tests/testlib/common",
         "//tests/testlib/system",
     ] + select({

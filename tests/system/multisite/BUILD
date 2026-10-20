@@ -28,7 +28,6 @@ py_library(
         requirement("opentelemetry-instrumentation-requests"),
         "//cmk/gui:app",
         "//packages/cmk-wsgi",
-        "//tests/system:pkg_marker",
         "//tests/testlib/common",
         "//tests/testlib/pytest_helpers",
         "//tests/testlib/system",

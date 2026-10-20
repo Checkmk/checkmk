@@ -47,6 +47,17 @@ class Drilldown:
     variables: Callable[[RowValues, Sequence[str]], FilterHTTPVariables | None]
     key: FilterKey | None = None
 
+    def carried(
+        self, row: RowValues, keys: Sequence[str]
+    ) -> tuple[FilterHTTPVariables | None, list[str]]:
+        """The variables for the keys the row has, and the keys it lacks. A key the row lacks
+        drops alone, so the filter still carries the others."""
+        present = [key for key in keys if self.variables(row, [key]) is not None]
+        missing = [key for key in keys if key not in present]
+        if keys and not present:
+            return None, missing
+        return self.variables(row, present), missing
+
 
 def value(row: RowValues, column: ColumnName) -> str | None:
     cell = row.get(column)

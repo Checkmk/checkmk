@@ -137,3 +137,10 @@ def test_the_filter_form_round_trips_the_merged_context() -> None:
     assert {ident: vars_ for ident, vars_ in resubmitted.items() if any(vars_.values())} == {
         ident: vars_ for ident, vars_ in view.context.items() if any(vars_.values())
     }
+
+
+@pytest.mark.usefixtures("request_context")
+def test_a_filter_carried_by_a_link_wins_over_the_view_own_value() -> None:
+    view = _view_opened_with("hostproblems", {"hst0": "on", "filled_in": "filter"})
+
+    assert (view.context["hoststate"]["hst0"], view.context["hoststate"]["hst1"]) == ("on", "")

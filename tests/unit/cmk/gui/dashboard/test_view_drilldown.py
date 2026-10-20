@@ -376,7 +376,7 @@ def test_column_drilldowns_custom_link_filter_wins_over_the_context(
 
 
 @pytest.mark.usefixtures("request_context")
-def test_column_drilldowns_custom_link_leaves_out_a_filter_the_row_has_no_value_for(
+def test_column_drilldowns_custom_link_leaves_out_and_names_a_filter_the_row_has_no_value_for(
     admin_permissions: UserPermissions,
 ) -> None:
     _path, variables = _url_of_first_column(
@@ -391,6 +391,40 @@ def test_column_drilldowns_custom_link_leaves_out_a_filter_the_row_has_no_value_
 
     assert "host_labels_count" not in variables
     assert variables["host"] == "heute"
+    assert variables["_dropped_filters"] == "host_labels:no_such_key:cmk/kubernetes"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_column_drilldowns_custom_link_carries_the_label_keys_the_row_has_and_names_the_others(
+    admin_permissions: UserPermissions,
+) -> None:
+    _path, variables = _url_of_first_column(
+        _view_spec("allhosts"),
+        _custom(
+            ContextFilterConfig(filter_id="host_labels", key="cmk/os_family"),
+            ContextFilterConfig(filter_id="host_labels", key="cmk/kubernetes"),
+        ),
+        _CUSTOM_HOST_ROW,
+        admin_permissions,
+    )
+
+    assert variables["host_labels_1_vs_1_vs"] == "cmk/os_family:linux"
+    assert variables["_dropped_filters"] == "host_labels:no_such_key:cmk/kubernetes"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_column_drilldowns_custom_link_names_no_filter_the_context_carries_instead(
+    admin_permissions: UserPermissions,
+) -> None:
+    _path, variables = _url_of_first_column(
+        _view_spec("allhosts"),
+        _custom(ContextFilterConfig(filter_id="opthostgroup"), include_context=True),
+        {**_CUSTOM_HOST_ROW, "host_groups": []},
+        admin_permissions,
+    )
+
+    assert variables["opthost_group"] == "linux"
+    assert "_dropped_filters" not in variables
 
 
 @pytest.mark.parametrize(
@@ -431,7 +465,7 @@ def test_column_drilldowns_custom_link_leaves_out_a_filter_the_row_has_no_value_
     ],
 )
 @pytest.mark.usefixtures("request_context")
-def test_column_drilldowns_custom_link_to_a_host_view_needs_the_host_named(
+def test_column_drilldowns_custom_link_to_a_host_view_links_even_without_the_host(
     admin_permissions: UserPermissions,
     link: ContextualLinkEntryConfig,
     context: VisualContext,
@@ -441,7 +475,8 @@ def test_column_drilldowns_custom_link_to_a_host_view_needs_the_host_named(
         _CUSTOM_HOST_ROW
     )
 
-    assert (None if url is None else dict(parse_qsl(urlsplit(url).query))["host"]) == host
+    assert url is not None
+    assert dict(parse_qsl(urlsplit(url).query)).get("host") == host
 
 
 @pytest.mark.parametrize(
@@ -493,20 +528,17 @@ def test_column_drilldowns_custom_link_reads_the_columns_of_the_filters_it_carri
 
 
 @pytest.mark.usefixtures("request_context")
-def test_column_drilldowns_custom_link_with_no_carriable_filter_links_nowhere(
+def test_column_drilldowns_custom_link_names_a_filter_it_cannot_carry(
     admin_permissions: UserPermissions,
 ) -> None:
-    drilldowns = column_drilldowns(
+    _path, variables = _url_of_first_column(
         _view_spec("allhosts"),
-        {
-            0: _custom(ContextFilterConfig(filter_id="log_class")),
-            1: _custom(ContextFilterConfig(filter_id="wato_folder")),
-        },
-        _CONTEXT,
+        _custom(ContextFilterConfig(filter_id="log_class")),
+        _CUSTOM_HOST_ROW,
         admin_permissions,
     )
 
-    assert list(drilldowns) == [1]
+    assert variables["_dropped_filters"] == "log_class:not_available"
 
 
 @pytest.mark.usefixtures("request_context")

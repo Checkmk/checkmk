@@ -8,9 +8,13 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.gui.data_source import data_source_registry
+from cmk.gui.http import request
 from cmk.gui.type_defs import FilterHTTPVariables, FilterName
 from cmk.gui.views.drilldown_filters import (
     drilldown_filters,
+    Dropped,
+    dropped_filters_variable,
+    dropped_filters_warning,
     filled_single_infos,
 )
 from cmk.gui.visuals.filter import filter_registry
@@ -487,6 +491,19 @@ def test_drilldowns_name_the_key_a_filter_takes(
     assert _drilldown(filter_name).key == key
 
 
+def test_drilldowns_carry_the_keys_the_row_has_and_name_the_others() -> None:
+    row = {"host_tags": {"ip-v4": "ip-v4", "checkmk-agent": "checkmk-agent"}}
+
+    assert _drilldown("host_auxtags").carried(row, ["ip-v4", "ip-v6", "checkmk-agent"]) == (
+        {"host_auxtags_0": "ip-v4", "host_auxtags_1": "checkmk-agent"},
+        ["ip-v6"],
+    )
+
+
+def test_drilldowns_carry_nothing_when_the_row_has_none_of_the_keys() -> None:
+    assert _drilldown("host_auxtags").carried({"host_tags": {}}, ["ip-v6"]) == (None, ["ip-v6"])
+
+
 def test_drilldowns_each_have_a_valued_case() -> None:
     assert {
         filter_name
@@ -590,3 +607,51 @@ def test_filled_single_infos_name_the_host_by_its_name_filter_only() -> None:
 @pytest.mark.usefixtures("request_context")
 def test_filled_single_infos_name_an_aggregation_by_its_name_filter() -> None:
     assert "aggr" in filled_single_infos(["aggr_name"])
+
+
+@pytest.mark.usefixtures("request_context")
+def test_dropped_filters_warning_names_each_filter_and_why() -> None:
+    request.set_var(
+        "_dropped_filters",
+        dropped_filters_variable(
+            [Dropped("host_labels", "no_such_key", "env"), Dropped("opthostgroup", "no_value")]
+        ),
+    )
+
+    assert dropped_filters_warning(request) == (
+        "These filters could not be carried over, so this page shows a wider scope than the "
+        f"clicked object: {filter_registry['host_labels'].title} (env): the clicked object lacks "
+        f"the configured key; {filter_registry['opthostgroup'].title}: the clicked object has no "
+        "value for it"
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_dropped_filters_warning_names_a_filter_this_edition_lacks_by_its_id() -> None:
+    request.set_var("_dropped_filters", "no_such_filter:not_available")
+
+    assert dropped_filters_warning(request) == (
+        "These filters could not be carried over, so this page shows a wider scope than the "
+        "clicked object: no_such_filter: it is not available here"
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_dropped_filters_warning_ignores_an_unknown_reason() -> None:
+    request.set_var("_dropped_filters", "host_labels:no_reason")
+
+    assert dropped_filters_warning(request) is None
+
+
+@pytest.mark.usefixtures("request_context")
+def test_dropped_filters_warning_ignores_a_name_that_is_no_filter_id() -> None:
+    request.set_var("_dropped_filters", "<b>Call support</b>:no_value")
+
+    assert dropped_filters_warning(request) is None
+
+
+@pytest.mark.usefixtures("request_context")
+def test_dropped_filters_warning_ignores_a_key_with_markup() -> None:
+    request.set_var("_dropped_filters", "host_labels:no_such_key:<b>Call support</b>")
+
+    assert dropped_filters_warning(request) is None

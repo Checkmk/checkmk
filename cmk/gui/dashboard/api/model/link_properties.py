@@ -7,8 +7,9 @@ from typing import Annotated, Literal
 
 from pydantic import Discriminator
 
-from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.type_defs import FilterName
+from cmk.gui.views.drilldown_filters import DropReason
 
 from .contextual_link import VisualLocation
 
@@ -34,13 +35,19 @@ class EncodedFilter:
     variables: dict[str, str] = api_field(
         description="The HTTP variables that carry the filter to the target."
     )
+    missing_keys: list[str] | ApiOmitted = api_field(
+        default_factory=ApiOmitted,
+        description="The configured keys the clicked element lacks; the filter travels without them.",
+    )
 
 
 @api_model
 class DroppedFilter:
     status: Literal["dropped"] = api_field(description="The filter does not travel with the link.")
-    reason: Literal["no_value", "no_such_key", "not_available"] = api_field(
-        description="Why the filter does not travel."
+    reason: DropReason = api_field(description="Why the filter does not travel.")
+    missing_keys: list[str] | ApiOmitted = api_field(
+        default_factory=ApiOmitted,
+        description="The configured keys the clicked element lacks, for a filter that takes keys.",
     )
 
 

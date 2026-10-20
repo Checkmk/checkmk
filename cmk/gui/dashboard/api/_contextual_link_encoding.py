@@ -6,8 +6,9 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.type_defs import ColumnName, ContextFilterConfig, FilterHTTPVariables, FilterName
-from cmk.gui.views.drilldown_filters import filter_drilldown, filter_keys
+from cmk.gui.views.drilldown_filters import drop_reason, filter_drilldown, filter_keys
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.filter.drilldowns import RowValues
 
@@ -111,13 +112,12 @@ def _encoded_filter(
 ) -> FilterResult:
     if filter_name not in filter_registry:
         return DroppedFilter(status="dropped", reason="not_available")
-    variables = native_key.get(filter_name)
-    if (
-        variables is None
-        and row is not None
-        and (drilldown := filter_drilldown(filter_name)) is not None
-    ):
-        variables = drilldown.variables(row, keys)
+    if (variables := native_key.get(filter_name)) is not None:
+        return EncodedFilter(status="encoded", variables=dict(variables))
+    missing = list(keys)
+    if row is not None and (drilldown := filter_drilldown(filter_name)) is not None:
+        variables, missing = drilldown.carried(row, keys)
+    missing_keys: list[str] | ApiOmitted = missing or ApiOmitted()
     if variables is None:
-        return DroppedFilter(status="dropped", reason="no_such_key" if keys else "no_value")
-    return EncodedFilter(status="encoded", variables=dict(variables))
+        return DroppedFilter(status="dropped", reason=drop_reason(keys), missing_keys=missing_keys)
+    return EncodedFilter(status="encoded", variables=dict(variables), missing_keys=missing_keys)

@@ -23,8 +23,14 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.views.drilldown_filters import drilldown_filters, filter_drilldown, filter_keys
-from cmk.gui.visuals import get_single_info_keys, missing_context_filters
+from cmk.gui.views.drilldown_filters import (
+    drilldown_filters,
+    Dropped,
+    DROPPED_FILTERS_VAR,
+    dropped_filters_variable,
+    filter_drilldown,
+    filter_keys,
+)
 from cmk.gui.visuals.filter.drilldowns import Drilldown
 from cmk.web.utils.urls import makeuri_contextless
 
@@ -72,14 +78,13 @@ def column_drilldowns(
         link_context = context if link["include_context"] else {}
         if link["filters"]:
             carriable = set(drilldown_filters(data_source, location.type))
+            configured = filter_keys(link["filters"])
             carried = {
                 filter_name: _CarriedFilter(drilldown, keys)
-                for filter_name, keys in filter_keys(link["filters"]).items()
+                for filter_name, keys in configured.items()
                 if filter_name in carriable
                 and (drilldown := filter_drilldown(filter_name)) is not None
             }
-            if not carried:
-                continue
             drilldowns[index] = CellDrilldown(
                 columns=[
                     column
@@ -90,8 +95,8 @@ def column_drilldowns(
                     _custom_url,
                     location,
                     link_context,
+                    configured,
                     carried,
-                    set(get_single_info_keys(target["single_infos"])),
                     show_filter_form=link["show_filter_form"],
                 ),
             )
@@ -155,24 +160,46 @@ def _inherited_url(
 def _custom_url(
     location: VisualLocation,
     context: VisualContext,
+    configured: Mapping[FilterName, Sequence[str]],
     carried: Mapping[FilterName, _CarriedFilter],
-    single_info_keys: set[FilterName],
     row: Row,
     *,
     show_filter_form: bool,
-) -> str | None:
-    valued = {
-        filter_name: variables
-        for filter_name, carried_filter in carried.items()
-        if (variables := carried_filter.drilldown.variables(row, carried_filter.keys)) is not None
-    }
+) -> str:
+    valued: dict[FilterName, FilterHTTPVariables] = {}
+    dropped: list[Dropped] = []
+    for filter_name in configured:
+        if (carried_filter := carried.get(filter_name)) is None:
+            dropped.append(Dropped(filter_name, "not_available"))
+            continue
+        variables, missing = carried_filter.drilldown.carried(row, carried_filter.keys)
+        if variables is not None:
+            valued[filter_name] = variables
+        if missing:
+            dropped.extend(Dropped(filter_name, "no_such_key", key) for key in missing)
+        elif variables is None:
+            dropped.append(Dropped(filter_name, "no_value"))
     filters = {**context, **valued}
-    if missing_context_filters(single_info_keys, filters):
-        return None
-    return _target_url(location, filters, show_filter_form=show_filter_form)
+    return _target_url(
+        location,
+        filters,
+        show_filter_form=show_filter_form,
+        # A filter the context carries in place of the row's value still travels.
+        dropped=[
+            entry
+            for entry in dropped
+            if entry.filter_name in valued or entry.filter_name not in filters
+        ],
+    )
 
 
-def _target_url(location: VisualLocation, context: VisualContext, *, show_filter_form: bool) -> str:
+def _target_url(
+    location: VisualLocation,
+    context: VisualContext,
+    *,
+    show_filter_form: bool,
+    dropped: Sequence[Dropped] = (),
+) -> str:
     page, name_variable = _PAGE_BY_TARGET_TYPE[location.type]
     variables: dict[str, str] = {}
     for filter_variables in context.values():
@@ -184,4 +211,6 @@ def _target_url(location: VisualLocation, context: VisualContext, *, show_filter
         variables["owner"] = str(location.owner)
     variables["filled_in"] = "filter"
     variables["_show_filter_form"] = "1" if show_filter_form else "0"
+    if dropped:
+        variables[DROPPED_FILTERS_VAR] = dropped_filters_variable(dropped)
     return makeuri_contextless(request, list(variables.items()), filename=page)

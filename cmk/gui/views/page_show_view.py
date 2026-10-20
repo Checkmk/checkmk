@@ -53,6 +53,7 @@ from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri_contextless
 
 from . import availability
+from .drilldown_filters import dropped_filters_warning
 from .exporter import exporter_registry
 from .row_post_processing import post_process_rows
 from .sorter import sorter_parameter_ident, SorterEntry, SorterProtocol
@@ -105,6 +106,8 @@ def page_show_view(
         )
 
         view.only_sites = get_only_sites_from_context(context)
+        if (dropped_filters := dropped_filters_warning(request)) is not None:
+            view.add_warning_message(dropped_filters)
 
         view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
         view.want_checkboxes = get_want_checkboxes()

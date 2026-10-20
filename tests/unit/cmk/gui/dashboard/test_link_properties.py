@@ -130,8 +130,31 @@ def test_a_custom_link_drops_a_label_key_the_host_lacks() -> None:
     )
 
     assert properties.links == [
-        {"host_labels": DroppedFilter(status="dropped", reason="no_such_key")}
+        {
+            "host_labels": DroppedFilter(
+                status="dropped", reason="no_such_key", missing_keys=["cmk/kubernetes"]
+            )
+        }
     ]
+
+
+def test_a_custom_link_carries_the_label_keys_the_host_has_and_names_the_others() -> None:
+    properties = link_properties_for(
+        [
+            _link(
+                filters=[
+                    {"filter_id": "host_labels", "key": "cmk/os_family"},
+                    {"filter_id": "host_labels", "key": "cmk/kubernetes"},
+                ]
+            )
+        ],
+        {},
+        _HOST_ROW,
+    )
+
+    assert isinstance(label := properties.links[0]["host_labels"], EncodedFilter)
+    assert label.variables["host_labels_1_vs_1_vs"] == "cmk/os_family:linux"
+    assert label.missing_keys == ["cmk/kubernetes"]
 
 
 def test_a_custom_link_drops_a_filter_this_edition_lacks() -> None:

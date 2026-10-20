@@ -1702,6 +1702,14 @@ class CustomGraphClient(RestApiClient):
             api_version=APIVersion.INTERNAL,
         )
 
+    def designer_config(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/actions/designer_config/invoke",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
     def _set_etag_header(
         self, name: str, owner: str | None, etag: IF_MATCH_HEADER_OPTIONS
     ) -> Mapping[str, str] | None:

@@ -185,6 +185,7 @@ CmkEndpointName = Literal[
     "cmk/create_dashboard_relative_grid",
     "cmk/create_dashboard_responsive_grid",
     "cmk/create_dashboard_token",
+    "cmk/custom_graph_designer_config",
     "cmk/delete_maps_background",
     "cmk/discover_average_scatterplot_graphs",
     "cmk/discover_combined_graphs",

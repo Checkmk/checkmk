@@ -138,15 +138,11 @@ def parse_performance_data(
     raw_perf_data, normalized_check_command = _parse_perf_data(
         perf_data_string, check_command, debug=debug, logger=logger
     )
-    if rrd_metrics:
-        rrd_only, _command = _parse_perf_data(
-            " ".join(f'"{m}"=1' if " " in m else f"{m}=1" for m in rrd_metrics if "," not in m),
-            check_command,
-            debug=debug,
-            logger=logger,
-        )
-        raw_perf_data = {
-            **raw_perf_data,
-            **{name: value for name, value in rrd_only.items() if name not in raw_perf_data},
-        }
-    return RawPerformanceData(check_command=normalized_check_command, values=raw_perf_data)
+    rrd_only = {
+        name: PerformanceData(value=1)
+        for name in (rrd_metric_name(metric) for metric in rrd_metrics if "," not in metric)
+        if name not in raw_perf_data
+    }
+    return RawPerformanceData(
+        check_command=normalized_check_command, values={**raw_perf_data, **rrd_only}
+    )

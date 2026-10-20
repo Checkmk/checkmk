@@ -8,6 +8,7 @@ import logging
 import signal
 from collections.abc import Callable, Iterator, Sequence
 from pathlib import Path
+from types import FrameType
 
 import pytest
 
@@ -15,7 +16,6 @@ from cmk.cli.engine.commands import Command, make_command
 from cmk.cli.engine.run import (
     dispatch,
     enable_file_logging,
-    interrupt_on_sigint,
     log_level,
     run,
     Runtime,
@@ -180,7 +180,7 @@ def _runtime(
     commands: Sequence[Command] = (),
     *,
     start_tracing: Callable[[Path], None] = lambda _omd_root: None,
-    on_sigint: Callable[[], None] = lambda: None,
+    on_sigint: Callable[[int, FrameType | None], object] = signal.default_int_handler,
     enable_debug: Callable[[], None] = lambda: None,
     debug_enabled: Callable[[], bool] = lambda: False,
     enable_profiling: Callable[[], None] = lambda: None,
@@ -205,7 +205,11 @@ def _runtime(
 
 
 def _run(argv: Sequence[str], runtime: Runtime) -> int:
-    return run(_SITE, argv, {}, runtime)
+    previous = signal.getsignal(signal.SIGINT)
+    try:
+        return run(_SITE, argv, {}, runtime)
+    finally:
+        signal.signal(signal.SIGINT, previous)
 
 
 def _numbered(handler: Callable[[Path, GlobalOptions, Options, Args], int]) -> Command:
@@ -320,20 +324,22 @@ def _ignored_sigint() -> Iterator[None]:
         signal.signal(signal.SIGINT, previous)
 
 
-@pytest.mark.usefixtures("ignored_sigint")
-def test_an_ignored_interrupt_signal_interrupts_again() -> None:
-    interrupt_on_sigint()
+def _interrupting(_omd_root: Path, _options: GlobalOptions, _sub: Options, _args: Args) -> int:
+    signal.raise_signal(signal.SIGINT)
+    return 0
 
-    with pytest.raises(KeyboardInterrupt):
-        signal.raise_signal(signal.SIGINT)
+
+@pytest.mark.usefixtures("ignored_sigint")
+def test_an_ignored_interrupt_signal_interrupts_the_command() -> None:
+    assert _run(["cmk", "--demo"], _runtime([_command(_interrupting)])) == 1
 
 
 def test_the_command_line_takes_the_interrupt_signal() -> None:
-    installed = Recorder()
+    handled = Recorder()
 
-    _run(["cmk", "--help"], _runtime(on_sigint=installed))
+    _run(["cmk", "--demo"], _runtime([_command(_interrupting)], on_sigint=handled))
 
-    assert len(installed.calls) == 1
+    assert len(handled.calls) == 1
 
 
 def test_tracing_starts_for_the_site_when_a_command_runs() -> None:

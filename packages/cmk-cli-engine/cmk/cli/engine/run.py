@@ -11,6 +11,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from logging.handlers import WatchedFileHandler
 from pathlib import Path
+from types import FrameType
 from typing import Final, override, Self
 
 import cmk.ccc.debug
@@ -160,17 +161,13 @@ _LOG_FILE_OPTION: Final = Option(
 )
 
 
-def interrupt_on_sigint() -> None:
-    signal.signal(signal.SIGINT, signal.default_int_handler)
-
-
 @dataclass(frozen=True, kw_only=True)
 class Runtime:
     """What the command line reaches for besides its arguments, injectable one by one"""
 
     discover: Callable[[], Sequence[Command]] = discover_commands
     start_tracing: Callable[[Path], None] = start_tracing
-    on_sigint: Callable[[], None] = interrupt_on_sigint
+    on_sigint: Callable[[int, FrameType | None], object] = signal.default_int_handler
     crash_reporter_for: Callable[[Path, Sequence[str], Mapping[str, str]], CrashReporter] = (
         saving_crash_reporter
     )
@@ -218,7 +215,7 @@ def run(
     environ: Mapping[str, str],
     runtime: Runtime,
 ) -> int:
-    runtime.on_sigint()
+    signal.signal(signal.SIGINT, runtime.on_sigint)
 
     commands = Commands(
         plugins=runtime.discover(),

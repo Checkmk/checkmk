@@ -65,6 +65,10 @@ def check_innovaphone_channels(
         )
         return
 
+    if not channel.total:
+        yield Result(state=State.OK, summary="No channels available (total: 0)")
+        return
+
     perc_used = 100 - (channel.idle / channel.total) * 100
     used = int(perc_used)
     warn, crit = params["levels"]

@@ -95,7 +95,6 @@ def test_check_innovaphone_channels_usage_is_truncated_to_whole_percent() -> Non
     )
 
 
-@pytest.mark.xfail(strict=True, raises=ZeroDivisionError, reason="a total of 0 crashes the check")
 def test_check_innovaphone_channels_zero_total_is_ok() -> None:
     section = {"A": Channel(link="Up", physical="Up", idle=0.0, total=0.0)}
 

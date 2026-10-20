@@ -113,10 +113,13 @@ Interfaces
 * ``cmk.gui.monitor.services.table``: the same for the services of one host.
   It offers ``HostServicesTable`` (with ``list`` and ``parse_filter``), the
   column catalog ``HOST_SERVICES_TABLE``, ``HostServiceEntry``,
-  ``ServiceOptionalField`` and the errors ``HostNotFoundError`` (also for a
-  site that does not exist) and ``InvalidServiceFilterError``. The rows are
-  ``HostServiceEntry``, the response model of the internal REST endpoint
-  that lists the services of a host.
+  ``ServiceOptionalField``, the errors ``HostNotFoundError`` (also for a
+  site that does not exist) and ``InvalidServiceFilterError``,
+  ``ServiceListing`` (which validates a request body of the internal REST
+  endpoint that lists the services of a host with the endpoint's own model)
+  and ``HOST_SERVICES_PERMISSION``, the permission the page "Services of
+  host" needs. The rows are ``HostServiceEntry``, the response model of
+  that endpoint.
 * Livestatus, locally or via :doc:`arch-comp-liveproxyd` for remote sites.
 * Outside Community, the page "All hosts" links to the instant PDF report
   of reporting with the columns it shows and the request body it sends to

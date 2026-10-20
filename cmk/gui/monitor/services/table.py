@@ -3,17 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ._access import HOST_SERVICES_PERMISSION
 from ._api._list_host_services import HostServiceEntry, HostServicesTable
-from ._exceptions import HostNotFoundError, InvalidServiceFilterError
+from ._exceptions import HostNotFoundError, InvalidServiceFilterError, InvalidServiceListingError
+from ._listing import ServiceListing
 from ._models import ServiceOptionalField
 from ._table_catalog import HOST_SERVICES_TABLE, ServiceTableCatalog
 
 __all__ = [
+    "HOST_SERVICES_PERMISSION",
     "HOST_SERVICES_TABLE",
     "HostNotFoundError",
     "HostServiceEntry",
     "HostServicesTable",
     "InvalidServiceFilterError",
+    "InvalidServiceListingError",
+    "ServiceListing",
     "ServiceOptionalField",
     "ServiceTableCatalog",
 ]

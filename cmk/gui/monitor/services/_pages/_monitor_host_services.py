@@ -30,6 +30,7 @@ from cmk.gui.monitor.command import (
 )
 from cmk.gui.monitor.export import EXPORT_EVENT, MonitorExportMenu
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
+from cmk.gui.monitor.services._access import HOST_SERVICES_PERMISSION, LEGACY_HOST_VIEW_NAME
 from cmk.gui.monitor.services._ai_explain import ai_explain
 from cmk.gui.monitor.services._api._list_host_services import LIMIT_TIERS
 from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
@@ -57,8 +58,6 @@ _SUPPORTED_ACTIONS: tuple[str, ...] = (
     "schedule_downtimes",
 )
 
-_LEGACY_VIEW_NAME = "host"
-_LEGACY_VIEW_PERMISSION = f"view.{_LEGACY_VIEW_NAME}"
 
 _HOST_STATUS_VIEW_NAME = "hoststatus"
 _ALL_HOSTS_PERMISSION = "view.allhosts"
@@ -119,7 +118,7 @@ class MonitorHostServicesPage(Page):
 
     @override
     def page(self, ctx: PageContext) -> None:
-        user.need_permission(_LEGACY_VIEW_PERMISSION)
+        user.need_permission(HOST_SERVICES_PERMISSION)
 
         hostname = ctx.request.get_validated_type_input_mandatory(HostName, "host")
         site_id = SiteId(ctx.request.get_str_input_mandatory("site"))
@@ -212,7 +211,7 @@ class MonitorHostServicesPage(Page):
                         url=makeuri_contextless(
                             ctx.request,
                             [
-                                ("view_name", _LEGACY_VIEW_NAME),
+                                ("view_name", LEGACY_HOST_VIEW_NAME),
                                 ("host", hostname),
                                 ("site", site_id),
                             ],

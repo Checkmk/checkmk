@@ -14,3 +14,7 @@ class InvalidServiceFilterError(ValueError):
 
 class HostNotFoundError(LookupError):
     """Raised when the host whose services are asked for does not exist."""
+
+
+class InvalidServiceListingError(ValueError):
+    """Raised when a services listing is not one the list services endpoint accepts."""

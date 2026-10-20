@@ -8,10 +8,10 @@ from cmk.graphing_engine import ApiGraph, ApiPerfometer
 from cmk.gui.log import logger
 
 from ._from_api import graphs_from_api, perfometers_from_api
-from ._plugins import graphing_plugins, GraphingPlugins
+from ._plugins import DiscoveredGraphingPlugins, graphing_plugins
 
 
-def _add_graphing_plugins(plugins: GraphingPlugins) -> None:
+def _add_graphing_plugins(plugins: DiscoveredGraphingPlugins) -> None:
     for plugin in plugins.plugins.values():
         if isinstance(plugin, ApiPerfometer):
             perfometers_from_api.register(plugin)
@@ -20,7 +20,7 @@ def _add_graphing_plugins(plugins: GraphingPlugins) -> None:
 
 
 def register_plugins() -> None:
-    plugins = graphing_plugins()
+    plugins = graphing_plugins().discovered
     for exc in plugins.errors:
         logger.error(exc)
     _add_graphing_plugins(plugins)

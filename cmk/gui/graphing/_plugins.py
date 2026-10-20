@@ -6,6 +6,7 @@
 
 import functools
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 
 import cmk.ccc.debug
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
@@ -17,43 +18,48 @@ from cmk.graphing.v2_unstable import (
 )
 from cmk.graphing_engine import ApiGraph, ApiPerfometer, sort_registered_graph_plugins
 
-type GraphingPlugins = DiscoveredPlugins[
+type DiscoveredGraphingPlugins = DiscoveredPlugins[
     metrics_v1.Metric | ApiPerfometer | ApiGraph | translations_v1.Translation
 ]
 
 
+@dataclass(frozen=True, kw_only=True)
+class GraphingPlugins:
+    discovered: DiscoveredGraphingPlugins
+    metrics: Mapping[str, metrics_v1.Metric]
+    graphs: Sequence[ApiGraph]
+    translations: Sequence[translations_v1.Translation]
+
+
 @functools.cache
 def graphing_plugins() -> GraphingPlugins:
-    return discover_all_plugins(
+    discovered = discover_all_plugins(
         PluginGroup.GRAPHING,
         dict(entry_point_prefixes_v1()) | dict(entry_point_prefixes_v2_unstable()),
         skip_wrong_types=False,
         raise_errors=cmk.ccc.debug.enabled(),
     )
+    plugins = discovered.plugins.values()
+    graphs = {plugin.name: plugin for plugin in plugins if isinstance(plugin, ApiGraph)}
+    return GraphingPlugins(
+        discovered=discovered,
+        metrics={
+            plugin.name: plugin for plugin in plugins if isinstance(plugin, metrics_v1.Metric)
+        },
+        graphs=[plugin for _name, plugin in sort_registered_graph_plugins(graphs)],
+        translations=[
+            plugin for plugin in plugins if isinstance(plugin, translations_v1.Translation)
+        ],
+    )
 
 
 def registered_metrics() -> Mapping[str, metrics_v1.Metric]:
-    return {
-        plugin.name: plugin
-        for plugin in graphing_plugins().plugins.values()
-        if isinstance(plugin, metrics_v1.Metric)
-    }
+    return graphing_plugins().metrics
 
 
 def registered_graphs() -> Sequence[ApiGraph]:
-    # Emit graphs in the legacy discovery order (cf. sort_registered_graph_plugins): ordered by
-    # GRAPHS_ORDER, with any graph not listed there kept ahead of the ordered ones.
-    registered = {
-        plugin.name: plugin
-        for plugin in graphing_plugins().plugins.values()
-        if isinstance(plugin, ApiGraph)
-    }
-    return [plugin for _name, plugin in sort_registered_graph_plugins(registered)]
+    return graphing_plugins().graphs
 
 
 def registered_translations() -> Sequence[translations_v1.Translation]:
-    return [
-        plugin
-        for plugin in graphing_plugins().plugins.values()
-        if isinstance(plugin, translations_v1.Translation)
-    ]
+    return graphing_plugins().translations

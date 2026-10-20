@@ -18,14 +18,14 @@ class DrawnCurve[CurveT]:
     stack: str | None
 
 
-class _DrawnStack[CurveT](Protocol):
+class _DrawnStackProtocol[CurveT](Protocol):
     @property
     def members(self) -> Sequence[CurveT]: ...
     @property
     def inverse(self) -> bool: ...
 
 
-class _DrawnLine[CurveT](Protocol):
+class _DrawnLineProtocol[CurveT](Protocol):
     @property
     def curve(self) -> CurveT: ...
     @property
@@ -44,7 +44,9 @@ def _drawn_stack[CurveT](
         )
 
 
-def _drawn_lines[CurveT](lines: Sequence[_DrawnLine[CurveT]]) -> Iterator[DrawnCurve[CurveT]]:
+def _drawn_lines[CurveT](
+    lines: Sequence[_DrawnLineProtocol[CurveT]],
+) -> Iterator[DrawnCurve[CurveT]]:
     for line in lines:
         yield DrawnCurve(
             curve=line.curve,
@@ -55,7 +57,7 @@ def _drawn_lines[CurveT](lines: Sequence[_DrawnLine[CurveT]]) -> Iterator[DrawnC
 
 
 def drawn_curves[CurveT](
-    stacks: Sequence[_DrawnStack[CurveT]], lines: Sequence[_DrawnLine[CurveT]]
+    stacks: Sequence[_DrawnStackProtocol[CurveT]], lines: Sequence[_DrawnLineProtocol[CurveT]]
 ) -> Iterator[DrawnCurve[CurveT]]:
     for index, stack in enumerate(stacks):
         yield from _drawn_stack(stack.members, f"stack-{index}", stack.inverse)

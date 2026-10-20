@@ -732,7 +732,23 @@ def _elasticache_with_two_nodes(sections: ElasticacheSectionsOut) -> ElastiCache
     _limits, elasticache_summary, elasticache = sections
     elasticache.receive(
         elasticache_summary,
-        AWSComputedContent(([], [{"NodeId": "node-a"}, {"NodeId": "node-b"}]), 0.0),
+        AWSComputedContent(
+            (
+                [
+                    {
+                        "ClusterId": "cluster",
+                        "MemberNodes": ["node-a", "node-b"],
+                        "ARN": "arn:aws:elasticache:region:123456789012:replicationgroup:cluster",
+                        "TagsForCmkLabels": {"team": "cache"},
+                    }
+                ],
+                [
+                    {"NodeId": "node-a", "ARN": "arn:aws:elasticache:region:123:cluster:node-a"},
+                    {"NodeId": "node-b", "ARN": "arn:aws:elasticache:region:123:cluster:node-b"},
+                ],
+            ),
+            0.0,
+        ),
     )
     return elasticache
 
@@ -749,17 +765,24 @@ def test_agent_aws_elasticache_metrics_go_to_the_host_of_their_node(
     } == {"node-a": {"node-a"}, "node-b": {"node-b"}}
 
 
-def test_agent_aws_elasticache_node_hosts_get_the_service_label(
+def test_agent_aws_elasticache_node_hosts_get_the_resource_labels(
     get_elasticache_sections: ElasticacheSections,
 ) -> None:
     elasticache = _elasticache_with_two_nodes(get_elasticache_sections(None, (None, None)))
 
     results = elasticache.run().results
 
-    assert [result.piggyback_host_labels for result in results] == [
-        {"cmk/aws/service": "elasticache"},
-        {"cmk/aws/service": "elasticache"},
-    ]
+    # A node has the tags of its cluster.
+    assert {result.piggyback_hostname: result.piggyback_host_labels for result in results} == {
+        node: {
+            "cmk/aws/service": "elasticache",
+            "cmk/aws/name": node,
+            "cmk/aws/resource_id": node,
+            "cmk/aws/region": "region",
+            "cmk/aws/tag/team": "cache",
+        }
+        for node in ("node-a", "node-b")
+    }
 
 
 def test_agent_aws_elasticache_summary_and_limits_stay_on_the_account_host(

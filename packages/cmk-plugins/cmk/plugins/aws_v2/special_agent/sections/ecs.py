@@ -16,6 +16,7 @@ from cmk.plugins.aws_v2.constants import AWS_ECS_QUOTA_DEFAULTS
 
 from .. import hosts
 from ..config import AWSConfig
+from ..labels import resource_labels
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -269,10 +270,10 @@ class ECS(AWSSectionCloudwatch):
         colleague = self._received_results.get("ecs_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(
-                [cluster.clusterName for cluster in colleague.content],
+                {cluster.clusterName: cluster for cluster in colleague.content},
                 colleague.cache_timestamp,
             )
-        return AWSColleagueContents([], 0.0)
+        return AWSColleagueContents({}, 0.0)
 
     @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
@@ -308,10 +309,6 @@ class ECS(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
-    @property
-    def host_labels(self) -> Mapping[str, str]:
-        return {"cmk/aws/service": "ecs"}
-
     @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
@@ -320,15 +317,26 @@ class ECS(AWSSectionCloudwatch):
         content_by_cluster: dict[str, list[Mapping[str, object]]] = {}
         for row in raw_content.content:
             content_by_cluster.setdefault(row["Label"], []).append(row)
-        return AWSComputedContent(content_by_cluster, raw_content.cache_timestamp)
+        return AWSComputedContent(
+            [
+                self._cluster_result(name, rows, colleague_contents.content.get(name))
+                for name, rows in content_by_cluster.items()
+            ],
+            raw_content.cache_timestamp,
+        )
+
+    def _cluster_result(
+        self, name: str, rows: Sequence[Mapping[str, object]], cluster: Cluster | None
+    ) -> AWSSectionResult:
+        host = self._target_host(hosts.ECSCluster(name))
+        if cluster is None:
+            # The cluster is gone from the summary since its metrics were cached.
+            return AWSSectionResult(host, rows, {"cmk/aws/service": "ecs"})
+        tags = self.process_tags_for_cmk_labels(
+            [{"Key": tag.Key, "Value": tag.Value} for tag in cluster.tags]
+        )
+        return AWSSectionResult(host, rows, resource_labels("ecs", name, name, self._region, tags))
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [
-            AWSSectionResult(
-                self._target_host(hosts.ECSCluster(cluster_name)),
-                rows,
-                self.host_labels,
-            )
-            for cluster_name, rows in computed_content.content.items()
-        ]
+        return list(computed_content.content)

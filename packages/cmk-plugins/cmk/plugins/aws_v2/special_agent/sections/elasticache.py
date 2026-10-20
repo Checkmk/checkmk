@@ -6,7 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Iterable, Mapping, Sequence
-from typing import override
+from typing import Any, NamedTuple, override
 
 from botocore.client import BaseClient
 from pydantic import BaseModel, ConfigDict, Field
@@ -15,6 +15,7 @@ from cmk.plugins.aws_v2.constants import AWS_ELASTICACHE_QUOTA_DEFAULTS
 
 from .. import hosts
 from ..config import AWSConfig
+from ..labels import resource_labels
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -334,6 +335,26 @@ class ElastiCacheSummary(AWSSection):
         ]
 
 
+class _ElastiCacheNodeInfo(NamedTuple):
+    tags: Mapping[str, str]
+    """The AWS tags of the cluster of the node, as the rule imports them."""
+
+
+def _node_info(
+    node: Mapping[str, Any], clusters: Sequence[Mapping[str, Any]]
+) -> _ElastiCacheNodeInfo:
+    # AWS tags the cluster (replication group), so its nodes share its tags.
+    tags: Mapping[str, str] = next(
+        (
+            cluster["TagsForCmkLabels"]
+            for cluster in clusters
+            if node["NodeId"] in cluster["MemberNodes"]
+        ),
+        {},
+    )
+    return _ElastiCacheNodeInfo(tags)
+
+
 class ElastiCache(AWSSectionCloudwatch):
     @property
     @override
@@ -354,11 +375,12 @@ class ElastiCache(AWSSectionCloudwatch):
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elasticache_summary")
         if colleague and colleague.content:
+            clusters, nodes = colleague.content
             return AWSColleagueContents(
-                [node["NodeId"] for node in colleague.content[1]],
+                {node["NodeId"]: _node_info(node, clusters) for node in nodes},
                 colleague.cache_timestamp,
             )
-        return AWSColleagueContents([], 0.0)
+        return AWSColleagueContents({}, 0.0)
 
     @override
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
@@ -403,10 +425,6 @@ class ElastiCache(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
-    @property
-    def host_labels(self) -> Mapping[str, str]:
-        return {"cmk/aws/service": "elasticache"}
-
     @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
@@ -415,15 +433,28 @@ class ElastiCache(AWSSectionCloudwatch):
         content_by_node: dict[str, list[Mapping[str, object]]] = {}
         for row in raw_content.content:
             content_by_node.setdefault(row["Label"], []).append(row)
-        return AWSComputedContent(content_by_node, raw_content.cache_timestamp)
+        return AWSComputedContent(
+            [
+                self._node_result(node_id, rows, colleague_contents.content.get(node_id))
+                for node_id, rows in content_by_node.items()
+            ],
+            raw_content.cache_timestamp,
+        )
+
+    def _node_result(
+        self,
+        node_id: str,
+        rows: Sequence[Mapping[str, object]],
+        node: _ElastiCacheNodeInfo | None,
+    ) -> AWSSectionResult:
+        host = self._target_host(hosts.ElastiCacheNode(node_id))
+        if node is None:
+            # The node is gone from the summary since its metrics were cached.
+            return AWSSectionResult(host, rows, {"cmk/aws/service": "elasticache"})
+        return AWSSectionResult(
+            host, rows, resource_labels("elasticache", node_id, node_id, self._region, node.tags)
+        )
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [
-            AWSSectionResult(
-                self._target_host(hosts.ElastiCacheNode(node_id)),
-                rows,
-                self.host_labels,
-            )
-            for node_id, rows in computed_content.content.items()
-        ]
+        return list(computed_content.content)

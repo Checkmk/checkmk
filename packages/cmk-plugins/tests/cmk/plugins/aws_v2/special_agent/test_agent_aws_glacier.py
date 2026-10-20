@@ -212,7 +212,7 @@ def test_agent_aws_glacier_puts_each_vault_on_its_own_host(
     } == {f"VaultName-{i}": [f"VaultName-{i}"] for i in range(4)}
 
 
-def test_agent_aws_glacier_labels_vault_hosts_as_glacier(
+def test_agent_aws_glacier_vault_hosts_get_the_resource_labels(
     get_glacier_sections: GetGlacierSections,
 ) -> None:
     _glacier_limits, glacier_summary, glacier = get_glacier_sections()
@@ -220,10 +220,25 @@ def test_agent_aws_glacier_labels_vault_hosts_as_glacier(
 
     glacier_results = glacier.run().results
 
-    assert glacier_results
-    assert all(
-        result.piggyback_host_labels == {"cmk/aws/service": "glacier"} for result in glacier_results
-    )
+    # Only the first two vaults have tags.
+    tags = [
+        {"cmk/aws/tag/Tag-0": "Value-0"},
+        {"cmk/aws/tag/Tag-0": "Value-0", "cmk/aws/tag/Tag-1": "Value-1"},
+        {},
+        {},
+    ]
+    assert {
+        result.piggyback_hostname: result.piggyback_host_labels for result in glacier_results
+    } == {
+        f"VaultName-{i}": {
+            "cmk/aws/service": "glacier",
+            "cmk/aws/name": f"VaultName-{i}",
+            "cmk/aws/resource_id": f"VaultName-{i}",
+            "cmk/aws/region": "eu-central-1",
+            **tags[i],
+        }
+        for i in range(4)
+    }
 
 
 def test_agent_aws_glacier_creates_no_vault_host_without_vaults(

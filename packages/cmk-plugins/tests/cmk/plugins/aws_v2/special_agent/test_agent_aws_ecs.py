@@ -480,7 +480,7 @@ def test_agent_aws_ecs_metrics_go_to_the_host_of_their_cluster(
     } == {"cluster-test1": {"cluster-test1"}, "cluster-test2": {"cluster-test2"}}
 
 
-def test_agent_aws_ecs_cluster_hosts_get_the_service_label(
+def test_agent_aws_ecs_cluster_hosts_get_the_resource_labels(
     get_ecs_sections: ECSSections,
 ) -> None:
     _ecs_limits, ecs_summary, ecs = get_ecs_sections(None, (None, None))
@@ -488,10 +488,24 @@ def test_agent_aws_ecs_cluster_hosts_get_the_service_label(
 
     results = ecs.run().results
 
-    assert [result.piggyback_host_labels for result in results] == [
-        {"cmk/aws/service": "ecs"},
-        {"cmk/aws/service": "ecs"},
-    ]
+    assert {result.piggyback_hostname: result.piggyback_host_labels for result in results} == {
+        "cluster-test1": {
+            "cmk/aws/service": "ecs",
+            "cmk/aws/name": "cluster-test1",
+            "cmk/aws/resource_id": "cluster-test1",
+            "cmk/aws/region": "region",
+            "cmk/aws/tag/tag1": "true",
+            "cmk/aws/tag/tag2": "2",
+        },
+        "cluster-test2": {
+            "cmk/aws/service": "ecs",
+            "cmk/aws/name": "cluster-test2",
+            "cmk/aws/resource_id": "cluster-test2",
+            "cmk/aws/region": "region",
+            "cmk/aws/tag/tag1": "false",
+            "cmk/aws/tag/tag3": "my_tag",
+        },
+    }
 
 
 def test_agent_aws_ecs_summary_and_limits_stay_on_the_account_host(

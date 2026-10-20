@@ -200,6 +200,7 @@ def get_sns_sections() -> SNSSections:
 
         distributor.add(sns_summary.name, sns)
         distributor.add(sns.name, sns_topic)
+        distributor.add(sns_summary.name, sns_topic)
 
         return sns_summary, sns_sms, sns, sns_topic
 
@@ -344,17 +345,31 @@ def test_agent_aws_sns_puts_each_topic_on_its_own_host(get_sns_sections: SNSSect
     }
 
 
-def test_agent_aws_sns_labels_topic_hosts_as_sns(get_sns_sections: SNSSections) -> None:
+def test_agent_aws_sns_topic_hosts_get_the_resource_labels(get_sns_sections: SNSSections) -> None:
     sns_summary, _sns_sms, sns, sns_topic = get_sns_sections(None, (None, None))
     sns_summary.run()
     sns.run()
 
     sns_topic_results = sns_topic.run().results
 
-    assert sns_topic_results
-    assert all(
-        result.piggyback_host_labels == {"cmk/aws/service": "sns"} for result in sns_topic_results
-    )
+    # Only the fourth topic has tags.
+    tags = {
+        "cmk/aws/tag/test-tag-key-0": "test-tag-value-0",
+        "cmk/aws/tag/test-tag-key-1": "test-tag-value-1",
+    }
+    topics = ["TopicName-0", "TopicName-1", "TopicName-2", "TopicName-3.fifo", "TopicName-4.fifo"]
+    assert {
+        result.piggyback_hostname: result.piggyback_host_labels for result in sns_topic_results
+    } == {
+        topic: {
+            "cmk/aws/service": "sns",
+            "cmk/aws/name": topic,
+            "cmk/aws/resource_id": topic,
+            "cmk/aws/region": "eu-west-1",
+            **(tags if topic == "TopicName-3.fifo" else {}),
+        }
+        for topic in topics
+    }
 
 
 def test_agent_aws_sns_creates_no_topic_host_without_topics(get_sns_sections: SNSSections) -> None:

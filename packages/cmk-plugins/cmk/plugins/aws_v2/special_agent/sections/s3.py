@@ -7,7 +7,7 @@
 # mypy: disable-error-code="no-any-return"
 
 import threading
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from typing import Any, Literal, override
 
@@ -15,6 +15,7 @@ from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig, LOGGER, Tags
+from ..labels import resource_labels
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -365,6 +366,25 @@ def _rows_by_bucket(
     return rows_by_bucket
 
 
+def _bucket_results(
+    to_host: Callable[[hosts.S3Bucket], hosts.TargetHost],
+    region: str,
+    rows_by_bucket: Mapping[str, Sequence[Mapping[str, Any]]],
+) -> list[AWSSectionResult]:
+    """One result per bucket host. A section only sees the buckets of its own region."""
+    results = []
+    for bucket_name, bucket_rows in rows_by_bucket.items():
+        host = to_host(hosts.S3Bucket(bucket_name))
+        # The rows carry the data of the S3 summary, if it still has the bucket.
+        tags = bucket_rows[0].get("TagsForCmkLabels", {})
+        results.append(
+            AWSSectionResult(
+                host, bucket_rows, resource_labels("s3", bucket_name, bucket_name, region, tags)
+            )
+        )
+    return results
+
+
 class S3Bucket(AWSSection):
     @property
     @override
@@ -396,14 +416,9 @@ class S3Bucket(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [
-            AWSSectionResult(
-                self._target_host(hosts.S3Bucket(bucket_name)),
-                bucket_rows,
-                {"cmk/aws/service": "s3"},
-            )
-            for bucket_name, bucket_rows in _rows_by_bucket(computed_content.content).items()
-        ]
+        return _bucket_results(
+            self._target_host, self._region, _rows_by_bucket(computed_content.content)
+        )
 
 
 class S3Requests(AWSSectionCloudwatch):
@@ -486,11 +501,6 @@ class S3Requests(AWSSectionCloudwatch):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [
-            AWSSectionResult(
-                self._target_host(hosts.S3Bucket(bucket_name)),
-                bucket_rows,
-                {"cmk/aws/service": "s3"},
-            )
-            for bucket_name, bucket_rows in _rows_by_bucket(computed_content.content).items()
-        ]
+        return _bucket_results(
+            self._target_host, self._region, _rows_by_bucket(computed_content.content)
+        )

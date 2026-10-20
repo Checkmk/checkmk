@@ -8,13 +8,14 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import Mapping
-from typing import override
+from collections.abc import Mapping, Sequence
+from typing import Any, override
 
 from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig, LOGGER, Tags
+from ..labels import resource_labels
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -22,15 +23,12 @@ from .core import (
     AWSRawContent,
     AWSSection,
     AWSSectionCloudwatch,
-    AWSSectionLabels,
     AWSSectionLimits,
     AWSSectionResult,
     Metric,
     Metrics,
     ResultDistributor,
 )
-
-RDS_HOST_LABELS: Mapping[str, str] = {"cmk/aws/service": "rds"}
 
 # The RDS summary goes to the account host with all instances and to each instance host with
 # only that instance. The copy on an instance host carries this key, so that the checks find
@@ -41,6 +39,17 @@ ON_INSTANCE_HOST = "CmkOnInstanceHost"
 
 def _rds_instance(instance: Mapping[str, object]) -> hosts.RDSInstance:
     return hosts.RDSInstance(str(instance["DBInstanceIdentifier"]))
+
+
+def _instance_labels(instance: Mapping[str, Any]) -> Mapping[str, str]:
+    """The labels of an instance host, from the instance as the RDS summary has it."""
+    return resource_labels(
+        "rds",
+        instance["DBInstanceIdentifier"],
+        instance["DbiResourceId"],
+        instance["Region"],
+        instance["TagsForCmkLabels"],
+    )
 
 
 AWSRDSLimitNameMap: Mapping[str, tuple[str, str]] = {
@@ -210,56 +219,13 @@ class RDSSummary(AWSSection):
         instances = list(computed_content.content.values())
         return [
             AWSSectionResult(self._target_host(hosts.AccountScope()), instances),
-            *(
-                AWSSectionResult(
-                    self._target_host(_rds_instance(instance)),
-                    [{**instance, ON_INSTANCE_HOST: True}],
-                    RDS_HOST_LABELS,
-                )
-                for instance in instances
-            ),
+            *(self._instance_result(instance) for instance in instances),
         ]
 
-
-class RDSLabels(AWSSectionLabels):
-    @property
-    @override
-    def name(self) -> str:
-        return "rds_labels"
-
-    @property
-    @override
-    def cache_interval(self) -> int:
-        return 300
-
-    @property
-    @override
-    def granularity(self) -> int:
-        return 300
-
-    @override
-    def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("rds_summary")
-        if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents({}, 0.0)
-
-    @override
-    def get_live_data(self, *args: AWSColleagueContents) -> Mapping[str, Mapping[str, object]]:
-        (colleague_contents,) = args
-        return colleague_contents.content
-
-    @override
-    def _compute_content(
-        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
-    ) -> AWSComputedContent:
-        return AWSComputedContent(
-            {
-                self._target_host(_rds_instance(instance)): instance["TagsForCmkLabels"]
-                for instance in raw_content.content.values()
-                if instance.get("TagsForCmkLabels")
-            },
-            raw_content.cache_timestamp,
+    def _instance_result(self, instance: Mapping[str, Any]) -> AWSSectionResult:
+        host = self._target_host(_rds_instance(instance))
+        return AWSSectionResult(
+            host, [{**instance, ON_INSTANCE_HOST: True}], _instance_labels(instance)
         )
 
 
@@ -358,16 +324,33 @@ class RDS(AWSSectionCloudwatch):
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-        content_by_instance: dict[hosts.RDSInstance, list[Mapping[str, object]]] = {}
+        content_by_instance: dict[str, list[Mapping[str, object]]] = {}
         for row in raw_content.content:
             instance_id = row["Label"].split(self._separator)[0]
             row.update(colleague_contents.content.get(instance_id, {}))
-            content_by_instance.setdefault(hosts.RDSInstance(instance_id), []).append(row)
-        return AWSComputedContent(content_by_instance, raw_content.cache_timestamp)
+            content_by_instance.setdefault(instance_id, []).append(row)
+        return AWSComputedContent(
+            [
+                self._instance_result(
+                    instance_id, rows, colleague_contents.content.get(instance_id)
+                )
+                for instance_id, rows in content_by_instance.items()
+            ],
+            raw_content.cache_timestamp,
+        )
+
+    def _instance_result(
+        self,
+        instance_id: str,
+        rows: Sequence[Mapping[str, object]],
+        instance: Mapping[str, Any] | None,
+    ) -> AWSSectionResult:
+        host = self._target_host(hosts.RDSInstance(instance_id))
+        if instance is None:
+            # The instance is gone from the summary since its metrics were cached.
+            return AWSSectionResult(host, rows, {"cmk/aws/service": "rds"})
+        return AWSSectionResult(host, rows, _instance_labels(instance))
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [
-            AWSSectionResult(self._target_host(instance), rows, RDS_HOST_LABELS)
-            for instance, rows in computed_content.content.items()
-        ]
+        return list(computed_content.content)

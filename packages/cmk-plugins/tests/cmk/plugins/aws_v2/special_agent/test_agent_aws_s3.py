@@ -355,17 +355,49 @@ def test_agent_aws_s3_puts_each_bucket_on_its_own_host(
     } == {f"Name-{i}": {f"Name-{i}"} for i in range(3)}
 
 
-def test_agent_aws_s3_labels_bucket_hosts_as_s3(
+def test_agent_aws_s3_bucket_hosts_get_the_resource_labels(
+    get_s3_sections: CreateS3Sections,
+) -> None:
+    _s3_limits, s3_summary, s3, s3_bucket, _s3_requests = get_s3_sections()
+    s3_summary.run()
+    s3.run()
+
+    results = s3_bucket.run().results
+
+    # Only the first two buckets have tags.
+    tags = [
+        {"cmk/aws/tag/Key-0": "Value-0"},
+        {"cmk/aws/tag/Key-0": "Value-0", "cmk/aws/tag/Key-1": "Value-1"},
+        {},
+    ]
+    assert {result.piggyback_hostname: result.piggyback_host_labels for result in results} == {
+        f"Name-{i}": {
+            "cmk/aws/service": "s3",
+            "cmk/aws/name": f"Name-{i}",
+            "cmk/aws/resource_id": f"Name-{i}",
+            "cmk/aws/region": "region",
+            **tags[i],
+        }
+        for i in range(3)
+    }
+
+
+def test_agent_aws_s3_requests_carry_the_labels_of_their_bucket_host(
     get_s3_sections: CreateS3Sections,
 ) -> None:
     _s3_limits, s3_summary, s3, s3_bucket, s3_requests = get_s3_sections()
     s3_summary.run()
     s3.run()
+    bucket_labels = {
+        result.piggyback_hostname: result.piggyback_host_labels
+        for result in s3_bucket.run().results
+    }
 
-    results = [*s3_bucket.run().results, *s3_requests.run().results]
+    results = s3_requests.run().results
 
-    assert results
-    assert all(result.piggyback_host_labels == {"cmk/aws/service": "s3"} for result in results)
+    assert {
+        result.piggyback_hostname: result.piggyback_host_labels for result in results
+    } == bucket_labels
 
 
 def test_agent_aws_s3_creates_no_bucket_host_without_buckets(

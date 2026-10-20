@@ -9,12 +9,13 @@
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import override
+from typing import Any, NamedTuple, override
 
 from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig
+from ..labels import resource_labels
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -392,6 +393,13 @@ class SNS(AWSSectionCloudwatch):
         return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
 
 
+class _TopicRows(NamedTuple):
+    rows: Sequence[Mapping[str, object]]
+    """The CloudWatch rows of the SNS section."""
+    topics: Mapping[str, Mapping[str, Any]]
+    """The topics of the SNS summary, by their item ID."""
+
+
 class SNSTopicCloudwatch(AWSSection):
     @property
     @override
@@ -407,13 +415,17 @@ class SNSTopicCloudwatch(AWSSection):
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("sns_cloudwatch")
         if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents([], 0.0)
+            summary = self._received_results.get("sns_summary")
+            topics = {topic["ItemId"]: topic for topic in summary.content} if summary else {}
+            return AWSColleagueContents(
+                _TopicRows(colleague.content, topics), colleague.cache_timestamp
+            )
+        return AWSColleagueContents(_TopicRows([], {}), 0.0)
 
     @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
         (colleague_contents,) = args
-        rows: Sequence[Mapping[str, object]] = colleague_contents.content
+        rows: Sequence[Mapping[str, object]] = colleague_contents.content.rows
         return rows
 
     @override
@@ -424,15 +436,33 @@ class SNSTopicCloudwatch(AWSSection):
         rows_by_item_id: dict[str, list[Mapping[str, object]]] = {}
         for row in raw_content.content:
             rows_by_item_id.setdefault(row["Label"], []).append(row)
-        return AWSComputedContent(rows_by_item_id, raw_content.cache_timestamp)
+        return AWSComputedContent(
+            [
+                self._topic_result(item_id, rows, colleague_contents.content.topics.get(item_id))
+                for item_id, rows in rows_by_item_id.items()
+            ],
+            raw_content.cache_timestamp,
+        )
+
+    def _topic_result(
+        self,
+        item_id: str,
+        rows: Sequence[Mapping[str, object]],
+        topic: Mapping[str, Any] | None,
+    ) -> AWSSectionResult:
+        topic_name = SNSTopic.topic_name_from_item_id(item_id)
+        host = self._target_host(hosts.SNSTopic(topic_name))
+        if topic is None:
+            # The topic is gone from the summary since its metrics were cached.
+            return AWSSectionResult(host, rows, {"cmk/aws/service": "sns"})
+        return AWSSectionResult(
+            host,
+            rows,
+            resource_labels(
+                "sns", topic_name, topic_name, topic["Region"], topic["TagsForCmkLabels"]
+            ),
+        )
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [
-            AWSSectionResult(
-                self._target_host(hosts.SNSTopic(SNSTopic.topic_name_from_item_id(item_id))),
-                rows,
-                {"cmk/aws/service": "sns"},
-            )
-            for item_id, rows in computed_content.content.items()
-        ]
+        return list(computed_content.content)

@@ -9,13 +9,14 @@
 # mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping, Sequence
-from typing import override
+from typing import Any, override
 
 import botocore
 from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig, LOGGER, Tags
+from ..labels import resource_labels
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -230,11 +231,18 @@ class Glacier(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [
-            AWSSectionResult(
-                self._target_host(hosts.GlacierVault(vault["VaultName"])),
-                [vault],
-                {"cmk/aws/service": "glacier"},
-            )
-            for vault in computed_content.content
-        ]
+        return [self._vault_result(vault) for vault in computed_content.content]
+
+    def _vault_result(self, vault: Mapping[str, Any]) -> AWSSectionResult:
+        host = self._target_host(hosts.GlacierVault(vault["VaultName"]))
+        return AWSSectionResult(
+            host,
+            [vault],
+            resource_labels(
+                "glacier",
+                vault["VaultName"],
+                vault["VaultName"],
+                self._region,
+                vault["TagsForCmkLabels"],
+            ),
+        )

@@ -256,16 +256,16 @@ _ENGINE_QUANTITY_SAMPLES: Mapping[str, QuantityProtocol] = {
 @pytest.mark.parametrize("kind", sorted(_ENGINE_QUANTITY_SAMPLES))
 def test_engine_quantity_round_trips_every_field(kind: str) -> None:
     quantity = _ENGINE_QUANTITY_SAMPLES[kind]
-    codec = COMMUNITY_GRAPH_CODEC
-    serialized = json.loads(json.dumps(codec.serialize_quantity(quantity)))
+    codec = QuantityCodec(COMMUNITY_QUANTITY_SPECS)
+    serialized = json.loads(json.dumps(codec.serialize(quantity)))
     assert serialized["kind"] == kind
-    assert codec.deserialize_quantity(serialized) == quantity
+    assert codec.deserialize(serialized) == quantity
 
 
 def test_every_engine_quantity_kind_is_covered() -> None:
     # The engine stays de/serialization-free, so a quantity's fields are mirrored by hand in the
     # codec. A new quantity kind must arrive with a round-trip sample above, or this fails.
-    assert set(_ENGINE_QUANTITY_SAMPLES) == set(COMMUNITY_GRAPH_CODEC.quantity_kinds())
+    assert set(_ENGINE_QUANTITY_SAMPLES) == {spec.kind for spec in COMMUNITY_QUANTITY_SPECS}
 
 
 def test_a_codec_refuses_two_quantities_claiming_one_kind() -> None:

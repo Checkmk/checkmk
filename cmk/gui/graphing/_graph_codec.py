@@ -88,9 +88,6 @@ class QuantityCodec:
                 raise ValueError(f"duplicate quantity kind: {spec.kind}")
             self._by_kind[spec.kind] = spec
 
-    def kinds(self) -> Sequence[str]:
-        return tuple(self._by_kind)
-
     def serialize(self, quantity: QuantityProtocol) -> Mapping[str, object]:
         kind = quantity.kind()
         return {"kind": kind, **self._by_kind[kind].to_dict(quantity, self)}
@@ -304,18 +301,6 @@ def _fraction_from_json(data: Mapping[str, object], codec: QuantityCodec) -> Fra
 class GraphCodec:
     def __init__(self, quantities: QuantityCodec) -> None:
         self._quantities = quantities
-
-    def quantity_kinds(self) -> Sequence[str]:
-        # The quantity kinds this codec can carry. The engine owns the quantities but not their
-        # transport, so a quantity gaining a field cannot break the build - only a round-trip test
-        # catches it. Tests use this to assert every registered kind has such a test.
-        return self._quantities.kinds()
-
-    def serialize_quantity(self, quantity: QuantityProtocol) -> Mapping[str, object]:
-        return self._quantities.serialize(quantity)
-
-    def deserialize_quantity(self, data: object) -> QuantityProtocol:
-        return self._quantities.deserialize(data)
 
     def _bound_to_json(self, bound: int | float | QuantityProtocol) -> Mapping[str, object]:
         if isinstance(bound, int | float):

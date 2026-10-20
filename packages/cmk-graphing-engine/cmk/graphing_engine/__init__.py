@@ -92,7 +92,6 @@ from ._plugins._attributes import (
     metric_attributes,
     parse_color,
     parse_unit,
-    scalar_attributes,
 )
 from ._plugins._matching import (
     build_matched_graphs,
@@ -274,7 +273,6 @@ __all__ = [
     "DrawnLineType",
     "evaluate_perfometer",
     "metric_attributes",
-    "scalar_attributes",
     "parse_color",
     "parse_unit",
     "split_predict_prefix",

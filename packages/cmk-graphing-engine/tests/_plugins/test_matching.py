@@ -34,7 +34,6 @@ from cmk.graphing_engine import (
     RequestedMetric,
     RRDMetric,
     Rule,
-    scalar_attributes,
     ScalarKind,
     ScalarOf,
     Service,
@@ -45,6 +44,7 @@ from cmk.graphing_engine import (
     TimeRange,
     TimeSeries,
 )
+from cmk.graphing_engine._plugins._attributes import scalar_attributes
 from cmk.graphing_engine._plugins._graph_parsing import parse_graph_from_api
 
 

@@ -24,7 +24,7 @@ import StepParagraph from '@/welcome/components/steps/components/StepParagraph.v
 import FirstHostSlideout from '../first-host/FirstHostSlideout.vue'
 import type { StepId } from './utils'
 
-const { _t } = usei18n()
+const { _t, _tp } = usei18n()
 
 const cseSlideoutOpen = ref<boolean>(false)
 
@@ -47,6 +47,18 @@ if (props.cards.add_host === 'cse-first-host-slideout') {
   useCseSlideout.value = true
 }
 
+function openRelaySetup(): void {
+  if (props.cards.relays) {
+    window.location.href = props.cards.relays
+  }
+}
+
+// One msgid for the whole sentence, so translations can move the link.
+const relayNoteParts = _tp(
+  '%{link} is the link text "Checkmk Relay"',
+  'Systems behind a firewall? Set up a %{link} first.'
+).split('%{link}')
+
 const emit = defineEmits(['step-completed'])
 </script>
 
@@ -61,10 +73,8 @@ const emit = defineEmits(['step-completed'])
     <StepParagraph>
       {{
         _t(
-          `In Checkmk, a host is any standalone physical or virtual system that is monitored.
-Each host has services which represent what is monitored, for example CPU usage, disk space, processes, or hardware sensors.
-The service discovery of Checkmk automatically detects these services.
-This allows monitoring to start with minimal configuration effort.`
+          `A host is anything you monitor: a server, a network device, a VM, a container platform,
+a cloud account or an application. Checkmk finds its services automatically.`
         )
       }}
     </StepParagraph>
@@ -76,14 +86,13 @@ This allows monitoring to start with minimal configuration effort.`
         </template>
         <template #content>
           <div>
-            <StepHeading>
-              {{ _t('On-premises hosts') }}
-            </StepHeading>
+            <StepHeading>{{ _t('Servers & operating systems') }}</StepHeading>
             <StepCardsRow>
               <CmkLinkCard
                 icon-name="folder"
                 :url="useCseSlideout ? undefined : cards.add_host"
-                :title="_t('Server (Linux, Windows, Solaris, ...)')"
+                :title="_t('Linux, Windows & Unix servers')"
+                :subtitle="_t('Solaris, AIX, FreeBSD, macOS, ...')"
                 :open-in-new-tab="false"
                 :callback="
                   () => {
@@ -93,27 +102,60 @@ This allows monitoring to start with minimal configuration effort.`
                   }
                 "
               />
+            </StepCardsRow>
+          </div>
+
+          <CmkAlert
+            v-if="useCseSlideout && cards.relays"
+            variant="info"
+            :heading="_t('Network devices and virtualization need a Checkmk Relay')"
+            :text="
+              _t(
+                'Checkmk Cloud cannot reach systems inside your network directly. Set up a Checkmk Relay in your network first, then add network devices or virtualization platforms such as Proxmox VE.'
+              )
+            "
+            :main-button="{ title: _t('Set up Checkmk Relay'), onclick: openRelaySetup }"
+          />
+
+          <div v-if="cards.network_devices">
+            <StepHeading>{{ _t('Network devices') }}</StepHeading>
+            <StepCardsRow>
               <CmkLinkCard
-                v-if="cards.network_devices"
                 icon-name="networking"
-                :title="_t('Network devices and SNMP')"
+                :title="_t('Switches, routers, firewalls & other SNMP devices')"
                 :url="cards.network_devices"
                 :open-in-new-tab="false"
               />
+            </StepCardsRow>
+          </div>
+          <StepParagraph
+            v-if="!useCseSlideout && cards.relays"
+            class="welcome-add-host__relay-note"
+          >
+            {{ relayNoteParts[0] }}<a :href="cards.relays">{{ _t('Checkmk Relay') }}</a
+            >{{ relayNoteParts[1] }}
+          </StepParagraph>
+
+          <div>
+            <StepHeading>{{ _t('Virtualization & containers') }}</StepHeading>
+            <StepCardsRow>
               <CmkLinkCard
-                v-if="cards.relays"
-                icon-name="relay-menu"
-                :title="_t('Checkmk Relay (objects behind a firewall)')"
-                :url="cards.relays"
+                icon-name="proxmox-ve"
+                :title="_t('Proxmox VE')"
+                :url="cards.proxmox_quick_setup"
+                :open-in-new-tab="false"
+              />
+              <CmkLinkCard
+                icon-name="kubernetes"
+                :title="_t('Kubernetes')"
+                :url="cards.kubernetes_quick_setup"
                 :open-in-new-tab="false"
               />
             </StepCardsRow>
           </div>
 
           <div>
-            <StepHeading>
-              {{ _t('Cloud platforms') }}
-            </StepHeading>
+            <StepHeading>{{ _t('Cloud platforms') }}</StepHeading>
             <StepCardsRow>
               <CmkLinkCard
                 icon-name="aws-logo"
@@ -137,9 +179,7 @@ This allows monitoring to start with minimal configuration effort.`
           </div>
 
           <div v-if="cards.synthetic_monitoring || cards.opentelemetry">
-            <StepHeading>
-              {{ _t('Application monitoring') }}
-            </StepHeading>
+            <StepHeading>{{ _t('Applications & databases') }}</StepHeading>
             <StepCardsRow>
               <CmkLinkCard
                 v-if="cards.synthetic_monitoring"
@@ -211,3 +251,9 @@ This allows monitoring to start with minimal configuration effort.`
 
   <FirstHostSlideout v-if="useCseSlideout" v-model="cseSlideoutOpen" />
 </template>
+
+<style scoped>
+.welcome-add-host__relay-note {
+  margin-top: var(--spacing);
+}
+</style>

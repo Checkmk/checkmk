@@ -218,6 +218,20 @@ def get_welcome_data() -> WelcomePage:
                 ],
                 filename="wato.py",
             ),
+            proxmox_quick_setup=_make_url(
+                addvars=[
+                    ("mode", "new_special_agent_configuration"),
+                    ("varname", "special_agents:proxmox_ve"),
+                ],
+                filename="wato.py",
+            ),
+            kubernetes_quick_setup=_make_url(
+                addvars=[
+                    ("mode", "new_special_agent_configuration"),
+                    ("varname", "special_agents:kube_v2"),
+                ],
+                filename="wato.py",
+            ),
             synthetic_monitoring=_make_url_or_callback_from_registry(
                 identifier="robotmk_managed_robots_overview",
                 permitted=user.may("edit_managed_robots"),

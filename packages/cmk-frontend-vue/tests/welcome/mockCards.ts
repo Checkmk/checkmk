@@ -23,6 +23,8 @@ export const createMockCards = (): WelcomeCards => ({
   aws_quick_setup: 'quick_setup.py?mode=aws',
   azure_quick_setup: 'quick_setup.py?mode=azure',
   gcp_quick_setup: 'quick_setup.py?mode=gcp',
+  proxmox_quick_setup: 'wato.py?mode=new_special_agent_configuration',
+  kubernetes_quick_setup: 'wato.py?mode=new_special_agent_configuration',
   activate_changes: 'wato.py?mode=changelog',
   setup_hosts: 'wato.py?mode=folder',
   main_dashboard: 'dashboard.py?name=main',

@@ -8,6 +8,7 @@
 import json
 from collections.abc import Iterator
 from dataclasses import replace
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 
@@ -19,6 +20,7 @@ from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageContext, PageHandler, PageRegistry
 from cmk.gui.permissions import all_permissions
+from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
@@ -105,6 +107,27 @@ def test_add_host_card_defaults_to_the_new_host_page(
 
     assert "wato.py" in add_host
     assert "mode=newhost" in add_host
+
+
+@pytest.mark.parametrize(
+    "card",
+    [
+        "aws_quick_setup",
+        "azure_quick_setup",
+        "gcp_quick_setup",
+        "proxmox_quick_setup",
+        "kubernetes_quick_setup",
+    ],
+)
+def test_quick_setup_card_opens_an_existing_quick_setup(
+    with_admin_login: UserId,
+    without_edition_cards: None,
+    card: str,
+) -> None:
+    query = parse_qs(urlparse(getattr(_cards(), card)).query)
+
+    assert query["mode"] == ["new_special_agent_configuration"]
+    assert quick_setup_registry.get(query["varname"][0]) is not None
 
 
 def test_add_host_card_prefers_the_registered_card(

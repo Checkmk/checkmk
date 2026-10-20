@@ -19,7 +19,6 @@ from cmk.graphing_engine import (
     MetricName,
     MetricProtocol,
     PerformanceData,
-    RawPerformanceValue,
     RRDMetric,
     ScalarKind,
     ScalarOf,
@@ -61,8 +60,8 @@ class _FakeRRDFetchMetricNames:
 
 @dataclass
 class _FakeRRDFetchData:
-    values: Mapping[str, RawPerformanceValue] = field(
-        default_factory=lambda: {_METRIC: RawPerformanceValue(value=1.0)}
+    values: Mapping[str, PerformanceData] = field(
+        default_factory=lambda: {_METRIC: PerformanceData(value=1.0)}
     )
     requested_ranges: list[TimeRange] = field(default_factory=list)
     diagnostics: FetchDiagnostics = field(default_factory=FetchDiagnostics)

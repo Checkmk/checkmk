@@ -9,8 +9,8 @@ from cmk.graphing.v1 import translations
 from cmk.graphing_engine import (
     map_metric_names,
     MetricName,
+    PerformanceData,
     RawPerformanceData,
-    RawPerformanceValue,
     reverse_translated_names,
     rrd_originals,
     RRDOriginal,
@@ -38,7 +38,7 @@ def _translations(specs: _Specs) -> Sequence[translations.Translation]:
     ]
 
 
-def _raw(values: Mapping[str, RawPerformanceValue]) -> RawPerformanceData:
+def _raw(values: Mapping[str, PerformanceData]) -> RawPerformanceData:
     return RawPerformanceData(
         check_command=_CHECK_COMMAND,
         values={MetricName(name): value for name, value in values.items()},
@@ -126,7 +126,7 @@ def test_a_scaling_translation_scales_the_value_and_every_threshold() -> None:
     [(name, data)] = translate_performance_data(
         _CHECK_COMMAND,
         {
-            MetricName("x"): RawPerformanceValue(
+            MetricName("x"): PerformanceData(
                 value=5.0,
                 warning=7.0,
                 critical=9.0,
@@ -147,7 +147,7 @@ def test_a_scaling_translation_scales_the_value_and_every_threshold() -> None:
 def test_an_absent_threshold_stays_absent_when_scaled() -> None:
     [(_name, data)] = translate_performance_data(
         _CHECK_COMMAND,
-        {MetricName("x"): RawPerformanceValue(value=5.0)},
+        {MetricName("x"): PerformanceData(value=5.0)},
         _translations({"x": translations.ScaleBy(1024)}),
     ).items()
     assert data.warning is None
@@ -159,7 +159,7 @@ def test_a_metric_is_drawn_from_the_column_its_data_was_translated_from() -> Non
     # data carried, and it carries the factor the value was scaled by.
     assert rrd_originals(
         MetricName("new"),
-        _raw({"old": RawPerformanceValue(value=5.0)}),
+        _raw({"old": PerformanceData(value=5.0)}),
         _translations({"old": translations.RenameToAndScaleBy("new", 1000)}),
     ) == [_original("old", 1000.0)]
 
@@ -167,7 +167,7 @@ def test_a_metric_is_drawn_from_the_column_its_data_was_translated_from() -> Non
 def test_two_columns_translated_onto_one_metric_are_both_drawn() -> None:
     assert rrd_originals(
         MetricName("m"),
-        _raw({"a": RawPerformanceValue(value=1.0), "b": RawPerformanceValue(value=2.0)}),
+        _raw({"a": PerformanceData(value=1.0), "b": PerformanceData(value=2.0)}),
         _translations({"a": translations.RenameTo("m"), "b": translations.RenameTo("m")}),
     ) == [_original("a", 1.0), _original("b", 1.0)]
 
@@ -177,7 +177,7 @@ def test_a_deprecated_column_absent_from_the_performance_data_is_still_drawn() -
     # alongside the current one - scaled by the translation that renamed it.
     assert rrd_originals(
         MetricName("new"),
-        _raw({"new": RawPerformanceValue(value=5.0)}),
+        _raw({"new": PerformanceData(value=5.0)}),
         _translations({"old": translations.RenameToAndScaleBy("new", 1000)}),
     ) == [_original("new", 1.0), _original("old", 1000.0)]
 
@@ -185,7 +185,7 @@ def test_a_deprecated_column_absent_from_the_performance_data_is_still_drawn() -
 def test_a_metric_without_performance_data_falls_back_to_its_own_column_unscaled() -> None:
     assert rrd_originals(
         MetricName("y"),
-        _raw({"x": RawPerformanceValue(value=5.0)}),
+        _raw({"x": PerformanceData(value=5.0)}),
         _translations({"x": translations.ScaleBy(1024)}),
     ) == [_original("y", 1.0)]
 

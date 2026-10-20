@@ -12,7 +12,7 @@ from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine._data._fetched import PerformanceData
 from cmk.graphing_engine._data._naming import MetricName
 from cmk.graphing_engine._rrd._naming import split_predict_prefix
-from cmk.graphing_engine._rrd._performance_data import RawPerformanceData, RawPerformanceValue
+from cmk.graphing_engine._rrd._performance_data import RawPerformanceData
 
 type _TranslationSpec = (
     translations_v1.RenameTo | translations_v1.ScaleBy | translations_v1.RenameToAndScaleBy
@@ -144,12 +144,12 @@ def _deprecated_originals(
 @dataclass(frozen=True, kw_only=True)
 class _TranslatedColumn:
     original: RRDOriginal
-    raw_value: RawPerformanceValue
+    raw_value: PerformanceData
 
 
 def _translated_columns(
     specs: Mapping[str, _TranslationSpec],
-    raw_values: Mapping[MetricName, RawPerformanceValue],
+    raw_values: Mapping[MetricName, PerformanceData],
 ) -> Mapping[MetricName, Sequence[_TranslatedColumn]]:
     columns: dict[MetricName, list[_TranslatedColumn]] = {}
     for original_name, raw_value in raw_values.items():
@@ -224,7 +224,7 @@ def translate_metric_names(
 
 
 def mapped_performance_data(
-    values: RawPerformanceValue | PerformanceData, transform: Callable[[float], float]
+    values: PerformanceData, transform: Callable[[float], float]
 ) -> PerformanceData:
     def _mapped_value(value: float | None) -> float | None:
         return None if value is None else transform(value)
@@ -247,7 +247,7 @@ def _performance_data(column: _TranslatedColumn) -> PerformanceData:
 
 def translate_performance_data(
     check_command: str,
-    raw_values: Mapping[MetricName, RawPerformanceValue],
+    raw_values: Mapping[MetricName, PerformanceData],
     registered_translations: Sequence[translations_v1.Translation],
 ) -> Mapping[MetricName, PerformanceData]:
     specs = _specs_for_command(check_command, registered_translations)

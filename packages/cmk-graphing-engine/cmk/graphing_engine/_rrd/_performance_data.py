@@ -10,26 +10,16 @@ import shlex
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
+from cmk.graphing_engine._data._fetched import PerformanceData
 from cmk.graphing_engine._data._naming import MetricName
 
 from ._naming import rrd_metric_name
 
 
 @dataclass(frozen=True, kw_only=True)
-class RawPerformanceValue:
-    value: float
-    warning: float | None = None
-    critical: float | None = None
-    lower_warning: float | None = None
-    lower_critical: float | None = None
-    minimum: float | None = None
-    maximum: float | None = None
-
-
-@dataclass(frozen=True, kw_only=True)
 class RawPerformanceData:
     check_command: str
-    values: Mapping[MetricName, RawPerformanceValue]
+    values: Mapping[MetricName, PerformanceData]
 
 
 _VALUE_AND_UNIT = re.compile(r"([0-9.,-]*)(.*)")
@@ -100,7 +90,7 @@ def parse_check_command(check_command: str) -> str:
 
 def _parse_perf_data(
     perf_data_string: str, check_command: str, *, debug: bool, logger: logging.Logger
-) -> tuple[Mapping[MetricName, RawPerformanceValue], str]:
+) -> tuple[Mapping[MetricName, PerformanceData], str]:
     check_command = parse_check_command(check_command)
 
     parts = shlex.split(perf_data_string)
@@ -109,7 +99,7 @@ def _parse_perf_data(
         del parts[-1]
     check_command = check_command.replace(".", "_")
 
-    raw_perf_data: dict[MetricName, RawPerformanceValue] = {}
+    raw_perf_data: dict[MetricName, PerformanceData] = {}
     for part in parts:
         try:
             varname, value_text, value_parts = _parse_perf_values(part)
@@ -118,7 +108,7 @@ def _parse_perf_data(
                 continue
             lower_warning, warning = _parse_range(value_parts[0])
             lower_critical, critical = _parse_range(value_parts[1])
-            raw_perf_data[rrd_metric_name(varname)] = RawPerformanceValue(
+            raw_perf_data[rrd_metric_name(varname)] = PerformanceData(
                 value=value,
                 warning=warning,
                 critical=critical,

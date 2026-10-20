@@ -1,0 +1,21 @@
+title: Raritan PX2/PX3: Hardware Failures
+agents: snmp
+catalog: hw/environment/raritan
+license: GPLv2
+distribution: check_mk
+description:
+ Reads the PDU2-MIB hwFailureTable and reports {CRIT} for every entry whose
+ hwFailureLastDeassertTimeStamp is 0. An empty table or a table containing
+ only cleared entries is {OK}. The timestamp determines the check state;
+ hwFailureAsserted is displayed as additional diagnostic information.
+
+ Active entries show the affected component and a readable failure type.
+ Details include the PDU and entry indices, asserted status, assertion and
+ clearing timestamps in UTC, and the number of assertions. Cleared entries
+ remain visible in the service details. Unknown failure types retain their
+ numerical type code. One service aggregates entries from all reported PDUs.
+
+discovery:
+ One service called HW-Failure is discovered, including when the fetched
+ hardware failure table is empty. A missing SNMP section is not treated
+ as a successfully fetched empty table.

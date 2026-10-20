@@ -93,3 +93,12 @@ def test_check_innovaphone_channels_usage_is_truncated_to_whole_percent() -> Non
         Result(state=State.OK, summary="Current: 66% (used: 2, free: 1, total: 3)"),
         Metric("usage", 66, levels=(75.0, 80.0), boundaries=(0, 100)),
     )
+
+
+@pytest.mark.xfail(strict=True, raises=ZeroDivisionError, reason="a total of 0 crashes the check")
+def test_check_innovaphone_channels_zero_total_is_ok() -> None:
+    section = {"A": Channel(link="Up", physical="Up", idle=0.0, total=0.0)}
+
+    assert list(check_innovaphone_channels("A", _PARAMS, section)) == [
+        Result(state=State.OK, summary="No channels available (total: 0)"),
+    ]

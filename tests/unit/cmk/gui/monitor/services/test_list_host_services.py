@@ -9,6 +9,13 @@ from http import HTTPStatus
 import pytest
 
 import cmk.utils.paths
+from cmk.ccc.site import SiteId
+from cmk.gui.config import active_config
+from cmk.gui.monitor.services._api._filters import (
+    ServiceAndNode,
+    ServiceBooleanCondition,
+    ServiceStringCondition,
+)
 from cmk.gui.monitor.services._api._list_host_services import _handle_list_services
 from cmk.gui.monitor.services._models import (
     ServiceFilter,
@@ -17,7 +24,11 @@ from cmk.gui.monitor.services._models import (
     ServiceSortDirection,
     ServiceState,
 )
-from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.monitor.services.table import (
+    HostNotFoundError,
+    HostServicesTable,
+    InvalidServiceFilterError,
+)
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.gui.setup_git_test_helper import (
     init_setup_git_repo,
@@ -173,8 +184,47 @@ def test_handle_list_services_empty_query_matches_all() -> None:
 
 def test_handle_list_services_host_not_found() -> None:
     services_repo = get_fake_host_services_repository(n_services=10)
-    with pytest.raises(ProblemException, match="404"):
+    with pytest.raises(HostNotFoundError, match="unknown-host"):
         _handle_list_services(services_repo, hostname="unknown-host", site_id=_SITE_ID)
+
+
+@pytest.mark.parametrize(
+    "site_id",
+    [pytest.param("", id="no site"), pytest.param("ghost", id="unknown site")],
+)
+def test_the_services_of_a_host_on_a_site_that_does_not_exist_are_not_queried(
+    site_id: str,
+) -> None:
+    with pytest.raises(HostNotFoundError, match="does not exist"):
+        HostServicesTable(active_config.sites).list(
+            hostname="heute",
+            site_id=SiteId(site_id),
+            limit=None,
+            query="",
+            sorters=[],
+            filter_node=None,
+            fields=frozenset(),
+        )
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_list_host_services_of_an_unknown_host_answers_404_with_a_plain_detail(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.set_sites(["NO_SITE"])
+    mock_livestatus.add_table("hosts", [])
+    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = ghost\nLimit: 1")
+
+    with mock_livestatus:
+        resp = aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/internal/monitor/hosts/ghost/services?site_id=NO_SITE",
+            params=json.dumps({}),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=HTTPStatus.NOT_FOUND,
+        )
+
+    assert resp.json["detail"] == "The host 'ghost' was not found on site 'NO_SITE'"
 
 
 @pytest.mark.usefixtures("with_admin_login")
@@ -201,3 +251,40 @@ def test_list_host_services_does_not_commit_the_setup_git_repo(
 
     assert resp.status_code == HTTPStatus.OK, resp.text
     assert setup_git_commit_subjects(config_dir) == ["Initialized GIT for Checkmk"]
+
+
+def test_a_service_filter_tree_from_the_page_url_parses_into_filter_nodes() -> None:
+    raw = json.dumps(
+        {
+            "type": "and",
+            "children": [
+                {"type": "condition", "field": "name", "op": "contains", "value": "CPU"},
+                {"type": "condition", "field": "acknowledged", "op": "eq", "value": False},
+            ],
+        }
+    )
+
+    node = HostServicesTable.parse_filter(raw)
+
+    assert node == ServiceAndNode(
+        type="and",
+        children=[
+            ServiceStringCondition(type="condition", field="name", op="contains", value="CPU"),
+            ServiceBooleanCondition(type="condition", field="acknowledged", op="eq", value=False),
+        ],
+    )
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        pytest.param("{not json", id="malformed JSON"),
+        pytest.param(
+            '{"type": "condition", "field": "no_such_field", "op": "eq", "value": 1}',
+            id="unknown field",
+        ),
+    ],
+)
+def test_an_invalid_service_filter_tree_is_rejected(raw: str) -> None:
+    with pytest.raises(InvalidServiceFilterError):
+        HostServicesTable.parse_filter(raw)

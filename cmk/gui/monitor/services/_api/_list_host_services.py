@@ -7,7 +7,7 @@ from http import HTTPStatus
 from typing import Annotated, Final, Self
 
 from annotated_types import Interval
-from pydantic import PlainValidator
+from pydantic import PlainValidator, TypeAdapter, ValidationError
 
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
@@ -27,8 +27,10 @@ from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.openapi.utils import ProblemException
+from cmk.livestatus_client import SiteConfigurations
 from cmk.web.utils import permission_verification as permissions
 
+from .._exceptions import HostNotFoundError, InvalidServiceFilterError
 from .._impl import LiveStatusHostServicesRepository
 from .._models import (
     Service,
@@ -64,6 +66,8 @@ _DEFAULT_SORT: tuple[ServiceSort, ...] = ()
 
 # The page's default columns; everything else has to be asked for.
 _DEFAULT_FIELDS: frozenset[ServiceOptionalField] = frozenset()
+
+_FILTER_NODE: Final = TypeAdapter[ServiceFilterNode](ServiceFilterNode)
 
 
 @api_model
@@ -259,36 +263,76 @@ def list_services(
     body: ServicesRequestBody = ServicesRequestBody(),
 ) -> HostServicesResponse:
     """List services of a host to be consumed by the host services monitoring page."""
-    with sites.only_sites(site_id):
-        host_services_repo = LiveStatusHostServicesRepository(connection=sites.live())
+    # A `None` request means "remove the limit". We only honor that for users allowed to ignore
+    # the hard limit; everyone else is clamped to the safety ceiling. Numeric requests are
+    # already bounded to the ceiling by the request schema, so they pass through unchanged.
+    match body.limit:
+        case None if api_context.user.may("general.ignore_hard_limit"):
+            limit = None
+        case None:
+            limit = _MAX_HOST_SVC_LIMIT
+        case _:
+            limit = body.limit
 
-        # A `None` request means "remove the limit". We only honor that for users allowed to ignore
-        # the hard limit; everyone else is clamped to the safety ceiling. Numeric requests are
-        # already bounded to the ceiling by the request schema, so they pass through unchanged.
-        match body.limit:
-            case None if api_context.user.may("general.ignore_hard_limit"):
-                limit = None
-            case None:
-                limit = _MAX_HOST_SVC_LIMIT
-            case _:
-                limit = body.limit
-
-        parsed_filters = (
-            ServiceFilter("")
-            if isinstance(body.filter, ApiOmitted)
-            else parse_as_livestatus_filter(body.filter)
-        )
-
-        return _handle_list_services(
-            host_services_repo,
+    try:
+        return HostServicesTable(api_context.config.sites).list(
             hostname=hostname,
             site_id=site_id,
             limit=limit,
             query="" if isinstance(body.q, ApiOmitted) else body.q,
             sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
-            filters=parsed_filters,
+            filter_node=None if isinstance(body.filter, ApiOmitted) else body.filter,
             fields=_DEFAULT_FIELDS if isinstance(body.fields, ApiOmitted) else body.fields,
         )
+    except HostNotFoundError as exc:
+        raise ProblemException(
+            status=HTTPStatus.NOT_FOUND,
+            title="The requested host was not found",
+            detail=str(exc),
+        ) from None
+
+
+class HostServicesTable:
+    def __init__(self, site_configs: SiteConfigurations) -> None:
+        self._site_ids = frozenset(site_configs)
+
+    @staticmethod
+    def parse_filter(raw: str) -> ServiceFilterNode:
+        try:
+            return _FILTER_NODE.validate_json(raw)
+        except ValidationError as exc:
+            raise InvalidServiceFilterError(str(exc)) from exc
+
+    def list(
+        self,
+        *,
+        hostname: str,
+        site_id: SiteId,
+        limit: int | None,
+        query: str,
+        sorters: Sequence[ServiceSort],
+        filter_node: ServiceFilterNode | None,
+        fields: Set[ServiceOptionalField],
+    ) -> HostServicesResponse:
+        if site_id not in self._site_ids:
+            raise HostNotFoundError(
+                f"The host {hostname!r} was not found: the site {site_id!r} does not exist"
+            )
+        with sites.only_sites(site_id):
+            return _handle_list_services(
+                LiveStatusHostServicesRepository(connection=sites.live()),
+                hostname=hostname,
+                site_id=site_id,
+                limit=limit,
+                query=query,
+                sorters=sorters,
+                filters=(
+                    ServiceFilter("")
+                    if filter_node is None
+                    else parse_as_livestatus_filter(filter_node)
+                ),
+                fields=fields,
+            )
 
 
 def _handle_list_services(
@@ -303,11 +347,7 @@ def _handle_list_services(
     fields: Set[ServiceOptionalField] = _DEFAULT_FIELDS,
 ) -> HostServicesResponse:
     if not host_services_repo.host_exists(hostname):
-        raise ProblemException(
-            status=HTTPStatus.NOT_FOUND,
-            title="The requested host was not found",
-            detail=f"The host {hostname!r} was not found on site {site_id!r}",
-        ) from None
+        raise HostNotFoundError(f"The host {hostname!r} was not found on site {site_id!r}")
 
     services = host_services_repo.fetch(
         hostname, limit=limit, query=query, sorters=sorters, filters=filters, fields=fields

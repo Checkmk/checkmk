@@ -110,6 +110,13 @@ Interfaces
   ``ALL_HOSTS_PERMISSION``, the permission the page "All hosts" needs. The
   rows are ``HostEntry``, the response model of the internal REST endpoint,
   so a change of that model also changes what these consumers get.
+* ``cmk.gui.monitor.services.table``: the same for the services of one host.
+  It offers ``HostServicesTable`` (with ``list`` and ``parse_filter``), the
+  column catalog ``HOST_SERVICES_TABLE``, ``HostServiceEntry``,
+  ``ServiceOptionalField`` and the errors ``HostNotFoundError`` (also for a
+  site that does not exist) and ``InvalidServiceFilterError``. The rows are
+  ``HostServiceEntry``, the response model of the internal REST endpoint
+  that lists the services of a host.
 * Livestatus, locally or via :doc:`arch-comp-liveproxyd` for remote sites.
 * Outside Community, the page "All hosts" links to the instant PDF report
   of reporting with the columns it shows and the request body it sends to
@@ -127,15 +134,19 @@ Risks and technical debts
 
 * Two implementations of the same pages have to be kept consistent until the
   classic views are replaced.
-* The columns of the page "All hosts" and their titles are defined in the
-  frontend (``all-hosts/columns.ts``) and, for server-side consumers such as
-  the PDF report, in ``cmk/gui/monitor/hosts/_table_catalog.py``. A new or
-  renamed column has to touch both. The titles of the two time columns
-  differ on purpose: the page shows an age ("Check age", "State age"), the
-  PDF an absolute time ("Last check", "Last state change").
-* The server-side consumers of ``cmk.gui.monitor.hosts.table`` read
-  ``HostEntry``, an API model, instead of a domain model. Reshaping the
-  response of the internal endpoint has to keep them working, too.
+* The columns of the pages "All hosts" and "Services of host" and their
+  titles are defined in the frontend (``all-hosts/columns.ts``,
+  ``host-services/columns.ts``) and, for server-side consumers such as the
+  PDF reports, in the ``_table_catalog.py`` of ``cmk/gui/monitor/hosts`` and
+  ``cmk/gui/monitor/services``. A new or renamed column has to touch both.
+  The titles of the time columns differ on purpose: the pages show an age
+  ("Check age", "State age"), the PDFs an absolute time ("Last check",
+  "Last state change").
+* The server-side consumers of ``cmk.gui.monitor.hosts.table`` and
+  ``cmk.gui.monitor.services.table`` read ``HostEntry`` and
+  ``HostServiceEntry``, API models, instead of domain models, including the
+  ``ApiOmitted`` placeholder of the REST framework. Reshaping a response of
+  the internal endpoints has to keep them working, too.
 * Classic data sources are loosely typed (rows are dicts) and derive the
   queried columns at runtime, which makes it hard to see what is queried.
 * The filter vocabulary of the monitoring pages is defined in the API, the

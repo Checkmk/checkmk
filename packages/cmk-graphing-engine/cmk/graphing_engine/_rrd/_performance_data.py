@@ -88,12 +88,25 @@ def parse_check_command(check_command: str) -> str:
     return parts[0]
 
 
+def _split_perf_data(perf_data_string: str, *, debug: bool, logger: logging.Logger) -> list[str]:
+    try:
+        return shlex.split(perf_data_string)
+    except ValueError:
+        logger.exception(
+            "Failed to split perfdata '%(perf_data_string)s'",
+            {"perf_data_string": perf_data_string},
+        )
+        if debug:
+            raise
+        return perf_data_string.split()
+
+
 def _parse_perf_data(
     perf_data_string: str, check_command: str, *, debug: bool, logger: logging.Logger
 ) -> tuple[Mapping[MetricName, PerformanceData], str]:
     check_command = parse_check_command(check_command)
 
-    parts = shlex.split(perf_data_string)
+    parts = _split_perf_data(perf_data_string, debug=debug, logger=logger)
     if parts and parts[-1].startswith("[") and parts[-1].endswith("]"):
         check_command = parts[-1][1:-1]
         del parts[-1]

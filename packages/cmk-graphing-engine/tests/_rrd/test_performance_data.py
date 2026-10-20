@@ -39,9 +39,18 @@ def test_parse_performance_data_names_a_metric_by_its_rrd_name() -> None:
     assert list(parsed.values) == ["disk_read_sda_1"]
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 3806: ValueError")
 def test_performance_data_with_an_unbalanced_quote_is_still_read() -> None:
     parsed = parse_performance_data(
         "days=10 'expires=5", "check-mk-custom!check_ssl_cert", debug=False, logger=_LOGGER
     )
-    assert parsed.values == {MetricName("days"): PerformanceData(value=10)}
+    assert parsed.values == {
+        MetricName("days"): PerformanceData(value=10),
+        MetricName("expires"): PerformanceData(value=5),
+    }
+
+
+def test_performance_data_with_an_unbalanced_quote_raises_in_debug_mode() -> None:
+    with pytest.raises(ValueError, match="No closing quotation"):
+        parse_performance_data(
+            "days=10 'expires=5", "check-mk-custom!check_ssl_cert", debug=True, logger=_LOGGER
+        )

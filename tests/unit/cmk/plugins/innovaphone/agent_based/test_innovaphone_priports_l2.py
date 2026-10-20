@@ -84,7 +84,6 @@ def test_check_innovaphone_priports_l2_changed_mode_is_crit() -> None:
     ]
 
 
-@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 4154: KeyError 0")
 def test_check_innovaphone_priports_l2_unknown_state_is_unknown() -> None:
     section = {"Port 1": PriPort(state=0, mode=1)}
 
@@ -94,7 +93,6 @@ def test_check_innovaphone_priports_l2_unknown_state_is_unknown() -> None:
     ]
 
 
-@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 4154: KeyError 0")
 def test_check_innovaphone_priports_l2_unknown_mode_in_discovered_mode_is_ok() -> None:
     section = {"Port 1": PriPort(state=2, mode=0)}
 

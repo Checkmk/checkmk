@@ -27,9 +27,9 @@ _MODE_NAMES = {
     2: "NT",
 }
 
-_STATE_NAMES = {
-    1: "Down",
-    2: "UP",
+_STATES = {
+    1: ("Down", State.CRIT),
+    2: ("UP", State.OK),
 }
 
 
@@ -65,13 +65,13 @@ def check_innovaphone_priports_l2(
     if (port := section.get(item)) is None:
         return
 
-    yield Result(
-        state=State.CRIT if port.state == 1 else State.OK,
-        summary=f"State: {_STATE_NAMES[port.state]}",
-    )
+    state_name, state = _STATES.get(port.state, (f"unknown ({port.state})", State.UNKNOWN))
+    yield Result(state=state, summary=f"State: {state_name}")
+
+    mode_name = _MODE_NAMES.get(port.mode, f"unknown ({port.mode})")
     yield Result(
         state=State.CRIT if port.mode != params["mode"] else State.OK,
-        summary=f"Mode: {_MODE_NAMES[port.mode]}",
+        summary=f"Mode: {mode_name}",
     )
 
 

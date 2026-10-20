@@ -10,5 +10,9 @@ def omd_root() -> Path:
     return Path(os.environ.get("OMD_ROOT", ""))
 
 
+def site_relative_db_path(feature: str) -> Path:
+    return Path("var", "check_mk", feature, "db.sqlite3")
+
+
 def db_path(feature: str) -> Path:
-    return omd_root() / "var" / "check_mk" / feature / "db.sqlite3"
+    return omd_root() / site_relative_db_path(feature)

@@ -2208,7 +2208,14 @@ allows = [
 ]
 
 [components."omdlib"]
-allows = ["@ccc", "@crypto", "@flags", "cmk.crash", "cmk.utils"]
+allows = [
+  "@ccc",
+  "@crypto",
+  "@flags",
+  "cmk.crash",
+  "cmk.schema_manager",
+  "cmk.utils",
+]
 
 [components."cmk.relay_trigger_protocol"]
 allows = [

@@ -5,7 +5,9 @@
 
 
 import socket
+import sqlite3
 import tarfile
+from contextlib import closing
 from pathlib import Path
 
 import pytest
@@ -163,3 +165,38 @@ def test_backup_site_to_tarfile_socket_fail(tmp_path: Path) -> None:
             BackupExclusions.from_options({}),
             verbose=False,
         )
+
+
+def test_backup_site_to_tarfile_snapshots_a_sqlite_database_without_its_wal(
+    tmp_path: Path,
+) -> None:
+    site_name = "site"
+    site_home = tmp_path / site_name
+    relative_path = "var/check_mk/feature/db.sqlite3"
+    db_path = site_home / relative_path
+    db_path.parent.mkdir(parents=True)
+
+    with closing(sqlite3.connect(db_path, autocommit=True)) as connection:
+        connection.execute("PRAGMA journal_mode=WAL")
+        connection.execute("PRAGMA wal_autocheckpoint=0")
+        connection.execute("CREATE TABLE t (id INTEGER)")
+        connection.execute("INSERT INTO t VALUES (1)")
+        # Open while archiving, so the committed row is still only in the WAL.
+        tar_path = tmp_path / "backup.tar"
+        with tarfile.open(tar_path, mode="w:") as tar:
+            omdlib.backup._backup_site_to_tarfile(  # noqa: SLF001
+                site_name,
+                str(site_home),
+                True,
+                tar,
+                BackupExclusions.from_options({}),
+                verbose=False,
+                sqlite_relative_paths=[relative_path],
+            )
+
+    with tarfile.open(tar_path) as tar:
+        assert f"{site_name}/{relative_path}-wal" not in tar.getnames()
+        tar.extract(f"{site_name}/{relative_path}", tmp_path / "restored", filter="data")
+    restored = tmp_path / "restored" / site_name / relative_path
+    with closing(sqlite3.connect(restored)) as connection:
+        assert connection.execute("SELECT id FROM t").fetchall() == [(1,)]

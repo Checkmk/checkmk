@@ -26,7 +26,7 @@ from urllib.parse import quote
 
 from cmk.schema_manager._discovery import discover_db_migrations
 from cmk.schema_manager._mechanism import ensure_schema, ensure_schemas_on_update
-from cmk.schema_manager._paths import db_path
+from cmk.schema_manager._paths import db_path, site_relative_db_path
 from cmk.schema_manager.backend.base import Backend
 from cmk.schema_manager.errors import (
     BackendUnavailableError,
@@ -119,6 +119,10 @@ class Sqlite(Backend[Connection]):
 
     def path(self, name: str) -> Path:
         return db_path(name)
+
+    def site_relative_path(self, name: str) -> Path:
+        """`path` relative to the site's home directory."""
+        return site_relative_db_path(name)
 
     @override
     @contextmanager
@@ -269,3 +273,22 @@ def ensure_sqlite_created(logger: Logger) -> None:
     "create" and apply its pending revisions."""
     for database in discover_db_migrations(backend_type=Sqlite, event="create").values():
         ensure_schema(database, logger)
+
+
+def sqlite_backup_paths() -> list[Path]:
+    """Site-relative paths of every SQLite database opted into "backup",
+    for `omd backup` to snapshot.
+
+    A broken plugin must not prevent the backup: then no path is returned,
+    and the databases are archived as plain files.
+    """
+    try:
+        databases = discover_db_migrations(backend_type=Sqlite, event="backup").values()
+    except Exception as e:
+        _LOGGER.warning(
+            "Failed to discover the schema-manager databases (%(error)s). "
+            "They are archived as plain files instead of snapshots.",
+            {"error": e},
+        )
+        return []
+    return [database.backend.site_relative_path(database.name) for database in databases]

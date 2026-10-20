@@ -5,6 +5,7 @@
 import logging
 import sqlite3
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Literal
 
 import pytest
@@ -18,6 +19,7 @@ from cmk.schema_manager.backend.sqlite import (
     ensure_sqlite_up_to_date,
     REVISION_TABLE,
     Sqlite,
+    sqlite_backup_paths,
 )
 from cmk.schema_manager.managed_database import ManagedDatabase
 from cmk.schema_manager.revision import RevisionChain
@@ -134,3 +136,8 @@ def test_ensure_sqlite_created_creates_only_the_databases_opted_into_create() ->
 
     assert _applied_revisions("create_and_update") == ["0001"]
     assert not Sqlite().exists("update_only")
+
+
+@pytest.mark.usefixtures("omd_root", "registered_fixture_databases")
+def test_sqlite_backup_paths_are_the_site_relative_paths_of_the_backup_databases() -> None:
+    assert sqlite_backup_paths() == [Path("var/check_mk/backup_only/db.sqlite3")]

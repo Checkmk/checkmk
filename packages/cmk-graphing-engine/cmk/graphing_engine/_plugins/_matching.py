@@ -38,9 +38,6 @@ def _matches(
     return any(name in available for name in names)
 
 
-# A plug-in's independently matchable parts paired with the metric names they draw: one part for a
-# plain graph, the lower and the upper one for a bidirectional graph. The names depend on the plug-in
-# alone, so they are resolved once and then matched against each service's available names.
 type _MatchableParts = Sequence[
     tuple[graphs_v1.Graph | graphs_v2_unstable.Graph, Sequence[MetricName]]
 ]
@@ -155,8 +152,6 @@ def build_matched_graphs(
     request: GraphRequest | None = None,
 ) -> Sequence[Graph]:
     names_by_service = fetch_metric_names()
-    # The metric-name fetch returns the services tagged with their resolved site; build from those so
-    # the metrics carry it.
     resolved = list(names_by_service)
     available = frozenset(itertools.chain.from_iterable(names_by_service.values()))
     single_service = resolved[0] if len(resolved) == 1 else None
@@ -164,12 +159,8 @@ def build_matched_graphs(
     claimed: set[MetricName] = set()
 
     def _collect(base: Graph) -> None:
-        # Discard non-requested graphs the moment their name is known, before the predictive-line
-        # work, rather than building every graph and filtering afterwards.
         if isinstance(request, RequestedGraph) and base.name != request.name:
             return
-        # A predictive line is a single-service concept; a graph over multiple services has none (nor
-        # rules or a quantity range bound, which the parse already left out).
         if single_service is None:
             matched_graphs.append(base)
             return
@@ -211,8 +202,6 @@ def build_matched_graphs(
             rules=_fallback_rules(name),
         )
 
-    # A single-metric request names no plug-in, and a plug-in graph drawing that metric claims it,
-    # which keeps the loop below from reaching it. Answer such a request on its own.
     if isinstance(request, RequestedMetric):
         if request.metric_name in available:
             _collect(_single_metric_graph(request.metric_name))

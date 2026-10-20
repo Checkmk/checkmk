@@ -37,8 +37,6 @@ class EvaluatedCurve:
     value: float | None
     time_series: TimeSeries
     source_id: str | None = None
-    # The attributes of the series the curve was evaluated from, e.g. a telemetry metrics source's resource,
-    # scope and data point attributes. Empty for a curve fetched from RRDs.
     series_attributes: SeriesAttributes = field(default_factory=dict)
 
 
@@ -123,9 +121,6 @@ def _evaluate_vertical_range(
 
 
 def _create_id(curve: Curve, *, inverse: bool, seen: Counter[str]) -> str:
-    # A curve that names its source (a custom graph names the row it draws) is identified by it. The
-    # quantity's ident spells out the whole expression, which a row referencing rows makes
-    # exponentially long.
     base = ("-" if inverse else "") + (curve.source_id or curve.quantity.ident())
     seen[base] += 1
     return base if seen[base] == 1 else f"{base}#{seen[base]}"
@@ -143,11 +138,8 @@ def _resolve_series_title(title: str, label_macros: Mapping[str, str], *, fanned
     for macro, value in label_macros.items():
         resolved = resolved.replace(macro, value)
     if resolved != title:
-        # The title carried macros (e.g. a query line) - resolve them per series, at any count.
         return resolved
     if fanned and (series_id := label_macros.get(MACRO_SERIES_ID, "")):
-        # A macro-less title fanned into several series (e.g. a combined graph) - fall back to
-        # appending the series id so the curves stay distinguishable.
         return f"{title} - {series_id}" if title else series_id
     return title
 
@@ -286,8 +278,6 @@ def _evaluate_graph(graph: Graph, context: EvaluationContext) -> EvaluatedGraph:
     ]
     rules = []
     for rule in graph.rules:
-        # The id has to be minted before the rule is known to be present: it counts the quantity
-        # towards the graph's seen ones either way.
         rule_id = _create_id(rule.curve, inverse=rule.inverse, seen=seen)
         if (evaluated := _evaluate_rule(rule, rule_id, context)) is not None:
             rules.append(evaluated)

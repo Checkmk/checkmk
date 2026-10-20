@@ -10,14 +10,11 @@ from dataclasses import dataclass
 from cmk.graphing_engine._data._units import CurveAttributes
 from cmk.graphing_engine._quantities._quantity import fetch_leaves, MetricProtocol, QuantityProtocol
 
-# What a drawable is bounded by: a plain number, or a quantity to be evaluated.
 type Bound = int | float | QuantityProtocol
 
 
 @dataclass(frozen=True, kw_only=True)
 class Curve:
-    """A quantity dressed for drawing: what to evaluate, and how to title, scale and colour it."""
-
     quantity: QuantityProtocol
     attributes: CurveAttributes
     source_id: str | None = None
@@ -69,7 +66,6 @@ class Graph:
     title: str
     kind: str
     vertical_range: VerticalRange | None = None
-    # Drop the curves with nothing to see - all zero, or no data at all - instead of drawing them.
     omit_zero_curves: bool = False
     stacks: Sequence[Stack] = ()
     lines: Sequence[Line] = ()

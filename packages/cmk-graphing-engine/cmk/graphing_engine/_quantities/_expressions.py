@@ -15,8 +15,6 @@ from ._quantity import EvaluatedQuantity, EvaluationContext, QuantityProtocol
 
 
 def _operand_label_macros(operands: Sequence[EvaluatedQuantity]) -> Mapping[str, str]:
-    # An operand may be a fan-out leaf that matched a single series, and then it carries that series'
-    # title macros: the operation is the curve that gets drawn, so it has to carry them on.
     macros: dict[str, str] = {}
     for operand in operands:
         macros.update(operand.label_macros)
@@ -24,8 +22,6 @@ def _operand_label_macros(operands: Sequence[EvaluatedQuantity]) -> Mapping[str,
 
 
 def _operand_series_attributes(operands: Sequence[EvaluatedQuantity]) -> SeriesAttributes:
-    # Same as the title macros: the operation is the drawn curve, so it carries on the attributes its
-    # operands' series came with.
     attributes: dict[str, dict[str, str]] = {}
     for operand in operands:
         for kind, of_kind in operand.series_attributes.items():
@@ -55,8 +51,6 @@ def _apply_to_operands(
 
 
 def _collapse(results: Sequence[EvaluatedQuantity]) -> EvaluatedQuantity | None:
-    # An operand of an operation must be single-valued: an absent operand is None; a fan-out operand
-    # (a quantity that expands into several curves) cannot take part in an operation.
     match results:
         case []:
             return None

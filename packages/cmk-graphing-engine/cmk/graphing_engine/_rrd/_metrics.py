@@ -28,8 +28,6 @@ class ConsolidationFunction(enum.StrEnum):
 
 @dataclass(frozen=True, kw_only=True)
 class RRDMetric:
-    # The monitoring site the service lives on. None until resolved during the fetch; once known it
-    # is part of the metric's identity, so the same host/service on two sites are distinct curves.
     site_id: SiteID | None = None
     host_name: HostName
     service_name: ServiceName

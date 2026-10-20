@@ -117,9 +117,6 @@ def reverse_translated_names(
     canonical_name: MetricName,
     registered_translations: Sequence[translations_v1.Translation],
 ) -> frozenset[MetricName]:
-    # Every raw metric name whose data may belong to this metric, across all check commands: the
-    # name itself plus every name any translation renames to it. A regex translation ("~.*rta")
-    # maps many names onto one and so cannot be reversed.
     return frozenset(
         {canonical_name}
         | {
@@ -169,10 +166,6 @@ def rrd_originals(
     raw_performance_data: RawPerformanceData,
     registered_translations: Sequence[translations_v1.Translation],
 ) -> Sequence[RRDOriginal]:
-    # The columns a metric's performance data was translated from, each with that translation's
-    # factor: a translation that only scales thereby reaches the series just like it reaches the
-    # values and the thresholds. A metric without performance data falls back to its own column -
-    # no translation applies to a column the perf data never carried, so it is unscaled.
     specs = _specs_for_command(raw_performance_data.check_command, registered_translations)
     columns = _translated_columns(specs, raw_performance_data.values).get(metric_name)
     present = (

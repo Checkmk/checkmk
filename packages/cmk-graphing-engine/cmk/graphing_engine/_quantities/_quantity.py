@@ -21,7 +21,6 @@ class EvaluationContext:
     )
 
     def evaluate(self, quantity: QuantityProtocol) -> Sequence[EvaluatedQuantity]:
-        """The quantity's results, evaluated at most once per context."""
         if (results := self._results.get(quantity)) is not None:
             return results
         results = quantity.evaluate(self)
@@ -42,10 +41,7 @@ class EvaluationContext:
 class EvaluatedQuantity:
     value: float | None
     time_series: TimeSeries
-    # Per-series title macros carried by a fan-out leaf's results: substituted into the curve title
-    # to tell the fanned curves apart. Empty for a single, non-fanned quantity.
     label_macros: Mapping[str, str] = field(default_factory=dict)
-    # The attributes of the series this quantity was evaluated from, passed on to the curve.
     series_attributes: SeriesAttributes = field(default_factory=dict)
 
 
@@ -53,34 +49,22 @@ def first_value(results: Sequence[EvaluatedQuantity]) -> float | None:
     return results[0].value if results else None
 
 
-# Every quantity is hashable by value: the evaluation keys the data it holds per quantity by
-# the quantity itself.
 class QuantityProtocol(Hashable, Protocol):
     def kind(self) -> str: ...
 
     def ident(self) -> str: ...
 
-    # The quantities this one is computed from, empty for a leaf. A quantity that several parents
-    # share is one node of a graph: a walk over it has to see it once, not once per path.
     def children(self) -> Sequence[QuantityProtocol]: ...
 
-    # A quantity evaluates to a sequence of curves: empty when absent, one for an ordinary quantity,
-    # and several when a fan-out leaf (e.g. a query matching many services) expands into one curve
-    # per matched series.
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]: ...
 
 
 @runtime_checkable
 class FanOutQuantity(Protocol):
-    """A quantity drawing one curve per matched series, unless aggregation_kind reduces them."""
-
     @property
     def aggregation_kind(self) -> object | None: ...
 
 
-# The leaves a graph fetches data for: the keys of EvaluationContext.fetched and what a walk over
-# a quantity collects. A metric is a quantity that draws itself, identified by its metric_name -
-# that is what sets it apart from an expression node, which names children instead.
 @runtime_checkable
 class MetricProtocol(QuantityProtocol, Protocol):
     @property
@@ -88,7 +72,6 @@ class MetricProtocol(QuantityProtocol, Protocol):
 
 
 def fetch_leaves(quantity: QuantityProtocol) -> Sequence[MetricProtocol]:
-    """The fetch leaves the quantity reaches, each once, in the order they first appear."""
     leaves: list[MetricProtocol] = []
     walked: set[QuantityProtocol] = set()
     stack = [quantity]

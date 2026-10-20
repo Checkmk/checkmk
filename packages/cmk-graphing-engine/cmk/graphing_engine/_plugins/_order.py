@@ -8,7 +8,6 @@ from typing import Final
 
 from ._types import ApiGraph
 
-# Graph order from 2.2 but slightly adapted
 GRAPHS_ORDER = [
     "apache_status",
     "bufferpool_hitratios",

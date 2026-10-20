@@ -20,8 +20,6 @@ from ._types import ApiGraph, ApiQuantity, is_scalar, metric_names_in_quantity
 
 
 class QuantityBuilderProtocol(Protocol):
-    """Combines what a graph draws for each matched object into the one quantity drawing them."""
-
     def __call__(self, per_object: Sequence[QuantityProtocol]) -> QuantityProtocol: ...
 
 
@@ -38,13 +36,9 @@ class _ParseContext:
     registered_metrics: Mapping[str, metrics_v1.Metric]
 
     def single_object(self) -> Service | None:
-        # A rule names one object's thresholds; over several matched ones there is none to name them
-        # against, so no rule is built.
         return self.services[0] if len(self.services) == 1 else None
 
     def object_for(self, bound: ApiQuantity) -> Service | None:
-        # A bound naming a metric is read from one object; over several matched ones there is none, so
-        # that end is left to auto-scale. A bound of constants alone is read without one.
         if any(metric_names_in_quantity(bound)):
             return self.single_object()
         return self.services[0]
@@ -53,8 +47,6 @@ class _ParseContext:
         return attributes_of_quantity(quantity, self.localizer, self.registered_metrics)
 
     def drawn(self, quantity: ApiQuantity) -> QuantityProtocol:
-        # Built once per matched object and combined, so an operation only ever takes that object's
-        # operands - never a quantity spanning the objects, which cannot be an operand.
         return self.quantity_builder(
             [parse_quantity(quantity, service) for service in self.services]
         )
@@ -87,8 +79,6 @@ def _widest_bound(
 ) -> Bound | None:
     if isinstance(of_upper, int | float) and isinstance(of_lower, int | float):
         return pick(of_upper, of_lower)
-    # Two quantity bounds cannot be compared before they are evaluated, so the upper half's wins; a
-    # half whose end was dropped has none, and then the other half's end is the range.
     return of_lower if of_upper is None else of_upper
 
 
@@ -102,9 +92,6 @@ def _bidirectional_range(
         return lower
     if lower is None:
         return upper
-    # The graph draws both halves around one axis, so its range has to span both. Each end widens on
-    # its own: taking only the upper half's whenever any single bound was a quantity threw away the
-    # ends that could be compared.
     return MinimalRange(
         lower=_widest_bound(upper.lower, lower.lower, min),
         upper=_widest_bound(upper.upper, lower.upper, max),

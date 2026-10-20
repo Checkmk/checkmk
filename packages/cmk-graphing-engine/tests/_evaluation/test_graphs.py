@@ -303,6 +303,33 @@ def test_evaluate_graph_rule_id_reflects_the_scalar_and_metric() -> None:
     assert result.rules[0].id == "scalar_of(warning,rrd_metric(h/svc/a))"
 
 
+def test_a_rule_without_a_value_still_counts_towards_later_ids() -> None:
+    a = _metric("a")
+    graph = Graph(
+        name="g",
+        title="g",
+        kind="test",
+        rules=[
+            Rule(
+                curve=Curve(
+                    quantity=ScalarOf(metric=a, scalar_kind=ScalarKind.WARNING),
+                    attributes=_attrs("Warning"),
+                    source_id="threshold",
+                ),
+                inverse=False,
+            ),
+            Rule(
+                curve=Curve(
+                    quantity=Constant(5.0), attributes=_attrs("Five"), source_id="threshold"
+                ),
+                inverse=False,
+            ),
+        ],
+    )
+    result = _evaluate_graph(graph, _context({a: _data(value=1.0)}, {}))
+    assert [rule.id for rule in result.rules] == ["threshold#2"]
+
+
 def test_evaluate_graph_preserves_ids_across_recalculation() -> None:
     a, b = _metric("a"), _metric("b")
     graph = Graph(

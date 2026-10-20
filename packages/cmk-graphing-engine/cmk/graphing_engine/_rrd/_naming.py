@@ -26,8 +26,6 @@ def rrd_metric_name(text: str) -> MetricName:
 
 @dataclass(frozen=True, kw_only=True)
 class Service:
-    # The monitoring site the service lives on, when known. Carried through matching so the metrics
-    # built for the service can be tagged with it; None means "site not (yet) known".
     site_id: SiteID | None = None
     host_name: HostName
     service_name: ServiceName

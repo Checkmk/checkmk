@@ -6,7 +6,7 @@
 from collections.abc import Sequence
 from statistics import fmean
 
-from cmk.graphing_engine._data._timeseries import TimeRange, TimeSeries, timestamps
+from cmk.graphing_engine._data._timeseries import point_count, TimeRange, TimeSeries, timestamps
 
 from ._metrics import ConsolidationFunction
 
@@ -64,7 +64,7 @@ def resample(
     if time_series.time_range == time_range:
         return time_series
     if not time_series.values or time_series.time_range.step <= 0:
-        return TimeSeries(time_range=time_range, values=[None] * len(timestamps(time_range)))
+        return TimeSeries(time_range=time_range, values=[None] * point_count(time_range))
     values = (
         _downsample(time_series, time_range, consolidation_function)
         if time_range.step >= time_series.time_range.step

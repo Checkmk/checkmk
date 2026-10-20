@@ -20,21 +20,26 @@ class TimeSeries:
     values: Sequence[float | None]
 
 
-def timestamps(time_range: TimeRange) -> Sequence[int]:
+def point_count(time_range: TimeRange) -> int:
     if time_range.step <= 0:
-        return []
-    num_points = max(0, (time_range.end - time_range.start) // time_range.step)
-    return [time_range.start + (index + 1) * time_range.step for index in range(num_points)]
+        return 0
+    return max(0, (time_range.end - time_range.start) // time_range.step)
+
+
+def timestamps(time_range: TimeRange) -> Sequence[int]:
+    return [
+        time_range.start + (index + 1) * time_range.step for index in range(point_count(time_range))
+    ]
 
 
 def fitted(time_series: TimeSeries, time_range: TimeRange) -> TimeSeries:
-    num_points = len(timestamps(time_range))
+    num_points = point_count(time_range)
     values = list(time_series.values[:num_points])
     return TimeSeries(time_range=time_range, values=values + [None] * (num_points - len(values)))
 
 
 def constant_time_series(value: float | None, time_range: TimeRange) -> TimeSeries:
-    return TimeSeries(time_range=time_range, values=[value] * len(timestamps(time_range)))
+    return TimeSeries(time_range=time_range, values=[value] * point_count(time_range))
 
 
 def mapped_series(time_series: TimeSeries, transform: Callable[[float], float]) -> TimeSeries:

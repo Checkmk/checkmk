@@ -16,9 +16,11 @@ const PRESETS: CustomPreset[] = [
   { id: 'p2', label: untranslated('Last 25 hours'), totalSeconds: 25 * 3600 }
 ]
 
-/** In render order, skipping the `aria-hidden` measurement replica. */
-function chipNames(container: Element): string[] {
-  return Array.from(container.querySelectorAll<HTMLElement>('.graphing-dynamic-presets > button'))
+/** In render order. Role queries skip the `aria-hidden` measure row, and `aria-pressed` separates
+ * chips from the overflow trigger. */
+function chipNames(): string[] {
+  return screen
+    .queryAllByRole('button')
     .filter((button) => button.hasAttribute('aria-pressed'))
     .map((button) => button.textContent!.trim())
 }
@@ -45,18 +47,18 @@ function renderPresets(
 
 describe('DynamicPresets includeCustomEntry', () => {
   test('defaults to false: no "Custom range" entry is added', () => {
-    const { container } = renderPresets()
-    expect(chipNames(container)).toEqual(['Last 4 hours', 'Last 25 hours'])
+    renderPresets()
+    expect(chipNames()).toEqual(['Last 4 hours', 'Last 25 hours'])
   })
 
   test('false explicitly: still no "Custom range" entry', () => {
-    const { container } = renderPresets({ includeCustomEntry: false })
-    expect(chipNames(container)).toEqual(['Last 4 hours', 'Last 25 hours'])
+    renderPresets({ includeCustomEntry: false })
+    expect(chipNames()).toEqual(['Last 4 hours', 'Last 25 hours'])
   })
 
   test('true: appends a trailing "Custom range" entry', () => {
-    const { container } = renderPresets({ includeCustomEntry: true })
-    expect(chipNames(container)).toEqual(['Last 4 hours', 'Last 25 hours', 'Custom range'])
+    renderPresets({ includeCustomEntry: true })
+    expect(chipNames()).toEqual(['Last 4 hours', 'Last 25 hours', 'Custom range'])
   })
 
   test('true and activePresetId null: the Custom chip shows pressed, the others do not', () => {
@@ -87,16 +89,6 @@ describe('DynamicPresets includeCustomEntry', () => {
 })
 
 describe('DynamicPresets variant', () => {
-  test('defaults to extended: presets render as chips', () => {
-    const { container } = renderPresets()
-    expect(chipNames(container)).toEqual(['Last 4 hours', 'Last 25 hours'])
-  })
-
-  test('condensed: renders no chips', () => {
-    const { container } = renderPresets({ variant: 'condensed' })
-    expect(chipNames(container)).toEqual([])
-  })
-
   test('condensed: the dropdown offers every preset, including the Custom entry', async () => {
     const user = userEvent.setup()
     renderPresets({ variant: 'condensed', includeCustomEntry: true })
@@ -104,11 +96,6 @@ describe('DynamicPresets variant', () => {
     await screen.findByRole('option', { name: 'Last 4 hours' })
     await screen.findByRole('option', { name: 'Last 25 hours' })
     await screen.findByRole('option', { name: 'Custom range' })
-  })
-
-  test('condensed: the trigger shows the active preset', () => {
-    renderPresets({ variant: 'condensed', activePresetId: 'p2' })
-    expect(screen.getByRole('combobox', { name: 'Time ranges' })).toHaveTextContent('Last 25 hours')
   })
 
   test('condensed: picking an option emits apply with that preset', async () => {

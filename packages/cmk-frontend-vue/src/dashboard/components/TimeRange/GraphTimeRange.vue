@@ -4,18 +4,20 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { getLocalTimeZone, parseDate, today } from '@internationalized/date'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
-import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
-import { type Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import type { Ref } from 'vue'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, shallowRef, watch } from 'vue'
+
+import TimeRangePresetRow from '@/lib/time-range-presets/TimeRangePresetRow.vue'
+import type { TimeRangePresetItem } from '@/lib/time-range-presets/types'
 
 import DateRangeFields from './DateRangeFields.vue'
 import DurationFields from './DurationFields.vue'
-import type { PreDefinedTimeRange } from './types'
+import type { DateRange, PreDefinedTimeRange } from './types'
 
 const { _t } = usei18n()
 
@@ -36,6 +38,8 @@ export interface Age {
   minutes: number
   seconds: number
 }
+
+const presetsLoaded = ref(false)
 
 // The keys to predefinedDurationSeconds and predefinedCalendarTitles combined are the complete set
 // of `_Predefined` keys from the API. The API's `_Predefined` keys are a mix of trailing durations
@@ -123,7 +127,7 @@ async function loadApiDurationGraphTimeranges(): Promise<GraphTimerangeApiResult
   return unwrap(await client.GET('/domain-types/graph_timerange/collections/all')).value
 }
 
-const dropdownOptions = computed<Suggestion[]>(() => {
+const dropdownOptions = computed<TimeRangePresetItem[]>(() => {
   // The configurable duration ranges are the single source of truth for trailing duration ranges
   // ("last N ...")
   const durationRanges = apiDurationTimeranges.value.map((range) => ({
@@ -151,17 +155,11 @@ const customDuration: Ref<Age> = ref({
   seconds: 0
 })
 
-const customDurationDate = ref({
-  from: {
-    year: new Date().getFullYear(),
-    month: new Date().getMonth() + 1,
-    day: new Date().getDate()
-  },
-  to: {
-    year: new Date().getFullYear(),
-    month: new Date().getMonth() + 1,
-    day: new Date().getDate()
-  }
+// shallowRef: a deep ref would unwrap CalendarDate and drop its private fields from the type.
+// DateRangeFields always emits a new DateRange object, so shallow reactivity is enough.
+const customDurationDate = shallowRef<DateRange>({
+  from: today(getLocalTimeZone()),
+  to: today(getLocalTimeZone())
 })
 
 function getDropdownOptionFromTimerange(timerange: GraphTimerange): string | null {
@@ -187,6 +185,7 @@ function getDropdownOptionFromTimerange(timerange: GraphTimerange): string | nul
 
 onMounted(async () => {
   apiDurationTimeranges.value = await loadApiDurationGraphTimeranges()
+  presetsLoaded.value = true
 
   if (selectedTimerange.value) {
     const option = getDropdownOptionFromTimerange(selectedTimerange.value)
@@ -208,19 +207,9 @@ onMounted(async () => {
     if (selectedTimerange.value.type === 'age' && selectedTimerange.value.age) {
       customDuration.value = { ...selectedTimerange.value.age }
     } else if (selectedTimerange.value.type === 'date' && selectedTimerange.value.date_range) {
-      const fromDate = new Date(selectedTimerange.value.date_range.from)
-      const toDate = new Date(selectedTimerange.value.date_range.to)
       customDurationDate.value = {
-        from: {
-          year: fromDate.getFullYear(),
-          month: fromDate.getMonth() + 1,
-          day: fromDate.getDate()
-        },
-        to: {
-          year: toDate.getFullYear(),
-          month: toDate.getMonth() + 1,
-          day: toDate.getDate()
-        }
+        from: parseDate(selectedTimerange.value.date_range.from),
+        to: parseDate(selectedTimerange.value.date_range.to)
       }
     }
   }
@@ -246,17 +235,11 @@ watch(
         predefined: null
       }
     } else if (selectedOption === customDateOptionName) {
-      const getApiDate = (date: { year: number; month: number; day: number }): string => {
-        const paddedMonth = String(date.month).padStart(2, '0')
-        const paddedDay = String(date.day).padStart(2, '0')
-        return `${date.year}-${paddedMonth}-${paddedDay}`
-      }
-
       selectedTimerange.value = {
         type: 'date',
         date_range: {
-          from: getApiDate(customDurationDate.value.from),
-          to: getApiDate(customDurationDate.value.to)
+          from: customDurationDate.value.from.toString(),
+          to: customDurationDate.value.to.toString()
         },
         duration: null,
         predefined: null,
@@ -283,12 +266,22 @@ const isCustomDateSelected = computed(() => selectedDropdownOption.value === cus
 
 <template>
   <div>
-    <CmkDropdown
-      v-model="selectedDropdownOption"
-      :options="{ type: 'fixed', suggestions: dropdownOptions }"
-      :label="_t('Time range')"
+    <TimeRangePresetRow
+      v-if="presetsLoaded"
+      class="db-graph-time-range__presets"
+      :presets="dropdownOptions"
+      :selected-name="selectedDropdownOption"
+      @select="selectedDropdownOption = $event.name"
     />
     <DurationFields v-if="isCustomTimeSelected" v-model="customDuration" />
     <DateRangeFields v-if="isCustomDateSelected" v-model="customDurationDate" />
   </div>
 </template>
+
+<style scoped>
+/* Ignore the chips' own width when the ancestors size themselves: otherwise every chip widens
+   the container on the first frame and each trim shrinks it, dropping chips one at a time. */
+.db-graph-time-range__presets {
+  contain: inline-size;
+}
+</style>

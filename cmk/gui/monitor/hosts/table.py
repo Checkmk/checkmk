@@ -6,11 +6,14 @@
 from ._api._list_hosts import HostEntry, HostTable
 from ._exceptions import InvalidFilterError
 from ._folder import MonitorFolders
-from ._table_catalog import HOST_TABLE, HostTableCatalog
+from ._models import HostOptionalField
+from ._table_catalog import ALL_HOSTS_TABLE, HOST_TABLE, HostTableCatalog
 
 __all__ = [
+    "ALL_HOSTS_TABLE",
     "HOST_TABLE",
     "HostEntry",
+    "HostOptionalField",
     "HostTable",
     "HostTableCatalog",
     "InvalidFilterError",

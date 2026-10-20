@@ -18,8 +18,9 @@ the REST API (see `Data model`_), or for many hosts at once with the relation
 detection. In the monitoring GUI the relations show up on the page
 "All hosts" (``monitor_all_hosts.py``): as a column with the number of related
 hosts, and as cards of the related hosts (with their state) in the host
-slide-in. The classic views, including the view "All hosts" (``allhosts``), do
-not show relations.
+slide-in. The same column is available in the host table element of PDF reports
+(Pro editions and above, ``reporting/_element/_host_table.py``). The classic
+views, including the view "All hosts" (``allhosts``), do not show relations.
 
 Relations are a feature of the web components, not of the core or the check
 engine.
@@ -100,9 +101,9 @@ The main requirements we need to meet are:
   host in the host properties or through the REST API must keep the relations
   of unknown kinds, as neither can show them (see `Risks and technical debts`_
   for what is still dropped).
-* The page "All hosts" and the host slide-in must only show what the user is
-  allowed to see. A related host the user cannot see is neither shown nor
-  counted there.
+* The page "All hosts", the host slide-in and the host table of PDF reports
+  must only show what the user is allowed to see. A related host the user
+  cannot see is neither shown nor counted there.
 * Setting up relations for a fleet of tens of thousands of hosts must not mean
   editing every host by hand. At the same time nothing may be stored that the
   user did not confirm.
@@ -120,10 +121,10 @@ Quality goals
 2. **Robustness:** A broken related host does not prevent saving a host, unless
    the save changes the relation to that host. A failed export does not fail the
    activation (outside of debug mode).
-3. **Confidentiality:** The page "All hosts" and the host slide-in only reveal
-   related hosts the user may see, and a multi-tenant site only learns about
-   hosts of its customer. The raw custom variable does not meet this goal (see
-   `Security considerations`_).
+3. **Confidentiality:** The page "All hosts", the host slide-in and the host
+   table of PDF reports only reveal related hosts the user may see, and a
+   multi-tenant site only learns about hosts of its customer. The raw custom
+   variable does not meet this goal (see `Security considerations`_).
 4. **Compatibility:** Configurations of other Checkmk versions are read without
    failing, and relations of unknown kinds are kept where possible.
 5. **Scalability:** What one host shows stays bounded, however many relations it
@@ -390,6 +391,9 @@ Monitoring GUI:
 * ``packages/cmk-frontend-vue/src/monitoring/all-hosts/``: The relations column
   and the related host cards in the slide-in
   (``components/slide-in/HostRelationsSection.vue``).
+* ``cmk/gui/nonfree/pro/reporting/_element/_host_table.py``: The relations
+  column of the host table in PDF reports. Its column and the queried field
+  come from ``ALL_HOSTS_TABLE`` in ``cmk/gui/monitor/hosts/_table_catalog.py``.
 * ``cmk/gui/painter/painters.py``: The legacy painter "Host custom
   attributes" hides the variable.
 
@@ -621,6 +625,9 @@ Monitoring
   (by site and name) is in this set or, for users who see all hosts, is on a
   site that currently cannot be reached. Sites the user disabled do not count
   as unreachable.
+* The **host table of PDF reports** offers the relations column, too, and
+  counts with the same query (``HostTable.list``) and the permissions of the
+  user the report is rendered for.
 * The **host slide-in** shows the first ``MAX_RESOLVED_RELATIONS`` related hosts
   the user may see, in the order of the export, with their state and service
   counts. ``more_relations`` says that there are more. It uses the same set of
@@ -856,11 +863,12 @@ Security considerations
   only reads hosts in folders the user may read.
   Scan results are bound to the user who started the scan, because the
   endpoints do not require the permission to see the background jobs of others.
-* **Information in the monitoring:** The page "All hosts" and the host slide-in
-  only show and count related hosts the user may see. The raw ``CMK_RELATIONS``
-  variable, however, contains the names and sites of *all* related hosts. The
-  legacy painter "Host custom attributes" hides it, but the variable reaches
-  everyone who can read the custom variables of the host:
+* **Information in the monitoring:** The page "All hosts", the host slide-in and
+  the host table of PDF reports only show and count related hosts the user may
+  see. The raw ``CMK_RELATIONS`` variable, however, contains the names and sites
+  of *all* related hosts. The legacy painter "Host custom attributes" hides it,
+  but the variable reaches everyone who can read the custom variables of the
+  host:
 
   * Livestatus (``custom_variables`` of the ``hosts`` table),
   * the public REST API, e.g. the host collection with ``custom_variables`` in

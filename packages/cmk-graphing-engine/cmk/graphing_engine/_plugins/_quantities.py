@@ -66,15 +66,16 @@ def attributes_of_quantity(
             return scalar_attributes(
                 attributes_of_quantity(quantity.metric_name, localizer, registered_metrics),
                 scalar_kind_of(quantity),
-                None,
                 localizer,
             )
         case metrics_v1.MinimumOf() | metrics_v1.MaximumOf():
-            return scalar_attributes(
+            extremum = scalar_attributes(
                 attributes_of_quantity(quantity.metric_name, localizer, registered_metrics),
                 scalar_kind_of(quantity),
-                parse_color(quantity.color),
                 localizer,
+            )
+            return CurveAttributes(
+                title=extremum.title, unit=extremum.unit, color=parse_color(quantity.color)
             )
         case metrics_v1.Sum() | metrics_v1.Difference():
             # A sum and a difference are in the unit of what they add up or take apart, so the API

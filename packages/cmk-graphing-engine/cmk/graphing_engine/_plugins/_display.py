@@ -159,7 +159,6 @@ def metric_display_attributes(
 def scalar_attributes(
     metric_attributes: CurveAttributes,
     scalar_kind: ScalarKind,
-    color: str | None,
     localizer: Callable[[str], str],
 ) -> CurveAttributes:
     label: str
@@ -182,5 +181,5 @@ def scalar_attributes(
     return CurveAttributes(
         title=localizer(label) % {"title": metric_attributes.title},
         unit=metric_attributes.unit,
-        color=color or type_color or metric_attributes.color,
+        color=type_color or metric_attributes.color,
     )

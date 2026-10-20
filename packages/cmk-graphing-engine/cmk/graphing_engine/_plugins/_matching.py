@@ -12,6 +12,7 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing_engine._data._fetched import ScalarKind
 from cmk.graphing_engine._data._naming import MetricName
+from cmk.graphing_engine._data._units import CurveAttributes
 from cmk.graphing_engine._graphs._graph import Curve, Graph, Line, Rule, Stack
 from cmk.graphing_engine._quantities._quantity import fetch_leaves
 from cmk.graphing_engine._rrd._fetch import FetchMetricNamesProtocol
@@ -107,12 +108,27 @@ def _add_predictive_lines(
     )
 
 
-_FALLBACK_SCALAR_KINDS = (
+_THRESHOLD_KINDS = (
     ScalarKind.WARNING,
     ScalarKind.CRITICAL,
     ScalarKind.LOWER_WARNING,
     ScalarKind.LOWER_CRITICAL,
 )
+
+
+def threshold_rules(
+    metric: RRDMetric, metric_attributes: CurveAttributes, localizer: Callable[[str], str]
+) -> Sequence[Rule]:
+    return [
+        Rule(
+            curve=Curve(
+                quantity=ScalarOf(metric=metric, scalar_kind=scalar_kind),
+                attributes=scalar_attributes(metric_attributes, scalar_kind, localizer),
+            ),
+            inverse=False,
+        )
+        for scalar_kind in _THRESHOLD_KINDS
+    ]
 
 
 @dataclass(frozen=True)
@@ -166,22 +182,11 @@ def build_matched_graphs(
     def _fallback_rules(name: MetricName) -> Sequence[Rule]:
         if single_service is None:
             return ()
-        metric = rrd_metric_of(single_service, name)
-        return [
-            Rule(
-                curve=Curve(
-                    quantity=ScalarOf(metric=metric, scalar_kind=scalar_kind),
-                    attributes=scalar_attributes(
-                        metric_display_attributes(name, localizer, registered_metrics),
-                        scalar_kind,
-                        None,
-                        localizer,
-                    ),
-                ),
-                inverse=False,
-            )
-            for scalar_kind in _FALLBACK_SCALAR_KINDS
-        ]
+        return threshold_rules(
+            rrd_metric_of(single_service, name),
+            metric_display_attributes(name, localizer, registered_metrics),
+            localizer,
+        )
 
     def _single_metric_graph(name: MetricName) -> Graph:
         return Graph(

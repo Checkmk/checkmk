@@ -99,6 +99,7 @@ from ._plugins._matching import (
     GraphRequest,
     RequestedGraph,
     RequestedMetric,
+    threshold_rules,
 )
 from ._plugins._order import sort_registered_graph_plugins
 from ._plugins._prediction import (
@@ -166,6 +167,7 @@ from ._rrd._performance_data import (
 from ._rrd._resample import resample
 
 __all__ = [
+    "threshold_rules",
     "build_prediction_graph",
     "Direction",
     "PREDICTION_KIND",

@@ -14,9 +14,11 @@ from cmk.graphing_engine import (
     build_matched_graphs,
     Constant,
     Curve,
+    CurveAttributes,
     Difference,
     evaluate_graphs,
     EvaluatedGraph,
+    FALLBACK_UNIT,
     FetchedData,
     Graph,
     GraphRequest,
@@ -39,6 +41,7 @@ from cmk.graphing_engine import (
     ServiceName,
     Stack,
     Sum,
+    threshold_rules,
     TimeRange,
     TimeSeries,
 )
@@ -119,7 +122,7 @@ def _fallback(name: MetricName) -> Graph:
                 curve=Curve(
                     quantity=ScalarOf(metric=_rrd(name), scalar_kind=scalar_kind),
                     attributes=scalar_attributes(
-                        metric_display_attributes(name, _id, _METRICS), scalar_kind, None, _id
+                        metric_display_attributes(name, _id, _METRICS), scalar_kind, _id
                     ),
                 ),
                 inverse=False,
@@ -1048,3 +1051,25 @@ def test_build_matched_graphs_lets_a_kept_end_win_over_a_dropped_one_when_bidire
     # The upper half's threshold end is dropped, so the lower half's numeric end is the range - where
     # a threshold resolved against one arbitrary object would have masked it.
     assert discovered.vertical_range == MinimalRange(lower=0, upper=50)
+
+
+def test_threshold_rules_draw_the_warning_and_critical_levels_of_a_metric() -> None:
+    metric = _rrd(MetricName("util"))
+
+    def rule(scalar_kind: ScalarKind, title: str, color: str) -> Rule:
+        return Rule(
+            curve=Curve(
+                quantity=ScalarOf(metric=metric, scalar_kind=scalar_kind),
+                attributes=CurveAttributes(title=title, unit=FALLBACK_UNIT, color=color),
+            ),
+            inverse=False,
+        )
+
+    assert threshold_rules(
+        metric, CurveAttributes(title="Util", unit=FALLBACK_UNIT, color="#000000"), _id
+    ) == [
+        rule(ScalarKind.WARNING, "Warning of Util", "#ffd000"),
+        rule(ScalarKind.CRITICAL, "Critical of Util", "#ff3232"),
+        rule(ScalarKind.LOWER_WARNING, "Warning (lower) of Util", "#ffd000"),
+        rule(ScalarKind.LOWER_CRITICAL, "Critical (lower) of Util", "#ff3232"),
+    ]

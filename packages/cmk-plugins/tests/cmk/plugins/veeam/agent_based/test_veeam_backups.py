@@ -189,7 +189,7 @@ def test_unparsable_end_time_is_unknown() -> None:
 
     assert results == [
         Result(state=State.OK, summary="Status: Success"),
-        Result(state=State.UNKNOWN, summary="FAILED TO PARSE -> End time: (garbage)"),
+        Result(state=State.UNKNOWN, summary="End time: Unparsable value (garbage)"),
     ]
 
 
@@ -240,7 +240,7 @@ def test_check_veeam_backups_unparsable_processing_rate_is_surfaced_as_raw_text(
     results = list(check_veeam_backups("odd_rate", PARAMS, section, now=NOW))
     assert not any(isinstance(r, Metric) and r.name == "backup_avgspeed" for r in results)
     assert any(
-        r.state == State.OK and "unparsable value (18.3 MiB/s)" in r.details
+        r.state == State.OK and "Unparsable value (18.3 MiB/s)" in r.details
         for r in results
         if isinstance(r, Result)
     )
@@ -251,7 +251,7 @@ def test_check_veeam_backups_unparsable_duration_is_omitted() -> None:
     results = list(check_veeam_backups("odd_duration", PARAMS, section, now=NOW))
     assert not any(isinstance(r, Metric) and r.name == "backup_duration" for r in results)
     assert any(
-        r.state == State.OK and "Duration: unparsable value (N/A)" in r.details
+        r.state == State.OK and "Duration: Unparsable value (N/A)" in r.details
         for r in results
         if isinstance(r, Result)
     )

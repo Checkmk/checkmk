@@ -40,6 +40,9 @@ class Unparsable:
 
     raw: str
 
+    def as_result_text(self, field_name: str) -> str:
+        return f"{field_name}: Unparsable value ({self.raw})"
+
 
 @dataclass(frozen=True, kw_only=True)
 class BackupTask:
@@ -195,7 +198,7 @@ def check_veeam_backups(
     if isinstance(task.processing_rate, Unparsable):
         yield Result(
             state=State.OK,
-            notice=f"Average speed: unparsable value ({task.processing_rate.raw})",
+            notice=task.processing_rate.as_result_text("Average speed"),
         )
     elif task.processing_rate is not None:
         yield from check_levels(
@@ -219,7 +222,7 @@ def check_veeam_backups(
             case Unparsable():
                 yield Result(
                     state=State.OK,
-                    notice=f"Duration: unparsable value ({task.duration.raw})",
+                    notice=task.duration.as_result_text("Duration"),
                 )
             case None:
                 pass
@@ -233,7 +236,7 @@ def _check_last_backup(
     elif isinstance(end_time, Unparsable):
         yield Result(
             state=State.UNKNOWN,
-            summary=f"FAILED TO PARSE -> End time: ({end_time.raw})",
+            summary=end_time.as_result_text("End time"),
         )
     elif (age := now - end_time) < 0:
         yield Result(state=State.UNKNOWN, summary="Last backup: end time is in the future")

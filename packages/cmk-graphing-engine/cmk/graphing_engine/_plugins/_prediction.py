@@ -10,7 +10,7 @@ from typing import Final, Literal
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing_engine._data._naming import MetricName
 from cmk.graphing_engine._data._timeseries import TimeRange
-from cmk.graphing_engine._data._units import CurveAttributes
+from cmk.graphing_engine._data._units import CurveAttributes, Unit
 from cmk.graphing_engine._graphs._graph import Curve, Graph, Line, Region
 from cmk.graphing_engine._rrd._metrics import (
     ConsolidationFunction,
@@ -75,36 +75,32 @@ class PredictionGraphContext:
         )
 
 
-def _attributes(title: str, color: str, unit_of: CurveAttributes) -> CurveAttributes:
-    return CurveAttributes(title=title, unit=unit_of.unit, color=color)
-
-
-def _area_title(
-    title: str, direction: Direction, drawn: Sequence[Direction], texts: PredictionTexts
-) -> str:
-    if len(drawn) < 2:
-        return title
-    return (
-        texts.upper_area % {"area": title}
-        if direction == "upper"
-        else texts.lower_area % {"area": title}
-    )
-
-
 def _level_regions(
-    context: PredictionGraphContext, unit_of: CurveAttributes, texts: PredictionTexts
+    context: PredictionGraphContext, unit: Unit, texts: PredictionTexts
 ) -> Sequence[Region]:
     has_upper = "upper" in context.directions
     has_lower = "lower" in context.directions
 
     def curve(curve_kind: PredictionCurveKind) -> Curve:
-        return context.curve_of(curve_kind, _attributes("", _REFERENCE_COLOR, unit_of))
+        return context.curve_of(
+            curve_kind, CurveAttributes(title="", unit=unit, color=_REFERENCE_COLOR)
+        )
 
     def zone(lower: Curve | None, upper: Curve | None, title: str, color: str) -> Region:
-        return Region(lower=lower, upper=upper, attributes=_attributes(title, color, unit_of))
+        return Region(
+            lower=lower,
+            upper=upper,
+            attributes=CurveAttributes(title=title, unit=unit, color=color),
+        )
 
     def area(title: str, direction: Direction) -> str:
-        return _area_title(title, direction, context.directions, texts)
+        if len(context.directions) < 2:
+            return title
+        return (
+            texts.upper_area % {"area": title}
+            if direction == "upper"
+            else texts.lower_area % {"area": title}
+        )
 
     upper_warning = curve(PredictionCurveKind.UPPER_WARNING) if has_upper else None
     lower_warning = curve(PredictionCurveKind.LOWER_WARNING) if has_lower else None
@@ -131,13 +127,14 @@ def _level_regions(
 
 
 def _prediction_line(
-    context: PredictionGraphContext, unit_of: CurveAttributes, texts: PredictionTexts
+    context: PredictionGraphContext, unit: Unit, texts: PredictionTexts
 ) -> Line | None:
     for direction, reference_kind in _REFERENCE_OF_DIRECTION:
         if direction in context.directions:
             return Line(
                 curve=context.curve_of(
-                    reference_kind, _attributes(texts.prediction, _REFERENCE_COLOR, unit_of)
+                    reference_kind,
+                    CurveAttributes(title=texts.prediction, unit=unit, color=_REFERENCE_COLOR),
                 ),
                 inverse=False,
             )
@@ -163,15 +160,21 @@ def build_prediction_graph(
     observed_attributes = metric_attributes(str(context.metric_name), localizer, metrics)
     observed_curve = Curve(
         quantity=observed,
-        attributes=_attributes(observed_attributes.title, _OBSERVED_COLOR, observed_attributes),
+        attributes=CurveAttributes(
+            title=observed_attributes.title, unit=observed_attributes.unit, color=_OBSERVED_COLOR
+        ),
     )
     return Graph(
         name=f"prediction_{context.metric_name}",
         title=title,
         kind=kind,
-        regions=list(_level_regions(context, observed_attributes, texts)),
+        regions=list(_level_regions(context, observed_attributes.unit, texts)),
         lines=[
-            *([line] if (line := _prediction_line(context, observed_attributes, texts)) else []),
+            *(
+                [line]
+                if (line := _prediction_line(context, observed_attributes.unit, texts))
+                else []
+            ),
             Line(curve=observed_curve, inverse=False),
         ],
     )

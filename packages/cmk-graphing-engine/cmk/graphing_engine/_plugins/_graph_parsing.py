@@ -10,7 +10,6 @@ from typing import assert_never, Protocol
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
-from cmk.graphing_engine._data._units import CurveAttributes
 from cmk.graphing_engine._graphs._graph import Bound, Curve, Graph, Line, MinimalRange, Rule, Stack
 from cmk.graphing_engine._quantities._quantity import QuantityProtocol
 from cmk.graphing_engine._rrd._naming import Service
@@ -42,9 +41,6 @@ class _ParseContext:
         if any(metric_names_in_quantity(bound)):
             return self.single_object()
         return self.services[0]
-
-    def attributes(self, quantity: ApiQuantity) -> CurveAttributes:
-        return attributes_of_quantity(quantity, self.localizer, self.registered_metrics)
 
     def drawn(self, quantity: ApiQuantity) -> QuantityProtocol:
         return self.quantity_builder(
@@ -105,7 +101,12 @@ def _parse_lines(
     inverse: bool,
 ) -> tuple[Sequence[Stack], Sequence[Line], Sequence[Rule]]:
     def _curve(api_quantity: ApiQuantity, quantity: QuantityProtocol) -> Curve:
-        return Curve(quantity=quantity, attributes=context.attributes(api_quantity))
+        return Curve(
+            quantity=quantity,
+            attributes=attributes_of_quantity(
+                api_quantity, context.localizer, context.registered_metrics
+            ),
+        )
 
     stack_members = [_curve(q, context.drawn(q)) for q in graph.compound_lines if not is_scalar(q)]
     stacks = [Stack(members=stack_members, inverse=inverse)] if stack_members else []

@@ -133,6 +133,11 @@ class LambdaFunction:
     name: str
 
 
+@dataclass(frozen=True)
+class ECSCluster:
+    name: str
+
+
 # Each of these resources always goes to a piggyback host of its own.
 PiggybackResource = (
     ClassicLoadBalancer
@@ -145,6 +150,7 @@ PiggybackResource = (
     | RDSInstance
     | SNSTopic
     | LambdaFunction
+    | ECSCluster
 )
 
 HostedResource = AccountScope | EBSAttachment | CloudFrontDistribution | PiggybackResource
@@ -190,6 +196,8 @@ def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost | No
             return _sns_topic_host(resource)
         case LambdaFunction():
             return _lambda_function_host(resource)
+        case ECSCluster():
+            return _ecs_cluster_host(resource)
         case _:
             assert_never(resource)
 
@@ -292,6 +300,10 @@ def _sns_topic_host(topic: SNSTopic) -> TargetHost:
 
 def _lambda_function_host(function: LambdaFunction) -> TargetHost:
     return TargetHost(function.name)
+
+
+def _ecs_cluster_host(cluster: ECSCluster) -> TargetHost:
+    return TargetHost(cluster.name)
 
 
 def _hostname_from_name_and_region(name: str, region: str) -> TargetHost:

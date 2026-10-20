@@ -308,12 +308,27 @@ class ECS(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
+    @property
+    def host_labels(self) -> Mapping[str, str]:
+        return {"cmk/aws/service": "ecs"}
+
     @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+        # The label of each metric is the name of its cluster.
+        content_by_cluster: dict[str, list[Mapping[str, object]]] = {}
+        for row in raw_content.content:
+            content_by_cluster.setdefault(row["Label"], []).append(row)
+        return AWSComputedContent(content_by_cluster, raw_content.cache_timestamp)
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.ECSCluster(cluster_name)),
+                rows,
+                self.host_labels,
+            )
+            for cluster_name, rows in computed_content.content.items()
+        ]

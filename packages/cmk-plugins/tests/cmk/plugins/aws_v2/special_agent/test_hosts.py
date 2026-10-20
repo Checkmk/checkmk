@@ -19,6 +19,7 @@ from cmk.plugins.aws_v2.special_agent.hosts import (
     DynamoDBTable,
     EBSAttachment,
     ec2_instance_hosts,
+    ECSCluster,
     ElastiCacheNode,
     GlacierVault,
     HostedResource,
@@ -113,6 +114,7 @@ def test_ec2_instance_without_a_name_has_no_host(
         pytest.param(S3Bucket("bucket"), "bucket", id="s3 bucket"),
         pytest.param(SNSTopic("topic"), "topic", id="sns topic"),
         pytest.param(LambdaFunction("function"), "function", id="lambda function"),
+        pytest.param(ECSCluster("cluster"), "cluster", id="ecs cluster"),
     ],
 )
 def test_resource_goes_to_a_host_of_its_own(resource: PiggybackResource, expected: str) -> None:

@@ -7,6 +7,7 @@ from collections.abc import Callable, Mapping
 from typing import assert_never
 
 from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import Title
 from cmk.graphing_engine._data._fetched import ScalarKind
 from cmk.graphing_engine._data._units import (
     AutoPrecision,
@@ -98,13 +99,13 @@ FALLBACK_COLOR = _COLORS[metrics_v1.Color.GRAY]
 FALLBACK_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 
 
-def _predicted_of(metric_name: str) -> tuple[str, str] | None:
+def _predicted_of(metric_name: str) -> tuple[str, Title] | None:
     prefix, base = split_predict_prefix(metric_name)
     match prefix:
         case PredictPrefix.LOWER:
-            return base, " (lower levels)"
+            return base, Title(" (lower levels)")
         case PredictPrefix.UPPER:
-            return base, " (upper levels)"
+            return base, Title(" (upper levels)")
         case _:
             return None
 
@@ -137,7 +138,11 @@ def _prediction_attributes(
         predicted_metric_name, localizer, registered_metrics
     )
     return CurveAttributes(
-        title=localizer("Prediction of ") + predicted_attributes.title + localizer(levels),
+        title=(
+            Title("Prediction of ").localize(localizer)
+            + predicted_attributes.title
+            + levels.localize(localizer)
+        ),
         unit=predicted_attributes.unit,
         color=FALLBACK_COLOR,
     )
@@ -160,25 +165,25 @@ def scalar_attributes(
     scalar_kind: ScalarKind,
     localizer: Callable[[str], str],
 ) -> CurveAttributes:
-    label: str
+    label: Title
     type_color: str | None
     match scalar_kind:
         case ScalarKind.WARNING:
-            label, type_color = "Warning of %(title)s", "#ffd000"
+            label, type_color = Title("Warning of %(title)s"), "#ffd000"
         case ScalarKind.CRITICAL:
-            label, type_color = "Critical of %(title)s", "#ff3232"
+            label, type_color = Title("Critical of %(title)s"), "#ff3232"
         case ScalarKind.LOWER_WARNING:
-            label, type_color = "Warning (lower) of %(title)s", "#ffd000"
+            label, type_color = Title("Warning (lower) of %(title)s"), "#ffd000"
         case ScalarKind.LOWER_CRITICAL:
-            label, type_color = "Critical (lower) of %(title)s", "#ff3232"
+            label, type_color = Title("Critical (lower) of %(title)s"), "#ff3232"
         case ScalarKind.MINIMUM:
-            label, type_color = "Minimum of %(title)s", None
+            label, type_color = Title("Minimum of %(title)s"), None
         case ScalarKind.MAXIMUM:
-            label, type_color = "Maximum of %(title)s", None
+            label, type_color = Title("Maximum of %(title)s"), None
         case _:
             assert_never(scalar_kind)
     return CurveAttributes(
-        title=localizer(label) % {"title": attributes.title},
+        title=label.localize(localizer) % {"title": attributes.title},
         unit=attributes.unit,
         color=type_color or attributes.color,
     )

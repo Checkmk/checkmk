@@ -10,3 +10,7 @@ class HostNotFoundError(KeyError):
 
 class InvalidFilterError(ValueError):
     """Raised when a host filter cannot be applied to the configured sites."""
+
+
+class InvalidHostListingError(ValueError):
+    """Raised when a host listing is not one the list hosts endpoint accepts."""

@@ -55,13 +55,11 @@ from cmk.utils import paths
 from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
 
+from .._access import ALL_HOSTS_PERMISSION, LEGACY_ALL_HOSTS_VIEW_NAME
 from .._api._list_hosts import LIMIT_TIERS
 from .._impl import LiveStatusHostRepository
 
 _PAGE_TITLE = _("All hosts")
-
-_LEGACY_VIEW_NAME = "allhosts"
-_LEGACY_VIEW_PERMISSION = f"view.{_LEGACY_VIEW_NAME}"
 
 
 def monitor_all_hosts_visual_spec() -> Visual:
@@ -99,7 +97,7 @@ class MonitorAllHostsPage(Page):
 
     @override
     def page(self, ctx: PageContext) -> None:
-        user.need_permission(_LEGACY_VIEW_PERMISSION)
+        user.need_permission(ALL_HOSTS_PERMISSION)
 
         breadcrumb = _make_breadcrumb(ctx)
 
@@ -183,7 +181,7 @@ class MonitorAllHostsPage(Page):
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
                             ctx.request,
-                            vars_=[("view_name", _LEGACY_VIEW_NAME)],
+                            vars_=[("view_name", LEGACY_ALL_HOSTS_VIEW_NAME)],
                             filename="view.py",
                         ),
                         title=_("Return to classic view"),
@@ -216,7 +214,7 @@ def _availability_dropdowns() -> list[PageMenuDropdown]:
 
     availability_url = makeuri_contextless(
         request,
-        [("view_name", _LEGACY_VIEW_NAME), ("mode", "availability")],
+        [("view_name", LEGACY_ALL_HOSTS_VIEW_NAME), ("mode", "availability")],
         filename="view.py",
     )
 

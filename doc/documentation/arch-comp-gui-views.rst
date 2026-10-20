@@ -104,9 +104,12 @@ Interfaces
   consumers that query hosts, such as the dashboards and the PDF reports.
   Other components use only this module, not the package internals. It
   offers ``HostTable`` (with ``list`` and ``parse_filter``), the column
-  catalogs ``ALL_HOSTS_TABLE`` and ``HOST_TABLE`` and ``HostEntry``. The rows
-  are ``HostEntry``, the response model of the internal REST endpoint, so a
-  change of that model also changes what these consumers get.
+  catalogs ``ALL_HOSTS_TABLE`` and ``HOST_TABLE``, ``HostEntry``,
+  ``HostListing`` (which validates a request body of the internal REST
+  endpoint that lists hosts with the endpoint's own model) and
+  ``ALL_HOSTS_PERMISSION``, the permission the page "All hosts" needs. The
+  rows are ``HostEntry``, the response model of the internal REST endpoint,
+  so a change of that model also changes what these consumers get.
 * Livestatus, locally or via :doc:`arch-comp-liveproxyd` for remote sites.
 
 Coexistence
@@ -132,3 +135,4 @@ Risks and technical debts
   queried columns at runtime, which makes it hard to see what is queried.
 * The filter vocabulary of the monitoring pages is defined in the API, the
   Livestatus translation and the frontend. A change has to touch all three.
+  The instant report of All hosts reuses the API's model for it.

@@ -25,7 +25,13 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, RuleConditions, Ruleset
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
-from cmk.utils.rulesets.ruleset_matcher import TagCondition
+from cmk.utils.rulesets.ruleset_matcher import (
+    is_tag_condition_ne,
+    is_tag_condition_nor,
+    is_tag_condition_or,
+    is_tag_condition_tag_id,
+    TagCondition,
+)
 from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID, TagID
 
 
@@ -501,7 +507,7 @@ def _change_host_tags_in_rule(
     if not isinstance(operation, OperationReplaceGroupedTags):
         raise NotImplementedError()
 
-    tag_map: list[tuple[str | None, Any]] = list(operation.replace_tag_ids.items())
+    tag_map: list[tuple[TagID | None, Any]] = list(operation.replace_tag_ids.items())
     tag_map += [(tag_id, False) for tag_id in operation.remove_tag_ids]
 
     # Removal or renaming of single tag choices
@@ -516,7 +522,7 @@ def _change_host_tags_in_rule(
         if current_value is None:
             continue
 
-        if current_value not in (old_tag, {"$ne": old_tag}):
+        if old_tag not in _tag_ids_in_condition(current_value):
             continue  # old_tag id is not configured
 
         affected_rulesets.add(ruleset)
@@ -524,13 +530,12 @@ def _change_host_tags_in_rule(
         if mode == TagCleanupMode.CHECK:
             continue  # Skip modification
 
+        new_value = _replaced_tag_condition(current_value, old_tag, new_tag or None)
+
         # First remove current setting
         _remove_tag_group_condition(rule, operation.tag_group_id)
 
-        # In case it needs to be replaced with a new value, do it now
-        if new_tag:
-            was_negated = isinstance(current_value, dict) and "$ne" in current_value
-            new_value: TagCondition = {"$ne": new_tag} if was_negated else new_tag
+        if new_value is not None:
             rule.update_conditions(
                 RuleConditions(
                     host_folder=rule.conditions.host_folder,
@@ -541,13 +546,44 @@ def _change_host_tags_in_rule(
                     service_label_groups=rule.conditions.service_label_groups,
                 )
             )
-        # Example for current_value: {'$ne': 'my_tag'} / my_tag
-        elif mode == TagCleanupMode.DELETE and (
-            not isinstance(current_value, dict) and list(current_value)[0] not in ["$ne", "$nor"]
+        # Nothing left to match on: a positive condition can never match again
+        elif mode == TagCleanupMode.DELETE and not (
+            is_tag_condition_ne(current_value) or is_tag_condition_nor(current_value)
         ):
             ruleset.delete_rule(rule, create_change=True, use_git=use_git)
 
     return affected_rulesets
+
+
+def _tag_ids_in_condition(condition: TagCondition) -> Sequence[TagID | None]:
+    return (
+        condition["$or"]
+        if is_tag_condition_or(condition)
+        else condition["$nor"]
+        if is_tag_condition_nor(condition)
+        else [condition["$ne"]]
+        if is_tag_condition_ne(condition)
+        else [condition]
+        if is_tag_condition_tag_id(condition)
+        else []
+    )
+
+
+def _replaced_tag_condition(
+    condition: TagCondition, old_tag: TagID, new_tag: TagID | None
+) -> TagCondition | None:
+    """old_tag renamed to new_tag or dropped if new_tag is None, None if nothing is left"""
+
+    def replaced(tag_ids: Sequence[TagID | None]) -> list[TagID | None]:
+        return [new_tag if t == old_tag else t for t in tag_ids if new_tag or t != old_tag]
+
+    if is_tag_condition_or(condition):
+        return {"$or": remaining} if (remaining := replaced(condition["$or"])) else None
+    if is_tag_condition_nor(condition):
+        return {"$nor": remaining} if (remaining := replaced(condition["$nor"])) else None
+    if is_tag_condition_ne(condition):
+        return {"$ne": new_tag} if new_tag else None
+    return new_tag
 
 
 def _remove_tag_group_condition(rule: Rule, tag_group_id: TagGroupID) -> None:

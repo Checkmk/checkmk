@@ -13,15 +13,25 @@ import pytest
 from pytest_mock import MockerFixture
 
 import cmk.gui.nagvis._hosttags
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
+from cmk.gui.watolib.rulesets import (
+    AllRulesets,
+    FolderRulesets,
+    Rule,
+    RuleConditions,
+    RuleOptions,
+    Ruleset,
+)
 from cmk.gui.watolib.tags import (
     change_host_tags,
     OperationRemoveTagGroup,
+    OperationReplaceGroupedTags,
     TagCleanupMode,
     TagConfigFile,
 )
 from cmk.gui.watolib.utils import multisite_dir
 from cmk.utils import tags
+from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import TagGroupID, TagID
 
 
@@ -150,3 +160,128 @@ def test_change_host_tags_removes_tag_group_from_folder() -> None:
     assert [folder.name() for folder in affected_folders] == ["test_tag_group_removal"]
     assert not affected_hosts
     assert "tag_criticality" not in tree.folder("test_tag_group_removal").attributes
+
+
+def _save_networking_rule(tree: FolderTree, condition: TagCondition) -> None:
+    folder = tree.root_folder()
+    ruleset = Ruleset("only_hosts")
+    ruleset.append_rule(
+        folder,
+        Rule(
+            id_="1",
+            folder=folder,
+            ruleset=ruleset,
+            conditions=RuleConditions(
+                host_folder=folder.path(),
+                host_tags={TagGroupID("networking"): condition},
+                host_label_groups=None,
+                host_name=None,
+                service_description=None,
+                service_label_groups=None,
+            ),
+            options=RuleOptions(disabled=None, description="", comment="", docu_url=""),
+            value=True,
+        ),
+    )
+    FolderRulesets({ruleset.name: ruleset}, folder=folder).save_folder(
+        pprint_value=False, debug=False
+    )
+
+
+def _networking_conditions() -> list[TagCondition | None]:
+    return [
+        rule.conditions.host_tags.get(TagGroupID("networking"))
+        for _folder, _index, rule in AllRulesets.load_all_rulesets().get("only_hosts").get_rules()
+    ]
+
+
+@pytest.mark.usefixtures("with_admin_login")
+@pytest.mark.parametrize(
+    "condition",
+    [
+        pytest.param({"$or": [TagID("lan"), TagID("wan")]}, id="one of"),
+        pytest.param({"$nor": [TagID("lan"), TagID("wan")]}, id="none of"),
+    ],
+)
+def test_change_host_tags_finds_tag_in_list_condition(
+    condition: TagCondition,
+) -> None:
+    tree = folder_tree()
+    _save_networking_rule(tree, condition)
+
+    _affected_folders, _affected_hosts, affected_rulesets = change_host_tags(
+        OperationReplaceGroupedTags(
+            TagGroupID("networking"), remove_tag_ids=[TagID("lan")], replace_tag_ids={}
+        ),
+        TagCleanupMode.CHECK,
+        pprint_value=False,
+        debug=False,
+        use_git=False,
+    )
+
+    assert [ruleset.name for ruleset in affected_rulesets] == ["only_hosts"]
+
+
+@pytest.mark.usefixtures("with_admin_login")
+@pytest.mark.parametrize(
+    "condition, replace_tag_ids, mode, expected",
+    [
+        pytest.param(
+            {"$or": [TagID("lan"), TagID("wan")]},
+            {},
+            TagCleanupMode.DELETE,
+            [{"$or": [TagID("wan")]}],
+            id="remove from one of",
+        ),
+        pytest.param(
+            {"$nor": [TagID("lan"), TagID("wan")]},
+            {TagID("lan"): TagID("dmz")},
+            TagCleanupMode.DELETE,
+            [{"$nor": [TagID("dmz"), TagID("wan")]}],
+            id="rename in none of",
+        ),
+        pytest.param(
+            {"$or": [TagID("lan")]},
+            {},
+            TagCleanupMode.DELETE,
+            [],
+            id="emptied one of deletes rule",
+        ),
+        pytest.param(
+            {"$or": [TagID("lan")]},
+            {},
+            TagCleanupMode.REMOVE,
+            [None],
+            id="emptied one of drops condition",
+        ),
+        pytest.param(
+            {"$nor": [TagID("lan")]},
+            {},
+            TagCleanupMode.DELETE,
+            [None],
+            id="emptied none of drops condition",
+        ),
+    ],
+)
+def test_change_host_tags_updates_list_condition(
+    condition: TagCondition,
+    replace_tag_ids: dict[TagID | None, TagID],
+    mode: TagCleanupMode,
+    expected: list[TagCondition | None],
+) -> None:
+    tree = folder_tree()
+    _save_networking_rule(tree, condition)
+
+    change_host_tags(
+        OperationReplaceGroupedTags(
+            TagGroupID("networking"),
+            remove_tag_ids=[] if replace_tag_ids else [TagID("lan")],
+            replace_tag_ids=replace_tag_ids,
+        ),
+        mode,
+        pprint_value=False,
+        debug=False,
+        use_git=False,
+    )
+
+    assert _networking_conditions() == expected

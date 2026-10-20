@@ -65,3 +65,15 @@ def test_a_non_convertible_axis_unit_keeps_the_vertical_range() -> None:
     assert converted.vertical_range == EvaluatedVerticalRange(
         range_kind=VerticalRangeKind.MINIMAL, lower=0.0, upper=100.0
     )
+
+
+def test_a_converted_curve_carries_the_converted_symbol() -> None:
+    [line] = converted_graph(_graph(_CELSIUS), TemperatureUnit.FAHRENHEIT, None).lines
+    assert line.curve.attributes.unit == Unit(
+        notation=DecimalNotation("°F"), precision=AutoPrecision(2)
+    )
+
+
+def test_converting_a_converted_graph_again_changes_nothing() -> None:
+    converted = converted_graph(_graph(_CELSIUS), TemperatureUnit.FAHRENHEIT, None)
+    assert converted_graph(converted, TemperatureUnit.FAHRENHEIT, None) == converted

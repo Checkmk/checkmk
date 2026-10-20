@@ -10,7 +10,13 @@ from cmk.graphing_engine._data._temperature import (
     unit_conversion,
 )
 from cmk.graphing_engine._data._timeseries import mapped_series
-from cmk.graphing_engine._data._units import NonConvertibleUnit, Unit
+from cmk.graphing_engine._data._units import (
+    CurveAttributes,
+    NonConvertibleUnit,
+    notation_from_name,
+    notation_name,
+    Unit,
+)
 
 from ._graph_evaluation import (
     EvaluatedCurve,
@@ -23,13 +29,24 @@ from ._graph_evaluation import (
 )
 
 
+def _converted_attributes(attributes: CurveAttributes, symbol: str) -> CurveAttributes:
+    return CurveAttributes(
+        title=attributes.title,
+        unit=Unit(
+            notation=notation_from_name(notation_name(attributes.unit.notation), symbol),
+            precision=attributes.unit.precision,
+        ),
+        color=attributes.color,
+    )
+
+
 def _converted_curve(curve: EvaluatedCurve, temperature_unit: TemperatureUnit) -> EvaluatedCurve:
-    conversion = unit_conversion(curve.attributes.unit, temperature_unit).converter
+    conversion = unit_conversion(curve.attributes.unit, temperature_unit)
     return EvaluatedCurve(
         id=curve.id,
-        attributes=curve.attributes,
-        value=None if curve.value is None else conversion(curve.value),
-        time_series=mapped_series(curve.time_series, conversion),
+        attributes=_converted_attributes(curve.attributes, conversion.symbol),
+        value=None if curve.value is None else conversion.converter(curve.value),
+        time_series=mapped_series(curve.time_series, conversion.converter),
         source_id=curve.source_id,
         series_attributes=curve.series_attributes,
     )
@@ -43,11 +60,11 @@ def _converted_stack(stack: EvaluatedStack, temperature_unit: TemperatureUnit) -
 
 
 def _converted_rule(rule: EvaluatedRule, temperature_unit: TemperatureUnit) -> EvaluatedRule:
-    conversion = unit_conversion(rule.attributes.unit, temperature_unit).converter
+    conversion = unit_conversion(rule.attributes.unit, temperature_unit)
     return EvaluatedRule(
         id=rule.id,
-        attributes=rule.attributes,
-        value=conversion(rule.value),
+        attributes=_converted_attributes(rule.attributes, conversion.symbol),
+        value=conversion.converter(rule.value),
         inverse=rule.inverse,
     )
 
@@ -55,12 +72,12 @@ def _converted_rule(rule: EvaluatedRule, temperature_unit: TemperatureUnit) -> E
 def _converted_region(
     region: EvaluatedRegion, temperature_unit: TemperatureUnit
 ) -> EvaluatedRegion:
-    conversion = unit_conversion(region.attributes.unit, temperature_unit).converter
+    conversion = unit_conversion(region.attributes.unit, temperature_unit)
     return EvaluatedRegion(
         id=region.id,
-        attributes=region.attributes,
-        lower=None if region.lower is None else mapped_series(region.lower, conversion),
-        upper=None if region.upper is None else mapped_series(region.upper, conversion),
+        attributes=_converted_attributes(region.attributes, conversion.symbol),
+        lower=None if region.lower is None else mapped_series(region.lower, conversion.converter),
+        upper=None if region.upper is None else mapped_series(region.upper, conversion.converter),
     )
 
 

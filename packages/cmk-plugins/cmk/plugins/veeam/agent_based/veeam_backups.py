@@ -58,7 +58,7 @@ class BackupTask:
     total_size: int | None
     read_size: int | None
     transferred_size: int | None
-    duration: float | None
+    duration: float | Unparsable | None
     processing_rate: float | Unparsable | None
     end_time: float | Unparsable | None
 
@@ -105,6 +105,14 @@ def _parse_end_time(end_time: str | None) -> float | Unparsable | None:
     return epoch
 
 
+def _parse_duration(duration: str | None) -> float | Unparsable | None:
+    if duration is None:
+        return None
+    if (parsed := parse_dotnet_timespan_seconds(duration)) is None:
+        return Unparsable(duration)
+    return parsed
+
+
 def parse_veeam_backups(string_table: StringTable) -> Section:
     section: dict[str, BackupTask] = {}
     for line in string_table:
@@ -119,7 +127,7 @@ def parse_veeam_backups(string_table: StringTable) -> Section:
             total_size=progress.get("processedSize"),
             read_size=progress.get("readSize"),
             transferred_size=progress.get("transferredSize"),
-            duration=parse_dotnet_timespan_seconds(duration) if duration is not None else None,
+            duration=_parse_duration(duration),
             processing_rate=_parse_processing_rate_bps(progress.get("processingRate")),
             end_time=_parse_end_time(task_dict.get("endTime")),
         )
@@ -198,14 +206,23 @@ def check_veeam_backups(
             notice_only=True,
         )
 
-    if task.state in _TERMINAL_STATES and task.duration is not None:
-        yield from check_levels(
-            task.duration,
-            metric_name="backup_duration",
-            render_func=render.timespan,
-            label="Duration",
-            notice_only=True,
-        )
+    if task.state in _TERMINAL_STATES:
+        match task.duration:
+            case float():
+                yield from check_levels(
+                    task.duration,
+                    metric_name="backup_duration",
+                    render_func=render.timespan,
+                    label="Duration",
+                    notice_only=True,
+                )
+            case Unparsable():
+                yield Result(
+                    state=State.OK,
+                    notice=f"Duration: unparsable value ({task.duration.raw})",
+                )
+            case None:
+                pass
 
 
 def _check_last_backup(

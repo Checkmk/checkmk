@@ -250,6 +250,11 @@ def test_check_veeam_backups_unparsable_duration_is_omitted() -> None:
     section = parse_veeam_backups([[_task("odd_duration", progress={"duration": "N/A"})]])
     results = list(check_veeam_backups("odd_duration", PARAMS, section, now=NOW))
     assert not any(isinstance(r, Metric) and r.name == "backup_duration" for r in results)
+    assert any(
+        r.state == State.OK and "Duration: unparsable value (N/A)" in r.details
+        for r in results
+        if isinstance(r, Result)
+    )
 
 
 @pytest.mark.parametrize(

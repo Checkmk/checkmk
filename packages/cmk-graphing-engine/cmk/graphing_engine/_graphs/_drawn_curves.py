@@ -32,33 +32,16 @@ class _DrawnLineProtocol[CurveT](Protocol):
     def inverse(self) -> bool: ...
 
 
-def _drawn_stack[CurveT](
-    members: Sequence[CurveT], identifier: str, inverse: bool
-) -> Iterator[DrawnCurve[CurveT]]:
-    for position, curve in enumerate(members):
-        yield DrawnCurve(
-            curve=curve,
-            line_type="stack" if position else "area",
-            inverse=inverse,
-            stack=identifier,
-        )
-
-
-def _drawn_lines[CurveT](
-    lines: Sequence[_DrawnLineProtocol[CurveT]],
-) -> Iterator[DrawnCurve[CurveT]]:
-    for line in lines:
-        yield DrawnCurve(
-            curve=line.curve,
-            line_type="line",
-            inverse=line.inverse,
-            stack=None,
-        )
-
-
 def drawn_curves[CurveT](
     stacks: Sequence[_DrawnStackProtocol[CurveT]], lines: Sequence[_DrawnLineProtocol[CurveT]]
 ) -> Iterator[DrawnCurve[CurveT]]:
     for index, stack in enumerate(stacks):
-        yield from _drawn_stack(stack.members, f"stack-{index}", stack.inverse)
-    yield from _drawn_lines(lines)
+        for position, curve in enumerate(stack.members):
+            yield DrawnCurve(
+                curve=curve,
+                line_type="stack" if position else "area",
+                inverse=stack.inverse,
+                stack=f"stack-{index}",
+            )
+    for line in lines:
+        yield DrawnCurve(curve=line.curve, line_type="line", inverse=line.inverse, stack=None)

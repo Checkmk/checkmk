@@ -24,8 +24,6 @@ from ._display import metric_display_attributes
 
 type Direction = Literal["upper", "lower"]
 
-PREDICTION_KIND: Final = "prediction"
-
 _PREDICTION_STEP: Final = 300
 
 _OBSERVED_COLOR: Final = "#2e7eff"
@@ -149,6 +147,7 @@ def _prediction_line(
 def build_prediction_graph(
     context: PredictionGraphContext,
     *,
+    kind: str,
     title: str,
     metrics: Mapping[str, metrics_v1.Metric],
     texts: PredictionTexts,
@@ -169,7 +168,7 @@ def build_prediction_graph(
     return Graph(
         name=f"prediction_{context.metric_name}",
         title=title,
-        kind=PREDICTION_KIND,
+        kind=kind,
         regions=list(_level_regions(context, display, texts)),
         lines=[
             *([line] if (line := _prediction_line(context, display, texts)) else []),

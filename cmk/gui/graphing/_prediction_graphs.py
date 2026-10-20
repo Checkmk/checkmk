@@ -5,12 +5,11 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Self
+from typing import Final, Self
 
 from cmk.graphing_engine import (
     evaluate_graphs,
     Graph,
-    PREDICTION_KIND,
     prediction_window_of,
     PredictionTexts,
 )
@@ -28,6 +27,8 @@ from ._graph_dispatch import (
 )
 from ._plugins import registered_translations
 from ._prediction_source import PredictionFetchData
+
+PREDICTION_KIND: Final = "prediction"
 
 
 def prediction_texts() -> PredictionTexts:

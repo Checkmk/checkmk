@@ -14,7 +14,7 @@ from cmk.graphing_engine import (
     SiteID,
 )
 from cmk.gui.graphing._graph_codec import community_graph_codec
-from cmk.gui.graphing._prediction_graphs import prediction_texts
+from cmk.gui.graphing._prediction_graphs import PREDICTION_KIND, prediction_texts
 
 
 def _graph() -> Graph:
@@ -31,6 +31,7 @@ def _graph() -> Graph:
         ),
         title="Prediction",
         metrics={},
+        kind=PREDICTION_KIND,
         texts=prediction_texts(),
         localizer=str,
     )

@@ -16,7 +16,6 @@ from cmk.graphing_engine import (
     Graph,
     HostName,
     MetricName,
-    PREDICTION_KIND,
     prediction_window_of,
     PredictionCurveKind,
     PredictionGraphContext,
@@ -30,6 +29,8 @@ from cmk.graphing_engine import (
 _VALID_FROM = 1700000000
 _VALID_UNTIL = _VALID_FROM + 86400
 
+
+_KIND = "prediction"
 
 _TEXTS = PredictionTexts(
     prediction="Prediction",
@@ -56,7 +57,12 @@ def _context(*directions: Direction) -> PredictionGraphContext:
 
 def _graph(*directions: Direction) -> Graph:
     return build_prediction_graph(
-        _context(*directions), title="Prediction", metrics={}, texts=_TEXTS, localizer=str
+        _context(*directions),
+        title="Prediction",
+        kind=_KIND,
+        metrics={},
+        texts=_TEXTS,
+        localizer=str,
     )
 
 
@@ -141,7 +147,7 @@ def test_the_graph_is_drawn_over_the_interval_its_prediction_is_valid_for() -> N
 
 
 def test_a_graph_without_a_prediction_has_no_window_of_its_own() -> None:
-    assert prediction_window_of(Graph(name="n", title="t", kind=PREDICTION_KIND)) is None
+    assert prediction_window_of(Graph(name="n", title="t", kind=_KIND)) is None
 
 
 @pytest.mark.parametrize("directions", [("upper",), ("lower",), ("upper", "lower")])

@@ -39,7 +39,7 @@ from ._graph_display_config import (
     resolve_size,
 )
 from ._plugins import registered_metrics
-from ._prediction_graphs import prediction_texts
+from ._prediction_graphs import PREDICTION_KIND, prediction_texts
 from ._prediction_query import PredictionQuerier, PredictionQuerierProtocol
 from ._user_specific_unit import get_temperature_unit
 
@@ -172,6 +172,7 @@ def _graph_group_data(
                         ),
                         title=prediction.title,
                         metrics=metrics,
+                        kind=PREDICTION_KIND,
                         texts=prediction_texts(),
                         localizer=translate_to_current_language,
                     ),

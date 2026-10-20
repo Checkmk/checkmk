@@ -104,7 +104,6 @@ from ._plugins._order import sort_registered_graph_plugins
 from ._plugins._prediction import (
     build_prediction_graph,
     Direction,
-    PREDICTION_KIND,
     prediction_window_of,
     PredictionGraphContext,
     PredictionTexts,
@@ -167,7 +166,6 @@ __all__ = [
     "threshold_rules",
     "build_prediction_graph",
     "Direction",
-    "PREDICTION_KIND",
     "prediction_window_of",
     "PredictionGraphContext",
     "PredictionTexts",

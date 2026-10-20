@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.innovaphone.agent_based.innovaphone_priports_l2 import (
     check_innovaphone_priports_l2,
@@ -24,9 +26,20 @@ def test_parse_innovaphone_priports_l2_maps_rows_by_item() -> None:
     }
 
 
-def test_parse_innovaphone_priports_l2_falls_back_to_zero_for_non_integers() -> None:
-    assert parse_innovaphone_priports_l2([["Port 1", "", "not-a-number"]]) == {
-        "Port 1": PriPort(state=0, mode=0),
+@pytest.mark.parametrize(
+    "row",
+    [
+        pytest.param([], id="empty row"),
+        pytest.param(["Port 1", "2"], id="missing column"),
+        pytest.param(["Port 1", "", "1"], id="empty state"),
+        pytest.param(["Port 1", "2", "not-a-number"], id="mode not a number"),
+        pytest.param(["Port 1", "-1", "1"], id="negative state"),
+    ],
+)
+@pytest.mark.xfail(strict=True, reason="rows that cannot be parsed are not skipped")
+def test_parse_innovaphone_priports_l2_skips_rows_that_cannot_be_parsed(row: list[str]) -> None:
+    assert parse_innovaphone_priports_l2([row, ["Port 2", "2", "1"]]) == {
+        "Port 2": PriPort(state=2, mode=1),
     }
 
 

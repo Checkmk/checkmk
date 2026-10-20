@@ -207,7 +207,7 @@ def test_agent_aws_glacier_puts_each_vault_on_its_own_host(
     assert {
         result.piggyback_hostname: [vault["VaultName"] for vault in result.content]
         for result in glacier_results
-    } == {f"VaultName-{i}_eu-central-1": [f"VaultName-{i}"] for i in range(4)}
+    } == {f"VaultName-{i}": [f"VaultName-{i}"] for i in range(4)}
 
 
 def test_agent_aws_glacier_labels_vault_hosts_as_glacier(

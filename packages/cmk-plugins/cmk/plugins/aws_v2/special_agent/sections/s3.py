@@ -389,7 +389,7 @@ class S3Bucket(AWSSection):
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(
-                self._target_host(hosts.S3Bucket(bucket_name, self._region)),
+                self._target_host(hosts.S3Bucket(bucket_name)),
                 bucket_rows,
                 {"cmk/aws/service": "s3"},
             )
@@ -479,7 +479,7 @@ class S3Requests(AWSSectionCloudwatch):
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(
-                self._target_host(hosts.S3Bucket(bucket_name, self._region)),
+                self._target_host(hosts.S3Bucket(bucket_name)),
                 bucket_rows,
                 {"cmk/aws/service": "s3"},
             )

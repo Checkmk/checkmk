@@ -232,7 +232,7 @@ class Glacier(AWSSection):
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(
-                self._target_host(hosts.GlacierVault(vault["VaultName"], self._region)),
+                self._target_host(hosts.GlacierVault(vault["VaultName"])),
                 [vault],
                 {"cmk/aws/service": "glacier"},
             )

@@ -103,13 +103,11 @@ class CloudFrontDistribution:
 @dataclass(frozen=True)
 class GlacierVault:
     name: str
-    region: str
 
 
 @dataclass(frozen=True)
 class S3Bucket:
     name: str
-    region: str
 
 
 # Each of these resources always goes to a piggyback host of its own.
@@ -225,11 +223,11 @@ def _cloudfront_distribution_host(
 
 
 def _glacier_vault_host(vault: GlacierVault) -> TargetHost:
-    return _hostname_from_name_and_region(vault.name, vault.region)
+    return TargetHost(vault.name)
 
 
 def _s3_bucket_host(bucket: S3Bucket) -> TargetHost:
-    return _hostname_from_name_and_region(bucket.name, bucket.region)
+    return TargetHost(bucket.name)
 
 
 def _hostname_from_name_and_region(name: str, region: str) -> TargetHost:

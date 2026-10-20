@@ -229,7 +229,7 @@ def test_agent_aws_s3_requests(
         # 16 metrics per bucket
         assert len(s3_requests_result.content) == 16
         for row in s3_requests_result.content:
-            assert s3_requests_result.piggyback_hostname == f"{row['Label']}_region"
+            assert s3_requests_result.piggyback_hostname == row["Label"]
             if row.get("Name") in ["Name-0", "Name-1", "Name-2"]:
                 assert row.get("LocationConstraint") == "region"
             assert "Tagging" in row
@@ -306,7 +306,7 @@ def test_agent_aws_s3_requests_without_limits(
         # 16 metrics per bucket
         assert len(s3_requests_result.content) == 16
         for row in s3_requests_result.content:
-            assert s3_requests_result.piggyback_hostname == f"{row['Label']}_region"
+            assert s3_requests_result.piggyback_hostname == row["Label"]
             if row.get("Name") in ["Name-0", "Name-1", "Name-2"]:
                 assert row.get("LocationConstraint") == "region"
             assert "Tagging" in row
@@ -350,7 +350,7 @@ def test_agent_aws_s3_puts_each_bucket_on_its_own_host(
     assert {
         result.piggyback_hostname: {row["Label"] for row in result.content}
         for result in s3_bucket_results
-    } == {f"Name-{i}_region": {f"Name-{i}"} for i in range(3)}
+    } == {f"Name-{i}": {f"Name-{i}"} for i in range(3)}
 
 
 def test_agent_aws_s3_labels_bucket_hosts_as_s3(

@@ -105,10 +105,8 @@ def test_ec2_instance_without_a_name_has_no_host(
         ),
         pytest.param(WAFV2WebACL("acl", "eu-central-1"), "acl_eu-central-1", id="regional web acl"),
         pytest.param(WAFV2WebACL("acl", "CloudFront"), "acl_CloudFront", id="cloudfront web acl"),
-        pytest.param(
-            GlacierVault("vault", "eu-central-1"), "vault_eu-central-1", id="glacier vault"
-        ),
-        pytest.param(S3Bucket("bucket", "eu-central-1"), "bucket_eu-central-1", id="s3 bucket"),
+        pytest.param(GlacierVault("vault"), "vault", id="glacier vault"),
+        pytest.param(S3Bucket("bucket"), "bucket", id="s3 bucket"),
     ],
 )
 def test_resource_goes_to_a_host_of_its_own(resource: PiggybackResource, expected: str) -> None:

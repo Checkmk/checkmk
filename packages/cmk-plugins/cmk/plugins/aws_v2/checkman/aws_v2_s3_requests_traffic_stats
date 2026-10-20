@@ -23,6 +23,6 @@ item:
  Name of the bucket
 
 discovery:
- Each bucket is a piggyback host with the name {<bucket name>_<region>}.
+ Each bucket is a piggyback host with the name {<bucket name>}.
  One service is created on this host if all required metrics
  (BytesDownloaded, BytesUploaded) are given.

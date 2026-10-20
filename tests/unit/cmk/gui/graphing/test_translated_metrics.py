@@ -665,9 +665,13 @@ def test__parse_check_command(check_command: str, expected: str) -> None:
     assert _parse_check_command(check_command) == expected
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 3806: ValueError")
 def test_parse_perf_data_with_an_unbalanced_quote() -> None:
     perf_data, _check_command = parse_perf_data(
         "days=10 'expires=5", "check-mk-custom!check_ssl_cert", debug=False
     )
     assert [(p.metric_name, p.value) for p in perf_data] == [("days", 10)]
+
+
+def test_parse_perf_data_with_an_unbalanced_quote_raises_in_debug_mode() -> None:
+    with pytest.raises(ValueError, match="No closing quotation"):
+        parse_perf_data("days=10 'expires=5", "check-mk-custom!check_ssl_cert", debug=True)

@@ -113,7 +113,7 @@ class SiteConfiguration(TypedDict):
     id: SiteId
     insecure: bool
     multisiteurl: str
-    persist: bool
+    persist: bool  # Ineffective: persistent connections were removed. Will be dropped.
     proxy: ProxyConfig | None
     replicate_ec: bool
     replicate_mkps: bool
@@ -210,17 +210,6 @@ class LivestatusTestingError(RuntimeError):
 #   '----------------------------------------------------------------------'
 
 tracer = trace.get_tracer()
-
-
-class _PersistentConnections(threading.local):
-    def __init__(self) -> None:
-        self.sockets: dict[str, socket.socket] = {}
-
-
-# TODO: This mechanism does not take different connection options into account
-# The persistent connections are kept per thread. Threads sharing a socket would mix up
-# their queries and responses.
-_persistent_connections = _PersistentConnections()
 
 # Regular expression for removing Cache: headers if caching is not allowed
 remove_cache_regex = re.compile("\nCache:[^\n]*")
@@ -601,7 +590,6 @@ class SingleSiteConnection(Helpers):
         self,
         socketurl: str,
         site_name: SiteId | None = None,
-        persist: bool = False,
         allow_cache: bool = False,
         tls: bool = False,
         verify: bool = True,
@@ -616,12 +604,10 @@ class SingleSiteConnection(Helpers):
         self.deadsites: dict[SiteId, DeadSite] = {}
         self.limit: int | None = None
         self.auth_header = ""
-        self.persist = persist
         self.allow_cache = allow_cache
         self.socketurl = socketurl
         self.socket: socket.socket | None = None
         self.timeout: int | None = None
-        self.successful_persistence = False
         self._output_format = LivestatusOutputFormat.PYTHON
 
         # Whether to establish an encrypted connection
@@ -637,29 +623,15 @@ class SingleSiteConnection(Helpers):
             return site_local_ca_path()
         return self._tls_ca_file_path
 
-    def successfully_persisted(self) -> bool:
-        return self.successful_persistence
-
     def set_timeout(self, timeout: int) -> None:
         self.timeout = timeout
         if self.socket:
             self.socket.settimeout(float(timeout))
 
-    def _try_get_persisted_connection(self) -> socket.socket | None:
-        if self.persist and self.socketurl in _persistent_connections.sockets:
-            self.successful_persistence = True
-            return _persistent_connections.sockets[self.socketurl]
-        return None
-
     def connect(self) -> None:
-        if (site_socket := self._try_get_persisted_connection()) is None:
-            site_socket = self._create_new_socket_connection()
-            if self.persist:
-                _persistent_connections.sockets[self.socketurl] = site_socket
-        self.socket = site_socket
+        self.socket = self._create_new_socket_connection()
 
     def _create_new_socket_connection(self) -> socket.socket:
-        self.successful_persistence = False
         family, address = parse_socket_url(self.socketurl)
         site_socket = self._create_socket(family, self.site_name)
 
@@ -736,11 +708,6 @@ class SingleSiteConnection(Helpers):
                 self.socket.close()
 
             self.socket = None
-
-        if self.persist:
-            self.successful_persistence = False
-            with contextlib.suppress(KeyError):
-                del _persistent_connections.sockets[self.socketurl]
 
     def receive_data(self, size: int, timeout: float | None = None) -> bytes:
         if self.socket is None:
@@ -1180,19 +1147,15 @@ class MultiSiteConnection(Helpers):
                         "exception": ex,
                     }
 
-    def connect_to_site(
-        self, site_name: SiteId, site: SiteConfiguration, temporary: bool = False
-    ) -> SingleSiteConnection:
+    def connect_to_site(self, site_name: SiteId, site: SiteConfiguration) -> SingleSiteConnection:
         """Helper function for connecting to a site"""
         url = site["socket"]
         assert isinstance(url, str)
-        persist = not temporary and site.get("persist", False)
         tls_type, tls_params = site.get("tls", ("plain_text", TLSParams()))
 
         connection = SingleSiteConnection(
             socketurl=url,
             site_name=site_name,
-            persist=persist,
             allow_cache=site.get("cache", False),
             tls=tls_type != "plain_text",
             verify=tls_params.get("verify", True),
@@ -1236,12 +1199,6 @@ class MultiSiteConnection(Helpers):
 
     def alive_sites(self) -> list[SiteId]:
         return [s.id for s in self.connections]
-
-    def successfully_persisted(self) -> bool:
-        for connected_site in self.connections:
-            if connected_site.connection.successfully_persisted():
-                return True
-        return False
 
     def set_output_format(self, output_format: LivestatusOutputFormat) -> None:
         for connected_site in self.connections:

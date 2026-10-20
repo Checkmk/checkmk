@@ -50,15 +50,19 @@ def check_innovaphone_priports_l2(item, params, info):
             if l2state == 1:
                 state = 2
                 state_label = "(!!)"
+            elif l2state not in states:
+                state = 3
 
             mode_label = ""
             if l2mode != params["mode"]:
                 state = 2
                 mode_label = "(!!)"
 
+            state_name = states.get(l2state, f"unknown ({l2state})")
+            mode_name = modes.get(l2mode, f"unknown ({l2mode})")
             return (
                 state,
-                f"State: {states[l2state]}{state_label}, Mode: {modes[l2mode]}{mode_label}",
+                f"State: {state_name}{state_label}, Mode: {mode_name}{mode_label}",
             )
     return 3, "Output not found"
 

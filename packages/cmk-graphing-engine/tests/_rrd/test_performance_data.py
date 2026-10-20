@@ -5,7 +5,9 @@
 
 import logging
 
-from cmk.graphing_engine import MetricName, parse_performance_data
+import pytest
+
+from cmk.graphing_engine import MetricName, parse_performance_data, PerformanceData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,3 +37,11 @@ def test_parse_performance_data_names_a_metric_by_its_rrd_name() -> None:
         "'disk read:sda/1'=5", "check_mk-foo", debug=False, logger=_LOGGER
     )
     assert list(parsed.values) == ["disk_read_sda_1"]
+
+
+@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 3806: ValueError")
+def test_performance_data_with_an_unbalanced_quote_is_still_read() -> None:
+    parsed = parse_performance_data(
+        "days=10 'expires=5", "check-mk-custom!check_ssl_cert", debug=False, logger=_LOGGER
+    )
+    assert parsed.values == {MetricName("days"): PerformanceData(value=10)}

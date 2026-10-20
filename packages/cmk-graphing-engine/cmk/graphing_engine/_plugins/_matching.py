@@ -54,52 +54,45 @@ def _matchable_parts(graph: ApiGraph) -> _MatchableParts:
             ]
 
 
-def _add_predictive_lines(
+def _with_predictive_lines(
     graph: Graph,
     service: Service,
     available: Container[MetricName],
     localizer: Callable[[str], str],
     registered_metrics: Mapping[str, metrics_v1.Metric],
-) -> tuple[Graph, set[MetricName]]:
+) -> Graph:
     inverse_by_metric: dict[MetricName, bool] = {}
     for quantity, inverse in graph.drawn_quantities():
         for metric in fetch_leaves(quantity):
             if isinstance(metric, RRDMetric):
                 inverse_by_metric.setdefault(metric.metric_name, inverse)
 
-    added: list[Line] = []
-    names: set[MetricName] = set()
+    added: dict[MetricName, Line] = {}
     for base, inverse in inverse_by_metric.items():
         for predictive in (
             MetricName(f"{PredictPrefix.UPPER}{base}"),
             MetricName(f"{PredictPrefix.LOWER}{base}"),
         ):
-            if predictive in available and predictive not in names:
-                added.append(
-                    Line(
-                        curve=Curve(
-                            quantity=rrd_metric_of(service, predictive),
-                            attributes=metric_attributes(predictive, localizer, registered_metrics),
-                        ),
-                        inverse=inverse,
-                    )
+            if predictive in available and predictive not in added:
+                added[predictive] = Line(
+                    curve=Curve(
+                        quantity=rrd_metric_of(service, predictive),
+                        attributes=metric_attributes(predictive, localizer, registered_metrics),
+                    ),
+                    inverse=inverse,
                 )
-                names.add(predictive)
     if not added:
-        return graph, names
-    return (
-        Graph(
-            name=graph.name,
-            title=graph.title,
-            kind=graph.kind,
-            vertical_range=graph.vertical_range,
-            omit_zero_curves=graph.omit_zero_curves,
-            stacks=graph.stacks,
-            lines=[*graph.lines, *added],
-            rules=graph.rules,
-            regions=graph.regions,
-        ),
-        names,
+        return graph
+    return Graph(
+        name=graph.name,
+        title=graph.title,
+        kind=graph.kind,
+        vertical_range=graph.vertical_range,
+        omit_zero_curves=graph.omit_zero_curves,
+        stacks=graph.stacks,
+        lines=[*graph.lines, *added.values()],
+        rules=graph.rules,
+        regions=graph.regions,
     )
 
 
@@ -139,6 +132,65 @@ class RequestedMetric:
 type GraphRequest = RequestedGraph | RequestedMetric
 
 
+def _single_metric_graph(
+    name: MetricName,
+    services: Sequence[Service],
+    *,
+    kind: str,
+    localizer: Callable[[str], str],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+    quantity_builder: QuantityBuilderProtocol,
+) -> Graph:
+    attributes = metric_attributes(name, localizer, registered_metrics)
+    return Graph(
+        name=name,
+        title=attributes.title,
+        kind=kind,
+        stacks=[
+            Stack(
+                members=[
+                    Curve(
+                        quantity=quantity_builder(
+                            [rrd_metric_of(service, name) for service in services]
+                        ),
+                        attributes=attributes,
+                    )
+                ],
+                inverse=False,
+            )
+        ],
+        rules=(
+            threshold_rules(rrd_metric_of(services[0], name), attributes, localizer)
+            if len(services) == 1
+            else ()
+        ),
+    )
+
+
+def _matches_any_service(
+    plugin: ApiGraph, names_by_service: Mapping[Service, frozenset[MetricName]]
+) -> bool:
+    return any(
+        _matches(part, names, service_names)
+        for service_names in names_by_service.values()
+        for part, names in _matchable_parts(plugin)
+    )
+
+
+def _claimed_names(plugins: Sequence[ApiGraph]) -> frozenset[MetricName]:
+    return frozenset(
+        name for plugin in plugins for _part, names in _matchable_parts(plugin) for name in names
+    )
+
+
+def _fallback_names(
+    available: frozenset[MetricName], claimed: frozenset[MetricName]
+) -> Sequence[MetricName]:
+    return [
+        name for name in sorted(available - claimed) if not name.startswith(PredictPrefix.UPPER)
+    ]
+
+
 def build_matched_graphs(
     *,
     localizer: Callable[[str], str],
@@ -150,82 +202,49 @@ def build_matched_graphs(
     request: GraphRequest | None = None,
 ) -> Sequence[Graph]:
     names_by_service = fetch_metric_names()
-    resolved = list(names_by_service)
+    services = list(names_by_service)
     available = frozenset(itertools.chain.from_iterable(names_by_service.values()))
-    single_service = resolved[0] if len(resolved) == 1 else None
-    matched_graphs: list[Graph] = []
-    claimed: set[MetricName] = set()
-
-    def _collect(base: Graph) -> None:
-        if isinstance(request, RequestedGraph) and base.name != request.name:
-            return
-        if single_service is None:
-            matched_graphs.append(base)
-            return
-        graph, predictive_names = _add_predictive_lines(
-            base, single_service, available, localizer, registered_metrics
-        )
-        claimed.update(predictive_names)
-        matched_graphs.append(graph)
-
-    def _fallback_rules(name: MetricName) -> Sequence[Rule]:
-        if single_service is None:
-            return ()
-        return threshold_rules(
-            rrd_metric_of(single_service, name),
-            metric_attributes(name, localizer, registered_metrics),
-            localizer,
-        )
-
-    def _single_metric_graph(name: MetricName) -> Graph:
-        return Graph(
-            name=name,
-            title=metric_attributes(name, localizer, registered_metrics).title,
-            kind=kind,
-            stacks=[
-                Stack(
-                    members=[
-                        Curve(
-                            quantity=quantity_builder(
-                                [rrd_metric_of(service, name) for service in resolved]
-                            ),
-                            attributes=metric_attributes(name, localizer, registered_metrics),
-                        )
-                    ],
-                    inverse=False,
-                )
-            ],
-            rules=_fallback_rules(name),
-        )
 
     if isinstance(request, RequestedMetric):
-        if request.metric_name in available:
-            _collect(_single_metric_graph(request.metric_name))
-        return matched_graphs
-
-    for plugin in registered_graphs:
-        parts = _matchable_parts(plugin)
-        if not any(
-            _matches(part, names, service_names)
-            for service_names in names_by_service.values()
-            for part, names in parts
-        ):
-            continue
-        claimed.update(name for _part, names in parts for name in names)
-        _collect(
+        plugins: Sequence[ApiGraph] = []
+        fallback = [request.metric_name] if request.metric_name in available else []
+    else:
+        matched = [
+            plugin for plugin in registered_graphs if _matches_any_service(plugin, names_by_service)
+        ]
+        plugins = [plugin for plugin in matched if request is None or plugin.name == request.name]
+        fallback = [
+            name
+            for name in _fallback_names(available, _claimed_names(matched))
+            if request is None or name == request.name
+        ]
+    graphs = [
+        *(
             parse_graph_from_api(
                 plugin,
-                resolved,
+                services,
                 localizer,
                 registered_metrics,
                 kind=kind,
                 quantity_builder=quantity_builder,
             )
-        )
-
-    for name in sorted(available):
-        if name in claimed or name.startswith(PredictPrefix.UPPER):
-            continue
-        _collect(_single_metric_graph(name))
-
-    return matched_graphs
+            for plugin in plugins
+        ),
+        *(
+            _single_metric_graph(
+                name,
+                services,
+                kind=kind,
+                localizer=localizer,
+                registered_metrics=registered_metrics,
+                quantity_builder=quantity_builder,
+            )
+            for name in fallback
+        ),
+    ]
+    if len(services) != 1:
+        return graphs
+    return [
+        _with_predictive_lines(graph, services[0], available, localizer, registered_metrics)
+        for graph in graphs
+    ]

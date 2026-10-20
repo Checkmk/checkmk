@@ -20,6 +20,7 @@ from cmk.ccc.version import Edition, edition
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import Tuple as FSTuple
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.form_specs.private.time_specific import TimeSpecific
@@ -30,11 +31,9 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import (
     DocReference,
-    makeuri,
     makeuri_contextless,
     makeuri_contextless_rulespec_group,
 )
@@ -1315,9 +1314,6 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
         return self._enclosed_valuespec.default_value()
 
     def render_input(self, varprefix: str, value: dict[str, Any]) -> None:
-        # The display mode differs when the valuespec is activated
-        vars_copy = dict(request.itervars())
-
         # The time period mode can be set by either the GUI switch or by the value itself
         # GUI switch overrules the information stored in the value
         if request.has_var(self.tp_toggle_var):
@@ -1325,31 +1321,50 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
         else:
             is_active = self.is_active(value)
 
+        if self._is_toggled():
+            value = self._value_from_html_vars_or(varprefix, value)
+            # The input fields of the other mode must not be prefilled from stale request vars
+            request.del_var(varprefix)
+            request.del_vars(varprefix + "_")
+
         # Set the actual used mode
-        html.hidden_field(self.tp_current_mode, str(int(is_active)))
-
-        vars_copy[self.tp_toggle_var] = str(int(not is_active))
-
-        url_vars: HTTPVariables = []
-        url_vars += vars_copy.items()
-        toggle_url = makeuri(request, url_vars)
+        html.hidden_field(self.tp_current_mode, str(int(is_active)), add_var=True)
+        html.hidden_field(self.tp_toggle_var, str(int(is_active)), add_var=True)
 
         if is_active:
-            value = self._get_timeperiod_value(value)
-            self._get_timeperiod_valuespec().render_input(varprefix, value)
-            html.buttonlink(
-                toggle_url,
-                _("Disable timespecific parameters"),
-                class_=["toggle_timespecific_parameter"],
+            self._get_timeperiod_valuespec().render_input(
+                varprefix, self._get_timeperiod_value(value)
             )
         else:
-            value = self._get_timeless_value(value)
-            self._enclosed_valuespec.render_input(varprefix, value)
-            html.buttonlink(
-                toggle_url,
-                _("Enable timespecific parameters"),
-                class_=["toggle_timespecific_parameter"],
-            )
+            self._enclosed_valuespec.render_input(varprefix, self._get_timeless_value(value))
+
+        html.jsbutton(
+            "_tp_toggle_button",
+            _("Disable timespecific parameters")
+            if is_active
+            else _("Enable timespecific parameters"),
+            self._toggle_js(not is_active),
+            class_=["toggle_timespecific_parameter"],
+        )
+
+    def _toggle_js(self, activate: bool) -> str:
+        """Submit without _transid: the page is rendered again with the current input, not saved"""
+        return (
+            "this.form._transid.disabled = true;"
+            f"this.form.{self.tp_toggle_var}.value = '{int(activate)}';"
+            "this.form.submit();"
+        )
+
+    def _is_toggled(self) -> bool:
+        """The form was submitted by the toggle button"""
+        toggle = request.var(self.tp_toggle_var)
+        return toggle is not None and request.var(self.tp_current_mode, toggle) != toggle
+
+    def _value_from_html_vars_or(self, varprefix: str, default: dict[str, Any]) -> dict[str, Any]:
+        try:
+            return self.from_html_vars(varprefix)
+        except MKUserError:
+            return default
 
     def value_to_html(self, value: dict[str, Any]) -> ValueSpecText:
         return self._get_used_valuespec(value).value_to_html(value)

@@ -18,7 +18,9 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 import cmk.gui.watolib.rulespecs
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.http import request
 from cmk.gui.plugins.wato.utils import TimeperiodValuespec
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.wato import register_check_parameters
@@ -513,3 +515,36 @@ def test_validate_datatype_timeperiod_valuespec_inner() -> None:
     value_spec = TimeperiodValuespec(Dictionary(elements=[]))
     with pytest.raises(MKUserError):
         value_spec.validate_datatype(["not", "a", "string"], "")  # type: ignore[arg-type]
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+@pytest.mark.parametrize(
+    "html_vars, expected_input",
+    [
+        pytest.param(
+            {"tp_active": "0", "tp_toggle": "1", "ve_p_text": "typed"},
+            'name="ve_p_tp_default_value_p_text"',
+            id="enable",
+        ),
+        pytest.param(
+            {"tp_active": "1", "tp_toggle": "0", "ve_p_tp_default_value_p_text": "typed"},
+            'name="ve_p_text"',
+            id="disable",
+        ),
+    ],
+)
+def test_timeperiod_valuespec_toggle_keeps_input(
+    html_vars: dict[str, str], expected_input: str
+) -> None:
+    for varname, value in html_vars.items():
+        request.set_var(varname, value)
+
+    with output_funnel.plugged():
+        TimeperiodValuespec(
+            Dictionary(elements=[("text", TextInput())], optional_keys=False)
+        ).render_input("ve", {"text": "stored"})
+        rendered = output_funnel.drain()
+
+    assert expected_input in rendered
+    assert 'value="typed"' in rendered
+    assert "stored" not in rendered

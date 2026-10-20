@@ -39,7 +39,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":engine",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version-info",

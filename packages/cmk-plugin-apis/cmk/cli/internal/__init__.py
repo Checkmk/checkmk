@@ -39,8 +39,9 @@ class GlobalOptions:
     """The options every command accepts.
 
     The engine declares and parses them, and applies the effects that are its own
-    (log level, debug mode, profiling) before the command's handler runs. The
-    handler receives the values for whatever it has to do with them itself.
+    (log level, profiling) before the command's handler runs. The handler
+    receives the values for whatever it has to do with them itself, such as
+    switching on debug mode for the Checkmk code it reaches.
     """
 
     verbosity: int = 0

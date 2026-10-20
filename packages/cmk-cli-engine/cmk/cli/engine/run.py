@@ -14,7 +14,6 @@ from pathlib import Path
 from types import FrameType
 from typing import Final, override, Self
 
-import cmk.ccc.debug
 import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
 from cmk.ccc.log import CMKFormatter
@@ -171,8 +170,6 @@ class Runtime:
     crash_reporter_for: Callable[[Path, Sequence[str], Mapping[str, str]], CrashReporter] = (
         saving_crash_reporter
     )
-    enable_debug: Callable[[], None] = cmk.ccc.debug.enable
-    debug_enabled: Callable[[], bool] = cmk.ccc.debug.enabled
     enable_profiling: Callable[[], None] = profiling.enable
     write_profile: Callable[[Path], None] = profiling.output_profile
     page: Callable[[str], None] = write_paged
@@ -184,7 +181,7 @@ def dispatch(
     command: Callable[[], int],
     logger: logging.Logger,
     crash_reporter: CrashReporter,
-    debug_enabled: Callable[[], bool] = cmk.ccc.debug.enabled,
+    debug: bool,
 ) -> int:
     """Run the command, mapping what it raises to the exit status it earns"""
     try:
@@ -197,13 +194,13 @@ def dispatch(
     except OSError as e:
         if e.errno == errno.EPIPE:
             return 4
-        if debug_enabled():
+        if debug:
             raise
         logger.error(crash_reporter())  # noqa: TRY400
         return 1
 
     except Exception:
-        if debug_enabled():
+        if debug:
             raise
         logger.error(crash_reporter())  # noqa: TRY400
         return 1
@@ -233,8 +230,6 @@ def run(
     global_options = parse_general_options(parsed.options)
     if global_options.verbosity:
         runtime.logger.setLevel(log_level(global_options.verbosity))
-    if global_options.debug:
-        runtime.enable_debug()
     if global_options.profile:
         runtime.enable_profiling()
         runtime.logger.debug("Enabled profiling")
@@ -250,7 +245,7 @@ def run(
             sub_options = parse_sub_options(parsed.command.sub_options, parsed.options)
         except ValueError as e:
             logger.error("%(error)s", {"error": e})  # noqa: TRY400
-            if runtime.debug_enabled():
+            if global_options.debug:
                 raise
             return 3
         return call(
@@ -268,7 +263,7 @@ def run(
             command,
             logger,
             runtime.crash_reporter_for(omd_root, argv, environ),
-            runtime.debug_enabled,
+            global_options.debug,
         )
     finally:
         runtime.write_profile(omd_root / "var/check_mk/web")

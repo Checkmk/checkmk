@@ -58,7 +58,7 @@ def _raising(exception: BaseException) -> Callable[[], int]:
 
 
 def _dispatch(command: Callable[[], int], reporter: FakeCrashReporter | None = None) -> int:
-    return dispatch(command, null_logger(), reporter or FakeCrashReporter(), lambda: False)
+    return dispatch(command, null_logger(), reporter or FakeCrashReporter(), debug=False)
 
 
 def test_the_exit_status_of_a_command_that_succeeds_is_its_own() -> None:
@@ -107,16 +107,14 @@ def test_an_unexpected_exception_is_reported() -> None:
 
 def test_a_debugged_exception_is_raised_through() -> None:
     with pytest.raises(ValueError):
-        dispatch(
-            _raising(ValueError("unexpected")), null_logger(), FakeCrashReporter(), lambda: True
-        )
+        dispatch(_raising(ValueError("unexpected")), null_logger(), FakeCrashReporter(), debug=True)
 
 
 def test_a_debugged_exception_is_not_reported() -> None:
     reporter = FakeCrashReporter()
 
     with pytest.raises(ValueError):
-        dispatch(_raising(ValueError("unexpected")), null_logger(), reporter, lambda: True)
+        dispatch(_raising(ValueError("unexpected")), null_logger(), reporter, debug=True)
 
     assert reporter.reports == 0
 
@@ -181,8 +179,6 @@ def _runtime(
     *,
     start_tracing: Callable[[Path], None] = lambda _omd_root: None,
     on_sigint: Callable[[int, FrameType | None], object] = signal.default_int_handler,
-    enable_debug: Callable[[], None] = lambda: None,
-    debug_enabled: Callable[[], bool] = lambda: False,
     enable_profiling: Callable[[], None] = lambda: None,
     write_profile: Callable[[Path], None] = lambda _path: None,
     page: Callable[[str], None] = lambda _text: None,
@@ -194,8 +190,6 @@ def _runtime(
         start_tracing=start_tracing,
         on_sigint=on_sigint,
         crash_reporter_for=lambda _omd_root, _argv, _environ: FakeCrashReporter(),
-        enable_debug=enable_debug,
-        debug_enabled=debug_enabled,
         enable_profiling=enable_profiling,
         write_profile=write_profile,
         page=page,
@@ -265,10 +259,10 @@ def test_a_sub_option_argument_the_conversion_rejects_is_logged(
 
 
 def test_a_sub_option_argument_the_conversion_rejects_is_raised_through_under_debug() -> None:
-    runtime = _runtime([_numbered(lambda *_args: 0)], debug_enabled=lambda: True)
+    runtime = _runtime([_numbered(lambda *_args: 0)])
 
     with pytest.raises(ValueError, match="--number: Invalid argument"):
-        _run(["cmk", "--demo", "--number", "x"], runtime)
+        _run(["cmk", "--debug", "--demo", "--number", "x"], runtime)
 
 
 def test_a_command_is_handed_the_site_root() -> None:
@@ -374,14 +368,6 @@ def test_verbosity_raises_the_log_level() -> None:
     assert runtime.logger.level == log_level(1)
 
 
-def test_debug_is_enabled_on_request() -> None:
-    enabled = Recorder()
-
-    _run(["cmk", "--debug", "--help"], _runtime(enable_debug=enabled))
-
-    assert len(enabled.calls) == 1
-
-
 def test_profiling_is_enabled_on_request() -> None:
     enabled = Recorder()
 
@@ -403,8 +389,8 @@ def test_the_profile_is_written_even_when_the_command_raises() -> None:
 
     with pytest.raises(ValueError):
         _run(
-            ["cmk", "--demo"],
-            _runtime([_command(_failing)], debug_enabled=lambda: True, write_profile=written),
+            ["cmk", "--debug", "--demo"],
+            _runtime([_command(_failing)], write_profile=written),
         )
 
     assert len(written.calls) == 1

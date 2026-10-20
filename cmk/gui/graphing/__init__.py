@@ -27,7 +27,6 @@ from ._frontend import (
 from ._graph_choices import graph_choices, GraphChoices, GraphPluginChoice
 from ._graph_codec import (
     COMMUNITY_QUANTITY_SPECS,
-    graph_codec,
     GraphCodec,
     QuantityCodec,
     QuantitySpec,
@@ -209,7 +208,6 @@ __all__ = [
     "global_time_picker_props",
     "global_time_picker_refresh",
     "graph_choices",
-    "graph_codec",
     "graph_dispatcher_registry",
     "graph_specification_registry",
     "GraphChoices",

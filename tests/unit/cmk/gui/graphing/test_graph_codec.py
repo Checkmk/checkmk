@@ -44,8 +44,8 @@ from cmk.graphing_engine import (
     TimeNotation,
     Unit,
 )
-from cmk.gui.graphing import COMMUNITY_QUANTITY_SPECS, graph_codec, QuantitySpec
-from cmk.gui.graphing._graph_codec import community_graph_codec
+from cmk.gui.graphing import COMMUNITY_QUANTITY_SPECS, QuantityCodec, QuantitySpec
+from cmk.gui.graphing._graph_codec import COMMUNITY_GRAPH_CODEC
 
 _METRIC = RRDMetric(
     host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("m")
@@ -183,7 +183,7 @@ def test_rrd_metric_site_id_round_trips() -> None:
         kind="template",
         lines=[Line(curve=Curve(quantity=metric, attributes=attributes), inverse=False)],
     )
-    codec = community_graph_codec()
+    codec = COMMUNITY_GRAPH_CODEC
     [restored] = codec.deserialize_graphs(codec.serialize_graphs([graph]))
     [line] = restored.lines
     assert line.curve.quantity == metric
@@ -193,13 +193,13 @@ def test_omit_zero_curves_round_trips() -> None:
     # The option rides on the graph, not on the request, so losing it here would silently drop it
     # for every graph rendered from the posted wire form.
     graph = Graph(name="g", title="G", kind="custom", omit_zero_curves=True)
-    codec = community_graph_codec()
+    codec = COMMUNITY_GRAPH_CODEC
     [restored] = codec.deserialize_graphs(codec.serialize_graphs([graph]))
     assert restored.omit_zero_curves is True
 
 
 def test_template_round_trip_is_lossless() -> None:
-    codec = community_graph_codec()
+    codec = COMMUNITY_GRAPH_CODEC
     graphs = _rich_graphs()
     payload = codec.serialize_graphs(graphs)
     # The payload is plain JSON.
@@ -256,7 +256,7 @@ _ENGINE_QUANTITY_SAMPLES: Mapping[str, QuantityProtocol] = {
 @pytest.mark.parametrize("kind", sorted(_ENGINE_QUANTITY_SAMPLES))
 def test_engine_quantity_round_trips_every_field(kind: str) -> None:
     quantity = _ENGINE_QUANTITY_SAMPLES[kind]
-    codec = community_graph_codec()
+    codec = COMMUNITY_GRAPH_CODEC
     serialized = json.loads(json.dumps(codec.serialize_quantity(quantity)))
     assert serialized["kind"] == kind
     assert codec.deserialize_quantity(serialized) == quantity
@@ -265,7 +265,7 @@ def test_engine_quantity_round_trips_every_field(kind: str) -> None:
 def test_every_engine_quantity_kind_is_covered() -> None:
     # The engine stays de/serialization-free, so a quantity's fields are mirrored by hand in the
     # codec. A new quantity kind must arrive with a round-trip sample above, or this fails.
-    assert set(_ENGINE_QUANTITY_SAMPLES) == set(community_graph_codec().quantity_kinds())
+    assert set(_ENGINE_QUANTITY_SAMPLES) == set(COMMUNITY_GRAPH_CODEC.quantity_kinds())
 
 
 def test_a_codec_refuses_two_quantities_claiming_one_kind() -> None:
@@ -275,11 +275,11 @@ def test_a_codec_refuses_two_quantities_claiming_one_kind() -> None:
         lambda data, codec: Constant(0.0),  # noqa: ARG005
     )
     with pytest.raises(ValueError, match="duplicate quantity kind: constant"):
-        graph_codec((*COMMUNITY_QUANTITY_SPECS, duplicate))
+        QuantityCodec((*COMMUNITY_QUANTITY_SPECS, duplicate))
 
 
 def test_a_region_round_trips_both_of_its_bounds() -> None:
-    codec = community_graph_codec()
+    codec = COMMUNITY_GRAPH_CODEC
     region = Region(
         lower=Curve(quantity=Constant(1.0), attributes=_ROUND_TRIP_DISPLAY),
         upper=Curve(quantity=Constant(2.0), attributes=_ROUND_TRIP_DISPLAY),
@@ -293,7 +293,7 @@ def test_a_region_round_trips_both_of_its_bounds() -> None:
 
 
 def test_a_region_open_at_one_side_round_trips_as_open() -> None:
-    codec = community_graph_codec()
+    codec = COMMUNITY_GRAPH_CODEC
     region = Region(
         lower=Curve(quantity=Constant(1.0), attributes=_ROUND_TRIP_DISPLAY),
         upper=None,

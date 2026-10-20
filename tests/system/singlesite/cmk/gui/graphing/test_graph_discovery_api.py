@@ -31,7 +31,7 @@ from cmk.graphing_engine import (
     Stack,
     Unit,
 )
-from cmk.gui.graphing._graph_codec import community_graph_codec
+from cmk.gui.graphing._graph_codec import COMMUNITY_GRAPH_CODEC
 from tests.testlib.system.graphing import discovered_graphs
 from tests.testlib.system.site import Site
 
@@ -170,7 +170,7 @@ def test_graph_data_for_missing_rrd_returns_empty_not_error(site: Site) -> None:
 
     # The client raises on any non-2xx, so reaching the assertions at all is the "not a 500" half.
     response = site.openapi.graph.fetch_data(
-        internal=community_graph_codec().serialize_graphs([graph]),
+        internal=COMMUNITY_GRAPH_CODEC.serialize_graphs([graph]),
         requested_time_range={"start": end - 3600, "end": end, "step": 60},
         consolidation_function="avg",
     )

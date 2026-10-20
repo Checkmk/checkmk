@@ -452,10 +452,6 @@ class GraphCodec:
         return [self.deserialize_graph(graph) for graph in ensure_type(data["graphs"], list)]
 
 
-def graph_codec(specs: Sequence[QuantitySpec]) -> GraphCodec:
-    return GraphCodec(QuantityCodec(specs))
-
-
 # What this edition can carry: the engine's own quantities. Every edition on top of it extends this
 # set, so a graph written by a smaller edition stays readable by a bigger one.
 COMMUNITY_QUANTITY_SPECS: Sequence[QuantitySpec] = (
@@ -470,8 +466,4 @@ COMMUNITY_QUANTITY_SPECS: Sequence[QuantitySpec] = (
 )
 
 
-def community_graph_codec() -> GraphCodec:
-    # One codec per edition rather than one per graph kind: a definition may hold a quantity another
-    # kind introduced - a combined aggregation inside a custom graph - and every kind has to be able to
-    # read it back.
-    return graph_codec(COMMUNITY_QUANTITY_SPECS)
+COMMUNITY_GRAPH_CODEC = GraphCodec(QuantityCodec(COMMUNITY_QUANTITY_SPECS))

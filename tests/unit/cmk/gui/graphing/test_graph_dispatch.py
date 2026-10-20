@@ -27,7 +27,7 @@ from cmk.gui.graphing import (
     GraphDispatcher,
     QueryLimitReached,
 )
-from cmk.gui.graphing._graph_codec import community_graph_codec
+from cmk.gui.graphing._graph_codec import COMMUNITY_GRAPH_CODEC
 from cmk.gui.graphing._graph_dispatch import evaluate_graphs, graph_request_of, serialize_graphs
 
 _KIND = "dispatch_test"
@@ -74,7 +74,7 @@ def _dispatched_kind() -> Iterator[None]:
     graph_dispatcher_registry.register(
         GraphDispatcher(
             kind=_KIND,
-            codec=community_graph_codec(),
+            codec=COMMUNITY_GRAPH_CODEC,
             make_evaluate=_RecordingEvaluate.make,
         )
     )

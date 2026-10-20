@@ -13,7 +13,7 @@ from cmk.graphing_engine import (
     ServiceName,
     SiteID,
 )
-from cmk.gui.graphing._graph_codec import community_graph_codec
+from cmk.gui.graphing._graph_codec import COMMUNITY_GRAPH_CODEC
 from cmk.gui.graphing._prediction_graphs import PREDICTION_KIND, prediction_texts
 
 
@@ -38,7 +38,7 @@ def _graph() -> Graph:
 
 
 def test_the_window_survives_the_trip_through_the_browser() -> None:
-    codec = community_graph_codec()
+    codec = COMMUNITY_GRAPH_CODEC
 
     restored = codec.deserialize_graph(codec.serialize_graph(_graph()))
 

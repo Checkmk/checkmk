@@ -10,7 +10,7 @@ from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
 from ._autocompleter import monitored_metrics_autocompleter
-from ._graph_codec import community_graph_codec, GraphCodec
+from ._graph_codec import COMMUNITY_GRAPH_CODEC, GraphCodec
 from ._graph_dispatch import graph_dispatcher_registry, GraphDispatcherRegistry
 from ._graph_specification import graph_specification_registry
 from ._graph_templates import template_graph_dispatcher, TemplateGraphSpecification
@@ -48,7 +48,7 @@ def register(
 
     graph_specification_registry.register(TemplateGraphSpecification)
 
-    _register_graph_dispatchers(graph_dispatcher_registry, community_graph_codec())
+    _register_graph_dispatchers(graph_dispatcher_registry, COMMUNITY_GRAPH_CODEC)
 
     telemetry_metrics_backend_registry.register(TelemetryMetricsBackend())
 

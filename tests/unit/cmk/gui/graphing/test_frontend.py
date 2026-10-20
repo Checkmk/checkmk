@@ -55,7 +55,7 @@ from cmk.gui.graphing._frontend import (
     resolve_default_time_range_seconds,
     value_axis_width_px,
 )
-from cmk.gui.graphing._graph_codec import community_graph_codec
+from cmk.gui.graphing._graph_codec import COMMUNITY_GRAPH_CODEC
 from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from cmk.gui.type_defs import GraphTimerange, PainterParameters, SizePT
 from cmk.gui.userdb.user_attributes import StartOfWeekUserAttribute
@@ -361,7 +361,7 @@ def test_data_attribute_internal_round_trips_to_the_same_graph() -> None:
     )
 
     assert result.options.header.title == "My Graph"
-    [restored] = community_graph_codec().deserialize_graphs(json.loads(result.internal))
+    [restored] = COMMUNITY_GRAPH_CODEC.deserialize_graphs(json.loads(result.internal))
     assert restored == graph
 
 

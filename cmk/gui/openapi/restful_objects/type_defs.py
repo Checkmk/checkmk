@@ -146,6 +146,7 @@ CmkEndpointName = Literal[
     "cmk/activate",
     "cmk/acknowledge",
     "cmk/agent_deployment_download",
+    "cmk/agent_deployment_forwarded_download",
     "cmk/agent_deployment_forwarded_status",
     "cmk/agent_deployment_status",
     "cmk/create_agent_registration_token",

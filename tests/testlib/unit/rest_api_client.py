@@ -2666,6 +2666,21 @@ class AgentDeploymentForwardedClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def download(
+        self,
+        host_name: str,
+        body: Mapping[str, Any],
+        headers: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{host_name}/actions/download/invoke",
+            body=dict(body),
+            headers={"Accept": "application/octet-stream", **(headers or {})},
+            expect_ok=expect_ok,
+        )
+
 
 class DowntimeClient(RestApiClient):
     domain: DomainType = "downtime"

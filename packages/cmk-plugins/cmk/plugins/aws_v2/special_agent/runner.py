@@ -70,7 +70,14 @@ from .sections.s3 import (
     S3Requests,
     S3Summary,
 )
-from .sections.sns import SNS, SNSLimits, SNSSMS, SNSSummary, SNSTopicsFetcher
+from .sections.sns import (
+    SNS,
+    SNSLimits,
+    SNSSMS,
+    SNSSummary,
+    SNSTopicCloudwatch,
+    SNSTopicsFetcher,
+)
 from .sections.wafv2 import WAFV2Limits, WAFV2Summary, WAFV2WebACL
 
 Results = dict[tuple[str, float, float], Sequence["AWSSectionResult"]]
@@ -189,6 +196,8 @@ def datetime_serializer(obj):
 # '-- SNSSummary
 #     |
 #     '-- SNS
+#         |
+#         '-- SNSTopicCloudwatch
 
 # ECSLimits
 # |
@@ -772,8 +781,10 @@ class AWSSectionsGeneric(AWSSections):
             sns_summary = SNSSummary(
                 sns_client, region, config, sns_topics_fetcher, distributor=distributor
             )
-            sns_cloudwatch = SNS(cloudwatch_client, region, config)
+            sns_cloudwatch = SNS(cloudwatch_client, region, config, distributor)
             distributor.add(sns_summary.name, sns_cloudwatch)
+            sns_topic_cloudwatch = SNSTopicCloudwatch(cloudwatch_client, region, config)
+            distributor.add(sns_cloudwatch.name, sns_topic_cloudwatch)
             sns_sms_cloudwatch = SNSSMS(cloudwatch_client, region, config)
             if config.service_config.get("sns_limits"):
                 sns_limits = SNSLimits(
@@ -786,6 +797,7 @@ class AWSSectionsGeneric(AWSSections):
             # there through the distributor
             self._sections.append(sns_summary)
             self._sections.append(sns_cloudwatch)
+            self._sections.append(sns_topic_cloudwatch)
             self._sections.append(sns_sms_cloudwatch)
 
         if "ecs" in services:

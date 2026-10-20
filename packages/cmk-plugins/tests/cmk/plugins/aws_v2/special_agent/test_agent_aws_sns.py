@@ -25,6 +25,7 @@ from cmk.plugins.aws_v2.special_agent.sections.sns import (
     SNSLimits,
     SNSSMS,
     SNSSummary,
+    SNSTopicCloudwatch,
     SNSTopicsFetcher,
 )
 
@@ -156,7 +157,7 @@ def test_sns_limits_of_one_account_are_not_cached_for_another() -> None:
     assert limits_topics_standard.amount == 2
 
 
-SNSSectionsOut = tuple[SNSSummary, SNSSMS, SNS]
+SNSSectionsOut = tuple[SNSSummary, SNSSMS, SNS, SNSTopicCloudwatch]
 
 
 class SNSSections(Protocol):
@@ -192,11 +193,13 @@ def get_sns_sections() -> SNSSections:
         sns_topics_fetcher = SNSTopicsFetcher(fake_sns_client, fake_tagging_client, region, config)
         sns_summary = SNSSummary(fake_sns_client, region, config, sns_topics_fetcher, distributor)
         sns_sms = SNSSMS(fake_cloudwatch_client, region, config)
-        sns = SNS(fake_cloudwatch_client, region, config)
+        sns = SNS(fake_cloudwatch_client, region, config, distributor)
+        sns_topic = SNSTopicCloudwatch(fake_cloudwatch_client, region, config)
 
         distributor.add(sns_summary.name, sns)
+        distributor.add(sns.name, sns_topic)
 
-        return sns_summary, sns_sms, sns
+        return sns_summary, sns_sms, sns, sns_topic
 
     return _create_sns_sections
 
@@ -222,7 +225,7 @@ def test_agent_aws_sns(
     tags: OverallTags,
     found_services_name: list[str],
 ) -> None:
-    sns_summary, _sns_sms, sns = get_sns_sections(names, tags)
+    sns_summary, _sns_sms, sns, _sns_topic = get_sns_sections(names, tags)
     sns_summary_results = sns_summary.run().results
 
     assert sns.name == "sns_cloudwatch"
@@ -263,7 +266,7 @@ def test_agent_aws_sns_sms(
     tags: OverallTags,
     found_services_name: list[str],
 ) -> None:
-    _sns_summary, sns_sms, _sns = get_sns_sections(names, tags)
+    _sns_summary, sns_sms, _sns, _sns_topic = get_sns_sections(names, tags)
     assert sns_sms.name == "sns_sms_cloudwatch"
     perform_agent_aws_sns_cloudwatch_test(sns_sms, found_services_name, 2)
 
@@ -312,9 +315,49 @@ def test_agent_aws_sns_summary_filters_tags(
     tag_import: TagsOption,
     expected_tags: dict[str, Sequence[str]],
 ) -> None:
-    sns_summary, _sns_sms, _sns = get_sns_sections(None, (None, None), tag_import)
+    sns_summary, _sns_sms, _sns, _sns_topic = get_sns_sections(None, (None, None), tag_import)
     sns_summary_results = sns_summary.run().results
     sns_summary_result = sns_summary_results[0]
 
     for result in sns_summary_result.content:
         assert list(result["TagsForCmkLabels"].keys()) == expected_tags.get(result["ARN"], [])
+
+
+def test_agent_aws_sns_puts_each_topic_on_its_own_host(get_sns_sections: SNSSections) -> None:
+    sns_summary, _sns_sms, sns, sns_topic = get_sns_sections(None, (None, None))
+    sns_summary.run()
+    sns.run()
+
+    sns_topic_results = sns_topic.run().results
+
+    assert {
+        result.piggyback_hostname: {row["Label"] for row in result.content}
+        for result in sns_topic_results
+    } == {
+        "TopicName-0": {"TopicName-0 [eu-west-1]"},
+        "TopicName-1": {"TopicName-1 [eu-west-1]"},
+        "TopicName-2": {"TopicName-2 [eu-west-1]"},
+        "TopicName-3.fifo": {"TopicName-3.fifo [eu-west-1]"},
+        "TopicName-4.fifo": {"TopicName-4.fifo [eu-west-1]"},
+    }
+
+
+def test_agent_aws_sns_labels_topic_hosts_as_sns(get_sns_sections: SNSSections) -> None:
+    sns_summary, _sns_sms, sns, sns_topic = get_sns_sections(None, (None, None))
+    sns_summary.run()
+    sns.run()
+
+    sns_topic_results = sns_topic.run().results
+
+    assert sns_topic_results
+    assert all(
+        result.piggyback_host_labels == {"cmk/aws/service": "sns"} for result in sns_topic_results
+    )
+
+
+def test_agent_aws_sns_creates_no_topic_host_without_topics(get_sns_sections: SNSSections) -> None:
+    sns_summary, _sns_sms, sns, sns_topic = get_sns_sections(["NONEXISTINGID"], (None, None))
+    sns_summary.run()
+    sns.run()
+
+    assert not sns_topic.run().results

@@ -122,6 +122,11 @@ class RDSInstance:
     instance_id: str
 
 
+@dataclass(frozen=True)
+class SNSTopic:
+    name: str
+
+
 # Each of these resources always goes to a piggyback host of its own.
 PiggybackResource = (
     ClassicLoadBalancer
@@ -132,6 +137,7 @@ PiggybackResource = (
     | S3Bucket
     | ElastiCacheNode
     | RDSInstance
+    | SNSTopic
 )
 
 HostedResource = AccountScope | EBSAttachment | CloudFrontDistribution | PiggybackResource
@@ -173,6 +179,8 @@ def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost | No
             return _elasticache_node_host(resource)
         case RDSInstance():
             return _rds_instance_host(resource)
+        case SNSTopic():
+            return _sns_topic_host(resource)
         case _:
             assert_never(resource)
 
@@ -259,6 +267,10 @@ def _elasticache_node_host(node: ElastiCacheNode) -> TargetHost:
 
 def _rds_instance_host(instance: RDSInstance) -> TargetHost:
     return TargetHost(instance.instance_id)
+
+
+def _sns_topic_host(topic: SNSTopic) -> TargetHost:
+    return TargetHost(topic.name)
 
 
 def _hostname_from_name_and_region(name: str, region: str) -> TargetHost:

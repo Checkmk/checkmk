@@ -14,7 +14,6 @@ from cmk.rulesets.v1.form_specs import FormSpec
 from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
-@pytest.mark.xfail(raises=ValueError, reason="Crash group 4531: ValueError")
 @pytest.mark.usefixtures("with_admin_login")
 def test_site_selection_accepts_site_named_like_python_keyword(set_config: SetConfig) -> None:
     keyword_site = {**active_config.sites[omd_site()], "id": "global", "alias": "Global"}

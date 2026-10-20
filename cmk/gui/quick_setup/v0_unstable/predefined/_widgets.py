@@ -23,14 +23,13 @@ from cmk.gui.user_sites import get_configured_site_choices, site_attribute_defau
 from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore
 from cmk.gui.watolib.form_spec_generators import create_full_path_folder_choice
 from cmk.gui.watolib.hosts_and_folders import FolderTree
+from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     FieldSize,
     InputHint,
-    SingleChoice,
-    SingleChoiceElement,
     String,
     validators,
 )
@@ -148,9 +147,9 @@ def site_formspec_wrapper() -> FormSpecWrapper:
         form_spec=TwoColumnDictionary(
             elements={
                 QSSiteSelection: DictElement(
-                    parameter_form=SingleChoice(
+                    parameter_form=SingleChoiceExtended(
                         elements=[
-                            SingleChoiceElement(
+                            SingleChoiceElementExtended(
                                 name=site_id,
                                 title=Title(  # astrein: disable=localization
                                     title

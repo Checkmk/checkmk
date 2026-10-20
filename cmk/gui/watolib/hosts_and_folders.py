@@ -2455,17 +2455,14 @@ class Folder:
 
     def _folder_attributes_for_base_config(self) -> dict[str, FolderAttributesForBase]:
         # TODO:
-        # These attributes only exist in PRO.
+        # At this time, this is the only attribute there is, and it only exists in PRO.
         # This functionality should be moved to PRO specific code!
         if "bake_agent_package" in self.attributes:
-            attributes: FolderAttributesForBase = {
-                "bake_agent_package": bool(self.attributes["bake_agent_package"]),
+            return {
+                self.path_for_rule_matching(): {
+                    "bake_agent_package": bool(self.attributes["bake_agent_package"]),
+                },
             }
-            # The agent connection mode is inheritable folder configuration, so the
-            # effective (not the folder's own) value is what the baked package must use.
-            if (connection := self.effective_attributes().get("cmk_agent_connection")) is not None:
-                attributes["cmk_agent_connection"] = connection
-            return {self.path_for_rule_matching(): attributes}
         return {}
 
     def save(self, *, pprint_value: bool, acting_user: LoggedInUser) -> None:

@@ -15,7 +15,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from functools import cache, lru_cache
 from pathlib import Path
-from typing import Any, Literal, NotRequired, override, TypedDict
+from typing import Any, Literal, override, TypedDict
 
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
@@ -71,7 +71,6 @@ def get_hosts_file_variables() -> HostsData:
 
 class FolderAttributesForBase(TypedDict):
     bake_agent_package: bool
-    cmk_agent_connection: NotRequired[Literal["pull-agent", "push-agent"]]
 
 
 class ContactGroupsField(TypedDict):

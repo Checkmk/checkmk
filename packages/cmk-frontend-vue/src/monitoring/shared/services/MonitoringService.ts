@@ -61,6 +61,13 @@ export interface PagedResponse<T> {
   }
 }
 
+export class RowsNotLoadedError extends Error {
+  constructor() {
+    super('The rows of the current query could not be loaded')
+    this.name = 'RowsNotLoadedError'
+  }
+}
+
 /**
  * The kind of fetch that produces visible rows:
  * - `'foreground'`: initial load or a user action (search/filter/sort) that
@@ -442,6 +449,15 @@ export abstract class MonitoringService<T> extends ServiceBase {
         }
       })
     })
+  }
+
+  /** The rows of the current query once {@link settled}; throws when they could not be loaded. */
+  protected async loadedItems(): Promise<T[]> {
+    await this.settled()
+    if (this.loadFailed.value) {
+      throw new RowsNotLoadedError()
+    }
+    return this.items.value
   }
 
   onFocusSearch(callback: () => void): void {

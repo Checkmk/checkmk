@@ -288,6 +288,7 @@ py_cmk_test(
         "//cmk/gui/graphing",
         "//cmk/gui/graphing:openapi",
         "//cmk/gui/monitor/command",
+        "//cmk/gui/monitor/export",
         "//cmk/gui/monitor/hosts",
         "//cmk/gui/monitor/services",
         "//cmk/gui/monitor/setup_folders",

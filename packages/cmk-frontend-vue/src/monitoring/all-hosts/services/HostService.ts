@@ -8,25 +8,19 @@ import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 
 import type { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostEntry, HostOptionalField } from '@/monitoring/shared/api/types'
+import { RowExport } from '@/monitoring/shared/export/rowExport'
 import {
   MonitoringService,
   type MonitoringServiceOptions,
   type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
 
-import { exportedHostColumns, visibleHostFields } from '../columns'
+import { visibleHostFields } from '../columns'
 import { HostExport } from '../export/hostExport'
 
 export interface HostServiceOptions extends MonitoringServiceOptions<HostEntry> {
   /** Fields read on every fetch, whichever columns are shown, for what a row offers. */
   rowFields?: readonly HostOptionalField[]
-}
-
-export class HostsNotLoadedError extends Error {
-  constructor() {
-    super('The hosts of the current query could not be loaded')
-    this.name = 'HostsNotLoadedError'
-  }
 }
 
 export class HostService extends MonitoringService<HostEntry> {
@@ -44,13 +38,10 @@ export class HostService extends MonitoringService<HostEntry> {
   }
 
   async export(): Promise<HostExport> {
-    await this.settled()
-    if (this.loadFailed.value) {
-      throw new HostsNotLoadedError()
-    }
+    const hosts = await this.loadedItems()
     return new HostExport(
-      exportedHostColumns(this.columns, this.columnVisibility.value),
-      this.items.value
+      RowExport.shownColumns(this.columns, this.columnVisibility.value, HostExport.isColumn),
+      hosts
     )
   }
 

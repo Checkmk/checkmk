@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from urllib.parse import parse_qs, urlparse
 
 import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.ccc.user import UserId
-from cmk.gui import login
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
@@ -34,7 +32,6 @@ from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
-from tests.testlib.unit.gui.users import create_and_destroy_user
 
 
 class _SetupGrantingAll:
@@ -48,24 +45,6 @@ class _SetupGrantingAll:
 
     def may_read_host(self, _host_name: str, _path: str | None) -> bool:
         return True
-
-
-@pytest.fixture(name="user_without_permissions")
-def fixture_user_without_permissions(load_config: Config) -> Iterator[UserId]:
-    with create_and_destroy_user(
-        automation=False, role="no_permissions", config=load_config
-    ) as created:
-        user_id = created[0]
-        with login.TransactionIdContext(
-            user_id,
-            UserPermissions(
-                load_config.roles,
-                all_permissions(),
-                {user_id: ["no_permissions"]},
-                [],
-            ),
-        ):
-            yield user_id
 
 
 @pytest.mark.usefixtures("user_without_permissions")

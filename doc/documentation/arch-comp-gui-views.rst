@@ -80,6 +80,13 @@ The page state (columns, sort, filter, opened row) lives in the URL, which
 makes pages shareable. Actions use the existing command infrastructure through
 the REST API.
 
+The CSV and JSON export is shared as well, so a new page family uses it
+instead of writing its own: ``cmk.gui.monitor.export`` builds the Export menu
+of the page, and in the Vue application ``RowExport`` writes the files from a
+per-page column schema, ``useRowExport`` answers the menu entries and
+``MonitoringExportFeedback`` shows the result. The page only supplies its
+column schema; the rows come from ``MonitoringService``.
+
 Interfaces
 ----------
 

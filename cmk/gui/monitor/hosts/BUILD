@@ -12,6 +12,7 @@ py_library(
         "//cmk/gui:config",
         "//cmk/gui:customer",
         "//cmk/gui/monitor/command",
+        "//cmk/gui/monitor/export",
         "//cmk/gui/monitor/setup_folders",
         "//cmk/gui/monitor/table_widget",
         "//cmk/gui/openapi/framework",

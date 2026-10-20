@@ -6,9 +6,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { visibleHostFields } from '@/monitoring/all-hosts/columns'
-import { HostService, HostsNotLoadedError } from '@/monitoring/all-hosts/services/HostService'
+import { HostService } from '@/monitoring/all-hosts/services/HostService'
 import type { HostEntry, HostState, HostsResponse } from '@/monitoring/shared/api/types'
 import { DEFAULT_BATCH_SIZE } from '@/monitoring/shared/constants'
+import { RowsNotLoadedError } from '@/monitoring/shared/services/MonitoringService'
 
 import { makeKeyShortcutService } from '../../shared/services/testHelpers'
 
@@ -263,7 +264,7 @@ describe('HostService', () => {
     const exported = service.export()
     service.destruct()
 
-    await expect(exported).rejects.toThrow(HostsNotLoadedError)
+    await expect(exported).rejects.toThrow(RowsNotLoadedError)
   })
 
   it('stops an export that waits for a fetch once the service is destructed', async () => {
@@ -283,7 +284,7 @@ describe('HostService', () => {
     const exported = service.export()
     service.destruct()
 
-    await expect(exported).rejects.toThrow(HostsNotLoadedError)
+    await expect(exported).rejects.toThrow(RowsNotLoadedError)
   })
 
   it('offers the configured limits and starts at the smallest one', async () => {

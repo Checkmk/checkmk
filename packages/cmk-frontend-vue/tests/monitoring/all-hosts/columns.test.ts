@@ -11,10 +11,11 @@ import {
   type HostColumnOptions,
   buildHostColumnPinning,
   buildHostColumns,
-  exportedHostColumns,
   visibleHostFields
 } from '@/monitoring/all-hosts/columns'
+import { HostExport } from '@/monitoring/all-hosts/export/hostExport'
 import type { HostEntry, HostOptionalField } from '@/monitoring/shared/api/types'
+import { RowExport } from '@/monitoring/shared/export/rowExport'
 import {
   MonitoringService,
   type PagedResponse
@@ -325,5 +326,5 @@ test('the export carries every data column of the table in table order', () => {
   const options = { showCustomer: true, showRelations: true }
   const dataColumns = columnIds(options).filter((id) => id !== 'select' && id !== 'actions')
 
-  expect(exportedHostColumns(hostColumns(options), {})).toEqual(dataColumns)
+  expect(RowExport.shownColumns(hostColumns(options), {}, HostExport.isColumn)).toEqual(dataColumns)
 })

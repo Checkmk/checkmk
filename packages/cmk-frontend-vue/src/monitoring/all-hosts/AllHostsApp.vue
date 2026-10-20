@@ -5,16 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
-import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
 import { useKeyboardHints } from 'cmk-ui-library/lib/keyboardHelp'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
-import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef, watch } from 'vue'
-
-import { downloadBlob } from '@/lib/downloadBlob'
+import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
 import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostEntry, HostRef, HostState } from '@/monitoring/shared/api/types'
@@ -31,12 +28,14 @@ import {
 import { filterTimestampsAsShown } from '@/monitoring/shared/timestampFilters'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 
+import MonitoringExportFeedback from '../shared/components/MonitoringExportFeedback.vue'
 import MonitoringHeaderActions from '../shared/components/MonitoringHeaderActions.vue'
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
 import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import MonitoringToolbar from '../shared/components/MonitoringToolbar.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
+import { useRowExport } from '../shared/export/useRowExport'
 import { buildFilterUrlSchema } from '../shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '../shared/filterState/urlState'
 import { tableKeyboardHints } from '../shared/keyboardHints'
@@ -59,8 +58,7 @@ import { useTypeToFocus } from '../shared/useTypeToFocus'
 import { buildHostColumnPinning, buildHostColumns } from './columns'
 import HostRow from './components/HostRow.vue'
 import HostSlideIn from './components/HostSlideIn.vue'
-import { HostExport, type HostExportFormat } from './export/hostExport'
-import { HostService, HostsNotLoadedError } from './services/HostService'
+import { HostService } from './services/HostService'
 import { HOST_TAB_OVERVIEW } from './slideInTabs'
 import { IMMEDIATE_HOST_COMMAND_IDS, useHostActions } from './useHostActions'
 
@@ -174,64 +172,27 @@ const typeToFocus = useTypeToFocus(root)
 useFallbackKeys(root, () => root.value?.querySelector<HTMLElement>('.monitoring-table'))
 useContextMenuKey(root)
 
-type ExportFeedback = { variant: 'loading' | 'warning' | 'error'; text: TranslatedString }
-
-const exportFeedback = ref<ExportFeedback | null>(null)
-
-const exportCount = new Intl.NumberFormat()
-
-async function exportHosts(format: HostExportFormat): Promise<void> {
-  exportFeedback.value = { variant: 'loading', text: _t('Exporting hosts…') }
-  try {
-    const file = (await hostService.export()).file(format)
-    downloadBlob(file.name, file)
-  } catch (error: unknown) {
-    exportFeedback.value = {
-      variant: 'error',
-      text:
-        error instanceof HostsNotLoadedError
-          ? _t('The hosts could not be loaded, so nothing was exported.')
-          : _t('The export failed: %{error}', { error: String(error) })
-    }
-    return
-  }
-  const exported = hostService.items.value.length
-  const matched = hostService.matched.value
-  exportFeedback.value =
-    exported < matched ? { variant: 'warning', text: truncatedExportText(exported, matched) } : null
-}
-
-function truncatedExportText(exported: number, matched: number): TranslatedString {
-  const counts = { exported: exportCount.format(exported), matched: exportCount.format(matched) }
-  const limits = hostService.offeredLimits
-  return limits.indexOf(hostService.requestedLimit.value) < limits.length - 1
-    ? _t('Exported %{exported} of %{matched} hosts. Show more hosts to export more.', counts)
-    : _t(
-        'Exported %{exported} of %{matched} hosts. Narrow the filters to export all of them.',
-        counts
-      )
-}
-
-watch(hostService.fetchState, (state) => {
-  if (state === 'foreground' && exportFeedback.value?.variant !== 'loading') {
-    exportFeedback.value = null
+const exportFeedback = useRowExport(hostService, {
+  exportEvent: props.export_event,
+  build: () => hostService.export(),
+  texts: {
+    exporting: _t('Exporting hosts…'),
+    notLoaded: _t('The hosts could not be loaded, so nothing was exported.'),
+    truncated: (counts, canShowMore) =>
+      canShowMore
+        ? _t('Exported %{exported} of %{matched} hosts. Show more hosts to export more.', counts)
+        : _t(
+            'Exported %{exported} of %{matched} hosts. Narrow the filters to export all of them.',
+            counts
+          )
   }
 })
-
-function onExport(event: Event): void {
-  const format: unknown = event instanceof CustomEvent ? event.detail : undefined
-  if (HostExport.isFormat(format)) {
-    void exportHosts(format)
-  }
-}
 
 onMounted(() => {
   hostService.onFocusSearch(() => toolbar.value?.focus())
-  document.addEventListener(props.export_event, onExport)
 })
 
 onBeforeUnmount(() => {
-  document.removeEventListener(props.export_event, onExport)
   hostService.destruct()
 })
 
@@ -351,23 +312,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :service="hostService"
         :search-placeholder="_t('Search hosts…')"
       />
-      <CmkAlert
-        v-if="exportFeedback?.variant === 'loading'"
-        variant="loading"
-        class="monitoring-all-hosts-app__feedback"
-        :text="exportFeedback.text"
-      />
-      <CmkAlert
-        v-else-if="exportFeedback"
-        :variant="exportFeedback.variant"
-        class="monitoring-all-hosts-app__feedback"
-        :text="exportFeedback.text"
-        :optional-button="{
-          title: _t('Dismiss'),
-          icon: 'cancel',
-          onclick: () => (exportFeedback = null)
-        }"
-      />
+      <MonitoringExportFeedback v-model="exportFeedback" />
       <MonitoringSplitPane
         :service="hostService"
         :actions="actionRegistry"
@@ -438,10 +383,5 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
   height: 100%;
   min-height: 0;
   padding-bottom: var(--spacing);
-}
-
-.monitoring-all-hosts-app__feedback {
-  flex: 0 0 auto;
-  margin: var(--spacing-half) 0 0;
 }
 </style>

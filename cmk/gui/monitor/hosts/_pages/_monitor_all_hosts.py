@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import asdict
-from typing import Literal, override
+from typing import override
 
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
@@ -27,8 +27,8 @@ from cmk.gui.monitor.command import (
     MonitorCommands,
     notification_rules_url,
 )
+from cmk.gui.monitor.export import EXPORT_EVENT, MonitorExportMenu
 from cmk.gui.page_menu import (
-    make_javascript_link,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
@@ -64,8 +64,6 @@ _PAGE_TITLE = _("All hosts")
 
 _LEGACY_VIEW_NAME = "allhosts"
 _LEGACY_VIEW_PERMISSION = f"view.{_LEGACY_VIEW_NAME}"
-
-_EXPORT_EVENT = "cmk-monitoring-export"
 
 
 def monitor_all_hosts_visual_spec() -> Visual:
@@ -141,7 +139,7 @@ class MonitorAllHostsPage(Page):
                     ],
                     edition=Edition(edition(paths.omd_root).short),
                     header_teleport_target=self._teleport_target,
-                    export_event=_EXPORT_EVENT,
+                    export_event=EXPORT_EVENT,
                     actions=[
                         MonitoringAction(
                             ident=command.ident, title=str(command.title), icon=command.icon
@@ -248,46 +246,9 @@ def _availability_dropdowns() -> list[PageMenuDropdown]:
     ]
 
 
-def _export_dropdowns() -> list[PageMenuDropdown]:
-    if not user.may("general.csv_export"):
-        return []
-
-    return [
-        PageMenuDropdown(
-            name="export",
-            title=_("Export"),
-            topics=[
-                PageMenuTopic(
-                    title=_("Data"),
-                    entries=[
-                        _export_entry(_("Export CSV"), StaticIcon(IconNames.download_csv), "csv"),
-                        _export_entry(
-                            _("Export JSON"), StaticIcon(IconNames.download_json), "json"
-                        ),
-                    ],
-                )
-            ],
-        ),
-    ]
-
-
-def _export_entry(
-    title: str, icon: StaticIcon, export_format: Literal["csv", "json"]
-) -> PageMenuEntry:
-    return PageMenuEntry(
-        title=title,
-        icon_name=icon,
-        item=make_javascript_link(
-            f"document.dispatchEvent(new CustomEvent('{_EXPORT_EVENT}', "
-            f"{{detail: '{export_format}'}}))"
-        ),
-        name=f"export_{export_format}",
-    )
-
-
 def _build_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     menu = PageMenu(
-        dropdowns=_availability_dropdowns() + _export_dropdowns(),
+        dropdowns=_availability_dropdowns() + MonitorExportMenu().dropdowns(),
         breadcrumb=breadcrumb,
     )
 

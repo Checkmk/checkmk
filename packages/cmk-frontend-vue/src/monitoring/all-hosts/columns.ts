@@ -7,7 +7,6 @@ import type { ColumnDef, ColumnPinningState, VisibilityState } from '@tanstack/v
 import type { Site } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
-import { HostExport, type HostExportColumn } from '@/monitoring/all-hosts/export/hostExport'
 import {
   autocompleter,
   labelAutocompleter,
@@ -109,18 +108,6 @@ export function visibleHostFields(
 ): HostOptionalField[] {
   const offered = new Set(offeredColumnIds)
   return OPTIONAL_FIELD_COLUMNS.filter((field) => offered.has(field) && visibility[field] !== false)
-}
-
-export function exportedHostColumns(
-  columns: readonly ColumnDef<HostEntry>[],
-  visibility: VisibilityState
-): HostExportColumn[] {
-  return columns
-    .map((column) => columnId(column))
-    .filter(
-      (id): id is HostExportColumn =>
-        id !== undefined && HostExport.isColumn(id) && visibility[id] !== false
-    )
 }
 
 function fixUnlessHideable(column: ColumnDef<HostEntry>): ColumnDef<HostEntry> {

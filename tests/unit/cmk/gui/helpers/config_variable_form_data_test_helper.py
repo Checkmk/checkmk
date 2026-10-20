@@ -155,34 +155,7 @@ def factory_default_disk_value(config_variable: ConfigVariable) -> object:
     return domain.default_globals().get(config_variable.ident(), NoFactoryDefault())
 
 
-_REUSE_LOWER_EDITION = object()
-
-
-@dataclass(frozen=True)
-class EditionDependentDefault:
-    """A pin or case list whose value differs between editions. Every edition
-    reuses the value of the next lower edition (declaration order of Edition:
-    community, pro, ultimate, ultimatemt, cloud) unless it spells out its own,
-    so a pin states only the editions where the value changes. community is
-    the base of the chain and therefore always required."""
-
-    community: object
-    pro: object = _REUSE_LOWER_EDITION
-    ultimate: object = _REUSE_LOWER_EDITION
-    ultimatemt: object = _REUSE_LOWER_EDITION
-    cloud: object = _REUSE_LOWER_EDITION
-
-    def for_edition(self, edition: Edition) -> object:
-        editions = list(Edition)
-        while (value := getattr(self, edition.long)) is _REUSE_LOWER_EDITION:
-            edition = editions[editions.index(edition) - 1]
-        return value
-
-
 FACTORY_DEFAULTS_NORMALIZED_BY_LOAD: Mapping[str, object] = {
-    "data_backend": EditionDependentDefault(
-        community={}, ultimate={"features": {"telemetry": "disabled"}}
-    ),
     "notification_spooling": "local",
     "site_opentelemetry_collector_delta_to_cumulative_processor": {
         "max_stale": 300.0,
@@ -212,8 +185,7 @@ factory floats (0.97, 0.94, 0.70) onto the nearest n/255 grid value below,
 exactly as the legacy Transform did on every edit. The delta-to-cumulative
 max_streams default is the int64 maximum, which exceeds what a JSON number
 can represent exactly, so loading clamps it to the largest JSON-safe
-integer. Loading the data backend factory default deletes the routing of
-the features the edition does not license."""
+integer."""
 
 
 def validate_disk_value(
@@ -279,6 +251,30 @@ class DefaultWithoutKeys:
     keys removed."""
 
     keys: frozenset[str]
+
+
+_REUSE_LOWER_EDITION = object()
+
+
+@dataclass(frozen=True)
+class EditionDependentDefault:
+    """A pin whose value differs between editions. Every edition reuses the
+    value of the next lower edition (declaration order of Edition: community,
+    pro, ultimate, ultimatemt, cloud) unless it spells out its own, so a pin
+    states only the editions where the value changes. community is the base
+    of the chain and therefore always required."""
+
+    community: object
+    pro: object = _REUSE_LOWER_EDITION
+    ultimate: object = _REUSE_LOWER_EDITION
+    ultimatemt: object = _REUSE_LOWER_EDITION
+    cloud: object = _REUSE_LOWER_EDITION
+
+    def for_edition(self, edition: Edition) -> object:
+        editions = list(Edition)
+        while (value := getattr(self, edition.long)) is _REUSE_LOWER_EDITION:
+            edition = editions[editions.index(edition) - 1]
+        return value
 
 
 def resolve_case_value(
@@ -1324,9 +1320,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
         "url_target": "_blank",
         "labels": ("shown", {"size": 11}),
     },
-    "data_backend": EditionDependentDefault(
-        community={}, ultimate={"features": {"telemetry": "disabled"}}
-    ),
+    "data_backend": {"features": {"telemetry": "disabled"}},
     "mkeventd_notify_remotehost": None,
     "mkeventd_service_levels": [],
     "notification_fallback_email": "",
@@ -1506,7 +1500,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
 }
 
 
-CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
+CASES: Mapping[str, list[Case]] = {
     "acknowledge_problems": [
         CasePass(
             "configured",
@@ -2235,86 +2229,54 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
         CaseFail("below-minimum", 100),
         CaseFail("not-an-int", "5000"),
     ],
-    "data_backend": EditionDependentDefault(
-        community=[],
-        pro=[
-            CaseMigrates(
-                "legacy-enabled",
-                (
-                    "enabled",
-                    {
-                        "tls_port": 9000,
-                        "https_port": 8443,
-                        "relative_memory_limit_percentage": 50.0,
-                    },
-                ),
-                {
-                    "local_instance": {
-                        "tls_port": 9000,
-                        "https_port": 8443,
-                        "relative_memory_limit_percentage": 50.0,
-                    },
+    "data_backend": [
+        CaseMigrates(
+            "legacy-disabled", ("disabled", None), {"features": {"telemetry": "disabled"}}
+        ),
+        CaseMigrates(
+            "legacy-enabled",
+            (
+                "enabled",
+                {"tls_port": 9000, "https_port": 8443, "relative_memory_limit_percentage": 50.0},
+            ),
+            {
+                "features": {"telemetry": "local"},
+                "local_instance": {
+                    "tls_port": 9000,
+                    "https_port": 8443,
+                    "relative_memory_limit_percentage": 50.0,
                 },
-            ),
-            CaseMigrates(
-                "unlicensed-routing-deleted",
-                {"features": {"telemetry": "central"}, "address_seen_by_central": "10.0.0.2"},
-                {},
-            ),
-        ],
-        ultimate=[
-            CaseMigrates(
-                "legacy-disabled", ("disabled", None), {"features": {"telemetry": "disabled"}}
-            ),
-            CaseMigrates(
-                "legacy-enabled",
-                (
-                    "enabled",
-                    {
-                        "tls_port": 9000,
-                        "https_port": 8443,
-                        "relative_memory_limit_percentage": 50.0,
-                    },
-                ),
-                {
-                    "features": {"telemetry": "local"},
-                    "local_instance": {
-                        "tls_port": 9000,
-                        "https_port": 8443,
-                        "relative_memory_limit_percentage": 50.0,
-                    },
+            },
+        ),
+        CaseFail("central-feature-without-address", {"features": {"telemetry": "central"}}),
+        CasePass(
+            "address-kept-without-central-feature",
+            {"features": {"telemetry": "disabled"}, "address_seen_by_central": "10.0.0.2"},
+        ),
+        CasePass(
+            "local-instance",
+            {
+                "features": {"telemetry": "local"},
+                "local_instance": {
+                    "tls_port": 9000,
+                    "https_port": 8443,
+                    "relative_memory_limit_percentage": 50.0,
                 },
-            ),
-            CaseFail("central-feature-without-address", {"features": {"telemetry": "central"}}),
-            CasePass(
-                "address-kept-without-central-feature",
-                {"features": {"telemetry": "disabled"}, "address_seen_by_central": "10.0.0.2"},
-            ),
-            CasePass(
-                "local-instance",
-                {
-                    "features": {"telemetry": "local"},
-                    "local_instance": {
-                        "tls_port": 9000,
-                        "https_port": 8443,
-                        "relative_memory_limit_percentage": 50.0,
-                    },
+            },
+        ),
+        CaseFail("local-feature-without-local-instance", {"features": {"telemetry": "local"}}),
+        CaseFail(
+            "duplicate-ports",
+            {
+                "features": {"telemetry": "local"},
+                "local_instance": {
+                    "tls_port": 9000,
+                    "https_port": 9000,
+                    "relative_memory_limit_percentage": 50.0,
                 },
-            ),
-            CaseFail("local-feature-without-local-instance", {"features": {"telemetry": "local"}}),
-            CaseFail(
-                "duplicate-ports",
-                {
-                    "features": {"telemetry": "local"},
-                    "local_instance": {
-                        "tls_port": 9000,
-                        "https_port": 9000,
-                        "relative_memory_limit_percentage": 50.0,
-                    },
-                },
-            ),
-        ],
-    ),
+            },
+        ),
+    ],
     "mkeventd_connect_timeout": MIN_ONE_INTEGER_CASES,
     "mkeventd_notify_contactgroup": [
         CaseDirty("no-groups-defined-in-test-config", "oncall", MKUserError),
@@ -3080,8 +3042,6 @@ class ConfigVariableSuite:
             if isinstance(factory, NoFactoryDefault):
                 continue
             expected = FACTORY_DEFAULTS_NORMALIZED_BY_LOAD.get(ident, factory)
-            if isinstance(expected, EditionDependentDefault):
-                expected = expected.for_edition(self.EDITION)
             try:
                 loaded = round_trip_disk_value(config_variable, global_settings_context, factory)
                 if loaded != expected:
@@ -3202,16 +3162,6 @@ class ConfigVariableSuite:
                 assert round_trip_disk_value(config_variable, context, value) == value
 
 
-def _cases_for_edition(
-    case_list: list[Case] | EditionDependentDefault, edition: Edition
-) -> list[Case]:
-    if isinstance(case_list, EditionDependentDefault):
-        resolved = case_list.for_edition(edition)
-        assert isinstance(resolved, list)
-        return resolved
-    return case_list
-
-
 def generate_config_variable_tests(metafunc: pytest.Metafunc) -> None:
     """Parametrize the suite with the case table entries the edition under test
     actually registers. The config variable registry is the single source of
@@ -3230,7 +3180,7 @@ def generate_config_variable_tests(metafunc: pytest.Metafunc) -> None:
                 pytest.param(ident, case, id=f"{ident}-{case.id}")
                 for ident, case_list in CASES.items()
                 if ident in registered
-                for case in _cases_for_edition(case_list, metafunc.cls.EDITION)
+                for case in case_list
             ],
         )
     elif "ident" in metafunc.fixturenames:

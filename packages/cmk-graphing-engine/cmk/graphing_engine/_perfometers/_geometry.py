@@ -236,13 +236,13 @@ def _project_segments(
 
 def _drawn_bar(
     bar: EvaluatedPerfometer,
+    lower: EvaluatedFocusBound,
     parameters: _ProjectionParameters,
     logger: logging.Logger,
-    lower: EvaluatedFocusBound | None = None,
 ) -> list[DrawnSegment]:
     return _project_segments(
         _make_projection(
-            bar.focus_range.lower if lower is None else lower,
+            lower,
             bar.focus_range.upper,
             parameters,
             bar.name,
@@ -258,15 +258,21 @@ def drawn_segments(
 ) -> Sequence[Sequence[DrawnSegment]]:
     match perfometer:
         case EvaluatedPerfometer():
-            return [_drawn_bar(perfometer, _SINGLE_PARAMETERS, logger)]
+            return [
+                _drawn_bar(perfometer, perfometer.focus_range.lower, _SINGLE_PARAMETERS, logger)
+            ]
         case EvaluatedBidirectional():
-            left = _drawn_bar(perfometer.left, _OPPOSED_PARAMETERS, logger, _ZERO)
-            right = _drawn_bar(perfometer.right, _OPPOSED_PARAMETERS, logger, _ZERO)
+            left = _drawn_bar(perfometer.left, _ZERO, _OPPOSED_PARAMETERS, logger)
+            right = _drawn_bar(perfometer.right, _ZERO, _OPPOSED_PARAMETERS, logger)
             return [[*left[::-1], *right]]
         case EvaluatedStacked():
             return [
-                _drawn_bar(perfometer.upper, _SINGLE_PARAMETERS, logger),
-                _drawn_bar(perfometer.lower, _SINGLE_PARAMETERS, logger),
+                _drawn_bar(
+                    perfometer.upper, perfometer.upper.focus_range.lower, _SINGLE_PARAMETERS, logger
+                ),
+                _drawn_bar(
+                    perfometer.lower, perfometer.lower.focus_range.lower, _SINGLE_PARAMETERS, logger
+                ),
             ]
         case _:
             assert_never(perfometer)

@@ -188,6 +188,46 @@ def test_parse_graph_from_api_routes_scalars_to_rules() -> None:
     ]
 
 
+def test_parse_graph_from_api_draws_an_operation_reading_a_metric_as_a_line() -> None:
+    graph = graphs_v1.Graph(
+        name="g",
+        title=Title("t"),
+        simple_lines=[
+            metrics_v1.Sum(Title("s"), metrics_v1.Color.BLUE, [metrics_v1.WarningOf("a"), "b"])
+        ],
+    )
+    parsed = parse_graph_from_api(graph, [_SERVICE], _id, _METRICS, kind=_KIND)
+    assert [line.curve.quantity for line in parsed.lines] == [
+        Sum(summands=(ScalarOf(metric=_rrd("a"), scalar_kind=ScalarKind.WARNING), _rrd("b")))
+    ]
+
+
+def test_parse_graph_from_api_draws_an_operation_of_scalars_alone_as_a_rule() -> None:
+    graph = graphs_v1.Graph(
+        name="g",
+        title=Title("t"),
+        simple_lines=[
+            metrics_v1.Sum(
+                Title("s"),
+                metrics_v1.Color.BLUE,
+                [
+                    metrics_v1.WarningOf("a"),
+                    metrics_v1.Constant(
+                        Title("c"),
+                        metrics_v1.Unit(metrics_v1.DecimalNotation("")),
+                        metrics_v1.Color.RED,
+                        1,
+                    ),
+                ],
+            )
+        ],
+    )
+    parsed = parse_graph_from_api(graph, [_SERVICE], _id, _METRICS, kind=_KIND)
+    assert [rule.curve.quantity for rule in parsed.rules] == [
+        Sum(summands=(ScalarOf(metric=_rrd("a"), scalar_kind=ScalarKind.WARNING), Constant(1)))
+    ]
+
+
 def test_parse_graph_from_api_maps_lower_warning_and_critical() -> None:
     graph = graphs_v2_unstable.Graph(
         name="g",

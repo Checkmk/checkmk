@@ -140,6 +140,19 @@ def test_a_plugin_whose_scalar_bound_is_absent_does_not_draw() -> None:
     assert _drawn_by(registered, _perf(a=PerformanceData(value=1.0, maximum=10.0))) == "with_scalar"
 
 
+def test_a_plugin_whose_segment_reads_an_absent_scalar_does_not_draw() -> None:
+    with_scalar = perfometers_v1.Perfometer(
+        name="with_scalar",
+        focus_range=perfometers_v1.FocusRange(perfometers_v1.Closed(0), perfometers_v1.Closed(100)),
+        segments=[
+            "a",
+            metrics_v1.Sum(Title("s"), metrics_v1.Color.BLUE, ["a", metrics_v1.WarningOf("a")]),
+        ],
+    )
+    registered = _registered(with_scalar, _closed_bar("plain", "a"))
+    assert _drawn_by(registered, _perf(a=PerformanceData(value=1.0))) == "plain"
+
+
 def test_a_plugin_whose_bound_metric_is_absent_does_not_draw() -> None:
     with_bound = perfometers_v1.Perfometer(
         name="with_bound",

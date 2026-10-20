@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from typing import assert_never
 
 from cmk.graphing.v1 import graphs as graphs_v1
@@ -53,46 +53,11 @@ def operands_of(quantity: ApiQuantity) -> Sequence[ApiQuantity]:
             return []
 
 
-def is_scalar(quantity: ApiQuantity) -> bool:
-    match quantity:
-        case str():
-            return False
-        case (
-            metrics_v1.Constant()
-            | metrics_v2_unstable.LowerWarningOf()
-            | metrics_v2_unstable.LowerCriticalOf()
-            | metrics_v1.WarningOf()
-            | metrics_v1.CriticalOf()
-            | metrics_v1.MinimumOf()
-            | metrics_v1.MaximumOf()
-        ):
-            return True
-        case (
-            metrics_v1.Sum()
-            | metrics_v1.Product()
-            | metrics_v1.Difference()
-            | metrics_v1.Fraction()
-        ):
-            return all(is_scalar(operand) for operand in operands_of(quantity))
-        case _:
-            assert_never(quantity)
+type _ApiLeaf = str | metrics_v1.Constant | ApiScalar
 
 
-def metric_names_in_quantity(quantity: ApiQuantity) -> Iterable[MetricName]:
+def _leaves(quantity: ApiQuantity) -> Iterator[_ApiLeaf]:
     match quantity:
-        case str():
-            yield MetricName(quantity)
-        case metrics_v1.Constant():
-            return
-        case (
-            metrics_v2_unstable.LowerWarningOf()
-            | metrics_v2_unstable.LowerCriticalOf()
-            | metrics_v1.WarningOf()
-            | metrics_v1.CriticalOf()
-            | metrics_v1.MinimumOf()
-            | metrics_v1.MaximumOf()
-        ):
-            yield MetricName(quantity.metric_name)
         case (
             metrics_v1.Sum()
             | metrics_v1.Product()
@@ -100,9 +65,24 @@ def metric_names_in_quantity(quantity: ApiQuantity) -> Iterable[MetricName]:
             | metrics_v1.Fraction()
         ):
             for operand in operands_of(quantity):
-                yield from metric_names_in_quantity(operand)
+                yield from _leaves(operand)
         case _:
-            assert_never(quantity)
+            yield quantity
+
+
+def is_scalar(quantity: ApiQuantity) -> bool:
+    return not any(isinstance(leaf, str) for leaf in _leaves(quantity))
+
+
+def metric_names_in_quantity(quantity: ApiQuantity) -> Iterable[MetricName]:
+    for leaf in _leaves(quantity):
+        match leaf:
+            case str():
+                yield MetricName(leaf)
+            case metrics_v1.Constant():
+                continue
+            case _:
+                yield MetricName(leaf.metric_name)
 
 
 def drawn_metric_names_of_graph(
@@ -158,25 +138,6 @@ def quantities_of_perfometer(perfometer: ApiPerfometer) -> Iterable[ApiQuantity]
 
 
 def scalars_in_quantity(quantity: ApiQuantity) -> Iterable[ApiScalar]:
-    match quantity:
-        case str() | metrics_v1.Constant():
-            return
-        case (
-            metrics_v2_unstable.LowerWarningOf()
-            | metrics_v2_unstable.LowerCriticalOf()
-            | metrics_v1.WarningOf()
-            | metrics_v1.CriticalOf()
-            | metrics_v1.MinimumOf()
-            | metrics_v1.MaximumOf()
-        ):
-            yield quantity
-        case (
-            metrics_v1.Sum()
-            | metrics_v1.Product()
-            | metrics_v1.Difference()
-            | metrics_v1.Fraction()
-        ):
-            for operand in operands_of(quantity):
-                yield from scalars_in_quantity(operand)
-        case _:
-            assert_never(quantity)
+    for leaf in _leaves(quantity):
+        if not isinstance(leaf, str | metrics_v1.Constant):
+            yield leaf

@@ -99,6 +99,14 @@ def _find_name_and_scale(
     return metric_name, 1.0
 
 
+def _translated_name(
+    raw_name: MetricName, specs: Mapping[str, _TranslationSpec]
+) -> tuple[MetricName, float]:
+    prefix, bare_name = split_predict_prefix(raw_name)
+    name, scale = _find_name_and_scale(MetricName(bare_name), specs)
+    return MetricName(f"{prefix}{name}"), scale
+
+
 def _reverse_names(
     canonical_name: MetricName,
     specs: Mapping[str, _TranslationSpec],
@@ -150,9 +158,8 @@ def _translated_columns(
 ) -> Mapping[MetricName, Sequence[_TranslatedColumn]]:
     columns: dict[MetricName, list[_TranslatedColumn]] = {}
     for original_name, raw_value in raw_values.items():
-        prefix, bare_name = split_predict_prefix(original_name)
-        name, scale = _find_name_and_scale(MetricName(bare_name), specs)
-        columns.setdefault(MetricName(f"{prefix}{name}"), []).append(
+        name, scale = _translated_name(original_name, specs)
+        columns.setdefault(name, []).append(
             _TranslatedColumn(
                 original=RRDOriginal(metric_name=original_name, scale=scale),
                 raw_value=raw_value,
@@ -185,12 +192,10 @@ def translated_names_and_scales(
     registered_translations: Sequence[translations_v1.Translation],
 ) -> Mapping[MetricName, tuple[MetricName, float]]:
     specs = _specs_for_command(check_command, registered_translations)
-    mapping: dict[MetricName, tuple[MetricName, float]] = {}
-    for raw_metric_name in raw_metric_names:
-        prefix, bare_name = split_predict_prefix(raw_metric_name)
-        name, scale = _find_name_and_scale(MetricName(bare_name), specs)
-        mapping[raw_metric_name] = (MetricName(f"{prefix}{name}"), scale)
-    return mapping
+    return {
+        raw_metric_name: _translated_name(raw_metric_name, specs)
+        for raw_metric_name in raw_metric_names
+    }
 
 
 def map_metric_names(

@@ -9,8 +9,17 @@ from http import HTTPStatus
 import pytest
 
 import cmk.utils.paths
+from cmk.ccc.site import SiteId
+from cmk.gui.config import active_config
+from cmk.gui.monitor.hosts._api._filters import (
+    AndNode,
+    NumericCondition,
+    SiteScopedFilter,
+    StringCondition,
+)
 from cmk.gui.monitor.hosts._api._list_hosts import _handle_list_hosts
 from cmk.gui.monitor.hosts._models import HostOptionalField, HostState
+from cmk.gui.monitor.hosts.table import HostTable, InvalidFilterError, MonitorFolders
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.gui.setup_git_test_helper import (
@@ -193,3 +202,96 @@ def test_handle_list_hosts_omits_timestamps_that_were_not_asked_for() -> None:
     response = _handle_list_hosts(host_repo, host_repo.count_total(), fields=frozenset())
 
     assert isinstance(response.hosts[0].last_check, ApiOmitted)
+
+
+def _host_table() -> HostTable:
+    return HostTable(active_config.sites, MonitorFolders())
+
+
+@pytest.mark.parametrize(
+    "site_condition, exclude_sites",
+    [
+        pytest.param(
+            {"type": "condition", "field": "site_id", "op": "one_of", "value": ["NO_SITE"]},
+            False,
+            id="site",
+        ),
+        pytest.param(
+            {
+                "type": "not",
+                "child": {
+                    "type": "condition",
+                    "field": "site_id",
+                    "op": "one_of",
+                    "value": ["NO_SITE"],
+                },
+            },
+            True,
+            id="negated site",
+        ),
+    ],
+)
+def test_a_filter_tree_from_the_page_url_parses_into_site_scoped_filter_nodes(
+    site_condition: dict[str, object], exclude_sites: bool
+) -> None:
+    raw = json.dumps(
+        {
+            "type": "and",
+            "children": [
+                {"type": "condition", "field": "name", "op": "contains", "value": "web"},
+                {"type": "condition", "field": "num_services", "op": "gt", "value": 3},
+                site_condition,
+            ],
+        }
+    )
+
+    scoped = _host_table().parse_filter(raw)
+
+    assert scoped == SiteScopedFilter(
+        node=AndNode(
+            type="and",
+            children=[
+                StringCondition(type="condition", field="name", op="contains", value="web"),
+                NumericCondition(type="condition", field="num_services", op="gt", value=3),
+            ],
+        ),
+        sites=frozenset({SiteId("NO_SITE")}),
+        exclude_sites=exclude_sites,
+    )
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        pytest.param("{not json", id="malformed JSON"),
+        pytest.param(
+            '{"type": "condition", "field": "no_such_field", "op": "eq", "value": 1}',
+            id="unknown field",
+        ),
+        pytest.param('{"type": "and", "children": []}', id="AND without children"),
+        pytest.param(
+            json.dumps(
+                {
+                    "type": "or",
+                    "children": [
+                        {
+                            "type": "condition",
+                            "field": "site_id",
+                            "op": "one_of",
+                            "value": ["remote"],
+                        },
+                        {"type": "condition", "field": "name", "op": "contains", "value": "web"},
+                    ],
+                }
+            ),
+            id="site condition under OR",
+        ),
+        pytest.param(
+            '{"type": "condition", "field": "site_id", "op": "one_of", "value": ["ghost"]}',
+            id="unknown site",
+        ),
+    ],
+)
+def test_an_invalid_filter_tree_is_rejected_as_invalid_filter(raw: str) -> None:
+    with pytest.raises(InvalidFilterError):
+        _host_table().parse_filter(raw)

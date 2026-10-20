@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._api._list_hosts import HostEntry, HostTable
+from ._exceptions import InvalidFilterError
 from ._folder import MonitorFolders
 from ._table_catalog import HOST_TABLE, HostTableCatalog
 
@@ -12,5 +13,6 @@ __all__ = [
     "HostEntry",
     "HostTable",
     "HostTableCatalog",
+    "InvalidFilterError",
     "MonitorFolders",
 ]

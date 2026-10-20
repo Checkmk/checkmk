@@ -6,8 +6,6 @@
 from collections.abc import Mapping
 from typing import Literal
 
-from pydantic import TypeAdapter
-
 from cmk.gui.monitor.legacy_context import (
     ContextFilterTranslation,
     PageFilterModel,
@@ -17,7 +15,7 @@ from cmk.gui.type_defs import FilterName, VisualContext
 
 from ._api._filters import (
     BooleanField,
-    FilterNode,
+    FILTER_NODE,
     NameListField,
     NumericField,
     scope_filter_by_site,
@@ -29,7 +27,7 @@ type _HostField = (
     StringField | NameListField | BooleanField | NumericField | Literal["site_id", "state"]
 )
 
-_PAGE = PageFilterModel(tree=TypeAdapter(FilterNode), check=scope_filter_by_site)
+_PAGE = PageFilterModel(tree=FILTER_NODE, check=scope_filter_by_site)
 
 _FIELDS: Mapping[FilterName, _HostField | Mapping[str, _HostField]] = {
     "sites": "site_id",

@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Callable, Sequence, Set
+from collections.abc import Callable, Collection, Sequence, Set
 from http import HTTPStatus
 from typing import Annotated, Final, Self
 
@@ -30,6 +30,7 @@ from cmk.livestatus_client import SiteConfigurations
 from cmk.web.utils import permission_verification as permissions
 
 from .._customer import customer_resolver
+from .._exceptions import InvalidFilterError
 from .._folder import MonitorFolders
 from .._impl import LiveStatusHostRepository
 from .._models import (
@@ -49,6 +50,7 @@ from .._table_catalog import HOST_TABLE
 from ..context_filters import translate_filters
 from ._family import MONITOR_HOSTS_FAMILY
 from ._filters import (
+    FILTER_NODE,
     FilterNode,
     parse_as_livestatus_filter,
     scope_filter_by_site,
@@ -381,12 +383,19 @@ def _list_hosts(
 
 def _scope_and_check_sites(node: FilterNode, site_configs: SiteConfigurations) -> SiteScopedFilter:
     try:
+        return scope_filter_to_sites(node, frozenset(site_configs))
+    except InvalidFilterError as exc:
+        raise _invalid_filter(str(exc)) from exc
+
+
+def scope_filter_to_sites(node: FilterNode, site_ids: Collection[SiteId]) -> SiteScopedFilter:
+    try:
         scoped = scope_filter_by_site(node)
     except ValueError as exc:
-        raise _invalid_filter(str(exc)) from exc
+        raise InvalidFilterError(str(exc)) from exc
     for site_id in sorted(scoped.sites or ()):
-        if site_id not in site_configs:
-            raise _invalid_filter(f"Site {site_id!r} does not exist.")
+        if site_id not in site_ids:
+            raise InvalidFilterError(f"Site {site_id!r} does not exist.")
     return scoped
 
 
@@ -404,6 +413,13 @@ class HostTable:
         self._sites = MonitorSites(
             MonitorSite(id=site_id, customer=self._customer_of(site_id)) for site_id in site_configs
         )
+
+    def parse_filter(self, raw: str) -> SiteScopedFilter:
+        try:
+            node = FILTER_NODE.validate_json(raw)
+        except ValueError as exc:
+            raise InvalidFilterError(str(exc)) from exc
+        return scope_filter_to_sites(node, self._site_ids)
 
     def list(
         self,

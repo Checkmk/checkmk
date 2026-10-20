@@ -3,14 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pydantic import TypeAdapter
-
 from cmk.gui.http import Request
 from cmk.web.utils.urls import makeuri_contextless
 
-from ._api._filters import FilterNode
-
-_FILTER_NODE: TypeAdapter[FilterNode] = TypeAdapter(FilterNode)
+from ._api._filters import FILTER_NODE, FilterNode
 
 
 def all_hosts_url(
@@ -24,9 +20,9 @@ def all_hosts_url(
     """
     vars_ = []
     if filter_node is not None:
-        filter_json = _FILTER_NODE.dump_json(filter_node).decode()
+        filter_json = FILTER_NODE.dump_json(filter_node).decode()
         # The nodes are plain dataclasses, only reading them back runs the model's validators.
-        _FILTER_NODE.validate_json(filter_json)
+        FILTER_NODE.validate_json(filter_json)
         vars_.append(("filter", filter_json))
     if search:
         vars_.append(("q", search))

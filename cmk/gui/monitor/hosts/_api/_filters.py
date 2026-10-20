@@ -6,10 +6,10 @@
 import dataclasses
 import re
 from collections.abc import Callable, Mapping
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from annotated_types import MinLen
-from pydantic import AfterValidator, PlainValidator, StringConstraints
+from pydantic import AfterValidator, PlainValidator, StringConstraints, TypeAdapter
 
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
@@ -280,6 +280,8 @@ class NotNode:
 
 
 type FilterNode = AndNode | OrNode | NotNode | ConditionNode
+
+FILTER_NODE: Final = TypeAdapter[FilterNode](FilterNode)
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)

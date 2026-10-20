@@ -11,6 +11,7 @@ from cmk.graphing_engine import (
     DrawnCurve,
     EvaluatedCurve,
     EvaluatedGraph,
+    NonConvertibleUnit,
     SeriesAttributes,
     TimeSeries,
     Unit,
@@ -20,7 +21,7 @@ from cmk.gui.i18n import _
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 from .._source import FetchDiagnostics
-from .._user_specific_unit import user_unit_format
+from .._unit_format import unit_to_unit_format
 from .models import (
     ApiAreaRender,
     ApiConsolidation,
@@ -57,13 +58,16 @@ def api_time_range_from_engine(time_range: EngineTimeRange) -> ApiTimeRange:
     return ApiTimeRange(start=time_range.start, end=time_range.end, step=time_range.step)
 
 
-def _api_unit(unit: Unit, temperature_unit: TemperatureUnit) -> ApiUnitFormat:
-    unit_format, _conversion = user_unit_format(unit, temperature_unit)
-    return ApiUnitFormat.from_shared(unit_format)
+def _api_unit(converted: Unit) -> ApiUnitFormat:
+    return ApiUnitFormat.from_shared(
+        unit_to_unit_format(
+            NonConvertibleUnit(notation=converted.notation, precision=converted.precision)
+        )
+    )
 
 
 def horizontal_lines_to_api(
-    converted: EvaluatedGraph, temperature_unit: TemperatureUnit
+    converted: EvaluatedGraph,
 ) -> list[ApiHorizontalLine]:
     lines: list[ApiHorizontalLine] = []
     for rule in converted.rules:
@@ -72,7 +76,7 @@ def horizontal_lines_to_api(
                 name=rule.id,
                 title=rule.attributes.title,
                 value=-rule.value if rule.inverse else rule.value,
-                unit=_api_unit(rule.attributes.unit, temperature_unit),
+                unit=_api_unit(rule.attributes.unit),
                 color=rule.attributes.color,
             )
         )
@@ -117,14 +121,14 @@ def _render_to_api(drawn: DrawnCurve[EvaluatedCurve]) -> ApiMetricRender:
 
 
 def curve_to_api_metric(
-    drawn: DrawnCurve[EvaluatedCurve], temperature_unit: TemperatureUnit
+    drawn: DrawnCurve[EvaluatedCurve],
 ) -> ApiMetric:
     curve = drawn.curve
     return ApiMetric(
         metadata=ApiMetricMetadata(
             name=curve.id,
             title=curve.attributes.title,
-            unit=_api_unit(curve.attributes.unit, temperature_unit),
+            unit=_api_unit(curve.attributes.unit),
             color=curve.attributes.color,
             attributes=_series_attributes_to_api(curve.series_attributes),
         ),
@@ -155,10 +159,9 @@ def evaluated_to_response(
         title=converted.title,
         time_range=api_time_range_from_engine(converted.time_range),
         metrics=[
-            curve_to_api_metric(drawn, temperature_unit)
-            for drawn in drawn_curves(converted.stacks, converted.lines)
+            curve_to_api_metric(drawn) for drawn in drawn_curves(converted.stacks, converted.lines)
         ],
-        horizontal_lines=horizontal_lines_to_api(converted, temperature_unit),
+        horizontal_lines=horizontal_lines_to_api(converted),
         shaded_regions=shaded_regions_to_api(converted),
         warnings=diagnostics_to_warnings(diagnostics),
         errors=list(diagnostics.errors),

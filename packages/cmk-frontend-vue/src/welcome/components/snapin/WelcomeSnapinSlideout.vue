@@ -15,8 +15,8 @@ import { computed, ref } from 'vue'
 import NextSteps from '@/welcome/components/NextSteps.vue'
 import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
 
-import { type StepId, totalSteps } from '../steps/stepComponents'
-import { getWelcomeStageInformation, markStepAsComplete } from '../steps/utils'
+import { countCompletedSteps, totalSteps } from '../steps/stepComponents'
+import { type StepId, getWelcomeStageInformation, markStepAsComplete } from '../steps/utils'
 
 const { _t } = usei18n()
 
@@ -30,7 +30,7 @@ const cards = ref<WelcomeCards>(props.cards)
 const nextStepsTitle = _t('Next steps with Checkmk')
 const firstStepsTitle = _t('Topics to explore')
 
-const completedSteps = computed(() => stageInformation.value?.finished.length || 0)
+const completedSteps = computed(() => countCompletedSteps(stageInformation.value?.finished || []))
 const completed = computed(() => completedSteps.value === totalSteps)
 const slideInTitle = computed(() => (completed.value ? nextStepsTitle : firstStepsTitle))
 
@@ -73,7 +73,12 @@ function closeSlideIn() {
       :show-heading="false"
       @step-completed="stepCompleted"
     />
-    <NextSteps v-else-if="cards" :cards="cards" />
+    <NextSteps
+      v-else-if="cards"
+      :cards="cards"
+      :finished-steps="stageInformation?.finished || []"
+      @step-completed="stepCompleted"
+    />
   </CmkSlideInDialog>
 </template>
 

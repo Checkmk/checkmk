@@ -14,7 +14,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
 import StepsProgressBar from '../StepsProgressBar.vue'
-import { totalSteps } from '../steps/stepComponents'
+import { countCompletedSteps, totalSteps } from '../steps/stepComponents'
 import WelcomeSnapinSlideout from './WelcomeSnapinSlideout.vue'
 
 const { _t } = usei18n()
@@ -25,7 +25,7 @@ const props = defineProps<{
 }>()
 
 const currentStageInformation = ref(props.stage_information)
-const completedSteps = computed(() => currentStageInformation.value.finished.length)
+const completedSteps = computed(() => countCompletedSteps(currentStageInformation.value.finished))
 const completed = computed(() => completedSteps.value === totalSteps)
 const slideoutOpen = ref<boolean>(false)
 

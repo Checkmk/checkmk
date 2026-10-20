@@ -146,7 +146,6 @@ def test_completed_steps_are_reported_in_stage_order(
 
     assert finished == [
         FinishedEnum.add_host,
-        FinishedEnum.activate_changes,
         FinishedEnum.adjust_services,
         FinishedEnum.assign_responsibilities,
         FinishedEnum.enable_notifications,
@@ -220,11 +219,20 @@ def test_stage_information_page_reports_the_finished_steps(
     pages: PageRegistry,
     page_context: PageContext,
 ) -> None:
-    user.welcome_completed_steps = {"activate_changes"}
+    user.welcome_completed_steps = {"enable_notifications"}
     stage_information = pages["ajax_get_welcome_page_stage_information"].handler
     assert isinstance(stage_information, Page)
 
-    assert stage_information.page(page_context) == {"finished": [FinishedEnum.activate_changes]}
+    assert stage_information.page(page_context) == {"finished": [FinishedEnum.enable_notifications]}
+
+
+def test_retired_steps_are_not_reported_as_finished(
+    with_admin_login: UserId,
+    without_edition_cards: None,
+) -> None:
+    user.welcome_completed_steps = {"activate_changes"}
+
+    assert get_welcome_data().stage_information.finished == []
 
 
 def test_welcome_page_renders_the_welcome_component(

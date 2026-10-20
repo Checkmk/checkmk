@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
 import CmkAccordionStepPanelItem from 'cmk-ui-library/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkLinkCard from 'cmk-ui-library/components/CmkLinkCard'
 import CmkWizard from 'cmk-ui-library/components/CmkWizard/CmkWizard.vue'
 import CmkWizardButton from 'cmk-ui-library/components/CmkWizard/CmkWizardButton.vue'
@@ -21,7 +22,7 @@ import StepHeading from '@/welcome/components/steps/components/StepHeading.vue'
 import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
 
 import FirstHostSlideout from '../first-host/FirstHostSlideout.vue'
-import type { StepId } from './stepComponents'
+import type { StepId } from './utils'
 
 const { _t } = usei18n()
 
@@ -36,7 +37,7 @@ const props = defineProps<{
 
 const useCseSlideout = ref<boolean>(false)
 const currentStep: Ref<number> = usePersistentRef<number>(
-  `${props.step}-currentStep`,
+  `${props.stepId}-currentStep`,
   0,
   (v) => v as number,
   'local'
@@ -70,40 +71,6 @@ This allows monitoring to start with minimal configuration effort.`
 
     <CmkWizard v-model="currentStep" mode="guided">
       <CmkWizardStep :index="0" :is-completed="() => currentStep > 0 || accomplished">
-        <template #header>
-          <CmkHeading type="h3">{{ _t('Set up basic folder structure') }}</CmkHeading>
-        </template>
-        <template #content>
-          <StepParagraph>
-            {{
-              _t(`In Checkmk, folders are the foundation for organizing hosts and applying settings consistently.
-            Creating a folder (or folder structure) before adding your first host helps you keep things tidy from
-            the start and makes it easier to manage similar hosts later on through inheritance. Learn more about
-            folders and inheritance in the`)
-            }}
-            <a
-              href="https://docs.checkmk.com/latest/en/hosts_structure.html?lquery=folder#folder"
-              target="_blank"
-            >
-              {{ _t('documentation.') }}
-            </a>
-          </StepParagraph>
-
-          <StepCardsRow>
-            <CmkLinkCard
-              icon-name="newfolder"
-              :url="cards.add_folder"
-              :title="_t('Add folder')"
-              :open-in-new-tab="false"
-            />
-          </StepCardsRow>
-        </template>
-        <template #actions>
-          <CmkWizardButton type="next" :override-label="_t('Continue')" />
-        </template>
-      </CmkWizardStep>
-
-      <CmkWizardStep :index="1" :is-completed="() => currentStep > 1 || accomplished">
         <template #header>
           <CmkHeading type="h3">{{ _t('Add your first host') }}</CmkHeading>
         </template>
@@ -190,6 +157,44 @@ This allows monitoring to start with minimal configuration effort.`
               />
             </StepCardsRow>
           </div>
+        </template>
+        <template #actions>
+          <CmkWizardButton type="next" :override-label="_t('Continue')" />
+        </template>
+      </CmkWizardStep>
+
+      <CmkWizardStep :index="1" :is-completed="() => currentStep > 1 || accomplished">
+        <template #header>
+          <CmkHeading type="h3">{{ _t('Activate changes') }}</CmkHeading>
+        </template>
+        <template #content>
+          <StepParagraph>
+            {{
+              _t(
+                `In Checkmk, configuration changes are first saved as pending and do not affect the running monitoring right away.
+          This lets you prepare and review multiple changes — such as adding hosts, adjusting services, or fine-tuning
+          thresholds — before applying them all at once. Only when you activate the pending changes are they transferred
+          to the live monitoring system as a single bundle.`
+              )
+            }}
+          </StepParagraph>
+          <CmkAlert
+            :heading="_t('Spotting pending changes')"
+            :text="
+              _t(
+                `If there are pending changes, you’ll see a yellow badge on the “Changes” menu item in the main navigation, reminding you that your setup is not yet active.`
+              )
+            "
+          />
+
+          <StepCardsRow>
+            <CmkLinkCard
+              icon-name="main-changes"
+              :title="_t('Open all pending changes')"
+              :url="cards.activate_changes"
+              :open-in-new-tab="false"
+            />
+          </StepCardsRow>
         </template>
         <template #actions>
           <CmkWizardButton

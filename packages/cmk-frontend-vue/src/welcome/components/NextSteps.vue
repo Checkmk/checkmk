@@ -11,17 +11,30 @@ import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
+import FurtherGuides from '@/welcome/components/FurtherGuides.vue'
+import type { StepId } from '@/welcome/components/steps/utils'
+
 const { _t } = usei18n()
 
 defineProps<{
   cards: WelcomeCards
+  finishedSteps: StepId[]
 }>()
+
+const emit = defineEmits<{ 'step-completed': [stepId: StepId] }>()
 </script>
 
 <template>
   <CmkHeading type="h4">
     {{ _t('Further topics') }}
   </CmkHeading>
+  <CmkSpace />
+  <FurtherGuides
+    :cards="cards"
+    :finished-steps="finishedSteps"
+    show="open"
+    @step-completed="emit('step-completed', $event)"
+  />
   <CmkSpace />
   <CmkLinkCardContainer class="welcome-next-steps">
     <CmkLinkCard

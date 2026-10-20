@@ -4,10 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen, within } from '@testing-library/vue'
-import type { StageInformation, WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
+import type { StageInformation } from 'cmk-shared-typing/typescript/welcome'
 import { defineComponent, h, ref } from 'vue'
 
 import WelcomeSnapin from '@/welcome/components/snapin/WelcomeSnapin.vue'
+
+import { createMockCards } from '../../mockCards'
 
 // Mock CmkSlideInDialog to avoid Radix-Vue portal issues in test environment
 vi.mock('cmk-ui-library/components/CmkSlideInDialog.vue', () => ({
@@ -31,44 +33,6 @@ vi.mock('cmk-ui-library/components/CmkSlideInDialog.vue', () => ({
     }
   })
 }))
-
-const createMockCards = (): WelcomeCards => ({
-  add_folder: 'add_folder.py',
-  checkmk_ai: 'https://checkmk.com/ai',
-  checkmk_docs: 'https://docs.checkmk.com',
-  checkmk_forum: 'https://forum.checkmk.com',
-  checkmk_best_practices: 'https://checkmk.com/best-practices',
-  checkmk_trainings: 'https://checkmk.com/trainings',
-  checkmk_webinars: 'https://checkmk.com/webinars',
-  create_contactgroups: 'wato.py?mode=contact_groups',
-  users: 'wato.py?mode=users',
-  assign_host_to_contactgroups: 'wato.py?mode=edit_host',
-  setup_backup: 'wato.py?mode=backup',
-  scale_monitoring: 'wato.py?mode=distributed_monitoring',
-  fine_tune_monitoring: 'wato.py?mode=globalvars',
-  add_host: 'wato.py?mode=newhost',
-  network_devices: 'wato.py?mode=newhost&host_type=snmp',
-  aws_quick_setup: 'quick_setup.py?mode=aws',
-  azure_quick_setup: 'quick_setup.py?mode=azure',
-  gcp_quick_setup: 'quick_setup.py?mode=gcp',
-  activate_changes: 'wato.py?mode=changelog',
-  setup_hosts: 'wato.py?mode=folder',
-  main_dashboard: 'dashboard.py?name=main',
-  problem_dashboard: 'dashboard.py?name=problems',
-  unhandled_service_problems: 'view.py?view_name=svcproblems',
-  time_periods: 'wato.py?mode=timeperiods',
-  host_groups: 'wato.py?mode=host_groups',
-  add_notification_rule: 'wato.py?mode=notification_rule',
-  test_notifications: 'wato.py?mode=notifications',
-  add_custom_dashboard: 'dashboard.py?mode=create',
-  all_dashboards: 'dashboard.py',
-  mark_step_completed: '/api/welcome/mark_step_completed',
-  get_stage_information: '/api/welcome/get_stage_information',
-  intro_users: 'https://docs.checkmk.com/2.5.0/en/intro_users.html?origin=checkmk',
-  intro_notifications: 'https://docs.checkmk.com/2.5.0/en/intro_notifications.html?origin=checkmk',
-  setup_folder_structure: 'https://docs.checkmk.com/2.5.0/en/host_structure.html?origin=checkmk',
-  start_page: 'user_profile.py'
-})
 
 test('clicking "Continue exploration" button on sidebar snapin opens slideout with welcome steps', async () => {
   const mockCards = createMockCards()
@@ -112,4 +76,15 @@ test('clicking "Continue exploration" button on sidebar snapin opens slideout wi
 
   const onboardingSteps = within(slideout as HTMLElement).getByTestId('onboarding-steps')
   expect(onboardingSteps).toBeInTheDocument()
+})
+
+test('progress counts only current onboarding steps', () => {
+  render(WelcomeSnapin, {
+    props: {
+      cards: createMockCards(),
+      stage_information: { finished: ['add_host', 'adjust_services'] }
+    }
+  })
+
+  expect(screen.getByText('1/3 Topics explored')).toBeInTheDocument()
 })

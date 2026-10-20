@@ -34,9 +34,6 @@ def _get_finished_stages() -> Generator[FinishedEnum]:
     if "add_host" in user.welcome_completed_steps:
         yield FinishedEnum.add_host
 
-    if "activate_changes" in user.welcome_completed_steps:
-        yield FinishedEnum.activate_changes
-
     if "adjust_services" in user.welcome_completed_steps:
         yield FinishedEnum.adjust_services
 
@@ -135,10 +132,6 @@ def _make_url(addvars: Sequence[HTTPVariable], filename: str) -> str:
 def get_welcome_data() -> WelcomePage:
     return WelcomePage(
         cards=WelcomeCards(
-            add_folder=_make_url(
-                addvars=[("mode", "newfolder")],
-                filename="wato.py",
-            ),
             checkmk_ai="https://chat.checkmk.com",
             checkmk_forum="https://forum.checkmk.com",
             checkmk_docs=doc_reference_url(

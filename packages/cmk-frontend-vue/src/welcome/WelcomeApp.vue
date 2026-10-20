@@ -7,17 +7,27 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { StageInformation, WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
+import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
+import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTabs'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
 import { refreshSidebarSnapin } from '@/sidebar/lib/snapin-refresh'
+import FurtherGuides from '@/welcome/components/FurtherGuides.vue'
 import NextSteps from '@/welcome/components/NextSteps.vue'
 import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
 import ResourceLinksPanel from '@/welcome/components/ResourceLinksPanel.vue'
-import { getWelcomeStageInformation, markStepAsComplete } from '@/welcome/components/steps/utils.ts'
+import {
+  type StepId,
+  getWelcomeStageInformation,
+  markStepAsComplete
+} from '@/welcome/components/steps/utils.ts'
 
 import WelcomeBanner from './components/WelcomeBanner.vue'
 import WelcomeFooter from './components/WelcomeFooter.vue'
-import { type StepId, totalSteps } from './components/steps/stepComponents'
+import { countCompletedSteps, totalSteps } from './components/steps/stepComponents'
+
+const { _t } = usei18n()
 
 const props = defineProps<{
   cards: WelcomeCards
@@ -26,7 +36,8 @@ const props = defineProps<{
 }>()
 
 const currentStageInformation = ref(props.stage_information)
-const completedSteps = computed(() => currentStageInformation.value.finished.length)
+const completedSteps = computed(() => countCompletedSteps(currentStageInformation.value.finished))
+const openedTab = ref<string>('explore')
 
 async function stepCompleted(stepId: StepId): Promise<void> {
   await markStepAsComplete(props.cards.mark_step_completed, stepId).then(async () => {
@@ -45,8 +56,38 @@ async function stepCompleted(stepId: StepId): Promise<void> {
       <WelcomeBanner :completed-steps="completedSteps" :total-steps="totalSteps" />
       <div class="welcome-app__panels">
         <div class="welcome-app__panel-left">
-          <NextSteps v-if="completedSteps === totalSteps" :cards="cards" />
+          <CmkTabs v-if="completedSteps === totalSteps" v-model="openedTab">
+            <template #tabs>
+              <CmkTab id="explore">{{ _t('To explore') }}</CmkTab>
+              <CmkTab id="done">{{ _t('Done') }}</CmkTab>
+            </template>
+            <template #tab-contents>
+              <CmkTabContent id="explore">
+                <NextSteps
+                  :cards="cards"
+                  :finished-steps="currentStageInformation.finished"
+                  @step-completed="stepCompleted"
+                />
+              </CmkTabContent>
+              <CmkTabContent id="done">
+                <OnboardingStepper
+                  :cards="cards"
+                  :finished-steps="currentStageInformation.finished"
+                  :show-heading="false"
+                  @step-completed="stepCompleted"
+                />
+                <CmkSpace />
+                <FurtherGuides
+                  :cards="cards"
+                  :finished-steps="currentStageInformation.finished"
+                  show="done"
+                  @step-completed="stepCompleted"
+                />
+              </CmkTabContent>
+            </template>
+          </CmkTabs>
           <OnboardingStepper
+            v-else
             :cards="cards"
             :finished-steps="currentStageInformation.finished"
             :show-heading="true"

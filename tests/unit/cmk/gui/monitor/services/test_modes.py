@@ -207,6 +207,38 @@ def test_build_service_modes_all_modes() -> None:
     ]
 
 
+def test_build_service_modes_by_id_names_modes_by_stable_ids() -> None:
+    service = ServiceFactory.build(
+        **_NO_MODES
+        | {
+            "in_downtime": True,
+            "acknowledged": True,
+            "notifications_enabled": False,
+            "num_comments": 3,
+            "active_checks_manually_disabled": True,
+            "passive_checks_disabled": True,
+            "in_notification_period": False,
+            "in_service_period": False,
+            "in_check_period": False,
+            "check_type": CheckType.SHADOW,
+        }
+    )
+    modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
+
+    assert [mode.id for mode in modes] == [
+        "downtime",
+        "acknowledged",
+        "notifications_off",
+        "comments",
+        "active_checks_off",
+        "passive_checks_off",
+        "out_of_notification_period",
+        "out_of_service_period",
+        "not_checked",
+        "shadow",
+    ]
+
+
 def test_build_service_modes_flapping_is_not_a_mode() -> None:
     # Flapping is shown as its own badge next to the state in the slide-in header instead.
     service = ServiceOverviewFactory.build(**_NO_MODES | {"is_flapping": True})

@@ -218,6 +218,7 @@ describe('ServiceOverviewTab', () => {
         data: makeOverview({
           host_modes: [
             {
+              id: 'downtime',
               icon_name: 'downtime',
               link: 'view.py?view_name=downtimes_of_host&site=local&host=web-server-01',
               title: 'Host is in scheduled downtime'

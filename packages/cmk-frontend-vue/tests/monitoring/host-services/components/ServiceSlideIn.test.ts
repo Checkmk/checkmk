@@ -172,6 +172,7 @@ describe('ServiceSlideIn', () => {
       data: makeOverview({
         modes: [
           {
+            id: 'acknowledged',
             icon_name: 'ack',
             link: 'view.py?view_name=service&site=local&host=web-server-01&service=CPU+load',
             title: 'Problem acknowledged'
@@ -196,6 +197,7 @@ describe('ServiceSlideIn', () => {
           data: makeOverview({
             modes: [
               {
+                id: 'acknowledged',
                 icon_name: 'ack',
                 link: 'view.py?view_name=service&site=local&host=web-server-01&service=CPU+load',
                 title: 'Problem acknowledged'
@@ -242,6 +244,7 @@ describe('ServiceSlideIn', () => {
         data: makeOverview({
           modes: [
             {
+              id: 'downtime',
               icon_name: 'downtime',
               link: 'view.py?view_name=downtimes_of_host&site=local&host=web-server-01',
               title: 'In scheduled downtime'
@@ -303,6 +306,7 @@ describe('ServiceSlideIn', () => {
         data: makeOverview({
           modes: [
             {
+              id: 'downtime',
               icon_name: 'downtime',
               link: 'view.py?view_name=downtimes_of_host&site=local&host=web-server-01',
               title: 'In scheduled downtime'

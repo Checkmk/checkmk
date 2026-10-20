@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Final
 
 from ._types import ApiGraph
@@ -435,5 +435,5 @@ _POSITION: Final = {graph_name: position for position, graph_name in enumerate(G
 
 def sort_registered_graph_plugins(
     registered_graphs: Mapping[str, ApiGraph],
-) -> list[tuple[str, ApiGraph]]:
+) -> Sequence[tuple[str, ApiGraph]]:
     return sorted(registered_graphs.items(), key=lambda item: _POSITION.get(item[0], -1))

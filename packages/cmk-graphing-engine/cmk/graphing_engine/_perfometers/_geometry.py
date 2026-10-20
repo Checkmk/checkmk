@@ -211,7 +211,7 @@ def _project_segments(
     projection: _Projection,
     segments: Sequence[EvaluatedSegment],
     fully_filled_at: float,
-) -> list[DrawnSegment]:
+) -> Sequence[DrawnSegment]:
     value_total = sum(segment.value for segment in segments)
     filled_total = projection(value_total)
 
@@ -239,7 +239,7 @@ def _drawn_bar(
     lower: EvaluatedFocusBound,
     parameters: _ProjectionParameters,
     logger: logging.Logger,
-) -> list[DrawnSegment]:
+) -> Sequence[DrawnSegment]:
     return _project_segments(
         _make_projection(
             lower,

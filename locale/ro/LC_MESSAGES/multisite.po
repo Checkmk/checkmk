@@ -28221,6 +28221,11 @@ msgstr ""
 "Testul de încărcare a fișierelor pentru stocarea la distanță a eșuat. Mesaj "
 "de eroare original: %s."
 
+msgid ""
+"File uploads are not supported in this form. Please paste the content "
+"instead, if the field offers it."
+msgstr ""
+
 msgid "File with performance counter"
 msgstr "Fișier cu contor de performanță"
 
@@ -34211,6 +34216,14 @@ msgstr ""
 
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr "Câte zile din trecut Checkmk trebuie să evalueze datele de măsurare"
+
+msgid ""
+"How many times the model may reply while answering one question. In each "
+"reply it can call several tools at once, then it reads their results and "
+"replies again. When an answer needs more replies, it ends with an error; the "
+"next question can build on what was found. Higher values allow longer "
+"investigations and cost more tokens."
+msgstr ""
 
 msgid ""
 "How old (in seconds) the cache file for built-in sections is allowed to be."
@@ -53029,6 +53042,10 @@ msgstr "Pragurile senzorilor de ieșire"
 msgid "Output text encoding settings for SNMP devices"
 msgstr "Setări de codificare a textului de ieșire pentru dispozitivele SNMP"
 
+#, fuzzy
+msgid "Output tokens per reply"
+msgstr "Pragurile senzorilor de ieșire"
+
 msgid "Output traffic"
 msgstr "Trafic de ieșire"
 
@@ -60540,6 +60557,10 @@ msgstr "%sMinimum pentru călătoria dus-întors"
 
 msgid "Round trip time"
 msgstr "Durata călătoriei dus-întors"
+
+#, fuzzy
+msgid "Rounds per turn"
+msgstr "Noduri pe regiune"
 
 msgid "Route53"
 msgstr "Ruta53"
@@ -73855,6 +73876,12 @@ msgstr ""
 
 msgid "The monitoring state that this event will trigger."
 msgstr "Starea de monitorizare pe care o va declanșa acest eveniment."
+
+msgid ""
+"The most tokens one model reply may produce, its thinking included. A value "
+"above what the model supports makes every answer fail: Claude Haiku 4.5, for "
+"example, allows at most 64,000."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""

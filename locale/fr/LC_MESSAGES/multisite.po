@@ -28344,6 +28344,11 @@ msgstr ""
 "Le test de téléchargement de fichier pour le stockage à distance a échoué. "
 "Message d'erreur original : %s"
 
+msgid ""
+"File uploads are not supported in this form. Please paste the content "
+"instead, if the field offers it."
+msgstr ""
+
 msgid "File with performance counter"
 msgstr "Fichier avec compteur de performance"
 
@@ -34399,6 +34404,14 @@ msgid ""
 msgstr ""
 
 msgid "How many days in the past Checkmk should evaluate the measurement data"
+msgstr ""
+
+msgid ""
+"How many times the model may reply while answering one question. In each "
+"reply it can call several tools at once, then it reads their results and "
+"replies again. When an answer needs more replies, it ends with an error; the "
+"next question can build on what was found. Higher values allow longer "
+"investigations and cost more tokens."
 msgstr ""
 
 msgid ""
@@ -53291,6 +53304,10 @@ msgstr "Seuils des capteurs de sortie"
 msgid "Output text encoding settings for SNMP devices"
 msgstr "Paramètres d'encodage du texte de sortie pour les dispositifs SNMP"
 
+#, fuzzy
+msgid "Output tokens per reply"
+msgstr "Seuils des capteurs de sortie"
+
 msgid "Output traffic"
 msgstr "Trafic de sortie"
 
@@ -60882,6 +60899,10 @@ msgstr "%sRound trip minimum"
 
 msgid "Round trip time"
 msgstr "Durée du voyage aller-retour"
+
+#, fuzzy
+msgid "Rounds per turn"
+msgstr "Nœuds par région"
 
 msgid "Route53"
 msgstr "Route53"
@@ -74201,6 +74222,12 @@ msgstr ""
 
 msgid "The monitoring state that this event will trigger."
 msgstr "L'état de surveillance que cet événement va déclencher."
+
+msgid ""
+"The most tokens one model reply may produce, its thinking included. A value "
+"above what the model supports makes every answer fail: Claude Haiku 4.5, for "
+"example, allows at most 64,000."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""

@@ -28106,6 +28106,11 @@ msgstr ""
 "Bestandsuploadtest voor externe opslag mislukt. Oorspronkelijke foutmelding: "
 "%s"
 
+msgid ""
+"File uploads are not supported in this form. Please paste the content "
+"instead, if the field offers it."
+msgstr ""
+
 msgid "File with performance counter"
 msgstr "Bestand met prestatieteller"
 
@@ -34102,6 +34107,14 @@ msgid ""
 msgstr ""
 
 msgid "How many days in the past Checkmk should evaluate the measurement data"
+msgstr ""
+
+msgid ""
+"How many times the model may reply while answering one question. In each "
+"reply it can call several tools at once, then it reads their results and "
+"replies again. When an answer needs more replies, it ends with an error; the "
+"next question can build on what was found. Higher values allow longer "
+"investigations and cost more tokens."
 msgstr ""
 
 msgid ""
@@ -52873,6 +52886,10 @@ msgstr "Uitgangssensordrempels"
 msgid "Output text encoding settings for SNMP devices"
 msgstr "Instellingen voor tekstcodering van uitvoer voor SNMP-apparaten"
 
+#, fuzzy
+msgid "Output tokens per reply"
+msgstr "Uitgangssensordrempels"
+
 msgid "Output traffic"
 msgstr "Uitgaand verkeer"
 
@@ -60377,6 +60394,10 @@ msgstr "%sRondreis minimum"
 
 msgid "Round trip time"
 msgstr "Tijd voor rondreis"
+
+#, fuzzy
+msgid "Rounds per turn"
+msgstr "Knooppunten per regio"
 
 msgid "Route53"
 msgstr "Route53"
@@ -73577,6 +73598,12 @@ msgstr ""
 
 msgid "The monitoring state that this event will trigger."
 msgstr "De bewakingstoestand die deze gebeurtenis zal triggeren."
+
+msgid ""
+"The most tokens one model reply may produce, its thinking included. A value "
+"above what the model supports makes every answer fail: Claude Haiku 4.5, for "
+"example, allows at most 64,000."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""

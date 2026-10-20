@@ -26251,6 +26251,11 @@ msgstr ""
 "リモートストレージのファイルアップロードテストに失敗。元のエラーメッセージ: "
 "%s"
 
+msgid ""
+"File uploads are not supported in this form. Please paste the content "
+"instead, if the field offers it."
+msgstr ""
+
 msgid "File with performance counter"
 msgstr "パフォーマンスカウンター付きのファイル"
 
@@ -31672,6 +31677,14 @@ msgstr ""
 
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr "Checkmkが測定データを評価すべき過去の日数"
+
+msgid ""
+"How many times the model may reply while answering one question. In each "
+"reply it can call several tools at once, then it reads their results and "
+"replies again. When an answer needs more replies, it ends with an error; the "
+"next question can build on what was found. Higher values allow longer "
+"investigations and cost more tokens."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -49467,6 +49480,10 @@ msgstr "出力センサーのしきい値"
 msgid "Output text encoding settings for SNMP devices"
 msgstr "SNMPデバイスの出力テキストエンコーディング設定"
 
+#, fuzzy
+msgid "Output tokens per reply"
+msgstr "出力センサーのしきい値"
+
 msgid "Output traffic"
 msgstr "出力トラフィック"
 
@@ -56579,6 +56596,10 @@ msgstr "ラウンドトリップの最小値"
 
 msgid "Round trip time"
 msgstr "ラウンドトリップタイム"
+
+#, fuzzy
+msgid "Rounds per turn"
+msgstr "リージョンごとのノード"
 
 msgid "Route53"
 msgstr "ルート53"
@@ -69325,6 +69346,12 @@ msgstr "エージェントプラグインのバージョンが解析不可能な
 
 msgid "The monitoring state that this event will trigger."
 msgstr "このイベントがトリガーする監視状態。"
+
+msgid ""
+"The most tokens one model reply may produce, its thinking included. A value "
+"above what the model supports makes every answer fail: Claude Haiku 4.5, for "
+"example, allows at most 64,000."
+msgstr ""
 
 #, python-format
 msgid ""

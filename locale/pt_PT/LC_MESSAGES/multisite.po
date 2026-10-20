@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-10-17 17:31+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -28113,6 +28113,11 @@ msgstr ""
 "Falha no teste de carregamento de ficheiros para armazenamento remoto. "
 "Mensagem de erro original: %s"
 
+msgid ""
+"File uploads are not supported in this form. Please paste the content "
+"instead, if the field offers it."
+msgstr ""
+
 msgid "File with performance counter"
 msgstr "Arquivo com contador de desempenho"
 
@@ -34120,6 +34125,14 @@ msgid ""
 msgstr ""
 
 msgid "How many days in the past Checkmk should evaluate the measurement data"
+msgstr ""
+
+msgid ""
+"How many times the model may reply while answering one question. In each "
+"reply it can call several tools at once, then it reads their results and "
+"replies again. When an answer needs more replies, it ends with an error; the "
+"next question can build on what was found. Higher values allow longer "
+"investigations and cost more tokens."
 msgstr ""
 
 msgid ""
@@ -52866,6 +52879,10 @@ msgstr "Limiares do sensor de saída"
 msgid "Output text encoding settings for SNMP devices"
 msgstr "Configurações de codificação de texto de saída para dispositivos SNMP"
 
+#, fuzzy
+msgid "Output tokens per reply"
+msgstr "Limiares do sensor de saída"
+
 msgid "Output traffic"
 msgstr "Tráfego de saída"
 
@@ -60392,6 +60409,10 @@ msgstr "%sRotagem mínima"
 
 msgid "Round trip time"
 msgstr "Tempo de viagem de ida e volta"
+
+#, fuzzy
+msgid "Rounds per turn"
+msgstr "Nós por região"
 
 msgid "Route53"
 msgstr "Rota53"
@@ -73578,6 +73599,12 @@ msgstr ""
 
 msgid "The monitoring state that this event will trigger."
 msgstr "O monitoramento indica que este evento será acionado."
+
+msgid ""
+"The most tokens one model reply may produce, its thinking included. A value "
+"above what the model supports makes every answer fail: Claude Haiku 4.5, for "
+"example, allows at most 64,000."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -95703,7 +95730,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -96229,7 +96255,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""

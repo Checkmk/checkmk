@@ -20,7 +20,7 @@ from cmk.graphing_engine._rrd._metrics import (
 )
 from cmk.graphing_engine._rrd._naming import HostName, ServiceName, SiteID
 
-from ._display import metric_display_attributes
+from ._attributes import metric_display_attributes
 
 type Direction = Literal["upper", "lower"]
 

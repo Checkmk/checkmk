@@ -32,7 +32,7 @@ py_library(
         "cmk/graphing_engine/_perfometers/_evaluation.py",
         "cmk/graphing_engine/_perfometers/_geometry.py",
         "cmk/graphing_engine/_plugins/__init__.py",
-        "cmk/graphing_engine/_plugins/_display.py",
+        "cmk/graphing_engine/_plugins/_attributes.py",
         "cmk/graphing_engine/_plugins/_graphs.py",
         "cmk/graphing_engine/_plugins/_matching.py",
         "cmk/graphing_engine/_plugins/_order.py",

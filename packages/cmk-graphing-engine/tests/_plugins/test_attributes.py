@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 from cmk.graphing.v1 import metrics, Title
 from cmk.graphing_engine import metric_display_attributes, split_predict_prefix
-from cmk.graphing_engine._plugins._display import FALLBACK_COLOR
+from cmk.graphing_engine._plugins._attributes import FALLBACK_COLOR
 
 _REGISTERED: Mapping[str, metrics.Metric] = {
     "used": metrics.Metric(

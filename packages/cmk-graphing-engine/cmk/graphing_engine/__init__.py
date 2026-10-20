@@ -87,7 +87,7 @@ from ._perfometers._evaluation import (
     FocusBoundKind,
 )
 from ._perfometers._geometry import drawn_segments, DrawnSegment, perfometer_sort_value
-from ._plugins._display import (
+from ._plugins._attributes import (
     FALLBACK_UNIT,
     metric_display_attributes,
     parse_color,

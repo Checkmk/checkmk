@@ -21,7 +21,7 @@ from cmk.graphing_engine._quantities._quantity import QuantityProtocol
 from cmk.graphing_engine._rrd._metrics import rrd_metric_of, ScalarOf
 from cmk.graphing_engine._rrd._naming import Service
 
-from ._display import metric_display_attributes, parse_color, parse_unit, scalar_attributes
+from ._attributes import metric_display_attributes, parse_color, parse_unit, scalar_attributes
 from ._types import ApiQuantity, ApiScalar, operands_of
 
 

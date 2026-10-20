@@ -530,7 +530,7 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
     )
     formatter = None if axis is None else axis.formatter
     scalars = _graph_scalars(graph)
-    is_mirrored = any(drawn.mirrored for drawn in drawn_curves(graph.stacks, graph.lines))
+    is_mirrored = any(drawn.inverse for drawn in drawn_curves(graph.stacks, graph.lines))
     lower, upper = _vertical_range_bounds(graph)
     # The legend always lists every rule (e.g. warning/critical), even ones outside the visible
     # Y range; only the drawn horizontal lines are restricted to the in-range subset.

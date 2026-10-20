@@ -112,8 +112,8 @@ def _series_attributes_to_api(attributes: SeriesAttributes) -> list[ApiMetricAtt
 
 def _render_to_api(drawn: DrawnCurve[EvaluatedCurve]) -> ApiMetricRender:
     if drawn.stack is None:
-        return ApiLineRender(shape="line", inverse=drawn.mirrored, hidden=False)
-    return ApiAreaRender(shape="area", stack=drawn.stack, inverse=drawn.mirrored, hidden=False)
+        return ApiLineRender(shape="line", inverse=drawn.inverse, hidden=False)
+    return ApiAreaRender(shape="area", stack=drawn.stack, inverse=drawn.inverse, hidden=False)
 
 
 def curve_to_api_metric(

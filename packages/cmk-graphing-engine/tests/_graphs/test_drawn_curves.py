@@ -41,7 +41,7 @@ def _drawn(curves: Iterable[DrawnCurve[Curve]]) -> list[tuple[str, str, bool, st
         (
             drawn.curve.attributes.title,
             drawn.line_type,
-            drawn.mirrored,
+            drawn.inverse,
             drawn.stack,
         )
         for drawn in curves

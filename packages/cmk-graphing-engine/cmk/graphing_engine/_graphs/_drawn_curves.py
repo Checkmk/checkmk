@@ -14,7 +14,7 @@ type DrawnLineType = Literal["line", "area", "stack"]
 class DrawnCurve[CurveT]:
     curve: CurveT
     line_type: DrawnLineType
-    mirrored: bool
+    inverse: bool
     stack: str | None
 
 
@@ -33,13 +33,13 @@ class _DrawnLine[CurveT](Protocol):
 
 
 def _drawn_stack[CurveT](
-    members: Sequence[CurveT], identifier: str, mirrored: bool
+    members: Sequence[CurveT], identifier: str, inverse: bool
 ) -> Iterator[DrawnCurve[CurveT]]:
     for position, curve in enumerate(members):
         yield DrawnCurve(
             curve=curve,
             line_type="stack" if position else "area",
-            mirrored=mirrored,
+            inverse=inverse,
             stack=identifier,
         )
 
@@ -49,7 +49,7 @@ def _drawn_lines[CurveT](lines: Sequence[_DrawnLine[CurveT]]) -> Iterator[DrawnC
         yield DrawnCurve(
             curve=line.curve,
             line_type="line",
-            mirrored=line.inverse,
+            inverse=line.inverse,
             stack=None,
         )
 

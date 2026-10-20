@@ -47,7 +47,7 @@ def _attributes(
 
 def _curve(drawn: DrawnCurve[EvaluatedCurve]) -> Curve:
     return Curve(
-        line_type=line_type_with_mirroring(drawn.line_type, drawn.mirrored),
+        line_type=line_type_with_mirroring(drawn.line_type, drawn.inverse),
         color=drawn.curve.attributes.color,
         title=drawn.curve.attributes.title,
         attributes=_attributes(drawn.curve.series_attributes),

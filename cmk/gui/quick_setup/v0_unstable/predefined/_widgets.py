@@ -9,6 +9,7 @@ import cmk.utils.regex
 
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.fields.definitions import HOST_NAME_REGEXP
+from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.private.folder import Folder
 from cmk.gui.i18n import translate_to_current_language
@@ -30,8 +31,6 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     FieldSize,
     InputHint,
-    SingleChoice,
-    SingleChoiceElement,
     String,
     validators,
 )
@@ -154,9 +153,9 @@ def site_formspec_wrapper() -> FormSpecWrapper:
         form_spec=DictionaryExtended(
             elements={
                 QSSiteSelection: DictElement(
-                    parameter_form=SingleChoice(
+                    parameter_form=SingleChoiceExtended(
                         elements=[
-                            SingleChoiceElement(
+                            SingleChoiceElementExtended(
                                 name=site_id,
                                 title=Title(  # pylint: disable=localization-of-non-literal-string
                                     title

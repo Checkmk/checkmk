@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from typing import Final
 
 from ._types import ApiGraph
 
@@ -430,13 +431,10 @@ GRAPHS_ORDER = [
 ]
 
 
+_POSITION: Final = {graph_name: position for position, graph_name in enumerate(GRAPHS_ORDER)}
+
+
 def sort_registered_graph_plugins(
     registered_graphs: Mapping[str, ApiGraph],
 ) -> list[tuple[str, ApiGraph]]:
-    def _by_index(graph_name: str) -> int:
-        try:
-            return GRAPHS_ORDER.index(graph_name)
-        except ValueError:
-            return -1
-
-    return sorted(registered_graphs.items(), key=lambda t: _by_index(t[0]))
+    return sorted(registered_graphs.items(), key=lambda item: _POSITION.get(item[0], -1))

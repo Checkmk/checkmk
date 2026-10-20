@@ -174,8 +174,8 @@ def _evaluate_curve(
     ]
 
 
-def _drawn_curves(curves: Sequence[EvaluatedCurve], *, omit_zero: bool) -> Sequence[EvaluatedCurve]:
-    if not omit_zero:
+def _shown_curves(curves: Sequence[EvaluatedCurve], graph: Graph) -> Sequence[EvaluatedCurve]:
+    if not graph.omit_zero_curves:
         return curves
     return [curve for curve in curves if any(curve.time_series.values)]
 
@@ -256,7 +256,7 @@ def _evaluate_graph(graph: Graph, context: EvaluationContext) -> EvaluatedGraph:
     seen: Counter[str] = Counter()
     stacks = []
     for group in graph.stacks:
-        members = _drawn_curves(
+        members = _shown_curves(
             [
                 member_curve
                 for member in group.members
@@ -264,16 +264,16 @@ def _evaluate_graph(graph: Graph, context: EvaluationContext) -> EvaluatedGraph:
                     member, inverse=group.inverse, seen=seen, context=context
                 )
             ],
-            omit_zero=graph.omit_zero_curves,
+            graph,
         )
         if members:
             stacks.append(EvaluatedStack(members=members, inverse=group.inverse))
     lines = [
         EvaluatedLine(curve=line_curve, inverse=line.inverse)
         for line in graph.lines
-        for line_curve in _drawn_curves(
+        for line_curve in _shown_curves(
             _evaluate_curve(line.curve, inverse=line.inverse, seen=seen, context=context),
-            omit_zero=graph.omit_zero_curves,
+            graph,
         )
     ]
     rules = []

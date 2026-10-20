@@ -19,6 +19,7 @@ type ApiServiceEntry = components['schemas']['HostServiceEntry']
 type ApiHostEntry = components['schemas']['HostEntry']
 
 const HOSTS_PATH = '/monitor/hosts'
+const EXPORT_EVENT = 'cmk-monitoring-export'
 
 // Several tests here drive the Mode filter panel through multiple userEvent interactions.
 // That's enough combined work to overrun the default 5s budget when the suite runs alongside
@@ -115,6 +116,7 @@ function renderApp(overrides: Partial<MonitoringHostServicesApp> = {}) {
       user_id: 'cmkadmin',
       edition: 'pro',
       limit_tiers: [1000, 5000],
+      export_event: EXPORT_EVENT,
       ...overrides
     } satisfies MonitoringHostServicesApp
   })
@@ -1228,5 +1230,54 @@ describe('with the rows laid out', () => {
     await screen.findByRole('button', { name: 'More actions' })
 
     expect(screen.queryByRole('button', { name: 'Explain with AI' })).not.toBeInTheDocument()
+  })
+})
+
+describe('export', () => {
+  let downloads: string[]
+
+  beforeEach(() => {
+    downloads = []
+    URL.createObjectURL = vi.fn(() => 'blob:services')
+    URL.revokeObjectURL = vi.fn()
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement
+    ) {
+      downloads.push(this.download)
+    })
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  async function exportAs(format: 'csv' | 'json'): Promise<void> {
+    await screen.findByRole('columnheader', { name: 'Service' })
+    await vi.waitUntil(() => servicesPost.mock.calls.length > 0)
+    document.dispatchEvent(new CustomEvent(EXPORT_EVENT, { detail: format }))
+  }
+
+  test.each(['csv', 'json'] as const)(
+    'downloads the services as %s, named after the host',
+    async (format) => {
+      mockServices([makeApiEntry()])
+      renderApp()
+
+      await exportAs(format)
+      await vi.waitUntil(() => downloads.length > 0)
+
+      expect(downloads[0]).toMatch(new RegExp(`^web-1-services-.*\\.${format}$`))
+    }
+  )
+
+  test('says how many services were exported when the row limit left some out', async () => {
+    mockServices([makeApiEntry()], { matched: 3, total: 3 })
+    renderApp()
+
+    await exportAs('csv')
+
+    expect(
+      await screen.findByText('Exported 1 of 3 services. Show more services to export more.')
+    ).toBeInTheDocument()
   })
 })

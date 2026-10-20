@@ -40,6 +40,7 @@ import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import HostSlideIn from '../all-hosts/components/HostSlideIn.vue'
 import { HOST_TAB_OVERVIEW } from '../all-hosts/slideInTabs'
 import { useHostActions } from '../all-hosts/useHostActions'
+import MonitoringExportFeedback from '../shared/components/MonitoringExportFeedback.vue'
 import MonitoringHeaderActions from '../shared/components/MonitoringHeaderActions.vue'
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
 import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
@@ -50,6 +51,7 @@ import { acknowledgeDefaults } from '../shared/components/action/actions/acknowl
 import { RESCHEDULE_ACTION_ID } from '../shared/components/action/actions/reschedule'
 import { downtimePresets } from '../shared/components/action/actions/scheduleDowntime'
 import { createActionRegistry } from '../shared/components/action/registry'
+import { useRowExport } from '../shared/export/useRowExport'
 import { buildFilterUrlSchema } from '../shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '../shared/filterState/urlState'
 import { tableKeyboardHints } from '../shared/keyboardHints'
@@ -262,6 +264,25 @@ const root = useTemplateRef<HTMLElement>('root')
 const typeToFocus = useTypeToFocus(root)
 useFallbackKeys(root, () => root.value?.querySelector<HTMLElement>('.monitoring-table'))
 useContextMenuKey(root)
+
+const exportFeedback = useRowExport(hostServicesService, {
+  exportEvent: props.export_event,
+  build: () => hostServicesService.export(),
+  texts: {
+    exporting: _t('Exporting services…'),
+    notLoaded: _t('The services could not be loaded, so nothing was exported.'),
+    truncated: (counts, canShowMore) =>
+      canShowMore
+        ? _t(
+            'Exported %{exported} of %{matched} services. Show more services to export more.',
+            counts
+          )
+        : _t(
+            'Exported %{exported} of %{matched} services. Narrow the filters to export all of them.',
+            counts
+          )
+  }
+})
 
 onMounted(() => {
   hostServicesService.onFocusSearch(() => toolbar.value?.focus())
@@ -476,6 +497,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
           />
         </template>
       </MonitoringToolbar>
+      <MonitoringExportFeedback v-model="exportFeedback" />
       <MonitoringSplitPane
         :service="hostServicesService"
         :actions="actionRegistry"

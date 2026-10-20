@@ -28,6 +28,7 @@ from cmk.gui.monitor.command import (
     MonitorCommands,
     notification_rules_url,
 )
+from cmk.gui.monitor.export import EXPORT_EVENT, MonitorExportMenu
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
 from cmk.gui.monitor.services._ai_explain import ai_explain
 from cmk.gui.monitor.services._api._list_host_services import LIMIT_TIERS
@@ -138,6 +139,7 @@ class MonitorHostServicesPage(Page):
                 hostname=hostname,
                 site_id=site_id,
                 breadcrumb=breadcrumb,
+                export_dropdowns=MonitorExportMenu().dropdowns(),
             ),
             enable_main_page_scrollbar=False,
             debug=ctx.config.debug,
@@ -163,6 +165,7 @@ class MonitorHostServicesPage(Page):
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
                     limit_tiers=list(LIMIT_TIERS),
                     host=hostname,
+                    export_event=EXPORT_EVENT,
                     site=site_id,
                     host_url=host_url,
                     user_id=str(user.id),

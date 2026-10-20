@@ -31,7 +31,10 @@
       "type": "array",
       "items": { "$ref": "monitoring/_base.json#/$defs/row_action" },
       "default": []
+    },
+    "export_event": {
+      "type": "string"
     }
   },
-  "required": ["host", "site", "host_url", "user_id", "edition"]
+  "required": ["host", "site", "host_url", "user_id", "edition", "export_event"]
 }

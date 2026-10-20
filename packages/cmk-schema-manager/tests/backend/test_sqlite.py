@@ -477,5 +477,11 @@ def test_apply_connection_pragmas_is_safe_on_an_in_memory_database() -> None:
     assert connection.execute("SELECT id FROM t").fetchone()[0] == 1
 
 
+def test_site_relative_path_is_path_below_the_site(omd_root: Path) -> None:
+    backend = Sqlite()
+
+    assert backend.path("db") == omd_root / backend.site_relative_path("db")
+
+
 def _recorded_revisions(connection: sqlite3.Connection) -> list[str]:
     return [row[0] for row in connection.execute(f"SELECT id FROM {REVISION_TABLE}")]

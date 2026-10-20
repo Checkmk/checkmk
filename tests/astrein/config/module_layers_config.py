@@ -1196,6 +1196,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("omdlib"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
+        "cmk.schema_manager",
         "cmk.utils",
     ),
     Component("tests.code_quality"): _allow(

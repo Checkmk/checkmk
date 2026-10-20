@@ -12,5 +12,5 @@ schema_manager_oauth = ManagedDatabase(
     name="oauth",
     backend=Sqlite(),
     chain=RevisionChain((InitialSchema(),)),
-    omd_lifecycle=["create", "update"],
+    omd_lifecycle=["create", "update", "backup"],
 )

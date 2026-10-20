@@ -15,7 +15,7 @@ from typing import Any, Literal
 from cmk.schema_manager.backend.base import Backend
 from cmk.schema_manager.revision import RevisionChain
 
-OmdLifecycleEvent = Literal["create", "update"]
+OmdLifecycleEvent = Literal["create", "update", "backup"]
 
 
 @dataclass(frozen=True)

@@ -38,5 +38,29 @@ test_root_mode_gives_the_controller_group_the_agent_directory() {
         "grep -qxF ':cmk-agent ${INSTALLDIR}/package/agent' '${WORK}/chown.log'"
 }
 
+test_non_root_mode_leaves_the_mk_job_folders_to_their_users() {
+    mkdir -p "${INSTALLDIR}/runtime/job/jobuser"
+    ln -s "$(command -v find)" "${FAKE_PATH}/find"
+
+    PATH="${FAKE_PATH}" DEPLOYMENT_MODE="non-root" MK_INSTALLDIR="${INSTALLDIR}" /bin/sh "${TESTEE}"
+    assertEquals "exit code" "0" "$?"
+
+    assertFalse "chown calls: $(cat "${WORK}/chown.log")" \
+        "grep -qE -- '^-R .*/runtime(/job)?( |\$)' '${WORK}/chown.log'"
+}
+
+test_non_root_mode_gives_the_agent_user_the_runtime_directory() {
+    mkdir -p "${INSTALLDIR}/runtime/job" "${INSTALLDIR}/runtime/cache"
+    ln -s "$(command -v find)" "${FAKE_PATH}/find"
+
+    PATH="${FAKE_PATH}" DEPLOYMENT_MODE="non-root" MK_INSTALLDIR="${INSTALLDIR}" /bin/sh "${TESTEE}"
+    assertEquals "exit code" "0" "$?"
+
+    assertTrue "chown calls: $(cat "${WORK}/chown.log")" \
+        "grep -qxF -- '-h cmk-agent:cmk-agent ${INSTALLDIR}/runtime ${INSTALLDIR}/runtime/job' '${WORK}/chown.log'"
+    assertTrue "chown calls: $(cat "${WORK}/chown.log")" \
+        "grep -qE -- '^-R cmk-agent:cmk-agent .*/runtime/cache( |\$)' '${WORK}/chown.log'"
+}
+
 # shellcheck disable=SC1090
 . "$UNIT_SH_SHUNIT2"

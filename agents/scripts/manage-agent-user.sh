@@ -38,7 +38,12 @@ _set_agent_user_permissions() {
     chown -R :"${GROUP_REF}" "${MK_INSTALLDIR}/package/config"
     chown -R :"${GROUP_REF}" "${MK_INSTALLDIR}/package/agent"
     chown -R :"${GROUP_REF}" "${MK_INSTALLDIR}/package/local"
-    chown -R "${USER_REF}":"${GROUP_REF}" "${MK_INSTALLDIR}/runtime"
+    # The folders below runtime/job belong to the users that run mk-job.
+    # The agent user can write to runtime and could replace job by a symlink.
+    # Hence chown must not follow symlinks here.
+    chown -h "${USER_REF}":"${GROUP_REF}" "${MK_INSTALLDIR}/runtime" "${MK_INSTALLDIR}/runtime/job"
+    find "${MK_INSTALLDIR}/runtime" -mindepth 1 -maxdepth 1 ! -name job \
+        -exec chown -R "${USER_REF}":"${GROUP_REF}" {} +
 }
 
 _set_agent_controller_user_permissions() {

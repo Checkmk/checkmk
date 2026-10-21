@@ -366,11 +366,6 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
         "type",
         "macaddress",
         "speed",
-        "gateway",
-        "ipv4_address",
-        "ipv6_address",
-        "ipv4_subnet",
-        "ipv6_subnet",
     ],
     ("software", "applications", "check_mk", "versions"): [
         "version",

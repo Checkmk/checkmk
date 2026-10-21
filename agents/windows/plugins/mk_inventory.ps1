@@ -181,6 +181,8 @@ function GetNetworkAdapter {
                 if ($adapterConfig.IPSubnet) {
                     Write-Output ("Subnet: {0}" -f ($adapterConfig.IPSubnet -join " "))
                 }
+                # Not read by the master parser any more; 2.5.0 and older still put it
+                # into hardware/nwadapter. Drop once those are out of support.
                 if ($adapterConfig.DefaultIPGateway) {
                     Write-Output ("DefaultGateway: {0}" -f ($adapterConfig.DefaultIPGateway -join " "))
                 }

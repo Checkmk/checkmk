@@ -25,11 +25,6 @@ node_hardware_nwadapter = Node(
             "type": TextField(Title("Type")),
             "macaddress": TextField(Title("Physical address (MAC)")),
             "speed": NumberField(Title("Speed"), render=UNIT_BITS_PER_SECOND),
-            "gateway": TextField(Title("Gateway")),
-            "ipv4_address": TextField(Title("IPv4 address")),
-            "ipv6_address": TextField(Title("IPv6 address")),
-            "ipv4_subnet": TextField(Title("IPv4 subnet")),
-            "ipv6_subnet": TextField(Title("IPv6 subnet")),
         },
     ),
 )

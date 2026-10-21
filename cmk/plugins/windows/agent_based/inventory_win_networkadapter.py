@@ -60,8 +60,8 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
     ...     ['Address', '169.178.23.42 fe80::c118:dead:beef:2342'],
     ...     ['Subnet', '255.255.0.0 64'],
     ... ]): print(parsed_adapter)
-    IPNetworkAdapter(name='Name1', type='T1', state_infos=None, link_ether='', macaddress='DE:AD', gateway='10.11.12.1', speed=100, inet4=[AugmentedIPv4Interface('10.11.12.13/24'), AugmentedIPv4Interface('10.11.12.14/24')], inet6=[AugmentedIPv6Interface('fe80::89d8:dead:beef:4223/64', is_temporary=True)])
-    IPNetworkAdapter(name='Name2', type='T2', state_infos=None, link_ether='', macaddress='BE:EF', gateway='', speed=200, inet4=[AugmentedIPv4Interface('169.178.23.42/16')], inet6=[AugmentedIPv6Interface('fe80::c118:dead:beef:2342/64', is_temporary=False)])
+    IPNetworkAdapter(name='Name1', type='T1', state_infos=None, link_ether='', macaddress='DE:AD', gateway=None, speed=100, inet4=[AugmentedIPv4Interface('10.11.12.13/24'), AugmentedIPv4Interface('10.11.12.14/24')], inet6=[AugmentedIPv6Interface('fe80::89d8:dead:beef:4223/64', is_temporary=True)])
+    IPNetworkAdapter(name='Name2', type='T2', state_infos=None, link_ether='', macaddress='BE:EF', gateway=None, speed=200, inet4=[AugmentedIPv4Interface('169.178.23.42/16')], inet6=[AugmentedIPv6Interface('fe80::c118:dead:beef:2342/64', is_temporary=False)])
     """
 
     def group_adapters(split_lines: StringTable) -> Iterable[dict]:
@@ -85,7 +85,7 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
             if not first_varname:
                 first_varname = varname
 
-            if varname in ("Name", "AdapterType", "MACAddress", "Speed", "DefaultGateway"):
+            if varname in ("Name", "AdapterType", "MACAddress", "Speed"):
                 result[varname] = value
             elif varname == "Address":
                 for address in value.split(" "):
@@ -108,7 +108,6 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
             macaddress=adapter.get("MACAddress", ""),
             name=adapter["Name"],
             speed=int(adapter["Speed"]) if "Speed" in adapter else 0,
-            gateway=adapter.get("DefaultGateway", ""),
             inet4=[
                 AugmentedIPv4Interface(f"{address}/{subnet}")
                 for address, subnet in zip(adapter["addrv4"], adapter["subnv4"])
@@ -141,7 +140,6 @@ def inventorize_win_networkadapter(section: Section) -> InventoryResult:
                 "type": adapter.type,
                 "macaddress": adapter.macaddress,
                 "speed": adapter.speed,
-                "gateway": adapter.gateway,
             },
             status_columns={},
         )

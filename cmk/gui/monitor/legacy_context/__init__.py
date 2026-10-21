@@ -3,20 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._translate import (
-    ContextFilter,
-    ContextFilterTranslation,
-    ContextFilterTranslator,
-    FilterNodeFactory,
-    IGNORED_TRISTATE,
-    UntranslatableFilterError,
-)
+from ._translate import ContextFilterTranslation, PageFilterModel, translate_context
 
 __all__ = [
-    "ContextFilter",
     "ContextFilterTranslation",
-    "ContextFilterTranslator",
-    "FilterNodeFactory",
-    "IGNORED_TRISTATE",
-    "UntranslatableFilterError",
+    "PageFilterModel",
+    "translate_context",
 ]

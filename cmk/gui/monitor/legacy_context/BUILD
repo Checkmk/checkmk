@@ -1,4 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "legacy_context",
@@ -10,6 +11,6 @@ py_library(
     ],
     deps = [
         "//cmk/gui:core_toolkit",
-        "//packages/cmk-ccc:site",
+        requirement("pydantic"),
     ],
 )

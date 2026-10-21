@@ -30,7 +30,6 @@ from cmk.livestatus_client import SiteConfigurations
 from cmk.web.utils import permission_verification as permissions
 
 from .._customer import customer_resolver
-from .._exceptions import InvalidFilterError
 from .._folder import MonitorFolders
 from .._impl import LiveStatusHostRepository
 from .._models import (
@@ -47,7 +46,7 @@ from .._models import (
 from .._repositories import HostRepository
 from .._site import MonitorSite, MonitorSites
 from .._table_catalog import HOST_TABLE
-from ..context_filters import HostContextFilters
+from ..context_filters import translate_filters
 from ._family import MONITOR_HOSTS_FAMILY
 from ._filters import (
     FilterNode,
@@ -467,18 +466,12 @@ class HostTable:
     def rows(
         self, *, columns: Sequence[str], sort: Sequence[str], limit: int, context: VisualContext
     ) -> TableRows[HostEntry]:
-        translation = HostContextFilters.translate(context)
-        try:
-            scoped_filter = (
-                None if translation.node is None else scope_filter_by_site(translation.node)
-            )
-        except ValueError as exc:
-            raise InvalidFilterError(str(exc)) from exc
+        translation = translate_filters(context)
         response = self.list(
             limit=limit,
             query="",
             sorters=HOST_TABLE.sorters(columns, sort),
-            scoped_filter=scoped_filter,
+            scoped_filter=translation.filter,
             fields=HOST_TABLE.fields(columns),
         )
         return TableRows(

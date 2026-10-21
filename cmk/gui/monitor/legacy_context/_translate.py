@@ -3,94 +3,127 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from abc import ABC, abstractmethod
-from collections.abc import Mapping, Sequence
+"""Translate the filter context of the legacy visuals into the filter tree of a monitoring page.
+
+A filter context is a ``VisualContext`` as the legacy views and the dashboards keep it. Each page
+maps the legacy filters of the catalog it can express to the page field they target. The legacy
+filters produce the pages' wire format, which the page then validates with its own filter model,
+together with what was translated before: a field, an operator or a combination the page does not
+accept is reported like any other filter without an equivalent.
+
+A filter that is set but cannot be applied is reported instead of dropped, so that a caller never
+shows more objects than the user asked for without knowing it.
+"""
+
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 
-from cmk.ccc.site import SiteId
+from pydantic import TypeAdapter
+
 from cmk.gui.type_defs import FilterHTTPVariables, FilterName, VisualContext
 
-IGNORED_TRISTATE = "-1"
-
-
-class UntranslatableFilterError(Exception):
-    pass
+from ._catalog import LEGACY_FILTERS, SITE_FILTERS
+from ._filters import all_of, FilterJSON, IGNORED_TRISTATE, UntranslatableFilterError
 
 
 @dataclass(frozen=True)
-class ContextFilterTranslation[N]:
-    node: N | None
+class ContextFilterTranslation[F]:
+    filter: F | None
     unapplied: Sequence[FilterName]
 
 
-class FilterNodeFactory[N](ABC):
-    @abstractmethod
-    def all_of(self, nodes: Sequence[N]) -> N: ...
+@dataclass(frozen=True)
+class PageFilterModel[N, F]:
+    """The filter model of a page: the tree it accepts, and ``check``, which turns the tree into
+    the filter the page queries with and raises a ``ValueError`` for a tree the page cannot use,
+    e.g. one with more than one site condition."""
 
-    @abstractmethod
-    def site_choice(self, site_ids: Sequence[SiteId]) -> N: ...
+    tree: TypeAdapter[N]
+    check: Callable[[N], F]
 
-    def combined(self, nodes: Sequence[N]) -> N | None:
-        match nodes:
-            case []:
-                return None
-            case [single]:
-                return single
-            case _:
-                return self.all_of(nodes)
-
-
-class ContextFilter[N](ABC):
-    @abstractmethod
-    def node(self, value: FilterHTTPVariables) -> N | None: ...
+    def validate(self, node: FilterJSON) -> F:
+        try:
+            return self.check(self.tree.validate_python(node))
+        # A pydantic ValidationError is a ValueError, too.
+        except ValueError as exc:
+            raise UntranslatableFilterError from exc
 
 
-class ContextFilterTranslator[N]:
-    _SITE_FILTERS: Sequence[FilterName] = ("sites", "site", "siteopt")
-
-    def __init__(
-        self, filters: Mapping[FilterName, ContextFilter[N]], nodes: FilterNodeFactory[N]
-    ) -> None:
-        self._filters = filters
-        self._nodes = nodes
-
-    def translate(self, context: VisualContext) -> ContextFilterTranslation[N]:
-        nodes: list[N] = []
-        unapplied: list[FilterName] = []
-        if (site_node := self._site_node(context)) is not None:
-            nodes.append(site_node)
-        for name, value in context.items():
-            if name in self._SITE_FILTERS or not self._is_set(value):
+def translate_context[N, F](
+    context: VisualContext,
+    fields: Mapping[FilterName, str],
+    page: PageFilterModel[N, F],
+) -> ContextFilterTranslation[F]:
+    """Translate the legacy filters in ``fields`` to conditions on the page field each is mapped
+    to, in the order of ``fields``: where the page cannot take two filters together, the one
+    listed first is applied. Raises a ``ValueError`` for a filter missing from the catalog."""
+    if unknown := fields.keys() - LEGACY_FILTERS.keys():
+        raise ValueError(f"Not in the catalog of legacy filters: {sorted(unknown)}")
+    nodes: list[FilterJSON] = []
+    page_filter: F | None = None
+    # Like the legacy views, only the first site filter that restricts the sites applies. If the
+    # page does not map it, it is reported, and still keeps the others from querying sites the
+    # user did not pick.
+    site_filters = _site_filters(context)
+    applied_site_filter = next(iter(site_filters), None)
+    unapplied = {
+        name
+        for name, value in context.items()
+        if name not in fields and name not in SITE_FILTERS and _is_set(value)
+    }
+    if applied_site_filter is not None and applied_site_filter not in fields:
+        unapplied.add(applied_site_filter)
+    for name, field in fields.items():
+        if name in SITE_FILTERS and name != applied_site_filter:
+            continue
+        if not _is_set(value := context.get(name, {})):
+            continue
+        try:
+            if (node := LEGACY_FILTERS[name](value, field)) is None:
                 continue
-            if (context_filter := self._filters.get(name)) is None or self._spans_lines(value):
-                unapplied.append(name)
-                continue
-            try:
-                node = context_filter.node(value)
-            except UntranslatableFilterError:
-                unapplied.append(name)
-                continue
-            if node is not None:
-                nodes.append(node)
-        return ContextFilterTranslation(node=self._nodes.combined(nodes), unapplied=unapplied)
+            candidate = [*nodes, node]
+            tree = all_of(candidate)
+            assert tree is not None
+            candidate_filter = page.validate(tree)
+        except UntranslatableFilterError:
+            unapplied.add(name)
+            continue
+        nodes, page_filter = candidate, candidate_filter
 
-    def _site_node(self, context: VisualContext) -> N | None:
-        if sites := context.get("sites", {}).get("sites", "").strip():
-            site_ids = [SiteId(site) for site in dict.fromkeys(sites.split("|")) if site]
-        else:
-            site_ids = [
-                SiteId(site)
-                for name in ("site", "siteopt")
-                if (site := context.get(name, {}).get("site"))
-            ][:1]
-        if not site_ids:
-            return None
-        return self._nodes.site_choice(site_ids)
+    # The other site filters are reported, unless they name every site that is queried: applying
+    # them as well would not change the result.
+    applied_sites = (
+        None
+        if applied_site_filter is None or applied_site_filter in unapplied
+        else site_filters[applied_site_filter]
+    )
+    unapplied.update(
+        name
+        for name, sites in list(site_filters.items())[1:]
+        if applied_sites is None or sites is None or not applied_sites <= sites
+    )
 
-    @staticmethod
-    def _spans_lines(value: FilterHTTPVariables) -> bool:
-        return any("\n" in text for text in value.values())
+    return ContextFilterTranslation(
+        filter=page_filter,
+        unapplied=[name for name in context if name in unapplied],
+    )
 
-    @staticmethod
-    def _is_set(value: FilterHTTPVariables) -> bool:
-        return any(text and text != IGNORED_TRISTATE for text in value.values())
+
+def _site_filters(context: VisualContext) -> dict[FilterName, frozenset[str] | None]:
+    """The site filters that restrict the sites, in the order in which they apply, with the sites
+    they name, or None if they name a site ID no page can take."""
+    site_filters: dict[FilterName, frozenset[str] | None] = {}
+    for name, ids in SITE_FILTERS.items():
+        try:
+            sites = ids(context.get(name, {}))
+        except UntranslatableFilterError:
+            # It names sites, just none a page can take: it is reported, not passed over.
+            site_filters[name] = None
+            continue
+        if sites:
+            site_filters[name] = frozenset(sites)
+    return site_filters
+
+
+def _is_set(value: FilterHTTPVariables) -> bool:
+    return any(text and text != IGNORED_TRISTATE for text in value.values())

@@ -124,6 +124,11 @@ archive_override(
 # release by buildscripts/scripts/extract_llvm.sh.
 bazel_dep(name = "clang-resource-headers", version = "19.1.7.cmk.1", dev_dependency = True)
 
+# Not used directly: only here so that the ape_cosmos extension below can
+# be configured from the root module.  It comes in via aspect_rules_lint and
+# rules_diff.
+bazel_dep(name = "ape", version = "1.0.1", dev_dependency = True)
+
 single_version_override(
     module_name = "rules_go",
     patch_strip = 1,
@@ -665,6 +670,23 @@ http_archive(
 )
 
 repo_license(name = "repo_license")
+
+# The lint aspects of aspect_rules_lint (ruff, clang-tidy, eslint, ...) depend
+# on the diff tool of rules_diff, a Cosmopolitan binary that ape's cosmos
+# extension downloads from https://cosmo.zip only.  That host went down in
+# October 2026 for days, so add the package registry of the ape project on
+# gitlab.arm.com, which mirrors the same files and is readable without
+# authentication.  The extension tries the URL tags of the root module first
+# and keeps cosmo.zip as the fallback; the integrity hashes from ape's lock
+# files are checked either way, so the mirror cannot change the bytes.
+cosmos = use_extension(
+    "@ape//ape/cosmos:defs.bzl",
+    "ape_cosmos",
+    dev_dependency = True,
+)
+cosmos.url(
+    template = "https://gitlab.arm.com/api/v4/projects/bazel%2Fape/packages/generic/cosmos.zip/{version}/{name}",
+)
 
 multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")
 multitool.hub(

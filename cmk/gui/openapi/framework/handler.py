@@ -31,7 +31,7 @@ from cmk.gui.openapi.restful_objects.validators import (
 )
 from cmk.gui.openapi.utils import (
     EXT,
-    RestAPIForbiddenException,
+    forbidden_from_auth_exception,
     RestAPIResponseException,
     RestAPIWatoDisabledException,
 )
@@ -232,10 +232,7 @@ def handle_endpoint_request(
             # At this point the request is already authenticated, so a failed permission check means
             # the user lacks a permission -> forbidden (403), not unauthorized (401). Without this
             # remap, `MKAuthException.status` (401) would end up in the response.
-            raise RestAPIForbiddenException(
-                title=HTTPStatus.FORBIDDEN.phrase,
-                detail=str(exc),
-            ) from exc
+            raise forbidden_from_auth_exception(exc) from exc
 
         # Step 5: Create the response object
         with tracer.span("create-response"):

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from datetime import datetime, timedelta, UTC
 from http import HTTPStatus
 from urllib.parse import urljoin
 from uuid import UUID
@@ -12,6 +13,9 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
+from cmk.gui.oauth.store.client_store import get_client_store
+from cmk.gui.oauth.token.token_store import get_token_store
+from cmk.gui.scopes import ScopeId
 from cmk.utils.agent_registration import RegistrationRoute, UUIDLinkManager
 from cmk.utils.paths import (
     data_source_push_agent_dir,
@@ -59,6 +63,33 @@ def test_openapi_host_register_ok(aut_user_auth_wsgi_app: WebTestAppForCMK) -> N
     )
     assert set(response.json) == {"connection_mode"}
     assert _uuid_link_manager().uuid_store.get(HostName("example.com")) == uuid
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_register_with_read_scoped_token_reports_insufficient_scope(
+    wsgi_app: WebTestAppForCMK, with_admin: tuple[UserId, str]
+) -> None:
+    with get_client_store() as clients:
+        client_id = clients.register(["https://client.example/callback"], None).ok.client_id
+    with get_token_store() as tokens:
+        token = tokens.issue_token(
+            with_admin[0],
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+            resource=None,
+            scope=frozenset({ScopeId.READ}),
+            client_id=client_id,
+        ).ok
+
+    response = wsgi_app.call_method(
+        "put",
+        _URL_REGISTER,
+        params=json.dumps({"uuid": "1409ac78-6548-4138-9285-12484409ddf2"}),
+        status=HTTPStatus.FORBIDDEN,
+        headers={"Accept": "application/json", "Authorization": f"Bearer {token}"},
+        content_type="application/json; charset=utf-8",
+    )
+
+    assert response.headers["WWW-Authenticate"] == 'Bearer error="insufficient_scope"'
 
 
 @pytest.mark.usefixtures("with_host")

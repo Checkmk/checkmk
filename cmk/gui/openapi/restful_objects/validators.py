@@ -36,7 +36,7 @@ from cmk.gui.openapi.restful_objects.type_defs import ETagBehaviour, StatusCodeI
 from cmk.gui.openapi.utils import (
     EXT,
     FIELDS,
-    RestAPIForbiddenException,
+    forbidden_from_auth_exception,
     RestAPIHeaderSchemaValidationException,
     RestAPIHeaderValidationException,
     RestAPIPathValidationException,
@@ -119,7 +119,7 @@ class PathParamsValidator:
         except ValidationError as exc:
             raise PathParamsValidator._schema_validation_exception(exc.messages)
         except MKAuthException as exc:
-            raise PathParamsValidator._auth_validation_exception(exc.args[0])
+            raise forbidden_from_auth_exception(exc) from exc
 
     @staticmethod
     def verify_marshmallow_params_presence(path: str, path_schema: type[Schema] | None) -> None:
@@ -193,13 +193,6 @@ class PathParamsValidator:
             ),
         )
 
-    @staticmethod
-    def _auth_validation_exception(message: str) -> RestAPIForbiddenException:
-        return RestAPIForbiddenException(
-            title=HTTPStatus.FORBIDDEN.phrase,
-            detail=message,
-        )
-
 
 class QueryParamsValidator:
     """Utility class for validating query parameters in API endpoints."""
@@ -225,7 +218,7 @@ class QueryParamsValidator:
         except ValidationError as exc:
             raise QueryParamsValidator._schema_validation_exception(exc.messages)
         except MKAuthException as exc:
-            raise QueryParamsValidator._auth_validation_exception(exc.args[0])
+            raise forbidden_from_auth_exception(exc) from exc
 
     @staticmethod
     def _schema_validation_exception(
@@ -237,13 +230,6 @@ class QueryParamsValidator:
             fields=FIELDS(
                 error_messages if isinstance(error_messages, dict) else {"exc": error_messages},
             ),
-        )
-
-    @staticmethod
-    def _auth_validation_exception(message: str) -> RestAPIForbiddenException:
-        return RestAPIForbiddenException(
-            title=HTTPStatus.FORBIDDEN.phrase,
-            detail=message,
         )
 
 
@@ -264,13 +250,6 @@ class RequestDataValidator:
         )
 
     @staticmethod
-    def _auth_exception(exc_detail: str) -> RestAPIForbiddenException:
-        return RestAPIForbiddenException(
-            title=HTTPStatus.FORBIDDEN.phrase,
-            detail=exc_detail,
-        )
-
-    @staticmethod
     def decode_marshmallow_schema(
         content_type: str,
         request_obj: Request,
@@ -285,7 +264,7 @@ class RequestDataValidator:
                 exc.messages,
             )
         except MKAuthException as exc:
-            raise RequestDataValidator._auth_exception(exc.args[0])
+            raise forbidden_from_auth_exception(exc) from exc
 
     @staticmethod
     def _format_pydantic_location(location: Iterable[str | int]) -> str:

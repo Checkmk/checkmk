@@ -19,7 +19,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site
 from cmk.gui.agent_registration import PERMISSION_SECTION_AGENT_REGISTRATION
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.exceptions import MKAuthException, MKInsufficientScope, MKUserError
 from cmk.gui.fields import HostField
 from cmk.gui.http import Response
 from cmk.gui.i18n import _l
@@ -201,10 +201,9 @@ def _verify_permissions(host: Host) -> None:
 
     try:
         host.permissions.need_permission("read", user)
-    except MKAuthException:
-        raise unathorized_excpt
-    try:
         host.permissions.need_permission("write", user)
+    except MKInsufficientScope:
+        raise
     except MKAuthException:
         raise unathorized_excpt
 

@@ -62,9 +62,9 @@ from cmk.gui.openapi.restful_objects.validators import (
 )
 from cmk.gui.openapi.utils import (
     FIELDS,
+    forbidden_from_auth_exception,
     problem,
     ProblemException,
-    RestAPIForbiddenException,
     RestAPIPermissionException,
     RestAPIWatoDisabledException,
 )
@@ -575,10 +575,7 @@ class Endpoint:
                 # response. Mirrors the equivalent remap in the new endpoint framework's
                 # handle_endpoint_request(). Raised (not turned into `response` directly) so it
                 # bypasses this endpoint's declared status codes, like RestAPIWatoDisabledException.
-                raise RestAPIForbiddenException(
-                    title=HTTPStatus.FORBIDDEN.phrase,
-                    detail=str(exc),
-                ) from exc
+                raise forbidden_from_auth_exception(exc) from exc
 
         # We don't expect a permission to be triggered when an endpoint ran into an error.
         if response.status_code < 400:

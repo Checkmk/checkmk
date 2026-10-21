@@ -6,7 +6,7 @@
 
 const OPEN_STORAGE_KEY = 'cmk-ai-assistant-open'
 const POSITION_STORAGE_KEY = 'cmk-ai-assistant-position'
-const PANEL_SIZE = '300px'
+const PANEL_SIZE = 'calc(300px + var(--dimension-2))'
 const DOCK_POSITIONS = ['left', 'right']
 
 function isOpen(): boolean {

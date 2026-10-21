@@ -6,6 +6,10 @@
 import type { Folder } from '@ucl/_ucl/types/page'
 import { Page } from '@ucl/_ucl/types/page'
 
+import UclAiDockPanel from './UclAiDockPanel.vue'
 import UclAiExplainButton from './UclAiExplainButton.vue'
 
-export const pages: Array<Folder | Page> = [new Page('AI Explain Button', UclAiExplainButton)]
+export const pages: Array<Folder | Page> = [
+  new Page('AI Dock Panel', UclAiDockPanel),
+  new Page('AI Explain Button', UclAiExplainButton)
+]

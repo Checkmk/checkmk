@@ -52,7 +52,11 @@ configure_make(
     # for those the flags definded with `copts` will be appended rather than
     # prepended, resulting in wrong RPATH components in front of `$ORIGIN/../lib`
     # For that reason we need to manually set RPATH outside Bazel (during `make`)
-    env = {"ORIGIN_VAR": "\\\\$$\\$$ORIGIN"},
+    env = {
+        "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
+        # util/mkbuildinf.pl records the build time in libcrypto otherwise.
+        "SOURCE_DATE_EPOCH": "0",
+    },
     lib_name = "openssl",
     lib_source = ":all_srcs",
     out_binaries = [
@@ -135,6 +139,8 @@ configure_make(
         "@platforms//cpu:aarch64": ["linux-aarch64"],
         "//conditions:default": [],
     }),
+    # util/mkbuildinf.pl records the build time in libcrypto otherwise.
+    env = {"SOURCE_DATE_EPOCH": "0"},
     lib_name = "openssl_static",
     lib_source = ":all_srcs",
     out_lib_dir = "lib",

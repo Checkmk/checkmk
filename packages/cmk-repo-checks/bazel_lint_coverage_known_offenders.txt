@@ -10,7 +10,7 @@ agents/waitmax.c
 agents/wnx/extensions/robotmk_ext/src/main.rs
 agents/wnx/test_files/tools/v/src/main.rs
 agents/z_os/waitmax.c
-bazel/thirdparty/modules/perl-modules/0.0.1.cmk.2/src/bin/cpan.wrapper
+bazel/thirdparty/modules/perl-modules/0.0.1.cmk.3/src/bin/cpan.wrapper
 bazel/tools/workspace_status.sh
 buildscripts/infrastructure/build-nodes/scripts/install-lz4-parallel.sh
 buildscripts/scripts/gcc-toolchain/build.sh

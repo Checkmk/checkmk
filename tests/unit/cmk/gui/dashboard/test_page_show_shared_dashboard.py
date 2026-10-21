@@ -5,9 +5,18 @@
 
 from dataclasses import replace
 
+import pytest
+
+from cmk.ccc.user import UserId
 from cmk.gui.config import Config
-from cmk.gui.dashboard.page_show_shared_dashboard import SharedDashboardPageComponents
+from cmk.gui.dashboard import get_all_dashboards
+from cmk.gui.dashboard.page_show_shared_dashboard import (
+    compute_widget_titles,
+    SharedDashboardPageComponents,
+)
+from cmk.gui.dashboard.type_defs import DashboardConfig
 from cmk.gui.type_defs import GraphTimerange
+from cmk.web.utils.request_cache import RequestCache
 
 
 def test_the_shared_page_carries_the_site_default_time_range(load_config: Config) -> None:
@@ -20,3 +29,18 @@ def test_the_shared_page_carries_the_site_default_time_range(load_config: Config
     )
 
     assert SharedDashboardPageComponents.default_time_range(config) == 7200
+
+
+@pytest.mark.xfail(raises=KeyError, reason="Crash group 4539: KeyError")
+def test_widget_titles_skip_a_widget_of_an_unknown_type(load_config: Config) -> None:
+    builtin = next(
+        board for (owner, _name), board in get_all_dashboards().items() if owner == UserId.builtin()
+    )
+    board: DashboardConfig = {
+        **builtin,
+        "widgets": {
+            "unknown": {"type": "notification_analysis", "position": (1, 1), "size": (10, 10)}
+        },
+    }
+
+    assert compute_widget_titles(board, RequestCache(load_config)) == {}

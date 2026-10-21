@@ -6,17 +6,22 @@
 # The action of python_cab (python_cab.bzl): builds the agent's python-3.cab
 # in the shape production's Windows build gave it.
 #
-# Usage: build_python_cab.sh --workdir DIR --out CAB --py-short 314
-#            --py-major-minor 3.14 --extract-msi BIN --msiinfo BIN
-#            --cabextract BIN --libmsi LIB --pip-offline BIN
-#            --make-exe-wrappers BIN --pack-cab BIN --pip-requirement PIN
-#            --wrapper-shebang PATH --pyvenv-cfg FILE --postinstall FILE
-#            [--requirement PIN]... [--venv-script FILE]...
-#            [--wheel WHL]... [--msi MSI]...
+# Usage: build_python_cab.sh --out CAB --python-version 3.14.7
+#            --python-tree DIR --pip-offline BIN --make-exe-wrappers BIN
+#            --pack-cab BIN --pip-requirement PIN --postinstall FILE
+#            [--wheel WHL]... [--requirement PIN]... [--venv-script FILE]...
 #
 # Paths are relative to the exec root, the working directory.
 
 set -euo pipefail
+
+# Production's pyvenv.cfg points home at the agent's install path on the
+# target host.  See clean_environment.cmd.
+PYVENV_HOME='C:\ProgramData\checkmk\agent\modules\python-3'
+
+# Interpreter the generated .exe wrappers exec at runtime: the production
+# install path (see make_exe_wrappers.py for why not the build machine's).
+WRAPPER_SHEBANG="$PYVENV_HOME"'\.venv\Scripts\python.exe'
 
 # Stdlib subtrees to strip from the *base* interpreter, ported from
 # clean_environment.cmd.  ensurepip is stripped because production's CAB
@@ -53,31 +58,22 @@ UCRT_RUNTIME=(
 )
 
 exec_root=$PWD
+wheels=()
 requirements=()
 venv_scripts=()
-wheels=()
-msis=()
 while [ $# -gt 0 ]; do
     case "$1" in
-        --workdir) workdir="$2" ;;
         --out) out="$2" ;;
-        --py-short) py_short="$2" ;;
-        --py-major-minor) py_major_minor="$2" ;;
-        --extract-msi) extract_msi="$2" ;;
-        --msiinfo) msiinfo="$2" ;;
-        --cabextract) cabextract="$2" ;;
-        --libmsi) libmsi="$2" ;;
+        --python-version) python_version="$2" ;;
+        --python-tree) python_tree="$2" ;;
         --pip-offline) pip_offline="$2" ;;
         --make-exe-wrappers) make_exe_wrappers="$2" ;;
         --pack-cab) pack_cab="$2" ;;
         --pip-requirement) pip_requirement="$2" ;;
-        --wrapper-shebang) wrapper_shebang="$2" ;;
-        --pyvenv-cfg) pyvenv_cfg="$2" ;;
         --postinstall) postinstall="$2" ;;
+        --wheel) wheels+=("$2") ;;
         --requirement) requirements+=("$2") ;;
         --venv-script) venv_scripts+=("$exec_root/$2") ;;
-        --wheel) wheels+=("$2") ;;
-        --msi) msis+=("$exec_root/$2") ;;
         *)
             echo "error: unknown argument: $1" >&2
             exit 2
@@ -86,54 +82,28 @@ while [ $# -gt 0 ]; do
     shift 2
 done
 
-rm -rf "$workdir"
+py_major_minor=${python_version%.*}
+py_short=${py_major_minor/./}
+
+# Scratch space: the sandbox's private /tmp, gone with the action.
+workdir=$(mktemp -d)
+trap 'rm -rf "$workdir"' EXIT
 PY_DIR="$workdir/py"
 WHEELDIR="$workdir/wheels"
-mkdir -p "$PY_DIR" "$WHEELDIR"
 
-# msiinfo is dynamically linked against libmsi.so.0.  Bazel ships the
-# unversioned file libmsi.so.0.0.0; the loader needs to find it as the
-# SONAME libmsi.so.0: create the symlink alongside.
-libmsi_dir=$(dirname "$exec_root/$libmsi")
-ln -sf "$(basename "$libmsi")" "$libmsi_dir/libmsi.so.0"
-
-# Stage the pinned win_amd64 wheel closure into a pip --find-links dir; both
-# pip installs below resolve against it offline (--no-index).
-for w in "${wheels[@]}"; do
-    cp "$w" "$WHEELDIR/"
-done
-
-# 1. Extract every MSI into the install-root tree using the Python
-# msiextract that drives @msitools' msiinfo and @cabextract.
-"$exec_root/$extract_msi" \
-    --msiinfo "$exec_root/$msiinfo" \
-    --cabextract "$exec_root/$cabextract" \
-    --libmsi-dir "$libmsi_dir" \
-    --directory "$PY_DIR" \
-    "${msis[@]}"
-
-# Sanity-check the python interpreter landed where we expect.
-if [ ! -f "$PY_DIR/python.exe" ] || [ ! -f "$PY_DIR/python$py_short.dll" ]; then
-    echo "error: python.exe / python$py_short.dll not found after msiextract" >&2
-    find "$PY_DIR" -maxdepth 2 | head -50 >&2
-    exit 1
-fi
+# 1. A writable copy of the extracted interpreter (python_msi_tree), and the
+# wheels staged as pip's --find-links dir.
+mkdir "$WHEELDIR"
+cp -RL "$python_tree" "$PY_DIR"
+chmod -R u+w "$PY_DIR"
+cp "${wheels[@]}" "$WHEELDIR/"
 
 # 2. Give the base interpreter its pip.  pip.msi has an empty File table
 # (the python.org installer bootstraps via a CustomAction msiextract can't
 # replay), so install the pinned pip wheel directly, by name, so pip
 # writes no direct_url.json pointing at build-machine paths.
-"$exec_root/$pip_offline" "$WHEELDIR" install \
-    --no-index \
-    --find-links "$WHEELDIR" \
-    --platform win_amd64 \
-    --python-version "$py_major_minor" \
-    --implementation cp \
-    --abi "cp$py_short" \
-    --only-binary=:all: \
-    --no-warn-script-location \
-    --target "$PY_DIR/Lib/site-packages" \
-    "$pip_requirement"
+"$exec_root/$pip_offline" --wheel-dir "$WHEELDIR" --python-version "$python_version" \
+    --target "$PY_DIR/Lib/site-packages" "$pip_requirement"
 
 # 3. Hand-construct the .venv/ tree the way production's virtualenv laid it
 # out.  Scripts/ gets a copy of the interpreter, its runtime DLLs, and the
@@ -180,17 +150,8 @@ done
 # 4. Install the locked closure into .venv/Lib/site-packages, offline.
 # Every name==version pin is an explicit argument, so each dist-info gets
 # a REQUESTED marker, exactly what the historic pipenv flow produced.
-"$exec_root/$pip_offline" "$WHEELDIR" install \
-    --no-index \
-    --find-links "$WHEELDIR" \
-    --platform win_amd64 \
-    --python-version "$py_major_minor" \
-    --implementation cp \
-    --abi "cp$py_short" \
-    --only-binary=:all: \
-    --no-warn-script-location \
-    --target "$VENV/Lib/site-packages" \
-    "${requirements[@]}"
+"$exec_root/$pip_offline" --wheel-dir "$WHEELDIR" --python-version "$python_version" \
+    --target "$VENV/Lib/site-packages" "${requirements[@]}"
 
 # ... except pip itself: production's pip was seeded by virtualenv, which
 # writes no REQUESTED.
@@ -204,7 +165,7 @@ rm -f "$VENV/Lib/site-packages"/pip-*.dist-info/REQUESTED
     --pip-wheel "$WHEELDIR" \
     --scripts-dir "$VENV/Scripts" \
     --python-major-minor "$py_major_minor" \
-    --shebang "$wrapper_shebang" \
+    --shebang "$WRAPPER_SHEBANG" \
     --fixup-records "$VENV/Lib/site-packages" \
     --fixup-records "$PY_DIR/Lib/site-packages"
 if [ -d "$VENV/Lib/site-packages/bin" ]; then
@@ -213,7 +174,8 @@ if [ -d "$VENV/Lib/site-packages/bin" ]; then
 fi
 
 # 5. Write the production-shape pyvenv.cfg.
-cp "$exec_root/$pyvenv_cfg" "$VENV/pyvenv.cfg"
+printf 'home = %s\nversion_info = %s\ninclude-system-site-packages = false\n' \
+    "$PYVENV_HOME" "$python_version" >"$VENV/pyvenv.cfg"
 
 # 6. Strip from the base interpreter what production strips (the union of
 # clean_environment.cmd's phase-1 and phase-2 cleanups).
@@ -265,6 +227,17 @@ rm -f "$VENV/Scripts/pythonw.exe" 2>/dev/null || true
 # ships both postinstall.cmd and pyvenv.cfg with CRLF line endings.
 cp "$exec_root/$postinstall" "$PY_DIR/postinstall.cmd"
 sed -i 's/\r$//; s/$/\r/' "$PY_DIR/postinstall.cmd" "$VENV/pyvenv.cfg"
+
+# No file may carry a build path. Look for the output base, not just the
+# exec root: a realpath that escapes the sandbox lands in the output base's
+# execroot/ or external/. (Under remote execution neither pattern matches and
+# this is the exec root.) And for the scratch dir, where pip installed.
+build_root=${exec_root%%/sandbox/*}
+build_root=${build_root%%/execroot/*}
+if grep -rlF -e "$build_root" -e "$workdir" "$PY_DIR"; then
+    echo "error: these files in the install tree carry the build path" >&2
+    exit 1
+fi
 
 # 8. Pack into a cabinet via the vendored @cabarchive Python writer.
 "$exec_root/$pack_cab" --root "$PY_DIR" --out "$exec_root/$out"

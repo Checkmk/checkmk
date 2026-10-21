@@ -436,7 +436,7 @@
     },
     "//bazel/extensions:python_cab_repositories.bzl%repos": {
       "general": {
-        "bzlTransitiveDigest": "QSUtBtikejkjVa4HSCMyLgRfE9wgUhiIGYKLsPh8kWs=",
+        "bzlTransitiveDigest": "ZcnXZgjvuacdHUYpJR7eUxaeRBTN47UcIqI7W25Wjyk=",
         "usagesDigest": "BXYqIAu49CQCFQxk4Z2fbq50BtPUgveC3nsyNS28Gd4=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -451,6 +451,17 @@
               "urls": [
                 "https://files.pythonhosted.org/packages/source/c/cabarchive/cabarchive-0.2.5.tar.gz",
                 "https://artifacts.lan.tribe29.com/repository/upstream-archives/cabarchive-0.2.5.tar.gz"
+              ]
+            }
+          },
+          "python_msi_ucrt": {
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
+            "attributes": {
+              "downloaded_file_path": "ucrt.msi",
+              "sha256": "c35e76105318b7472c6028e8d4a2f9b8ec1a3ef02897b4e49350c8adb84a2105",
+              "urls": [
+                "https://www.python.org/ftp/python/3.14.7/amd64/ucrt.msi",
+                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.14.7-amd64-ucrt.msi"
               ]
             }
           },
@@ -495,17 +506,6 @@
               "urls": [
                 "https://www.python.org/ftp/python/3.14.7/amd64/pip.msi",
                 "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.14.7-amd64-pip.msi"
-              ]
-            }
-          },
-          "python_msi_ucrt": {
-            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
-            "attributes": {
-              "downloaded_file_path": "ucrt.msi",
-              "sha256": "c35e76105318b7472c6028e8d4a2f9b8ec1a3ef02897b4e49350c8adb84a2105",
-              "urls": [
-                "https://www.python.org/ftp/python/3.14.7/amd64/ucrt.msi",
-                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.14.7-amd64-ucrt.msi"
               ]
             }
           }

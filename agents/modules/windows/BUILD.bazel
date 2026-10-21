@@ -5,7 +5,8 @@ load("@windows_python_wheels//:requirements.bzl", "all_whl_requirements")
 load("//:package_versions.bzl", "PYTHON_VERSION_WINDOWS")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:requirements.bzl", "compile_requirements_in")
-load(":python_cab.bzl", "py_platform_transition_filegroup", "python_cab", "python_version_major_minor")
+load(":python_cab.bzl", "python_cab", "python_msi_tree", "python_version_major_minor")
+load(":python_msis.bzl", "PYTHON_MSI_FEATURES")
 
 exports_files([
     "windows-constraints.txt",
@@ -98,31 +99,21 @@ pip_compile(
     visibility = ["//visibility:public"],
 )
 
-# Maintainer tool: recomputes the sha256 hashes for the five python.org
-# per-feature MSIs and prints the _MSI_SHA256 map for
+# Maintainer tool: recomputes the sha256 hashes for the python.org per-feature
+# MSIs and prints the _MSI_SHA256 map for
 # //bazel/extensions:python_cab_repositories.bzl.  Run after bumping
 # PYTHON_VERSION_WINDOWS in //:package_versions.bzl -- which it reads through
-# args below, so the hashes cannot be fetched for a different version than the
-# extension requests.
+# args below, as it does PYTHON_MSI_FEATURES, so the hashes cannot be fetched
+# for a different version or set of MSIs than the extension requests.
 py_binary(
     name = "refresh_msi_pins",
     srcs = ["refresh_msi_pins.py"],
-    args = ["--python-version=" + PYTHON_VERSION_WINDOWS],
+    args = ["--python-version=" + PYTHON_VERSION_WINDOWS] + [
+        "--msi=" + f
+        for f in PYTHON_MSI_FEATURES
+    ],
     main = "refresh_msi_pins.py",
     visibility = ["//visibility:public"],
-)
-
-# Pull msiinfo and libmsi.so out of @msitools' configure_make output groups.
-filegroup(
-    name = "_msiinfo",
-    srcs = ["@msitools"],
-    output_group = "msiinfo",
-)
-
-filegroup(
-    name = "_libmsi",
-    srcs = ["@msitools"],
-    output_group = "libmsi.so.0.0.0",
 )
 
 # cabextract (LZX-capable CAB extractor) from the @cabextract bcr module —
@@ -134,27 +125,15 @@ filegroup(
     output_group = "cabextract",
 )
 
-py_platform_transition_filegroup(
-    name = "wheels",
-    srcs = all_whl_requirements,
-    python_version = PYTHON_VERSION_WINDOWS,
-    target_platform = "//bazel/platforms:x86_64-windows",
-)
+python_msi_tree(name = "python_tree")
 
 python_cab(
     name = "python_3_cab",
-    cabextract = ":_cabextract",
-    extract_msi = ":extract_msi",
-    libmsi = ":_libmsi",
-    make_exe_wrappers = ":make_exe_wrappers",
-    msiinfo = ":_msiinfo",
-    pack_cab = ":pack_cab",
-    pip_offline = ":pip_offline",
     postinstall_cmd = "postinstall.cmd",
-    python_version = PYTHON_VERSION_WINDOWS,
+    python_tree = ":python_tree",
     venv_scripts = [":venv_scripts"],
     visibility = ["//visibility:public"],
-    wheels = [":wheels"],
+    wheels = all_whl_requirements,
 )
 
 py_cmk_test(

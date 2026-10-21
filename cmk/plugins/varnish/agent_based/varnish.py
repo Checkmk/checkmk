@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping, Sequence
+from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
 
 from cmk.agent_based.legacy.conversion import (
     # Temporary compatibility layer until we migrate the corresponding ruleset.
@@ -28,98 +26,91 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-Section = Mapping[str, object]
+
+@dataclass(frozen=True)
+class Counter:
+    value: int
+    descr: str
+
+
+Section = Mapping[str, Counter]
 Params = Mapping[str, tuple[float, float]]
+
+# Newer output has MAIN and MGT prefixed keys, MGT takes precedence
+_PREFIX_PRECEDENCE = {"MAIN": 1, "MGT": 2}
 
 
 def parse_varnish(string_table: StringTable) -> Section:
-    parsed: dict[str, Any] = {}
-    for line in string_table:
-        parsed_path = _parse_path(line[0])
-        instance = _create_hierarchy(parsed_path, parsed)
-        try:
-            value = int(line[1])
-        except ValueError:
-            value = None
-        descr = " ".join(line[4:]) if line[3].lower() in line[0] else " ".join(line[3:])
-        perf_var_name = "varnish_%s_rate" % parsed_path[-1]
-        if perf_var_name.startswith("varnish_n_wrk"):
-            perf_var_name = perf_var_name.replace("n_wrk", "worker")
-        elif perf_var_name.startswith("varnish_n_"):
-            perf_var_name = perf_var_name.replace("n_", "objects_")
-        instance.update(
-            {
-                "value": value,
-                "descr": descr.replace("/", " "),
-                "perf_var_name": perf_var_name,
-                "params_var_name": parsed_path[-1].split("_", 1)[-1],
-            }
+    return {
+        _strip_prefix(line[0]): Counter(value, _descr(line[0], line[3:]))
+        for line in sorted(
+            string_table, key=lambda line: _PREFIX_PRECEDENCE.get(line[0].split(".", 1)[0], 0)
         )
-    # Newer output has MAIN or MGT prefix keys,
-    # see above in 'agent output'
-    for key in ["MAIN", "MGT"]:
-        values = parsed.pop(key, {})
-        parsed.update(values)
-    return parsed
+        if (value := _parse_int(line[1])) is not None
+    }
 
 
-def _parse_path(raw_path: str) -> list[str]:
-    # Split raw path on ".". We have to deal with different paths:
-    # - 'client_conn'
-    #   => ['client_conn']
-    # - 'LCK.sms.creat'
-    #   => ['LCK', 'sms', 'creat']
-    # - 'VBE.default(127.0.0.1,,81).happy'
-    #   => ['VBE', 'default(127.0.0.1,,81)', 'happy']
-    if "(" not in raw_path:
-        return raw_path.split(".")
-    head_str, middle = raw_path.split("(", 1)
-    address, tail = middle.split(")", 1)
-    head = head_str.strip(".").split(".")
-    return head[:-1] + [f"{head[-1]}({address})"] + tail.strip(".").split(".")
+def _strip_prefix(key: str) -> str:
+    head, _, tail = key.partition(".")
+    return tail if head in _PREFIX_PRECEDENCE else key
 
 
-def _create_hierarchy(path: list[str], instance: dict[str, Any]) -> dict[str, Any]:
-    if not path:
-        return instance
-    head, tail = path[0], path[1:]
-    child = instance.setdefault(head, {})
-    return _create_hierarchy(tail, child)
+def _parse_int(raw: str) -> int | None:
+    try:
+        return int(raw)
+    except ValueError:
+        return None
 
 
-def check_varnish_stats(params: Params, section: Section, expected_keys: list[str]) -> CheckResult:
-    this_time = time.time()
-    for key in expected_keys:
-        if not (data := section.get(key)):
-            continue
-        assert isinstance(data, dict)
-        descr_per_sec = f"{data['descr']}/s"
+def _descr(key: str, words: Sequence[str]) -> str:
+    # skip the first word if it repeats the key, e.g. 'client_conn ... Client connections'
+    return " ".join(words[1:] if words and words[0].lower() in key else words).replace("/", " ")
+
+
+def _metric_name(key: str) -> str:
+    name = (
+        key.replace("n_wrk", "worker", 1)
+        if key.startswith("n_wrk")
+        else key.replace("n_", "objects_", 1)
+        if key.startswith("n_")
+        else key
+    )
+    return f"varnish_{name}_rate"
+
+
+def check_varnish_stats(params: Params, section: Section, keys: Sequence[str]) -> CheckResult:
+    yield from check_varnish_rates(params, section, keys, get_value_store(), time.time())
+
+
+def check_varnish_rates(
+    params: Params,
+    section: Section,
+    keys: Sequence[str],
+    value_store: MutableMapping[str, object],
+    now: float,
+) -> CheckResult:
+    for key in (k for k in keys if k in section):
+        counter = section[key]
         yield from check_levels(
-            get_rate(
-                get_value_store(), "varnish.%s" % key, this_time, data["value"], raise_overflow=True
-            ),
-            data["perf_var_name"],
-            params.get(data["params_var_name"], (None, None)),
-            human_readable_func=lambda r, d=descr_per_sec: f"{r:.1f} {d}",
+            get_rate(value_store, f"varnish.{key}", now, counter.value, raise_overflow=True),
+            _metric_name(key),
+            params.get(key.split("_", 1)[-1], (None, None)),
+            human_readable_func=lambda r, d=f"{counter.descr}/s": f"{r:.1f} {d}",
         )
 
 
 def check_varnish_ratio(
     params: Params, section: Section, ratio_keys: tuple[str, str, str]
 ) -> CheckResult:
-    reference_key, additional_key, perf_key = ratio_keys
-    reference = section[reference_key]
-    assert isinstance(reference, dict)
-    reference_value = reference["value"]
-    ratio = 0.0
-    additional = section[additional_key]
-    assert isinstance(additional, dict)
-    total = reference_value + additional["value"]
-    if total > 0:
-        ratio = 100.0 * reference_value / total
+    reference_key, additional_key, metric_name = ratio_keys
+    reference = section[reference_key].value
+    total = reference + section[additional_key].value
     warn, crit = params["levels_lower"]
     yield from check_levels(
-        ratio, perf_key, (None, None, warn, crit), human_readable_func=render.percent
+        100.0 * reference / total if total > 0 else 0.0,
+        metric_name,
+        (None, None, warn, crit),
+        human_readable_func=render.percent,
     )
 
 
@@ -129,24 +120,21 @@ def discover_varnish_uptime(section: Section) -> DiscoveryResult:
 
 
 def check_varnish_uptime(section: Section) -> CheckResult:
-    if "uptime" not in section:
+    if (uptime := section.get("uptime")) is None:
         return
-    uptime = section["uptime"]
-    assert isinstance(uptime, dict)
-    uptime_sec = uptime["value"]
     try:
         yield from check_levels(
-            uptime_sec,
+            uptime.value,
             "uptime",
             None,
             human_readable_func=lambda x: timedelta(seconds=int(x)),
             infoname="Up since %s, uptime"
-            % time.strftime("%c", time.localtime(time.time() - uptime_sec)),
+            % time.strftime("%c", time.localtime(time.time() - uptime.value)),
         )
-    except OverflowError:  # is this in the right place?
+    except OverflowError:
         yield Result(
             state=State.UNKNOWN,
-            summary=f"Could not handle uptime value {uptime['value']!r}. "
+            summary=f"Could not handle uptime value {uptime.value!r}. "
             "Output of `varnishstats` seems to be faulty.",
         )
 
@@ -434,19 +422,10 @@ check_plugin_varnish_backend_success_ratio = CheckPlugin(
 
 
 def check_varnish_worker_thread_ratio(params: Params, section: Section) -> CheckResult:
-    ratio = 0.0
-    n_wrk_create = section["n_wrk_create"]
-    assert isinstance(n_wrk_create, dict)
-    worker_create = n_wrk_create["value"]
-
-    n_wrk = section["n_wrk"]
-    assert isinstance(n_wrk, dict)
-
-    if worker_create > 0:
-        ratio = 100.0 * n_wrk["value"] / worker_create
+    worker_create = section["n_wrk_create"].value
     warn, crit = params["levels_lower"]
     yield from check_levels(
-        ratio,
+        100.0 * section["n_wrk"].value / worker_create if worker_create > 0 else 0.0,
         "varnish_worker_thread_ratio",
         (None, None, warn, crit),
         human_readable_func=render.percent,

@@ -375,7 +375,7 @@
     },
     "//bazel/extensions:python_cab_repositories.bzl%repos": {
       "general": {
-        "bzlTransitiveDigest": "Ohd+0mN0czwmNb2B5kESN5DqRRDVUVix0yXwJQZZ/L4=",
+        "bzlTransitiveDigest": "Xhc7/FFpL22tlKa8MtAMmxJvtPYwDXqwjKxGYiP1/1E=",
         "usagesDigest": "5qODU8+VF+agVVzVA8XavgFFOS1icLm99ZVCsrtfzMQ=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -390,6 +390,17 @@
               "urls": [
                 "https://files.pythonhosted.org/packages/source/c/cabarchive/cabarchive-0.2.5.tar.gz",
                 "https://artifacts.lan.tribe29.com/repository/upstream-archives/cabarchive-0.2.5.tar.gz"
+              ]
+            }
+          },
+          "python_msi_ucrt": {
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
+            "attributes": {
+              "downloaded_file_path": "ucrt.msi",
+              "sha256": "c0dc366e60851d85ea7341672b3041b5faf808149280476f961c7054828421e7",
+              "urls": [
+                "https://www.python.org/ftp/python/3.13.16/amd64/ucrt.msi",
+                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.13.16-amd64-ucrt.msi"
               ]
             }
           },
@@ -434,17 +445,6 @@
               "urls": [
                 "https://www.python.org/ftp/python/3.13.16/amd64/pip.msi",
                 "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.13.16-amd64-pip.msi"
-              ]
-            }
-          },
-          "python_msi_ucrt": {
-            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
-            "attributes": {
-              "downloaded_file_path": "ucrt.msi",
-              "sha256": "c0dc366e60851d85ea7341672b3041b5faf808149280476f961c7054828421e7",
-              "urls": [
-                "https://www.python.org/ftp/python/3.13.16/amd64/ucrt.msi",
-                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.13.16-amd64-ucrt.msi"
               ]
             }
           }

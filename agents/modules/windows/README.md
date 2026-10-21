@@ -41,8 +41,8 @@ Everything else is hermetic via bazel modules:
 
 - CPython version: `PYTHON_VERSION_WINDOWS` in `package_versions.bzl`, the
   single source of truth for the CAB's CPython version: `defines.make`
-  `sed`-reads it out of there at make time, `BUILD.bazel` `load()`s it into
-  `python_version`, and the MSI URLs below derive from it. Only
+  `sed`-reads it out of there at make time, `python_cab.bzl` `load()`s it,
+  and the MSI URLs below derive from it. Only
   `MODULE.bazel` files duplicate the version — they cannot `load()` it; see
   the bump procedure below.
 - Per-feature MSIs (`ucrt`, `core`, `exe`, `lib`, `pip`): declared by the

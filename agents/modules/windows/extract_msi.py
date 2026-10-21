@@ -192,18 +192,22 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--msiinfo", required=True, help="path to the msiinfo binary")
     parser.add_argument("--cabextract", required=True, help="path to the cabextract binary")
-    parser.add_argument("--libmsi-dir", required=True, help="dir containing libmsi.so.0")
     parser.add_argument("-C", "--directory", required=True, type=Path, help="output dir")
+    parser.add_argument(
+        "--require",
+        action="append",
+        default=[],
+        help="path, relative to the output dir, that must exist after extraction",
+    )
     parser.add_argument("msi", nargs="+", type=Path, help="MSI files to extract")
     args = parser.parse_args()
-
-    # msiinfo is dynamically linked against libmsi; make sure it can find it.
-    env_ld = os.environ.get("LD_LIBRARY_PATH", "")
-    os.environ["LD_LIBRARY_PATH"] = f"{args.libmsi_dir}:{env_ld}" if env_ld else args.libmsi_dir
 
     args.directory.mkdir(parents=True, exist_ok=True)
     for msi in args.msi:
         _extract_msi(args.msiinfo, args.cabextract, msi, args.directory)
+
+    if missing := [r for r in args.require if not (args.directory / r).is_file()]:
+        raise SystemExit(f"not found after extraction: {', '.join(missing)}")
     return 0
 
 

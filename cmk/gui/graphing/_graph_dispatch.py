@@ -48,16 +48,13 @@ def graph_request_of(graph_id: str) -> GraphRequest:
     return RequestedGraph(graph_id)
 
 
-def consolidation_function_of(options: Mapping[str, object]) -> ConsolidationFunction:
-    return ensure_type(options["consolidation_function"], ConsolidationFunction)
-
-
-def time_range_of(options: Mapping[str, object]) -> TimeRange:
-    return ensure_type(options["time_range"], TimeRange)
-
-
-def edge_neighbours_at_served_step_of(options: Mapping[str, object]) -> bool:
-    return ensure_type(options.get("edge_neighbours_at_served_step", False), bool)
+@dataclass(frozen=True, kw_only=True)
+class EvaluationOptions:
+    time_range: TimeRange
+    consolidation_function: ConsolidationFunction
+    destination: str | None
+    combination_mode: str | None = None
+    include_edge_neighbours: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -87,7 +84,7 @@ class GraphDispatcher:
     codec: GraphCodec
     # How to make this graph type's evaluation for the options of a request: that is where it
     # deserializes the common options and whatever else it alone needs from them.
-    make_evaluate: Callable[[Mapping[str, object]], DispatchedEvaluateProtocol]
+    make_evaluate: Callable[[EvaluationOptions], DispatchedEvaluateProtocol]
 
 
 class GraphDispatcherRegistry(Registry[GraphDispatcher]):
@@ -109,7 +106,7 @@ def serialize_graphs(graphs: Sequence[Graph]) -> Mapping[str, object]:
 
 def evaluate_built_graphs(
     graphs: Sequence[Graph],
-    options: Mapping[str, object],
+    options: EvaluationOptions,
 ) -> EvaluatedGraphs:
     evaluated_graphs: list[EvaluatedGraph] = []
     diagnostics = FetchDiagnostics()
@@ -125,7 +122,7 @@ def evaluate_built_graphs(
 
 def evaluate_graphs(
     internal: Mapping[str, object],
-    options: Mapping[str, object],
+    options: EvaluationOptions,
 ) -> EvaluatedGraphs:
     graphs = []
     for serialized in ensure_type(internal["graphs"], list):

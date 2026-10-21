@@ -6,7 +6,7 @@
 """Tests for the token-authenticated graph widget data fetch."""
 
 import datetime as dt
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from http import HTTPStatus
 from typing import cast, Literal
 
@@ -37,6 +37,7 @@ from cmk.gui.graphing import (
     BuiltGraph,
     DiscoveredGraphs,
     EvaluatedGraphs,
+    EvaluationOptions,
     FetchDiagnostics,
 )
 from cmk.gui.graphing.openapi import fetch_graph_data as fetch_graph_data_module
@@ -101,7 +102,7 @@ def _discovering(monkeypatch: pytest.MonkeyPatch, graphs: Sequence[BuiltGraph]) 
     )
 
 
-def _celsius_graph(_graphs: Sequence[Graph], _options: Mapping[str, object]) -> EvaluatedGraphs:
+def _celsius_graph(_graphs: Sequence[Graph], _options: EvaluationOptions) -> EvaluatedGraphs:
     """One 20 °C data point, so a Fahrenheit reader must get 68.0 and a "°F" symbol."""
     unit = Unit(notation=DecimalNotation("°C"), precision=AutoPrecision(2))
     return EvaluatedGraphs(
@@ -178,7 +179,7 @@ def test_fetch_evaluates_as_the_token_issuer(monkeypatch: pytest.MonkeyPatch) ->
     # unauthenticated user this request otherwise is would not be filtered at all.
     evaluated_as: dict[str, object] = {}
 
-    def _capture(_graphs: Sequence[Graph], _options: Mapping[str, object]) -> EvaluatedGraphs:
+    def _capture(_graphs: Sequence[Graph], _options: EvaluationOptions) -> EvaluatedGraphs:
         evaluated_as["user_id"] = user.id
         return EvaluatedGraphs(
             graphs=[

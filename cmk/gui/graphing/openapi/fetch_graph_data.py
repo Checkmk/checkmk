@@ -24,7 +24,12 @@ from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.livestatus_client import MKLivestatusException
 from cmk.web.utils import permission_verification as permissions
 
-from .._graph_dispatch import evaluate_built_graphs, evaluate_graphs, EvaluatedGraphs
+from .._graph_dispatch import (
+    evaluate_built_graphs,
+    evaluate_graphs,
+    EvaluatedGraphs,
+    EvaluationOptions,
+)
 from .._user_specific_unit import get_temperature_unit
 from ._family import GRAPH_FAMILY
 from ._serialize import (
@@ -45,16 +50,14 @@ def graph_fetch_options(
     time_range: EngineTimeRange,
     consolidation_function: ApiConsolidation,
     combination_mode: ApiCombinationMode | None,
-) -> Mapping[str, object]:
-    options: dict[str, object] = {
-        "consolidation_function": api_consolidation_to_engine(consolidation_function),
-        "time_range": time_range,
-        "edge_neighbours_at_served_step": True,
-        "destination": None,
-    }
-    if combination_mode is not None:
-        options["combination_mode"] = combination_mode
-    return options
+) -> EvaluationOptions:
+    return EvaluationOptions(
+        time_range=time_range,
+        consolidation_function=api_consolidation_to_engine(consolidation_function),
+        destination=None,
+        combination_mode=combination_mode,
+        include_edge_neighbours=True,
+    )
 
 
 def evaluated_or_problem(evaluate: Callable[[], EvaluatedGraphs]) -> EvaluatedGraphs:

@@ -33,6 +33,7 @@ from cmk.gui.graphing import (
     discover_template_graphs,
     DiscoveredGraphs,
     evaluate_built_graphs,
+    EvaluationOptions,
     get_graph_plugin_choices,
     graph_choices,
     GraphChoices,
@@ -145,11 +146,11 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig](Dashlet[T]):
             )
             evaluated = evaluate_built_graphs(
                 [built.graph for built in discovered.graphs[:1]],
-                {
-                    "consolidation_function": ConsolidationFunction.MAX,
-                    "time_range": TimeRange(start=int(start), end=int(end), step=60),
-                    "destination": None,
-                },
+                EvaluationOptions(
+                    consolidation_function=ConsolidationFunction.MAX,
+                    time_range=TimeRange(start=int(start), end=int(end), step=60),
+                    destination=None,
+                ),
             )
         except Exception:
             return self.title()

@@ -18,6 +18,7 @@ from cmk.gui.exceptions import MKUnauthenticatedException
 from cmk.gui.graphing import (
     build_template_graphs,
     evaluate_built_graphs,
+    EvaluationOptions,
     get_temperature_unit,
     GraphDestinations,
     GraphEnvironment,
@@ -121,13 +122,13 @@ def _answer_graph_image_request(
     ranges = compute_image_graph_ranges(display_config, start_time, end_time)
     evaluated = evaluate_built_graphs(
         [built.graph for built in requested],
-        {
-            "consolidation_function": ConsolidationFunction.MAX,
-            "time_range": TimeRange(
+        EvaluationOptions(
+            consolidation_function=ConsolidationFunction.MAX,
+            time_range=TimeRange(
                 start=ranges.time_range[0], end=ranges.time_range[1], step=ranges.step
             ),
-            "destination": graph_specification.destination,
-        },
+            destination=graph_specification.destination,
+        ),
     )
 
     options = png_options(display_config)

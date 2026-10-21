@@ -26,6 +26,7 @@ from cmk.gui.graphing import (
     build_template_graphs,
     evaluate_built_graphs,
     evaluated_to_graph_spec,
+    EvaluationOptions,
     get_graph_plugin_from_id,
     graphs_from_api,
     MKGraphNotFound,
@@ -111,11 +112,11 @@ def get_graph(params: Mapping[str, Any]) -> Response:
             )
         evaluated = evaluate_built_graphs(
             [requested.graph],
-            {
-                "consolidation_function": ConsolidationFunction(body["reduce"]),
-                "time_range": time_range,
-                "destination": None,
-            },
+            EvaluationOptions(
+                consolidation_function=ConsolidationFunction(body["reduce"]),
+                time_range=time_range,
+                destination=None,
+            ),
         )
 
     except MKUserError as e:

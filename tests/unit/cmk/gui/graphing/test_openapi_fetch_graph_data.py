@@ -43,8 +43,8 @@ from cmk.graphing_engine import (
     Unit,
 )
 from cmk.gui.graphing import (
-    edge_neighbours_at_served_step_of,
     EvaluatedGraphs,
+    EvaluationOptions,
     FetchDiagnostics,
     QueryLimitReached,
 )
@@ -261,10 +261,10 @@ def test_fetch_graph_data_multiple_internal_graphs_raises_500() -> None:
 
 
 def _capture_request(
-    monkeypatch: pytest.MonkeyPatch, captured: dict[str, Mapping[str, object]]
+    monkeypatch: pytest.MonkeyPatch, captured: dict[str, EvaluationOptions]
 ) -> None:
     def _capture(
-        _graphs: Sequence[Mapping[str, object]], options: Mapping[str, object]
+        _graphs: Sequence[Mapping[str, object]], options: EvaluationOptions
     ) -> EvaluatedGraphs:
         captured["options"] = options
         return EvaluatedGraphs(
@@ -288,7 +288,7 @@ def _capture_request(
 def test_fetch_graph_data_passes_combination_mode_into_options(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    captured: dict[str, Mapping[str, object]] = {}
+    captured: dict[str, EvaluationOptions] = {}
     _capture_request(monkeypatch, captured)
     fetch_graph_data_v1(
         _api_context(),
@@ -299,14 +299,14 @@ def test_fetch_graph_data_passes_combination_mode_into_options(
             combination_mode="stacked",
         ),
     )
-    assert captured["options"]["combination_mode"] == "stacked"
+    assert captured["options"].combination_mode == "stacked"
 
 
 @pytest.mark.usefixtures("load_config")
 def test_fetch_graph_data_asks_each_rrd_for_the_neighbours_of_the_archive_serving_it(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    captured: dict[str, Mapping[str, object]] = {}
+    captured: dict[str, EvaluationOptions] = {}
     _capture_request(monkeypatch, captured)
 
     fetch_graph_data_v1(
@@ -318,14 +318,14 @@ def test_fetch_graph_data_asks_each_rrd_for_the_neighbours_of_the_archive_servin
         ),
     )
 
-    assert edge_neighbours_at_served_step_of(captured["options"])
+    assert captured["options"].include_edge_neighbours
 
 
 @pytest.mark.usefixtures("load_config")
 def test_fetch_graph_data_omits_combination_mode_when_not_requested(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    captured: dict[str, Mapping[str, object]] = {}
+    captured: dict[str, EvaluationOptions] = {}
     _capture_request(monkeypatch, captured)
     fetch_graph_data_v1(
         _api_context(),
@@ -335,7 +335,7 @@ def test_fetch_graph_data_omits_combination_mode_when_not_requested(
             consolidation_function="avg",
         ),
     )
-    assert "combination_mode" not in captured["options"]
+    assert captured["options"].combination_mode is None
 
 
 def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import Self
 
@@ -21,21 +21,22 @@ from cmk.graphing_engine import (
 from cmk.gui.graphing import (
     evaluate_built_graphs,
     EvaluatedGraphs,
+    EvaluationOptions,
     FetchDiagnostics,
     graph_dispatcher_registry,
     GraphDispatcher,
     QueryLimitReached,
-    time_range_of,
 )
 from cmk.gui.graphing._graph_codec import COMMUNITY_GRAPH_CODEC
 from cmk.gui.graphing._graph_dispatch import evaluate_graphs, graph_request_of, serialize_graphs
 
 _KIND = "dispatch_test"
 
-_OPTIONS: Mapping[str, object] = {
-    "consolidation_function": ConsolidationFunction.MAX,
-    "time_range": TimeRange(start=0, end=60, step=10),
-}
+_OPTIONS = EvaluationOptions(
+    consolidation_function=ConsolidationFunction.MAX,
+    time_range=TimeRange(start=0, end=60, step=10),
+    destination=None,
+)
 
 
 @dataclass
@@ -46,8 +47,8 @@ class _RecordingEvaluate:
     diagnostics: FetchDiagnostics = field(default_factory=FetchDiagnostics)
 
     @classmethod
-    def make(cls, options: Mapping[str, object]) -> Self:
-        return cls(time_range_of(options))
+    def make(cls, options: EvaluationOptions) -> Self:
+        return cls(options.time_range)
 
     def __call__(self, graph: Graph) -> EvaluatedGraphs:
         self.diagnostics.errors.append(f"{graph.name} at step {self.time_range.step}")
@@ -121,10 +122,11 @@ def test_the_diagnostics_of_every_graph_are_collected() -> None:
 def test_every_graph_is_evaluated_under_the_requested_options() -> None:
     evaluated = evaluate_built_graphs(
         [_graph("a"), _graph("b")],
-        {
-            "consolidation_function": ConsolidationFunction.MAX,
-            "time_range": TimeRange(start=0, end=120, step=30),
-        },
+        EvaluationOptions(
+            consolidation_function=ConsolidationFunction.MAX,
+            time_range=TimeRange(start=0, end=120, step=30),
+            destination=None,
+        ),
     )
 
     assert evaluated.diagnostics.errors == ["a at step 30", "b at step 30"]

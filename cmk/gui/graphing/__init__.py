@@ -32,10 +32,9 @@ from ._graph_codec import (
     QuantitySpec,
 )
 from ._graph_dispatch import (
-    consolidation_function_of,
-    edge_neighbours_at_served_step_of,
     evaluate_built_graphs,
     EvaluatedGraphs,
+    EvaluationOptions,
     FetchDataWithDiagnosticsProtocol,
     graph_dispatcher_registry,
     graph_request_of,
@@ -43,7 +42,6 @@ from ._graph_dispatch import (
     GraphDispatcherRegistry,
     legacy_graph_id,
     serialize_graphs,
-    time_range_of,
 )
 from ._graph_display_config import (
     GraphDestinations,
@@ -173,7 +171,6 @@ __all__ = [
     "build_template_graphs",
     "BuiltGraph",
     "canonical_mapping_key",
-    "time_range_of",
     "COMMUNITY_QUANTITY_SPECS",
     "context_from_json",
     "compute_graph_ranges_for_width",
@@ -191,10 +188,9 @@ __all__ = [
     "evaluated_perfometer",
     "evaluated_to_graph_spec",
     "EvaluatedGraphs",
+    "EvaluationOptions",
     "EvaluatedMetric",
-    "consolidation_function_of",
     "graph_request_of",
-    "edge_neighbours_at_served_step_of",
     "FetchDataWithDiagnosticsProtocol",
     "FetchDiagnostics",
     "FetchTimeSeriesProtocol",

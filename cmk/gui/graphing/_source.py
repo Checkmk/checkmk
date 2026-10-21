@@ -357,7 +357,7 @@ class RRDFetchData:
     # scale and merge the series - sits above them and is independent of it.
     performance_data_source: _RRDFetchPerformanceDataProtocol = RRDFetchPerformanceData()
     time_series_source: _RRDFetchTimeSeriesProtocol = RRDFetchTimeSeries()
-    edge_neighbours_at_served_step: bool = False
+    include_edge_neighbours: bool = False
     # Accumulated while fetching; read by the dispatcher into the evaluated result.
     diagnostics: FetchDiagnostics = field(default_factory=FetchDiagnostics, compare=False)
 
@@ -515,7 +515,7 @@ class RRDFetchData:
     ) -> Mapping[RRDMetric, TimeSeries]:
         time_series_source = (
             _TimeSeriesWithEdgeNeighboursAtServedStep(self.time_series_source)
-            if self.edge_neighbours_at_served_step
+            if self.include_edge_neighbours
             else self.time_series_source
         )
         result: dict[RRDMetric, TimeSeries] = {}

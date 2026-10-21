@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final, Self
 
@@ -19,12 +18,10 @@ from cmk.gui.i18n import _
 
 from ._graph_codec import GraphCodec
 from ._graph_dispatch import (
-    consolidation_function_of,
-    edge_neighbours_at_served_step_of,
     EvaluatedGraphs,
+    EvaluationOptions,
     FetchDataWithDiagnosticsProtocol,
     GraphDispatcher,
-    time_range_of,
 )
 from ._plugins import registered_translations
 from ._prediction_source import PredictionFetchData
@@ -49,14 +46,14 @@ class _EvaluatePrediction:
     fetch_data: FetchDataWithDiagnosticsProtocol
 
     @classmethod
-    def make(cls, options: Mapping[str, object]) -> Self:
+    def make(cls, options: EvaluationOptions) -> Self:
         return cls(
-            time_range_of(options),
+            options.time_range,
             PredictionFetchData(
                 debug=active_config.debug,
                 registered_translations=registered_translations(),
-                edge_neighbours_at_served_step=edge_neighbours_at_served_step_of(options),
-                consolidation_function=consolidation_function_of(options),
+                include_edge_neighbours=options.include_edge_neighbours,
+                consolidation_function=options.consolidation_function,
             ),
         )
 

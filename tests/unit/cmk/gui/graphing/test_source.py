@@ -463,7 +463,7 @@ def _fetched_with_edge_neighbours(
             consolidation_function=ConsolidationFunction.MAX,
             performance_data_source=performance_data,
             time_series_source=rrd,
-            edge_neighbours_at_served_step=True,
+            include_edge_neighbours=True,
         )(
             [_EDGE_METRIC],
             time_range=_HALF_HOUR_A_WEEK_AGO,

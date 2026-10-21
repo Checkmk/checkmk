@@ -37,14 +37,12 @@ from ._built_graphs import BuiltGraph, DiscoveredGraphs
 from ._graph_choices import GraphPluginChoice
 from ._graph_codec import GraphCodec
 from ._graph_dispatch import (
-    consolidation_function_of,
-    edge_neighbours_at_served_step_of,
     EvaluatedGraphs,
+    EvaluationOptions,
     FetchDataWithDiagnosticsProtocol,
     graph_request_of,
     GraphDispatcher,
     legacy_graph_id,
-    time_range_of,
 )
 from ._graph_specification import AnnotatedHostName, GraphSpecification, StoredGraphSpecification
 from ._plugins import registered_graphs, registered_metrics, registered_translations
@@ -201,14 +199,14 @@ class _EvaluateTemplateGraphs:
     fetch_data: FetchDataWithDiagnosticsProtocol
 
     @classmethod
-    def make(cls, options: Mapping[str, object]) -> Self:
+    def make(cls, options: EvaluationOptions) -> Self:
         return cls(
-            time_range_of(options),
+            options.time_range,
             RRDFetchData(
                 debug=active_config.debug,
                 registered_translations=registered_translations(),
-                edge_neighbours_at_served_step=edge_neighbours_at_served_step_of(options),
-                consolidation_function=consolidation_function_of(options),
+                include_edge_neighbours=options.include_edge_neighbours,
+                consolidation_function=options.consolidation_function,
             ),
         )
 

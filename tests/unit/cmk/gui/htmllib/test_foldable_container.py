@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+
 import pytest
+from bs4 import BeautifulSoup, Tag
 from pytest_mock import MockerFixture
 
 from cmk.gui.htmllib.foldable_container import (
@@ -30,7 +33,7 @@ def test_foldable_container(mocker: MockerFixture) -> None:
             code,
             """
             <div class="foldable closed">
-            <div onclick="cmk.foldable_container.toggle(&quot;name&quot;, &quot;id&quot;, &quot;&quot;, true)" class="foldable_header">
+            <div class="foldable_header" data-cmk_on_click="foldable_container_toggle" data-cmk_on_click_arguments="{&quot;treename&quot;: &quot;name&quot;, &quot;id&quot;: &quot;id&quot;, &quot;fetch_url&quot;: &quot;&quot;, &quot;save_state&quot;: &quot;true&quot;}">
             <img id="treeimg.name.id" src="some_random_icon_path.svg" class="treeangle closed" />
             <b class="treeangle title">Title</b>
             </div>
@@ -39,6 +42,49 @@ def test_foldable_container(mocker: MockerFixture) -> None:
 
             """,
         )
+
+
+TOGGLE_ARGUMENTS = {"treename": "name", "id": "id", "fetch_url": "", "save_state": "true"}
+
+
+def _render(title_url: str | None = None) -> BeautifulSoup:
+    with output_funnel.plugged():
+        with foldable_container(
+            treename="name", id_="id", isopen=True, title="Title", title_url=title_url
+        ):
+            pass
+        return BeautifulSoup(output_funnel.drain(), "lxml")
+
+
+def _click_handling(tag: Tag | None) -> tuple[object, object, object]:
+    assert tag is not None
+    arguments = tag.get("data-cmk_on_click_arguments")
+    return (
+        tag.get("onclick"),
+        tag.get("data-cmk_on_click"),
+        None if arguments is None else json.loads(str(arguments)),
+    )
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_foldable_container_header_toggles_by_click_action() -> None:
+    soup = _render()
+
+    assert _click_handling(soup.select_one("div.foldable_header")) == (
+        None,
+        "foldable_container_toggle",
+        TOGGLE_ARGUMENTS,
+    )
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_foldable_container_with_title_url_toggles_on_the_icon_only() -> None:
+    soup = _render(title_url="view.py")
+
+    assert (
+        _click_handling(soup.select_one("div.foldable_header")),
+        _click_handling(soup.select_one("img.treeangle")),
+    ) == ((None, None, None), (None, "foldable_container_toggle", TOGGLE_ARGUMENTS))
 
 
 def test_foldable_container_id() -> None:

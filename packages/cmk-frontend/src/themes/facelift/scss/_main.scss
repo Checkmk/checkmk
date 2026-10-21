@@ -380,7 +380,7 @@ div.foldable_wrapper {
     z-index: $sticky-table-header-z-index;
     background-color: $headline-color;
 
-    &[onclick] {
+    &[data-cmk_on_click] {
       cursor: pointer;
     }
 

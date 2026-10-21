@@ -97,6 +97,7 @@
         "add_to_visual",
         "confirm_link",
         "dispatch_custom_event",
+        "foldable_container_toggle",
         "graph_export",
         "loading_transition",
         "nodevis_toggle_compare_history",

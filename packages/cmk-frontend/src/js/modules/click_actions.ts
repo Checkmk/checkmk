@@ -7,6 +7,7 @@ import type { KnownClickAction } from 'cmk-shared-typing/typescript/legacy_front
 
 import { activate_changes } from '@/modules/activation'
 import { call_ajax } from '@/modules/ajax'
+import { toggle as toggle_foldable_container } from '@/modules/foldable_container'
 import { confirm_link, waiting_flash_message } from '@/modules/forms'
 import { toggle as toggle_inline_help } from '@/modules/help'
 import {
@@ -68,6 +69,16 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
     close_icon_popup()
   },
   dispatch_custom_event: dispatch_custom_event,
+  foldable_container_toggle: (_element, options) => {
+    toggle_foldable_container(
+      options.treename,
+      options.id,
+      options.fetch_url,
+      options.save_state === 'true'
+    )
+    // The header may contain links, e.g. to a view, which have to be followed
+    return true
+  },
   graph_export: closing_dropdown((_element, options) => graph_export(options.page)),
   loading_transition: (_element, options, event) => {
     makeLoadingTransition(options.template, 1000, options.title, event)

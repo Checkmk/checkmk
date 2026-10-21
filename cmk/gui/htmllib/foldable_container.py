@@ -11,6 +11,7 @@ from contextlib import contextmanager
 from cmk.gui.theme.current_theme import theme
 from cmk.web.utils.html import HTML
 
+from .generator import ClickAction
 from .html import html
 from .tag_rendering import HTMLContent
 
@@ -37,18 +38,18 @@ def foldable_container(
     padding: int = 15,
     save_state: bool = True,
 ) -> Iterator[bool]:
-    onclick = foldable_container_onclick(treename, id_, fetch_url, save_state)
+    toggle = _toggle_click_action(treename, id_, fetch_url, save_state).data_attributes()
     img_id = foldable_container_img_id(treename, id_)
     container_id = foldable_container_id(treename, id_)
 
     html.open_div(class_=["foldable", "open" if isopen else "closed"])
-    html.open_div(class_="foldable_header", onclick=None if title_url else onclick)
+    html.open_div(class_="foldable_header", **({} if title_url else toggle))
 
     html.img(
         id_=img_id,
         class_=["treeangle", "open" if isopen else "closed"] + (["title", "icon"] if icon else []),
         src=theme.detect_icon_path(icon if icon else "tree_closed", "icon_"),
-        onclick=onclick if title_url else None,
+        **(toggle if title_url else {}),
     )
 
     if isinstance(title, HTML):  # custom HTML code
@@ -79,6 +80,23 @@ def foldable_container(
     finally:
         html.close_ul()
         html.close_div()
+
+
+def _toggle_click_action(
+    treename: str,
+    id_: str,
+    fetch_url: str | None,
+    save_state: bool = True,
+) -> ClickAction:
+    return ClickAction(
+        action="foldable_container_toggle",
+        arguments={
+            "treename": treename,
+            "id": id_,
+            "fetch_url": fetch_url if fetch_url else "",
+            "save_state": json.dumps(save_state),
+        },
+    )
 
 
 def foldable_container_onclick(

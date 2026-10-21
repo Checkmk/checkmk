@@ -17,7 +17,18 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.varnish.agent_based import varnish
+from cmk.plugins.varnish.agent_based import (
+    lib,
+    varnish,
+    varnish_backend,
+    varnish_cache,
+    varnish_client,
+    varnish_esi,
+    varnish_fetch,
+    varnish_objects,
+    varnish_ratios,
+    varnish_worker,
+)
 
 STRING_TABLE: StringTable = [
     ["MGT.uptime", "3600", "1.00", "Management", "process", "uptime"],
@@ -52,11 +63,11 @@ STRING_TABLE: StringTable = [
 
 
 def test_parse_varnish() -> None:
-    section = varnish.parse_varnish(STRING_TABLE)
-    assert section["uptime"] == varnish.Counter(3600, "Management process uptime")
-    assert section["client_conn"] == varnish.Counter(13687134, "connections accepted")
-    assert section["client_drop"] == varnish.Counter(0, "Connection dropped, no sess wrk")
-    assert section["VBE.default(127.0.0.1,,81).happy"] == varnish.Counter(0, "health probes")
+    section = lib.parse_varnish(STRING_TABLE)
+    assert section["uptime"] == lib.Counter(3600, "Management process uptime")
+    assert section["client_conn"] == lib.Counter(13687134, "connections accepted")
+    assert section["client_drop"] == lib.Counter(0, "Connection dropped, no sess wrk")
+    assert section["VBE.default(127.0.0.1,,81).happy"] == lib.Counter(0, "health probes")
     assert "SMA.s0.g_space" not in section
 
 
@@ -64,20 +75,20 @@ def test_parse_varnish() -> None:
     "discover",
     [
         varnish.discover_varnish_uptime,
-        varnish.discover_varnish_cache,
-        varnish.discover_varnish_client,
-        varnish.discover_varnish_backend,
-        varnish.discover_varnish_fetch,
-        varnish.discover_varnish_esi,
-        varnish.discover_varnish_objects,
-        varnish.discover_varnish_worker,
-        varnish.discover_varnish_cache_hit_ratio,
-        varnish.discover_varnish_backend_success_ratio,
-        varnish.discover_varnish_worker_thread_ratio,
+        varnish_cache.discover_varnish_cache,
+        varnish_client.discover_varnish_client,
+        varnish_backend.discover_varnish_backend,
+        varnish_fetch.discover_varnish_fetch,
+        varnish_esi.discover_varnish_esi,
+        varnish_objects.discover_varnish_objects,
+        varnish_worker.discover_varnish_worker,
+        varnish_ratios.discover_varnish_cache_hit_ratio,
+        varnish_ratios.discover_varnish_backend_success_ratio,
+        varnish_ratios.discover_varnish_worker_thread_ratio,
     ],
 )
-def test_discovery(discover: Callable[[varnish.Section], DiscoveryResult]) -> None:
-    assert list(discover(varnish.parse_varnish(STRING_TABLE))) == [Service()]
+def test_discovery(discover: Callable[[lib.Section], DiscoveryResult]) -> None:
+    assert list(discover(lib.parse_varnish(STRING_TABLE))) == [Service()]
     assert not list(discover({}))
 
 
@@ -89,14 +100,14 @@ def test_check_varnish_rates() -> None:
     for now in (0.0, 1.0, 2.0):
         with pytest.raises(GetRateError):
             list(
-                varnish.check_varnish_rates(
-                    params, varnish.parse_varnish(STRING_TABLE), keys, value_store, now
+                lib.check_varnish_rates(
+                    params, lib.parse_varnish(STRING_TABLE), keys, value_store, now
                 )
             )
     assert list(
-        varnish.check_varnish_rates(
+        lib.check_varnish_rates(
             params,
-            varnish.parse_varnish(
+            lib.parse_varnish(
                 [
                     ["n_wrk_failed", "15", "0.00", "N", "worker", "threads", "not", "created"],
                     ["n_expired", "1", ".", "N", "expired", "objects"],
@@ -124,19 +135,19 @@ def test_check_varnish_rates() -> None:
     "check, metric, ratio, state",
     [
         (
-            varnish.check_varnish_cache_hit_ratio,
+            varnish_ratios.check_varnish_cache_hit_ratio,
             "cache_hit_ratio",
             75.0,
             State.OK,
         ),
         (
-            varnish.check_varnish_backend_success_ratio,
+            varnish_ratios.check_varnish_backend_success_ratio,
             "varnish_backend_success_ratio",
             90.0,
             State.OK,
         ),
         (
-            varnish.check_varnish_worker_thread_ratio,
+            varnish_ratios.check_varnish_worker_thread_ratio,
             "varnish_worker_thread_ratio",
             60.0,
             State.WARN,
@@ -144,21 +155,21 @@ def test_check_varnish_rates() -> None:
     ],
 )
 def test_check_ratios(
-    check: Callable[[varnish.Params, varnish.Section], CheckResult],
+    check: Callable[[lib.Params, lib.Section], CheckResult],
     metric: str,
     ratio: float,
     state: State,
 ) -> None:
-    results = list(check({"levels_lower": (70.0, 60.0)}, varnish.parse_varnish(STRING_TABLE)))
+    results = list(check({"levels_lower": (70.0, 60.0)}, lib.parse_varnish(STRING_TABLE)))
     assert [r.state for r in results if isinstance(r, Result)] == [state]
     assert [m for m in results if isinstance(m, Metric)] == [Metric(metric, ratio)]
 
 
 def test_check_ratio_zero_total() -> None:
     assert list(
-        varnish.check_varnish_cache_hit_ratio(
+        varnish_ratios.check_varnish_cache_hit_ratio(
             {"levels_lower": (70.0, 60.0)},
-            {"cache_hit": varnish.Counter(0, ""), "cache_miss": varnish.Counter(0, "")},
+            {"cache_hit": lib.Counter(0, ""), "cache_miss": lib.Counter(0, "")},
         )
     ) == [
         Result(state=State.CRIT, summary="0% (warn/crit below 70.00%/60.00%)"),
@@ -167,6 +178,6 @@ def test_check_ratio_zero_total() -> None:
 
 
 def test_check_varnish_uptime() -> None:
-    results = list(varnish.check_varnish_uptime(varnish.parse_varnish(STRING_TABLE)))
+    results = list(varnish.check_varnish_uptime(lib.parse_varnish(STRING_TABLE)))
     assert [r.state for r in results if isinstance(r, Result)] == [State.OK]
     assert [m for m in results if isinstance(m, Metric)] == [Metric("uptime", 3600)]

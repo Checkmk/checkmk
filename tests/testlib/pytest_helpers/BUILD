@@ -6,7 +6,10 @@ py_library(
     testonly = True,
     srcs = glob(["**/*.py"]),
     imports = ["../../.."],
-    visibility = ["//tests:__subpackages__"],
+    visibility = [
+        "//non-free/tests:__subpackages__",
+        "//tests:__subpackages__",
+    ],
     deps = [
         "//tests/testlib/common",
         requirement("psutil"),

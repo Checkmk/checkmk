@@ -25,7 +25,9 @@ directory over growing these further.
 
 # Pytest setup
 
-`tests/system/conftest.py` registers the setup every system suite needs: the
+`tests/system/conftest.py` (and its copy `non-free/tests/system/conftest.py` for
+the suites below `non-free/tests/system/`) registers the setup every system
+suite needs: the
 package under test (`--cmk-edition`, edition skips, crash reports), the session
 timeout, sharding, CI selection and failure diagnostics. Each of those is a
 plugin module in `tests/testlib/system/pytest_helpers/` (or in

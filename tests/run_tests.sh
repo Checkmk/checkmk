@@ -380,7 +380,7 @@ test-system-azure-ultimate() {
 
 test-system-ai-features() {
     EDITION=pro _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/system/ai_features")" \
+        "$(realpath "$REPO_PATH/non-free/tests/system/ai_features")" \
         --session-timeout 3600
 }
 

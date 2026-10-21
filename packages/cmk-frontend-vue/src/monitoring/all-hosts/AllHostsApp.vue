@@ -557,8 +557,8 @@ function navigateToLegacy() {
     </div>
     <CmkSplitPane
       :collapsed="!activeAction"
-      :right-min-size="30"
-      :right-max-size="50"
+      :pane-min-size="30"
+      :pane-max-size="50"
       :collapsible-on-resize="false"
       class="monitoring-all-hosts-app__split"
       @update:collapsed="onRightPaneCollapse($event as boolean)"

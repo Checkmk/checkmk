@@ -14,9 +14,10 @@ interface PanelInstance {
 }
 
 export interface CmkSplitPaneProps {
-  rightMinSize?: number
-  rightMaxSize?: number
-  rightDefaultSize?: number
+  paneMinSize?: number
+  paneMaxSize?: number
+  paneDefaultSize?: number
+  dock?: 'left' | 'right'
   sizeUnit?: '%' | 'px'
   keyboardResizeBy?: number
   hideHandleWhenCollapsed?: boolean
@@ -24,9 +25,10 @@ export interface CmkSplitPaneProps {
 }
 
 const {
-  rightMinSize = 20,
-  rightMaxSize = 50,
-  rightDefaultSize = 30,
+  paneMinSize = 20,
+  paneMaxSize = 50,
+  paneDefaultSize = 30,
+  dock = 'right',
   sizeUnit = '%',
   keyboardResizeBy = 10,
   hideHandleWhenCollapsed = true,
@@ -35,12 +37,18 @@ const {
 
 const collapsed = defineModel<boolean>('collapsed', { default: false })
 
+const emit = defineEmits<{
+  resize: [size: number]
+}>()
+
+const leftPanel = useTemplateRef<PanelInstance>('leftPanel')
 const rightPanel = useTemplateRef<PanelInstance>('rightPanel')
+const dockedPanel = computed(() => (dock === 'left' ? leftPanel.value : rightPanel.value))
 
 const hidePanel = computed(() => collapsed.value && !collapsibleOnResize)
 
 watch(
-  [collapsed, rightPanel],
+  [collapsed, dockedPanel],
   ([value, panel]) => {
     if (!panel || !collapsibleOnResize) {
       return
@@ -62,6 +70,25 @@ function onExpand(): void {
   collapsed.value = false
 }
 
+function panelProps(side: 'left' | 'right') {
+  if (side !== dock) {
+    return { class: 'cmk-split-pane__panel' }
+  }
+  return {
+    class: 'cmk-split-pane__panel',
+    collapsible: collapsibleOnResize,
+    collapsedSize: 0,
+    minSize: paneMinSize,
+    maxSize: paneMaxSize,
+    defaultSize: paneDefaultSize,
+    sizeUnit,
+    style: { display: hidePanel.value ? 'none' : undefined },
+    onCollapse,
+    onExpand,
+    onResize: (size: number) => emit('resize', size)
+  }
+}
+
 function focusHandle(event: PointerEvent): void {
   ;(event.currentTarget as HTMLElement | null)?.focus()
 }
@@ -69,17 +96,19 @@ function focusHandle(event: PointerEvent): void {
 
 <template>
   <SplitterGroup
+    :key="dock"
     direction="horizontal"
     :keyboard-resize-by="keyboardResizeBy"
     class="cmk-split-pane"
   >
-    <SplitterPanel class="cmk-split-pane__panel">
+    <SplitterPanel ref="leftPanel" v-bind="panelProps('left')">
       <slot name="left" />
     </SplitterPanel>
 
     <SplitterResizeHandle
       v-show="!(collapsed && hideHandleWhenCollapsed)"
       class="cmk-split-pane__handle"
+      :class="{ 'cmk-split-pane__handle--dock-left': dock === 'left' }"
       @pointerdown="focusHandle"
     >
       <span class="cmk-split-pane__grip" aria-hidden="true">
@@ -88,19 +117,7 @@ function focusHandle(event: PointerEvent): void {
       </span>
     </SplitterResizeHandle>
 
-    <SplitterPanel
-      v-show="!hidePanel"
-      ref="rightPanel"
-      :collapsible="collapsibleOnResize"
-      :collapsed-size="0"
-      :min-size="rightMinSize"
-      :max-size="rightMaxSize"
-      :default-size="rightDefaultSize"
-      :size-unit="sizeUnit"
-      class="cmk-split-pane__panel"
-      @collapse="onCollapse"
-      @expand="onExpand"
-    >
+    <SplitterPanel ref="rightPanel" v-bind="panelProps('right')">
       <slot name="right" />
     </SplitterPanel>
   </SplitterGroup>
@@ -126,6 +143,11 @@ function focusHandle(event: PointerEvent): void {
   border-left: 4px solid var(--ux-theme-6);
   cursor: col-resize;
   outline: none;
+}
+
+.cmk-split-pane__handle--dock-left {
+  border-right: 4px solid var(--ux-theme-6);
+  border-left: none;
 }
 
 .cmk-split-pane__handle:focus-visible {

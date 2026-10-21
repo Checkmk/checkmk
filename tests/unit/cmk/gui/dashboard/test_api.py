@@ -64,7 +64,6 @@ def test_widget_title_from_internal_sanitizes_title_url(
         assert result.url == expected_url
 
 
-@pytest.mark.xfail(raises=KeyError, reason="Crash group 4539: KeyError")
 def test_stored_widget_of_an_unknown_type_is_not_supported() -> None:
     config: DashletConfig = {"type": "notification_analysis", "position": (1, 1), "size": (10, 10)}
 

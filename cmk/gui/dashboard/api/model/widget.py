@@ -308,6 +308,7 @@ class RelativeGridWidgetResponse(BaseWidgetResponse):
 def determine_widget_filter_used_infos(
     widget_config: DashletConfig,
 ) -> list[AnnotatedInfoName]:
-    dashlet_type = dashlet_registry[widget_config["type"]]
+    if (dashlet_type := dashlet_registry.get(widget_config["type"])) is None:
+        return []
     dashlet = dashlet_type(widget_config)
     return list(dashlet.infos())

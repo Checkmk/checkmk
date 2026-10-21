@@ -31,6 +31,7 @@ py_cmk_test(
         "//:runtime-requirements.txt",
         "//agents/modules/windows:windows-constraints.txt",
         "//agents/modules/windows:windows-requirements.in",
+        "//agents/modules/windows:windows-test-cab-requirements.in",
         "//agents/plugins:dev-requirements.in",
         "//bazel/module:py.MODULE.bazel",
         "//bazel/module:python_cab.MODULE.bazel",

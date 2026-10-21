@@ -1,17 +1,21 @@
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+load("@rules_shell//shell:sh_library.bzl", "sh_library")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@windows_python_wheels//:requirements.bzl", "all_whl_requirements")
+load("@windows_test_python_wheels//:requirements.bzl", test_whl_requirements = "all_whl_requirements")
 load("//:package_versions.bzl", "PYTHON_VERSION_WINDOWS")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:requirements.bzl", "compile_requirements_in")
-load(":python_cab.bzl", "python_cab", "python_msi_tree", "python_version_major_minor")
+load(":python_cab.bzl", "python_cab", "python_msi_tree", "python_test_cab", "python_version_major_minor")
 load(":python_msis.bzl", "PYTHON_MSI_FEATURES")
 
 exports_files([
     "windows-constraints.txt",
     "windows-requirements.in",
     "windows-requirements.txt",
+    "windows-test-cab-requirements.in",
+    "windows-test-cab-requirements.txt",
 ])
 
 _PY_WIN_MAJOR_MINOR = python_version_major_minor(PYTHON_VERSION_WINDOWS)
@@ -78,6 +82,17 @@ sh_binary(
     srcs = ["build_python_cab.sh"],
 )
 
+sh_binary(
+    name = "build_python_test_cab",
+    srcs = ["build_python_test_cab.sh"],
+)
+
+# Sourced by both; python_cab.bzl passes it to them.
+sh_library(
+    name = "cab_lib",
+    srcs = ["cab_lib.sh"],
+)
+
 compile_requirements_in(
     name = "windows-requirements-in",
     constraints = [":windows-constraints.txt"],
@@ -95,6 +110,25 @@ pip_compile(
     python_platform = "x86_64-pc-windows-msvc",
     requirements_in = ":windows-requirements-in",
     requirements_txt = ":windows-requirements.txt",
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+# The test closure of :python_test_cab, resolved like windows_requirements but
+# constrained to the repo lock: shared packages stay at the repo's versions.
+compile_requirements_in(
+    name = "windows-test-cab-requirements-in",
+    constraints = ["//:requirements.txt"],
+    requirements = [":windows-test-cab-requirements.in"],
+)
+
+pip_compile(
+    name = "windows_test_cab_requirements",
+    extra_args = ["--only-binary=:all:"],
+    py3_runtime = _PY_WIN_RESOLVER_RUNTIME,
+    python_platform = "x86_64-pc-windows-msvc",
+    requirements_in = ":windows-test-cab-requirements-in",
+    requirements_txt = ":windows-test-cab-requirements.txt",
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )
@@ -125,6 +159,7 @@ filegroup(
     output_group = "cabextract",
 )
 
+# The python.org MSIs extracted once, for both cabs.
 python_msi_tree(name = "python_tree")
 
 python_cab(
@@ -141,6 +176,28 @@ py_cmk_test(
     srcs = ["cab_contents_test.py"],
     data = [":python_3_cab"],
     env = {"PYTHON_CAB": "$(rootpath :python_3_cab)"},
+    deps = [
+        "@cabarchive",
+    ],
+)
+
+# The harness Python of the Windows agent's pytest suites in their QEMU tiers
+# (agents/wnx/tests/{regression,integration}): the interpreter of python-3.cab
+# with the whole stdlib and windows-test-cab-requirements.txt installed. Test-only,
+# never shipped.
+python_test_cab(
+    name = "python_test_cab",
+    testonly = True,
+    python_tree = ":python_tree",
+    visibility = ["//agents/wnx/tests:__subpackages__"],
+    wheels = test_whl_requirements,
+)
+
+py_cmk_test(
+    name = "test_cab_contents_test",
+    srcs = ["test_cab_contents_test.py"],
+    data = [":python_test_cab"],
+    env = {"PYTHON_TEST_CAB": "$(rootpath :python_test_cab)"},
     deps = [
         "@cabarchive",
     ],

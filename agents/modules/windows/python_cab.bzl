@@ -3,8 +3,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Starlark rules that build the Windows ``python-3.cab`` on Linux.
 
-python_msi_tree extracts the python.org MSIs, and python_cab builds the
-agent's python-3.cab from that tree.
+python_msi_tree extracts the python.org MSIs once; python_cab builds the
+agent's python-3.cab from that tree, and python_test_cab the harness Python
+of the agent's pytest suites.
 
 The CAB has the same shape as the one historically produced by
 ``agents/modules/windows/Makefile`` on a Windows build node, but no
@@ -80,7 +81,8 @@ def _python_msi_tree_impl(ctx):
 python_msi_tree = rule(
     implementation = _python_msi_tree_impl,
     doc = "The python.org MSIs of PYTHON_VERSION_WINDOWS extracted into the " +
-          "install-root tree, the interpreter python_cab starts from.",
+          "install-root tree, the interpreter python_cab and python_test_cab " +
+          "start from.",
     attrs = {
         "msis": attr.label_list(
             default = ["@python_msi_{}//file".format(f) for f in PYTHON_MSI_FEATURES],
@@ -123,6 +125,56 @@ def _pip_requirement(requirements):
         fail("wheels must contain exactly one pip wheel, got %r" % requirements)
     return pip_pins[0]
 
+def _cab_args(ctx, cab, requirements):
+    """The arguments both build scripts take."""
+    args = ctx.actions.args()
+    args.add("--out", cab)
+    args.add("--cab-lib", ctx.file._cab_lib)
+    args.add("--python-version", PYTHON_VERSION_WINDOWS)
+    args.add("--python-tree", ctx.file.python_tree.path)
+    args.add("--pip-offline", ctx.executable._pip_offline)
+    args.add("--pack-cab", ctx.executable._pack_cab)
+    args.add_all(ctx.files.wheels, before_each = "--wheel")
+    args.add_all(requirements, before_each = "--requirement")
+    return args
+
+def _cab_tools(ctx):
+    return [
+        ctx.attr._pack_cab[DefaultInfo].files_to_run,
+        ctx.attr._pip_offline[DefaultInfo].files_to_run,
+    ]
+
+# The attributes python_cab and python_test_cab share: the extracted
+# interpreter, the wheels and the tools that install them and pack the cab.
+_CAB_ATTRS = {
+    "python_tree": attr.label(
+        mandatory = True,
+        allow_single_file = True,
+        doc = "The python_msi_tree the cab starts from.",
+    ),
+    "wheels": attr.label_list(
+        allow_files = [".whl"],
+        cfg = _windows_wheels_transition,
+        doc = "The all_whl_requirements of a pip.parse hub: the pinned " +
+              "win_amd64/cp3xx wheel closure, installed offline. Must include " +
+              "exactly one pip wheel, the one pip_offline runs.",
+    ),
+    "_cab_lib": attr.label(
+        default = Label(":cab_lib"),
+        allow_single_file = True,
+    ),
+    "_pack_cab": attr.label(
+        default = Label(":pack_cab"),
+        executable = True,
+        cfg = "exec",
+    ),
+    "_pip_offline": attr.label(
+        default = Label(":pip_offline"),
+        executable = True,
+        cfg = "exec",
+    ),
+}
+
 def _python_cab_impl(ctx):
     cab = ctx.actions.declare_file(ctx.label.name + ".cab")
 
@@ -136,29 +188,18 @@ def _python_cab_impl(ctx):
     # also replaces the base interpreter's ensurepip bootstrap.
     pip_requirement = _pip_requirement(requirements)
 
-    args = ctx.actions.args()
-    args.add("--out", cab)
-    args.add("--python-version", PYTHON_VERSION_WINDOWS)
-    args.add("--python-tree", ctx.file.python_tree.path)
-    args.add("--pip-offline", ctx.executable._pip_offline)
+    args = _cab_args(ctx, cab, requirements)
     args.add("--make-exe-wrappers", ctx.executable._make_exe_wrappers)
-    args.add("--pack-cab", ctx.executable._pack_cab)
     args.add("--pip-requirement", pip_requirement)
     args.add("--postinstall", ctx.file.postinstall_cmd)
-    args.add_all(ctx.files.wheels, before_each = "--wheel")
-    args.add_all(requirements, before_each = "--requirement")
     args.add_all(ctx.files.venv_scripts, before_each = "--venv-script")
 
     ctx.actions.run(
         executable = ctx.attr._build_script[DefaultInfo].files_to_run,
         arguments = [args],
         outputs = [cab],
-        inputs = ctx.files.wheels + ctx.files.venv_scripts + [ctx.file.python_tree, ctx.file.postinstall_cmd],
-        tools = [
-            ctx.attr._make_exe_wrappers[DefaultInfo].files_to_run,
-            ctx.attr._pack_cab[DefaultInfo].files_to_run,
-            ctx.attr._pip_offline[DefaultInfo].files_to_run,
-        ],
+        inputs = ctx.files.wheels + ctx.files.venv_scripts + [ctx.file._cab_lib, ctx.file.python_tree, ctx.file.postinstall_cmd],
+        tools = _cab_tools(ctx) + [ctx.attr._make_exe_wrappers[DefaultInfo].files_to_run],
         mnemonic = "PythonCab",
         progress_message = "Building Windows python-3.cab on Linux (%{label})",
         use_default_shell_env = True,
@@ -173,27 +214,15 @@ python_cab = rule(
     implementation = _python_cab_impl,
     doc = "The agent's python-3.cab: the interpreter of a python_msi_tree, " +
           "stripped like production's, with a venv holding the wheel closure.",
-    attrs = {
+    attrs = _CAB_ATTRS | {
         "postinstall_cmd": attr.label(
             mandatory = True,
             allow_single_file = True,
             doc = "Agent's postinstall.cmd, copied verbatim to the install root.",
         ),
-        "python_tree": attr.label(
-            mandatory = True,
-            allow_single_file = True,
-            doc = "The python_msi_tree the cab starts from.",
-        ),
         "venv_scripts": attr.label_list(
             allow_files = True,
             doc = "Static venv activation scripts copied into .venv/Scripts (see venv_scripts/).",
-        ),
-        "wheels": attr.label_list(
-            allow_files = [".whl"],
-            cfg = _windows_wheels_transition,
-            doc = "The all_whl_requirements of the @windows_python_wheels " +
-                  "pip.parse hub: the pinned win_amd64/cp3xx wheel closure, " +
-                  "installed offline. Must include exactly one pip wheel.",
         ),
         "_build_script": attr.label(
             default = Label(":build_python_cab"),
@@ -205,13 +234,38 @@ python_cab = rule(
             executable = True,
             cfg = "exec",
         ),
-        "_pack_cab": attr.label(
-            default = Label(":pack_cab"),
-            executable = True,
-            cfg = "exec",
-        ),
-        "_pip_offline": attr.label(
-            default = Label(":pip_offline"),
+    },
+)
+
+def _python_test_cab_impl(ctx):
+    cab = ctx.actions.declare_file(ctx.label.name + ".cab")
+    requirements = _wheel_requirements(ctx.files.wheels)
+
+    # Only checks there is one: pip_offline runs pip from that wheel.
+    _pip_requirement(requirements)
+
+    ctx.actions.run(
+        executable = ctx.attr._build_script[DefaultInfo].files_to_run,
+        arguments = [_cab_args(ctx, cab, requirements)],
+        outputs = [cab],
+        inputs = ctx.files.wheels + [ctx.file._cab_lib, ctx.file.python_tree],
+        tools = _cab_tools(ctx),
+        mnemonic = "PythonTestCab",
+        progress_message = "Building the Windows test Python cab on Linux (%{label})",
+        use_default_shell_env = True,
+        execution_requirements = {"block-network": ""},
+    )
+    return [DefaultInfo(files = depset([cab]))]
+
+python_test_cab = rule(
+    implementation = _python_test_cab_impl,
+    doc = "The Windows interpreter of python_cab (same python.org MSIs, same " +
+          "PYTHON_VERSION_WINDOWS) with a test closure in its site-packages and " +
+          "the stdlib kept: the harness Python of the Windows agent's pytest " +
+          "suites (agents/wnx/tests), unpacked with expand.exe and called by path.",
+    attrs = _CAB_ATTRS | {
+        "_build_script": attr.label(
+            default = Label(":build_python_test_cab"),
             executable = True,
             cfg = "exec",
         ),

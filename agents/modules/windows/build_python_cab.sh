@@ -6,7 +6,7 @@
 # The action of python_cab (python_cab.bzl): builds the agent's python-3.cab
 # in the shape production's Windows build gave it.
 #
-# Usage: build_python_cab.sh --out CAB --python-version 3.14.7
+# Usage: build_python_cab.sh --out CAB --cab-lib FILE --python-version 3.14.7
 #            --python-tree DIR --pip-offline BIN --make-exe-wrappers BIN
 #            --pack-cab BIN --pip-requirement PIN --postinstall FILE
 #            [--wheel WHL]... [--requirement PIN]... [--venv-script FILE]...
@@ -64,6 +64,7 @@ venv_scripts=()
 while [ $# -gt 0 ]; do
     case "$1" in
         --out) out="$2" ;;
+        --cab-lib) cab_lib="$2" ;;
         --python-version) python_version="$2" ;;
         --python-tree) python_tree="$2" ;;
         --pip-offline) pip_offline="$2" ;;
@@ -85,18 +86,11 @@ done
 py_major_minor=${python_version%.*}
 py_short=${py_major_minor/./}
 
-# Scratch space: the sandbox's private /tmp, gone with the action.
-workdir=$(mktemp -d)
-trap 'rm -rf "$workdir"' EXIT
-PY_DIR="$workdir/py"
-WHEELDIR="$workdir/wheels"
+# shellcheck disable=SC1090,SC1091 # cab_lib.sh, see python_cab.bzl
+source "$cab_lib"
 
-# 1. A writable copy of the extracted interpreter (python_msi_tree), and the
-# wheels staged as pip's --find-links dir.
-mkdir "$WHEELDIR"
-cp -RL "$python_tree" "$PY_DIR"
-chmod -R u+w "$PY_DIR"
-cp "${wheels[@]}" "$WHEELDIR/"
+# 1. A writable copy of the extracted interpreter, and the wheels.
+cab_setup "$python_tree" "${wheels[@]}"
 
 # 2. Give the base interpreter its pip.  pip.msi has an empty File table
 # (the python.org installer bootstraps via a CustomAction msiextract can't
@@ -196,18 +190,8 @@ rm -f "$PY_DIR/Lib/turtle.py" 2>/dev/null || true
 # base bin/ (its Scripts/ equivalent is stripped via ROOT_DIR_STRIP above).
 rm -rf "$PY_DIR/Lib/site-packages/bin" 2>/dev/null || true
 
-# Installing by name from --find-links must not leave PEP 610 direct-url
-# metadata (it would leak build paths and break reproducibility); fail
-# loudly if pip's behaviour ever changes.
-if find "$PY_DIR" -name direct_url.json | grep -q .; then
-    echo "error: direct_url.json in the install tree leaks build paths:" >&2
-    find "$PY_DIR" -name direct_url.json >&2
-    exit 1
-fi
-
 # Bytecode caches.
-find "$PY_DIR" -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null || true
-find "$PY_DIR" -name '*.pyc' -delete 2>/dev/null || true
+cab_strip_bytecode
 
 # Strip pipenv/virtualenv/setuptools subtrees anywhere in the tree
 # (clean_environment.cmd does this with a recursive dir loop).
@@ -228,16 +212,7 @@ rm -f "$VENV/Scripts/pythonw.exe" 2>/dev/null || true
 cp "$exec_root/$postinstall" "$PY_DIR/postinstall.cmd"
 sed -i 's/\r$//; s/$/\r/' "$PY_DIR/postinstall.cmd" "$VENV/pyvenv.cfg"
 
-# No file may carry a build path. Look for the output base, not just the
-# exec root: a realpath that escapes the sandbox lands in the output base's
-# execroot/ or external/. (Under remote execution neither pattern matches and
-# this is the exec root.) And for the scratch dir, where pip installed.
-build_root=${exec_root%%/sandbox/*}
-build_root=${build_root%%/execroot/*}
-if grep -rlF -e "$build_root" -e "$workdir" "$PY_DIR"; then
-    echo "error: these files in the install tree carry the build path" >&2
-    exit 1
-fi
+cab_check_no_build_paths
 
 # 8. Pack into a cabinet via the vendored @cabarchive Python writer.
 "$exec_root/$pack_cab" --root "$PY_DIR" --out "$exec_root/$out"

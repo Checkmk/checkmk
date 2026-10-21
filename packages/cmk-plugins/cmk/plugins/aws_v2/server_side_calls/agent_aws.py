@@ -62,7 +62,7 @@ class ServiceOptions(BaseModel):
     # WAFV2 only
     cloudfront: bool = False
     # CloudFront only
-    host_assignment: Literal["aws_host", "domain_host"] = "aws_host"
+    host_assignment: Literal["aws_host", "domain_host", "distribution_host"] = "aws_host"
 
 
 ServiceSelection = (

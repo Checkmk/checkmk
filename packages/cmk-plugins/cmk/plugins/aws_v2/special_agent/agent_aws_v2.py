@@ -375,7 +375,10 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--cloudfront-host-assignment",
-        help="Assign CloudFront services to the AWS host or to the origin domain host",
+        type=CloudFrontHostAssignment,
+        default=CloudFrontHostAssignment.account,
+        help="Assign CloudFront services to the AWS host, to the origin domain host or to a host"
+        " per distribution",
     )
     parser.add_argument("--hostname", required=True)
     parser.add_argument(
@@ -546,11 +549,7 @@ def _configure_aws(args: argparse.Namespace) -> AWSConfig:
         (args.overall_tag_keys, args.overall_tag_values),
         args.piggyback_naming_convention,
         args.tag_key_pattern,
-        cloudfront_host_assignment=(
-            CloudFrontHostAssignment.origin_domain
-            if args.cloudfront_host_assignment == CloudFrontHostAssignment.origin_domain.value
-            else CloudFrontHostAssignment.account
-        ),
+        cloudfront_host_assignment=args.cloudfront_host_assignment,
     )
     for service_key, service_names, service_tags, service_limits in [
         ("ec2", args.ec2_names, (args.ec2_tag_keys, args.ec2_tag_values), args.ec2_limits),

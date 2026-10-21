@@ -190,6 +190,7 @@ def test_cloudwatch_alarms_are_restricted_by_alarm_name() -> None:
         pytest.param({"regional_services": {"s3": ("all", {"requests": True})}}, ["--service", "s3", "--s3-requests"], id="S3 request metrics"),
         pytest.param({"regional_services": {"wafv2": ("all", {"cloudfront": True})}}, ["--service", "wafv2", "--wafv2-cloudfront"], id="CloudFront WAFs"),
         pytest.param({"global_services": {"cloudfront": ("all", {"host_assignment": "domain_host"})}}, ["--global-service", "cloudfront", "--cloudfront-host-assignment", "domain_host"], id="CloudFront host assignment"),
+        pytest.param({"global_services": {"cloudfront": ("all", {"host_assignment": "distribution_host"})}}, ["--global-service", "cloudfront", "--cloudfront-host-assignment", "distribution_host"], id="CloudFront distribution host"),
     ],
 )
 # fmt: on

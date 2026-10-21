@@ -96,6 +96,7 @@ class WAFV2WebACL:
 
 @dataclass(frozen=True)
 class CloudFrontDistribution:
+    distribution_id: str
     origin_domain: str | None
     """The domain name of the first origin, if the distribution has one."""
 
@@ -248,9 +249,17 @@ def _wafv2_web_acl_host(web_acl: WAFV2WebACL) -> TargetHost:
 def _cloudfront_distribution_host(
     distribution: CloudFrontDistribution, naming: HostNaming
 ) -> TargetHost | None:
-    if naming.cloudfront is CloudFrontHostAssignment.origin_domain and distribution.origin_domain:
-        return TargetHost(distribution.origin_domain)
-    return _account_scope_host(naming.account)
+    match naming.cloudfront:
+        case CloudFrontHostAssignment.account:
+            return _account_scope_host(naming.account)
+        case CloudFrontHostAssignment.origin_domain:
+            if distribution.origin_domain:
+                return TargetHost(distribution.origin_domain)
+            return _account_scope_host(naming.account)
+        case CloudFrontHostAssignment.distribution:
+            return TargetHost(distribution.distribution_id)
+        case _:
+            assert_never(naming.cloudfront)
 
 
 def _glacier_vault_host(vault: GlacierVault) -> TargetHost:

@@ -14,7 +14,7 @@ from typing import override
 from botocore.client import BaseClient
 
 from .. import hosts
-from ..config import AWSConfig
+from ..config import AWSConfig, CloudFrontHostAssignment
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -195,14 +195,21 @@ class CloudFront(AWSSectionCloudwatch):
         for distribution_data in raw_content.content:
             distribution_id = distribution_data.get("Label", "")
             piggyback_host = self._target_host(
-                hosts.CloudFrontDistribution(origin_domain_by_distribution.get(distribution_id))
+                hosts.CloudFrontDistribution(
+                    distribution_id, origin_domain_by_distribution.get(distribution_id)
+                )
             )
             content_by_host[piggyback_host].append(distribution_data)
         return AWSComputedContent(content_by_host, raw_content.cache_timestamp)
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        host_labels = (
+            {"cmk/aws/service": "cloudfront"}
+            if self._config.host_naming.cloudfront is CloudFrontHostAssignment.distribution
+            else None
+        )
         return [
-            AWSSectionResult(piggyback_host, content)
+            AWSSectionResult(piggyback_host, content, host_labels)
             for piggyback_host, content in computed_content.content.items()
         ]

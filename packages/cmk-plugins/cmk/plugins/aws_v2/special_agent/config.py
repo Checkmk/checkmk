@@ -77,6 +77,7 @@ class CloudFrontHostAssignment(Enum):
 
     account = "aws_host"
     origin_domain = "domain_host"
+    distribution = "distribution_host"
 
 
 @dataclass(frozen=True)

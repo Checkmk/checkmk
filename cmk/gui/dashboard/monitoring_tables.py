@@ -23,7 +23,7 @@ class MonitoringTableSource[R](Protocol):
 
 @dataclass(frozen=True)
 class MonitoringTableSpec[R]:
-    catalog: TableCatalog
+    catalog: TableCatalog[object]
     infos: SingleInfos
     source: Callable[[ApiContext], MonitoringTableSource[R]]
 

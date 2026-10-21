@@ -46,7 +46,7 @@ from .._models import (
 )
 from .._repositories import HostRepository
 from .._site import MonitorSite, MonitorSites
-from .._table_catalog import HOST_TABLE
+from .._table_catalog import DEFAULT_HOST_SORT, HOST_TABLE
 from ..context_filters import translate_filters
 from ._family import MONITOR_HOSTS_FAMILY
 from ._filters import (
@@ -68,8 +68,6 @@ _DEFAULT_LIMIT = 1_000
 
 # The row limits the All hosts page offers: the default first, the maximum last.
 LIMIT_TIERS: Final = (_DEFAULT_LIMIT, _MAX_NUMBER_OF_HOSTS)
-
-_DEFAULT_SORT = (HostSort(column=HostSortColumn.NAME, direction=HostSortDirection.ASC),)
 
 _DEFAULT_FIELDS: frozenset[HostOptionalField] = frozenset(
     {
@@ -371,7 +369,7 @@ def _list_hosts(
     return HostTable(api_context.config.sites, folders).list(
         limit=limit,
         query="" if isinstance(body.q, ApiOmitted) else body.q,
-        sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
+        sorters=DEFAULT_HOST_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
         scoped_filter=(
             None
             if isinstance(body.filter, ApiOmitted)
@@ -504,7 +502,7 @@ def _handle_list_hosts(
     *,
     limit: int | None = _DEFAULT_LIMIT,
     query: str = "",
-    sorters: Sequence[HostSort] = _DEFAULT_SORT,
+    sorters: Sequence[HostSort] = DEFAULT_HOST_SORT,
     filters: HostFilter = HostFilter(""),
     fields: Set[HostOptionalField] = _DEFAULT_FIELDS,
     site_ids: Sequence[SiteId] | None = None,

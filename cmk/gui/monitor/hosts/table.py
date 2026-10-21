@@ -9,7 +9,7 @@ from ._exceptions import InvalidFilterError, InvalidHostListingError
 from ._folder import MonitorFolders
 from ._listing import HostListing
 from ._models import HostOptionalField
-from ._table_catalog import ALL_HOSTS_TABLE, HOST_TABLE, HostTableCatalog
+from ._table_catalog import ALL_HOSTS_TABLE, HOST_TABLE
 
 __all__ = [
     "ALL_HOSTS_PERMISSION",
@@ -19,7 +19,6 @@ __all__ = [
     "HostListing",
     "HostOptionalField",
     "HostTable",
-    "HostTableCatalog",
     "InvalidFilterError",
     "InvalidHostListingError",
     "MonitorFolders",

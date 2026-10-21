@@ -10,5 +10,6 @@ py_library(
     ],
     deps = [
         "//cmk/gui:core_toolkit",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )

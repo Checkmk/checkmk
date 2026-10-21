@@ -27,6 +27,8 @@ _CONTENT: dict[str, object] = {
     "columns": ["state", "name"],
     "sort": ["name:asc"],
     "limit": 100,
+    "date_format": "%Y-%m-%d",
+    "timestamp_format": "mixed",
 }
 
 
@@ -153,7 +155,8 @@ def test_sorting_by_a_column_the_widget_does_not_display_is_400(clients: ClientR
         pytest.param({**_CONTENT, "columns": []}, id="no column"),
         pytest.param({**_CONTENT, "columns": ["name", "name"]}, id="repeated column"),
         pytest.param({**_CONTENT, "limit": 0}, id="limit below one"),
-        pytest.param({**_CONTENT, "limit": 1001}, id="limit above maximum"),
+        pytest.param({**_CONTENT, "limit": 5001}, id="limit above maximum"),
+        pytest.param({**_CONTENT, "timestamp_format": "age"}, id="unknown timestamp format"),
     ],
 )
 def test_an_invalid_widget_is_rejected(clients: ClientRegistry, content: dict[str, object]) -> None:
@@ -178,12 +181,27 @@ def test_the_picked_columns_survive_a_reload(clients: ClientRegistry) -> None:
 
 
 _HOSTS_TABLE = MonitoringTableContent(
-    type="monitoring_table", table="hosts", columns=["name"], sort=[], limit=10
+    type="monitoring_table",
+    table="hosts",
+    columns=["name"],
+    sort=[],
+    limit=10,
+    date_format="%d.%m.%Y",
+    timestamp_format="abs",
 )
 
 
 def test_a_monitoring_table_survives_the_internal_round_trip() -> None:
     assert MonitoringTableContent.from_internal(_HOSTS_TABLE.to_internal()) == _HOSTS_TABLE
+
+
+def test_a_monitoring_table_stored_without_display_options_shows_the_page_defaults() -> None:
+    config = _HOSTS_TABLE.to_internal()
+    del config["date_format"], config["timestamp_format"]
+
+    content = MonitoringTableContent.from_internal(config)
+
+    assert (content.date_format, content.timestamp_format) == ("%Y-%m-%d", "mixed")
 
 
 @pytest.mark.usefixtures("request_context")

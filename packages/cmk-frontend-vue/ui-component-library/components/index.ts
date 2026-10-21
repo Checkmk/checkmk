@@ -51,6 +51,7 @@ import UclCmkDropdown from './form-elements/CmkDropdown/UclCmkDropdown.vue'
 import UclCmkDualList from './form-elements/CmkDualList/UclCmkDualList.vue'
 import UclCmkInput from './form-elements/CmkInput/UclCmkInput.vue'
 import UclCmkList from './form-elements/CmkList/UclCmkList.vue'
+import UclCmkMultiselectList from './form-elements/CmkMultiselectList/UclCmkMultiselectList.vue'
 import UclCmkRadioButton from './form-elements/CmkRadioButton/UclCmkRadioButton.vue'
 import UclCmkSearchInput from './form-elements/CmkSearchInput/UclCmkSearchInput.vue'
 import UclCmkSlideInDropdown from './form-elements/CmkSlideInDropdown/UclCmkSlideInDropdown.vue'
@@ -141,6 +142,7 @@ const formElementsPages = [
   new Page('CmkDualList', UclCmkDualList),
   new Page('CmkInput', UclCmkInput),
   new Page('CmkList', UclCmkList),
+  new Page('CmkMultiselectList', UclCmkMultiselectList),
   new Page('CmkRadioButton', UclCmkRadioButton),
   new Page('CmkSearchInput', UclCmkSearchInput),
   new Page('CmkSlideInDropdown', UclCmkSlideInDropdown),

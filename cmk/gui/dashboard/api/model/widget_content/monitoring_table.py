@@ -8,12 +8,17 @@ from annotated_types import Interval, MinLen
 from pydantic import model_validator
 
 from cmk.gui.dashboard.monitoring_tables import MONITORING_TABLES
-from cmk.gui.dashboard.type_defs import MonitoringTableDashletConfig, MonitoringTableName
+from cmk.gui.dashboard.type_defs import (
+    MonitoringTableDashletConfig,
+    MonitoringTableDateFormat,
+    MonitoringTableName,
+    MonitoringTableTimestampFormat,
+)
 from cmk.gui.openapi.framework.model import api_field, api_model
 
 from ._base import BaseWidgetContent
 
-MAX_MONITORING_TABLE_ROWS = 1000
+MAX_MONITORING_TABLE_ROWS = 5000
 
 
 @api_model
@@ -43,6 +48,18 @@ class MonitoringTableContent(BaseWidgetContent):
     limit: Annotated[int, Interval(ge=1, le=MAX_MONITORING_TABLE_ROWS)] = api_field(
         description="The maximum number of rows to display.", example=100
     )
+    date_format: MonitoringTableDateFormat = api_field(
+        description="The strftime pattern of the date in absolute timestamps.",
+        example="%Y-%m-%d",
+    )
+    timestamp_format: MonitoringTableTimestampFormat = api_field(
+        description=(
+            "How the timestamp columns, e.g. the check age, render: 'abs' as date and time, 'rel' "
+            "as age, 'mixed' as age if less than 48 hours, else as date, 'both' as both, 'epoch' as Unix "
+            "timestamp."
+        ),
+        example="mixed",
+    )
 
     @classmethod
     @override
@@ -62,6 +79,8 @@ class MonitoringTableContent(BaseWidgetContent):
             columns=list(config["columns"]),
             sort=list(config["sort"]),
             limit=config["limit"],
+            date_format=config.get("date_format", "%Y-%m-%d"),
+            timestamp_format=config.get("timestamp_format", "mixed"),
         )
 
     @override
@@ -72,4 +91,6 @@ class MonitoringTableContent(BaseWidgetContent):
             columns=self.columns,
             sort=self.sort,
             limit=self.limit,
+            date_format=self.date_format,
+            timestamp_format=self.timestamp_format,
         )

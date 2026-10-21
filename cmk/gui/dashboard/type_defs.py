@@ -229,12 +229,18 @@ class AlertOverviewDashletConfig(DashletConfig):
 
 type MonitoringTableName = Literal["hosts"]
 
+# The display options of the monitoring pages for their timestamp columns.
+type MonitoringTableDateFormat = Literal["%Y-%m-%d", "%d.%m.%Y", "%m/%d/%Y", "%d.%m.", "%m/%d"]
+type MonitoringTableTimestampFormat = Literal["mixed", "abs", "rel", "both", "epoch"]
+
 
 class MonitoringTableDashletConfig(DashletConfig):
     table: MonitoringTableName
     columns: Sequence[str]
     sort: Sequence[str]
     limit: int
+    date_format: NotRequired[MonitoringTableDateFormat]
+    timestamp_format: NotRequired[MonitoringTableTimestampFormat]
 
 
 class SiteOverviewDashletConfig(DashletConfig):

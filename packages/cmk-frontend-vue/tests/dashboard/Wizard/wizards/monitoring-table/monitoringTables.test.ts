@@ -28,7 +28,9 @@ describe('defaultMonitoringTableContent', () => {
         'num_services_pending'
       ],
       sort: [],
-      limit: 1000
+      limit: 1000,
+      date_format: '%Y-%m-%d',
+      timestamp_format: 'mixed'
     })
   })
 })

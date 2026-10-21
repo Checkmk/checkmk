@@ -24,7 +24,9 @@ const CONTENT: MonitoringTableContent = {
   table: 'hosts',
   columns: ['state', 'name'],
   sort: ['name:asc'],
-  limit: 100
+  limit: 100,
+  date_format: '%Y-%m-%d',
+  timestamp_format: 'mixed'
 }
 
 const VALUE: ComputedMonitoringTable = {

@@ -50,7 +50,9 @@ const EDITED: WidgetSpec = {
     table: 'hosts',
     columns: ['state', 'name', 'labels'],
     sort: ['name:desc'],
-    limit: 250
+    limit: 250,
+    date_format: '%d.%m.%Y',
+    timestamp_format: 'abs'
   },
   general_settings: {
     title: { text: 'Linux hosts', render_mode: 'with_background' },

@@ -70,6 +70,10 @@ function truncatedHint(value: ComputedMonitoringTable): string {
           :column-ids="content.columns"
           :rows="value.rows"
           :table-state="tableState"
+          :display-options="{
+            dateFormat: content.date_format,
+            timestampFormat: content.timestamp_format
+          }"
         />
         <p v-if="value.matched > value.rows.length" class="db-content-monitoring-table__truncated">
           {{ truncatedHint(value) }}

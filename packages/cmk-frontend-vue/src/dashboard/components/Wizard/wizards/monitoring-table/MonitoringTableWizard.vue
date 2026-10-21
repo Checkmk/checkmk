@@ -25,6 +25,7 @@ import type {
   WidgetGeneralSettings,
   WidgetSpec
 } from '@/dashboard/types/widget'
+import { monitoringTableRegistry } from '@/monitoring/table-widget/registry'
 import type { MonitoringTableName } from '@/monitoring/table-widget/tableDescriptors'
 import QuickSetup from '@/quick-setup/components/quick-setup/QuickSetup.vue'
 import type { QuickSetupStageSpec } from '@/quick-setup/components/quick-setup/quick_setup_types'
@@ -44,7 +45,7 @@ import Stage1 from './stage1/StageContents.vue'
 import Stage2 from './stage2/StageContents.vue'
 import Stage3 from './stage3/StageContents.vue'
 
-const { _t } = usei18n()
+const { _t, _tn } = usei18n()
 
 interface MonitoringTableWizardProps {
   tick: number
@@ -134,6 +135,19 @@ function stage1GoNext() {
   wizardHandler.next()
 }
 
+function stage2GoNext() {
+  const columnCount = content.value?.columns.length ?? 0
+  const rowLimit = content.value?.limit ?? 0
+  wizardStages[1]!.recapContent = h(
+    'div',
+    _t('%{columns}, %{rows}', {
+      columns: _tn('%{n} column', '%{n} columns', columnCount, { n: columnCount }),
+      rows: _tn('up to %{n} row', 'up to %{n} rows', rowLimit, { n: rowLimit })
+    })
+  )
+  wizardHandler.next()
+}
+
 function saveWidget() {
   if (!content.value || !visualizationProps.validate()) {
     return
@@ -187,9 +201,12 @@ function saveWidget() {
         @remove-filter="(filterId) => widgetFilterManager.filterHandler.removeFilter(filterId)"
       />
       <Stage2
-        v-if="wizardHandler.stage.value === 1"
+        v-if="wizardHandler.stage.value === 1 && content && table"
+        v-model:content="content"
+        :view-title="views[table].title"
+        :catalog="monitoringTableRegistry.descriptor(table).catalog()"
         @go-prev="wizardHandler.prev"
-        @go-next="wizardHandler.next"
+        @go-next="stage2GoNext"
       />
       <Stage3
         v-if="wizardHandler.stage.value === 2"

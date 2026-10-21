@@ -7,6 +7,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import type { MonitoringTableContent } from '@/dashboard/types/widget'
+import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import { monitoringTableRegistry } from '@/monitoring/table-widget/registry'
 import type { MonitoringTableName } from '@/monitoring/table-widget/tableDescriptors'
 
@@ -48,6 +49,8 @@ export function defaultMonitoringTableContent(table: MonitoringTableName): Monit
       .filter((column) => column.shownByDefault)
       .map((column) => column.id),
     sort: [],
-    limit: DEFAULT_ROW_LIMIT
+    limit: DEFAULT_ROW_LIMIT,
+    date_format: DEFAULT_DISPLAY_OPTIONS.dateFormat,
+    timestamp_format: DEFAULT_DISPLAY_OPTIONS.timestampFormat
   }
 }

@@ -131,6 +131,8 @@ apache_wait_start() {
 }
 
 kill_stale_php_cgis() {
+    # PHP (mod_fcgid) is only shipped together with NagVis, not in every edition
+    [ -e "$OMD_ROOT/etc/apache/php-wrapper" ] || return 0
     i=1
     killall -e "$(php_cgi_bin)" -u "$OMD_SITE" >/dev/null 2>&1
     while killall -e "$(php_cgi_bin)" -u "$OMD_SITE" >/dev/null 2>&1; do

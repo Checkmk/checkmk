@@ -83,6 +83,9 @@ configured with the Site Apache using the file
 `$OMD_ROOT/etc/apache/conf.d/02_fcgid.conf`. Within the Site Apache PHP is executed using
 the wrapper script `$OMD_ROOT/etc/apache/php-wrapper`.
 
+NagVis is the only PHP application in the Site Apache, so `mod_fcgid` is only
+shipped with the editions that ship NagVis (all except Checkmk Cloud).
+
 Checkmk is not shipping it's own PHP installation. Instead it uses the binaries
 and libraries provided by the Operating System. As you can see in `php-wrapper`,
 the `php-cgi` command is used to execute PHP. We also use the default system

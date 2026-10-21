@@ -120,9 +120,6 @@ pkg_mkdirs(
         "skel/var/log/apache",
         "skel/var/www",
         "skel/tmp/apache/run",
-        "skel/tmp/php/session",
-        "skel/tmp/php/upload",
-        "skel/tmp/php/wsdl-cache",
     ],
 )
 

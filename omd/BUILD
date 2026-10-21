@@ -28,6 +28,7 @@ sh_binary(
 # NOTES:
 # * jaeger should be added to all editions EXCEPT cloud - cloud has its own tracing collector
 # * nagvis should be added to all editions EXCEPT cloud - see CMK-14926
+# * mod_fcgid (PHP) is only needed by nagvis (see above regarding edition limitations)
 edition_deps = select({
     "@cmk//edition:cloud": [
         "//non-free/packages/cmc-protocols:pkg_tar",
@@ -77,6 +78,7 @@ edition_deps = select({
     "@cmk//edition:community": [
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/cmk-maps:pkg_tar",
+        "//omd/packages/mod_fcgid",
         "//omd/packages/nagvis:pkg_tar",
     ],
     "@cmk//edition:pro": [
@@ -110,6 +112,7 @@ edition_deps = select({
         "//omd/non-free/packages/saml2:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/cmk-maps:pkg_tar",
+        "//omd/packages/mod_fcgid",
         "//omd/packages/nagvis:pkg_tar",
     ],
     "@cmk//edition:ultimate": [
@@ -156,6 +159,7 @@ edition_deps = select({
         "//omd/non-free/packages/saml2:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/cmk-maps:pkg_tar",
+        "//omd/packages/mod_fcgid",
         "//omd/packages/nagvis:pkg_tar",
     ],
     "@cmk//edition:ultimatemt": [
@@ -204,6 +208,7 @@ edition_deps = select({
         "//omd/non-free/packages/saml2:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/cmk-maps:pkg_tar",
+        "//omd/packages/mod_fcgid",
         "//omd/packages/nagvis:pkg_tar",
     ],
 })
@@ -242,6 +247,7 @@ edition_skel_permissions = select({
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
         "//omd/packages/cmk-maps:skel.permissions",
+        "//omd/packages/mod_fcgid:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
         "//omd/packages/omd:skel.permissions",
         "//omd/packages/pnp4nagios:skel.permissions",
@@ -268,6 +274,7 @@ edition_skel_permissions = select({
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
         "//omd/packages/cmk-maps:skel.permissions",
+        "//omd/packages/mod_fcgid:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
         "//omd/packages/omd:skel.permissions",
         "//omd/packages/pnp4nagios:skel.permissions",
@@ -297,6 +304,7 @@ edition_skel_permissions = select({
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
         "//omd/packages/cmk-maps:skel.permissions",
+        "//omd/packages/mod_fcgid:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
         "//omd/packages/omd:skel.permissions",
         "//omd/packages/pnp4nagios:skel.permissions",
@@ -326,6 +334,7 @@ edition_skel_permissions = select({
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
         "//omd/packages/cmk-maps:skel.permissions",
+        "//omd/packages/mod_fcgid:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
         "//omd/packages/omd:skel.permissions",
         "//omd/packages/pnp4nagios:skel.permissions",
@@ -815,7 +824,6 @@ pkg_tar(
         "//omd/packages/maintenance",
         "//omd/packages/mk-livestatus",
         "//omd/packages/mk-oracle",
-        "//omd/packages/mod_fcgid",
         "//omd/packages/mod_wsgi",
         "//omd/packages/monitoring-plugins",
         "//omd/packages/msitools",

@@ -1,6 +1,8 @@
-load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "pkg_mkdirs", "strip_prefix")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
 load("//bazel/rules:pkg.bzl", "pkg_tar")
+
+exports_files(["skel.permissions"])
 
 set_runpath(
     name = "mod_fcgid_runpath",
@@ -19,9 +21,21 @@ pkg_files(
 pkg_files(
     name = "skel_pkg",
     srcs = [
-        ":skel/etc/apache/conf.d/02_fcgid.conf",
+        "skel/etc/apache/conf.d/02_fcgid.conf",
+        "skel/etc/apache/php-wrapper",
+        "skel/etc/cron.d/php-sessions",
     ],
-    prefix = "skel/etc/apache/conf.d",
+    strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["manual"],
+)
+
+pkg_mkdirs(
+    name = "skel_dirs",
+    dirs = [
+        "skel/tmp/php/session",
+        "skel/tmp/php/upload",
+        "skel/tmp/php/wsdl-cache",
+    ],
     tags = ["manual"],
 )
 
@@ -29,6 +43,7 @@ pkg_tar(
     name = "mod_fcgid",
     srcs = [
         ":lib_pkg",
+        ":skel_dirs",
         ":skel_pkg",
     ],
     stamp = 1,

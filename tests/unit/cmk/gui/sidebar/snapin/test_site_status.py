@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
+import json
 from collections.abc import Iterator
 from typing import cast
 
 import pytest
+from bs4 import BeautifulSoup
 
 from livestatus import SiteConfiguration, SiteConfigurations
 
@@ -144,6 +146,26 @@ def test_show_links_an_online_site_to_its_hosts(
     assert "Disable this site" in rendered
     assert "_site_switch=heute%3Aoff" in rendered
     assert "view.py?view_name=sitehosts&site=heute" in rendered
+
+
+@pytest.mark.usefixtures("patch_theme")
+def test_show_switches_a_site_by_click_action(
+    monkeypatch: pytest.MonkeyPatch, load_config: Config
+) -> None:
+    rendered = _show(
+        monkeypatch,
+        load_config,
+        aliases={"heute": "Heute site"},
+        states={SiteId("heute"): SiteStatus(state="online")},
+    )
+
+    button = BeautifulSoup(rendered, "lxml").select_one("div.status_label")
+    assert button is not None
+    assert (
+        button.get("onclick"),
+        button.get("data-cmk_on_click"),
+        json.loads(str(button["data-cmk_on_click_arguments"])),
+    ) == (None, "switch_site", {"url": "switch_site.py?_site_switch=heute%3Aoff"})
 
 
 @pytest.mark.usefixtures("patch_theme")

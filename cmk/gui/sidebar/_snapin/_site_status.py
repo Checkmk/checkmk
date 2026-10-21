@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from typing import override
 
 from cmk.ccc.site import SiteId
@@ -89,7 +88,7 @@ class SiteStatus(SidebarSnapin):
                     content=state,
                     status=state,
                     title=_("Enable this site") if state == "disabled" else _("Disable this site"),
-                    onclick="cmk.sidebar.switch_site(%s)" % (json.dumps(url)),
+                    click_action=ClickAction(action="switch_site", arguments={"url": url}),
                 )
             html.close_tr()
         html.close_table()

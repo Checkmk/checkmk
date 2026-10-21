@@ -28,6 +28,7 @@ import { toggle_all_rows } from '@/modules/selection'
 import { start as start_service_discovery } from '@/modules/service_discovery'
 import {
   add_bookmark,
+  switch_customer,
   switch_site,
   update_vue_snapin_contents,
   virtual_host_tree_enter
@@ -123,6 +124,10 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
       options.waiting_message
     )
   ),
+  switch_customer: (_element, options) => {
+    switch_customer(options.customer_id, options.switch_state)
+    switch_site(options.url)
+  },
   switch_master_state: (_element, options) => {
     call_ajax(options.url, {
       method: 'POST',

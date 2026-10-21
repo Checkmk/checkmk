@@ -113,6 +113,7 @@
         "randomize_secret",
         "reload_page",
         "service_discovery_start",
+        "switch_customer",
         "switch_master_state",
         "switch_site",
         "toggle_all_rows",

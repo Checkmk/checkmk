@@ -388,6 +388,7 @@ py_cmk_test(
         "//packages/cmk-web/cmk/web/utils",
         "//tests/testlib/unit",
         "//tests/unit:conftest",
+        requirement("beautifulsoup4"),
         requirement("flask"),
         requirement("pytest-mock"),
         requirement("time-machine"),

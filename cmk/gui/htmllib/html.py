@@ -939,23 +939,25 @@ class HTMLGenerator(HTMLWriter):
         self, content: HTMLContent, status: str, title: str, **attrs: HTMLTagAttributeValue
     ) -> None:
         """Shows a colored badge with text (used on Setup activation page for the site status)"""
-        self.status_label_button(content, status, title, onclick=None, **attrs)
+        self.status_label_button(content, status, title, onclick=None, click_action=None, **attrs)
 
     def status_label_button(
         self,
         content: HTMLContent,
         status: str,
         title: str,
-        onclick: str | None,
+        onclick: str | None = None,
+        click_action: ClickAction | None = None,
         **attrs: HTMLTagAttributeValue,
     ) -> None:
         """Shows a colored button with text (used in site and customer status snap-ins)"""
         self.div(
             content,
             title=title,
-            class_=["status_label"] + (["button"] if onclick else []) + [status],
+            class_=["status_label"] + (["button"] if onclick or click_action else []) + [status],
             onclick=onclick,
             **attrs,
+            **(click_action.data_attributes() if click_action else {}),
         )
 
     def toggle_switch(

@@ -12,7 +12,7 @@
 
 import pytest
 
-from cmk.agent_based.v2 import GetRateError, Service
+from cmk.agent_based.v2 import GetRateError, Metric, Result, Service, State
 from cmk.plugins.varnish.agent_based import varnish
 
 
@@ -950,17 +950,19 @@ class TestVarnishRatioChecks:
         assert len(discovery_result) == 1
         assert discovery_result[0] == Service()
 
-    @pytest.mark.usefixtures("empty_value_store")
-    def test_worker_thread_ratio_normal_usage(self) -> None:
-        """Test worker thread ratio with normal thread usage."""
-        parsed = _create_parsed_varnish(
-            worker_values={
-                "n_wrk": 800,  # Current threads
-                "n_wrk_max": 900,  # Maximum threads hit
-            }
+    def test_worker_thread_ratio(self) -> None:
+        section = varnish.parse_varnish(
+            [
+                ["n_wrk", "60", ".", "N", "worker", "threads"],
+                ["n_wrk_create", "100", "0.01", "N", "worker", "threads", "created"],
+            ]
         )
-
-        results = list(
-            varnish.check_varnish_worker_thread_ratio({"levels_lower": (70.0, 60.0)}, parsed)
-        )
-        assert isinstance(results, list | tuple)
+        assert list(
+            varnish.check_varnish_worker_thread_ratio({"levels_lower": (70.0, 60.0)}, section)
+        ) == [
+            Result(
+                state=State.WARN,
+                summary="60.00% (warn/crit below 70.00%/60.00%)",
+            ),
+            Metric("varnish_worker_thread_ratio", 60.0),
+        ]

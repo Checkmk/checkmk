@@ -441,7 +441,6 @@ def check_varnish_worker_thread_ratio(params: Params, section: Section) -> Check
 
     n_wrk = section["n_wrk"]
     assert isinstance(n_wrk, dict)
-    worker_create = n_wrk["value"]
 
     if worker_create > 0:
         ratio = 100.0 * n_wrk["value"] / worker_create

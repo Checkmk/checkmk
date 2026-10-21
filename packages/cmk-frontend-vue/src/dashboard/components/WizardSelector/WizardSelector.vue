@@ -155,7 +155,7 @@ const handleAddEditWidget = (
       />
 
       <ViewWizardWrapper
-        v-if="selectedWizard === 'views'"
+        v-if="selectedWizard === 'classic_view'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"

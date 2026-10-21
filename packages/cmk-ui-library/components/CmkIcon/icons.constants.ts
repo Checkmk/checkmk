@@ -131,6 +131,7 @@ import lightIconCheckmarkPlusSvg from '~cmk-frontend/themes/facelift/images/icon
 import lightIconCheckmkSvg from '~cmk-frontend/themes/facelift/images/icon_checkmk.svg?url&no-inline'
 import lightIconCheckmkLogoSvg from '~cmk-frontend/themes/facelift/images/icon_checkmk_logo.svg?url&no-inline'
 import lightIconCheckmkLogoMinSvg from '~cmk-frontend/themes/facelift/images/icon_checkmk_logo_min.svg?url&no-inline'
+import lightIconClassicViewSvg from '~cmk-frontend/themes/facelift/images/icon_classic_view.svg?url&no-inline'
 import lightIconCleanupPng from '~cmk-frontend/themes/facelift/images/icon_cleanup.png?url&no-inline'
 import lightIconClearPng from '~cmk-frontend/themes/facelift/images/icon_clear.png?url&no-inline'
 import lightIconClipboardSvg from '~cmk-frontend/themes/facelift/images/icon_clipboard.svg?url&no-inline'
@@ -974,6 +975,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   checkmk: lightIconCheckmkSvg,
   'checkmk-logo': lightIconCheckmkLogoSvg,
   'checkmk-logo-min': lightIconCheckmkLogoMinSvg,
+  'classic-view': lightIconClassicViewSvg,
   cleanup: lightIconCleanupPng,
   clear: lightIconClearPng,
   clipboard: lightIconClipboardSvg,

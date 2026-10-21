@@ -88,7 +88,20 @@ export function getDashboardWidgetWorkflows({
     views: {
       title: _t('Views'),
       subtitle: _t('Embed saved views'),
-      icon: 'view'
+      icon: 'view',
+      subWorkflows: {
+        classic_view: {
+          title: _t('Classic view'),
+          subtitle: _t('Embed or link an existing classic view'),
+          icon: 'classic-view'
+        },
+        view: {
+          title: _t('View'),
+          subtitle: _t('Embed new views (from 3.0)'),
+          icon: 'view',
+          unavailableReason: _t('Not available yet.')
+        }
+      }
     },
     host_site_overview: {
       title: _t('Host & site overview'),
@@ -135,7 +148,7 @@ export function getDashboardWidgetWorkflows({
 export const DASHBOARD_WIDGET_WORKFLOW_KEYS = [
   'metrics_graphs',
   'link_custom_graph',
-  'views',
+  'classic_view',
   'host_site_overview',
   'service_overview',
   'hw_sw_inventory',

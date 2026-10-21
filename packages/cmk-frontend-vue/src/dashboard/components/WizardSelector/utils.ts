@@ -34,7 +34,7 @@ export function widgetTypeToSelectorMatcher(
 
     case 'linked_view':
     case 'embedded_view': {
-      return 'views'
+      return 'classic_view'
     }
 
     case 'host_stats':
@@ -94,7 +94,7 @@ export function wizardSlideInSize(wizard: string): 'small' | 'medium' | 'large' 
   if (['other', 'ntop'].includes(wizard)) {
     return 'small'
   }
-  if (wizard === 'views') {
+  if (wizard === 'classic_view') {
     return 'large'
   }
   return 'medium'

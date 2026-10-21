@@ -23,6 +23,13 @@ describe('widgetTypeToSelectorMatcher', () => {
     expect(wizardKey).toBe('link_custom_graph')
   })
 
+  it.each(['linked_view', 'embedded_view'] as const)(
+    'edits a %s widget in the classic view wizard',
+    (contentType) => {
+      expect(widgetTypeToSelectorMatcher(contentType)).toBe('classic_view')
+    }
+  )
+
   it('has no wizard for a monitoring table widget', () => {
     const wizardKey = widgetTypeToSelectorMatcher('monitoring_table')
 
@@ -38,7 +45,7 @@ describe('widgetTypeToSelectorMatcher', () => {
 
 describe('wizardSlideInSize', () => {
   const small: DashboardWidgetWorkflowKey[] = ['other', 'ntop']
-  const large: DashboardWidgetWorkflowKey[] = ['views']
+  const large: DashboardWidgetWorkflowKey[] = ['classic_view']
   const medium = DASHBOARD_WIDGET_WORKFLOW_KEYS.filter(
     (key) => !small.includes(key) && !large.includes(key)
   )

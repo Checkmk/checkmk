@@ -66,4 +66,12 @@ describe('getDashboardWidgetWorkflows', () => {
 
     expect(cloneEntry?.unavailableReason).toContain('Customize and use custom graphs')
   })
+
+  it.each(['view', 'classic_view'])('offers the %s wizard inside the views group', (key) => {
+    const dashboardCatalog = getDashboardWidgetWorkflows()
+
+    const parentKey = findParentWorkflowKey(dashboardCatalog, key)
+
+    expect(parentKey).toBe('views')
+  })
 })

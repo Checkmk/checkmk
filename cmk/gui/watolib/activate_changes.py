@@ -1599,6 +1599,15 @@ def _distribute_central_piggyback_configs(
     ):
         return
 
+    _distribute_piggyback_hub_configs(activation_features, all_site_configs, sites, tree)
+
+
+def _distribute_piggyback_hub_configs(
+    activation_features: ActivationFeatures,
+    all_site_configs: SiteConfigurations,
+    sites: Sequence[SiteId],
+    tree: FolderTree,
+) -> None:
     with (
         tracer.span("distribute_piggyback_hub_configs"),
         _debug_log_message("Starting piggyback hub config distribution"),

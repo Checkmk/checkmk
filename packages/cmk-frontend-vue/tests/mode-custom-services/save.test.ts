@@ -126,6 +126,75 @@ describe('createCustomService', () => {
     expect(result.error).toContain('already exists')
   })
 
+  test('reports a refused host name template for the template field', async () => {
+    server.use(
+      http.post(CREATE_URL, () =>
+        HttpResponse.json(
+          {
+            status: 400,
+            title: 'Bad Request',
+            detail: 'These fields have problems: body.host_assignment.host_name_template',
+            fields: {
+              'body.host_assignment.host_name_template.host_name_template': {
+                type: 'value_error',
+                loc: ['body', 'host_assignment', 'host_name_template', 'host_name_template'],
+                msg: 'Value error, The host name template must reference at least one attribute.',
+                input: 'fixed-name'
+              }
+            }
+          },
+          { status: 400 }
+        )
+      )
+    )
+    const result = await createCustomService({
+      ...completeModel(),
+      hostName: null,
+      hostNameTemplate: 'fixed-name'
+    })
+    expect(result.ok).toBe(false)
+    expect(result.templateError).toBe(
+      'The host name template must reference at least one attribute.'
+    )
+  })
+
+  test('reports a refused host name template with other problems as a whole', async () => {
+    server.use(
+      http.post(CREATE_URL, () =>
+        HttpResponse.json(
+          {
+            status: 400,
+            title: 'Bad Request',
+            detail: 'These fields have problems: body.host_assignment, body.configuration',
+            fields: {
+              'body.host_assignment.host_name_template.host_name_template': {
+                type: 'value_error',
+                loc: ['body', 'host_assignment', 'host_name_template', 'host_name_template'],
+                msg: 'Value error, The host name template must reference at least one attribute.',
+                input: 'fixed-name'
+              },
+              'body.configuration.metric_name': {
+                type: 'string_too_short',
+                loc: ['body', 'configuration', 'metric_name'],
+                msg: 'String should have at least 1 character',
+                input: ''
+              }
+            }
+          },
+          { status: 400 }
+        )
+      )
+    )
+    const result = await createCustomService({
+      ...completeModel(),
+      hostName: null,
+      hostNameTemplate: 'fixed-name'
+    })
+    expect(result.ok).toBe(false)
+    expect(result.templateError).toBeUndefined()
+    expect(result.error).toContain('These fields have problems')
+  })
+
   test('lets a server fault through so it keeps its crash report', async () => {
     server.use(
       http.post(CREATE_URL, () =>

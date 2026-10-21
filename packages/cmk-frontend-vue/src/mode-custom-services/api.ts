@@ -15,6 +15,8 @@ import type {
 export interface SaveResult {
   ok: boolean
   error?: string
+  /** Why the endpoint refused the host name template, to be shown at the template field. */
+  templateError?: string
 }
 
 export type LoadResult =
@@ -23,6 +25,29 @@ export type LoadResult =
 
 function isClientError(error: unknown): error is CmkApiError {
   return error instanceof CmkApiError && error.statusCode < 500
+}
+
+// Only a template that is the sole problem is shown at its field, so no other problem goes unseen
+function templateErrorOf(body: unknown): string | undefined {
+  const fields = (body as { fields?: unknown } | null | undefined)?.fields
+  if (typeof fields !== 'object' || fields === null) {
+    return undefined
+  }
+  const [field, ...others] = Object.values(fields)
+  if (field === undefined || others.length > 0) {
+    return undefined
+  }
+  const { loc, msg } = field as { loc?: unknown; msg?: unknown }
+  return Array.isArray(loc) && loc.at(-1) === 'host_name_template' && typeof msg === 'string'
+    ? msg.replace(/^Value error,\s*/, '')
+    : undefined
+}
+
+function refusal(error: CmkApiError): SaveResult {
+  const templateError = templateErrorOf(error.body)
+  return templateError === undefined
+    ? { ok: false, error: error.message }
+    : { ok: false, error: error.message, templateError }
 }
 
 export async function saveCustomServiceDefinition(
@@ -38,7 +63,7 @@ export async function saveCustomServiceDefinition(
     return { ok: true }
   } catch (error) {
     if (isClientError(error)) {
-      return { ok: false, error: error.message }
+      return refusal(error)
     }
     throw error
   }
@@ -85,7 +110,7 @@ export async function updateCustomServiceDefinition(
     return { ok: true }
   } catch (error) {
     if (isClientError(error)) {
-      return { ok: false, error: error.message }
+      return refusal(error)
     }
     throw error
   }

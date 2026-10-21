@@ -8,6 +8,7 @@ import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { ConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
+import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTabs'
 import FormAutocompleter from 'cmk-ui-library/components/FormAutocompleter/FormAutocompleter.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
@@ -19,14 +20,36 @@ import { appendedAttributeNames } from '../definition'
 
 const { _t } = usei18n()
 
-const { consolidation, aggregator, appendSeriesAttributes } = defineProps<{
+const {
+  consolidation,
+  aggregator,
+  appendSeriesAttributes,
+  templateErrors = []
+} = defineProps<{
   consolidation: ConsolidationFunction
   aggregator: Aggregator | undefined
   appendSeriesAttributes: boolean
+  templateErrors?: string[]
 }>()
 
 const serviceName = defineModel<string>('serviceName', { required: true })
 const hostName = defineModel<string | null>('hostName', { required: true })
+const hostNameTemplate = defineModel<string | null>('hostNameTemplate', { required: true })
+
+type AssignmentMode = 'manual' | 'automatic'
+
+const assignmentMode = computed<AssignmentMode>(() =>
+  hostNameTemplate.value === null ? 'manual' : 'automatic'
+)
+
+// Switching discards what was configured for the other mode
+function selectAssignmentMode(mode: string | number): void {
+  if (mode === assignmentMode.value) {
+    return
+  }
+  hostName.value = null
+  hostNameTemplate.value = mode === 'automatic' ? '' : null
+}
 
 const appendedAttributes = computed<string>(() => {
   if (!appendSeriesAttributes) {
@@ -46,6 +69,8 @@ const hostAutocompleter: Autocompleter = {
 
 const hostFieldId = useId()
 const serviceNameHelpId = useId()
+const assignmentLabelId = useId()
+const templateFieldId = useId()
 </script>
 
 <template>
@@ -73,20 +98,73 @@ const serviceNameHelpId = useId()
     >
 
     <div class="mode-custom-services-assign-host-step__field">
-      <CmkLabel variant="subtitle" :for="hostFieldId">{{ _t('Select host') }}</CmkLabel>
-      <FormAutocompleter
-        :id="hostFieldId"
-        :model-value="hostName"
-        :autocompleter="hostAutocompleter"
-        :size="0"
-        :placeholder="_t('Search hosts by name…')"
-        width="wide"
-        floating
-        @update:model-value="hostName = $event"
-      />
+      <span :id="assignmentLabelId" class="mode-custom-services-assign-host-step__label">{{
+        _t('Assignment')
+      }}</span>
+      <CmkTabs
+        :model-value="assignmentMode"
+        :aria-labelledby="assignmentLabelId"
+        @update:model-value="selectAssignmentMode"
+      >
+        <template #tabs>
+          <CmkTab id="manual">{{ _t('Manual') }}</CmkTab>
+          <CmkTab id="automatic">{{ _t('Automatic') }}</CmkTab>
+        </template>
+        <template #tab-contents>
+          <CmkTabContent id="manual">
+            <div class="mode-custom-services-assign-host-step__tab-form">
+              <CmkParagraph class="mode-custom-services-assign-host-step__tab-description">{{
+                _t('Select one host to add the service to.')
+              }}</CmkParagraph>
+              <div class="mode-custom-services-assign-host-step__field">
+                <CmkLabel variant="subtitle" :for="hostFieldId">{{ _t('Select host') }}</CmkLabel>
+                <FormAutocompleter
+                  :id="hostFieldId"
+                  :model-value="hostName"
+                  :autocompleter="hostAutocompleter"
+                  :size="0"
+                  :placeholder="_t('Search hosts by name…')"
+                  width="wide"
+                  floating
+                  @update:model-value="hostName = $event"
+                />
+              </div>
+            </div>
+          </CmkTabContent>
+          <CmkTabContent id="automatic">
+            <div class="mode-custom-services-assign-host-step__tab-form">
+              <CmkParagraph class="mode-custom-services-assign-host-step__tab-description">{{
+                _t(
+                  'Derive the host from a host name template, so every matching host gets the service.'
+                )
+              }}</CmkParagraph>
+              <div class="mode-custom-services-assign-host-step__field">
+                <CmkLabel
+                  variant="subtitle"
+                  :for="templateFieldId"
+                  :help="
+                    _t(
+                      'Every combination of attribute values the template references resolves to one host name, e.g. $RESOURCE_ATTR.service.name$. The service is created on the configured hosts the template resolves to when saving.'
+                    )
+                  "
+                  >{{ _t('Host name template') }}</CmkLabel
+                >
+                <CmkInput
+                  :id="templateFieldId"
+                  :model-value="hostNameTemplate ?? ''"
+                  field-size="fill"
+                  :placeholder="_t('e.g. $RESOURCE_ATTR.service.name$')"
+                  :external-errors="templateErrors"
+                  @update:model-value="(value) => (hostNameTemplate = value ?? '')"
+                />
+              </div>
+            </div>
+          </CmkTabContent>
+        </template>
+      </CmkTabs>
     </div>
 
-    <div class="mode-custom-services-assign-host-step__preview">
+    <div v-if="assignmentMode === 'manual'" class="mode-custom-services-assign-host-step__preview">
       <span class="mode-custom-services-assign-host-step__label">
         {{ _t('Services to be created') }} ({{ hostName ? 1 : 0 }})
       </span>
@@ -108,13 +186,22 @@ const serviceNameHelpId = useId()
   display: flex;
   flex-direction: column;
   gap: var(--dimension-5);
-  max-width: 620px;
 }
 
 .mode-custom-services-assign-host-step__field {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-2);
+}
+
+.mode-custom-services-assign-host-step__tab-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-5);
+}
+
+.mode-custom-services-assign-host-step__tab-description {
+  font-size: var(--font-size-small);
 }
 
 .mode-custom-services-assign-host-step__label {

@@ -46,26 +46,44 @@ function renderStep(
   hostName: string | null = null,
   {
     aggregator = undefined,
-    appendSeriesAttributes = true
-  }: { aggregator?: Aggregator | undefined; appendSeriesAttributes?: boolean } = {}
+    appendSeriesAttributes = true,
+    hostNameTemplate = null,
+    templateErrors = []
+  }: {
+    aggregator?: Aggregator | undefined
+    appendSeriesAttributes?: boolean
+    hostNameTemplate?: string | null
+    templateErrors?: string[]
+  } = {}
 ) {
   const service = ref(serviceName)
   const host = ref<string | null>(hostName)
+  const template = ref<string | null>(hostNameTemplate)
   const wrapper = defineComponent({
     components: { AssignHostStep },
     setup() {
-      return { service, host, consolidation: GAUGE, aggregator, appendSeriesAttributes }
+      return {
+        service,
+        host,
+        template,
+        consolidation: GAUGE,
+        aggregator,
+        appendSeriesAttributes,
+        templateErrors
+      }
     },
     template: `<AssignHostStep
       v-model:service-name="service"
       v-model:host-name="host"
+      v-model:host-name-template="template"
       :consolidation="consolidation"
       :aggregator="aggregator"
       :append-series-attributes="appendSeriesAttributes"
+      :template-errors="templateErrors"
     />`
   })
   render(wrapper)
-  return { service, host }
+  return { service, host, template }
 }
 
 test('edits the service name', async () => {
@@ -124,4 +142,56 @@ test('a service name without appended attributes shows neither indicator nor exp
   renderStep('Pod CPU usage', null, { appendSeriesAttributes: false })
   expect(screen.queryByText('+ all attributes')).toBeNull()
   expect(screen.queryByText(/short hash/)).toBeNull()
+})
+
+test('choosing automatic assignment asks for a host name template instead of a host', async () => {
+  const { host, template } = renderStep('HTTP duration', 'web01')
+
+  await userEvent.click(screen.getByRole('tab', { name: 'Automatic' }))
+
+  expect(host.value).toBeNull()
+  expect(template.value).toBe('')
+  expect(screen.getByLabelText('Host name template')).toBeTruthy()
+  expect(screen.queryByText('Select host')).toBeNull()
+})
+
+test('clicking the active tab keeps the chosen host', async () => {
+  const { host } = renderStep('HTTP duration', 'web01')
+
+  await userEvent.click(screen.getByRole('tab', { name: 'Manual' }))
+
+  expect(host.value).toBe('web01')
+})
+
+test('edits the host name template', async () => {
+  const { template } = renderStep('HTTP duration', null, { hostNameTemplate: '' })
+
+  await userEvent.type(
+    screen.getByLabelText('Host name template'),
+    'pod-$RESOURCE_ATTR.k8s.pod.name$'
+  )
+
+  expect(template.value).toBe('pod-$RESOURCE_ATTR.k8s.pod.name$')
+})
+
+test('switching back to manual assignment discards the host name template', async () => {
+  const { template } = renderStep('HTTP duration', null, {
+    hostNameTemplate: '$RESOURCE_ATTR.service.name$'
+  })
+
+  await userEvent.click(screen.getByRole('tab', { name: 'Manual' }))
+
+  expect(template.value).toBeNull()
+  expect(screen.queryByLabelText('Host name template')).toBeNull()
+})
+
+test('shows why the host name template was refused at the template field', () => {
+  renderStep('HTTP duration', null, {
+    hostNameTemplate: 'fixed-name',
+    templateErrors: ['The host name template must reference at least one attribute.']
+  })
+
+  expect(
+    screen.getByText('The host name template must reference at least one attribute.')
+  ).toBeTruthy()
 })

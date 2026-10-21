@@ -216,3 +216,67 @@ test('without a configuration name the wizard creates instead of saving', async 
   await expectActiveStep('General configuration properties')
   expect(screen.queryByRole('button', { name: 'Save & activate changes' })).toBeNull()
 })
+
+const TEMPLATE_ASSIGNMENT = {
+  mode: 'host_name_template',
+  host_name_template: '$RESOURCE_ATTR.service.name$'
+}
+
+function serveStoredTemplateService(): void {
+  server.use(
+    http.get(OBJECT_URL, () =>
+      HttpResponse.json(
+        {
+          domainType: 'custom_service',
+          id: 'http_duration_on_web01',
+          title: 'HTTP duration',
+          extensions: { ...STORED_EXTENSIONS, host_assignment: TEMPLATE_ASSIGNMENT }
+        },
+        { headers: { ETag: 'etag-1' } }
+      )
+    )
+  )
+}
+
+test('a service assigned by host name template is written back with its template', async () => {
+  serveStoredTemplateService()
+  renderWizard()
+  await goToHostStep()
+
+  expect(await screen.findByDisplayValue('$RESOURCE_ATTR.service.name$')).toBeTruthy()
+  await userEvent.click(await screen.findByRole('button', { name: 'Save & activate changes' }))
+
+  await waitFor(() => expect(updateRequests).toBe(1))
+  expect(lastBody).toMatchObject({ host_assignment: TEMPLATE_ASSIGNMENT })
+})
+
+test('a refused host name template is shown at the template field', async () => {
+  serveStoredTemplateService()
+  server.use(
+    http.put(OBJECT_URL, () =>
+      HttpResponse.json(
+        {
+          status: 400,
+          title: 'Bad Request',
+          detail: 'These fields have problems: body.host_assignment.host_name_template',
+          fields: {
+            'body.host_assignment.host_name_template.host_name_template': {
+              type: 'value_error',
+              loc: ['body', 'host_assignment', 'host_name_template', 'host_name_template'],
+              msg: "Value error, The host name template must not start with '.'.",
+              input: '.$RESOURCE_ATTR.service.name$'
+            }
+          }
+        },
+        { status: 400 }
+      )
+    )
+  )
+  renderWizard()
+  await goToHostStep()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Save & activate changes' }))
+
+  expect(await screen.findByText("The host name template must not start with '.'.")).toBeTruthy()
+  expect(screen.queryByText(/These fields have problems/)).toBeNull()
+})

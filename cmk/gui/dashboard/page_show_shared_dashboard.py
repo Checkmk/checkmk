@@ -95,6 +95,7 @@ def compute_widget_titles(
     return {
         widget_id: _compute_widget_title(widget, request_cache)
         for widget_id, widget in board["widgets"].items()
+        if widget["type"] in dashlet_registry
     }
 
 

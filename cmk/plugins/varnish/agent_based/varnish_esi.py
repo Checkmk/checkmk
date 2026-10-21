@@ -31,5 +31,5 @@ check_plugin_varnish_esi = CheckPlugin(
     discovery_function=discover_varnish_esi,
     check_function=check_varnish_esi,
     check_ruleset_name="varnish_esi",
-    check_default_parameters={"errors": (1.0, 2.0)},
+    check_default_parameters={"errors": ("fixed", (1.0, 2.0))},
 )

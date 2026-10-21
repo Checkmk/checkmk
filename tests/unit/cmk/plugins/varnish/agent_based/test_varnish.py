@@ -94,10 +94,13 @@ def test_discovery(discover: Callable[[lib.Section], DiscoveryResult]) -> None:
 
 def test_check_varnish_rates() -> None:
     value_store: dict[str, object] = {}
-    keys = ["n_wrk_failed", "n_expired", "client_drop", "missing"]
-    params = {"wrk_failed": (1.0, 2.0)}
+    keys = ["n_wrk_failed", "n_expired", "client_drop", "fetch_1xx", "missing"]
+    params: lib.Params = {
+        "wrk_failed": ("fixed", (1.0, 2.0)),
+        "fetch_1xx": ("fixed", (0.5, 1.0)),
+    }
     # each run initializes only the first uninitialized counter
-    for now in (0.0, 1.0, 2.0):
+    for now in (0.0, 1.0, 2.0, 3.0):
         with pytest.raises(GetRateError):
             list(
                 lib.check_varnish_rates(
@@ -112,22 +115,25 @@ def test_check_varnish_rates() -> None:
                     ["n_wrk_failed", "15", "0.00", "N", "worker", "threads", "not", "created"],
                     ["n_expired", "1", ".", "N", "expired", "objects"],
                     ["client_drop", "60", "0.00", "Connection", "dropped,", "no", "sess/wrk"],
+                    ["fetch_1xx", "20", "0.00", "Fetch", "no", "body", "(1xx)"],
                 ]
             ),
             keys,
             value_store,
-            12.0,
+            13.0,
         )
     ) == [
         Result(
             state=State.WARN,
-            summary="1.5 worker threads not created/s (warn/crit at 1.0 worker threads not created/s/2.0 worker threads not created/s)",
+            summary="worker threads not created: 1.5/s (warn/crit at 1.0/s/2.0/s)",
         ),
         Metric("varnish_worker_failed_rate", 1.5, levels=(1.0, 2.0)),
-        Result(state=State.OK, summary="0.0 expired objects/s"),
+        Result(state=State.OK, summary="expired objects: 0.0/s"),
         Metric("varnish_objects_expired_rate", 0.0),
-        Result(state=State.OK, summary="6.0 Connection dropped, no sess wrk/s"),
+        Result(state=State.OK, summary="Connection dropped, no sess wrk: 6.0/s"),
         Metric("varnish_client_drop_rate", 6.0),
+        Result(state=State.CRIT, summary="no body (1xx): 2.0/s (warn/crit at 0.5/s/1.0/s)"),
+        Metric("varnish_fetch_1xx_rate", 2.0, levels=(0.5, 1.0)),
     ]
 
 
@@ -160,7 +166,9 @@ def test_check_ratios(
     ratio: float,
     state: State,
 ) -> None:
-    results = list(check({"levels_lower": (70.0, 60.0)}, lib.parse_varnish(STRING_TABLE)))
+    results = list(
+        check({"levels_lower": ("fixed", (70.0, 60.0))}, lib.parse_varnish(STRING_TABLE))
+    )
     assert [r.state for r in results if isinstance(r, Result)] == [state]
     assert [m for m in results if isinstance(m, Metric)] == [Metric(metric, ratio)]
 
@@ -168,7 +176,7 @@ def test_check_ratios(
 def test_check_ratio_zero_total() -> None:
     assert list(
         varnish_ratios.check_varnish_cache_hit_ratio(
-            {"levels_lower": (70.0, 60.0)},
+            {"levels_lower": ("fixed", (70.0, 60.0))},
             {"cache_hit": lib.Counter(0, ""), "cache_miss": lib.Counter(0, "")},
         )
     ) == [

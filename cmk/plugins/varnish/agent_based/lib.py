@@ -7,11 +7,15 @@ import time
 from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 
-from cmk.agent_based.legacy.conversion import (
-    # Temporary compatibility layer until we migrate the corresponding ruleset.
-    check_levels_legacy_compatible as check_levels,
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckResult,
+    get_rate,
+    get_value_store,
+    LevelsT,
+    render,
+    StringTable,
 )
-from cmk.agent_based.v2 import CheckResult, get_rate, get_value_store, render, StringTable
 
 
 @dataclass(frozen=True)
@@ -21,7 +25,7 @@ class Counter:
 
 
 Section = Mapping[str, Counter]
-Params = Mapping[str, tuple[float, float]]
+Params = Mapping[str, LevelsT[float]]
 
 # Newer output has MAIN and MGT prefixed keys, MGT takes precedence
 _PREFIX_PRECEDENCE = {"MAIN": 1, "MGT": 2}
@@ -65,6 +69,11 @@ def _metric_name(key: str) -> str:
     return f"varnish_{name}_rate"
 
 
+def _param_name(key: str) -> str:
+    # 'n_wrk_failed' -> 'wrk_failed', but 'fetch_1xx' stays (no identifier)
+    return name if (name := key.split("_", 1)[-1]).isidentifier() else key
+
+
 def check_varnish_stats(params: Params, section: Section, keys: Sequence[str]) -> CheckResult:
     yield from check_varnish_rates(params, section, keys, get_value_store(), time.time())
 
@@ -80,9 +89,10 @@ def check_varnish_rates(
         counter = section[key]
         yield from check_levels(
             get_rate(value_store, f"varnish.{key}", now, counter.value, raise_overflow=True),
-            _metric_name(key),
-            params.get(key.split("_", 1)[-1], (None, None)),
-            human_readable_func=lambda r, d=f"{counter.descr}/s": f"{r:.1f} {d}",
+            levels_upper=params.get(_param_name(key)),
+            metric_name=_metric_name(key),
+            render_func=lambda r: f"{r:.1f}/s",
+            label=counter.descr,
         )
 
 
@@ -92,10 +102,9 @@ def check_varnish_ratio(
     reference_key, additional_key, metric_name = ratio_keys
     reference = section[reference_key].value
     total = reference + section[additional_key].value
-    warn, crit = params["levels_lower"]
     yield from check_levels(
         100.0 * reference / total if total > 0 else 0.0,
-        metric_name,
-        (None, None, warn, crit),
-        human_readable_func=render.percent,
+        levels_lower=params["levels_lower"],
+        metric_name=metric_name,
+        render_func=render.percent,
     )

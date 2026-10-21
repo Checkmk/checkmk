@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.legacy.conversion import (
-    # Temporary compatibility layer until we migrate the corresponding ruleset.
-    check_levels_legacy_compatible as check_levels,
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Service,
 )
-from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, render, Service
 
 from .lib import check_varnish_ratio, Params, Section
 
@@ -28,7 +31,7 @@ check_plugin_varnish_cache_hit_ratio = CheckPlugin(
     discovery_function=discover_varnish_cache_hit_ratio,
     check_function=check_varnish_cache_hit_ratio,
     check_ruleset_name="varnish_cache_hit_ratio",
-    check_default_parameters={"levels_lower": (70.0, 60.0)},
+    check_default_parameters={"levels_lower": ("fixed", (70.0, 60.0))},
 )
 
 
@@ -50,18 +53,17 @@ check_plugin_varnish_backend_success_ratio = CheckPlugin(
     discovery_function=discover_varnish_backend_success_ratio,
     check_function=check_varnish_backend_success_ratio,
     check_ruleset_name="varnish_backend_success_ratio",
-    check_default_parameters={"levels_lower": (70.0, 60.0)},
+    check_default_parameters={"levels_lower": ("fixed", (70.0, 60.0))},
 )
 
 
 def check_varnish_worker_thread_ratio(params: Params, section: Section) -> CheckResult:
     worker_create = section["n_wrk_create"].value
-    warn, crit = params["levels_lower"]
     yield from check_levels(
         100.0 * section["n_wrk"].value / worker_create if worker_create > 0 else 0.0,
-        "varnish_worker_thread_ratio",
-        (None, None, warn, crit),
-        human_readable_func=render.percent,
+        levels_lower=params["levels_lower"],
+        metric_name="varnish_worker_thread_ratio",
+        render_func=render.percent,
     )
 
 
@@ -77,5 +79,5 @@ check_plugin_varnish_worker_thread_ratio = CheckPlugin(
     discovery_function=discover_varnish_worker_thread_ratio,
     check_function=check_varnish_worker_thread_ratio,
     check_ruleset_name="varnish_worker_thread_ratio",
-    check_default_parameters={"levels_lower": (70.0, 60.0)},
+    check_default_parameters={"levels_lower": ("fixed", (70.0, 60.0))},
 )

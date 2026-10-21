@@ -6,12 +6,9 @@
 import time
 from datetime import timedelta
 
-from cmk.agent_based.legacy.conversion import (
-    # Temporary compatibility layer until we migrate the corresponding ruleset.
-    check_levels_legacy_compatible as check_levels,
-)
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -34,10 +31,9 @@ def check_varnish_uptime(section: Section) -> CheckResult:
     try:
         yield from check_levels(
             uptime.value,
-            "uptime",
-            None,
-            human_readable_func=lambda x: timedelta(seconds=int(x)),
-            infoname="Up since %s, uptime"
+            metric_name="uptime",
+            render_func=lambda x: str(timedelta(seconds=int(x))),
+            label="Up since %s, uptime"
             % time.strftime("%c", time.localtime(time.time() - uptime.value)),
         )
     except OverflowError:

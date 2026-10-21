@@ -1590,8 +1590,6 @@ class HTMLGenerator(HTMLWriter):
         data: Any = None,
         style: str | None = None,
         cssclass: CSSSpec | None = None,
-        onclose: str | None = None,
-        onopen: str | None = None,
         resizable: bool = False,
         popup_group: str | None = None,
         hover_switch_delay: int | None = None,
@@ -1604,8 +1602,6 @@ class HTMLGenerator(HTMLWriter):
                 data,
                 style,
                 cssclass,
-                onclose,
-                onopen,
                 resizable,
                 popup_group,
                 hover_switch_delay,
@@ -1620,20 +1616,11 @@ class HTMLGenerator(HTMLWriter):
         data: Any = None,
         style: str | None = None,
         cssclass: CSSSpec | None = None,
-        onclose: str | None = None,
-        onopen: str | None = None,
         resizable: bool = False,
         popup_group: str | None = None,
         hover_switch_delay: int | None = None,
     ) -> HTML:
-        onclick = "cmk.popup_menu.toggle_popup(event, this, {}, {}, {}, {}, {},  {});".format(
-            json.dumps(ident),
-            json.dumps(method.asdict()),
-            json.dumps(data if data else None),
-            json.dumps(onclose.replace("'", "\\'") if onclose else None),
-            json.dumps(onopen.replace("'", "\\'") if onopen else None),
-            json.dumps(resizable),
-        )
+        onclick = f"cmk.popup_menu.toggle_popup(event, this, {json.dumps(ident)}, {json.dumps(method.asdict())}, {json.dumps(data if data else None)}, {json.dumps(resizable)});"
 
         if popup_group:
             onmouseenter: str | None = (

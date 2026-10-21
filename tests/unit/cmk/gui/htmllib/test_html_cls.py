@@ -5,6 +5,8 @@
 
 
 import gettext
+import html as html_escaping
+import re
 import traceback
 
 import pytest
@@ -13,11 +15,12 @@ from werkzeug.test import create_environ
 from cmk.gui.ctx_stack import set_global_var
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
-from cmk.gui.htmllib.html import _collect_stylesheets, html
+from cmk.gui.htmllib.html import _collect_stylesheets, html, HTMLGenerator
 from cmk.gui.http import Request
 from cmk.gui.i18n import Translation
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.user_errors import user_errors
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.html import HTML
@@ -282,6 +285,24 @@ def test_render_a() -> None:
         a,
         '<a href="b&lt;script&gt;alert(1)&lt;/script&gt;lu" target="_blank" '
         'class="eee">b&lt;script&gt;alert(1)&lt;/script&gt;la</a>',
+    )
+
+
+def test_popup_trigger_passes_only_data_to_toggle_popup() -> None:
+    trigger = HTMLGenerator.render_popup_trigger(
+        HTML.with_escaping("menu"),
+        "my_popup",
+        MethodAjax(endpoint="action_menu", url_vars=None),
+        data={"key": "value"},
+        resizable=True,
+    )
+
+    onclick = re.search(r'onclick="([^"]*)"', str(trigger))
+    assert onclick is not None
+    assert html_escaping.unescape(onclick.group(1)) == (
+        'cmk.popup_menu.toggle_popup(event, this, "my_popup",'
+        ' {"type": "ajax", "endpoint": "action_menu", "url_vars": null},'
+        ' {"key": "value"}, true);'
     )
 
 

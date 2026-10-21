@@ -8529,7 +8529,6 @@ def Fontsize(
 class Color(ValueSpec[None | str]):
     def __init__(
         self,
-        on_change: str | None = None,
         allow_empty: bool = True,
         # ValueSpec
         title: str | None = None,
@@ -8541,7 +8540,6 @@ class Color(ValueSpec[None | str]):
         # kwargs["regex"] = "#[0-9]{3,6}"
         # kwargs["regex_error"] = _("The color needs to be given in hex format.")
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
-        self._on_change = on_change
         self._allow_empty = allow_empty
 
     @override
@@ -8568,7 +8566,6 @@ class Color(ValueSpec[None | str]):
             varprefix + "_popup",
             MethodColorpicker(varprefix, value),
             cssclass=["colorpicker"],
-            onclose=self._on_change,
         )
 
     @override

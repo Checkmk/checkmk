@@ -24,8 +24,6 @@ interface PopUpSpec {
   id: string
   trigger_obj: HTMLElement
   data: any
-  onclose: string | null
-  onopen: string | null
   remove_on_close: boolean
   popup_element?: HTMLElement | null
 }
@@ -35,8 +33,6 @@ class PopUp {
   container: null | HTMLElement
   popup: null | HTMLElement | ChildNode
   data: any
-  onclose: string | null
-  onopen: string | null
   remove_on_close: boolean
 
   constructor() {
@@ -44,8 +40,6 @@ class PopUp {
     this.container = null
     this.popup = null
     this.data = null
-    this.onclose = null
-    this.onopen = null
     this.remove_on_close = false
   }
 
@@ -53,8 +47,6 @@ class PopUp {
     spec = spec || {}
     this.id = spec.id || null
     this.data = spec.data || null
-    this.onclose = spec.onclose || null
-    this.onopen = spec.onopen || null
     this.remove_on_close = spec.remove_on_close || false
 
     if (this.id) {
@@ -71,13 +63,6 @@ class PopUp {
     }
   }
 
-  open() {
-    if (this.onopen) {
-      /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
-      eval(this.onopen)
-    }
-  }
-
   close() {
     if (this.container) {
       remove_class(this.container, 'active')
@@ -90,16 +75,10 @@ class PopUp {
       del_event_handler('click', handle_popup_close)
     }
 
-    if (this.onclose) {
-      /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
-      eval(this.onclose)
-    }
-
     this.id = null
     this.container = null
     this.popup = null
     this.data = null
-    this.onclose = null
     this.remove_on_close = false
   }
 }
@@ -108,10 +87,6 @@ const active_popup = new PopUp()
 
 export function close_popup() {
   active_popup.close()
-}
-
-export function open_popup() {
-  active_popup.open()
 }
 
 export function is_open(ident: string): boolean {
@@ -183,10 +158,6 @@ type JSPopupMethod = MethodColorpicker | MethodInline | MethodAjax
 //                           ID of the color picker and its recent color.
 //
 // data:        JSON data which can be used by actions in popup menus
-// onopen:      JavaScript code represented as a string that is evaluated when the
-//              popup is opened
-// onclose:     JavaScript code represented as a string that is evaluated when the
-//              popup is closed
 // resizable:   Allow the user to resize the popup by drag/drop (not persisted)
 export function toggle_popup(
   event: Event | undefined,
@@ -194,8 +165,6 @@ export function toggle_popup(
   ident: string,
   method: JSPopupMethod,
   data: any,
-  onclose: string | null,
-  onopen: string | null,
   resizable: boolean
 ) {
   if (active_popup.id) {
@@ -235,12 +204,9 @@ export function toggle_popup(
       id: ident,
       trigger_obj: trigger_obj,
       data: data,
-      onclose: onclose,
-      onopen: onopen,
       remove_on_close: method.type !== 'inline',
       popup_element: menu
     })
-    open_popup()
     return
   }
 
@@ -248,12 +214,8 @@ export function toggle_popup(
     id: ident,
     trigger_obj: trigger_obj,
     data: data,
-    onclose: onclose,
-    onopen: onopen,
     remove_on_close: method.type !== 'inline'
   })
-
-  open_popup()
 }
 
 let switch_popup_timeout: null | number = null

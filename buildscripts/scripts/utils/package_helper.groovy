@@ -130,23 +130,6 @@ void provide_agent_binaries(Map args) {
                 cp mk-oracle.{aix,solaris} ${checkout_dir}/omd/packages/mk-oracle/
                 """.stripIndent(),
         ],
-        "build-mk-oracle-rhel8-component-test": [
-            relative_job_name: "${branch_base_folder(false)}/builders/build-cmk-package-mk-oracle-k8s",
-            dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
-            condition: test_binaries_only,
-            retry: 1,
-            additional_build_params: [
-                PACKAGE_PATH: "packages/mk-oracle",
-                DISTRO: "almalinux-8",
-                FILE_ARCHIVING_PATTERN: "test_ora_*_test",
-                // do not add line breaks here. ci-artifacts might not find a match
-                // groovylint-disable-next-line LineLength
-                COMMAND_LINE: """bazel build //packages/mk-oracle:mk-oracle-lib-test-external; for t in test_ora_no_db test_ora_discovery test_ora_with_db; do cp \$(bazel info workspace)/\$(bazel cquery --output=files //packages/mk-oracle:mk-oracle-lib-test-external_tests/\${t}_test) \$(bazel info workspace); done"""
-            ],
-            install_cmd: """\
-                cp test_ora_no_db_test test_ora_discovery_test test_ora_with_db_test ${checkout_dir}/packages/mk-oracle/
-                """.stripIndent(),
-        ],
         "build-mk-oracle-aix-solaris-component-test": [
             relative_job_name: "${branch_base_folder(false)}/builders/build-mk-oracle-on-aix-and-solaris",
             dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],

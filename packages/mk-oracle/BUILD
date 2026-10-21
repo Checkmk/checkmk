@@ -1,6 +1,6 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@host_crates//:defs.bzl", "aliases", "all_crate_deps")
-load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_library", "rust_test_suite")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_library")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:xcomp/rust.bzl", "rust_binary", "rust_test")
 load("//bazel/rules:xcomp/rust_wine_test.bzl", "rust_wine_test")
@@ -180,14 +180,20 @@ rust_library(
     ],
 )
 
-rust_test_suite(
-    name = "mk-oracle-lib-test-external",
-    srcs = [
-        "tests/test_mk_oracle_bin.rs",
-        "tests/test_ora_discovery.rs",
-        "tests/test_ora_no_db.rs",
-        "tests/test_ora_with_db.rs",
-    ],
+# Like rust_test_suite (same target and crate names), but built for the
+# hermetic platform: the component tests copy these binaries to and run
+# them on the Oracle test host, so they must not depend on the glibc of
+# the build container.
+EXTERNAL_TESTS = [
+    "test_mk_oracle_bin",
+    "test_ora_discovery",
+    "test_ora_no_db",
+    "test_ora_with_db",
+]
+
+[rust_test(
+    name = "mk-oracle-lib-test-external_tests/%s_test" % test,
+    srcs = ["tests/%s.rs" % test],
     compile_data = [
         "tests/files/not-ora_sql.yml",
         "tests/files/tns/tnsnames.ora",
@@ -200,6 +206,8 @@ rust_test_suite(
         "tests/files/orasql_config/**/*.sql",
     ]),
     crate_features = ["build_system_bazel"],
+    crate_name = "mk_oracle_lib_test_external_tests_%s_test" % test,
+    crate_root = "tests/%s.rs" % test,
     data = [
         "references/output-multiple.cfg",
         "references/output-multiple.ps1",
@@ -220,6 +228,8 @@ rust_test_suite(
         "MK_LIBDIR",
         "ORACLE_HOME",
     ],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
+    tags = ["restrict_mk-oracle-lib-test-external"],
     deps = all_crate_deps() + [
         ":mk-oracle",
         ":mk-oracle-lib",
@@ -227,6 +237,12 @@ rust_test_suite(
         "@host_crates//:assert_cmd",
         "@host_crates//:tempfile",
     ],
+) for test in EXTERNAL_TESTS]
+
+test_suite(
+    name = "mk-oracle-lib-test-external",
+    tags = ["restrict_mk-oracle-lib-test-external"],
+    tests = ["mk-oracle-lib-test-external_tests/%s_test" % test for test in EXTERNAL_TESTS],
 )
 
 rust_doc(

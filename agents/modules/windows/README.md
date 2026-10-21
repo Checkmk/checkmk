@@ -51,21 +51,21 @@ Everything else is hermetic via bazel modules:
   `PYTHON_VERSION_WINDOWS` — a `.bzl` file can `load()` it, whereas
   `MODULE.bazel` cannot, so the version is not spelled out twice. Only the
   SHA256 hashes (`_MSI_SHA256`) are maintained by hand.
-- Python packages: edit `requirements-windows.in`, then regenerate the
-  sha256-pinned `requirements-windows.txt` with
-  `bazel run //agents/modules/windows:requirements_windows` (same uv flow
+- Python packages: edit `windows-requirements.in`, then regenerate the
+  sha256-pinned `windows-requirements.txt` with
+  `bazel run //agents/modules/windows:windows_requirements` (same uv flow
   as the repo's other requirements files, but resolved under the hermetic
   interpreter of `PYTHON_VERSION_WINDOWS`'s `major.minor` line — rules_uv's
   `py3_runtime` — so the lock tracks the CAB's Python, independent of the
   site toolchain). The `@windows_python_wheels` pip.parse hub
   (`bazel/module/python_cab.MODULE.bazel`) downloads the pinned wheels; stale pins
-  fail `:requirements_windows_test` in CI
+  fail `:windows_requirements_test` in CI
   (`make check_python_requirements`).
 
-  Keep `requirements-windows.in` unpinned — the resolved
-  `requirements-windows.txt` is the pin. Version bounds go into
-  `constraints-windows.txt`, which the resolution consumes via
-  `:requirements-windows-in`. That file is deliberately separate from
+  Keep `windows-requirements.in` unpinned — the resolved
+  `windows-requirements.txt` is the pin. Version bounds go into
+  `windows-constraints.txt`, which the resolution consumes via
+  `:windows-requirements-in`. That file is deliberately separate from
   `//:constraints.txt`: the CAB resolves for `win_amd64` with
   `--only-binary=:all:`, so a bound that is satisfiable for the site can be
   unsatisfiable here, and a shared file would let a server-side hold break
@@ -73,7 +73,7 @@ Everything else is hermetic via bazel modules:
   its removal, enforced by `test_constraints` in
   `tests/code_quality/test_requirements.py`.
 
-  `requirements-windows.txt` is also a `manifest_srcs` entry of
+  `windows-requirements.txt` is also a `manifest_srcs` entry of
   `//omd/dependency_management:list_of_dependencies`. The SBOM aspect already
   finds the CAB's packages in the build graph, through the `package_metadata`
   of the hub's generated whl repositories, but it carries no artifact hashes
@@ -107,7 +107,7 @@ For a **patch bump** (same `major.minor`, e.g. 3.13.14 → 3.13.15):
 
   ```bash
   bazel run //agents/modules/windows:refresh_msi_pins
-  bazel run //agents/modules/windows:requirements_windows
+  bazel run //agents/modules/windows:windows_requirements
   ```
 
   `refresh_msi_pins` takes no version: the `py_binary` passes

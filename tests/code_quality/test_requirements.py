@@ -521,7 +521,7 @@ def constraints_files() -> list[Path]:
     """Return all constraints files: the shared one plus any platform specific ones."""
     return [
         repo_path() / "constraints.txt",
-        repo_path() / "agents/modules/windows/constraints-windows.txt",
+        repo_path() / "agents/modules/windows/windows-constraints.txt",
     ]
 
 

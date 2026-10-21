@@ -68,7 +68,7 @@ def test_windows_python_version_module_literals() -> None:
     runtime_repo = f"python_{windows.replace('.', '_')}_x86_64-unknown-linux-gnu"
     assert re.search(rf'use_repo\(\s*python,\s*"{runtime_repo}"\s*\)', py_module_text), (
         f'use_repo(python, "{runtime_repo}") missing from {py_module.name}: '
-        "//agents/modules/windows:requirements_windows resolves under this runtime "
+        "//agents/modules/windows:windows_requirements resolves under this runtime "
         "(rules_uv py3_runtime). " + _DIVERGENCE_CHECKLIST
     )
 

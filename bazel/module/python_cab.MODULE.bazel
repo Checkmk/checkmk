@@ -22,7 +22,7 @@ pip.parse(
     hub_name = "windows_python_wheels",
     python_version = "3.13",
     requirements_by_platform = {
-        "@//agents/modules/windows:requirements-windows.txt": "windows_x86_64",
+        "@//agents/modules/windows:windows-requirements.txt": "windows_x86_64",
     },
 )
 use_repo(pip, "windows_python_wheels")

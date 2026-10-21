@@ -246,9 +246,8 @@ void triggerCascadeJob(Map args) {
 /// run_tests.sh evals TEST_FILTER as shell tokens, so it carries plain pytest
 /// options as well as markers.
 ///
-/// Sharded entries carry no medium_test_chain marker. Sharding the marker
-/// subset needs balancing by selected tests, not whole modules, which will
-/// be done in CMK-41175.
+/// Combining markers and sharding is possible. Markers are applied first,
+/// then the remaining tests are sharded.
 String composeTestFilter(Map args) {
     def parts = [];
     if (args.marker) {
@@ -306,46 +305,43 @@ Map cascadeJobSpecs(Map args) {
     /// cached build from before this param existed is still a valid match.
     def skip_qa_submodule = [CIPARAM_SKIP_QA_SUBMODULE: true];
 
-    def markerSpec = { job_name, options = [] -> [
-        job_name: job_name,
-        build_params: [
-            /// unsharded entry
-            TEST_FILTER: composeTestFilter(
-                marker: "medium_test_chain",
-                options: options + rerun_opts,
-            )
-        ],
-        build_params_no_check: skip_qa_submodule,
-        start_delay: 0,
-    ] };
-
-    /// Sharding off: exactly what this cascade did before.
-    /// The switch is the SHARD_COUNT/SHARD_COUNT_MULTISITE job parameters.
-    def addSuite = { job_prefix, shard_count, shard_durations_build, max_suite_reruns ->
+    /// Add jobs that should be triggered, one per shard of each suite.
+    ///
+    /// job_prefix: Job name withouth edition, e.g. test-system-multisite
+    /// shard_count: Integer for the amount of shards that should be created (<2 for no sharding)
+    /// marker: Pytest marker to filter tests. This is applied before sharding and
+    ///     an empty marker ("") is valid.
+    /// shard_duration_build: The finished build whose test runtimes the shards use to balance the
+    ///    split. It's passed to the job as SHARD_BUILD_BASED_ON, only when the suite is sharded.
+    /// max_suite_reruns: rerun limit for marker runs, roughly 10% of the
+    ///     suite's marked test-cases.
+    def addSuite = { job_prefix, shard_count, marker, shard_durations_build, max_suite_reruns ->
         def job_name = "${job_prefix}-${args.edition}".toString();
-
-        if (shard_count < 2) {
-            /// limiting reruns; roughly 10% of the suite's total test-cases
-            specs["${job_name} [marker]".toString()] = markerSpec(
-                job_name, ["--max-suite-reruns=${max_suite_reruns}"]
-            );
-            return;
+        def sharded = shard_count >= 2;
+        def options = [args.medium_chain_option] + rerun_opts;
+        if (marker) {
+            options = ["--max-suite-reruns=${max_suite_reruns}"] + options;
         }
 
-        /// The whole suite, split over N jobs (markers are dropped, see CMK-41175)
-        (0..<shard_count).each { shard ->
-            def label = "${job_name} [shard ${shard + 1}/${shard_count}]";
-            specs[label.toString()] = [
+        (0..<(sharded ? shard_count : 1)).each { shard ->
+            def label_parts = [marker ? "marker" : "whole suite"];
+            if (sharded) {
+                label_parts.add("shard ${shard + 1}/${shard_count}");
+            }
+            def build_params = [
+                TEST_FILTER: composeTestFilter(
+                    marker: marker,
+                    shard_index: shard,
+                    shard_count: shard_count,
+                    options: options,
+                ),
+            ];
+            if (sharded) {
+                build_params.SHARD_BUILD_BASED_ON = shard_durations_build;
+            }
+            specs["${job_name} [${label_parts.join(', ')}]".toString()] = [
                 job_name: job_name,
-                build_params: [
-                    TEST_FILTER: composeTestFilter(
-                        shard_index: shard,
-                        shard_count: shard_count,
-                        options: [args.medium_chain_option] + rerun_opts,
-                    ),
-                    /// Record which run time the sharding is based on
-                    SHARD_BUILD_BASED_ON: shard_durations_build,
-                ],
+                build_params: build_params,
                 build_params_no_check: skip_qa_submodule,
                 start_delay: shard == 0 ? 0 : args.package_visibility_delay,
             ];
@@ -354,9 +350,15 @@ Map cascadeJobSpecs(Map args) {
 
     /// limiting reruns; duration of multisite tests is approaching thresholds ~ 35 mins.
     /// 10 ~ 10% of total multisite test-cases
-    addSuite("test-system-multisite", args.multisite_shards, args.shard_durations_build_multisite, 10);
+    addSuite(
+        "test-system-multisite", args.multisite_shards, args.multisite_marker,
+        args.shard_durations_build_multisite, 10,
+    );
     /// limiting reruns; 50 ~ 10% of total singlesite test-cases
-    addSuite("test-system-singlesite", args.singlesite_shards, args.shard_durations_build_singlesite, 50);
+    addSuite(
+        "test-system-singlesite", args.singlesite_shards, args.singlesite_marker,
+        args.shard_durations_build_singlesite, 50,
+    );
     return specs;
 }
 
@@ -388,8 +390,12 @@ void main() {
     /// Job parameters so the numbers can be tuned from checkmk_ci without a change
     /// here. The fallbacks keep this working before those parameters are deployed.
     def singlesite_shards = (params.SHARD_COUNT ?: 8) as Integer;
-    /// Disable sharding for multisite until markers are accepted (see CMK-41175)
+    /// Multisite stays unsharded by default until SHARD_COUNT_MULTISITE is raised.
     def multisite_shards = (params.SHARD_COUNT_MULTISITE ?: 1) as Integer;
+    /// Marker per suite, "" runs the whole suite. Unsharded singlesite keeps the
+    /// marker, so SHARD_COUNT=1 restores the run from before sharding.
+    def singlesite_marker = (singlesite_shards < 2) ? "medium_test_chain" : "";
+    def multisite_marker = "medium_test_chain";
     /// Build the shards take their runtimes from. Heavy has no singlesite/multisite
     /// job on the gate's edition, so this is the closest full report. Only used for
     /// balancing, never for selecting, so the mismatch does not matter.
@@ -427,6 +433,8 @@ void main() {
         |force_build:....... │${force_build}│
         |singlesite_shards:. │${singlesite_shards}│
         |multisite_shards:.. │${multisite_shards}│
+        |singlesite_marker:. │${singlesite_marker}│
+        |multisite_marker:.. │${multisite_marker}│
         |durations_job_s:... │${durations_job_singlesite}│
         |durations_job_m:... │${durations_job_multisite}│
         |safe_branch_name:.. │${safe_branch_name}│
@@ -515,6 +523,8 @@ void main() {
                     edition: edition_medium_chain,
                     singlesite_shards: singlesite_shards,
                     multisite_shards: multisite_shards,
+                    singlesite_marker: singlesite_marker,
+                    multisite_marker: multisite_marker,
                     medium_chain_option: medium_chain_option,
                     package_visibility_delay: package_visibility_delay,
                     shard_durations_build_singlesite: (singlesite_shards < 2) ? "" : resolveShardDurations(job: durations_job_singlesite),

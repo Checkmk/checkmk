@@ -28,7 +28,7 @@ from cmk_dev.jenkins_utils import AugmentedJenkinsClient, extract_credentials
 
 logger = logging.getLogger(__name__)
 
-REPORT_TREE = "suites[cases[className,duration]]"
+REPORT_TREE = "suites[cases[className,name,duration]]"
 FETCH_TIMEOUT_SECONDS = 120
 
 #: Credentials come from the environment, so a test pod needs no ini file. The
@@ -47,6 +47,7 @@ def jenkins_client(timeout: int = FETCH_TIMEOUT_SECONDS) -> AugmentedJenkinsClie
 
 class JenkinsTestCase(TypedDict, total=False):
     className: str
+    name: str
     duration: float | None
 
 
@@ -66,9 +67,27 @@ class Shardable(Protocol):
 
 
 class Durations(NamedTuple):
-    """Recorded runtime per module, plus what it took to get there."""
+    """Recorded runtime per module and per test, plus what it took to get there.
+
+    per_module is the whole file's historical total, used to size a run that
+    collects everything in it. per_test is the same data at test granularity,
+    used to size a run that only collects some of a module's tests (e.g. a
+    marker filter) - estimate() sums exactly the selected tests instead of
+    charging the whole file's weight for a fraction of its tests.
+
+    pivot_test names, per module, the first test the reference build actually
+    ran in it. A JUnit case's duration is setup+call+teardown (pytest's default
+    junit_duration_report=total), so a module- or class-scoped fixture's setup
+    cost - the site setup in a multisite module, say - is baked into whichever
+    test happened to trigger it there, almost always the first one. Summing
+    only a subset's own per_test durations silently drops that cost whenever
+    the subset excludes the pivot; estimate() uses this field to charge it
+    unconditionally instead.
+    """
 
     per_module: dict[str, float]
+    per_test: dict[str, float]
+    pivot_test: dict[str, str]
     test_count: int
 
     @property
@@ -84,30 +103,69 @@ def module_of(nodeid: str) -> str:
     return nodeid.split("::", 1)[0]
 
 
-def module_from_class_name(class_name: str) -> str | None:
-    """'pytest.tests.system.singlesite.omd.test_omd.TestX' -> the file path.
+def _split_class_name(class_name: str) -> tuple[str, str] | tuple[None, None]:
+    """'pytest.tests.system.singlesite.omd.test_omd.TestX' -> module path + class.
 
-    Most of these tests are plain functions, some sit in a class, so walk back to
-    the last "test_" part to land on the module either way.
+    The dotted name does not mark where the module ends and a class begins.
+    Test modules are named test_*, classes Test*, so the last part starting
+    with "test_" is the module; anything after it is the class.
     """
     parts = class_name.removeprefix("pytest.").split(".")
+    tail: list[str] = []
     while parts and not parts[-1].startswith("test_"):
-        parts.pop()
-    return "/".join(parts) + ".py" if parts else None
+        tail.insert(0, parts.pop())
+    if not parts:
+        return None, None
+    return "/".join(parts) + ".py", "::".join(tail)
+
+
+def module_from_class_name(class_name: str) -> str | None:
+    """'pytest.tests.system.singlesite.omd.test_omd.TestX' -> the file path."""
+    return _split_class_name(class_name)[0]
+
+
+def nodeid_from_case(class_name: str, name: str) -> str | None:
+    """Rebuild the pytest nodeid a Jenkins case was split into className + name.
+
+    'pytest.tests.a.test_x.TestY' + 'test_z[1]' -> 'tests/a/test_x.py::TestY::test_z[1]'.
+    None if className does not resolve to a module, same as module_from_class_name.
+    """
+    module, cls = _split_class_name(class_name)
+    if module is None or not name:
+        return None
+    return f"{module}::{cls}::{name}" if cls else f"{module}::{name}"
 
 
 def durations_from_report(report: JenkinsTestReport) -> Durations:
-    """Add up the case durations of a Jenkins test report per module."""
+    """Add up the case durations of a Jenkins test report, per module and per test.
+
+    Also records, per module, the first test actually executed in it - cases
+    arrive in the report in the order pytest ran them, so this is the one that
+    paid any module- or class-scoped fixture setup, see Durations.pivot_test.
+    """
     per_module: dict[str, float] = {}
+    per_test: dict[str, float] = {}
+    pivot_test: dict[str, str] = {}
     test_count = 0
     for suite in report.get("suites", []):
         for case in suite.get("cases", []):
-            module = module_from_class_name(case.get("className", ""))
+            class_name = case.get("className", "")
+            module = module_from_class_name(class_name)
             if module is None:
                 continue
-            per_module[module] = per_module.get(module, 0.0) + (case.get("duration") or 0.0)
+            duration = case.get("duration") or 0.0
+            per_module[module] = per_module.get(module, 0.0) + duration
+            nodeid = nodeid_from_case(class_name, case.get("name", ""))
+            if nodeid is not None:
+                per_test[nodeid] = per_test.get(nodeid, 0.0) + duration
+                pivot_test.setdefault(module, nodeid)
             test_count += 1
-    return Durations(dict(sorted(per_module.items())), test_count)
+    return Durations(
+        per_module=dict(sorted(per_module.items())),
+        per_test=dict(sorted(per_test.items())),
+        pivot_test=pivot_test,
+        test_count=test_count,
+    )
 
 
 def parse_reference(reference: str) -> tuple[str, int]:
@@ -152,22 +210,51 @@ def fetch_durations(reference: str, timeout: int = FETCH_TIMEOUT_SECONDS) -> Dur
     return durations
 
 
-def estimate(modules: dict[str, int], durations: Durations) -> dict[str, float]:
-    """Seconds to expect per module, for the modules actually collected.
+def estimate(items: Iterable[Shardable], durations: Durations) -> dict[str, float]:
+    """Estimate each collected module's runtime from the reference build's durations.
 
-    A module the reference build did not have, typically a test file this change
-    adds, is estimated from its own test count times the mean runtime per test.
+    A module is priced at its recorded total (per_module) when it runs as
+    many tests as the reference build did. When a filter such as a marker
+    selects fewer tests, it is priced at the sum of the selected tests' own
+    durations (per_test) instead.
+
+    A JUnit case's duration includes the setup of module- and class-scoped
+    fixtures, and that cost lands on the first test that used them
+    (pivot_test). If the selection leaves out the pivot test, its duration
+    is added anyway, so the module keeps its fixture cost. This overcharges
+    by the pivot's own test time, which is acceptable for balancing.
+
+    A test without recorded duration (new, or not matched to the report) is
+    estimated at the mean runtime per test. A module without any recorded
+    data (a new file) is estimated as its test count times that mean.
     """
-    # Bound once: dict.get evaluates its default on every lookup, hit or miss.
     mean_per_test = durations.mean_per_test
-    return {
-        module: durations.per_module.get(module, test_count * mean_per_test)
-        for module, test_count in modules.items()
-    }
+    by_module: dict[str, list[Shardable]] = {}
+    for item in items:
+        by_module.setdefault(module_of(item.nodeid), []).append(item)
+
+    historical_counts: dict[str, int] = {}
+    for nodeid in durations.per_test:
+        module = module_of(nodeid)
+        historical_counts[module] = historical_counts.get(module, 0) + 1
+
+    seconds: dict[str, float] = {}
+    for module, module_items in by_module.items():
+        if module not in durations.per_module:
+            seconds[module] = len(module_items) * mean_per_test
+        elif len(module_items) >= historical_counts.get(module, 0):
+            seconds[module] = durations.per_module[module]
+        else:
+            total = sum(durations.per_test.get(item.nodeid, mean_per_test) for item in module_items)
+            pivot = durations.pivot_test.get(module)
+            if pivot is not None and pivot not in {item.nodeid for item in module_items}:
+                total += durations.per_test.get(pivot, 0.0)
+            seconds[module] = total
+    return seconds
 
 
 def assign_modules(
-    modules: dict[str, int], shard_count: int, durations: Durations
+    items: Iterable[Shardable], shard_count: int, durations: Durations
 ) -> dict[str, int]:
     """Map every module to a shard index in [0, shard_count-1].
 
@@ -179,7 +266,7 @@ def assign_modules(
     if shard_count < 1:
         raise ValueError(f"shard_count must be >= 1, got {shard_count}")
 
-    seconds = estimate(modules, durations)
+    seconds = estimate(items, durations)
     ordered = sorted(seconds, key=lambda module: (-seconds[module], module))
 
     load = [0.0] * shard_count
@@ -206,7 +293,7 @@ def select_for_shard[T: Shardable](
     if not 0 <= shard_index < shard_count:
         raise ValueError(f"shard_index {shard_index} out of range for {shard_count} shards")
 
-    assignment = assign_modules(module_test_counts(items), shard_count, durations)
+    assignment = assign_modules(items, shard_count, durations)
     selected = [item for item in items if assignment[module_of(item.nodeid)] == shard_index]
     deselected = [item for item in items if assignment[module_of(item.nodeid)] != shard_index]
     return selected, deselected
@@ -231,8 +318,8 @@ class ShardPlan(NamedTuple):
 def plan(items: Sequence[Shardable], shard_count: int, durations: Durations) -> ShardPlan:
     """Per shard totals, plus the floor more shards can never get below."""
     counts = module_test_counts(items)
-    seconds_per_module = estimate(counts, durations)
-    assignment = assign_modules(counts, shard_count, durations)
+    seconds_per_module = estimate(items, durations)
+    assignment = assign_modules(items, shard_count, durations)
 
     modules = [0] * shard_count
     tests = [0] * shard_count

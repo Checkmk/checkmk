@@ -24,7 +24,6 @@ from cmk.base.modes.check_mk import (
     fake_dns_address,
     FAKE_DNS_OPTION,
     FETCHER_OPTIONS,
-    forced_ip_lookup,
     handle_fetcher_options,
     host_address,
     host_addresses,
@@ -107,15 +106,13 @@ def _mode_dump_agent(
 
     ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_family = ip_lookup_config.default_address_family(hostname)
-    ip_address_of_bare = forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         ip_address_of_bare,
         allow_empty=(),
         error_handler=config.handle_ip_lookup_failure,
     )
-    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
-        ip_lookup_config
-    )
+    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
     with ruleset_matcher.ruleset_optimizer.processed_hosts({hostname}):
         ip_stack_config = ip_lookup_config.ip_stack_config(hostname)
         ipaddress = (
@@ -330,13 +327,11 @@ def _mode_dump_hosts(
     ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
-    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
-        ip_lookup_config
-    )
+    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
 
     all_hosts = {
         hn

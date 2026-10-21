@@ -20,7 +20,6 @@ from cmk.base.core import interface as core_interface
 from cmk.base.modes.check_mk import (
     fake_dns_address,
     FAKE_DNS_OPTION,
-    forced_ip_lookup,
     host_addresses,
     load_checks,
 )
@@ -118,7 +117,7 @@ def _mode_dump_nagios_config(
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         default_address_family=ip_lookup_config.default_address_family,
         ip_address_of=ip_lookup.ConfiguredIPLookup(
-            forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            ip_lookup.make_lookup_ip_address(ip_lookup_config),
             allow_empty=hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         ),
@@ -216,7 +215,7 @@ def _mode_update(
 
     ip_lookup_config = loading_result.config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
@@ -256,8 +255,7 @@ def _mode_update(
                 get_ip_stack_config=ip_lookup_config.ip_stack_config,
                 default_address_family=ip_lookup_config.default_address_family,
                 ip_address_of=ip_address_of,
-                ip_address_of_mgmt=forced_ip_lookup()
-                or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+                ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
                 hosts_to_update=None,
                 service_depends_on=config.ServiceDependsOn(
                     tag_list=loading_result.host_tags.tag_list,
@@ -347,13 +345,11 @@ def _mode_restart(
     ip_lookup_config = loading_result.config_cache.ip_lookup_config(fake_dns=fake_dns)
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
-        ip_lookup_config
-    )
+    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
     passive_service_name_config = loading_result.config_cache.make_passive_service_name_config(
         final_service_name_config
@@ -471,13 +467,11 @@ def _mode_reload(
     ip_lookup_config = loading_result.config_cache.ip_lookup_config(fake_dns=fake_dns)
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
-        ip_lookup_config
-    )
+    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
     passive_service_name_config = loading_result.config_cache.make_passive_service_name_config(
         final_service_name_config

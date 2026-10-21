@@ -32,11 +32,11 @@ from cmk.base.modes.check_mk import (
     fake_dns_address,
     FAKE_DNS_OPTION,
     FETCHER_OPTIONS,
-    forced_ip_lookup,
     get_plugins_option,
     handle_fetcher_options,
     InventoryOptions,
     load_checks,
+    mandatory_ip_lookup,
     option_detect_plugins,
     option_sections,
     parse_snmp_backend,
@@ -144,7 +144,7 @@ def _mode_inventory(
     )
     ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -225,10 +225,8 @@ def _mode_inventory(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mandatory=forced_ip_lookup()
-            or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-            ip_address_of_mgmt=forced_ip_lookup()
-            or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+            ip_address_of_mandatory=mandatory_ip_lookup(options, ip_lookup_config),
+            ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=(
                 FetchMode.INVENTORY
                 if selected_sections is NO_SELECTION
@@ -417,7 +415,7 @@ def _mode_inventorize_marked_hosts(
     )  # not obvious to me why/if we *really* need this
     ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -466,10 +464,8 @@ def _mode_inventorize_marked_hosts(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=forced_ip_lookup()
-        or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        ip_address_of_mgmt=forced_ip_lookup()
-        or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+        ip_address_of_mandatory=mandatory_ip_lookup(options, ip_lookup_config),
+        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         simulation_mode=loaded_config.simulation_mode,
         secrets_config_relay=StoredSecrets(

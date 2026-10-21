@@ -45,7 +45,6 @@ from cmk.base.modes.check_mk import (
     fake_dns_address,
     FAKE_DNS_OPTION,
     FETCHER_OPTIONS,
-    forced_ip_lookup,
     get_plugins_option,
     handle_fetcher_options,
     host_address,
@@ -174,7 +173,7 @@ def _mode_check_discovery(
         )
         ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
         ip_address_of = ip_lookup.ConfiguredIPLookup(
-            forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            ip_lookup.make_lookup_ip_address(ip_lookup_config),
             allow_empty=hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         )
@@ -216,8 +215,7 @@ def _mode_check_discovery(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mgmt=forced_ip_lookup()
-            or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+            ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=FetchMode.DISCOVERY,
             simulation_mode=loaded_config.simulation_mode,
             max_cachefile_age=MaxAge(
@@ -446,7 +444,7 @@ def _mode_discover(
     )
     ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -535,8 +533,7 @@ def _mode_discover(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mgmt=forced_ip_lookup()
-            or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+            ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=(
                 FetchMode.DISCOVERY
                 if selected_sections is NO_SELECTION

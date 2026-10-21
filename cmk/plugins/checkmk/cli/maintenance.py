@@ -16,7 +16,6 @@ from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.modes.check_mk import (
     fake_dns_address,
     FAKE_DNS_OPTION,
-    forced_ip_lookup,
     host_addresses,
     load_checks,
 )
@@ -55,10 +54,7 @@ def _mode_update_dns_cache(
             if config_cache.is_active(hn) and config_cache.is_online(hn)
         ),
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
-        lookup_ip_address=(
-            forced_ip_lookup()  # this makes little sense.
-            or ip_lookup.make_lookup_ip_address(ip_lookup_config)
-        ),
+        lookup_ip_address=(ip_lookup.make_lookup_ip_address(ip_lookup_config)),
     )
     return ExitCode.SUCCESS
 

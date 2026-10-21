@@ -17,7 +17,6 @@ from cmk.base import config
 from cmk.base.modes.check_mk import (
     fake_dns_address,
     FAKE_DNS_OPTION,
-    forced_ip_lookup,
     parse_snmp_backend,
     SNMP_BACKEND_OPTION,
 )
@@ -241,7 +240,7 @@ def _mode_snmpwalk(
 
     config_cache = config.load(validate_hosts=True).config_cache
     ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
-    ip_address_of = forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_address_of = ip_lookup.make_lookup_ip_address(ip_lookup_config)
 
     for hostname in (HostName(hn) for hn in hostnames):
         if ip_lookup_config.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
@@ -343,7 +342,7 @@ def _mode_snmpget(
     hosts_config = loading_result.hosts_config
 
     ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
-    ip_address_of = forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_address_of = ip_lookup.make_lookup_ip_address(ip_lookup_config)
     oid, *hostnames = args
 
     if not hostnames:

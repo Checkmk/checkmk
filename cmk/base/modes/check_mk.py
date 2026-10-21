@@ -137,8 +137,6 @@ def load_checks() -> AgentBasedPlugins:
 #   | things and used by the most of the modes.                            |
 #   '----------------------------------------------------------------------'
 
-_enforce_localhost = False
-
 
 def parse_snmp_backend(backend: object) -> SNMPBackendEnum | None:
     match backend:
@@ -177,10 +175,12 @@ def state_exit_code(state: ServiceState) -> ExitCode:
             return ExitCode.UNKNOWN
 
 
-def forced_ip_lookup() -> ip_lookup.IPLookup | None:
-    if _enforce_localhost:
-        return ip_lookup.local_ip_for
-    return None
+def mandatory_ip_lookup(
+    options: Mapping[str, object], ip_lookup_config: ip_lookup.IPLookupConfig
+) -> ip_lookup.IPLookup | None:
+    if options.get("usewalk", False):
+        return None
+    return ip_lookup.make_lookup_ip_address(ip_lookup_config)
 
 
 # .
@@ -225,10 +225,6 @@ def handle_fetcher_options(
         file_cache_options = dataclasses.replace(
             file_cache_options, disabled=False, use_outdated=True, use_only_cache=True
         )
-
-    if options.get("usewalk", False):
-        global _enforce_localhost
-        _enforce_localhost = True
 
     return file_cache_options
 
@@ -462,7 +458,7 @@ def run_checking(
 
     ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -546,10 +542,8 @@ def run_checking(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mandatory=forced_ip_lookup()
-            or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-            ip_address_of_mgmt=forced_ip_lookup()
-            or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+            ip_address_of_mandatory=mandatory_ip_lookup(options, ip_lookup_config),
+            ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=(
                 FetchMode.CHECKING
                 if selected_sections is NO_SELECTION

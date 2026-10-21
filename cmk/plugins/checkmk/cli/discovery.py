@@ -172,9 +172,9 @@ def _mode_check_discovery(
             label_manager.labels_of_host,
             loaded_config.discovery_parameters,
         )
-        ip_lookup_config = config_cache.ip_lookup_config()
+        ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
         ip_address_of = ip_lookup.ConfiguredIPLookup(
-            forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
             allow_empty=hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         )
@@ -216,7 +216,7 @@ def _mode_check_discovery(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mgmt=forced_ip_lookup(fake_dns)
+            ip_address_of_mgmt=forced_ip_lookup()
             or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=FetchMode.DISCOVERY,
             simulation_mode=loaded_config.simulation_mode,
@@ -444,9 +444,9 @@ def _mode_discover(
         plugins.check_plugins,
         label_manager.labels_of_service,
     )
-    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -535,7 +535,7 @@ def _mode_discover(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mgmt=forced_ip_lookup(fake_dns)
+            ip_address_of_mgmt=forced_ip_lookup()
             or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=(
                 FetchMode.DISCOVERY

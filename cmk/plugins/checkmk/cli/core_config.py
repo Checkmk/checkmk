@@ -63,7 +63,7 @@ def _mode_dump_nagios_config(
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = loading_result.hosts_config
 
-    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
 
     hostnames = args if args else None
 
@@ -118,7 +118,7 @@ def _mode_dump_nagios_config(
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         default_address_family=ip_lookup_config.default_address_family,
         ip_address_of=ip_lookup.ConfiguredIPLookup(
-            forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
             allow_empty=hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         ),
@@ -214,9 +214,9 @@ def _mode_update(
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = loading_result.hosts_config
 
-    ip_lookup_config = loading_result.config_cache.ip_lookup_config()
+    ip_lookup_config = loading_result.config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
@@ -256,7 +256,7 @@ def _mode_update(
                 get_ip_stack_config=ip_lookup_config.ip_stack_config,
                 default_address_family=ip_lookup_config.default_address_family,
                 ip_address_of=ip_address_of,
-                ip_address_of_mgmt=forced_ip_lookup(fake_dns)
+                ip_address_of_mgmt=forced_ip_lookup()
                 or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
                 hosts_to_update=None,
                 service_depends_on=config.ServiceDependsOn(
@@ -344,14 +344,14 @@ def _mode_restart(
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = loading_result.hosts_config
 
-    ip_lookup_config = loading_result.config_cache.ip_lookup_config()
+    ip_lookup_config = loading_result.config_cache.ip_lookup_config(fake_dns=fake_dns)
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    ip_address_of_mgmt = forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_mgmt_board_ip_address(
+    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
         ip_lookup_config
     )
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
@@ -468,14 +468,14 @@ def _mode_reload(
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = loading_result.hosts_config
 
-    ip_lookup_config = loading_result.config_cache.ip_lookup_config()
+    ip_lookup_config = loading_result.config_cache.ip_lookup_config(fake_dns=fake_dns)
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    ip_address_of_mgmt = forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_mgmt_board_ip_address(
+    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
         ip_lookup_config
     )
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)

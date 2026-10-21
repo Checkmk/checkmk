@@ -47,7 +47,7 @@ def _mode_update_dns_cache(
     loading_result = config.load(validate_hosts=True)
     config_cache = loading_result.config_cache
     hosts_config = loading_result.hosts_config
-    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_lookup.update_dns_cache(
         hosts=(
             hn
@@ -56,7 +56,7 @@ def _mode_update_dns_cache(
         ),
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         lookup_ip_address=(
-            forced_ip_lookup(fake_dns)  # this makes little sense.
+            forced_ip_lookup()  # this makes little sense.
             or ip_lookup.make_lookup_ip_address(ip_lookup_config)
         ),
     )

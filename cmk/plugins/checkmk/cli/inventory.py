@@ -142,9 +142,9 @@ def _mode_inventory(
         plugins.check_plugins,
         label_manager.labels_of_service,
     )
-    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -225,9 +225,9 @@ def _mode_inventory(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mandatory=forced_ip_lookup(fake_dns)
+            ip_address_of_mandatory=forced_ip_lookup()
             or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-            ip_address_of_mgmt=forced_ip_lookup(fake_dns)
+            ip_address_of_mgmt=forced_ip_lookup()
             or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=(
                 FetchMode.INVENTORY
@@ -415,9 +415,9 @@ def _mode_inventorize_marked_hosts(
         plugins.check_plugins,
         label_manager.labels_of_service,
     )  # not obvious to me why/if we *really* need this
-    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -466,9 +466,9 @@ def _mode_inventorize_marked_hosts(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=forced_ip_lookup(fake_dns)
+        ip_address_of_mandatory=forced_ip_lookup()
         or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        ip_address_of_mgmt=forced_ip_lookup(fake_dns)
+        ip_address_of_mgmt=forced_ip_lookup()
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         simulation_mode=loaded_config.simulation_mode,

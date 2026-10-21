@@ -177,9 +177,7 @@ def state_exit_code(state: ServiceState) -> ExitCode:
             return ExitCode.UNKNOWN
 
 
-def forced_ip_lookup(fake_dns: HostAddress | None) -> ip_lookup.IPLookup | None:
-    if fake_dns is not None:
-        return lambda hn, family: fake_dns  # noqa: ARG005
+def forced_ip_lookup() -> ip_lookup.IPLookup | None:
     if _enforce_localhost:
         return ip_lookup.local_ip_for
     return None
@@ -462,9 +460,9 @@ def run_checking(
     if len(args) == 2:
         ipaddress = HostAddress(args[1])
 
-    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -548,9 +546,9 @@ def run_checking(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mandatory=forced_ip_lookup(fake_dns)
+            ip_address_of_mandatory=forced_ip_lookup()
             or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-            ip_address_of_mgmt=forced_ip_lookup(fake_dns)
+            ip_address_of_mgmt=forced_ip_lookup()
             or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=(
                 FetchMode.CHECKING

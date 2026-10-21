@@ -1349,7 +1349,7 @@ class ConfigCache:
             host_name, self._loaded_config.datasource_programs, self.label_manager.labels_of_host
         )
 
-    def ip_lookup_config(self) -> ip_lookup.IPLookupConfig:
+    def ip_lookup_config(self, *, fake_dns: HostAddress | None = None) -> ip_lookup.IPLookupConfig:
         return ip_lookup.IPLookupConfig(
             ip_stack_config=self.ip_stack_config,
             is_snmp_host=lambda host_name: self.computed_datasources(host_name).is_snmp,
@@ -1361,9 +1361,12 @@ class ConfigCache:
             management_address=self.management_address,
             is_dyndns_host=self.is_dyndns_host,
             simulation_mode=self._loaded_config.simulation_mode,
-            fake_dns=None
-            if self._loaded_config.fake_dns is None
-            else HostAddress(self._loaded_config.fake_dns),
+            fake_dns=fake_dns
+            or (
+                None
+                if self._loaded_config.fake_dns is None
+                else HostAddress(self._loaded_config.fake_dns)
+            ),
             use_dns_cache=self._loaded_config.use_dns_cache,
             ipv4_addresses=self._loaded_config.ipaddresses,
             ipv6_addresses=self._loaded_config.ipv6addresses,

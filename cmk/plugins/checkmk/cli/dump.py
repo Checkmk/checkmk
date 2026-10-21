@@ -105,17 +105,15 @@ def _mode_dump_agent(
     relay_id = config.get_relay_id(host_labels)
     fetcher_trigger = app.make_fetcher_trigger(relay_id, cmk.utils.paths.trusted_ca_file)
 
-    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_family = ip_lookup_config.default_address_family(hostname)
-    ip_address_of_bare = forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(
-        ip_lookup_config
-    )
+    ip_address_of_bare = forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         ip_address_of_bare,
         allow_empty=(),
         error_handler=config.handle_ip_lookup_failure,
     )
-    ip_address_of_mgmt = forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_mgmt_board_ip_address(
+    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
         ip_lookup_config
     )
     with ruleset_matcher.ruleset_optimizer.processed_hosts({hostname}):
@@ -329,14 +327,14 @@ def _mode_dump_hosts(
     config_cache = loading_result.config_cache
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = loading_result.hosts_config
-    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
-    ip_address_of_mgmt = forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_mgmt_board_ip_address(
+    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
         ip_lookup_config
     )
 

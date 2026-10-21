@@ -25,7 +25,7 @@ import cmk.base.configlib.fetchers
 import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.base import config, notify
-from cmk.base.config import ConfigCache, EnforcedServicesTable
+from cmk.base.config import ConfigCache, EnforcedServicesTable, make_host_tags, make_hosts_config
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.labels import LabelConfig
 from cmk.base.configlib.loaded_config import BaseConfig, CustomCheck
@@ -323,6 +323,36 @@ def test_is_ipv4v6_host(
     ts.add_host(hostname, tags)
     ip_lookup_config = ts.apply(monkeypatch).config_cache.ip_lookup_config()
     assert (ip_lookup_config.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK) is result
+
+
+def _config_cache_of(loaded_config: BaseConfig) -> ConfigCache:
+    hosts_config = make_hosts_config(loaded_config)
+    return ConfigCache(
+        loaded_config,
+        hosts_config,
+        make_host_tags(loaded_config, hosts_config),
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+        builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+    )
+
+
+def test_the_configured_fake_dns_address_is_looked_up() -> None:
+    ip_lookup_config = _config_cache_of(BaseConfig(fake_dns="10.0.0.1")).ip_lookup_config()
+
+    assert make_lookup_ip_address(ip_lookup_config)(
+        HostName("testhost"), socket.AddressFamily.AF_INET
+    ) == HostAddress("10.0.0.1")
+
+
+def test_a_given_fake_dns_address_wins_over_the_configured_one() -> None:
+    ip_lookup_config = _config_cache_of(BaseConfig(fake_dns="10.0.0.1")).ip_lookup_config(
+        fake_dns=HostAddress("10.0.0.2")
+    )
+
+    assert make_lookup_ip_address(ip_lookup_config)(
+        HostName("testhost"), socket.AddressFamily.AF_INET
+    ) == HostAddress("10.0.0.2")
 
 
 def _assert_not_called(*args: object) -> NoReturn:

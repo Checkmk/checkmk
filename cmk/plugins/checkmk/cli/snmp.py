@@ -240,8 +240,8 @@ def _mode_snmpwalk(
         raise MKBailOut("Please specify host names to walk on.")
 
     config_cache = config.load(validate_hosts=True).config_cache
-    ip_lookup_config = config_cache.ip_lookup_config()
-    ip_address_of = forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
+    ip_address_of = forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
 
     for hostname in (HostName(hn) for hn in hostnames):
         if ip_lookup_config.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
@@ -342,8 +342,8 @@ def _mode_snmpget(
     config_cache = loading_result.config_cache
     hosts_config = loading_result.hosts_config
 
-    ip_lookup_config = config_cache.ip_lookup_config()
-    ip_address_of = forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
+    ip_address_of = forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
     oid, *hostnames = args
 
     if not hostnames:

@@ -24,6 +24,7 @@ import {
   graph_export,
   pagetype_add_to_container
 } from '@/modules/popup_menu'
+import { close_popup as close_quicksearch_popup, on_search_click } from '@/modules/quicksearch'
 import { toggle_all_rows } from '@/modules/selection'
 import { start as start_service_discovery } from '@/modules/service_discovery'
 import {
@@ -111,6 +112,16 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
   pagetype_add_to_container: closing_dropdown((_element, options) =>
     pagetype_add_to_container(options.page_type, options.page_name)
   ),
+  quicksearch_close_popup: () => {
+    close_quicksearch_popup()
+    // Clicks on the search results have to be followed
+    return true
+  },
+  quicksearch_search: () => {
+    on_search_click()
+    // The button is inside the search field container, which closed the popup afterwards
+    close_quicksearch_popup()
+  },
   randomize_secret: (_element, options) =>
     randomize_secret(options.id, options.length, options.message),
   reload_page: () => location.reload(),

@@ -84,7 +84,17 @@ def test_show_renders_and_registers_the_search_field(load_config: Config) -> Non
     assert 'id="mk_side_search_field"' in rendered
     assert 'data-cmk_call_ts_function="register_search_field"' in rendered
     assert "mk_side_search_field" in rendered
-    assert "cmk.quicksearch.on_search_click();" in rendered
+
+
+@pytest.mark.usefixtures("patch_theme")
+def test_show_uses_click_actions_instead_of_inline_handlers(load_config: Config) -> None:
+    with output_funnel.plugged():
+        QuicksearchSnapin().show(load_config)
+        rendered = output_funnel.drain()
+
+    assert "onclick" not in rendered
+    assert 'data-cmk_on_click="quicksearch_close_popup"' in rendered
+    assert 'data-cmk_on_click="quicksearch_search"' in rendered
 
 
 def test_build_quicksearch_manager_takes_the_limits_from_the_config(load_config: Config) -> None:

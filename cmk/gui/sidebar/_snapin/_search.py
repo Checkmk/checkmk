@@ -10,7 +10,7 @@ import cmk.livestatus_client as livestatus
 from cmk.ccc.exceptions import MKException, MKGeneralException
 from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -61,13 +61,15 @@ class QuicksearchSnapin(SidebarSnapin):
     @override
     def show(self, config: Config) -> None:
         id_ = "mk_side_search_field"
-        html.open_div(id_="mk_side_search", onclick="cmk.quicksearch.close_popup();")
+        html.open_div(
+            id_="mk_side_search", **ClickAction(action="quicksearch_close_popup").data_attributes()
+        )
         html.input(id_=id_, type_="text", name="search", autocomplete="off")
         html.icon_button(
             "#",
             _("Search"),
             StaticIcon(IconNames.quicksearch),
-            onclick="cmk.quicksearch.on_search_click();",
+            click_action=ClickAction(action="quicksearch_search"),
         )
         html.close_div()
         html.div("", id_="mk_side_clear")

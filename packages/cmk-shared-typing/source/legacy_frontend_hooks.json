@@ -110,6 +110,8 @@
         "page_menu_toggle_popup",
         "page_menu_toggle_suggestions",
         "pagetype_add_to_container",
+        "quicksearch_close_popup",
+        "quicksearch_search",
         "randomize_secret",
         "reload_page",
         "service_discovery_start",

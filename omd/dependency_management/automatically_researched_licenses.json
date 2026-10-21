@@ -2372,6 +2372,7 @@
   "pkg:pypi/cachetools@6.2.6": "MIT",
   "pkg:pypi/certifi@2023.11.17": "MPL-2.0",
   "pkg:pypi/certifi@2026.1.4": "MPL-2.0",
+  "pkg:pypi/certifi@2026.10.19": "MPL-2.0",
   "pkg:pypi/certifi@2026.5.20": "MPL-2.0",
   "pkg:pypi/certifi@2026.6.17": "MPL-2.0",
   "pkg:pypi/certifi@2026.7.22": "MPL-2.0",

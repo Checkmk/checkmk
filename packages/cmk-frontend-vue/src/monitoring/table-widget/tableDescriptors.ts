@@ -19,14 +19,41 @@ export interface MonitoringTableRows {
   hosts: HostEntry
 }
 
+export interface MonitoringTableColumn {
+  id: string
+  title: string
+  sortable: boolean
+  shownByDefault: boolean
+}
+
 export abstract class MonitoringTableDescriptor<T> {
   abstract readonly rowComponent: Component
+
+  /** The columns the backend offers for this table, in the order the row renders them. */
+  abstract readonly columnIds: readonly string[]
 
   protected abstract allColumns(): ColumnDef<T>[]
 
   abstract rowKey(row: T): string
 
   abstract truncatedHint(shown: number, matched: number): string
+
+  catalog(): MonitoringTableColumn[] {
+    const byId = new Map(this.allColumns().map((column) => [columnId(column), column]))
+    return this.columnIds.flatMap((id) => {
+      const column = byId.get(id)
+      return column
+        ? [
+            {
+              id,
+              title: typeof column.header === 'string' ? column.header : id,
+              sortable: column.enableSorting !== false,
+              shownByDefault: !column.meta?.hidden
+            }
+          ]
+        : []
+    })
+  }
 
   columns(ids: readonly string[]): ColumnDef<T>[] {
     const byId = new Map(this.allColumns().map((column) => [columnId(column), column]))
@@ -39,6 +66,29 @@ export abstract class MonitoringTableDescriptor<T> {
 
 export class HostsTableDescriptor extends MonitoringTableDescriptor<HostEntry> {
   readonly rowComponent: Component = HostRow
+
+  readonly columnIds = [
+    'state',
+    'modes',
+    'name',
+    'alias',
+    'address',
+    'folder',
+    'site_id',
+    'last_check',
+    'last_state_change',
+    'labels',
+    'tags',
+    'contacts',
+    'contact_groups',
+    'num_services',
+    'num_services_ok',
+    'num_services_warn',
+    'num_services_crit',
+    'num_services_unknown',
+    'num_services_pending',
+    'customer'
+  ]
 
   protected allColumns(): ColumnDef<HostEntry>[] {
     return buildHostColumns({

@@ -49,6 +49,12 @@ const SORTABLE_COLUMNS = [
 ]
 
 describe('HostsTableDescriptor', () => {
+  it('offers exactly the columns the backend offers for the hosts table', () => {
+    const offered = new HostsTableDescriptor().catalog().map((column) => column.id)
+
+    expect(offered).toEqual(HOST_TABLE_COLUMNS)
+  })
+
   it('renders every column the backend offers for the hosts table', () => {
     const rendered = new HostsTableDescriptor().columns(HOST_TABLE_COLUMNS).map(columnId)
 

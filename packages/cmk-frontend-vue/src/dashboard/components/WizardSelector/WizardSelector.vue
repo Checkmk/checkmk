@@ -22,6 +22,7 @@ import EventsWizard from '../Wizard/wizards/events/EventsWizard.vue'
 import HostsSiteWizard from '../Wizard/wizards/hosts-site/HostsSiteWizard.vue'
 import HwSwInventoryWizard from '../Wizard/wizards/hw_sw_inventory/HwSwInventoryWizard.vue'
 import MetricsWizard from '../Wizard/wizards/metrics/MetricsWizard.vue'
+import MonitoringTableWizard from '../Wizard/wizards/monitoring-table/MonitoringTableWizard.vue'
 import NtopWizard from '../Wizard/wizards/ntop/NtopWizard.vue'
 import OtherWizard from '../Wizard/wizards/other/OtherWizard.vue'
 import ServicesOverviewWizard from '../Wizard/wizards/services/ServicesOverviewWizard.vue'
@@ -149,6 +150,18 @@ const handleAddEditWidget = (
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         :dashboard-features="dashboardFeatures"
+        @go-back="handleGoBack"
+        @close="handleClose"
+        @add-widget="handleAddEditWidget"
+      />
+
+      <MonitoringTableWizard
+        v-if="selectedWizard === 'view'"
+        :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
+        :context-filters="contextFilters"
+        :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
         @close="handleClose"
         @add-widget="handleAddEditWidget"

@@ -98,8 +98,7 @@ export function getDashboardWidgetWorkflows({
         view: {
           title: _t('View'),
           subtitle: _t('Embed new views (from 3.0)'),
-          icon: 'view',
-          unavailableReason: _t('Not available yet.')
+          icon: 'view'
         }
       }
     },
@@ -148,6 +147,7 @@ export function getDashboardWidgetWorkflows({
 export const DASHBOARD_WIDGET_WORKFLOW_KEYS = [
   'metrics_graphs',
   'link_custom_graph',
+  'view',
   'classic_view',
   'host_site_overview',
   'service_overview',

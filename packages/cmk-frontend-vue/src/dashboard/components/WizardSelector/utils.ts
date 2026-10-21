@@ -79,7 +79,7 @@ export function widgetTypeToSelectorMatcher(
     }
 
     case 'monitoring_table': {
-      return null
+      return 'view'
     }
 
     default: {
@@ -94,7 +94,7 @@ export function wizardSlideInSize(wizard: string): 'small' | 'medium' | 'large' 
   if (['other', 'ntop'].includes(wizard)) {
     return 'small'
   }
-  if (wizard === 'classic_view') {
+  if (['view', 'classic_view'].includes(wizard)) {
     return 'large'
   }
   return 'medium'

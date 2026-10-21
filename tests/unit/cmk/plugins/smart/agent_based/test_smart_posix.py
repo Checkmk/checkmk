@@ -61,3 +61,13 @@ def test_parse_missing_tresh_ata_attributes() -> None:
         ]
     ]
     parse_smart_posix(string_table)
+
+
+def test_parse_pending_defect_count_prefix() -> None:
+    """smartctl bug: the prefix is printed to stdout even in JSON mode"""
+    string_table = [
+        [
+            """Pending defect count:{"json_format_version":[1,0],"smartctl":{"version":[7,2],"svn_revision":"5155","platform_info":"x86_64-linux-5.14.0-687.22.1.el9_8.x86_64","build_info":"(local build)","argv":["smartctl","--all","--json=c","/dev/bus/0","-d","megaraid,3"],"exit_status":0},"device":{"name":"/dev/bus/0","info_name":"/dev/bus/0 [megaraid_disk_03]","type":"megaraid,3","protocol":"SCSI"},"vendor":"SEAGATE","product":"ST8000NM024B","model_name":"SEAGATE ST8000NM024B","revision":"LS0E","scsi_version":"SPC-5","serial_number":"XXX","device_type":{"scsi_value":0,"name":"disk"},"smart_status":{"passed":true},"temperature":{"current":25,"drive_trip":60},"power_on_time":{"hours":11537,"minutes":31},"pending_defects":{"count":0}}"""
+        ],
+    ]
+    assert list(parse_smart_posix(string_table).devices) == ["SEAGATE ST8000NM024B XXX"]

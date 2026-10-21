@@ -174,6 +174,7 @@ class UnixSingleDirectoryKeeper:
         LogicalPath.VAR: RUNTIME_SUBDIR,
     }
     ACCESSIBLE_FOR_OTHERS = 0o755
+    TRAVERSABLE_FOR_OTHERS = 0o751
     FORBIDDEN_FOR_OTHERS = 0o750
 
     def __init__(self, install_dir: str, package_name: str):
@@ -196,13 +197,17 @@ class UnixSingleDirectoryKeeper:
         (package_dir / "config").mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True)
         (package_dir / "scripts").mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True)
 
-        runtime_dir.mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True)
+        # mk-job runs as an arbitrary user and writes to runtime/job/<user>.
+        runtime_dir.mkdir(mode=self.TRAVERSABLE_FOR_OTHERS, exist_ok=True, parents=True)
         (runtime_dir / "log").mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True)
         (runtime_dir / "spool").mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True)
-        (runtime_dir / "job").mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True)
+        (runtime_dir / "job").mkdir(mode=self.TRAVERSABLE_FOR_OTHERS, exist_ok=True, parents=True)
         (runtime_dir / "controller").mkdir(
             mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True
         )
+        # The agent and its plug-ins would otherwise create these on demand, readable for others.
+        for subdir in ("cache", "logwatch-batches", "persisted", "rtc_remotes", "tmp"):
+            (runtime_dir / subdir).mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True)
 
     def get_target_path(self, logical_path: LogicalPath) -> Path:
         match logical_path:

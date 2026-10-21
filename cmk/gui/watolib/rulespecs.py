@@ -10,6 +10,7 @@
 """The rulespecs are the ruleset specifications registered to Setup."""
 
 import abc
+import dataclasses
 import re
 import sys
 from collections.abc import Callable, Mapping, Sequence
@@ -20,6 +21,7 @@ import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Edition, edition
 from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.unstable.legacy_converter import resolve_help_text, resolve_title
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FSTuple
 from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
@@ -55,9 +57,10 @@ from cmk.gui.valuespec import (
 )
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, SingleChoiceExtended
-from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec
 from cmk.rulesets.v1.form_specs import FixedValue as FSFixedValue
+from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.utils import paths
 from cmk.utils.timeperiod import TIMESPECIFIC_DEFAULT_KEY, TIMESPECIFIC_VALUES_KEY
 from cmk.web.utils.doc_references import DocReference
@@ -1083,6 +1086,33 @@ def _wrap_form_spec_in_timespecific[ModelT](
     return wrapped
 
 
+# An enforced service is configured as (check type, item, parameters).
+_ENFORCED_SERVICE_ITEM_INDEX: Final = 1
+
+
+def _validate_enforced_service_item(value: tuple[object, ...], varprefix: str) -> None:
+    """Validate the item of the enforced service the whole rule value configures"""
+    if value[_ENFORCED_SERVICE_ITEM_INDEX] == "":
+        raise MKUserError(
+            f"{varprefix}_{_ENFORCED_SERVICE_ITEM_INDEX}",
+            _(
+                "The item must not be empty. Only check plug-ins that have no item at "
+                "all can be enforced without one."
+            ),
+        )
+
+
+def _validate_item_is_not_empty(value: object) -> None:
+    """Validate the item of an enforced service on its own form spec"""
+    if value == "":
+        raise ValidationError(
+            Message(
+                "The item must not be empty. Only check plug-ins that have no item at "
+                "all can be enforced without one."
+            )
+        )
+
+
 class ManualCheckParameterRulespec(HostRulespec):
     """Base class for all rulespecs managing manually configured checks
 
@@ -1184,6 +1214,7 @@ class ManualCheckParameterRulespec(HostRulespec):
                 self._get_item_valuespec(),
                 parameter_vs,
             ],
+            validate=_validate_enforced_service_item,
         )
 
     def _get_item_valuespec(self) -> ValueSpec:
@@ -1232,7 +1263,14 @@ class ManualCheckParameterRulespec(HostRulespec):
                 value=None,
                 label=Label(""),
             )
-        return form_spec()
+        item_form_spec = form_spec()
+        return dataclasses.replace(
+            item_form_spec,
+            custom_validate=(
+                *(item_form_spec.custom_validate or ()),
+                _validate_item_is_not_empty,
+            ),
+        )
 
 
 def _get_check_type_group_choice(

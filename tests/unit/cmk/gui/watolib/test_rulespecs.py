@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="comparison-overlap"
 
+from collections.abc import Callable, Sequence
 from functools import partial
 from typing import override
 
@@ -12,9 +13,11 @@ import pytest
 from pytest import MonkeyPatch
 
 import cmk.gui.watolib.rulespecs
+from cmk.checkengine.plugins import CheckPluginName
 from cmk.gui import hooks
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
@@ -23,7 +26,7 @@ from cmk.gui.plugins.wato.utils import TimeperiodValuespec
 from cmk.gui.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.search.matchers import MatchItem, MatchItemConfig
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
+from cmk.gui.valuespec import Dictionary, FixedValue, TextInput, ValueSpec
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.rule_match_item_generator import MatchItemGeneratorRules
 from cmk.gui.watolib.rulespecs import (
@@ -33,6 +36,7 @@ from cmk.gui.watolib.rulespecs import (
     HostRulespec,
     main_module_from_rulespec_group_name,
     ManualCheckParameterRulespec,
+    Rulespec,
     rulespec_group_registry,
     RulespecGroup,
     RulespecGroupRegistry,
@@ -40,7 +44,8 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
 )
 from cmk.rulesets.v1 import Help, Title
-from cmk.rulesets.v1.form_specs import FormSpec, Integer
+from cmk.rulesets.v1.form_specs import FormSpec, Integer, String
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 
 def test_rulespec_sub_group() -> None:
@@ -648,3 +653,94 @@ def test_manual_check_parameter_value_model_does_not_need_a_valuespec() -> None:
 
     assert isinstance(parameter_value_model, TimeSpecific)
     assert parameter_value_model.parameter_form is form_spec
+
+
+@pytest.fixture(name="known_check_plugin")
+def fixture_known_check_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Let the "Check type" element know one plug-in of "some_check_group" """
+    monkeypatch.setattr(
+        cmk.gui.watolib.rulespecs,
+        "get_check_information_cached",
+        lambda **_kwargs: {
+            CheckPluginName("some_check"): {"title": "Some check", "group": "some_check_group"}
+        },
+    )
+
+
+def _enforced_service_rulespec(item_spec: Callable[[], ValueSpec[str]] | None) -> Rulespec:
+    return ManualCheckParameterRulespec(
+        group=_CheckParametersGroup,
+        check_group_name="some_check_group",
+        parameter_valuespec=lambda: FixedValue(value=None, totext=""),
+        item_spec=item_spec,
+    )
+
+
+# as permissive as the item valuespec of a check plug-in may be
+def _permissive_item_spec() -> ValueSpec[str]:
+    return TextInput(title="Item", allow_empty=True)
+
+
+@pytest.mark.parametrize(
+    ["value"],
+    [
+        pytest.param(("some_check", "an item", None), id="item is accepted"),
+        pytest.param(("some_check", None, None), id="no item is accepted"),
+    ],
+)
+@pytest.mark.usefixtures("known_check_plugin", "request_context")
+def test_enforced_service_item(
+    value: tuple[str, str | None, str | None],
+) -> None:
+    valuespec = _enforced_service_rulespec(_permissive_item_spec).valuespec
+    valuespec.validate_value(value, "rule")
+
+
+@pytest.mark.usefixtures("known_check_plugin", "request_context")
+def test_enforded_service_item_validation() -> None:
+    valuespec = _enforced_service_rulespec(_permissive_item_spec).valuespec
+
+    with pytest.raises(MKUserError, match="must not be empty") as excinfo:
+        valuespec.validate_value(("some_check", "", None), "rule")
+        assert excinfo.value.varname == "rule_1"
+
+
+def _enforced_service_form_spec_rulespec() -> Rulespec:
+    return ManualCheckParameterRulespec(
+        group=_CheckParametersGroup,
+        check_group_name="some_check_group",
+        form_spec_definition=FormSpecDefinition(
+            lambda: Integer(title=Title("Parameters")),
+            lambda: String(title=Title("Item")),
+        ),
+    )
+
+
+def _validate_as_form_spec(
+    rulespec: Rulespec, value: object
+) -> Sequence[shared_type_defs.ValidationMessage]:
+    visitor = get_visitor(
+        rulespec.form_spec, VisitorOptions(migrate_values=False, mask_values=False)
+    )
+    return visitor.validate(RawDiskData(value))
+
+
+@pytest.mark.usefixtures("known_check_plugin", "request_context")
+def test_enforced_service_with_an_empty_item_is_rejected_by_the_form_spec() -> None:
+    rulespec = _enforced_service_form_spec_rulespec()
+
+    errors = _validate_as_form_spec(rulespec, ("some_check", "", 1))
+
+    assert [(error.location, str(error.message)) for error in errors] == [
+        (
+            ["1"],
+            "The item must not be empty. Only check plug-ins that have no item at all can be enforced without one.",
+        )
+    ]
+
+
+@pytest.mark.usefixtures("known_check_plugin", "request_context")
+def test_enforced_service_with_an_item_is_accepted_by_the_form_spec() -> None:
+    rulespec = _enforced_service_form_spec_rulespec()
+
+    assert not _validate_as_form_spec(rulespec, ("some_check", "an item", 1))

@@ -33,6 +33,7 @@ import itertools
 import json
 import logging
 import pprint
+import sys
 import time
 import urllib.parse
 from collections.abc import Iterator, Mapping, Sequence
@@ -513,7 +514,7 @@ class ChangesAPI(BaseAPI):
                 ):
                     raise RuntimeError(
                         "Activation of the following sites did not succeed:\n"
-                        f"{pprint.pformat(not_succeeded_sites)}"
+                        f"{pprint.pformat(not_succeeded_sites, width=sys.maxsize)}"
                     )
                 logger.info(
                     "%s Use `--log-cli-level=DEBUG` for analysis.",
@@ -605,6 +606,30 @@ class GlobalSettingsAPI(BaseAPI):
         """Returns the Etag of the written setting"""
         response = self.session.put(
             f"/objects/global_setting/{varname}",
+            api_version=APIVersion.INTERNAL,
+            headers={"If-Match": etag},
+            json={"value": value},
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return response.headers["ETag"]
+
+    def get_site(self, site_id: str, varname: str) -> GlobalSetting:
+        response = self.session.get(
+            f"/objects/site_connection/{site_id}/global_setting/{varname}",
+            api_version=APIVersion.INTERNAL,
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        body = response.json()
+        return GlobalSetting(
+            value=body["value"], origin=body["origin"], etag=response.headers["ETag"]
+        )
+
+    def update_site(self, site_id: str, varname: str, value: object, etag: str = "*") -> str:
+        """Returns the Etag of the written setting"""
+        response = self.session.put(
+            f"/objects/site_connection/{site_id}/global_setting/{varname}",
             api_version=APIVersion.INTERNAL,
             headers={"If-Match": etag},
             json={"value": value},

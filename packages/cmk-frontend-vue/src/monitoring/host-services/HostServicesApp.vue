@@ -20,6 +20,7 @@ import type {
   HostOptionalField,
   HostRef,
   HostServiceEntry,
+  ServiceRef,
   ServiceState
 } from '@/monitoring/shared/api/types'
 import DisplayOptionsPane from '@/monitoring/shared/components/DisplayOptionsPane.vue'
@@ -48,8 +49,11 @@ import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import MonitoringToolbar from '../shared/components/MonitoringToolbar.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
 import { acknowledgeDefaults } from '../shared/components/action/actions/acknowledge'
+import { useAcknowledgeServicesAction } from '../shared/components/action/actions/acknowledgeServices'
 import { RESCHEDULE_ACTION_ID } from '../shared/components/action/actions/reschedule'
+import { useRescheduleServicesAction } from '../shared/components/action/actions/rescheduleServices'
 import { downtimePresets } from '../shared/components/action/actions/scheduleDowntime'
+import { useScheduleServiceDowntimeAction } from '../shared/components/action/actions/scheduleServiceDowntime'
 import { createActionRegistry } from '../shared/components/action/registry'
 import { InstantReport } from '../shared/export/instantReport'
 import { useRowExport } from '../shared/export/useRowExport'
@@ -74,9 +78,6 @@ import { useUrlSync } from '../shared/urlState/useUrlSync'
 import { useContextMenuKey } from '../shared/useContextMenuKey'
 import { useFallbackKeys } from '../shared/useFallbackKeys'
 import { useTypeToFocus } from '../shared/useTypeToFocus'
-import { useAcknowledgeServicesAction } from './actions/acknowledgeServices'
-import { useRescheduleServicesAction } from './actions/rescheduleServices'
-import { useScheduleServiceDowntimeAction } from './actions/scheduleServiceDowntime'
 import { requestAiExplanation } from './aiExplain'
 import { ServiceActionMenuApi } from './api/actionMenu'
 import { HostServicesApi } from './api/services'
@@ -240,18 +241,16 @@ const tableColumns = computed(() =>
   )
 )
 
-const actionRegistry = createActionRegistry<string>([
+const actionRegistry = createActionRegistry<ServiceRef>([
   useAcknowledgeServicesAction(
-    host,
     {
       presetsUrl: props.acknowledge_presets_url ?? null,
       notificationRulesUrl: props.notification_rules_url ?? null
     },
     acknowledgeDefaults(props.acknowledge_defaults)
   ),
-  useRescheduleServicesAction(host),
+  useRescheduleServicesAction(),
   useScheduleServiceDowntimeAction(
-    host,
     props.downtime_recurrences ?? [],
     downtimePresets(props.downtime_presets),
     props.downtime_presets_url ?? null
@@ -435,17 +434,28 @@ useUrlSync([
   })
 ])
 
-function serviceRef(row: HostServiceEntry): string {
-  return row.name
+function serviceOfHost(description: string): ServiceRef {
+  return { host, description }
+}
+
+function serviceRef(row: HostServiceEntry): ServiceRef {
+  return serviceOfHost(row.name)
 }
 
 // As in the slide-in: a byproduct of the agent-based check reschedules the host's "Check_MK"
 // service, and a service that cannot be rescheduled at all is left out.
-function serviceActionTargets(rows: HostServiceEntry[], actionId: string): string[] {
+function serviceActionTargets(rows: HostServiceEntry[], actionId: string): ServiceRef[] {
   if (actionId !== RESCHEDULE_ACTION_ID) {
     return rows.map(serviceRef)
   }
-  return [...new Set(rows.flatMap((row) => row.reschedule?.target ?? []))]
+  return [...new Set(rows.flatMap((row) => row.reschedule?.target ?? []))].map(serviceOfHost)
+}
+
+function onServiceCommand(
+  runCommand: (command: { id: string; target: ServiceRef }) => void,
+  command: { id: string; target: string }
+): void {
+  runCommand({ id: command.id, target: serviceOfHost(command.target) })
 }
 
 function serviceSelectionLabel(count: number): TranslatedString {
@@ -536,7 +546,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
             :ai-explain="aiExplain && hostServicesService.hostEntry.value !== null"
             @open="openSlideIn"
             @open-graphs="openServiceGraphs"
-            @command="onCommand"
+            @command="onServiceCommand(onCommand, $event)"
             @explain="explainService"
           />
         </template>

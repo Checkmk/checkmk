@@ -5,7 +5,7 @@
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
 
-import type { HostRef } from '@/monitoring/shared/api/types'
+import type { ServiceRef } from '@/monitoring/shared/api/types'
 import {
   type DowntimePresetOption,
   type DowntimeRecurrenceOption,
@@ -14,16 +14,14 @@ import {
 import { createScheduleDowntimeAction } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 
-/** Target is the service description; the host is fixed to the page's host. */
 export function useScheduleServiceDowntimeAction(
-  host: HostRef,
   recurrences: DowntimeRecurrenceOption[],
   presets: DowntimePresetOption[],
   presetsUrl: string | null
-): MonitoringAction<ScheduleDowntimeFormValues, string> {
+): MonitoringAction<ScheduleDowntimeFormValues, ServiceRef> {
   const { _t, _tn } = usei18n()
 
-  return createScheduleDowntimeAction<string>({
+  return createScheduleDowntimeAction<ServiceRef>({
     submitLabel: _t('Schedule service downtime'),
     description: [
       _t('Scheduled downtimes set the services in planned maintenance.'),
@@ -34,7 +32,7 @@ export function useScheduleServiceDowntimeAction(
     presets,
     presetsUrl,
     async schedule(api, targets, _values, options) {
-      await api.scheduleServiceDowntime(host.name, targets, options)
+      await api.scheduleServiceDowntime(targets, options)
       return targets.length
     },
     successMessage: (count) =>

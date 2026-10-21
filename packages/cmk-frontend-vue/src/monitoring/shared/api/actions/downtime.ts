@@ -5,7 +5,8 @@
  */
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import { hostNameQuery } from '@/monitoring/shared/api/actions/query'
+import { hostNameQuery, serviceQuery } from '@/monitoring/shared/api/actions/query'
+import type { ServiceRef } from '@/monitoring/shared/api/types'
 
 /** The intervals the downtime API repeats a downtime on, `fixed` being no repeat at all. */
 export type DowntimeRecur =
@@ -85,17 +86,15 @@ export class ScheduleDowntimeApi {
   }
 
   public async scheduleServiceDowntime(
-    hostName: string,
-    serviceDescriptions: string[],
+    services: ServiceRef[],
     options: ScheduleDowntimeOptions
   ): Promise<void> {
     unwrap(
       await client.POST('/domain-types/downtime/collections/service', {
         params: { header: { 'Content-Type': 'application/json' } },
         body: {
-          downtime_type: 'service',
-          host_name: hostName,
-          service_descriptions: serviceDescriptions,
+          downtime_type: 'service_by_query',
+          query: serviceQuery(services),
           start_time: options.startTime,
           end_time: options.endTime,
           recur: options.recur,

@@ -71,12 +71,14 @@ describe('RescheduleApi.rescheduleServices', () => {
     } as never)
   }
 
-  it('expands the names to services of the page host', async () => {
+  it('names each service by its site and host', async () => {
     mockRescheduled(2)
 
     const count = await new RescheduleApi().rescheduleServices(
-      { site_id: 'local', name: 'web-1' },
-      ['CPU load', 'Memory'],
+      [
+        { host: { site_id: 'local', name: 'web-1' }, description: 'CPU load' },
+        { host: { site_id: 'remote', name: 'web-2' }, description: 'Memory' }
+      ],
       5
     )
 
@@ -87,7 +89,7 @@ describe('RescheduleApi.rescheduleServices', () => {
       body: {
         services: [
           { site_id: 'local', host_name: 'web-1', name: 'CPU load' },
-          { site_id: 'local', host_name: 'web-1', name: 'Memory' }
+          { site_id: 'remote', host_name: 'web-2', name: 'Memory' }
         ],
         spread_minutes: 5
       }
@@ -102,7 +104,10 @@ describe('RescheduleApi.rescheduleServices', () => {
     } as never)
 
     await expect(
-      new RescheduleApi().rescheduleServices({ site_id: 'local', name: 'web-1' }, ['CPU load'], 0)
+      new RescheduleApi().rescheduleServices(
+        [{ host: { site_id: 'local', name: 'web-1' }, description: 'CPU load' }],
+        0
+      )
     ).rejects.toThrow()
   })
 })

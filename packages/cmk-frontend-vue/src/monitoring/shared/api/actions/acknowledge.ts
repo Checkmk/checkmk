@@ -6,7 +6,8 @@
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import { hostNameQuery, serviceDescriptionQuery } from '@/monitoring/shared/api/actions/query'
+import { hostNameQuery, serviceQuery } from '@/monitoring/shared/api/actions/query'
+import type { ServiceRef } from '@/monitoring/shared/api/types'
 
 export type AcknowledgeHostQueryProblem = components['schemas']['AcknowledgeHostQueryProblem']
 
@@ -36,13 +37,12 @@ export class AcknowledgeApi {
   }
 
   public async acknowledgeServices(
-    hostName: string,
-    serviceDescriptions: string[],
+    services: ServiceRef[],
     options: AcknowledgeOptions
   ): Promise<void> {
     const body: AcknowledgeServiceQueryProblem = {
       acknowledge_type: 'service_by_query',
-      query: serviceDescriptionQuery(hostName, serviceDescriptions),
+      query: serviceQuery(services),
       ...this.commonFields(options)
     }
     unwrap(

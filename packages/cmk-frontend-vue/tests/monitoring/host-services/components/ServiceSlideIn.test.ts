@@ -13,7 +13,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ServiceSlideIn, {
   SERVICE_GRAPHS_TAB_ID
 } from '@/monitoring/host-services/components/ServiceSlideIn.vue'
-import type { HostRef, HostServiceEntry, ServiceOverview } from '@/monitoring/shared/api/types'
+import type {
+  HostRef,
+  HostServiceEntry,
+  ServiceOverview,
+  ServiceRef
+} from '@/monitoring/shared/api/types'
 import type { ActionFeedback } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import { ACK_ACTION_ID } from '@/monitoring/shared/components/action/actions/acknowledge'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
@@ -34,14 +39,14 @@ const PERMITTED_ACTIONS: CellAction[] = [
 const SUCCESS: ActionFeedback = { variant: 'success', message: 'Done' as TranslatedString }
 
 function makeActionRegistry(
-  perform: (targets: string[]) => Promise<ActionFeedback> = async () => SUCCESS
-): MonitoringActionRegistry<string> {
+  perform: (targets: ServiceRef[]) => Promise<ActionFeedback> = async () => SUCCESS
+): MonitoringActionRegistry<ServiceRef> {
   const action = (id: string, title: string) => ({
     id,
     title: title as TranslatedString,
     submitLabel: title as TranslatedString,
     defaultValues: () => ({}),
-    perform: (targets: string[]) => perform(targets)
+    perform: (targets: ServiceRef[]) => perform(targets)
   })
   return {
     [ACK_ACTION_ID]: action(ACK_ACTION_ID, 'Acknowledge problem'),
@@ -408,7 +413,7 @@ describe('ServiceSlideIn', () => {
   })
 
   it('performs a reschedule on the shown service right away', async () => {
-    const performed: string[][] = []
+    const performed: ServiceRef[][] = []
     render(ServiceSlideIn, {
       props: {
         displayOptions: DISPLAY_OPTIONS,
@@ -424,12 +429,12 @@ describe('ServiceSlideIn', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Reschedule check' }))
 
-    expect(performed).toEqual([['CPU load']])
+    expect(performed).toEqual([[{ host: HOST, description: 'CPU load' }]])
     expect(await screen.findByText('Done')).toBeInTheDocument()
   })
 
   it('opens the form of an action that needs input instead of performing it', async () => {
-    const performed: string[][] = []
+    const performed: ServiceRef[][] = []
     render(ServiceSlideIn, {
       props: {
         displayOptions: DISPLAY_OPTIONS,
@@ -749,7 +754,7 @@ describe('ServiceSlideIn', () => {
       await screen.findByRole('button', { name: "Reschedule 'Check_MK' service" })
     )
 
-    expect(perform).toHaveBeenCalledWith(['Check_MK'])
+    expect(perform).toHaveBeenCalledWith([{ host: HOST, description: 'Check_MK' }])
   })
 
   it('offers no reschedule button for a service that cannot be rescheduled', async () => {

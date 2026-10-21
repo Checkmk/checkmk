@@ -22,7 +22,12 @@ import EventHistoryApp from '@/monitoring/events/EventHistoryApp.vue'
 import { fetchEvents } from '@/monitoring/events/api'
 import { ServiceGraphsApi } from '@/monitoring/host-services/api/graphs'
 import { HostServicesApi } from '@/monitoring/host-services/api/services'
-import type { HostRef, HostServiceEntry, ServiceOverview } from '@/monitoring/shared/api/types'
+import type {
+  HostRef,
+  HostServiceEntry,
+  ServiceOverview,
+  ServiceRef
+} from '@/monitoring/shared/api/types'
 import ActionFeedback, {
   type ActionFeedback as ActionFeedbackResult
 } from '@/monitoring/shared/components/action/ActionFeedback.vue'
@@ -51,8 +56,7 @@ const props = withDefaults(
     host: HostRef
     /** Offer the cloud edition's "Explain with AI" action. */
     aiExplain?: boolean
-    /** The actions this user may run, as reported by the backend; targets are service names. */
-    actions?: MonitoringActionRegistry<string>
+    actions?: MonitoringActionRegistry<ServiceRef>
     permittedActions?: CellAction[]
     /** Lazy loader for the overflow menu entries of a service. */
     loadActionMenu?: ((service: string) => Promise<CellAction[]>) | undefined
@@ -129,12 +133,18 @@ const slideInActions = computed<CellAction[]>(() => {
   ]
 })
 
-const targets = computed<string[]>(() => (props.service ? [props.service.name] : []))
+function serviceOfHost(description: string): ServiceRef {
+  return { host: props.host, description }
+}
+
+const targets = computed<ServiceRef[]>(() =>
+  props.service ? [serviceOfHost(props.service.name)] : []
+)
 
 // A byproduct of the agent-based check reschedules the service that fetches the data, not itself.
-function actionTargets(actionId: string): string[] {
+function actionTargets(actionId: string): ServiceRef[] {
   const redirect = actionId === RESCHEDULE_ACTION_ID ? props.service?.reschedule?.target : undefined
-  return redirect === undefined ? targets.value : [redirect]
+  return redirect === undefined ? targets.value : [serviceOfHost(redirect)]
 }
 
 const displayService = computed<ServiceHeaderSubject | null>(() => {
@@ -199,7 +209,7 @@ const {
   openAction,
   closeAction,
   applyFeedback
-} = useSlideInActions<string>(
+} = useSlideInActions<ServiceRef>(
   () => props.actions,
   actionTargets,
   () => props.service,
@@ -214,7 +224,7 @@ watch(
 )
 
 async function loadOverview(description: string): Promise<ServiceOverview> {
-  const loaded = await servicesApi.fetchServiceOverview({ host: props.host, description })
+  const loaded = await servicesApi.fetchServiceOverview(serviceOfHost(description))
   // A request started for a service the user has since navigated away from must not win the
   // race against the one for the service now on screen.
   if (props.service?.name === description) {

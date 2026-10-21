@@ -5,20 +5,16 @@
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
 
-import type { HostRef } from '@/monitoring/shared/api/types'
+import type { ServiceRef } from '@/monitoring/shared/api/types'
 import { type RescheduleValues } from '@/monitoring/shared/components/action/actions/RescheduleForm.vue'
 import { createRescheduleAction } from '@/monitoring/shared/components/action/actions/reschedule'
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 
-/** Target is the service name; the host is fixed to the page's host. */
-export function useRescheduleServicesAction(
-  host: HostRef
-): MonitoringAction<RescheduleValues, string> {
+export function useRescheduleServicesAction(): MonitoringAction<RescheduleValues, ServiceRef> {
   const { _t } = usei18n()
 
-  return createRescheduleAction<string>({
-    reschedule: (api, targets, spreadMinutes) =>
-      api.rescheduleServices(host, targets, spreadMinutes),
+  return createRescheduleAction<ServiceRef>({
+    reschedule: (api, targets, spreadMinutes) => api.rescheduleServices(targets, spreadMinutes),
     errorHeading: _t('Could not reschedule the checks for the selected services')
   })
 }

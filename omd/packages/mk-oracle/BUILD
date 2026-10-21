@@ -5,7 +5,6 @@ load("//bazel/rules:pkg.bzl", "pkg_tar")
 ARTIFACTS = [
     "mk-oracle.aix",
     "mk-oracle.exe",
-    "mk-oracle.rhel8",
     "mk-oracle.solaris",
 ]
 
@@ -27,22 +26,33 @@ pkg_files(
         "@//:use_fake_artifacts_enabled": {
             ":mk-oracle.aix.faked": "lib/python3.14/site-packages/cmk/plugins/oracle/agents/mk-oracle.aix.faked",
             ":mk-oracle.exe.faked": "lib/python3.14/site-packages/cmk/plugins/oracle/agents/mk-oracle.exe.faked",
-            ":mk-oracle.rhel8.faked": "lib/python3.14/site-packages/cmk/plugins/oracle/agents/mk-oracle.faked",
             ":mk-oracle.solaris.faked": "lib/python3.14/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris.faked",
         },
         "//conditions:default": {
             ":mk-oracle.aix": "lib/python3.14/site-packages/cmk/plugins/oracle/agents/mk-oracle.aix",
             ":mk-oracle.exe": "lib/python3.14/site-packages/cmk/plugins/oracle/agents/mk-oracle.exe",
-            ":mk-oracle.rhel8": "lib/python3.14/site-packages/cmk/plugins/oracle/agents/mk-oracle",
             ":mk-oracle.solaris": "lib/python3.14/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris",
         },
     }),
     tags = ["manual"],
 )
 
+# Built hermetically against the glibc of the gcc_toolchain sysroot, so
+# unlike the other platforms it is never fetched or faked.
+pkg_files(
+    name = "mk-oracle_linux_pkg",
+    srcs = ["//packages/mk-oracle"],
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "lib/python3.14/site-packages/cmk/plugins/oracle/agents",
+    tags = ["manual"],
+)
+
 pkg_tar(
     name = "mk-oracle",
-    srcs = [":mk-oracle_pkg"],
+    srcs = [
+        ":mk-oracle_linux_pkg",
+        ":mk-oracle_pkg",
+    ],
     stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__subpackages__"],

@@ -106,23 +106,6 @@ void provide_agent_binaries(Map args) {
                 cp mk-oracle.{aix,solaris} ${checkout_dir}/omd/packages/mk-oracle/
                 """.stripIndent(),
         ],
-        "build-mk-oracle-rhel8": [
-            relative_job_name: "${branch_base_folder(false)}/builders/build-cmk-package-mk-oracle-k8s",
-            dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
-            skip: test_binaries_only || fake_artifacts,
-            retry: 1,
-            additional_build_params: [
-                PACKAGE_PATH: "packages/mk-oracle",
-                DISTRO: "almalinux-8",
-                FILE_ARCHIVING_PATTERN: "mk-oracle*",
-                // do not add line breaks here. ci-artifacts might not find a match
-                // groovylint-disable-next-line LineLength
-                COMMAND_LINE: """bazel build --cmk_version=${args.cmk_version} mk-oracle; cp \$(bazel info workspace)/\$(bazel cquery --output=files mk-oracle) \$(bazel info workspace)""",
-            ],
-            install_cmd: """\
-                cp mk-oracle ${checkout_dir}/omd/packages/mk-oracle/mk-oracle.rhel8
-                """.stripIndent(),
-        ],
         "build-mk-oracle-rhel8-component-test": [
             relative_job_name: "${branch_base_folder(false)}/builders/build-cmk-package-mk-oracle-k8s",
             dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],

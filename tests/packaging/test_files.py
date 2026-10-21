@@ -1268,7 +1268,6 @@ PLUGINS_EXECUTABLE_EXCEPTIONS = {
     "cmk/plugins/oracle/agents/mk-oracle.aix",
     "cmk/plugins/oracle/agents/mk-oracle.exe",
     "cmk/plugins/oracle/agents/mk-oracle.solaris",
-    "cmk/plugins/oracle/agents/mk-oracle.faked",
     "cmk/plugins/oracle/agents/mk-oracle.aix.faked",
     "cmk/plugins/oracle/agents/mk-oracle.exe.faked",
     "cmk/plugins/oracle/agents/mk-oracle.solaris.faked",

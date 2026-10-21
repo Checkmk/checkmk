@@ -5,10 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
-import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { computed } from 'vue'
 
-import CmkDeltaArrow from '../CmkDeltaArrow.vue'
 import type {
   CmkRankedTableProps,
   RankedTableCell,
@@ -16,15 +14,9 @@ import type {
   RankedTableRow
 } from './types'
 
-const { columns, rows, barColor = 'var(--status-color-info)' } = defineProps<CmkRankedTableProps>()
+const { columns, rows } = defineProps<CmkRankedTableProps>()
 
-const emit = defineEmits<{
-  /** A cell in a column marked `clickable` was activated. */
-  cellClick: [column: RankedTableColumn, row: RankedTableRow]
-}>()
-
-// Canonical SI byte formatter (base 1000), matching the backend: 90_400_000_000 → "90.40 GB".
-const byteFormatter = new SIFormatter('B', { type: 'strict', digits: 2 })
+const DEFAULT_BAR_COLOR = 'var(--status-color-info)'
 
 // Largest value per bar column, used to scale bars of columns without a fixed `barRange`.
 const columnMax = computed<Record<string, number>>(() => {
@@ -43,25 +35,13 @@ function cell(column: RankedTableColumn, row: RankedTableRow): RankedTableCell {
 }
 
 function isNumeric(column: RankedTableColumn): boolean {
-  return column.render === 'bytes' || column.render === 'count' || column.render === 'delta'
-}
-
-/** Which way a delta cell's arrow points, or null for a change without one. */
-function deltaDirection(column: RankedTableColumn, row: RankedTableRow): 'up' | 'down' | null {
-  const value = Number(cell(column, row).value ?? 0)
-  if (!Number.isFinite(value) || value === 0) {
-    return null
-  }
-  return value > 0 ? 'up' : 'down'
+  return column.render === 'count'
 }
 
 function cellText(column: RankedTableColumn, row: RankedTableRow): string {
   const { value, formatted } = cell(column, row)
   if (formatted !== undefined) {
     return formatted
-  }
-  if (column.render === 'bytes') {
-    return byteFormatter.render(Number(value ?? 0))
   }
   return String(value ?? '')
 }
@@ -81,7 +61,7 @@ function barPercent(column: RankedTableColumn, row: RankedTableRow): number {
 }
 
 function barColorOf(column: RankedTableColumn, row: RankedTableRow): string {
-  return cell(column, row).color ?? barColor
+  return cell(column, row).color ?? DEFAULT_BAR_COLOR
 }
 
 /** Whether a column's text may be cut with an ellipsis when the width runs short. */
@@ -89,9 +69,9 @@ function truncates(column: RankedTableColumn): boolean {
   return !column.bar && !isNumeric(column)
 }
 
-/** Links and buttons carry their own tooltip, so only plain text cells get one on the cell. */
+/** Links carry their own tooltip, so only plain text cells get one on the cell. */
 function plainTextTooltip(column: RankedTableColumn, row: RankedTableRow): string | undefined {
-  const isPlain = cell(column, row).href === undefined && !column.clickable
+  const isPlain = cell(column, row).href === undefined
   return truncates(column) && isPlain ? cellText(column, row) : undefined
 }
 
@@ -163,23 +143,6 @@ const gridTemplateColumns = computed(() =>
             >
               <span class="db-cmk-ranked-table__text">{{ cellText(column, row) }}</span>
             </CmkButton>
-            <CmkButton
-              v-else-if="column.clickable"
-              class="db-cmk-ranked-table__link"
-              variant="text"
-              size="small"
-              :title="cellText(column, row)"
-              @click="emit('cellClick', column, row)"
-            >
-              <span class="db-cmk-ranked-table__text">{{ cellText(column, row) }}</span>
-            </CmkButton>
-            <span v-else-if="column.render === 'delta'" class="db-cmk-ranked-table__delta">
-              <CmkDeltaArrow
-                v-if="deltaDirection(column, row) !== null"
-                :direction="deltaDirection(column, row)!"
-              />
-              {{ cellText(column, row) }}
-            </span>
             <span v-else class="db-cmk-ranked-table__text">{{ cellText(column, row) }}</span>
           </td>
         </tr>
@@ -299,15 +262,6 @@ const gridTemplateColumns = computed(() =>
   display: block;
   height: 100%;
   border-radius: 99999px;
-}
-
-/* Right-aligned like the other numeric columns, with the arrow riding along
-   the end of the figure rather than sitting in a column of its own. */
-.db-cmk-ranked-table__delta {
-  display: inline-flex;
-  gap: 4px;
-  align-items: center;
-  justify-content: flex-end;
 }
 
 .db-cmk-ranked-table__bar-value {

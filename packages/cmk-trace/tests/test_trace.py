@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import subprocess
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 
@@ -146,6 +148,32 @@ def test_exporter_from_config_local_site() -> None:
     assert exporter.test_timeout == 3
     assert exporter.test_endpoint == "http://localhost:1234"
     assert exporter.test_insecure is True
+
+
+def test_init_tracing_survives_daemonizing_double_fork() -> None:
+    # A fresh interpreter, because this test module imports concurrent.futures.thread itself
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            """
+import os
+from cmk import trace
+trace.init_tracing(
+    service_namespace="namespace",
+    service_name="service",
+    service_instance_id="instance",
+)
+if os.fork() == 0:
+    if os.fork() == 0:
+        os._exit(0)
+    os._exit(os.waitstatus_to_exitcode(os.wait()[1]))
+os._exit(os.waitstatus_to_exitcode(os.wait()[1]))
+""",
+        ],
+        check=True,
+        timeout=30,
+    )
 
 
 @pytest.mark.usefixtures("reset_global_tracer_provider")

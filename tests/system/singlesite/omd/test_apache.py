@@ -35,14 +35,14 @@ def test_http_methods(site: Site) -> None:
 @pytest.mark.parametrize(
     ["size", "status_code"],
     [
-        pytest.param(1024 * 1024 * (100 - 1), 400, id="under_limit"),
-        pytest.param(1024 * 1024 * 100, 413, id="at_limit"),
-        pytest.param(1024 * 1024 * (100 * 10), 413, id="over_limit"),
+        pytest.param(1024 * 1024 * (1024 - 1), 400, id="under_limit"),
+        pytest.param(1024 * 1024 * 1024, 413, id="at_limit"),
+        pytest.param(1024 * 1024 * (1024 + 100), 413, id="over_limit"),
     ],
 )
 def test_upload_limit(site: Site, web: CMKWebSession, size: int, status_code: int) -> None:
     """
-    Check that the 100MB file size limit is enforced.
+    Check that the 1GB file size limit is enforced.
 
     The upload has no "mode" parameter, so under the limit wato.py rejects it as an
     invalid request (400) rather than processing it -- this only checks that Apache's

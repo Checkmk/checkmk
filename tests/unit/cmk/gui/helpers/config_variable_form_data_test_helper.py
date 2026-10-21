@@ -181,7 +181,8 @@ class EditionDependentDefault:
 
 FACTORY_DEFAULTS_NORMALIZED_BY_LOAD: Mapping[str, object] = {
     "data_backend": EditionDependentDefault(
-        community={}, ultimate={"features": {"telemetry": "disabled"}}
+        community={},
+        ultimate={"features": {"telemetry": "disabled", "synthetic_monitoring": "disabled"}},
     ),
     "notification_spooling": "local",
     "site_opentelemetry_collector_delta_to_cumulative_processor": {
@@ -1325,7 +1326,8 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
         "labels": ("shown", {"size": 11}),
     },
     "data_backend": EditionDependentDefault(
-        community={}, ultimate={"features": {"telemetry": "disabled"}}
+        community={},
+        ultimate={"features": {"telemetry": "disabled", "synthetic_monitoring": "disabled"}},
     ),
     "mkeventd_notify_remotehost": None,
     "mkeventd_service_levels": [],
@@ -2264,7 +2266,9 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
         ],
         ultimate=[
             CaseMigrates(
-                "legacy-disabled", ("disabled", None), {"features": {"telemetry": "disabled"}}
+                "legacy-disabled",
+                ("disabled", None),
+                {"features": {"telemetry": "disabled", "synthetic_monitoring": "disabled"}},
             ),
             CaseMigrates(
                 "legacy-enabled",
@@ -2277,7 +2281,7 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
                     },
                 ),
                 {
-                    "features": {"telemetry": "local"},
+                    "features": {"telemetry": "local", "synthetic_monitoring": "disabled"},
                     "local_instance": {
                         "tls_port": 9000,
                         "https_port": 8443,
@@ -2285,15 +2289,21 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
                     },
                 },
             ),
-            CaseFail("central-feature-without-address", {"features": {"telemetry": "central"}}),
+            CaseFail(
+                "central-feature-without-address",
+                {"features": {"telemetry": "central", "synthetic_monitoring": "disabled"}},
+            ),
             CasePass(
                 "address-kept-without-central-feature",
-                {"features": {"telemetry": "disabled"}, "address_seen_by_central": "10.0.0.2"},
+                {
+                    "features": {"telemetry": "disabled", "synthetic_monitoring": "disabled"},
+                    "address_seen_by_central": "10.0.0.2",
+                },
             ),
             CasePass(
                 "local-instance",
                 {
-                    "features": {"telemetry": "local"},
+                    "features": {"telemetry": "local", "synthetic_monitoring": "disabled"},
                     "local_instance": {
                         "tls_port": 9000,
                         "https_port": 8443,
@@ -2301,11 +2311,14 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
                     },
                 },
             ),
-            CaseFail("local-feature-without-local-instance", {"features": {"telemetry": "local"}}),
+            CaseFail(
+                "local-feature-without-local-instance",
+                {"features": {"telemetry": "local", "synthetic_monitoring": "disabled"}},
+            ),
             CaseFail(
                 "duplicate-ports",
                 {
-                    "features": {"telemetry": "local"},
+                    "features": {"telemetry": "local", "synthetic_monitoring": "disabled"},
                     "local_instance": {
                         "tls_port": 9000,
                         "https_port": 9000,

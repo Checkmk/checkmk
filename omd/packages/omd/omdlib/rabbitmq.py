@@ -39,7 +39,7 @@ RABBITMQ_DIST_PORT = PortHook(
     display_name="RabbitMQ distribution port",
     default_port=25672,
     activation=null_action,
-    choices=re.compile(r"[0-9]{1,5}$"),
+    choices=lambda _edition: re.compile(r"[0-9]{1,5}$"),
 )
 
 RABBITMQ_MANAGEMENT_PORT = PortHook(
@@ -47,12 +47,12 @@ RABBITMQ_MANAGEMENT_PORT = PortHook(
     display_name="RabbitMQ management port",
     default_port=15671,
     activation=_write_rabbitmq_management_port_conf,
-    choices=re.compile(r"[0-9]{1,5}$"),
+    choices=lambda _edition: re.compile(r"[0-9]{1,5}$"),
 )
 
 RABBITMQ_ONLY_FROM = Hook(
     name="RABBITMQ_ONLY_FROM",
-    choices=ip_address_list_has_error,
+    choices=lambda _edition: ip_address_list_has_error,
     default=lambda _edition: ":: 0.0.0.0",
     activation=write_rabbitmq_default_conf,
 )
@@ -62,5 +62,5 @@ RABBITMQ_PORT = PortHook(
     display_name="RabbitMQ port",
     default_port=5672,
     activation=write_rabbitmq_default_conf,
-    choices=re.compile(r"[0-9]{1,5}$"),
+    choices=lambda _edition: re.compile(r"[0-9]{1,5}$"),
 )

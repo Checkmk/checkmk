@@ -21,7 +21,7 @@ def write_admin_mail_forward(_site_name: str, site_home: Path, config: Config) -
 
 ADMIN_MAIL = Hook(
     name="ADMIN_MAIL",
-    choices=re.compile(
+    choices=lambda _edition: re.compile(
         r"^([-a-zäöüÄÖÜA-Z0-9_.+%]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[-a-zäöüÄÖÜA-Z0-9]+)*)?$$"
     ),
     default=lambda _edition: "",

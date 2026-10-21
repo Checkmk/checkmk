@@ -343,7 +343,7 @@ def fstab_verify(site_name: str, mountpoint: str) -> bool:
 
 TMPFS = Hook(
     name="TMPFS",
-    choices=[
+    choices=lambda _edition: [
         ("on", "Use a ramdisk for temporary files"),
         ("off", "Do not use a ramdisk within this site"),
     ],

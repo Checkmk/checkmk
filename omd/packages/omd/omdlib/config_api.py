@@ -95,7 +95,7 @@ class PortHook:
     display_name: str
     default_port: int
     activation: Activation
-    choices: ConfigHookChoices
+    choices: Callable[[Edition], ConfigHookChoices]
     depends: Callable[[Config], bool] = lambda _: True
 
 
@@ -104,5 +104,5 @@ class Hook:
     name: str
     default: Callable[[Edition], str]
     activation: Activation
-    choices: ConfigHookChoices
+    choices: Callable[[Edition], ConfigHookChoices]
     depends: Callable[[Config], bool] = lambda _: True

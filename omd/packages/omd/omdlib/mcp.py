@@ -73,7 +73,7 @@ MCP_SERVER = Hook(
     name="MCP_SERVER",
     default=lambda _edition: "off",
     activation=_write_mcp_apache_conf,
-    choices=[("on", "enable"), ("off", "disable")],
+    choices=lambda _edition: [("on", "enable"), ("off", "disable")],
 )
 
 # Opt-in gate for forwarding the MCP server's traces (usage data) to Checkmk's
@@ -84,5 +84,5 @@ MCP_TRACE_FORWARD = Hook(
     name="MCP_TRACE_FORWARD",
     default=lambda _edition: "off",
     activation=null_action,
-    choices=[("on", "enable"), ("off", "disable")],
+    choices=lambda _edition: [("on", "enable"), ("off", "disable")],
 )

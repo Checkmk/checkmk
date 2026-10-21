@@ -11,7 +11,7 @@ OPENTELEMETRY_COLLECTOR = Hook(
     name="OPENTELEMETRY_COLLECTOR",
     default=lambda _edition: "off",
     activation=null_action,
-    choices=[("on", "enable"), ("off", "disable")],
+    choices=lambda _edition: [("on", "enable"), ("off", "disable")],
 )
 
 OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT = PortHook(
@@ -19,5 +19,5 @@ OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT = PortHook(
     display_name="Otel Collector self-monitoring port",
     default_port=14317,
     activation=null_action,
-    choices=re.compile(r"[0-9]{1,5}$"),
+    choices=lambda _edition: re.compile(r"[0-9]{1,5}$"),
 )

@@ -89,7 +89,7 @@ monitoring_core = 'cmc'
 
 CORE = Hook(
     name="CORE",
-    choices=core_has_error,
+    choices=lambda _edition: core_has_error,
     default=core_default,
     activation=write_core_conf,
 )

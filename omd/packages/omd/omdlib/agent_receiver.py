@@ -9,7 +9,7 @@ from omdlib.config_api import Hook, null_action, PortHook
 
 AGENT_RECEIVER = Hook(
     name="AGENT_RECEIVER",
-    choices=[("on", "enable"), ("off", "disable")],
+    choices=lambda _edition: [("on", "enable"), ("off", "disable")],
     default=lambda _edition: "on",
     activation=null_action,
 )
@@ -19,6 +19,6 @@ AGENT_RECEIVER_PORT = PortHook(
     display_name="agent-receiver port",
     default_port=8000,
     activation=null_action,
-    choices=re.compile(r"[0-9]{1,5}$"),
+    choices=lambda _edition: re.compile(r"[0-9]{1,5}$"),
     depends=lambda c: c.get("AGENT_RECEIVER") == "on",
 )

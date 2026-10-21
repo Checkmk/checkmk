@@ -87,7 +87,7 @@ authorisation_multisite_file="{site_home}/var/check_mk/wato/auth/auth.php"
 
 MULTISITE_AUTHORISATION = Hook(
     name="MULTISITE_AUTHORISATION",
-    choices=[
+    choices=lambda _edition: [
         ("on", "control user permissions"),
         ("off", "disable permission control"),
     ],
@@ -97,7 +97,7 @@ MULTISITE_AUTHORISATION = Hook(
 
 MULTISITE_COOKIE_AUTH = Hook(
     name="MULTISITE_COOKIE_AUTH",
-    choices=[
+    choices=lambda _edition: [
         ("on", "use cookie authentication"),
         ("off", "use basic authentication"),
     ],

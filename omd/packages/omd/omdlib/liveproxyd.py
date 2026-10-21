@@ -17,7 +17,7 @@ def write_liveproxyd_conf(_site_name: str, site_home: Path, config: Config) -> N
 
 LIVEPROXYD = Hook(
     name="LIVEPROXYD",
-    choices=[("on", "enable"), ("off", "disable")],
+    choices=lambda _edition: [("on", "enable"), ("off", "disable")],
     default=lambda _edition: "on",
     activation=write_liveproxyd_conf,
 )

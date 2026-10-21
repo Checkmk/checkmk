@@ -1462,7 +1462,9 @@ def validate_config_change_commands(
         if not hook:
             sys.exit("Invalid config option: %r" % key)
 
-        error_from_config_choice = _error_from_config_choice(get_hook(key).choices, value)
+        error_from_config_choice = _error_from_config_choice(
+            get_hook(key).choices(Edition.from_version_string(omdlib.__version__)), value
+        )
         if error_from_config_choice is not None:
             sys.exit(f"Invalid value for '{value} for {key}'. {error_from_config_choice}\n")
 
@@ -1488,7 +1490,9 @@ def config_set(
     if not hook:
         return Error("No such variable '%s'" % hook_name)
 
-    error_from_config_choice = _error_from_config_choice(get_hook(hook_name).choices, value)
+    error_from_config_choice = _error_from_config_choice(
+        get_hook(hook_name).choices(Edition.from_version_string(omdlib.__version__)), value
+    )
     if error_from_config_choice is not None:
         return Error(f"Invalid value for '{value}'. {error_from_config_choice}")
 
@@ -1642,7 +1646,7 @@ def config_configure_hook(
     title = hook.alias
     descr = hook.description.replace("\n\n", "\001").replace("\n", " ").replace("\001", "\n\n")
     value = config[hook_name]
-    choices = get_hook(hook_name).choices
+    choices = get_hook(hook_name).choices(Edition.from_version_string(omdlib.__version__))
 
     if isinstance(choices, list):
         change, new_value = dialog_menu(title, descr, choices, value, "Change", "Cancel")

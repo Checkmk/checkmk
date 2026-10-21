@@ -76,7 +76,7 @@ APACHE_TCP_PORT = PortHook(
     display_name="Apache port",
     default_port=5000,
     activation=write_apache_listen_conf,
-    choices=apache_network_port_has_error,
+    choices=lambda _edition: apache_network_port_has_error,
     depends=lambda c: c.get("APACHE_MODE") == "own",
 )
 
@@ -406,7 +406,7 @@ def restart_apache(version_info: VersionInfo, verbose: bool) -> None:
 
 APACHE_MODE = Hook(
     name="APACHE_MODE",
-    choices=[
+    choices=lambda _edition: [
         ("own", "Run an own webserver process for this instance"),
         ("none", "Do not run or configure a webserver"),
     ],
@@ -416,7 +416,7 @@ APACHE_MODE = Hook(
 
 APACHE_TCP_ADDR = Hook(
     name="APACHE_TCP_ADDR",
-    choices=apache_TCP_addr_has_error,
+    choices=lambda _edition: apache_TCP_addr_has_error,
     default=lambda _edition: "127.0.0.1",
     depends=lambda c: c.get("APACHE_MODE") == "own",
     activation=write_apache_listen_conf,
@@ -424,7 +424,7 @@ APACHE_TCP_ADDR = Hook(
 
 APACHE_FORWARDED_HEADERS = Hook(
     name="APACHE_FORWARDED_HEADERS",
-    choices=[
+    choices=lambda _edition: [
         ("auto", "Automatically set X-Forwarded-Proto/-Ssl for sites"),
         ("manual", "I set X-Forwarded-Proto/-Ssl myself in the system Apache"),
     ],

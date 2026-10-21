@@ -24,14 +24,14 @@ mkeventd_enabled = {enabled}
 
 MKEVENTD = Hook(
     name="MKEVENTD",
-    choices=[("on", "enable"), ("off", "disable")],
+    choices=lambda _edition: [("on", "enable"), ("off", "disable")],
     default=lambda edition: "off" if edition is Edition.CLOUD else "on",
     activation=write_mkeventd_conf,
 )
 
 MKEVENTD_SNMPTRAP = Hook(
     name="MKEVENTD_SNMPTRAP",
-    choices=[("on", "enable"), ("off", "disable")],
+    choices=lambda _edition: [("on", "enable"), ("off", "disable")],
     default=lambda _edition: "off",
     depends=lambda c: c.get("MKEVENTD") == "on",
     activation=null_action,
@@ -39,7 +39,7 @@ MKEVENTD_SNMPTRAP = Hook(
 
 MKEVENTD_SYSLOG = Hook(
     name="MKEVENTD_SYSLOG",
-    choices=[("on", "enable"), ("off", "disable")],
+    choices=lambda _edition: [("on", "enable"), ("off", "disable")],
     default=lambda _edition: "off",
     depends=lambda c: c.get("MKEVENTD") == "on",
     activation=null_action,
@@ -47,7 +47,7 @@ MKEVENTD_SYSLOG = Hook(
 
 MKEVENTD_SYSLOG_TCP = Hook(
     name="MKEVENTD_SYSLOG_TCP",
-    choices=[("on", "enable"), ("off", "disable")],
+    choices=lambda _edition: [("on", "enable"), ("off", "disable")],
     default=lambda _edition: "off",
     depends=lambda c: c.get("MKEVENTD") == "on",
     activation=null_action,

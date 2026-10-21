@@ -8,7 +8,7 @@ from omdlib.config_api import Hook, null_action
 AUTOSTART = Hook(
     name="AUTOSTART",
     activation=null_action,
-    choices=[
+    choices=lambda _edition: [
         ("on", "Start this site at boot time"),
         ("off", "Do not start this site at boot time"),
     ],

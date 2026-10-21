@@ -11,6 +11,7 @@ import traceback
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 
+import omdlib
 from omdlib.admin_mail import ADMIN_MAIL
 from omdlib.agent_receiver import AGENT_RECEIVER, AGENT_RECEIVER_PORT
 from omdlib.automation_helper import AUTOMATION_HELPER
@@ -64,7 +65,7 @@ from omdlib.system_apache import (
 from omdlib.tmpfs import TMPFS
 
 from cmk.ccc.exceptions import MKTerminate
-from cmk.ccc.version import edition
+from cmk.ccc.version import Edition
 
 ConfigHookResult = tuple[int, str]
 
@@ -216,7 +217,9 @@ def load_config(site_name: str, hook_dir: str | None, omd_path: Path = Path("/om
                         )
                     )
                 else:
-                    config[hook_name] = hook.default(edition(Path(site_home)))
+                    config[hook_name] = hook.default(
+                        Edition.from_version_string(omdlib.__version__)
+                    )
     return config
 
 

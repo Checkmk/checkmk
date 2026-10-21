@@ -12,6 +12,7 @@ import logging
 import os
 import tarfile
 from collections.abc import Mapping
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -33,6 +34,7 @@ from cmk.gui.watolib import activate_changes
 from cmk.gui.watolib import activate_changes as activate_changes_module
 from cmk.gui.watolib.activate_changes import (
     _confirm_activated_changes,
+    _distribute_piggyback_hub_configs,
     ActivateChanges,
     ActivateChangesManager,
     ActivationCleanupJob,
@@ -51,6 +53,7 @@ from cmk.gui.watolib.config_sync import (
     ReplicationPath,
     ReplicationPathType,
 )
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.livestatus_client import (
     BrokerConnection,
@@ -59,7 +62,7 @@ from cmk.livestatus_client import (
     ConnectionId,
     NetworkSocketDetails,
 )
-from cmk.messaging import rabbitmq
+from cmk.messaging import CMKConnectionError, rabbitmq
 from tests.testlib.common.repo import is_pro_repo, is_ultimatemt_repo
 from tests.testlib.unit.rabbitmq import get_expected_definition
 from tests.testlib.unit.utils import reset_registries
@@ -1744,3 +1747,23 @@ def test_domains_restarting_the_site_are_activated_last() -> None:
         OMD,
         EXPERIMENTAL_FLAGS,
     ]
+
+
+def _fail_to_connect_to_broker(*_args: object) -> None:
+    raise CMKConnectionError("certificate verify failed: self-signed certificate")
+
+
+@pytest.mark.xfail(raises=CMKConnectionError, reason="Crash group 4014: CMKConnectionError")
+@pytest.mark.usefixtures("request_context")
+def test_failing_broker_connection_during_hub_config_distribution_is_logged(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    features = replace(
+        next(iter(activate_changes.activation_features_registry.values())),
+        distribute_piggyback_hub_configs=_fail_to_connect_to_broker,
+    )
+
+    with caplog.at_level(logging.WARNING, logger="cmk.web"):
+        _distribute_piggyback_hub_configs(features, SiteConfigurations({}), [], folder_tree())
+
+    assert any("message broker" in m for m in caplog.messages)

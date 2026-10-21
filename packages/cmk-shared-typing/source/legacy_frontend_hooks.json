@@ -124,7 +124,8 @@
         "valuespec_iconselector_toggle",
         "valuespec_list_choice_toggle_all",
         "virtual_host_tree_enter",
-        "waiting_flash_message"
+        "waiting_flash_message",
+        "wato_tree_click"
       ]
     },
     "dynamic_params_callback_name": {

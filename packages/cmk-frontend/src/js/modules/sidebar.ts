@@ -440,7 +440,7 @@ export function refresh_single_snapin(name: string) {
  *************************************************/
 
 /* Foldable Tree in snapin */
-export function wato_tree_click(_link_obj: string, folderpath: string) {
+export function wato_tree_click(folderpath: string) {
   const topic = (document.getElementById('topic') as HTMLInputElement).value
   const target = (document.getElementById('target_' + topic) as HTMLInputElement).value
 

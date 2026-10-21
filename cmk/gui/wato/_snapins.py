@@ -10,7 +10,7 @@ from cmk.gui import site_config, sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard import get_permitted_dashboards
 from cmk.gui.htmllib.foldable_container import foldable_container
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.icon_helpers import migrate_to_dynamic_icon, migrate_to_static_icon
@@ -286,7 +286,7 @@ def compute_foldertree(tree: FolderTree) -> dict[str, FolderEntry]:
     return user_folders
 
 
-def render_tree_folder(tree_id: str, folder: FolderEntry, js_func: str) -> None:
+def render_tree_folder(tree_id: str, folder: FolderEntry) -> None:
     subfolders = folder.get(".folders", {}).values()
     is_leaf = len(subfolders) == 0
 
@@ -300,7 +300,9 @@ def render_tree_folder(tree_id: str, folder: FolderEntry, js_func: str) -> None:
         "%s (%d)" % (folder["title"], folder[".num_hosts"]),
         href="#",
         class_="link",
-        onclick="{}(this, '{}');".format(js_func, folder[".path"]),
+        **ClickAction(
+            action="wato_tree_click", arguments={"folder_path": folder[".path"]}
+        ).data_attributes(),
     )
 
     if not is_leaf:
@@ -312,7 +314,7 @@ def render_tree_folder(tree_id: str, folder: FolderEntry, js_func: str) -> None:
             padding=6,
         ):
             for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
-                render_tree_folder(tree_id, subfolder, js_func)
+                render_tree_folder(tree_id, subfolder)
     else:
         html.li(title, class_="single")
 
@@ -430,8 +432,4 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
 
         # Now render the whole tree
         if user_folders:
-            render_tree_folder(
-                "wato-hosts",
-                list(user_folders.values())[0],
-                "cmk.sidebar.wato_tree_click",
-            )
+            render_tree_folder("wato-hosts", list(user_folders.values())[0])

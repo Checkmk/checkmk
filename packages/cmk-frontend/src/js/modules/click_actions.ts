@@ -32,13 +32,18 @@ import {
   switch_customer,
   switch_site,
   update_vue_snapin_contents,
-  virtual_host_tree_enter
+  virtual_host_tree_enter,
+  wato_tree_click
 } from '@/modules/sidebar'
 import { makeLoadingTransition, makeuri, querySelectorID } from '@/modules/utils'
 import { duallist_switch, iconselector_toggle, list_choice_toggle_all } from '@/modules/valuespecs'
 import { randomize_secret } from '@/modules/wato'
 
-import { type ClickAction, register_click_actions } from './click_action_dispatcher'
+import {
+  type ClickAction,
+  type ClickActionArguments,
+  register_click_actions
+} from './click_action_dispatcher'
 
 // Actions of page menu entries close the open dropdown afterwards
 function closing_dropdown(action: ClickAction): ClickAction {
@@ -58,6 +63,15 @@ const node_instance = () => (window as any).node_instance
 const dispatch_custom_event: ClickAction = (_element, options) =>
   document.dispatchEvent(new CustomEvent(options.name, { detail: options.detail }))
 
+function toggle_foldable_container_by_options(options: ClickActionArguments) {
+  toggle_foldable_container(
+    options.treename,
+    options.id,
+    options.fetch_url,
+    options.save_state === 'true'
+  )
+}
+
 const click_actions: Record<KnownClickAction, ClickAction> = {
   activate_changes: closing_dropdown((_element, options) =>
     activate_changes(options.mode, options.site_id)
@@ -72,12 +86,7 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
   },
   dispatch_custom_event: dispatch_custom_event,
   foldable_container_toggle: (_element, options) => {
-    toggle_foldable_container(
-      options.treename,
-      options.id,
-      options.fetch_url,
-      options.save_state === 'true'
-    )
+    toggle_foldable_container_by_options(options)
     // The header may contain links, e.g. to a view, which have to be followed
     return true
   },
@@ -161,6 +170,16 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
   waiting_flash_message: (_element, options) => {
     waiting_flash_message('top_heading', options.message)
     return true
+  },
+  wato_tree_click: (element, options) => {
+    wato_tree_click(options.folder_path)
+    // The link is the title of the folder's foldable container, which is toggled by a click, too
+    const header = element.parentElement?.closest<HTMLElement>(
+      '[data-cmk_on_click="foldable_container_toggle"]'
+    )
+    if (header?.dataset.cmk_on_click_arguments) {
+      toggle_foldable_container_by_options(JSON.parse(header.dataset.cmk_on_click_arguments))
+    }
   }
 }
 

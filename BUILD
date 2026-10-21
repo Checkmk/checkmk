@@ -181,6 +181,7 @@ multirun(
         ":community_requirements",
         ":runtime_requirements",
         "//agents/modules/windows:windows_requirements",
+        "//agents/modules/windows:windows_test_cab_requirements",
     ] + select({
         "@//:gpl+nonfree_repo": ["//omd/non-free/relay:requirements"],
         "@//:gpl_repo": [],
@@ -197,6 +198,7 @@ test_suite(
         ":requirements_test",
         ":runtime_requirements_test",
         "//agents/modules/windows:windows_requirements_test",
+        "//agents/modules/windows:windows_test_cab_requirements_test",
     ],
 )
 
@@ -205,6 +207,7 @@ test_suite(
     tests = [
         ":community_requirements_test",
         "//agents/modules/windows:windows_requirements_test",
+        "//agents/modules/windows:windows_test_cab_requirements_test",
     ],
 )
 

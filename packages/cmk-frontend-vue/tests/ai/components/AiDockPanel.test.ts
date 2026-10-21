@@ -80,6 +80,17 @@ test('a size beyond the element it docks into shrinks to fit it', async () => {
   expect(screen.getByRole('separator')).toHaveAttribute('aria-valuenow', '500')
 })
 
+test('reports only the sizes the user sets, not the ones it shrinks to', async () => {
+  dockIntoContainerOfWidth(500)
+  const { emitted } = render(AiDockPanel, { props: { size: 800, minSize: 200 }, slots })
+  await nextTick()
+
+  await focusedSeparator()
+  await userEvent.keyboard('{ArrowRight}')
+
+  expect(emitted('userResize')).toEqual([[450]])
+})
+
 test('dragging the handle away from the edge grows the pane by the distance moved', async () => {
   render(AiDockPanel, { props: { size: 300, minSize: 200 }, slots })
   const separator = screen.getByRole('separator')

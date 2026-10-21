@@ -6,11 +6,19 @@
 
 const OPEN_STORAGE_KEY = 'cmk-ai-assistant-open'
 const POSITION_STORAGE_KEY = 'cmk-ai-assistant-position'
-const PANEL_SIZE = 'calc(300px + var(--dimension-2))'
+const WIDTH_STORAGE_KEY = 'cmk-ai-assistant-width'
+const PANEL_MIN_WIDTH = 300
 const DOCK_POSITIONS = ['left', 'right']
 
 function isOpen(): boolean {
   return sessionStorage.getItem(OPEN_STORAGE_KEY) === 'true'
+}
+
+function storedWidth(): number {
+  const stored: unknown = JSON.parse(localStorage.getItem(WIDTH_STORAGE_KEY) ?? 'null')
+  return typeof stored === 'number' && Number.isFinite(stored) && stored >= PANEL_MIN_WIDTH
+    ? stored
+    : PANEL_MIN_WIDTH
 }
 
 function storedPosition(): string {
@@ -23,7 +31,10 @@ export function reserve_panel_space_before_first_paint() {
     if (!isOpen()) {
       return
     }
-    document.documentElement.style.setProperty(`--main-area-inset-${storedPosition()}`, PANEL_SIZE)
+    document.documentElement.style.setProperty(
+      `--main-area-inset-${storedPosition()}`,
+      `calc(${storedWidth()}px + var(--dimension-2))`
+    )
   } catch {
     return
   }

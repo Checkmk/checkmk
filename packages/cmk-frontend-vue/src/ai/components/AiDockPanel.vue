@@ -22,6 +22,8 @@ const { dock = 'right', minSize } = defineProps<AiDockPanelProps>()
 const size = defineModel<number>('size', { required: true })
 const collapsed = defineModel<boolean>('collapsed', { default: false })
 
+const emit = defineEmits<{ userResize: [size: number] }>()
+
 const root = useTemplateRef('root')
 const contentId = useId()
 
@@ -71,7 +73,9 @@ function resizeTo(value: number): void {
     return
   }
   collapsed.value = false
-  size.value = clamp(value)
+  const resized = clamp(value)
+  size.value = resized
+  emit('userResize', resized)
 }
 
 const growKey = computed(

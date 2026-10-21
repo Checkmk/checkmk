@@ -9,6 +9,8 @@ import {
   type FilterDefinition,
   useProvideFilterDefinitions
 } from 'cmk-ui-library/components/filter'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h, provide, ref } from 'vue'
 
@@ -41,6 +43,14 @@ const CONSTANTS: DashboardConstants = {
     }
   }
 }
+
+const API = `${location.protocol}//${location.host}/api/internal/domain-types/dashboard/actions`
+
+useMswServer(
+  http.post(`${API}/compute-widget-titles/invoke`, () =>
+    HttpResponse.json({ extensions: { titles: { preview_widget: 'All hosts' } } })
+  )
+)
 
 type Saved = [WidgetContent, WidgetGeneralSettings, WidgetFilterContext]
 
@@ -83,7 +93,15 @@ function renderWizard(editWidgetSpec: WidgetSpec | null) {
           })
       }
     }),
-    { global: { stubs: { WidgetObjectFilterConfiguration: true, FiltersRecap: true } } }
+    {
+      global: {
+        stubs: {
+          WidgetObjectFilterConfiguration: true,
+          FiltersRecap: true,
+          DashboardPreviewContent: true
+        }
+      }
+    }
   )
   return saved
 }

@@ -12,13 +12,17 @@ import { computed, h, ref, watch } from 'vue'
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import AddFilters from '@/dashboard/components/Wizard/components/AddFilters/AddFilters.vue'
 import FiltersRecap from '@/dashboard/components/Wizard/components/FiltersRecap/FiltersRecap.vue'
-import { parseContextConfiguredFilters } from '@/dashboard/components/Wizard/components/FiltersRecap/utils'
+import {
+  parseContextConfiguredFilters,
+  squashFilters
+} from '@/dashboard/components/Wizard/components/FiltersRecap/utils'
 import { useWidgetVisualizationProps } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import { useWidgetFilterManager } from '@/dashboard/components/Wizard/components/filter/composables/useWidgetFilterManager.ts'
 import { extractConfiguredFilters } from '@/dashboard/components/Wizard/utils'
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type { ContextFilters } from '@/dashboard/types/filter.ts'
 import type {
+  EffectiveWidgetFilterContext,
   MonitoringTableContent,
   WidgetContent,
   WidgetFilterContext,
@@ -148,11 +152,23 @@ function stage2GoNext() {
   wizardHandler.next()
 }
 
-function saveWidget() {
-  if (!content.value || !visualizationProps.validate()) {
+const effectiveFilterContext = computed<EffectiveWidgetFilterContext>(
+  () =>
+    ({
+      uses_infos: infos.value,
+      filters: squashFilters(
+        parseContextConfiguredFilters(props.contextFilters),
+        widgetFilterManager.getConfiguredFilters()
+      ),
+      restricted_to_single: []
+    }) as EffectiveWidgetFilterContext
+)
+
+function saveWidget(generalSettings: WidgetGeneralSettings) {
+  if (!content.value) {
     return
   }
-  emit('addWidget', content.value, visualizationProps.widgetGeneralSettings.value, {
+  emit('addWidget', content.value, generalSettings, {
     uses_infos: infos.value,
     filters: extractConfiguredFilters(widgetFilterManager)
   } as WidgetFilterContext)
@@ -209,7 +225,13 @@ function saveWidget() {
         @go-next="stage2GoNext"
       />
       <Stage3
-        v-if="wizardHandler.stage.value === 2"
+        v-if="wizardHandler.stage.value === 2 && content"
+        v-model:visualization="visualizationProps"
+        :tick="tick"
+        :range="range"
+        :dashboard-key="dashboardKey"
+        :content="content"
+        :effective-filter-context="effectiveFilterContext"
         :is-edit-mode="!!editWidgetSpec"
         @go-prev="wizardHandler.prev"
         @add-widget="saveWidget"

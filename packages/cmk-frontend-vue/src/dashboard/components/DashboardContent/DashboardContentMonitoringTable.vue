@@ -44,6 +44,13 @@ function unappliedHint(value: ComputedMonitoringTable): string {
   })
 }
 
+// The wizard preview has no click shield, so that it scrolls: its links must not navigate away.
+function blockLinksInPreview(event: MouseEvent): void {
+  if (props.isPreview && event.target instanceof Element && event.target.closest('a')) {
+    event.preventDefault()
+  }
+}
+
 function truncatedHint(value: ComputedMonitoringTable): string {
   return descriptor.value.truncatedHint(value.rows.length, value.matched)
 }
@@ -57,7 +64,11 @@ function truncatedHint(value: ComputedMonitoringTable): string {
     @retry="retry"
   >
     <template #default="{ value }">
-      <div class="db-content-monitoring-table">
+      <div
+        class="db-content-monitoring-table"
+        @click.capture="blockLinksInPreview"
+        @auxclick.capture="blockLinksInPreview"
+      >
         <p
           v-if="value.unapplied_filters.length > 0"
           class="db-content-monitoring-table__unapplied"

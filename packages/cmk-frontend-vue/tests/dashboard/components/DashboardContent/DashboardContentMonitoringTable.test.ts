@@ -221,6 +221,23 @@ describe('DashboardContentMonitoringTable', () => {
     expect(screen.queryByRole('button', { name: 'heute' })).not.toBeInTheDocument()
   })
 
+  it('keeps its links from navigating away in the wizard preview', async () => {
+    value = { ...VALUE, rows: [{ ...VALUE.rows[0]!, num_services: 3 }] }
+    render(DashboardContentMonitoringTable, {
+      props: makeContentProps(
+        { ...CONTENT, columns: ['name', 'num_services'] },
+        { isPreview: true }
+      )
+    })
+    await nextTick()
+    deliverSize(800, 400)
+
+    const click = new MouseEvent('click', { bubbles: true, cancelable: true })
+    ;(await screen.findByRole('link', { name: '3' })).dispatchEvent(click)
+
+    expect(click.defaultPrevented).toBe(true)
+  })
+
   it('says how many hosts it leaves out beyond its limit', async () => {
     value = { ...VALUE, matched: 250, total: 300 }
 

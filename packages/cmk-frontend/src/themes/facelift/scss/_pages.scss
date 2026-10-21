@@ -126,7 +126,6 @@ body {
   &:not(:has(#ai-panel-container)) {
     --main-area-inset-right: 0px;
     --main-area-inset-left: 0px;
-    --main-area-inset-bottom: 0px;
   }
 
   &.main {
@@ -149,7 +148,6 @@ body {
       min-height: 0;
       margin-right: var(--main-area-inset-right, 0);
       margin-left: var(--main-area-inset-left, 0);
-      margin-bottom: var(--main-area-inset-bottom, 0);
     }
 
     /* Can be toggled with N/n display option */

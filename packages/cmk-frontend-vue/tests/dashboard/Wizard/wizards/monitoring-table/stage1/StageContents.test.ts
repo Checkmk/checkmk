@@ -59,6 +59,18 @@ describe('monitoring table data selection', () => {
     expect(screen.getByRole('region', { name: 'Host' })).toBeInTheDocument()
   })
 
+  it('offers host and service filters once All services is chosen', async () => {
+    const user = userEvent.setup()
+    const { table } = renderStage1()
+
+    await user.click(screen.getByRole('combobox', { name: 'View' }))
+    await user.click(await screen.findByText('All services'))
+
+    expect(table.value).toBe('services')
+    expect(screen.getByRole('region', { name: 'Host' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Service' })).toBeInTheDocument()
+  })
+
   it('offers only host filters for All hosts', () => {
     renderStage1('hosts')
 

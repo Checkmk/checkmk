@@ -43,4 +43,12 @@ describe('filtersForeignTo', () => {
       'serviceregex'
     ])
   })
+
+  it('keeps the host filters of a widget switched to All services', () => {
+    const infos: Record<string, string> = { hostregex: 'host', serviceregex: 'service' }
+
+    expect(filtersForeignTo('services', ['hostregex', 'serviceregex'], (id) => infos[id])).toEqual(
+      []
+    )
+  })
 })

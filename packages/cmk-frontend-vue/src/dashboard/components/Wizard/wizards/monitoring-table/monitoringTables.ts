@@ -21,7 +21,7 @@ export interface MonitoringTableView {
 }
 
 /** The tables the wizard lets the user choose from. */
-export const OFFERED_TABLES: readonly MonitoringTableName[] = ['hosts']
+export const OFFERED_TABLES: readonly MonitoringTableName[] = ['hosts', 'services']
 
 export function monitoringTableViews(): Record<MonitoringTableName, MonitoringTableView> {
   return {

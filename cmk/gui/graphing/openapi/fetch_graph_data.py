@@ -6,7 +6,7 @@
 from collections.abc import Callable, Mapping
 from http import HTTPStatus
 
-from cmk.graphing_engine import Graph
+from cmk.graphing_engine import EvaluatedGraph, Graph
 from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -57,7 +57,7 @@ def graph_fetch_options(
     return options
 
 
-def _evaluated_or_problem(evaluate: Callable[[], EvaluatedGraphs]) -> EvaluatedGraphs:
+def evaluated_or_problem(evaluate: Callable[[], EvaluatedGraphs]) -> EvaluatedGraphs:
     try:
         return evaluate()
     except MKLivestatusException as exc:
@@ -74,19 +74,23 @@ def _evaluated_or_problem(evaluate: Callable[[], EvaluatedGraphs]) -> EvaluatedG
         ) from exc
 
 
-def _single_graph_response(
-    evaluated: EvaluatedGraphs,
-    *,
-    temperature_unit: TemperatureUnit,
-) -> GraphFetchResponse:
+def only_graph(evaluated: EvaluatedGraphs) -> EvaluatedGraph:
     if len(evaluated.graphs) != 1:
         raise ProblemException(
             status=HTTPStatus.INTERNAL_SERVER_ERROR,
             title="Graph evaluation failed",
             detail=f"Expected exactly one graph to be evaluated, but got {len(evaluated.graphs)}",
         )
+    return evaluated.graphs[0]
+
+
+def _single_graph_response(
+    evaluated: EvaluatedGraphs,
+    *,
+    temperature_unit: TemperatureUnit,
+) -> GraphFetchResponse:
     return evaluated_to_response(
-        evaluated.graphs[0],
+        only_graph(evaluated),
         diagnostics=evaluated.diagnostics,
         temperature_unit=temperature_unit,
     )
@@ -104,7 +108,7 @@ def evaluate_graph_to_response(
     time_range = api_time_range_to_engine(requested_time_range)
     options = graph_fetch_options(time_range, consolidation_function, combination_mode)
     return _single_graph_response(
-        _evaluated_or_problem(lambda: evaluate_graphs(internal, options)),
+        evaluated_or_problem(lambda: evaluate_graphs(internal, options)),
         temperature_unit=temperature_unit,
     )
 
@@ -125,7 +129,7 @@ def evaluate_built_graph_to_response(
     time_range = api_time_range_to_engine(requested_time_range)
     options = graph_fetch_options(time_range, consolidation_function, combination_mode)
     return _single_graph_response(
-        _evaluated_or_problem(lambda: evaluate_built_graphs([graph], options)),
+        evaluated_or_problem(lambda: evaluate_built_graphs([graph], options)),
         temperature_unit=temperature_unit,
     )
 

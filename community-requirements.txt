@@ -491,16 +491,16 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.43.115 \
-    --hash=sha256:6667a0c21d48dc125dbba88444bc8a601ce881a99341a0e6169f9333898e620d \
-    --hash=sha256:c0f35e5f9cdf0edb365195e306d5586d3970b224660a11a87a4ec361ec3d7168
+boto3==1.43.116 \
+    --hash=sha256:89fa15e7d1788fb17cbd694b034beba57f43f30f58f4506913a5b62220f8ba01 \
+    --hash=sha256:9dca4dbd464b189041b27b5a02280bd5e02c3051bebf6bd03cd0e47aaf558030
     # via
     #   -c requirements.txt
     #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-plugins/requirements.in
-botocore==1.43.115 \
-    --hash=sha256:9ceda640c868bc15f5399129e8cfdef8cbb4b350e8a99547c9b5f477cfb9619a \
-    --hash=sha256:aa4d9c4e7ef99988b7347e0cd276ba84e1eb1625510557b0e36cd57ecb19bbf2
+botocore==1.43.116 \
+    --hash=sha256:00b1fbfc1c024b56633538385628a1bbc7ab15aca0b5b53e5fe188841d96c8ce \
+    --hash=sha256:92f1efe8434183f08f91a61478925f5f8d23082024556f269f916477040e26f4
     # via
     #   -c requirements.txt
     #   -r packages/cmk-plugins/requirements.in
@@ -1342,9 +1342,9 @@ fakeredis[lua]==2.40.0 \
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-fastapi==0.150.0 \
-    --hash=sha256:97583806e6de1b6fc299866bdb88730fa311ff640829af876c9e847f4c3a3b29 \
-    --hash=sha256:e566bc3f1347cfacf61f2f9ea1d7ab4576fbcff02eb9747c2807b8ced16d9e9a
+fastapi==0.156.4 \
+    --hash=sha256:a09d29fdd6635e94ae00199bae331a04350e0e46ba4334d50809007cd3119db5 \
+    --hash=sha256:e7dd3889a6d6f0c2976a89d6fb34be92fb3ee77bb5f9d1a40e68e9af09c96968
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -2155,9 +2155,9 @@ jsonpatch==1.36 \
     # via
     #   -c requirements.txt
     #   redfish
-jsonpath-ng==1.11.0 \
-    --hash=sha256:84b325f791e43ae40810ff4059f50744b4c22fe53066b0884a659f0191c0b308 \
-    --hash=sha256:938b9c8d02f625c079c884f2b76241d0ac54ee7d1c8f10a502c42d8e31ff0c4b
+jsonpath-ng==1.12.0 \
+    --hash=sha256:3a00d5ec335559d63f683b7b5295fef2a8afe61717f2fef8128c418790124579 \
+    --hash=sha256:6fc33404ab2a9b77895e9acde23f80998c61567c8e9c182301e73a78f158e585
     # via
     #   -c requirements.txt
     #   redfish
@@ -3972,9 +3972,9 @@ ply==3.11 \
     # via
     #   -c requirements.txt
     #   python-active-directory
-polyfactory==3.3.0 \
-    --hash=sha256:237258b6ff43edf362ffd1f68086bb796466f786adfa002b0ac256dbf2246e9a \
-    --hash=sha256:686abcaa761930d3df87b91e95b26b8d8cb9fdbbbe0b03d5f918acff5c72606e
+polyfactory==3.4.0 \
+    --hash=sha256:1a615824fa25fdd5de0a8df53ee5ec650d26d5f4e3ad27f3bcb8ef32d2c5e40c \
+    --hash=sha256:ba24b134ff90599a7abc71420a308c4e2d0a4a8db89f775ed59ae88accdf673b
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
@@ -4485,9 +4485,9 @@ pydantic-core==2.50.1 \
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   pydantic
-pydantic-settings==2.16.0 \
-    --hash=sha256:5b6c578049ede4db0e2ef3b4eaa4ad4069cfa9211f83fb38df899dfade50a614 \
-    --hash=sha256:7e73acf7f61936a15e5a3b6eedaea29f133357faf7272f2607ba479b049dd7f2
+pydantic-settings==2.16.1 \
+    --hash=sha256:30f5313340da4e8f1b440d1910b92a5bc3ccbb6b4ba70ec2b8395bc921f418f5 \
+    --hash=sha256:aff602a1886338c2df3d1e958e2193a8dc33cec75b91f202e83fd98484b4b0da
     # via
     #   -c requirements.txt
     #   openapi-schema-validator
@@ -4995,9 +4995,9 @@ python-slugify==9.1.3 \
     # via
     #   -c requirements.txt
     #   pytest-playwright
-python-snap7==3.2.1 \
-    --hash=sha256:05d65110169c3ef2edea2aaeb23be598527c46877d5546ee0a7e61a7e37ab198 \
-    --hash=sha256:15748f8423e3726457f6c4d0202aabde4ad65f2b809c2c1e7ee4f2f776509c2b
+python-snap7==3.3.0 \
+    --hash=sha256:99aec46ef78d526ad3106b9359bd259ca5cd151034500b21a8732ba901e406f3 \
+    --hash=sha256:cd4d6a3eb3f199c78a1725e54a437ef664da7988c10817e8b19b58ed99ef8b04
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -5722,9 +5722,9 @@ setproctitle==1.3.8 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-ec/requirements.in
-setuptools==84.2.0 \
-    --hash=sha256:6f445ca2ce864605f81e223f262b4c94ffcb9a4a63473bae0ed7be5aab0291da \
-    --hash=sha256:8cc107ac7a403105dc8d6477664171f36135fab26adf8b5e0edaebc313f39b21
+setuptools==84.2.1 \
+    --hash=sha256:3ff8b3b5492a0aa66960f4419365a86b84e013070d4313e4d4a6894f5d64d6bc \
+    --hash=sha256:ca140b45d5325a9478f880e351484f62fef15f336462e449ca0c03c873d589c2
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -5782,9 +5782,9 @@ soupsieve==3.0.3 \
     # via
     #   -c requirements.txt
     #   beautifulsoup4
-sphinx==9.1.1 \
-    --hash=sha256:48b627f02908f22c601b3ba9c7b17265b4f315dd05c8bc64cd4da41183f44fbc \
-    --hash=sha256:f8b60013ce25017be41a509e5c2d265bc1918410061315c36b809c7f335646c0
+sphinx==9.2.0 \
+    --hash=sha256:4c3ec13b612712c0d3ce4cbdd9e3eb91e68577e07a8e31f32f21cf178453578c \
+    --hash=sha256:90470459f3cab15d9dfed146c71cf77694b0445df17b2e0e69059cb9f7fc9ee4
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
@@ -5844,9 +5844,9 @@ sphinxcontrib-jquery==4.1 \
     # via
     #   -c requirements.txt
     #   sphinx-rtd-theme
-sphinxcontrib-jsmath==1.0.1 \
-    --hash=sha256:2ec2eaebfb78f3f2078e73666b1415417a116cc848b72e5172e596c871103178 \
-    --hash=sha256:a9925e4a4587247ed2191a22df5f6970656cb8ca2bd6284309578f2153e0c4b8
+sphinxcontrib-jsmath==2.0.0 \
+    --hash=sha256:15ca92fe0eec82f0baf91a7efcc51ffacdb605924be6327683a52ebdacb6744c \
+    --hash=sha256:551f780cf9687f9c3c74f0cf9f18aca06e0d6958853453f3803fe4d357c5b924
     # via
     #   -c requirements.txt
     #   sphinx
@@ -6493,9 +6493,9 @@ vcs-versioning==2.6.0 \
     # via
     #   -c requirements.txt
     #   setuptools-scm
-virtualenv==21.14.11 \
-    --hash=sha256:593052d8477ea8c55a842387ce111bd08c72618f0c1133c302cafe335e570a57 \
-    --hash=sha256:b319f8590a84e5de5f8f2c803ecd2237e9bc0ffa7c1e875e3169c107cecb7454
+virtualenv==21.14.12 \
+    --hash=sha256:7820aeaef23f1f59a96458edfc7f9d3deac937155718de15f1c9a64471e15551 \
+    --hash=sha256:bbcfb78e36c22ad70c6917c4aecb5e63477d3c138e9f88c946f320e31859c76a
     # via
     #   -c requirements.txt
     #   pre-commit

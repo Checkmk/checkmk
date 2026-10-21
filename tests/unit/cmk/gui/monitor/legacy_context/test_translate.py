@@ -64,6 +64,12 @@ def _translate(context: VisualContext) -> ContextFilterTranslation[_JSON]:
             id="negated text",
         ),
         pytest.param(
+            "hostregex",
+            {"host_regex": "-1"},
+            _condition("name", "contains", "-1"),
+            id="text that reads like an ignored flag",
+        ),
+        pytest.param(
             "host",
             {"host": "web-01"},
             _condition("name", "matches", r"^web\-01$"),
@@ -147,6 +153,12 @@ def _translate(context: VisualContext) -> ContextFilterTranslation[_JSON]:
             _condition("num_services", "lte", 9),
             id="number range with one bound",
         ),
+        pytest.param(
+            "host_num_services",
+            {"host_num_services_until": "-1"},
+            _condition("num_services", "lte", -1),
+            id="bound that reads like an ignored flag",
+        ),
     ],
 )
 def test_legacy_filter_translates_to_condition_on_its_field(
@@ -163,6 +175,14 @@ def test_legacy_filter_translates_to_condition_on_its_field(
         pytest.param({"hostregex": {"host_regex": "", "neg_host_regex": ""}}, id="empty vars"),
         pytest.param({"sites": {"sites": "|"}}, id="no site"),
         pytest.param({"host_acknowledged": {"is_host_acknowledged": "-1"}}, id="ignored flag"),
+        pytest.param(
+            {"host_staleness": {"is_host_staleness": "-1"}},
+            id="ignored flag the page does not map",
+        ),
+        pytest.param(
+            {"wato_folder": {"wato_folder": "-1"}},
+            id="filter outside the catalog that reads like an ignored flag",
+        ),
         pytest.param(
             {"hoststate": {"hst0": "on", "hst1": "on", "hst2": "on", "hstp": "on"}},
             id="every state",
@@ -194,6 +214,22 @@ def test_inactive_context_translates_to_no_filter(context: VisualContext) -> Non
 )
 def test_filter_without_equivalent_is_reported(context: VisualContext) -> None:
     assert _translate(context) == ContextFilterTranslation(filter=None, unapplied=list(context))
+
+
+@pytest.mark.parametrize(
+    "value, expected_unapplied",
+    [
+        pytest.param({"host_regex": "-1"}, ["hostregex"], id="reads like an ignored flag"),
+        pytest.param({"host_regex": "web["}, ["hostregex"], id="untranslatable"),
+        pytest.param({"neg_host_regex": "on"}, [], id="restricts nothing"),
+    ],
+)
+def test_filter_the_page_does_not_map_is_reported_if_it_restricts_anything(
+    value: FilterHTTPVariables, expected_unapplied: list[FilterName]
+) -> None:
+    translation = translate_context({"hostregex": value}, _fields_without("hostregex"), _ANY_PAGE)
+
+    assert translation == ContextFilterTranslation(filter=None, unapplied=expected_unapplied)
 
 
 def test_page_mapping_a_filter_outside_the_catalog_is_rejected() -> None:

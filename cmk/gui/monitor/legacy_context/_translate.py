@@ -69,17 +69,15 @@ def translate_context[N, F](
     unapplied = {
         name
         for name, value in context.items()
-        if name not in fields and name not in SITE_FILTERS and _is_set(value)
+        if name not in fields and name not in SITE_FILTERS and _restricts(name, value)
     }
     if applied_site_filter is not None and applied_site_filter not in fields:
         unapplied.add(applied_site_filter)
     for name, field in fields.items():
         if name in SITE_FILTERS and name != applied_site_filter:
             continue
-        if not _is_set(value := context.get(name, {})):
-            continue
         try:
-            if (node := LEGACY_FILTERS[name](value, field)) is None:
+            if (node := LEGACY_FILTERS[name](context.get(name, {}), field)) is None:
                 continue
             candidate = [*nodes, node]
             tree = all_of(candidate)
@@ -125,5 +123,13 @@ def _site_filters(context: VisualContext) -> dict[FilterName, frozenset[str] | N
     return site_filters
 
 
-def _is_set(value: FilterHTTPVariables) -> bool:
-    return any(text and text != IGNORED_TRISTATE for text in value.values())
+def _restricts(name: FilterName, value: FilterHTTPVariables) -> bool:
+    """Whether a filter the page does not map restricts anything, i.e. has to be reported."""
+    if (legacy_filter := LEGACY_FILTERS.get(name)) is None:
+        # Its kind is unknown, so "-1" is taken for an ignored tri-state flag.
+        return any(text and text != IGNORED_TRISTATE for text in value.values())
+    try:
+        # Whether it restricts anything does not depend on the field it would be mapped to.
+        return legacy_filter(value, "") is not None
+    except UntranslatableFilterError:
+        return True

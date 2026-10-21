@@ -107,11 +107,23 @@ def _forward_put_token(
     )
 
 
+_DOWNLOAD_TIMEOUT_SECONDS = 120
+"""The longest pause of the site while it answers a download
+
+A host of a remote site waits for the transfer from the central site, which the remote site
+reads in full before it answers. That whole transfer is one silent wait here, so the 30 seconds
+of the other calls would end a slow download in every cycle. The controller allows 300 seconds
+(AGENT_DOWNLOAD_TIMEOUT in packages/cmk-agent-ctl/src/agent_receiver_api.rs), and the Apache of
+the site cuts a silent request after its own Timeout of 120.
+"""
+
+
 def _forward_post_internal(
     endpoint: str,
     site_internal_secret: B64SiteInternalSecret,
     json_body: dict[str, object],
     accept: str,
+    timeout: int = 30,
 ) -> requests.Response:
     return requests.post(
         f"{_local_internal_rest_api_url()}/{endpoint}",
@@ -120,7 +132,7 @@ def _forward_post_internal(
             "Accept": accept,
         },
         json=json_body,
-        timeout=30,
+        timeout=timeout,
     )
 
 
@@ -275,6 +287,7 @@ def deployment_download(
         site_internal_secret,
         {**download_request.model_dump(), "uuid": str(uuid)},
         "application/octet-stream",
+        timeout=_DOWNLOAD_TIMEOUT_SECONDS,
     )
     _verify_agent_update_response(response)
     return response.content

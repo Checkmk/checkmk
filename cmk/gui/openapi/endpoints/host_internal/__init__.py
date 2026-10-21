@@ -16,7 +16,7 @@ import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site
 from cmk.gui.agent_registration import PERMISSION_SECTION_AGENT_REGISTRATION
-from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.exceptions import MKAuthException, MKInsufficientScope, MKUserError
 from cmk.gui.fields import HostField
 from cmk.gui.http import Response
 from cmk.gui.i18n import _l
@@ -167,10 +167,9 @@ def _verify_permissions(host: Host) -> None:
 
     try:
         host.permissions.need_permission("read")
-    except MKAuthException:
-        raise unathorized_excpt
-    try:
         host.permissions.need_permission("write")
+    except MKInsufficientScope:
+        raise
     except MKAuthException:
         raise unathorized_excpt
 
@@ -198,6 +197,8 @@ def _check_host_access_permissions(
     host = Host.load_host(host_name)
     try:
         host.permissions.need_permission(access_type)
+    except MKInsufficientScope:
+        raise
     except MKAuthException as exc:
         # The request is already authenticated at this point, so a failed permission check
         # means the user lacks a permission -> forbidden (403), not unauthorized (401). Let this

@@ -5,13 +5,15 @@
 
 # mypy: disable-error-code="mutable-override"
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
+from http import HTTPStatus
 from typing import Any, Literal, NewType
 from wsgiref.types import StartResponse, WSGIEnvironment
 
 import docstring_parser
 from werkzeug.exceptions import HTTPException
 
+from cmk.gui.exceptions import MKAuthException, MKInsufficientScope
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects.type_defs import Serializable
 from cmk.utils.encoding import json_encode
@@ -57,25 +59,29 @@ class GeneralRestAPIException(HTTPException):
         detail: str,
         fields: FIELDS | None = None,
         ext: EXT | None = None,
+        headers: Mapping[str, str] | None = None,
     ) -> None:
         self.code: int = status
         self.description: str = title
         self.detail = detail
         self.fields = fields
         self.ext = ext
+        self.headers = headers or {}
         super().__init__(description=title)
 
     def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> Iterable[bytes]:
         return self.to_problem()(environ, start_response)
 
     def to_problem(self) -> Response:
-        return problem(
+        response = problem(
             status=self.code,
             title=self.description,
             detail=self.detail,
             fields=self.fields,
             ext=self.ext,
         )
+        response.headers.update(self.headers)
+        return response
 
 
 # ==================================================== REQUEST exceptions
@@ -87,8 +93,9 @@ class RestAPIRequestGeneralException(GeneralRestAPIException):
         detail: str,
         fields: FIELDS | None = None,
         ext: EXT | None = None,
+        headers: Mapping[str, str] | None = None,
     ) -> None:
-        super().__init__(status, title, detail, fields, ext)
+        super().__init__(status, title, detail, fields, ext, headers)
 
 
 class RestAPIRequestContentTypeException(RestAPIRequestGeneralException):
@@ -200,8 +207,22 @@ class RestAPIForbiddenException(RestAPIRequestGeneralException):
         *,
         fields: FIELDS | None = None,
         ext: EXT | None = None,
+        headers: Mapping[str, str] | None = None,
     ) -> None:
-        super().__init__(RestAPIForbiddenException.status, title, detail, fields, ext)
+        super().__init__(RestAPIForbiddenException.status, title, detail, fields, ext, headers)
+
+
+def forbidden_from_auth_exception(exc: MKAuthException) -> RestAPIForbiddenException:
+    return RestAPIForbiddenException(
+        title=HTTPStatus.FORBIDDEN.phrase,
+        detail=str(exc),
+        # The RFC 6750 section 3.1 challenge.
+        headers=(
+            {"WWW-Authenticate": 'Bearer error="insufficient_scope"'}
+            if isinstance(exc, MKInsufficientScope)
+            else None
+        ),
+    )
 
 
 class RestAPIPermissionException(GeneralRestAPIException):

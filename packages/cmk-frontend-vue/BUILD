@@ -130,18 +130,31 @@ css_library(
     ),
 )
 
+vue_library(
+    name = "src_nonfree_vue",
+    srcs = glob(
+        ["src/**/nonfree/**/*.vue"],
+        allow_empty = True,
+    ),
+    data = [":tsconfig"],
+    deps = [
+        ":src_ts",
+        "//:node_modules/vue",
+    ],
+)
+
 js_library(
     name = "src_nonfree",
     srcs = glob(
         [
             "src/**/nonfree/**/*.ts",
-            "src/**/nonfree/**/*.vue",
             "src/**/nonfree/**/*.css",
             "src/**/nonfree/**/*.scss",
         ],
         allow_empty = True,
     ) + [":tsconfig"],
     deps = [
+        ":src_nonfree_vue",
         ":src_ts",
         "//:node_modules/vue",
     ],

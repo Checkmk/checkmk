@@ -25,7 +25,7 @@ def vue_library(name, srcs = [], data = [], tags = [], **kwargs):
     native.filegroup(
         name = stylelint_fg,
         srcs = srcs,
-        tags = (tags or []) + ["stylelint"],
+        tags = (tags or []) + (["stylelint"] if srcs else []),
         visibility = ["//visibility:private"],
     )
 

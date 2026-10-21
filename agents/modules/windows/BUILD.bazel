@@ -7,9 +7,9 @@ load("//bazel/rules:requirements.bzl", "compile_requirements_in")
 load(":python_cab.bzl", "py_platform_transition_filegroup", "python_cab", "python_version_major_minor")
 
 exports_files([
-    "constraints-windows.txt",
-    "requirements-windows.in",
-    "requirements-windows.txt",
+    "windows-constraints.txt",
+    "windows-requirements.in",
+    "windows-requirements.txt",
 ])
 
 _PY_WIN_MAJOR_MINOR = python_version_major_minor(PYTHON_VERSION_WINDOWS)
@@ -71,13 +71,13 @@ filegroup(
 )
 
 compile_requirements_in(
-    name = "requirements-windows-in",
-    constraints = [":constraints-windows.txt"],
-    requirements = [":requirements-windows.in"],
+    name = "windows-requirements-in",
+    constraints = [":windows-constraints.txt"],
+    requirements = [":windows-requirements.in"],
 )
 
 pip_compile(
-    name = "requirements_windows",
+    name = "windows_requirements",
     extra_args = [
         # Fail loudly if any (transitive) dep lacks a win_amd64 wheel rather
         # than silently resolving an sdist the hub cannot build.
@@ -85,8 +85,8 @@ pip_compile(
     ],
     py3_runtime = _PY_WIN_RESOLVER_RUNTIME,
     python_platform = "x86_64-pc-windows-msvc",
-    requirements_in = ":requirements-windows-in",
-    requirements_txt = ":requirements-windows.txt",
+    requirements_in = ":windows-requirements-in",
+    requirements_txt = ":windows-requirements.txt",
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )

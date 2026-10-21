@@ -581,8 +581,8 @@ def _parse_windows_requirements(
 ) -> dict[str, str]:
     """Map the direct python-3.cab requirements to their resolved versions.
 
-    requirements-windows.in names what the CAB ships (unpinned), the resolved
-    requirements-windows.txt holds the versions.  Returns
+    windows-requirements.in names what the CAB ships (unpinned), the resolved
+    windows-requirements.txt holds the versions.  Returns
     {package_name: version}.
     """
     resolved: dict[str, str] = {}
@@ -598,12 +598,12 @@ def _parse_windows_requirements(
         match = re.match(r"([A-Za-z0-9._-]+)(?:\[[^]]*\])?$", stripped)
         assert match, (
             f"unparsable requirement line: {line!r}"
-            " (requirements-windows.in must stay unpinned, bounds go into constraints.txt)"
+            " (windows-requirements.in must stay unpinned, bounds go into constraints.txt)"
         )
         name = match.group(1)
         assert name.lower() in resolved, (
             f"{name} is not in {requirements_txt_path.name};"
-            " run `bazel run //agents/modules/windows:requirements_windows`"
+            " run `bazel run //agents/modules/windows:windows_requirements`"
         )
         packages[name] = resolved[name.lower()]
     return packages
@@ -636,8 +636,8 @@ def test_python3_cab_integrity(package_path: str) -> None:
 
     repo_root = Path(__file__).parents[2]
     packages = _parse_windows_requirements(
-        repo_root / "agents/modules/windows/requirements-windows.in",
-        repo_root / "agents/modules/windows/requirements-windows.txt",
+        repo_root / "agents/modules/windows/windows-requirements.in",
+        repo_root / "agents/modules/windows/windows-requirements.txt",
     )
     python_version = _windows_python_version(repo_root / "package_versions.bzl")
 

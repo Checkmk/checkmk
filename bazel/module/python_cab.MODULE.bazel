@@ -16,7 +16,7 @@ pip.parse(
     hub_name = "windows_python_wheels",
     python_version = "3.14",
     requirements_by_platform = {
-        "@//agents/modules/windows:requirements-windows.txt": "windows_x86_64",
+        "@//agents/modules/windows:windows-requirements.txt": "windows_x86_64",
     },
     target_platforms = ["windows_x86_64"],
 )

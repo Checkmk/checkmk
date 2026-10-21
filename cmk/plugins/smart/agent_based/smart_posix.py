@@ -161,7 +161,10 @@ class ParseSection(RootModel):
 
 def parse_smart_posix(string_table: StringTable) -> Section:
     # Each line contains the output of `smartctl --all --json`.
-    scans = [ParseSection.model_validate_json(line[0]).root for line in string_table]
+    scans = [
+        ParseSection.model_validate_json(line[0].removeprefix("Pending defect count:")).root
+        for line in string_table
+    ]
     failures: list[FailureAll | CantOpenDevice | SCSIMissingModel] = []
     devices: dict[str, NVMeAll | ATAAll | SCSIAll] = {}
     for scan in scans:

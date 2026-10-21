@@ -1,4 +1,5 @@
 load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@windows_python_wheels//:requirements.bzl", "all_whl_requirements")
 load("//:package_versions.bzl", "PYTHON_VERSION_WINDOWS")
@@ -68,6 +69,12 @@ py_binary(
 filegroup(
     name = "venv_scripts",
     srcs = glob(["venv_scripts/*"]),
+)
+
+# The actions of python_cab.bzl's rules.
+sh_binary(
+    name = "build_python_cab",
+    srcs = ["build_python_cab.sh"],
 )
 
 compile_requirements_in(

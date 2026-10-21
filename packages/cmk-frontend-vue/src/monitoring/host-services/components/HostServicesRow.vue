@@ -11,7 +11,7 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, inject } from 'vue'
 
 import { AI_EXPLAIN_ACTION_ID } from '@/monitoring/host-services/aiExplain'
-import type { HostServiceEntry } from '@/monitoring/shared/api/types'
+import type { HostRef, HostServiceEntry, ServiceEntry } from '@/monitoring/shared/api/types'
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
@@ -23,12 +23,13 @@ import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
+import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const props = withDefaults(
   defineProps<{
-    row: HostServiceEntry
+    row: HostServiceEntry | ServiceEntry
     tableRow: Row<HostServiceEntry>
     // Always-visible inline buttons; their url may contain a {service} placeholder resolved per row.
     rowActions?: CellAction[]
@@ -52,6 +53,10 @@ const emit = defineEmits<{
 }>()
 
 const columns = inject(COLUMN_LAYOUT_KEY, null)
+
+const host = computed<HostRef | null>(() =>
+  'host_name' in props.row ? { name: props.row.host_name, site_id: props.row.site_id } : null
+)
 
 function hasColumn(columnId: string): boolean {
   return columns?.value.has(columnId) ?? true
@@ -148,6 +153,15 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     :icons="row.modes ?? []"
     :max-per-row="MODE_ICONS_PER_ROW"
   />
+  <template v-if="host">
+    <StringCell
+      v-if="hasColumn('host_name')"
+      column-id="host_name"
+      :value="host.name"
+      :linked-to="{ href: hostServicesPageUrl(host), target: '_top' }"
+    />
+    <StringCell v-if="hasColumn('site_id')" column-id="site_id" :value="host.site_id" />
+  </template>
   <StringCell
     v-if="hasColumn('name')"
     column-id="name"

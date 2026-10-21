@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { HostServiceEntry } from '@/monitoring/shared/api/types'
+import type { HostServiceEntry, ServiceEntry } from '@/monitoring/shared/api/types'
 import { type ExportJsonValue, ExportValues, RowExport } from '@/monitoring/shared/export/rowExport'
 import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
 
@@ -22,7 +22,15 @@ const COLUMN_VALUES = {
   perfometer: (service) => service.perfometer?.formatted ?? ''
 } satisfies Record<string, (service: HostServiceEntry) => string>
 
+const COLUMN_VALUES_WITH_HOST = {
+  host_name: (service) => service.host_name,
+  site_id: (service) => service.site_id,
+  ...COLUMN_VALUES
+} satisfies Record<string, (service: ServiceEntry) => string>
+
 export type ServiceExportColumn = keyof typeof COLUMN_VALUES
+
+export type ServiceWithHostExportColumn = keyof typeof COLUMN_VALUES_WITH_HOST
 
 const JSON_VALUES: Partial<
   Record<ServiceExportColumn, (service: HostServiceEntry) => ExportJsonValue>
@@ -40,12 +48,12 @@ const JSON_VALUES: Partial<
 
 export class ServiceExport extends RowExport<HostServiceEntry, ServiceExportColumn> {
   constructor(
-    hostName: string,
+    filePrefixName: string,
     columns: readonly ServiceExportColumn[],
     services: readonly HostServiceEntry[]
   ) {
     super(
-      { filePrefix: `${hostName}-services`, csv: COLUMN_VALUES, json: JSON_VALUES },
+      { filePrefix: `${filePrefixName}-services`, csv: COLUMN_VALUES, json: JSON_VALUES },
       columns,
       services
     )
@@ -53,5 +61,27 @@ export class ServiceExport extends RowExport<HostServiceEntry, ServiceExportColu
 
   static isColumn(id: string): id is ServiceExportColumn {
     return Object.hasOwn(COLUMN_VALUES, id)
+  }
+}
+
+export class ServiceWithHostExport extends RowExport<ServiceEntry, ServiceWithHostExportColumn> {
+  constructor(
+    filePrefixName: string,
+    columns: readonly ServiceWithHostExportColumn[],
+    services: readonly ServiceEntry[]
+  ) {
+    super(
+      {
+        filePrefix: `${filePrefixName}-services`,
+        csv: COLUMN_VALUES_WITH_HOST,
+        json: JSON_VALUES
+      },
+      columns,
+      services
+    )
+  }
+
+  static isColumn(id: string): id is ServiceWithHostExportColumn {
+    return Object.hasOwn(COLUMN_VALUES_WITH_HOST, id)
   }
 }

@@ -19,6 +19,8 @@ export type HostServicesResponse = components['schemas']['HostServicesResponse']
 
 export type HostServiceEntry = components['schemas']['HostServiceEntry']
 
+export type ServiceEntry = components['schemas']['ServiceEntry']
+
 export type ServicesRequestBody = components['schemas']['ServicesRequestBody']
 
 /**

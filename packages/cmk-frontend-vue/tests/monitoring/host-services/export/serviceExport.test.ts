@@ -7,8 +7,11 @@ import { describe, expect, test } from 'vitest'
 
 import { CSV_BOM } from '@/lib/csv'
 
-import { ServiceExport } from '@/monitoring/host-services/export/serviceExport'
-import type { HostServiceEntry } from '@/monitoring/shared/api/types'
+import {
+  ServiceExport,
+  ServiceWithHostExport
+} from '@/monitoring/host-services/export/serviceExport'
+import type { HostServiceEntry, ServiceEntry } from '@/monitoring/shared/api/types'
 
 function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntry {
   return {
@@ -75,5 +78,18 @@ describe('ServiceExport', () => {
     const file = new ServiceExport('web-1', ['name'], []).file('csv')
 
     expect(file.name).toMatch(/^web-1-services-.*\.csv$/)
+  })
+
+  test('writes the host and the site of a service that names them', async () => {
+    const service: ServiceEntry = { ...makeService(), host_name: 'web-2', site_id: 'remote' }
+
+    const file = new ServiceWithHostExport('all', ['host_name', 'site_id', 'name'], [service]).file(
+      'csv'
+    )
+
+    expect(file.name).toMatch(/^all-services-.*\.csv$/)
+    expect((await file.text()).replace(CSV_BOM, '')).toBe(
+      '"host_name";"site_id";"name"\n"web-2";"remote";"CPU load"\n'
+    )
   })
 })

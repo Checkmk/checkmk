@@ -8,10 +8,14 @@ import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
-import { defineComponent, h } from 'vue'
+import { computed, defineComponent, h, provide } from 'vue'
 
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
-import type { HostServiceEntry } from '@/monitoring/shared/api/types'
+import type { HostServiceEntry, ServiceEntry } from '@/monitoring/shared/api/types'
+import {
+  COLUMN_LAYOUT_KEY,
+  type ColumnLayoutInfo
+} from '@/monitoring/shared/components/MonitoringTableContext'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 // 'abs' keeps assertions comparable to plain `renderDateAndTime`, independent of how old
@@ -526,4 +530,77 @@ test('leaves the reschedule out for a user who may not reschedule', () => {
   })
 
   expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
+})
+
+function makeServiceOfHost(): ServiceEntry {
+  return { ...makeService(), host_name: 'web-2', site_id: 'remote' }
+}
+
+function mountRowInLayout(row: HostServiceEntry, columnIds: string[]) {
+  const layoutInfo: ColumnLayoutInfo = {
+    width: null,
+    pinnedLeft: null,
+    pinnedRight: null,
+    isLastPinned: false,
+    isFirstPinnedRight: false,
+    justify: 'left'
+  }
+  return render(
+    defineComponent({
+      setup() {
+        provide(
+          COLUMN_LAYOUT_KEY,
+          computed(() => new Map(columnIds.map((id) => [id, layoutInfo])))
+        )
+      },
+      render() {
+        return h('table', [
+          h('tbody', [
+            h('tr', [
+              h(HostServicesRow, { row, tableRow: makeTableRow(), displayOptions: DISPLAY_OPTIONS })
+            ])
+          ])
+        ])
+      }
+    })
+  )
+}
+
+function renderedColumnIds(container: Element): (string | null)[] {
+  return Array.from(container.querySelectorAll('td')).map((td) => td.getAttribute('data-column-id'))
+}
+
+test('renders the host and site of a service that names its host, before the service', () => {
+  const { container } = mountRow(makeServiceOfHost())
+
+  const cells = renderedColumnIds(container)
+  expect(cells.slice(cells.indexOf('host_name'), cells.indexOf('name') + 1)).toEqual([
+    'host_name',
+    'site_id',
+    'name'
+  ])
+  expect(screen.getByRole('link', { name: 'web-2' })).toHaveAttribute(
+    'href',
+    expect.stringContaining('monitor_host_services.py?host=web-2&site=remote')
+  )
+  expect(screen.getByText('remote')).toBeInTheDocument()
+})
+
+test('renders no host cells in a layout without the host and site columns', () => {
+  const { container } = mountRowInLayout(makeServiceOfHost(), ['state', 'name'])
+
+  expect(renderedColumnIds(container)).toEqual(['state', 'name'])
+})
+
+test('renders only the site cell in a layout without the host column', () => {
+  const { container } = mountRowInLayout(makeServiceOfHost(), ['state', 'site_id', 'name'])
+
+  expect(renderedColumnIds(container)).toEqual(['state', 'site_id', 'name'])
+})
+
+test('renders no host cells for a service of the page host', () => {
+  const { container } = mountRow(makeService())
+
+  expect(container.querySelector('[data-column-id="host_name"]')).toBeNull()
+  expect(container.querySelector('[data-column-id="site_id"]')).toBeNull()
 })

@@ -361,7 +361,10 @@ def test_data_attribute_internal_round_trips_to_the_same_graph() -> None:
     )
 
     assert result.options.header.title == "My Graph"
-    [restored] = COMMUNITY_GRAPH_CODEC.deserialize_graphs(json.loads(result.internal))
+    [restored] = [
+        COMMUNITY_GRAPH_CODEC.deserialize_graph(serialized)
+        for serialized in json.loads(result.internal)["graphs"]
+    ]
     assert restored == graph
 
 

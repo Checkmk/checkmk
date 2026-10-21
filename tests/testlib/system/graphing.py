@@ -201,7 +201,10 @@ def discovered_graphs(discovered: Mapping[str, object]) -> Sequence[Graph]:
     graphs: list[Graph] = []
     for definition in ensure_type(discovered["graphs"], list):
         internal = ensure_type(ensure_type(definition, dict)["internal"], str)
-        graphs.extend(COMMUNITY_GRAPH_CODEC.deserialize_graphs(json.loads(internal)))
+        graphs.extend(
+            COMMUNITY_GRAPH_CODEC.deserialize_graph(serialized)
+            for serialized in json.loads(internal)["graphs"]
+        )
     return graphs
 
 

@@ -184,7 +184,7 @@ def test_rrd_metric_site_id_round_trips() -> None:
         lines=[Line(curve=Curve(quantity=metric, attributes=attributes), inverse=False)],
     )
     codec = COMMUNITY_GRAPH_CODEC
-    [restored] = codec.deserialize_graphs(codec.serialize_graphs([graph]))
+    restored = codec.deserialize_graph(codec.serialize_graph(graph))
     [line] = restored.lines
     assert line.curve.quantity == metric
 
@@ -194,27 +194,34 @@ def test_omit_zero_curves_round_trips() -> None:
     # for every graph rendered from the posted wire form.
     graph = Graph(name="g", title="G", kind="custom", omit_zero_curves=True)
     codec = COMMUNITY_GRAPH_CODEC
-    [restored] = codec.deserialize_graphs(codec.serialize_graphs([graph]))
+    restored = codec.deserialize_graph(codec.serialize_graph(graph))
     assert restored.omit_zero_curves is True
 
 
+def _serialized_templates() -> Sequence[Mapping[str, object]]:
+    return [COMMUNITY_GRAPH_CODEC.serialize_graph(graph) for graph in _rich_graphs()]
+
+
+def test_serialized_templates_are_plain_json() -> None:
+    serialized = _serialized_templates()
+    assert json.loads(json.dumps(serialized)) == serialized
+
+
+def test_serialized_templates_carry_their_kind() -> None:
+    assert {graph["kind"] for graph in _serialized_templates()} == {"template"}
+
+
 def test_template_round_trip_is_lossless() -> None:
-    codec = COMMUNITY_GRAPH_CODEC
-    graphs = _rich_graphs()
-    payload = codec.serialize_graphs(graphs)
-    # The payload is plain JSON.
-    assert json.loads(json.dumps(payload)) == payload
-    # Each graph carries its own kind; there is no separate envelope field.
-    serialized_graphs = payload["graphs"]
-    assert isinstance(serialized_graphs, list)
-    assert all(graph["kind"] == "template" for graph in serialized_graphs)
-    # The round-trip is stable: deserializing and re-serializing reproduces the same payload (compared
-    # as JSON, so the empty-sequence list/tuple distinction the dataclass defaults carry is irrelevant).
-    restored = codec.deserialize_graphs(payload)
-    assert codec.serialize_graphs(restored) == payload
-    # The source id survives the round-trip; untagged curves stay untagged.
-    assert restored[0].stacks[0].members[0].source_id == "A"
-    assert restored[0].stacks[0].members[1].source_id is None
+    serialized = _serialized_templates()
+    restored = [COMMUNITY_GRAPH_CODEC.deserialize_graph(graph) for graph in serialized]
+    assert [COMMUNITY_GRAPH_CODEC.serialize_graph(graph) for graph in restored] == serialized
+
+
+def test_source_ids_survive_the_round_trip() -> None:
+    [restored, *_rest] = [
+        COMMUNITY_GRAPH_CODEC.deserialize_graph(graph) for graph in _serialized_templates()
+    ]
+    assert [member.source_id for member in restored.stacks[0].members[:2]] == ["A", None]
 
 
 _ROUND_TRIP_METRIC = RRDMetric(

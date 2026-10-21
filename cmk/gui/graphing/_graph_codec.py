@@ -430,12 +430,6 @@ class GraphCodec:
             regions=tuple(self._region_from_json(region) for region in _as_list(data["regions"])),
         )
 
-    def serialize_graphs(self, graphs: Sequence[Graph]) -> Mapping[str, object]:
-        return {"graphs": [self.serialize_graph(graph) for graph in graphs]}
-
-    def deserialize_graphs(self, data: Mapping[str, object]) -> Sequence[Graph]:
-        return [self.deserialize_graph(graph) for graph in ensure_type(data["graphs"], list)]
-
 
 # What this edition can carry: the engine's own quantities. Every edition on top of it extends this
 # set, so a graph written by a smaller edition stays readable by a bigger one.

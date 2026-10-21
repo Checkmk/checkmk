@@ -299,7 +299,7 @@ def _render_apache_hook(
     # for multi-segment issuer paths. Lives outside the /{site_name} prefix,
     # so it needs its own Location, but is served by the same site backend
     # (see cmk.gui's noauth:oauth_authorization_server page).
-    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorization_server.py retry=0 disablereuse=On timeout=120
+    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorization_server.py
     ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorization_server.py{headers}
   </Location>
 
@@ -308,17 +308,17 @@ def _render_apache_hook(
   # client that guesses endpoint paths from the issuer instead of reading
   # them out of the RFC 8414 metadata document lands on the real thing.
   <Location /oauth-{site_name}/authorize>
-    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorize.py retry=0 disablereuse=On timeout=120
+    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorize.py
     ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorize.py{headers}
   </Location>
 
   <Location /oauth-{site_name}/token>
-    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_token.py retry=0 disablereuse=On timeout=120
+    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_token.py
     ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_token.py{headers}
   </Location>
 
   <Location /oauth-{site_name}/register>
-    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_client_registration.py retry=0 disablereuse=On timeout=120
+    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_client_registration.py
     ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_client_registration.py{headers}
   </Location>
 

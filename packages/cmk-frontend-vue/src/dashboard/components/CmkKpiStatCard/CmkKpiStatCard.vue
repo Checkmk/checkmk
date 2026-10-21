@@ -97,8 +97,7 @@ function computeBasisValue(basis: ComparisonBasis, values: number[]): number {
 // The basis excludes the current sample itself - it is a comparison, not a
 // self-inclusive average. Hidden below two real samples: one alone has
 // nothing to compare against, and a zero basis has no meaningful ratio.
-// Superseded by `delta.override` when given - see the `delta` computed below.
-const seriesDelta = computed<KpiDelta | undefined>(() => {
+const delta = computed<KpiDelta | undefined>(() => {
   if (!showDelta.value) {
     return undefined
   }
@@ -136,16 +135,6 @@ const seriesDelta = computed<KpiDelta | undefined>(() => {
     up: ratio >= 0,
     comparisonText
   }
-})
-
-// A caller-supplied delta takes priority over series-derived one; fromCaller uses
-// delta.override exclusively so a per-render undefined stays empty, not a wrong fallback.
-const delta = computed<KpiDelta | undefined>(() => {
-  if (!showDelta.value) {
-    return undefined
-  }
-  const override = props.delta.override
-  return props.delta.fromCaller ? override : (override ?? seriesDelta.value)
 })
 
 const STATE_TAG_TONE: Record<KpiStateSeverity, StateTone> = {

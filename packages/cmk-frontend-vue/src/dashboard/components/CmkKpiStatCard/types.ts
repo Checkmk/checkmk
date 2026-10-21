@@ -24,13 +24,7 @@ export type SparkHeightMode = 'band' | 'full'
 /** What the current value is compared against, computed over real samples in the displayed window. */
 export type ComparisonBasis = 'average' | 'last' | 'minimum' | 'maximum' | 'median'
 
-/**
- * A ready-made delta, computed by the caller instead of derived from `series`.
- * For callers whose headline `value` is a window aggregate (a sum, or a
- * deduplicated count) rather than `series`'s own last sample - comparing two
- * per-bucket samples out of `series` would be meaningless there, since neither
- * is on the same scale as the aggregate headline.
- */
+/** The delta indicator's content, derived from `series`. */
 export interface KpiDelta {
   /** Absolute percentage, formatted, e.g. "5.7%". */
   percent: string
@@ -46,22 +40,9 @@ export interface KpiDeltaConfig {
   show?: boolean | undefined
   /**
    * What the delta compares the current value against; defaults to 'average'.
-   * Delta is hidden entirely when fewer than two real samples exist. Ignored
-   * when `override` is given.
+   * Delta is hidden entirely when fewer than two real samples exist.
    */
   comparisonBasis?: ComparisonBasis | undefined
-  /**
-   * A ready-made delta, taking priority over `comparisonBasis`/`series`. For
-   * callers whose `value` is a window aggregate rather than a live reading -
-   * see `KpiDelta`.
-   */
-  override?: KpiDelta | undefined
-  /**
-   * True when the caller computes its own delta via `override`, so an
-   * undefined value this render stays empty instead of falling back to the
-   * wrong series-derived one.
-   */
-  fromCaller?: boolean | undefined
 }
 
 /**

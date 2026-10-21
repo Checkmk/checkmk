@@ -52,6 +52,7 @@ py_test(
     deps = [
         ":__test__",
         ":cmk-messaging",
+        requirement("cryptography"),
         requirement("pika"),
         requirement("pytest"),
     ],

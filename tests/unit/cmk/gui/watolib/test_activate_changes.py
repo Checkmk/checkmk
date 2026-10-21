@@ -1753,7 +1753,6 @@ def _fail_to_connect_to_broker(*_args: object) -> None:
     raise CMKConnectionError("certificate verify failed: self-signed certificate")
 
 
-@pytest.mark.xfail(raises=CMKConnectionError, reason="Crash group 4014: CMKConnectionError")
 @pytest.mark.usefixtures("request_context")
 def test_failing_broker_connection_during_hub_config_distribution_is_logged(
     caplog: pytest.LogCaptureFixture,

@@ -4,17 +4,36 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Test that the channel wrapper works as expected"""
 
+import contextlib
+import datetime
+import socket
+import ssl
+import threading
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from pathlib import Path
 
 import pika
 import pika.adapters.blocking_connection
 import pika.channel
 import pika.spec
 import pytest
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.x509.oid import NameOID
 from pydantic import BaseModel
 
-from cmk.messaging import AppName, BindingKey, Channel, DeliveryTag, QueueName, RoutingKey
+from cmk.messaging import (
+    AppName,
+    BindingKey,
+    Channel,
+    CMKConnectionError,
+    Connection,
+    DeliveryTag,
+    QueueName,
+    RoutingKey,
+)
 
 
 class _ConsumedSuccesfully(RuntimeError):
@@ -224,3 +243,77 @@ class TestChannel:
 
         with pytest.raises(_ConsumedSuccesfully):
             channel.consume(QueueName("ignored-by-this-test"), _on_message)
+
+
+def _write_self_signed_cert(cert_file: Path, key_file: Path, common_name: str) -> None:
+    key = ec.generate_private_key(ec.SECP256R1())
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, common_name)])
+    now = datetime.datetime.now(datetime.UTC)
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - datetime.timedelta(days=1))
+        .not_valid_after(now + datetime.timedelta(days=1))
+        .add_extension(x509.SubjectAlternativeName([x509.DNSName(common_name)]), critical=False)
+        .add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True)
+        .sign(key, hashes.SHA256())
+    )
+    cert_file.write_bytes(cert.public_bytes(serialization.Encoding.PEM))
+    key_file.write_bytes(
+        key.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            serialization.NoEncryption(),
+        )
+    )
+
+
+def _make_site(omd_root: Path, port: int, monkeypatch: pytest.MonkeyPatch) -> Path:
+    (site_conf := omd_root / "etc" / "omd" / "site.conf").parent.mkdir(parents=True)
+    site_conf.write_text(f"CONFIG_RABBITMQ_PORT='{port}'\n")
+    (tls_dir := omd_root / "etc" / "rabbitmq" / "ssl").mkdir(parents=True)
+    monkeypatch.setenv("OMD_ROOT", str(omd_root))
+    return tls_dir
+
+
+def _handshake_once(server: socket.socket, context: ssl.SSLContext) -> None:
+    client, _address = server.accept()
+    with client, contextlib.suppress(OSError):
+        context.wrap_socket(client, server_side=True)
+
+
+def test_untrusted_broker_certificate_is_a_connection_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    server_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    _write_self_signed_cert(
+        server_cert := tmp_path / "broker_cert.pem",
+        server_key := tmp_path / "broker_key.pem",
+        "mysite",
+    )
+    server_context.load_cert_chain(server_cert, server_key)
+
+    with socket.create_server(("127.0.0.1", 0)) as server:
+        tls_dir = _make_site(tmp_path / "site", server.getsockname()[1], monkeypatch)
+        _write_self_signed_cert(tls_dir / "cert.pem", tls_dir / "key.pem", "mysite")
+        (tls_dir / "trusted_cas.pem").write_bytes((tls_dir / "cert.pem").read_bytes())
+        broker = threading.Thread(target=_handshake_once, args=(server, server_context))
+        broker.start()
+
+        with pytest.raises(CMKConnectionError, match="certificate verify failed"):
+            Connection(AppName("my-app"), tmp_path / "site", "mysite")
+
+        broker.join()
+
+
+def test_broken_local_tls_setup_is_not_a_connection_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tls_dir = _make_site(tmp_path, 5671, monkeypatch)
+    (tls_dir / "trusted_cas.pem").write_text("")
+
+    with pytest.raises(ssl.SSLError, match="NO_CERTIFICATE_OR_CRL_FOUND"):
+        Connection(AppName("my-app"), tmp_path, "mysite")

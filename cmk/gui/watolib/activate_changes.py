@@ -152,7 +152,7 @@ from cmk.gui.watolib.piggyback_hub import (
 )
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.gui.watolib.snapshots import SnapshotManager
-from cmk.messaging import rabbitmq
+from cmk.messaging import CMKConnectionError, rabbitmq
 from cmk.shared_typing.changes import (
     OnlineStatus,
     StatusPerSiteResponse,
@@ -1612,16 +1612,23 @@ def _distribute_piggyback_hub_configs(
         tracer.span("distribute_piggyback_hub_configs"),
         _debug_log_message("Starting piggyback hub config distribution"),
     ):
-        activation_features.distribute_piggyback_hub_configs(
-            logger,
-            load_configuration_settings(),
-            all_site_configs,
-            sites,
-            {
-                host_name: host.site_id()
-                for host_name, host in tree.root_folder().all_hosts_recursively().items()
-            },
-        )
+        try:
+            activation_features.distribute_piggyback_hub_configs(
+                logger,
+                load_configuration_settings(),
+                all_site_configs,
+                sites,
+                {
+                    host_name: host.site_id()
+                    for host_name, host in tree.root_folder().all_hosts_recursively().items()
+                },
+            )
+        except CMKConnectionError as e:
+            logger.warning(
+                "The piggyback hub configuration was not distributed, because the connection "
+                "to the local message broker failed: %(error)s",
+                {"error": e},
+            )
 
 
 class ActivateChangesManager:

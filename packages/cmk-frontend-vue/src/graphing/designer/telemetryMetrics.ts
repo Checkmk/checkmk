@@ -22,6 +22,7 @@ export function customServiceModelFor(
     aggregator: item.aggregator ?? undefined,
     serviceName: item.title.replaceAll(DEFAULT_TITLE_MACRO, defaultTitle),
     appendSeriesAttributes: true,
-    hostName: null
+    hostName: null,
+    hostNameTemplate: null
   }
 }

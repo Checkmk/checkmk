@@ -8,6 +8,7 @@ import type { ConsolidationFunction } from 'cmk-shared-typing/typescript/consoli
 import { describe, expect, test } from 'vitest'
 
 import {
+  type CompleteModel,
   aggregationProblem,
   appendedAttributeNames,
   buildCustomServiceDefinition,
@@ -16,16 +17,25 @@ import {
 } from '@/mode-custom-services/definition'
 import { type ServiceModel, emptyService } from '@/mode-custom-services/types'
 
-type CompleteModel = ServiceModel & { metricName: string; hostName: string }
+const TEMPLATE = '$RESOURCE_ATTR.service.name$'
 
-function model(overrides: Partial<CompleteModel> = {}): CompleteModel {
+function model(
+  overrides: Partial<Omit<ServiceModel, 'hostName' | 'hostNameTemplate'>> & {
+    metricName?: string
+  } = {}
+): CompleteModel {
   return {
     ...emptyService(),
     metricName: 'otel.http.duration',
     serviceName: 'HTTP duration',
+    ...overrides,
     hostName: 'web01',
-    ...overrides
+    hostNameTemplate: null
   }
+}
+
+function templateModel(): CompleteModel {
+  return { ...model(), hostName: null, hostNameTemplate: TEMPLATE }
 }
 
 describe('buildCustomServiceDefinition', () => {
@@ -33,6 +43,13 @@ describe('buildCustomServiceDefinition', () => {
     expect(buildCustomServiceDefinition(model()).host_assignment).toEqual({
       mode: 'explicit_host',
       host_name: 'web01'
+    })
+  })
+
+  test('assigns the hosts the host name template resolves to', () => {
+    expect(buildCustomServiceDefinition(templateModel()).host_assignment).toEqual({
+      mode: 'host_name_template',
+      host_name_template: TEMPLATE
     })
   })
 
@@ -306,21 +323,21 @@ describe('serviceModelFrom', () => {
     const restored = serviceModelFrom('pod_cpu_usage', extensions)
 
     expect(
-      buildCustomServiceUpdate({ ...restored, metricName: 'otel.http.duration', hostName: 'web01' })
-        .configuration.service_name_template
+      buildCustomServiceUpdate({
+        ...restored,
+        metricName: 'otel.http.duration',
+        hostName: 'web01',
+        hostNameTemplate: null
+      }).configuration.service_name_template
     ).toBe(template)
   })
 
-  test('has no host to offer for a service assigned by host name template', () => {
-    const restored = serviceModelFrom('http_duration_on_web01', {
-      host_assignment: {
-        mode: 'host_name_template',
-        host_name_template: '$RESOURCE_ATTR.service.name$'
-      },
-      configuration: buildCustomServiceUpdate(model()).configuration
-    })
+  test('restores a service assigned by host name template', () => {
+    const original = templateModel()
 
-    expect(restored.hostName).toBeNull()
+    expect(
+      serviceModelFrom(original.configurationName, buildCustomServiceUpdate(original))
+    ).toEqual(original)
   })
 })
 

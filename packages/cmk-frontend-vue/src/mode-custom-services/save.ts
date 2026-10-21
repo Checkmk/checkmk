@@ -9,6 +9,7 @@ import { configNameFormatErrors } from '@/lib/configuration-name'
 
 import { type SaveResult, saveCustomServiceDefinition, updateCustomServiceDefinition } from './api'
 import {
+  type CompleteModel,
   aggregationProblem,
   buildCustomServiceDefinition,
   buildCustomServiceUpdate
@@ -19,26 +20,34 @@ const { _t } = usei18n()
 
 export type { SaveResult }
 
-type CompleteModel = ServiceModel & { metricName: string; hostName: string }
-
 type Validated = { ok: true; model: CompleteModel } | { ok: false; error: string }
 
 /** What the endpoint would reject, refused here so the reason names the field. */
 function validate(model: ServiceModel): Validated {
-  const { metricName, hostName } = model
+  const { metricName, hostName, hostNameTemplate } = model
   if (metricName === null) {
     return { ok: false, error: _t('No metric selected.') }
+  }
+  if (hostNameTemplate !== null) {
+    if (hostNameTemplate.trim() === '') {
+      return { ok: false, error: _t('Please enter a host name template.') }
+    }
+    return validateConsolidation({ ...model, metricName, hostName: null, hostNameTemplate })
   }
   if (hostName === null || hostName.trim() === '') {
     return { ok: false, error: _t('Please assign the custom service to a host.') }
   }
+  return validateConsolidation({ ...model, metricName, hostName, hostNameTemplate })
+}
+
+function validateConsolidation(model: CompleteModel): Validated {
   switch (aggregationProblem(model.consolidation)) {
     case 'thresholds_missing':
       return { ok: false, error: _t('Please enter the thresholds of the selected consolidation.') }
     case 'thresholds_out_of_order':
       return { ok: false, error: _t('The lower threshold must be below the upper threshold.') }
   }
-  return { ok: true, model: { ...model, metricName, hostName } }
+  return { ok: true, model }
 }
 
 export async function createCustomService(model: ServiceModel): Promise<SaveResult> {

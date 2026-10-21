@@ -24,6 +24,12 @@ export type CustomServiceUpdate = NonNullable<
 export type CustomServiceExtensions =
   paths[CustomServicePath]['get']['responses'][200]['content']['application/json']['extensions']
 
+/** A model the endpoint accepts: a metric and either a host or a host name template. */
+export type CompleteModel = ServiceModel & { metricName: string } & (
+    | { hostName: string; hostNameTemplate: null }
+    | { hostName: null; hostNameTemplate: string }
+  )
+
 const SERIES_ATTRIBUTES_MACRO = '$SERIES_ATTRIBUTES$'
 
 const SERIES_ATTRIBUTES_SUFFIX = ` ${SERIES_ATTRIBUTES_MACRO}`
@@ -97,11 +103,15 @@ export function aggregationProblem(
   }
 }
 
-function customServiceBody(
-  model: ServiceModel & { metricName: string; hostName: string }
-): CustomServiceUpdate {
+function hostAssignment(model: CompleteModel): CustomServiceUpdate['host_assignment'] {
+  return model.hostNameTemplate === null
+    ? { mode: 'explicit_host', host_name: model.hostName }
+    : { mode: 'host_name_template', host_name_template: model.hostNameTemplate }
+}
+
+function customServiceBody(model: CompleteModel): CustomServiceUpdate {
   return {
-    host_assignment: { mode: 'explicit_host', host_name: model.hostName },
+    host_assignment: hostAssignment(model),
     configuration: {
       metric_name: model.metricName,
       service_name_template: serviceNameTemplate(model),
@@ -112,18 +122,14 @@ function customServiceBody(
   }
 }
 
-export function buildCustomServiceDefinition(
-  model: ServiceModel & { metricName: string; hostName: string }
-): CustomServiceDefinition {
+export function buildCustomServiceDefinition(model: CompleteModel): CustomServiceDefinition {
   return {
     configuration_name: model.configurationName,
     ...customServiceBody(model)
   }
 }
 
-export function buildCustomServiceUpdate(
-  model: ServiceModel & { metricName: string; hostName: string }
-): CustomServiceUpdate {
+export function buildCustomServiceUpdate(model: CompleteModel): CustomServiceUpdate {
   return customServiceBody(model)
 }
 
@@ -146,6 +152,8 @@ export function serviceModelFrom(
       ? template.slice(0, -SERIES_ATTRIBUTES_SUFFIX.length)
       : template,
     appendSeriesAttributes,
-    hostName: assignment.mode === 'explicit_host' ? assignment.host_name : null
+    hostName: assignment.mode === 'explicit_host' ? assignment.host_name : null,
+    hostNameTemplate:
+      assignment.mode === 'host_name_template' ? assignment.host_name_template : null
   }
 }

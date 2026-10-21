@@ -19,6 +19,8 @@ export interface ServiceModel {
   serviceName: string
   appendSeriesAttributes: boolean
   hostName: string | null
+  // Null while the service is assigned to a host by hand
+  hostNameTemplate: string | null
 }
 
 export function emptyService(): ServiceModel {
@@ -31,7 +33,8 @@ export function emptyService(): ServiceModel {
     aggregator: undefined,
     serviceName: '',
     appendSeriesAttributes: true,
-    hostName: null
+    hostName: null,
+    hostNameTemplate: null
   }
 }
 
@@ -41,7 +44,8 @@ export function isMetricSelected(model: ServiceModel): boolean {
 }
 
 // The assign host step is complete — and the service may be created — only when
-// both a non-empty service name and a target host are set.
+// both a non-empty service name and a target host or host name template are set.
 export function isReadyToCreate(model: ServiceModel): boolean {
-  return model.serviceName.trim() !== '' && model.hostName !== null && model.hostName.trim() !== ''
+  const assignment = model.hostNameTemplate ?? model.hostName
+  return model.serviceName.trim() !== '' && assignment !== null && assignment.trim() !== ''
 }

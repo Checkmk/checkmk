@@ -83,6 +83,31 @@ describe('createCustomService', () => {
     })
   })
 
+  test('sends the host name template it assigns the service by', async () => {
+    await createCustomService({
+      ...completeModel(),
+      hostName: null,
+      hostNameTemplate: '$RESOURCE_ATTR.service.name$'
+    })
+    expect(lastBody).toMatchObject({
+      host_assignment: {
+        mode: 'host_name_template',
+        host_name_template: '$RESOURCE_ATTR.service.name$'
+      }
+    })
+  })
+
+  test('refuses to save with an empty host name template and issues no request', async () => {
+    const result = await createCustomService({
+      ...completeModel(),
+      hostName: null,
+      hostNameTemplate: ' '
+    })
+    expect(result.ok).toBe(false)
+    expect(result.error).toBeTruthy()
+    expect(createRequests).toBe(0)
+  })
+
   test('surfaces the backend error message when the name is already taken', async () => {
     server.use(
       http.post(CREATE_URL, () =>

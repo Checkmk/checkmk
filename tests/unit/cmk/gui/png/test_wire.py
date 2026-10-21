@@ -35,6 +35,7 @@ from cmk.gui.png._wire import (
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 _TIME_RANGE = TimeRange(start=0, end=180, step=60)
+_VISIBLE_TIME_RANGE = (_TIME_RANGE.start, _TIME_RANGE.end)
 _UNIT = Unit(notation=IECNotation("B"), precision=AutoPrecision(2))
 
 
@@ -101,6 +102,7 @@ def test_graphs_survive_the_trip_to_the_rendering_process() -> None:
                 range_kind=VerticalRangeKind.FIXED, lower=50.0, upper=100.0
             ),
             time_zone=ZoneInfo("Europe/Berlin"),
+            visible_time_range=(60, 120),
         ),
         PngGraph(
             graph=graph,
@@ -108,6 +110,7 @@ def test_graphs_survive_the_trip_to_the_rendering_process() -> None:
             y_axis_unit=None,
             requested_vertical_range=None,
             time_zone=None,
+            visible_time_range=_VISIBLE_TIME_RANGE,
         ),
     ]
     texts = PngTexts(

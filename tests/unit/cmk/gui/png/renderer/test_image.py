@@ -50,6 +50,7 @@ from cmk.web.utils.unit_formatter import DecimalFormatter
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TIME_RANGE = TimeRange(start=0, end=180, step=60)
+_VISIBLE_TIME_RANGE = (_TIME_RANGE.start, _TIME_RANGE.end)
 
 
 def _options(*, show_legend: bool) -> PngOptions:
@@ -154,6 +155,7 @@ def test_render_png_produces_bytes_for_an_empty_graph() -> None:
                 y_axis_unit=None,
                 requested_vertical_range=None,
                 time_zone=None,
+                visible_time_range=_VISIBLE_TIME_RANGE,
             )
         ],
         _TEXTS,
@@ -183,6 +185,7 @@ def test_render_png_with_a_unit_renders_ticks_and_legend_via_the_formatter() -> 
                 y_axis_unit=y_axis_unit,
                 requested_vertical_range=None,
                 time_zone=None,
+                visible_time_range=_VISIBLE_TIME_RANGE,
             )
         ],
         _TEXTS,
@@ -243,7 +246,7 @@ def test_far_away_rule_is_clipped_and_does_not_stretch_the_axis() -> None:
         rules=[far_away_rule],
     )
 
-    lower, upper = _vertical_range_bounds(graph)
+    lower, upper = _vertical_range_bounds(graph, graph.time_range)
     rules = _rules_in_range(graph.rules, lower, upper)
     limits = _y_axis_limits(lower, upper, is_mirrored=False)
 
@@ -264,7 +267,7 @@ def test_vertical_range_bounds_use_the_stacked_top_not_each_members_own_max() ->
         lines=[],
     )
 
-    lower, upper = _vertical_range_bounds(graph)
+    lower, upper = _vertical_range_bounds(graph, graph.time_range)
 
     assert lower == 0.0
     assert upper == 30.0
@@ -294,6 +297,7 @@ def test_the_image_has_the_size_computed_for_it_without_a_legend() -> None:
                 y_axis_unit=_UNIT,
                 requested_vertical_range=None,
                 time_zone=None,
+                visible_time_range=_VISIBLE_TIME_RANGE,
             )
         ],
         _TEXTS,
@@ -332,6 +336,7 @@ def test_the_image_has_the_size_computed_for_it_with_a_legend() -> None:
                 y_axis_unit=_UNIT,
                 requested_vertical_range=None,
                 time_zone=None,
+                visible_time_range=_VISIBLE_TIME_RANGE,
             )
         ],
         _TEXTS,
@@ -363,7 +368,7 @@ def test_plot_metrics_spans_the_full_time_range_despite_a_long_leading_gap() -> 
 
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
-    _plot_metrics(ax, graph)
+    _plot_metrics(ax, graph, graph.time_range)
 
     assert ax.get_xlim() == (time_range.start, time_range.end)
 
@@ -381,7 +386,7 @@ def test_plot_metrics_spans_the_full_time_range_for_an_entirely_empty_curve() ->
 
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
-    _plot_metrics(ax, graph)
+    _plot_metrics(ax, graph, graph.time_range)
 
     assert ax.get_xlim() == (_TIME_RANGE.start, _TIME_RANGE.end)
 
@@ -393,7 +398,7 @@ def test_plot_metrics_spans_the_time_range_of_a_graph_without_curves() -> None:
 
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
-    _plot_metrics(ax, graph)
+    _plot_metrics(ax, graph, graph.time_range)
 
     assert ax.get_xlim() == (_TIME_RANGE.start, _TIME_RANGE.end)
 
@@ -416,7 +421,7 @@ def test_time_axis_of_a_multi_day_graph_is_labelled_with_weekday_and_time() -> N
     )
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
-    _plot_metrics(ax, graph)
+    _plot_metrics(ax, graph, graph.time_range)
 
     _fit_time_axis(ax, _OPTIONS, None)
 
@@ -437,10 +442,43 @@ def test_values_are_drawn_at_their_bucket_end_like_the_vue_graph() -> None:
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
 
-    _plot_metrics(ax, graph)
+    _plot_metrics(ax, graph, graph.time_range)
 
     (line,) = ax.get_lines()
     assert np.asarray(line.get_xdata()).tolist() == [60, 120, 180]
+
+
+def test_plot_metrics_spans_the_visible_range_even_between_samples() -> None:
+    graph = EvaluatedGraph(
+        name="g",
+        title="Graph",
+        time_range=_TIME_RANGE,
+        vertical_range=None,
+        stacks=[],
+        lines=[EvaluatedLine(curve=_curve("m", [1.0, 2.0, 3.0]), inverse=False)],
+    )
+    fig = Figure()
+    ax = fig.add_subplot(1, 1, 1)
+
+    _plot_metrics(ax, graph, TimeRange(start=90, end=150, step=60))
+
+    assert ax.get_xlim() == (90, 150)
+
+
+def test_neighbours_beyond_the_visible_range_stretch_the_vertical_axis_only_up_to_the_edges() -> (
+    None
+):
+    graph = EvaluatedGraph(
+        name="g",
+        title="Graph",
+        time_range=TimeRange(start=0, end=240, step=60),
+        vertical_range=None,
+        stacks=[],
+        lines=[EvaluatedLine(curve=_curve("m", [100.0, 2.0, 4.0, 100.0]), inverse=False)],
+    )
+
+    # The line crosses the edges halfway between its samples at 60/120 and 180/240.
+    assert _vertical_range_bounds(graph, TimeRange(start=90, end=210, step=60)) == (2.0, 52.0)
 
 
 def _hourly_graph(time_range: TimeRange) -> EvaluatedGraph:
@@ -470,7 +508,7 @@ def test_time_axis_is_labelled_in_the_given_time_zone() -> None:
     def labels(tz: ZoneInfo) -> list[str]:
         fig = Figure()
         ax = fig.add_subplot(1, 1, 1)
-        _plot_metrics(ax, graph)
+        _plot_metrics(ax, graph, graph.time_range)
         _fit_time_axis(ax, _OPTIONS, tz)
         return [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
 
@@ -531,6 +569,7 @@ def test_a_celsius_graph_renders_like_its_fahrenheit_twin_for_a_fahrenheit_user(
                 y_axis_unit=celsius,
                 requested_vertical_range=None,
                 time_zone=None,
+                visible_time_range=_VISIBLE_TIME_RANGE,
             )
         ],
         _TEXTS,
@@ -544,6 +583,7 @@ def test_a_celsius_graph_renders_like_its_fahrenheit_twin_for_a_fahrenheit_user(
                 y_axis_unit=fahrenheit,
                 requested_vertical_range=None,
                 time_zone=None,
+                visible_time_range=_VISIBLE_TIME_RANGE,
             )
         ],
         _TEXTS,
@@ -573,6 +613,7 @@ def test_each_graph_of_a_batch_gets_its_own_image_in_order() -> None:
                 y_axis_unit=None,
                 requested_vertical_range=None,
                 time_zone=None,
+                visible_time_range=_VISIBLE_TIME_RANGE,
             ),
             PngGraph(
                 graph=graph,
@@ -580,6 +621,7 @@ def test_each_graph_of_a_batch_gets_its_own_image_in_order() -> None:
                 y_axis_unit=None,
                 requested_vertical_range=None,
                 time_zone=None,
+                visible_time_range=_VISIBLE_TIME_RANGE,
             ),
         ],
         _TEXTS,
@@ -606,6 +648,7 @@ def test_a_requested_vertical_range_is_taken_in_the_users_unit() -> None:
                 y_axis_unit=celsius,
                 requested_vertical_range=requested,
                 time_zone=None,
+                visible_time_range=_VISIBLE_TIME_RANGE,
             )
         ],
         _TEXTS,
@@ -628,6 +671,7 @@ def test_a_requested_vertical_range_is_taken_in_the_users_unit() -> None:
                 y_axis_unit=fahrenheit,
                 requested_vertical_range=None,
                 time_zone=None,
+                visible_time_range=_VISIBLE_TIME_RANGE,
             )
         ],
         _TEXTS,
@@ -652,6 +696,7 @@ def test_a_graph_that_fails_to_render_leaves_the_others_their_images() -> None:
             y_axis_unit=None,
             requested_vertical_range=None,
             time_zone=None,
+            visible_time_range=_VISIBLE_TIME_RANGE,
         )
 
     results = render_pngs(

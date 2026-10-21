@@ -128,6 +128,7 @@ def _answer_graph_image_request(
                 start=ranges.time_range[0], end=ranges.time_range[1], step=ranges.step
             ),
             destination=graph_specification.destination,
+            include_edge_neighbours=True,
         ),
     )
 
@@ -140,6 +141,7 @@ def _answer_graph_image_request(
                 y_axis_unit=built.resolved_y_axis_unit(),
                 requested_vertical_range=None,
                 time_zone=None,
+                visible_time_range=ranges.time_range,
             )
             for built, evaluated_graph in zip(requested, evaluated.graphs, strict=True)
         ],

@@ -60,6 +60,9 @@ class PngGraph:
     # None: the site's local zone. An export passes the browser's zone, so that its time
     # axis matches the one of the Vue graph.
     time_zone: datetime.tzinfo | None
+    # The graph is fetched with the samples just beyond the range it shows, as the Vue graph
+    # is, so that the curves are drawn in from them up to the axes.
+    visible_time_range: tuple[int, int]
 
 
 @dataclass(frozen=True)
@@ -151,6 +154,7 @@ def _png_graph_to_json(graph: PngGraph) -> Mapping[str, object]:
         "time_zone": (
             None if graph.time_zone is None else ensure_type(graph.time_zone, ZoneInfo).key
         ),
+        "visible_time_range": graph.visible_time_range,
     }
 
 
@@ -344,6 +348,11 @@ def _zone(raw: object) -> ZoneInfo | None:
     return None if raw is None else ZoneInfo(ensure_type(raw, str))
 
 
+def _visible_time_range(raw: object) -> tuple[int, int]:
+    start, end = ensure_type(raw, list)
+    return ensure_type(start, int), ensure_type(end, int)
+
+
 def _png_graph(raw: object) -> PngGraph:
     fields = ensure_type(raw, dict)
     y_axis_unit = fields["y_axis_unit"]
@@ -353,6 +362,7 @@ def _png_graph(raw: object) -> PngGraph:
         y_axis_unit=None if y_axis_unit is None else unit_from_specification(y_axis_unit),
         requested_vertical_range=_vertical_range(fields["requested_vertical_range"]),
         time_zone=_zone(fields["time_zone"]),
+        visible_time_range=_visible_time_range(fields["visible_time_range"]),
     )
 
 

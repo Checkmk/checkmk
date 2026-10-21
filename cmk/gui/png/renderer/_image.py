@@ -156,7 +156,7 @@ def _plot_regions(ax: Axes, graph: EvaluatedGraph) -> None:
         )
 
 
-def _plot_metrics(ax: Axes, graph: EvaluatedGraph) -> None:
+def _plot_metrics(ax: Axes, graph: EvaluatedGraph, visible: TimeRange) -> None:
     times = timestamps(graph.time_range)
 
     for stack in graph.stacks:
@@ -173,31 +173,51 @@ def _plot_metrics(ax: Axes, graph: EvaluatedGraph) -> None:
 
     ax.margins(y=0)
 
-    ax.set_xlim(graph.time_range.start, graph.time_range.end)
+    ax.set_xlim(visible.start, visible.end)
 
 
-def _drawn_vertical_extent(graph: EvaluatedGraph) -> tuple[float | None, float | None]:
+def _values_drawn_on(
+    visible: TimeRange, times: Sequence[int], values: npt.NDArray[np.float64]
+) -> list[float]:
+    """Like Vue's valuesDrawnOn (composeSeries.ts): the samples on the plot, and where a segment
+    crosses an edge of it, the value at that edge. The samples beyond the edges are not drawn."""
+    at = np.asarray(times, dtype=np.float64)
+    present = ~np.isnan(values)
+    on_plot = present & (at >= visible.start) & (at <= visible.end)
+    drawn: list[float] = values[on_plot].tolist()
+    for edge in (visible.start, visible.end):
+        after = int(np.searchsorted(at, edge))
+        if 0 < after < len(at) and at[after] != edge and present[after - 1] and present[after]:
+            drawn.append(
+                float(np.interp(edge, at[after - 1 : after + 1], values[after - 1 : after + 1]))
+            )
+    return drawn
+
+
+def _drawn_vertical_extent(
+    graph: EvaluatedGraph, visible: TimeRange
+) -> tuple[float | None, float | None]:
     """Stack members are drawn at running sums, so the axis follows those and not the members'
     own values, which would clip a stack to its largest member."""
     times = timestamps(graph.time_range)
     values: list[float] = []
     for stack in graph.stacks:
         for bottom, top, has_value in _stack_extents(stack, times):
-            values.extend(bottom[has_value].tolist())
-            values.extend(top[has_value].tolist())
+            values.extend(_values_drawn_on(visible, times, np.where(has_value, bottom, np.nan)))
+            values.extend(_values_drawn_on(visible, times, np.where(has_value, top, np.nan)))
     for line in graph.lines:
         sign = _mirroring_sign(line.inverse)
-        raw = _values(line.curve, sign=sign)
-        values.extend(raw[~np.isnan(raw)].tolist())
+        values.extend(_values_drawn_on(visible, times, _values(line.curve, sign=sign)))
     for series in _region_bound_series(graph):
-        raw = _series_values(series)
-        values.extend(raw[~np.isnan(raw)].tolist())
+        values.extend(_values_drawn_on(visible, times, _series_values(series)))
     if not values:
         return None, None
     return min(values), max(values)
 
 
-def _vertical_range_bounds(graph: EvaluatedGraph) -> tuple[float | None, float | None]:
+def _vertical_range_bounds(
+    graph: EvaluatedGraph, visible: TimeRange
+) -> tuple[float | None, float | None]:
     """Like Vue's computeYDomain (yAxis.ts): a fixed range wins, otherwise the drawn data widens
     any soft bounds, and rules never stretch the axis."""
     lower: float | None = None
@@ -206,7 +226,7 @@ def _vertical_range_bounds(graph: EvaluatedGraph) -> tuple[float | None, float |
         lower, upper = graph.vertical_range.lower, graph.vertical_range.upper
         if graph.vertical_range.range_kind is not VerticalRangeKind.MINIMAL:
             return lower, upper
-    data_lower, data_upper = _drawn_vertical_extent(graph)
+    data_lower, data_upper = _drawn_vertical_extent(graph, visible)
     lower = min([b for b in (lower, data_lower) if b is not None], default=None)
     upper = max([b for b in (upper, data_upper) if b is not None], default=None)
     return lower, upper
@@ -284,6 +304,7 @@ def _apply_render_config(
     texts: PngTexts,
     formatter: NotationFormatter | None,
     *,
+    visible: TimeRange,
     is_mirrored: bool,
     tz: datetime.tzinfo | None,
 ) -> Text | None:
@@ -303,8 +324,6 @@ def _apply_render_config(
         )
 
     if options.show_vertical_axis:
-        if formatter is not None and formatter.symbol:
-            ax.set_ylabel(formatter.symbol, fontsize=options.font_size)
         if formatter is not None and is_mirrored:
             target_number_of_labels = max(1.0, options.size[1] / 8.0 + 1)
             if labels := _mirrored_y_labels(ax, formatter, target_number_of_labels):
@@ -330,7 +349,7 @@ def _apply_render_config(
 
     if options.show_graph_time:
         ax.set_title(
-            _graph_time_caption(graph.time_range, texts, tz),
+            _graph_time_caption(visible, texts, tz),
             fontsize=options.font_size * X_AXIS_TITLE_FONT_SCALE,
             loc="right",
         )
@@ -518,6 +537,11 @@ def _with_requested_vertical_range(
     )
 
 
+def _visible_time_range(graph: EvaluatedGraph, visible_time_range: tuple[int, int]) -> TimeRange:
+    start, end = visible_time_range
+    return TimeRange(start=start, end=end, step=graph.time_range.step)
+
+
 def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: TemperatureUnit) -> bytes:
     axis = (
         None
@@ -531,7 +555,8 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
     formatter = None if axis is None else axis.formatter
     scalars = _graph_scalars(graph)
     is_mirrored = any(drawn.inverse for drawn in drawn_curves(graph.stacks, graph.lines))
-    lower, upper = _vertical_range_bounds(graph)
+    visible = _visible_time_range(graph, png_graph.visible_time_range)
+    lower, upper = _vertical_range_bounds(graph, visible)
     # The legend always lists every rule (e.g. warning/critical), even ones outside the visible
     # Y range; only the drawn horizontal lines are restricted to the in-range subset.
     in_range_rules = _rules_in_range(graph.rules, lower, upper)
@@ -555,7 +580,7 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
     else:
         ax = fig.add_subplot(1, 1, 1)
     ax.set_facecolor(BACKGROUND_COLOR)
-    _plot_metrics(ax, graph)
+    _plot_metrics(ax, graph, visible)
     if (limits := _y_axis_limits(lower, upper, is_mirrored=is_mirrored)) is not None:
         # Set explicitly (not just autoscaled) *before* the rules below are drawn, so a rule far
         # outside the data's range doesn't stretch the view via matplotlib's own autoscale.
@@ -570,6 +595,7 @@ def _render_png(png_graph: PngGraph, texts: PngTexts, temperature_unit: Temperat
         png_graph.options,
         texts,
         formatter,
+        visible=visible,
         is_mirrored=is_mirrored,
         tz=png_graph.time_zone,
     )

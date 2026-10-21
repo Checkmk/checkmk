@@ -43,6 +43,7 @@ def _graph() -> PngGraph:
         y_axis_unit=None,
         requested_vertical_range=None,
         time_zone=None,
+        visible_time_range=(0, 180),
     )
 
 

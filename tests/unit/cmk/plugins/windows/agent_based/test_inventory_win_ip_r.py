@@ -440,3 +440,29 @@ from cmk.plugins.windows.agent_based.inventory_win_ip_r import (
 )
 def test_inventorize_win_ip_r(string_table: StringTable, expected_result: InventoryResult) -> None:
     assert list(inventorize_win_ip_r(parse_win_ip_r(string_table))) == expected_result
+
+
+def test_inventorize_win_ip_r_ipv6() -> None:
+    assert list(
+        inventorize_win_ip_r(
+            parse_win_ip_r(
+                [
+                    ["indirect", "::", "0", "fe80::290:27ff:fee9:2486", "Ethernet"],
+                    ["direct", "fe80::", "64", "::", "Ethernet"],
+                ]
+            )
+        )
+    ) == [
+        TableRow(
+            path=["networking", "routes"],
+            key_columns={"target": "::/0", "gateway": "fe80::290:27ff:fee9:2486"},
+            inventory_columns={"device": "Ethernet", "type": "indirect"},
+            status_columns={},
+        ),
+        TableRow(
+            path=["networking", "routes"],
+            key_columns={"target": "fe80::/64", "gateway": "::"},
+            inventory_columns={"device": "Ethernet", "type": "direct"},
+            status_columns={},
+        ),
+    ]

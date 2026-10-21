@@ -215,6 +215,16 @@ function GetRouteTable {
             Write-Output ("{0}|{1}|{2}|{3}|{4}" -f $rtType, $rtTarget, $rtMask, $rtGateway, $rtDevice)
         }
     }
+
+    # IPv6 routes: the mask column carries the prefix length
+    foreach ($route in Get-NetRoute -AddressFamily IPv6 -ErrorAction SilentlyContinue) {
+        $rtType = if ($route.NextHop -eq "::") { "direct" } else { "indirect" }
+        $rtTarget, $rtPrefix = $route.DestinationPrefix -split "/"
+        $rtDevice = [string]$indexNames[[int]$route.InterfaceIndex]
+        if ($rtDevice) {
+            Write-Output ("{0}|{1}|{2}|{3}|{4}" -f $rtType, $rtTarget, $rtPrefix, $route.NextHop, $rtDevice)
+        }
+    }
 }
 
 function GetSoftwareFromInstaller {

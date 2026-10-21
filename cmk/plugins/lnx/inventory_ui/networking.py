@@ -12,8 +12,8 @@ from cmk.inventory_ui.v1 import (
 )
 
 
-def _render_ipv4_network(value: str) -> Label | str:
-    return Label("Default") if value == "0.0.0.0/0" else value
+def _render_route_target(value: str) -> Label | str:
+    return Label("Default") if value in {"0.0.0.0/0", "::/0"} else value
 
 
 def _render_route_type(value: str) -> Label | str:
@@ -26,7 +26,7 @@ node_networking_routes = Node(
     title=Title("Routes"),
     table=Table(
         columns={
-            "target": TextField(Title("Target"), render=_render_ipv4_network),
+            "target": TextField(Title("Target"), render=_render_route_target),
             "device": TextField(Title("Device")),
             "type": TextField(Title("Type of route"), render=_render_route_type),
             "gateway": TextField(Title("Gateway")),

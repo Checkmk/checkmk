@@ -1,0 +1,24 @@
+title: Pure Storage FlashArray: Power Supply
+agents: pure_storage_fa
+catalog: hw/storagehw/pure_storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the power supply of a Pure Storage.
+
+ The status is mapped to the following Checkmk state:
+
+ - {OK} status is "ok"
+
+ - {WARN} if power supply lower 50
+
+ - {CRIT} if power supply lower 10 or status != "ok"
+
+ To make this check work you have to configure the related special agent
+ {Pure Storage FlashArray}.
+
+item:
+ Name of the pwoer supply.
+
+discovery:
+ One service per pwoer supply is created.

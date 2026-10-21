@@ -181,6 +181,7 @@ class CMKOpenApiSession(requests.Session):
         self.custom_graph = CustomGraphAPI(self)
         self.dashboard = DashboardAPI(self)
         self.autocomplete = AutocompleteAPI(self)
+        self.custom_service = CustomServiceAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -2743,3 +2744,47 @@ class AgentReceiverRelayAPI(ARBaseAPI):
         if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return TaskListResponse.model_validate(response.json()).tasks
+
+
+class CustomServiceAPI(BaseAPI):
+    """Custom services built from telemetry metrics; only registered at ``APIVersion.UNSTABLE``."""
+
+    def create(
+        self,
+        configuration_name: str,
+        host_assignment: Mapping[str, object],
+        configuration: Mapping[str, object],
+    ) -> None:
+        response = self.session.post(
+            "domain-types/custom_service/collections/all",
+            api_version=APIVersion.UNSTABLE,
+            json={
+                "configuration_name": configuration_name,
+                "host_assignment": host_assignment,
+                "configuration": configuration,
+            },
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    def get(self, configuration_name: str) -> dict[str, Any]:
+        response = self.session.get(
+            f"objects/custom_service/{configuration_name}", api_version=APIVersion.UNSTABLE
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        parsed = response.json()
+        if not isinstance(parsed, dict):
+            raise UnexpectedResponse(
+                response.status_code, f"expected a JSON object, got {parsed!r}"
+            )
+        return parsed
+
+    def delete(self, configuration_name: str, missing_ok: bool = False) -> None:
+        response = self.session.delete(
+            f"objects/custom_service/{configuration_name}", api_version=APIVersion.UNSTABLE
+        )
+        if missing_ok and response.status_code == HTTPStatus.NOT_FOUND:
+            return
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)

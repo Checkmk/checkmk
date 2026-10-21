@@ -6,6 +6,7 @@
 """Page objects for the graph engine's rendered graphs and their canvas gestures."""
 
 import logging
+from enum import StrEnum
 
 from playwright.sync_api import expect, FloatRect, Locator, Page, Response
 
@@ -29,6 +30,15 @@ _DRAG_STEPS = 12
 
 _ADD_PIN_LABEL = "Add pin"
 _REMOVE_PIN_LABEL = "Remove pin"
+
+
+class GraphStat(StrEnum):
+    """The statistics both the legend and the graph appearance table show per series."""
+
+    MIN = "min"
+    AVG = "avg"
+    MAX = "max"
+    LAST = "last"
 
 
 def _is_pin_stored(response: Response) -> bool:
@@ -290,6 +300,27 @@ class GraphPanel:
     @property
     def legend(self) -> Locator:
         return self.root.locator(".graphing-graph-legend")
+
+    @property
+    def legend_rows(self) -> Locator:
+        """One row per series the graph draws; a row's text holds the series title.
+
+        The horizontal lines are listed in the table footer, so they are left out.
+        """
+        return self.legend.locator("tbody .graphing-graph-legend__row")
+
+    def legend_stat(self, title: str, stat: GraphStat) -> Locator:
+        """The `stat` cell of the legend row whose title contains `title`.
+
+        The legend does not name its columns, so a stat is found by its position - keep
+        `GraphStat` in the order the legend renders.
+        """
+        row = self.legend_rows.filter(has_text=title)
+        return row.locator(".graphing-graph-legend__stat").nth(list(GraphStat).index(stat))
+
+    def notice(self, message: str) -> Locator:
+        """The message shown instead of data, e.g. "No metric selected"."""
+        return self.root.get_by_role("status").filter(has_text=message)
 
     @property
     def action_menu_button(self) -> Locator:

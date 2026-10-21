@@ -14,7 +14,6 @@ the "build a graph from scratch" cases need a saved graph to open.
 
 import logging
 import re
-from enum import StrEnum
 from typing import override
 from urllib.parse import urljoin
 
@@ -24,7 +23,10 @@ from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
 from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
     SURFACE_NOTICE_ERROR_SELECTOR,
 )
-from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import TimeSeriesGraph
+from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import (
+    GraphStat,
+    TimeSeriesGraph,
+)
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
@@ -52,15 +54,6 @@ _APPEARANCE_SERIES_ROW_SELECTOR = ".graphing-appearance-table__expanded-row"
 
 _CREATE_CUSTOM_SERVICE = "Create custom service"
 _SELECT_HOST_FIELD = "Select host"
-
-
-class GraphStat(StrEnum):
-    """The statistics both the legend and the graph appearance table show per series."""
-
-    MIN = "min"
-    AVG = "avg"
-    MAX = "max"
-    LAST = "last"
 
 
 class CustomGraphDesigner(CmkPage):

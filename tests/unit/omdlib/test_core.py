@@ -6,22 +6,17 @@
 import os
 from pathlib import Path
 
-import pytest
+from omdlib.core import core_choices, write_core_conf
 
-from omdlib.core import core_has_error, write_core_conf
+from cmk.ccc.version import Edition
 
 
-def test_core_has_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.chdir(tmp_path)
-    # "none" is always allowed; cmc/nagios only when their binary is present.
-    assert core_has_error("none") is None
-    assert core_has_error("cmc") is not None
-    assert core_has_error("nagios") is not None
+def test_core_choices_community_has_no_cmc() -> None:
+    assert [core for core, _ in core_choices(Edition.COMMUNITY)] == ["nagios", "none"]
 
-    (tmp_path / "bin").mkdir()
-    (tmp_path / "bin" / "cmc").write_text("")
-    assert core_has_error("cmc") is None
-    assert core_has_error("nagios") is not None
+
+def test_core_choices_pro_offers_cmc() -> None:
+    assert [core for core, _ in core_choices(Edition.PRO)] == ["cmc", "nagios", "none"]
 
 
 def _mkdirs(tmp_path: Path) -> None:

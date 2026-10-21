@@ -8,27 +8,18 @@ import subprocess
 import sys
 from pathlib import Path
 
-from omdlib.config_api import Config, Error, Hook
+from omdlib.config_api import Config, ConfigHookChoiceItem, Hook
+
+from cmk.ccc.version import Edition
 
 
-def core_has_error(value: str) -> None | Error:
-    cores: list[str] = []
-    if Path("bin/cmc").exists():
-        cores.append("cmc")
-    if Path("bin/nagios").exists():
-        cores.append("nagios")
-    cores.append("none")
-    if value not in cores:
-        return Error("Allowed are: " + ", ".join(cores))
-    return None
+def core_choices(edition: Edition) -> list[ConfigHookChoiceItem]:
+    cmc = [] if edition is Edition.COMMUNITY else [("cmc", "Check_MK Micro core")]
+    return [*cmc, ("nagios", "Nagios"), ("none", "No monitoring core")]
 
 
-def core_default(_edition: object) -> str:
-    if Path("bin/cmc").exists():
-        return "cmc"
-    if Path("bin/nagios").exists():
-        return "nagios"
-    return "none"
+def core_default(edition: Edition) -> str:
+    return "nagios" if edition is Edition.COMMUNITY else "cmc"
 
 
 def _ln_sf(target: str, linkpath: Path) -> None:
@@ -89,7 +80,7 @@ monitoring_core = 'cmc'
 
 CORE = Hook(
     name="CORE",
-    choices=lambda _edition: core_has_error,
+    choices=core_choices,
     default=core_default,
     activation=write_core_conf,
 )

@@ -571,12 +571,6 @@ metric_active_vpn_websessions = metrics.Metric(
     unit=UNIT_COUNTER,
     color=metrics.Color.CYAN,
 )
-metric_total_active_sessions = metrics.Metric(
-    name="total_active_sessions",
-    title=Title("Total active sessions"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.DARK_GRAY,
-)
 metric_packages_accepted = metrics.Metric(
     name="packages_accepted",
     title=Title("Accepted packages/s"),

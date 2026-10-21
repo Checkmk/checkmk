@@ -41,7 +41,16 @@ def check_palo_alto_sessions(_no_item, params, info):
     levelstext = " (warn/crit at %d/%d%%)" % (warn, crit)
 
     perfdata = [
-        ("total_active_sessions", total),
+        ("total_active_sessions", total)
+        if sessions_supported == 0
+        else (
+            "total_active_sessions",
+            total,
+            sessions_supported * warn / 100,
+            sessions_supported * crit / 100,
+            0,
+            sessions_supported,
+        ),
         ("tcp_active_sessions", tcp),
         ("udp_active_sessions", udp),
         ("icmp_active_sessions", icmp),

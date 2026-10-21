@@ -167,6 +167,22 @@ const callable_functions: Record<Exclude<KnownTSFunction, `mobile_${string}`>, C
 
   // sidebar
   register_search_field: (_node, options) => quicksearch.register_search_field(options.field),
+  // Assign the handler property instead of adding a listener: select2 only triggers the
+  // change event via jQuery, which calls the property but no native listener.
+  register_snapin_site_choice: (node, options) => {
+    node.onchange = (event) => {
+      sidebar.set_snapin_site(event, options.ident, node as HTMLSelectElement)
+    }
+  },
+  register_wato_tree_topic_choice: (node) => {
+    node.onchange = () => sidebar.wato_tree_topic_changed(node as HTMLSelectElement)
+  },
+  register_wato_tree_target_choice: (node) => {
+    node.onchange = () => sidebar.wato_tree_target_changed(node as HTMLSelectElement)
+  },
+  register_virtual_host_tree_choice: (node) => {
+    node.onchange = () => sidebar.virtual_host_tree_changed(node as HTMLSelectElement)
+  },
   fetch_nagvis_snapin_contents: () => sidebar.fetch_nagvis_snapin_contents(),
   speedometer_show_speed: (_node, options) =>
     sidebar.speedometer_show_speed(

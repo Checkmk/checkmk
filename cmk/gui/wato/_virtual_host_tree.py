@@ -111,7 +111,7 @@ class VirtualHostTree(SidebarSnapin):
                 "vtree",
                 self._tree_choices(),
                 deflt="%s" % self._current_tree_id,
-                onchange="cmk.sidebar.virtual_host_tree_changed(this)",
+                data_cmk_call_ts_function="register_virtual_host_tree_choice",
                 style="width:210px" if self._current_tree_path else None,
             )
 

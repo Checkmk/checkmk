@@ -395,7 +395,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
             "topic",
             topic_choices,
             deflt=selected_topic_name,
-            onchange="cmk.sidebar.wato_tree_topic_changed(this)",
+            data_cmk_call_ts_function="register_wato_tree_topic_choice",
         )
         html.close_td()
         html.close_tr()
@@ -422,7 +422,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
                 "target_%s" % topic.title,
                 targets,
                 deflt=default,
-                onchange="cmk.sidebar.wato_tree_target_changed(this)",
+                data_cmk_call_ts_function="register_wato_tree_target_choice",
                 style=style,
             )
 

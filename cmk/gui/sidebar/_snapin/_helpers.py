@@ -163,8 +163,13 @@ def snapin_site_choice(ident: str, choices: list[tuple[SiteId, str]]) -> list[Si
     ]
     dropdown_choices += available_site_choices
 
-    onchange = "cmk.sidebar.set_snapin_site(event, %s, this)" % json.dumps(ident)
-    html.dropdown("site", dropdown_choices, deflt=site, onchange=onchange)
+    html.dropdown(
+        "site",
+        dropdown_choices,
+        deflt=site,
+        data_cmk_call_ts_function="register_snapin_site_choice",
+        data_cmk_call_ts_arguments=json.dumps({"ident": ident}),
+    )
 
     return only_sites
 

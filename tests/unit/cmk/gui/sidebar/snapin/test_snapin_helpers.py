@@ -278,7 +278,21 @@ def test_snapin_site_choice_renders_a_dropdown_for_several_sites(
     assert "All sites" in rendered
     assert "Heute" in rendered
     assert "Beta" in rendered
-    assert "cmk.sidebar.set_snapin_site" in rendered
+
+
+def test_snapin_site_choice_registers_its_change_handler_without_inline_code(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _only_sites, rendered = _site_choice(
+        monkeypatch,
+        states=ONLINE_SITES,
+        choices=[(SiteId("heute"), "Heute"), (SiteId("beta"), "Beta")],
+        stored={},
+    )
+
+    assert "onchange" not in rendered
+    assert 'data-cmk_call_ts_function="register_snapin_site_choice"' in rendered
+    assert 'data-cmk_call_ts_arguments="{&quot;ident&quot;: &quot;performance&quot;}"' in rendered
 
 
 def test_snapin_site_choice_restricts_to_the_stored_site(monkeypatch: pytest.MonkeyPatch) -> None:

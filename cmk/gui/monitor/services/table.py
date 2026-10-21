@@ -5,19 +5,18 @@
 
 from ._access import HOST_SERVICES_PERMISSION
 from ._api._list_host_services import HostServiceEntry, HostServicesTable
-from ._exceptions import HostNotFoundError, InvalidServiceFilterError, InvalidServiceListingError
-from ._listing import ServiceListing
+from ._exceptions import HostNotFoundError, InvalidServiceFilterError
+from ._listing import SERVICE_LISTING
 from ._models import ServiceOptionalField
 from ._table_catalog import HOST_SERVICES_TABLE
 
 __all__ = [
     "HOST_SERVICES_PERMISSION",
     "HOST_SERVICES_TABLE",
+    "SERVICE_LISTING",
     "HostNotFoundError",
     "HostServiceEntry",
     "HostServicesTable",
     "InvalidServiceFilterError",
-    "InvalidServiceListingError",
-    "ServiceListing",
     "ServiceOptionalField",
 ]

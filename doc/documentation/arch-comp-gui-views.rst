@@ -105,7 +105,7 @@ Interfaces
   Other components use only this module, not the package internals. It
   offers ``HostTable`` (with ``list`` and ``parse_filter``), the column
   catalogs ``ALL_HOSTS_TABLE`` and ``HOST_TABLE``, ``HostEntry``,
-  ``HostListing`` (which validates a request body of the internal REST
+  ``HOST_LISTING`` (which validates a request body of the internal REST
   endpoint that lists hosts with the endpoint's own model) and
   ``ALL_HOSTS_PERMISSION``, the permission the page "All hosts" needs. The
   rows are ``HostEntry``, the response model of the internal REST endpoint,
@@ -115,7 +115,7 @@ Interfaces
   column catalog ``HOST_SERVICES_TABLE``, ``HostServiceEntry``,
   ``ServiceOptionalField``, the errors ``HostNotFoundError`` (also for a
   site that does not exist) and ``InvalidServiceFilterError``,
-  ``ServiceListing`` (which validates a request body of the internal REST
+  ``SERVICE_LISTING`` (which validates a request body of the internal REST
   endpoint that lists the services of a host with the endpoint's own model)
   and ``HOST_SERVICES_PERMISSION``, the permission the page "Services of
   host" needs. The rows are ``HostServiceEntry``, the response model of
@@ -125,8 +125,12 @@ Interfaces
   an instant PDF report of reporting with the columns they show and the
   request body they send to their internal REST endpoint, with relative age
   filters already resolved. Reporting turns that body into the listing with
-  ``HostListing`` from ``cmk.gui.monitor.hosts.table`` and ``ServiceListing``
-  from ``cmk.gui.monitor.services.table``.
+  ``HOST_LISTING`` from ``cmk.gui.monitor.hosts.table`` and
+  ``SERVICE_LISTING`` from ``cmk.gui.monitor.services.table``.
+* ``cmk.gui.monitor.table_widget``: what the tables of the monitoring pages
+  share. ``ColumnCatalog`` implements the column catalog ``TableCatalog``
+  and ``ListingParser`` turns a request body into a ``TableListing``; the
+  hosts and services packages only plug in their columns and models.
 
 Coexistence
 -----------

@@ -7,7 +7,7 @@ from http import HTTPStatus
 from typing import Annotated, Final, Self
 
 from annotated_types import Interval
-from pydantic import PlainValidator, TypeAdapter, ValidationError
+from pydantic import PlainValidator, ValidationError
 
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
@@ -45,7 +45,7 @@ from .._models import (
 )
 from .._repositories import HostServicesRepository
 from ._family import MONITOR_SERVICES_FAMILY
-from ._filters import parse_as_livestatus_filter, ServiceFilterNode
+from ._filters import parse_as_livestatus_filter, SERVICE_FILTER_NODE, ServiceFilterNode
 from ._modes import build_service_modes_by_id, ServiceModeInfo
 from ._perfometer import ServicePerfometer
 from ._reschedule_offer import build_reschedule_offer, ServiceRescheduleOffer
@@ -66,8 +66,6 @@ _DEFAULT_SORT: tuple[ServiceSort, ...] = ()
 
 # The page's default columns; everything else has to be asked for.
 _DEFAULT_FIELDS: frozenset[ServiceOptionalField] = frozenset()
-
-_FILTER_NODE: Final = TypeAdapter[ServiceFilterNode](ServiceFilterNode)
 
 
 @api_model
@@ -299,7 +297,7 @@ class HostServicesTable:
     @staticmethod
     def parse_filter(raw: str) -> ServiceFilterNode:
         try:
-            return _FILTER_NODE.validate_json(raw)
+            return SERVICE_FILTER_NODE.validate_json(raw)
         except ValidationError as exc:
             raise InvalidServiceFilterError(str(exc)) from exc
 

@@ -5,10 +5,10 @@
 
 import re
 from collections.abc import Mapping
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from annotated_types import MinLen
-from pydantic import AfterValidator, PlainValidator, StringConstraints
+from pydantic import AfterValidator, PlainValidator, StringConstraints, TypeAdapter
 
 from cmk.gui.config import active_config
 from cmk.gui.openapi.framework.model import api_field, api_model
@@ -212,6 +212,8 @@ class ServiceNotNode:
 
 
 type ServiceFilterNode = ServiceAndNode | ServiceOrNode | ServiceNotNode | ServiceConditionNode
+
+SERVICE_FILTER_NODE: Final = TypeAdapter[ServiceFilterNode](ServiceFilterNode)
 
 
 def parse_as_livestatus_filter(node: ServiceFilterNode) -> ServiceFilter:

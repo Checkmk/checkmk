@@ -5,21 +5,20 @@
 
 from ._access import ALL_HOSTS_PERMISSION
 from ._api._list_hosts import HostEntry, HostTable
-from ._exceptions import InvalidFilterError, InvalidHostListingError
+from ._exceptions import InvalidFilterError
 from ._folder import MonitorFolders
-from ._listing import HostListing
+from ._listing import HOST_LISTING
 from ._models import HostOptionalField
 from ._table_catalog import ALL_HOSTS_TABLE, HOST_TABLE
 
 __all__ = [
     "ALL_HOSTS_PERMISSION",
     "ALL_HOSTS_TABLE",
+    "HOST_LISTING",
     "HOST_TABLE",
     "HostEntry",
-    "HostListing",
     "HostOptionalField",
     "HostTable",
     "InvalidFilterError",
-    "InvalidHostListingError",
     "MonitorFolders",
 ]

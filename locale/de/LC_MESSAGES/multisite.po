@@ -911,9 +911,6 @@ msgstr ""
 "%s<br><br>Dies ist ein vorläufiges Release-Flag. Es wird in Version %s "
 "entfernt und sollte nicht für dauerhafte Konfigurationen verwendet werden."
 
-msgid "&lt;None&gt;"
-msgstr "&lt;keine&gt;"
-
 msgid ""
 "'Activate changes' is blocked. Distributed monitoring is not available after "
 "trial expiration, including hosts added via CMCDump"
@@ -1021,6 +1018,10 @@ msgstr "(sende keine Benachrichtigungen zur Event Console)"
 #, fuzzy
 msgid "(edit presets)"
 msgstr "(Voreinstellungen bearbeiten)"
+
+#, fuzzy
+msgid "(empty)"
+msgstr "leer"
 
 msgid "(finished)"
 msgstr "(abgeschlossen)"
@@ -1148,6 +1149,12 @@ msgstr ", verstrichene Cache-Lebensdauer: %s"
 
 msgid ", errors occurred"
 msgstr ", es sind Fehler aufgetreten"
+
+# Möglicherweise auch ein Negativbeispiel für gut lokalisierbaren Code. Aber
+# vermutlich weniger tragisch als andere Fälle.
+#, fuzzy
+msgid ", first match drops the message"
+msgstr ", der erste Treffer überspringt das Regelpaket"
 
 msgid ", first match is a cancelling match"
 msgstr ", die erste Übereinstimmung ist eine Aufhebung"
@@ -6095,6 +6102,9 @@ msgstr "Zustände der Alertmanager-Regel (Zusammenfassung)"
 msgid "Alerts"
 msgstr "Alerts"
 
+msgid "Alerts for items scheduled for deletion"
+msgstr ""
+
 msgid "Algorithm"
 msgstr "Algorithmus"
 
@@ -7964,6 +7974,10 @@ msgstr "Zuweisung von Services zu Kontaktgruppen"
 
 msgid "Assignment of services to service groups"
 msgstr "Zuweisung von Services zu Service-Gruppen"
+
+#, fuzzy
+msgid "Assistant instructions"
+msgstr "Persistente Verbindungen"
 
 #, python-format
 msgid ""
@@ -12299,6 +12313,10 @@ msgstr ""
 "Die Regelbedingungen der von Quick Setup verwalteten Regeln können nicht "
 "geändert werden."
 
+#, python-format
+msgid "Cannot compile the rule: %(error)s"
+msgstr ""
+
 msgid ""
 "Cannot compute forecast based on the current data. You can either wait until "
 "more data has been collected or you can try to change the time range of the "
@@ -12493,6 +12511,14 @@ msgid ""
 msgstr ""
 "Kann HW-/SW-Inventur-Baum des Hosts %s nicht laden. Bitte entfernen Sie die "
 "beschädigte Datei."
+
+#, python-format
+msgid "Cannot look up the time periods: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Cannot match the rule: %(error)s"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -66138,6 +66164,10 @@ msgstr "Support Diagnostics"
 msgid "Supporting rules"
 msgstr "Unterstützende Regeln"
 
+#, fuzzy
+msgid "Suppress alerts"
+msgstr "Unterdrücke alle bisherigen"
+
 msgid "Suppress all previous"
 msgstr "Unterdrücke alle bisherigen"
 
@@ -67741,6 +67771,20 @@ msgid ""
 msgstr ""
 "Die Event-Consolen-Ansicht '%s' kann nicht dargestellt werden. "
 "Möglicherweise ist die Event Console deaktiviert."
+
+#, python-format
+msgid ""
+"The GUI has no Livestatus connection to site %(site)s, because the site is "
+"disabled in the \"Site status\" snap-in."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The GUI has no Livestatus connection to site %(site)s."
+msgstr "Neue Verbindung zu Instanz %s erstellt"
+
+#, python-format
+msgid "The GUI has no Livestatus connection to site %(site)s: %(error)s"
+msgstr ""
 
 msgid "The Graylog node"
 msgstr "Der Graylog-Knoten"
@@ -70271,6 +70315,17 @@ msgstr ""
 "Der Instanzname, der Datenbankname und der Tablespace-Name, wie folgt "
 "zusammengesetzt: db2wps8:WPSCOMT8.USERSPACE1"
 
+msgid ""
+"The instructions the AI assistant sends to the model with every request. Any "
+"user of the assistant can get the model to repeat them, so keep secrets and "
+"restricted information out of them. While this setting is not saved, the "
+"assistant uses the default text that ships with Checkmk, and each update can "
+"change it. Once you save the setting, the assistant uses the saved text, "
+"even if you saved the default unchanged, and updates no longer change it. "
+"Reset the setting to go back to the shipped default. An empty text sends no "
+"instructions."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The interval in which the connection will be executed to check the available "
@@ -72419,6 +72474,10 @@ msgstr ""
 "Wenn sie verloren geht, werden Sie keine neuen Agenten mehr mit diesem "
 "Schlüssel signieren können. Dies kann bedeuten, dass Sie alle Agenten "
 "manuell mit einem neuen Schlüssel aktualisieren müssen!"
+
+#, python-format
+msgid "The simulator cannot tell whether this rule matches: %s"
+msgstr ""
 
 #, python-format
 msgid "The site \"%s\" does not exist."
@@ -75003,6 +75062,16 @@ msgstr ""
 "Möglicherweise benötigen Sie diese Einstellung bei der Verwendung von SSL "
 "Verbindungen und beim Auftreten von Problemen."
 
+#, python-format
+msgid ""
+"This might be wrong, because the simulator cannot tell whether %(count)d "
+"rule of this pack matches: %(reason)s"
+msgid_plural ""
+"This might be wrong, because the simulator cannot tell whether %(count)d "
+"rules of this pack match: %(reason)s"
+msgstr[0] ""
+msgstr[1] ""
+
 msgid "This might take some time and involves a core restart..."
 msgstr ""
 "Das kann etwas dauern und erfordert einen Neustart des Monitoring Cores..."
@@ -76760,6 +76829,16 @@ msgstr "Diese Regel trifft zu"
 
 msgid "This rule matches and defines new parameters."
 msgstr "Diese Regel trifft zu und definiert neue Parameter."
+
+#, fuzzy
+msgid "This rule matches and drops the message."
+msgstr "Diese Regel trifft zu und definiert neue Parameter."
+
+# Möglicherweise auch ein Negativbeispiel für gut lokalisierbaren Code. Aber
+# vermutlich weniger tragisch als andere Fälle.
+#, fuzzy
+msgid "This rule matches and skips the rest of this rule pack."
+msgstr ", der erste Treffer überspringt das Regelpaket"
 
 #, python-format
 msgid "This rule matches for the host '%s'"
@@ -88693,6 +88772,18 @@ msgstr ""
 "physischen Knoten nach der Änderung dieses Regelsatzes neu inventarisieren."
 
 msgid ""
+"When you delete an Azure backup item, Azure keeps it in the vault for a soft "
+"delete grace period. During this period, Azure reports the protection state "
+"'ProtectionStopped', and the time since the last backup increases. The check "
+"then reports a problem, although you deleted the item on purpose. If you set "
+"this option, the check reports OK for the last status, the protection state, "
+"the protection status and the backup age. This applies while Azure reports "
+"the item as scheduled for deletion. The check still shows this information, "
+"but the information does not change the service state. By default, the check "
+"treats these items like any other stopped protection, and reports a problem."
+msgstr ""
+
+msgid ""
 "When you expect this rule to receive events from hosts that are <i>not</i> "
 "known to the monitoring, you can specify contact groups for controlling the "
 "visibility and eventually triggered notifications here.<br><br><i>Notes:</"
@@ -99368,6 +99459,9 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "&lt;None&gt;"
+#~ msgstr "&lt;keine&gt;"
 
 #~ msgid "Can not evaluate search"
 #~ msgstr "Kann Suche nicht auswerten"

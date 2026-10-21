@@ -895,9 +895,6 @@ msgstr ""
 "%s<br><br>これは一時的なリリースフラグです。バージョン%sで削除される予定であ"
 "り、恒久的な設定として依存してはなりません。"
 
-msgid "&lt;None&gt;"
-msgstr "&lt;なし&gt;"
-
 msgid ""
 "'Activate changes' is blocked. Distributed monitoring is not available after "
 "trial expiration, including hosts added via CMCDump"
@@ -1001,6 +998,10 @@ msgstr "(イベントコンソールに通知を送信しないでください)"
 
 msgid "(edit presets)"
 msgstr "(プリセットを編集する)"
+
+#, fuzzy
+msgid "(empty)"
+msgstr "空の"
 
 msgid "(finished)"
 msgstr "(終了しました)"
@@ -1119,6 +1120,10 @@ msgstr ",経過キャッシュ寿命: %s"
 
 msgid ", errors occurred"
 msgstr "、エラーが発生しました"
+
+#, fuzzy
+msgid ", first match drops the message"
+msgstr ",最初の一致はこのルールパックをスキップします"
 
 msgid ", first match is a cancelling match"
 msgstr "、最初の一致ははキャンセルした一致です"
@@ -5818,6 +5823,9 @@ msgstr "アラートマネージャーのルール状態（サマリー）"
 msgid "Alerts"
 msgstr "アラート"
 
+msgid "Alerts for items scheduled for deletion"
+msgstr ""
+
 msgid "Algorithm"
 msgstr "アルゴリズム"
 
@@ -7598,6 +7606,10 @@ msgstr "連絡先グループへのサービスの割り当て"
 
 msgid "Assignment of services to service groups"
 msgstr "サービスグループへのサービスの割り当て"
+
+#, fuzzy
+msgid "Assistant instructions"
+msgstr "持続的接続"
 
 #, python-format
 msgid ""
@@ -11730,6 +11742,10 @@ msgstr "グラフレシピを計算できません: %s"
 msgid "Cannot change rule conditions for rules managed by Quick Setup."
 msgstr "クイックセットアップで管理されているルールの条件を変更できません。"
 
+#, python-format
+msgid "Cannot compile the rule: %(error)s"
+msgstr ""
+
 msgid ""
 "Cannot compute forecast based on the current data. You can either wait until "
 "more data has been collected or you can try to change the time range of the "
@@ -11908,6 +11924,14 @@ msgid ""
 msgstr ""
 "ホストのHW/SWインベントリツリー %s をロードできません。破損したファイルを削除"
 "してください。"
+
+#, python-format
+msgid "Cannot look up the time periods: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Cannot match the rule: %(error)s"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -64806,6 +64830,10 @@ msgstr "診断をサポートする"
 msgid "Supporting rules"
 msgstr "サポート規定"
 
+#, fuzzy
+msgid "Suppress alerts"
+msgstr "すべてを抑制する"
+
 msgid "Suppress all previous"
 msgstr "すべてを抑制する"
 
@@ -66377,6 +66405,20 @@ msgid ""
 msgstr ""
 "イベントコンソールビュー '%s' はレンダリングできません。イベントコンソールが"
 "無効になっている可能性があります。"
+
+#, python-format
+msgid ""
+"The GUI has no Livestatus connection to site %(site)s, because the site is "
+"disabled in the \"Site status\" snap-in."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The GUI has no Livestatus connection to site %(site)s."
+msgstr "サイト%sへの新しい接続を作成しました"
+
+#, python-format
+msgid "The GUI has no Livestatus connection to site %(site)s: %(error)s"
+msgstr ""
 
 msgid "The Graylog node"
 msgstr "グレイログノード"
@@ -68782,6 +68824,17 @@ msgstr ""
 "インスタンス名、データベース名、テーブルスペース名の組み合わせは以下のように"
 "なります。 db2wps8:WPSCOMT8.USERSPACE1"
 
+msgid ""
+"The instructions the AI assistant sends to the model with every request. Any "
+"user of the assistant can get the model to repeat them, so keep secrets and "
+"restricted information out of them. While this setting is not saved, the "
+"assistant uses the default text that ships with Checkmk, and each update can "
+"change it. Once you save the setting, the assistant uses the saved text, "
+"even if you saved the default unchanged, and updates no longer change it. "
+"Reset the setting to go back to the shipped default. An empty text sends no "
+"instructions."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The interval in which the connection will be executed to check the available "
@@ -70838,6 +70891,10 @@ msgstr ""
 "どこにも保存されません。紛失した場合、このキーでエージェントに署名することは"
 "できなくなります。これは、すべてのエージェントを新しいキーで手動で更新する必"
 "要があることを意味する場合があります。だから注意してください!"
+
+#, python-format
+msgid "The simulator cannot tell whether this rule matches: %s"
+msgstr ""
 
 #, python-format
 msgid "The site \"%s\" does not exist."
@@ -73309,6 +73366,15 @@ msgstr ""
 "これは、SSLで保護された接続を使用するときに、同期がSSL証明書の問題を受け入れ"
 "るようにするために必要になる場合があります。"
 
+#, python-format
+msgid ""
+"This might be wrong, because the simulator cannot tell whether %(count)d "
+"rule of this pack matches: %(reason)s"
+msgid_plural ""
+"This might be wrong, because the simulator cannot tell whether %(count)d "
+"rules of this pack match: %(reason)s"
+msgstr[0] ""
+
 msgid "This might take some time and involves a core restart..."
 msgstr "これには時間がかかり、コアの再起動が必要になる場合があります..."
 
@@ -74993,6 +75059,14 @@ msgstr "このルールは一致します"
 
 msgid "This rule matches and defines new parameters."
 msgstr "このルールは、新しいパラメーターに一致し、定義します。"
+
+#, fuzzy
+msgid "This rule matches and drops the message."
+msgstr "このルールは、新しいパラメーターに一致し、定義します。"
+
+#, fuzzy
+msgid "This rule matches and skips the rest of this rule pack."
+msgstr ",最初の一致はこのルールパックをスキップします"
 
 #, python-format
 msgid "This rule matches for the host '%s'"
@@ -86819,6 +86893,18 @@ msgstr ""
 "更した後は、クラスターと物理ノードを再インベントリしてください。"
 
 msgid ""
+"When you delete an Azure backup item, Azure keeps it in the vault for a soft "
+"delete grace period. During this period, Azure reports the protection state "
+"'ProtectionStopped', and the time since the last backup increases. The check "
+"then reports a problem, although you deleted the item on purpose. If you set "
+"this option, the check reports OK for the last status, the protection state, "
+"the protection status and the backup age. This applies while Azure reports "
+"the item as scheduled for deletion. The check still shows this information, "
+"but the information does not change the service state. By default, the check "
+"treats these items like any other stopped protection, and reports a problem."
+msgstr ""
+
+msgid ""
 "When you expect this rule to receive events from hosts that are <i>not</i> "
 "known to the monitoring, you can specify contact groups for controlling the "
 "visibility and eventually triggered notifications here.<br><br><i>Notes:</"
@@ -97842,6 +97928,9 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid "&lt;None&gt;"
+#~ msgstr "&lt;なし&gt;"
 
 #~ msgid "Can not evaluate search"
 #~ msgstr "検索を評価できません"

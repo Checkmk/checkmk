@@ -904,9 +904,6 @@ msgid ""
 "in version %s and must not be relied on for permanent configuration."
 msgstr ""
 
-msgid "&lt;None&gt;"
-msgstr "&lt;Nimic&gt;"
-
 #, fuzzy
 msgid ""
 "'Activate changes' is blocked. Distributed monitoring is not available after "
@@ -1017,6 +1014,10 @@ msgstr "(nu trimite notificări câtre Event Console)"
 #, fuzzy
 msgid "(edit presets)"
 msgstr "(Editare preselecții)"
+
+#, fuzzy
+msgid "(empty)"
+msgstr "gol"
 
 #, fuzzy
 msgid "(finished)"
@@ -1147,6 +1148,10 @@ msgstr ", durata de viață scursă a cache-ului: %s."
 #, fuzzy
 msgid ", errors occurred"
 msgstr ", au apărut erori"
+
+#, fuzzy
+msgid ", first match drops the message"
+msgstr ", prima potrivire sare peste acest pachet de reguli"
 
 msgid ", first match is a cancelling match"
 msgstr ", primul meci este un meci de anulare"
@@ -6203,6 +6208,9 @@ msgstr "Stări ale regulilor Alertmanager (Rezumat)"
 msgid "Alerts"
 msgstr "Alerte"
 
+msgid "Alerts for items scheduled for deletion"
+msgstr ""
+
 msgid "Algorithm"
 msgstr "Algoritm"
 
@@ -8098,6 +8106,10 @@ msgstr "Atribuirea serviciilor la grupurile de contact"
 
 msgid "Assignment of services to service groups"
 msgstr "Atribuirea serviciilor la grupurile de servicii"
+
+#, fuzzy
+msgid "Assistant instructions"
+msgstr "Conexiuni persistente"
 
 #, fuzzy, python-format
 msgid ""
@@ -12762,6 +12774,10 @@ msgstr "Nu se pot calcula rețete grafice: %s."
 msgid "Cannot change rule conditions for rules managed by Quick Setup."
 msgstr "Nu puteți șterge rolurile care sunt încă în uz (%s)!"
 
+#, python-format
+msgid "Cannot compile the rule: %(error)s"
+msgstr ""
+
 msgid ""
 "Cannot compute forecast based on the current data. You can either wait until "
 "more data has been collected or you can try to change the time range of the "
@@ -12943,6 +12959,14 @@ msgid ""
 msgstr ""
 "Nu se pot încărca arborii de inventar HW/SW %s. Vă rugăm să eliminați "
 "fișierele corupte."
+
+#, python-format
+msgid "Cannot look up the time periods: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Cannot match the rule: %(error)s"
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -69229,6 +69253,10 @@ msgid "Supporting rules"
 msgstr "Reguli orizontale"
 
 #, fuzzy
+msgid "Suppress alerts"
+msgstr "Suprimarea senzorilor care nu sunt disponibili"
+
+#, fuzzy
 msgid "Suppress all previous"
 msgstr "Suprimarea senzorilor care nu sunt disponibili"
 
@@ -70897,6 +70925,20 @@ msgid ""
 msgstr ""
 "Vizualizarea Consola de evenimente '%s' nu poate fi redată. Consola de "
 "evenimente este posibil să fie dezactivată."
+
+#, python-format
+msgid ""
+"The GUI has no Livestatus connection to site %(site)s, because the site is "
+"disabled in the \"Site status\" snap-in."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The GUI has no Livestatus connection to site %(site)s."
+msgstr "A fost creată o nouă conexiune la site %s"
+
+#, python-format
+msgid "The GUI has no Livestatus connection to site %(site)s: %(error)s"
+msgstr ""
 
 msgid "The Graylog node"
 msgstr "Nodul Graylog"
@@ -73299,6 +73341,17 @@ msgstr ""
 "Numele instanței, numele bazei de date și numele tablespace-ului combinate "
 "astfel db2wps8:WPSCOMT8.USERSPACE1"
 
+msgid ""
+"The instructions the AI assistant sends to the model with every request. Any "
+"user of the assistant can get the model to repeat them, so keep secrets and "
+"restricted information out of them. While this setting is not saved, the "
+"assistant uses the default text that ships with Checkmk, and each update can "
+"change it. Once you save the setting, the assistant uses the saved text, "
+"even if you saved the default unchanged, and updates no longer change it. "
+"Reset the setting to go back to the shipped default. An empty text sends no "
+"instructions."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The interval in which the connection will be executed to check the available "
@@ -75361,6 +75414,10 @@ msgstr ""
 "acces. Fraza nu va fi stocată nicăieri. Dacă se pierde, nu veți mai putea "
 "semna niciun agent cu această cheie. Acest lucru poate însemna că va trebui "
 "să actualizați manual toți agenții cu o nouă cheie. Așadar, aveți grijă!"
+
+#, python-format
+msgid "The simulator cannot tell whether this rule matches: %s"
+msgstr ""
 
 #, python-format
 msgid "The site \"%s\" does not exist."
@@ -77890,6 +77947,17 @@ msgstr ""
 "Acest lucru ar putea fi necesar pentru ca sincronizarea să accepte probleme "
 "cu certificatele SSL atunci când se utilizează o conexiune securizată SSL."
 
+#, python-format
+msgid ""
+"This might be wrong, because the simulator cannot tell whether %(count)d "
+"rule of this pack matches: %(reason)s"
+msgid_plural ""
+"This might be wrong, because the simulator cannot tell whether %(count)d "
+"rules of this pack match: %(reason)s"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
 msgid "This might take some time and involves a core restart..."
 msgstr ""
 "Acest lucru ar putea dura ceva timp și implică o repornire a nucleului..."
@@ -79681,6 +79749,14 @@ msgstr "Această regulă se potrivește cu"
 
 msgid "This rule matches and defines new parameters."
 msgstr "Această regulă se potrivește și definește noi parametri."
+
+#, fuzzy
+msgid "This rule matches and drops the message."
+msgstr "Această regulă se potrivește și definește noi parametri."
+
+#, fuzzy
+msgid "This rule matches and skips the rest of this rule pack."
+msgstr ", prima potrivire sare peste acest pachet de reguli"
 
 #, python-format
 msgid "This rule matches for the host '%s'"
@@ -92354,6 +92430,18 @@ msgstr ""
 "fizice după ce modificați acest set de reguli."
 
 msgid ""
+"When you delete an Azure backup item, Azure keeps it in the vault for a soft "
+"delete grace period. During this period, Azure reports the protection state "
+"'ProtectionStopped', and the time since the last backup increases. The check "
+"then reports a problem, although you deleted the item on purpose. If you set "
+"this option, the check reports OK for the last status, the protection state, "
+"the protection status and the backup age. This applies while Azure reports "
+"the item as scheduled for deletion. The check still shows this information, "
+"but the information does not change the service state. By default, the check "
+"treats these items like any other stopped protection, and reports a problem."
+msgstr ""
+
+msgid ""
 "When you expect this rule to receive events from hosts that are <i>not</i> "
 "known to the monitoring, you can specify contact groups for controlling the "
 "visibility and eventually triggered notifications here.<br><br><i>Notes:</"
@@ -103349,6 +103437,9 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "&lt;None&gt;"
+#~ msgstr "&lt;Nimic&gt;"
 
 #~ msgid "Can not evaluate search"
 #~ msgstr "Nu se poate evalua căutarea"

@@ -14,8 +14,8 @@ from cmk.gui.config import Config
 from cmk.gui.dashboard import DashletConfig, get_all_dashboards
 from cmk.gui.dashboard.api._utils import INTERNAL_TO_API_TYPE_NAME
 from cmk.gui.dashboard.api.model.constants import RESPONSIVE_GRID_BREAKPOINTS
-from cmk.gui.dashboard.api.model.widget import WidgetTitle
-from cmk.gui.dashboard.api.model.widget_content import _CONTENT_TYPES
+from cmk.gui.dashboard.api.model.widget import RelativeGridWidgetResponse, WidgetTitle
+from cmk.gui.dashboard.api.model.widget_content import _CONTENT_TYPES, NotSupportedContent
 from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
@@ -62,6 +62,18 @@ def test_widget_title_from_internal_sanitizes_title_url(
         assert isinstance(result.url, ApiOmitted)
     else:
         assert result.url == expected_url
+
+
+@pytest.mark.xfail(raises=KeyError, reason="Crash group 4539: KeyError")
+def test_stored_widget_of_an_unknown_type_is_not_supported() -> None:
+    config: DashletConfig = {"type": "notification_analysis", "position": (1, 1), "size": (10, 10)}
+
+    widget = RelativeGridWidgetResponse.from_internal(config)
+
+    assert (widget.content, widget.filter_context.uses_infos) == (
+        NotSupportedContent(type="not_supported", original_type="notification_analysis"),
+        [],
+    )
 
 
 @pytest.mark.parametrize(
@@ -1054,6 +1066,17 @@ class TestNotSupportedContent:
         assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
         assert (
             resp.json["fields"]["body.widgets.test_widget.content.not_supported"]["msg"]
+            == "Value error, Cannot use unsupported content type."
+        )
+
+    def test_compute_widget_attributes(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.compute_widget_attributes(
+            {"type": "not_supported", "original_type": "notification_analysis"},
+            expect_ok=False,
+        )
+        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert (
+            resp.json["fields"]["body.content.not_supported"]["msg"]
             == "Value error, Cannot use unsupported content type."
         )
 

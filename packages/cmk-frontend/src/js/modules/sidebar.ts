@@ -436,52 +436,6 @@ export function refresh_single_snapin(name: string) {
 }
 
 /************************************************
- * WATO Folders snapin handling
- *************************************************/
-
-// FIXME: Make this somehow configurable - use the start url?
-let g_last_view = 'dashboard.py?name=main'
-const g_last_folder = ''
-
-// highlight the followed link (when both needed snapins are available)
-function highlight_link(link_obj: HTMLElement, container_id: string) {
-  const this_snapin = document.getElementById(container_id)
-  let other_snapin
-  if (container_id == 'snapin_container_wato_folders')
-    other_snapin = document.getElementById('snapin_container_views')
-  else other_snapin = document.getElementById('snapin_container_wato_folders')
-
-  if (this_snapin && other_snapin) {
-    let links: HTMLCollectionOf<HTMLElement>
-    if (this_snapin.getElementsByClassName)
-      links = this_snapin.getElementsByClassName('link') as HTMLCollectionOf<HTMLElement>
-    else links = document.getElementsByClassName('link') as HTMLCollectionOf<HTMLElement>
-
-    for (let i = 0; i < links.length; i++) {
-      links[i].style.fontWeight = 'normal'
-    }
-
-    link_obj.style.fontWeight = 'bold'
-  }
-}
-
-export function wato_views_clicked(link_obj: HTMLLinkElement) {
-  g_last_view = link_obj.href
-
-  highlight_link(link_obj, 'snapin_container_views')
-  highlight_link(link_obj, 'snapin_container_dashboards')
-
-  if (g_last_folder != '') {
-    // Navigate by using javascript, cancel following the default link
-    window.location.href = g_last_view + '&wato_folder=' + encodeURIComponent(g_last_folder)
-    return false
-  } else {
-    // Makes use the url stated in href attribute
-    return true
-  }
-}
-
-/************************************************
  * WATO Foldertree (Standalone) snapin handling
  *************************************************/
 

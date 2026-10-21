@@ -339,8 +339,4 @@ def _show_topic(treename: str, topic: NavItemTopic, show_item_icons: bool) -> No
                 )
                 html.close_li()
             else:
-                bulletlink(
-                    item.title,
-                    item.url,
-                    onclick="return cmk.sidebar.wato_views_clicked(this)",
-                )
+                bulletlink(item.title, item.url)

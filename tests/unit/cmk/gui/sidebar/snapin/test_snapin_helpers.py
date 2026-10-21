@@ -307,7 +307,15 @@ def test_show_main_menu_renders_one_foldable_container_per_topic() -> None:
     assert "Topic a" in rendered
     assert "Topic b" not in rendered
     assert "View 1" in rendered
-    assert "cmk.sidebar.wato_views_clicked" in rendered
+
+
+@pytest.mark.usefixtures("patch_theme")
+def test_show_main_menu_renders_plain_entry_links() -> None:
+    with output_funnel.plugged():
+        show_main_menu("views", [_topic("a", [_entry("v1", "View 1")])])
+        rendered = output_funnel.drain()
+
+    assert "onclick" not in rendered
 
 
 @pytest.mark.usefixtures("patch_theme")

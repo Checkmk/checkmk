@@ -91,6 +91,8 @@ async function save(): Promise<void> {
         v-model:service-name="model.serviceName"
         v-model:host-name="model.hostName"
         v-model:host-name-template="model.hostNameTemplate"
+        :metric-name="model.metricName"
+        :attribute-filter="model.attributeFilter"
         :consolidation="model.consolidation"
         :aggregator="model.aggregator"
         :append-series-attributes="model.appendSeriesAttributes"

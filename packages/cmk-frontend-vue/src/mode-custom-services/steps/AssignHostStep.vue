@@ -5,8 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
+import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import type { ConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTabs'
 import FormAutocompleter from 'cmk-ui-library/components/FormAutocompleter/FormAutocompleter.vue'
@@ -14,18 +16,23 @@ import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
-import { appendedAttributeNames } from '../definition'
+import { fetchTemplateAttributes } from '../api'
+import { type TemplateAttributes, appendedAttributeNames, templateMacro } from '../definition'
 
 const { _t } = usei18n()
 
 const {
+  metricName,
+  attributeFilter,
   consolidation,
   aggregator,
   appendSeriesAttributes,
   templateErrors = []
 } = defineProps<{
+  metricName: string | null
+  attributeFilter: AttributeFilter | undefined
   consolidation: ConsolidationFunction
   aggregator: Aggregator | undefined
   appendSeriesAttributes: boolean
@@ -49,6 +56,43 @@ function selectAssignmentMode(mode: string | number): void {
   }
   hostName.value = null
   hostNameTemplate.value = mode === 'automatic' ? '' : null
+}
+
+const templateAttributes = ref<TemplateAttributes | null>(null)
+const templateAttributesError = ref<string | null>(null)
+let templateAttributesRequest = 0
+
+watch(
+  () => [assignmentMode.value, metricName, attributeFilter, consolidation, aggregator] as const,
+  async ([mode, metric]) => {
+    const request = ++templateAttributesRequest
+    templateAttributes.value = null
+    templateAttributesError.value = null
+    if (mode !== 'automatic' || metric === null) {
+      return
+    }
+    try {
+      const attributes = await fetchTemplateAttributes({
+        metric_name: metric,
+        ...(attributeFilter === undefined ? {} : { attribute_filter: attributeFilter }),
+        consolidation,
+        ...(aggregator === undefined ? {} : { aggregator })
+      })
+      if (request === templateAttributesRequest) {
+        templateAttributes.value = attributes
+      }
+    } catch (error) {
+      if (request === templateAttributesRequest) {
+        templateAttributesError.value =
+          error instanceof Error ? error.message : _t('The attributes could not be loaded.')
+      }
+    }
+  },
+  { immediate: true }
+)
+
+function insertMacro(macro: string): void {
+  hostNameTemplate.value = `${hostNameTemplate.value ?? ''}${macro}`
 }
 
 const appendedAttributes = computed<string>(() => {
@@ -144,7 +188,7 @@ const templateFieldId = useId()
                   :for="templateFieldId"
                   :help="
                     _t(
-                      'Every combination of attribute values the template references resolves to one host name, e.g. $RESOURCE_ATTR.service.name$. The service is created on the configured hosts the template resolves to when saving.'
+                      'Click an attribute to insert its placeholder. Every combination of attribute values the template references resolves to one host name. The service is created on the configured hosts the template resolves to when saving.'
                     )
                   "
                   >{{ _t('Host name template') }}</CmkLabel
@@ -157,6 +201,48 @@ const templateFieldId = useId()
                   :external-errors="templateErrors"
                   @update:model-value="(value) => (hostNameTemplate = value ?? '')"
                 />
+              </div>
+              <div class="mode-custom-services-assign-host-step__tab-notes">
+                <CmkParagraph
+                  v-if="templateAttributesError"
+                  class="mode-custom-services-assign-host-step__note"
+                  >{{ templateAttributesError }}</CmkParagraph
+                >
+                <CmkParagraph
+                  v-else-if="templateAttributes?.availability === 'series_merged'"
+                  class="mode-custom-services-assign-host-step__note"
+                  >{{
+                    _t(
+                      'The metric step combines all series into one, so no attribute can tell hosts apart. Group the series by the attributes the template should use.'
+                    )
+                  }}</CmkParagraph
+                >
+                <CmkParagraph
+                  v-else-if="templateAttributes?.availability === 'no_series'"
+                  class="mode-custom-services-assign-host-step__note"
+                  >{{
+                    _t('No series of this metric reported any attributes within the last hour.')
+                  }}</CmkParagraph
+                >
+                <div
+                  v-else-if="templateAttributes"
+                  class="mode-custom-services-assign-host-step__attributes"
+                >
+                  <CmkButton
+                    v-for="attribute in templateAttributes.attributes"
+                    :key="`${attribute.kind}:${attribute.key}`"
+                    variant="optional"
+                    size="small"
+                    :title="templateMacro(attribute)"
+                    @click="insertMacro(templateMacro(attribute))"
+                    >+ {{ attribute.key }}</CmkButton
+                  >
+                  <CmkParagraph
+                    v-if="templateAttributes.truncated"
+                    class="mode-custom-services-assign-host-step__note"
+                    >{{ _t('Only the first attributes of each kind are listed.') }}</CmkParagraph
+                  >
+                </div>
               </div>
             </div>
           </CmkTabContent>
@@ -204,6 +290,16 @@ const templateFieldId = useId()
   font-size: var(--font-size-small);
 }
 
+.mode-custom-services-assign-host-step__tab-notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-3);
+}
+
+.mode-custom-services-assign-host-step__note {
+  font-size: var(--font-size-small);
+}
+
 .mode-custom-services-assign-host-step__label {
   font-weight: bold;
   font-size: var(--font-size-small);
@@ -212,6 +308,12 @@ const templateFieldId = useId()
 .mode-custom-services-assign-host-step__help {
   margin-top: calc(-1 * var(--dimension-3));
   font-size: var(--font-size-small);
+}
+
+.mode-custom-services-assign-host-step__attributes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dimension-3);
 }
 
 .mode-custom-services-assign-host-step__preview {

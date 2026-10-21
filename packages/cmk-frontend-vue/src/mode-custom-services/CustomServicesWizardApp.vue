@@ -179,11 +179,15 @@ async function saveService(): Promise<void> {
           <CmkHeading type="h3">{{ _t('Assign to host') }}</CmkHeading>
         </template>
         <template #content>
+          <!-- Mounted only while shown, so editing the metric step asks the backend nothing -->
           <AssignHostStep
+            v-if="currentStep === 3"
             v-model:service-name="model.serviceName"
             v-model:host-name="model.hostName"
             v-model:host-name-template="model.hostNameTemplate"
             :template-errors="templateErrors"
+            :metric-name="model.metricName"
+            :attribute-filter="model.attributeFilter"
             :consolidation="model.consolidation"
             :aggregator="model.aggregator"
             :append-series-attributes="model.appendSeriesAttributes"

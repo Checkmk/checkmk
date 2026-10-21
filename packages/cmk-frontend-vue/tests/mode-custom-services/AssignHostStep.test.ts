@@ -23,16 +23,32 @@ const HOSTS: Array<[string, string]> = [
   ['db01', 'db01 (10.0.0.2)']
 ]
 
-useMswServer(
+const TEMPLATE_ATTRIBUTES_URL = `${API_BASE}/domain-types/custom_service/actions/template_attributes/invoke`
+
+let templateAttributesRequest: unknown = null
+
+const server = useMswServer(
   http.post(`${API_BASE}/objects/autocomplete/:ident`, async ({ request }) => {
     const { value: query } = (await request.json()) as { value: string }
     const matching = HOSTS.filter(([, label]) => !query || label.includes(query))
     return HttpResponse.json({ choices: matching.map(([id, value]) => ({ id, value })) })
+  }),
+  http.post(TEMPLATE_ATTRIBUTES_URL, async ({ request }) => {
+    templateAttributesRequest = await request.json()
+    return HttpResponse.json({
+      availability: 'available',
+      attributes: [
+        { kind: 'resource', key: 'service.name' },
+        { kind: 'data_point', key: 'http.route' }
+      ],
+      truncated: false
+    })
   })
 )
 
 afterEach(() => {
   cleanup()
+  templateAttributesRequest = null
 })
 
 const GAUGE: ConsolidationFunction = {
@@ -66,6 +82,7 @@ function renderStep(
         service,
         host,
         template,
+        metricName: 'otel.http.duration',
         consolidation: GAUGE,
         aggregator,
         appendSeriesAttributes,
@@ -76,6 +93,8 @@ function renderStep(
       v-model:service-name="service"
       v-model:host-name="host"
       v-model:host-name-template="template"
+      :metric-name="metricName"
+      :attribute-filter="undefined"
       :consolidation="consolidation"
       :aggregator="aggregator"
       :append-series-attributes="appendSeriesAttributes"
@@ -194,4 +213,41 @@ test('shows why the host name template was refused at the template field', () =>
   expect(
     screen.getByText('The host name template must reference at least one attribute.')
   ).toBeTruthy()
+})
+
+test('asks for the attributes of the metric step', async () => {
+  renderStep('HTTP duration', null, { hostNameTemplate: '' })
+
+  await waitFor(() =>
+    expect(templateAttributesRequest).toEqual({
+      metric_name: 'otel.http.duration',
+      consolidation: GAUGE
+    })
+  )
+})
+
+test('clicking an attribute inserts its placeholder into the host name template', async () => {
+  const { template } = renderStep('HTTP duration', null, { hostNameTemplate: 'pod-' })
+
+  await userEvent.click(await screen.findByRole('button', { name: '+ http.route' }))
+
+  expect(template.value).toBe('pod-$DATA_POINT_ATTR.http.route$')
+})
+
+test('explains that merged series offer no attribute', async () => {
+  server.use(
+    http.post(TEMPLATE_ATTRIBUTES_URL, () =>
+      HttpResponse.json({ availability: 'series_merged', attributes: [], truncated: false })
+    )
+  )
+  renderStep('HTTP duration', null, { hostNameTemplate: '' })
+
+  expect(await screen.findByText(/combines all series into one/)).toBeTruthy()
+})
+
+test('asks for no attributes while the host is assigned by hand', async () => {
+  renderStep('HTTP duration', 'web01')
+
+  await screen.findByText('web01')
+  expect(templateAttributesRequest).toBeNull()
 })

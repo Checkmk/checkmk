@@ -20,6 +20,7 @@ const LIST_URL = `${API_BASE}/domain-types/custom_service/collections/all`
 const AUTOCOMPLETE_URL = `${API_BASE}/objects/autocomplete/:ident`
 const METRIC_NAMES_URL = `${API_BASE}/domain-types/telemetry_metrics/actions/names_with_types/invoke`
 const GRAPH_DATA_URL = `${API_BASE}/domain-types/custom_graph/actions/fetch_data/invoke`
+const TEMPLATE_ATTRIBUTES_URL = `${API_BASE}/domain-types/custom_service/actions/template_attributes/invoke`
 
 const STORED_EXTENSIONS = {
   host_assignment: { mode: 'explicit_host', host_name: 'web01' },
@@ -42,6 +43,7 @@ const WRITTEN_EXTENSIONS = {
 }
 
 let updateRequests = 0
+let templateAttributesRequests = 0
 let lastBody: unknown = null
 let lastIfMatch: string | null = null
 
@@ -79,6 +81,10 @@ const server = useMswServer(
   http.post(METRIC_NAMES_URL, () =>
     HttpResponse.json({ choices: [{ name: 'otel.http.duration', types: ['sum'] }] })
   ),
+  http.post(TEMPLATE_ATTRIBUTES_URL, () => {
+    templateAttributesRequests += 1
+    return HttpResponse.json({ availability: 'available', attributes: [], truncated: false })
+  }),
   http.post(GRAPH_DATA_URL, () =>
     HttpResponse.json({
       time_range: { start: 0, end: 3600, step: 60 },
@@ -100,6 +106,7 @@ afterEach(() => {
   cleanup()
   resetGlobalTimeState()
   updateRequests = 0
+  templateAttributesRequests = 0
   lastBody = null
   lastIfMatch = null
 })
@@ -279,4 +286,17 @@ test('a refused host name template is shown at the template field', async () => 
 
   expect(await screen.findByText("The host name template must not start with '.'.")).toBeTruthy()
   expect(screen.queryByText(/These fields have problems/)).toBeNull()
+})
+
+test('a service assigned by host name template asks for its attributes only at the host step', async () => {
+  serveStoredTemplateService()
+  renderWizard()
+  await expectActiveStep('Define metric')
+  await new Promise((resolve) => setTimeout(resolve, 100))
+
+  expect(templateAttributesRequests).toBe(0)
+
+  await goToHostStep()
+
+  await waitFor(() => expect(templateAttributesRequests).toBe(1))
 })

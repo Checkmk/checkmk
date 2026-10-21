@@ -9,7 +9,9 @@ import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import type {
   CustomServiceDefinition,
   CustomServiceExtensions,
-  CustomServiceUpdate
+  CustomServiceUpdate,
+  TemplateAttributes,
+  TemplateAttributesRequest
 } from './definition'
 
 export interface SaveResult {
@@ -120,4 +122,15 @@ export async function listCustomServiceNames(): Promise<string[]> {
   return unwrap(await client.GET('/domain-types/custom_service/collections/all'))
     .value.map((service) => service.id)
     .filter((id): id is string => typeof id === 'string')
+}
+
+export async function fetchTemplateAttributes(
+  request: TemplateAttributesRequest
+): Promise<TemplateAttributes> {
+  return unwrap(
+    await client.POST('/domain-types/custom_service/actions/template_attributes/invoke', {
+      params: { header: { 'Content-Type': 'application/json' } },
+      body: request
+    })
+  )
 }

@@ -21,6 +21,25 @@ export type CustomServiceUpdate = NonNullable<
   paths[CustomServicePath]['put']['requestBody']
 >['content']['application/json']
 
+type TemplateAttributesPath = '/domain-types/custom_service/actions/template_attributes/invoke'
+
+export type TemplateAttributesRequest = NonNullable<
+  paths[TemplateAttributesPath]['post']['requestBody']
+>['content']['application/json']
+
+export type TemplateAttributes =
+  paths[TemplateAttributesPath]['post']['responses'][200]['content']['application/json']
+
+const MACRO_PREFIXES = {
+  resource: 'RESOURCE_ATTR',
+  scope: 'SCOPE_ATTR',
+  data_point: 'DATA_POINT_ATTR'
+} as const
+
+export function templateMacro({ kind, key }: TemplateAttributes['attributes'][number]): string {
+  return `$${MACRO_PREFIXES[kind]}.${key}$`
+}
+
 export type CustomServiceExtensions =
   paths[CustomServicePath]['get']['responses'][200]['content']['application/json']['extensions']
 

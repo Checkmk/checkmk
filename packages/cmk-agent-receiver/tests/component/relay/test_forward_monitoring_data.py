@@ -184,8 +184,9 @@ def test_forward_active_check_data_announces_it_as_an_active_check(
 
         assert response.status_code == HTTPStatus.NO_CONTENT
         connection_data = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT)
-        header = connection_data.data.split(b"\n", 1)[0].decode()
-        assert "payload_type:active_check;" in header, header
+        header, forwarded = connection_data.data.split(b"\n", 1)
+        assert "payload_type:active_check;" in header.decode(), header
+        assert forwarded == payload
 
 
 def create_monitoring_data(

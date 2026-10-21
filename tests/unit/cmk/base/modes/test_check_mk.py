@@ -5,8 +5,23 @@
 
 import pytest
 
-from cmk.base.modes.check_mk import state_exit_code
+from cmk.base.modes.check_mk import fake_dns_address, state_exit_code
+from cmk.ccc.exceptions import MKBailOut
+from cmk.ccc.hostaddress import HostAddress
 from cmk.cli.internal import ExitCode
+
+
+def test_no_fake_dns_option_leaves_the_lookup_alone() -> None:
+    assert fake_dns_address({}) is None
+
+
+def test_the_fake_dns_option_is_a_host_address() -> None:
+    assert fake_dns_address({"fake-dns": "1.2.3.4"}) == HostAddress("1.2.3.4")
+
+
+def test_an_invalid_fake_dns_address_is_refused() -> None:
+    with pytest.raises(MKBailOut):
+        fake_dns_address({"fake-dns": "not an address!"})
 
 
 @pytest.mark.parametrize(

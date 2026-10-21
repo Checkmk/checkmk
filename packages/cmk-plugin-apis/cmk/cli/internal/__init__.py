@@ -72,12 +72,6 @@ class GlobalOptions:
     """``--debug``: let most Python exceptions raise through"""
     profile: bool = False
     """``--profile``: profile the command"""
-    fake_dns: str | None = None
-    """``--fake-dns IP``: use this address for all hosts instead of looking them up
-
-    A plain string: the address type lives in cmk-ccc, on which this package must
-    not depend. The handler that uses it validates it.
-    """
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -153,6 +153,7 @@ def main() -> int:
                 secrets=secrets,
             ),
             trusted_ca_file=(active_config_path / RELATIVE_PATH_TRUSTED_CAS),
+            fake_dns=None,
         )
     except KeyboardInterrupt:
         with suppress(IOError):

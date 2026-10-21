@@ -339,17 +339,10 @@ _PROFILE_OPTION = Option(
     short_help="Enable profiling mode",
 )
 
-_FAKE_DNS_OPTION = Option(
-    long_option="fake-dns",
-    short_help="Fake IP addresses of all hosts to be IP. This prevents DNS lookups.",
-    argument=True,
-    argument_descr="IP",
-)
-
 
 def general_options() -> Sequence[Option]:
     """The options every command accepts, see `cmk.cli.internal.GlobalOptions`"""
-    return [_VERBOSE_OPTION, _DEBUG_OPTION, _PROFILE_OPTION, _FAKE_DNS_OPTION]
+    return [_VERBOSE_OPTION, _DEBUG_OPTION, _PROFILE_OPTION]
 
 
 def parse_general_options(all_opts: Options) -> GlobalOptions:
@@ -357,17 +350,14 @@ def parse_general_options(all_opts: Options) -> GlobalOptions:
     verbosity = 0
     debug = False
     profile = False
-    fake_dns: str | None = None
-    for option, argument in all_opts:
+    for option, _argument in all_opts:
         if option in _VERBOSE_OPTION.options():
             verbosity += 1
         elif option in _DEBUG_OPTION.options():
             debug = True
         elif option in _PROFILE_OPTION.options():
             profile = True
-        elif option in _FAKE_DNS_OPTION.options():
-            fake_dns = argument
-    return GlobalOptions(verbosity=verbosity, debug=debug, profile=profile, fake_dns=fake_dns)
+    return GlobalOptions(verbosity=verbosity, debug=debug, profile=profile)
 
 
 def discover_commands() -> Sequence[Command]:

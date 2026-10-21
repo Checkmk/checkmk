@@ -42,6 +42,8 @@ from cmk.base.errorhandling import (
 from cmk.base.modes.check_mk import (
     DiscoveryOptions,
     extract_plugin_selection,
+    fake_dns_address,
+    FAKE_DNS_OPTION,
     FETCHER_OPTIONS,
     forced_ip_lookup,
     get_plugins_option,
@@ -51,7 +53,6 @@ from cmk.base.modes.check_mk import (
     option_detect_plugins,
     option_sections,
     parse_snmp_backend,
-    set_fake_dns,
     SNMP_BACKEND_OPTION,
     state_exit_code,
 )
@@ -110,7 +111,7 @@ def _mode_check_discovery(
     omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> ExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(options)
     raw_host_name = args[0]
     hostname = host_address(raw_host_name)
     file_cache_options = handle_fetcher_options(options)
@@ -173,7 +174,7 @@ def _mode_check_discovery(
         )
         ip_lookup_config = config_cache.ip_lookup_config()
         ip_address_of = ip_lookup.ConfiguredIPLookup(
-            forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
             allow_empty=hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         )
@@ -215,7 +216,7 @@ def _mode_check_discovery(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mgmt=forced_ip_lookup()
+            ip_address_of_mgmt=forced_ip_lookup(fake_dns)
             or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=FetchMode.DISCOVERY,
             simulation_mode=loaded_config.simulation_mode,
@@ -338,7 +339,7 @@ cli_command_check_discovery = CLICommand(
     handler_function=_run_check_discovery,
     argument=True,
     argument_descr="HOSTNAME",
-    sub_options=[*FETCHER_OPTIONS, SNMP_BACKEND_OPTION],
+    sub_options=[*FETCHER_OPTIONS, SNMP_BACKEND_OPTION, FAKE_DNS_OPTION],
     short_help="Check for not yet monitored services",
     long_help=[
         (
@@ -406,7 +407,7 @@ def _mode_discover(
     omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args
 ) -> ExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(parsed)
     options = _discovery_options(parsed)
     plugins = load_checks()
     loading_result = config.load(validate_hosts=True)
@@ -445,7 +446,7 @@ def _mode_discover(
     )
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -534,7 +535,7 @@ def _mode_discover(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mgmt=forced_ip_lookup()
+            ip_address_of_mgmt=forced_ip_lookup(fake_dns)
             or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=(
                 FetchMode.DISCOVERY
@@ -659,6 +660,7 @@ cli_command_discover = CLICommand(
             short_option="L",
             short_help="Restrict discovery to host labels only",
         ),
+        FAKE_DNS_OPTION,
     ],
     short_help="Find new services",
     long_help=[

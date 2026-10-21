@@ -17,7 +17,13 @@ from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
-from cmk.base.modes.check_mk import forced_ip_lookup, host_addresses, load_checks, set_fake_dns
+from cmk.base.modes.check_mk import (
+    fake_dns_address,
+    FAKE_DNS_OPTION,
+    forced_ip_lookup,
+    host_addresses,
+    load_checks,
+)
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.store import activation_lock
@@ -39,10 +45,10 @@ from cmk.utils.log import console
 
 
 def _mode_dump_nagios_config(
-    omd_root: Path, global_options: GlobalOptions, _options: Options, raw_host_names: Args
+    omd_root: Path, _global_options: GlobalOptions, options: Options, raw_host_names: Args
 ) -> ExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(options)
     args = host_addresses(raw_host_names)
 
     from cmk.base.core.nagios import create_config
@@ -112,7 +118,7 @@ def _mode_dump_nagios_config(
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         default_address_family=ip_lookup_config.default_address_family,
         ip_address_of=ip_lookup.ConfiguredIPLookup(
-            forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
             allow_empty=hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         ),
@@ -146,6 +152,7 @@ cli_command_nagios_config = CLICommand(
     argument=True,
     argument_descr="HOST1 HOST2...",
     argument_optional=True,
+    sub_options=[FAKE_DNS_OPTION],
     short_help="Output Nagios configuration",
     long_help=[
         (
@@ -195,10 +202,10 @@ def _make_configured_notify_relay(
 
 
 def _mode_update(
-    omd_root: Path, global_options: GlobalOptions, _options: Options, _args: Args
+    omd_root: Path, global_options: GlobalOptions, options: Options, _args: Args
 ) -> ExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(options)
     plugins = load_checks()
     loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
@@ -209,7 +216,7 @@ def _mode_update(
 
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
@@ -249,7 +256,7 @@ def _mode_update(
                 get_ip_stack_config=ip_lookup_config.ip_stack_config,
                 default_address_family=ip_lookup_config.default_address_family,
                 ip_address_of=ip_address_of,
-                ip_address_of_mgmt=forced_ip_lookup()
+                ip_address_of_mgmt=forced_ip_lookup(fake_dns)
                 or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
                 hosts_to_update=None,
                 service_depends_on=config.ServiceDependsOn(
@@ -298,6 +305,7 @@ cli_command_update = CLICommand(
     long_option="update",
     short_option="U",
     handler_function=_run_update,
+    sub_options=[FAKE_DNS_OPTION],
     short_help="Create core config",
     long_help=[
         (
@@ -323,10 +331,10 @@ cli_command_update = CLICommand(
 
 
 def _mode_restart(
-    omd_root: Path, global_options: GlobalOptions, _options: Options, raw_host_names: Args
+    omd_root: Path, _global_options: GlobalOptions, options: Options, raw_host_names: Args
 ) -> ExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(options)
     args = host_addresses(raw_host_names)
     plugins = load_checks()
     loading_result = config.load(validate_hosts=True)
@@ -339,11 +347,11 @@ def _mode_restart(
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
+    ip_address_of_mgmt = forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_mgmt_board_ip_address(
         ip_lookup_config
     )
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
@@ -423,6 +431,7 @@ cli_command_restart = CLICommand(
     argument=True,
     argument_descr="[HostA, HostB]",
     argument_optional=True,
+    sub_options=[FAKE_DNS_OPTION],
     short_help="Create core config + core restart",
     long_help=[
         (
@@ -446,10 +455,10 @@ cli_command_restart = CLICommand(
 
 
 def _mode_reload(
-    omd_root: Path, global_options: GlobalOptions, _options: Options, raw_host_names: Args
+    omd_root: Path, _global_options: GlobalOptions, options: Options, raw_host_names: Args
 ) -> ExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(options)
     args = host_addresses(raw_host_names)
     plugins = load_checks()
     loading_result = config.load(validate_hosts=True)
@@ -462,11 +471,11 @@ def _mode_reload(
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
+    ip_address_of_mgmt = forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_mgmt_board_ip_address(
         ip_lookup_config
     )
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
@@ -546,6 +555,7 @@ cli_command_reload = CLICommand(
     argument=True,
     argument_descr="[HostA, HostB]",
     argument_optional=True,
+    sub_options=[FAKE_DNS_OPTION],
     short_help="Create core config + core reload",
     long_help=[
         (

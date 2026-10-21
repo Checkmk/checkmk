@@ -13,7 +13,13 @@ import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.base import config
 from cmk.base.configlib.servicename import make_final_service_name_config
-from cmk.base.modes.check_mk import forced_ip_lookup, host_addresses, load_checks, set_fake_dns
+from cmk.base.modes.check_mk import (
+    fake_dns_address,
+    FAKE_DNS_OPTION,
+    forced_ip_lookup,
+    host_addresses,
+    load_checks,
+)
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.checkengine.discovery import remove_autochecks_of_host
@@ -35,9 +41,9 @@ from cmk.utils import ip_lookup
 
 
 def _mode_update_dns_cache(
-    _omd_root: Path, global_options: GlobalOptions, _options: Options, _args: Args
+    _omd_root: Path, _global_options: GlobalOptions, options: Options, _args: Args
 ) -> ExitCode:
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(options)
     loading_result = config.load(validate_hosts=True)
     config_cache = loading_result.config_cache
     hosts_config = loading_result.hosts_config
@@ -50,7 +56,7 @@ def _mode_update_dns_cache(
         ),
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         lookup_ip_address=(
-            forced_ip_lookup()  # this makes little sense.
+            forced_ip_lookup(fake_dns)  # this makes little sense.
             or ip_lookup.make_lookup_ip_address(ip_lookup_config)
         ),
     )
@@ -73,6 +79,7 @@ def _run_update_dns_cache(context: CommandContext, options: Options, args: Args)
 cli_command_update_dns_cache = CLICommand(
     long_option="update-dns-cache",
     handler_function=_run_update_dns_cache,
+    sub_options=[FAKE_DNS_OPTION],
     short_help="Update IP address lookup cache",
 )
 

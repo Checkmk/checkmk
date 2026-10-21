@@ -33,6 +33,7 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/parser",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-cli-engine:engine",
         "//packages/cmk-inventory:inventory",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:agent_based",

@@ -14,13 +14,14 @@ from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.modes.check_mk import (
     CheckingOptions,
+    fake_dns_address,
+    FAKE_DNS_OPTION,
     FETCHER_OPTIONS,
     get_plugins_option,
     load_checks,
     option_detect_plugins,
     option_sections,
     run_checking,
-    set_fake_dns,
     SNMP_BACKEND_OPTION,
     state_exit_code,
 )
@@ -76,10 +77,10 @@ def _checking_options(parsed: Mapping[str, object]) -> CheckingOptions:
 
 
 def _mode_check(
-    omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args
+    omd_root: Path, _global_options: GlobalOptions, parsed: Options, args: Args
 ) -> ExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(parsed)
     options = _checking_options(parsed)
     plugins = load_checks()
     loading_result = config.load(validate_hosts=True)
@@ -114,6 +115,7 @@ def _mode_check(
         secrets_config_site=StoredSecrets(
             path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
         ),
+        fake_dns=fake_dns,
         trusted_ca_file=cmk.utils.paths.trusted_ca_file,
     )
     return state_exit_code(state)
@@ -154,6 +156,7 @@ cli_command_check = CLICommand(
         option_sections,
         get_plugins_option(CheckPluginName),
         option_detect_plugins,
+        FAKE_DNS_OPTION,
     ],
     short_help="Check all services on the given HOST",
     long_help=[

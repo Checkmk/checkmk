@@ -152,10 +152,6 @@ def test_a_general_flag_is_collected() -> None:
     assert parse_general_options([("--debug", "")]) == GlobalOptions(debug=True)
 
 
-def test_a_general_option_hands_over_its_argument() -> None:
-    assert parse_general_options([("--fake-dns", "1.2.3.4")]) == GlobalOptions(fake_dns="1.2.3.4")
-
-
 def test_the_verbosity_counts_the_short_and_long_spelling_alike() -> None:
     assert parse_general_options([("-v", ""), ("--verbose", "")]) == GlobalOptions(verbosity=2)
 

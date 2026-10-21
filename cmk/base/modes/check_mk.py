@@ -89,6 +89,7 @@ from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.checkengine.submitters import get_submitter
 from cmk.checkengine.summarize import SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
+from cmk.cli.engine.commands import option_string
 from cmk.cli.internal import CLIOption, ExitCode
 from cmk.inventory.label_picker import InventorizedHostLabelsStore, LabelPickerConfig, pick_labels
 from cmk.inventory.paths import InventoryPaths
@@ -136,7 +137,6 @@ def load_checks() -> AgentBasedPlugins:
 #   | things and used by the most of the modes.                            |
 #   '----------------------------------------------------------------------'
 
-_fake_dns: HostAddress | None = None
 _enforce_localhost = False
 
 
@@ -177,19 +177,9 @@ def state_exit_code(state: ServiceState) -> ExitCode:
             return ExitCode.UNKNOWN
 
 
-def set_fake_dns(raw_address: str | None) -> None:
-    """Remember --fake-dns for the ip lookup of this command.
-
-    The engine hands the raw value to every handler; the ones that look up IP
-    addresses store it here, where forced_ip_lookup() picks it up.
-    """
-    global _fake_dns
-    _fake_dns = None if raw_address is None else host_address(raw_address)
-
-
-def forced_ip_lookup() -> ip_lookup.IPLookup | None:
-    if _fake_dns is not None:
-        return lambda hn, family: _fake_dns  # noqa: ARG005
+def forced_ip_lookup(fake_dns: HostAddress | None) -> ip_lookup.IPLookup | None:
+    if fake_dns is not None:
+        return lambda hn, family: fake_dns  # noqa: ARG005
     if _enforce_localhost:
         return ip_lookup.local_ip_for
     return None
@@ -272,6 +262,18 @@ SNMP_BACKEND_OPTION: Final = CLIOption(
     argument=True,
     argument_descr="inline|classic|stored-walk",
 )
+
+FAKE_DNS_OPTION: Final = CLIOption(
+    long_option="fake-dns",
+    short_help="Fake IP addresses of all hosts to be IP. This prevents DNS lookups.",
+    argument=True,
+    argument_descr="IP",
+)
+
+
+def fake_dns_address(options: Mapping[str, object]) -> HostAddress | None:
+    raw_address = option_string(options, FAKE_DNS_OPTION.long_option)
+    return None if raw_address is None else host_address(raw_address)
 
 
 def _convert_sections_argument(arg: str) -> set[SectionName]:
@@ -437,6 +439,7 @@ def run_checking(
     secrets_config_relay: AdHocSecrets | StoredSecrets,
     secrets_config_site: StoredSecrets,
     trusted_ca_file: Path,
+    fake_dns: HostAddress | None,
 ) -> ServiceState:
     file_cache_options = handle_fetcher_options(options)
     try:
@@ -461,7 +464,7 @@ def run_checking(
 
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -545,9 +548,9 @@ def run_checking(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mandatory=forced_ip_lookup()
+            ip_address_of_mandatory=forced_ip_lookup(fake_dns)
             or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-            ip_address_of_mgmt=forced_ip_lookup()
+            ip_address_of_mgmt=forced_ip_lookup(fake_dns)
             or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=(
                 FetchMode.CHECKING

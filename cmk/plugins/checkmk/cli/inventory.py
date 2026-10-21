@@ -29,6 +29,8 @@ from cmk.base.errorhandling import create_section_crash_dump, RecordingFetcher
 from cmk.base.modes.check_mk import (
     execute_active_check_inventory,
     extract_plugin_selection,
+    fake_dns_address,
+    FAKE_DNS_OPTION,
     FETCHER_OPTIONS,
     forced_ip_lookup,
     get_plugins_option,
@@ -38,7 +40,6 @@ from cmk.base.modes.check_mk import (
     option_detect_plugins,
     option_sections,
     parse_snmp_backend,
-    set_fake_dns,
     SNMP_BACKEND_OPTION,
 )
 from cmk.ccc.config_path import VersionedConfigPath
@@ -111,7 +112,7 @@ def _mode_inventory(
     omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args
 ) -> ExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(parsed)
     options = _inventory_options(parsed)
     file_cache_options = handle_fetcher_options(options)
     try:
@@ -143,7 +144,7 @@ def _mode_inventory(
     )
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -224,9 +225,9 @@ def _mode_inventory(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mandatory=forced_ip_lookup()
+            ip_address_of_mandatory=forced_ip_lookup(fake_dns)
             or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-            ip_address_of_mgmt=forced_ip_lookup()
+            ip_address_of_mgmt=forced_ip_lookup(fake_dns)
             or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=(
                 FetchMode.INVENTORY
@@ -361,6 +362,7 @@ cli_command_inventory = CLICommand(
         option_sections,
         get_plugins_option(InventoryPluginName),
         option_detect_plugins,
+        FAKE_DNS_OPTION,
     ],
     short_help="Do a HW/SW Inventory on some or all hosts",
     long_help=[
@@ -374,10 +376,10 @@ cli_command_inventory = CLICommand(
 
 
 def _mode_inventorize_marked_hosts(
-    omd_root: Path, global_options: GlobalOptions, options: Options, _args: Args
+    omd_root: Path, _global_options: GlobalOptions, options: Options, _args: Args
 ) -> ExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(options)
     file_cache_options = handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
@@ -415,7 +417,7 @@ def _mode_inventorize_marked_hosts(
     )  # not obvious to me why/if we *really* need this
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -464,9 +466,9 @@ def _mode_inventorize_marked_hosts(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=forced_ip_lookup()
+        ip_address_of_mandatory=forced_ip_lookup(fake_dns)
         or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        ip_address_of_mgmt=forced_ip_lookup()
+        ip_address_of_mgmt=forced_ip_lookup(fake_dns)
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         simulation_mode=loaded_config.simulation_mode,
@@ -577,7 +579,7 @@ def _run_inventorize_marked_hosts(
 cli_command_inventorize_marked_hosts = CLICommand(
     long_option="inventorize-marked-hosts",
     handler_function=_run_inventorize_marked_hosts,
-    sub_options=[*FETCHER_OPTIONS, SNMP_BACKEND_OPTION],
+    sub_options=[*FETCHER_OPTIONS, SNMP_BACKEND_OPTION, FAKE_DNS_OPTION],
     short_help="Run inventory for hosts which previously had no tree data",
     long_help=[
         "Run actual service HW/SW Inventory on all hosts that had no tree data",

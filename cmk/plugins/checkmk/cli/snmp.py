@@ -15,9 +15,10 @@ import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.base import config
 from cmk.base.modes.check_mk import (
+    fake_dns_address,
+    FAKE_DNS_OPTION,
     forced_ip_lookup,
     parse_snmp_backend,
-    set_fake_dns,
     SNMP_BACKEND_OPTION,
 )
 from cmk.ccc import tty
@@ -218,7 +219,7 @@ def _make_backend(snmp_config: SNMPHostConfig) -> SNMPBackend:
 def _mode_snmpwalk(
     _omd_root: Path, global_options: GlobalOptions, options: Options, hostnames: Args
 ) -> ExitCode:
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(options)
     oids = option_strings(options, "oid")
     extra_oids = option_strings(options, "extraoid")
     if oids and extra_oids:
@@ -240,7 +241,7 @@ def _mode_snmpwalk(
 
     config_cache = config.load(validate_hosts=True).config_cache
     ip_lookup_config = config_cache.ip_lookup_config()
-    ip_address_of = forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_address_of = forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config)
 
     for hostname in (HostName(hn) for hn in hostnames):
         if ip_lookup_config.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
@@ -300,6 +301,7 @@ cli_command_snmpwalk = CLICommand(
             short_help="Walk on this OID instead of mib-2 and enterprises. "
             "You can specify this option multiple times.",
         ),
+        FAKE_DNS_OPTION,
     ],
     short_help="Do snmpwalk on one or more hosts",
     long_help=[
@@ -326,9 +328,9 @@ cli_command_snmpwalk = CLICommand(
 
 
 def _mode_snmpget(
-    _omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
+    _omd_root: Path, _global_options: GlobalOptions, options: Options, args: Args
 ) -> ExitCode:
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(options)
     if not args:
         raise MKBailOut("You need to specify an OID.")
     try:
@@ -341,7 +343,7 @@ def _mode_snmpget(
     hosts_config = loading_result.hosts_config
 
     ip_lookup_config = config_cache.ip_lookup_config()
-    ip_address_of = forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_address_of = forced_ip_lookup(fake_dns) or ip_lookup.make_lookup_ip_address(ip_lookup_config)
     oid, *hostnames = args
 
     if not hostnames:
@@ -395,7 +397,7 @@ cli_command_snmpget = CLICommand(
     argument=True,
     argument_descr="OID [HOST1 HOST2...]",
     argument_optional=True,
-    sub_options=[SNMP_BACKEND_OPTION],
+    sub_options=[SNMP_BACKEND_OPTION, FAKE_DNS_OPTION],
     short_help="Fetch single OID from one or multiple hosts",
     long_help=[
         (

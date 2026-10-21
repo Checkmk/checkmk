@@ -83,10 +83,18 @@ class ContainerizedMarker(StrEnum):
     skip_if_not = "skip_if_not_containerized"
 
 
+_TESTDIR_PATHS: Final = (
+    Path(__file__).parent.resolve(),
+    Path(__file__).parent.parent.resolve() / "non-free" / "tests",
+)
+
+
 def get_test_type(test_path: Path) -> str:
-    testdir_path = Path(__file__).parent.resolve()
-    test_path_relative = test_path.resolve().relative_to(testdir_path)
-    return test_path_relative.parts[0]
+    test_path = test_path.resolve()
+    testdir_path = next(
+        (p for p in _TESTDIR_PATHS if test_path.is_relative_to(p)), _TESTDIR_PATHS[0]
+    )
+    return test_path.relative_to(testdir_path).parts[0]
 
 
 @pytest.fixture(scope="session", autouse=True)

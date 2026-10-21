@@ -288,7 +288,7 @@ test-system-ai-features-docker:
 
 test-system-ai-features: prepare-playwright # the ai_control_plane fixture enables the feature on the Global settings page
 	EDITION=pro $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
-	$(realpath system/ai_features) --session-timeout 3600
+	$(realpath ../non-free/tests/system/ai_features) --session-timeout 3600
 
 test-system-otel:
 	EDITION=ultimate $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \

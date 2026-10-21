@@ -205,6 +205,9 @@ $snapin-heading-border-color: rgba($grey-4, 0.2);
 $scrollbar-color: $color-mid-grey-60;
 $scrollbar-color-hover: $color-mid-grey-80;
 $scrollbar-color-active: $color-mid-grey-100;
+// Firefox darkens the pressed thumb only above a relative luminance of 0.18 and
+// lightens it below. $color-mid-grey-60 (rgb(103, 120, 131)) is just below.
+$scrollbar-color-firefox: rgb(103, 121, 131);
 $popup-border: $popup-border-width solid $success;
 $popup-inner-border: 1px solid rgba(51, 51, 51, 0.2);
 $filter-add-button-hover-brightness: brightness(0);

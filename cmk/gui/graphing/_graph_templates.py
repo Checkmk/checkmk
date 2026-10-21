@@ -19,6 +19,7 @@ from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
     ApiGraph,
     build_matched_graphs,
+    drawn_curves,
     evaluate_graphs,
     FetchMetricNamesProtocol,
     Graph,
@@ -139,11 +140,7 @@ TEMPLATE_KIND: Final = "template"
 
 
 def _assert_uniform_unit(graph: Graph) -> None:
-    drawn = [
-        *(member for stack in graph.stacks for member in stack.members),
-        *(line.curve for line in graph.lines),
-    ]
-    units = {curve.attributes.unit for curve in drawn}
+    units = {drawn.curve.attributes.unit for drawn in drawn_curves(graph.stacks, graph.lines)}
     if len(units) > 1:
         raise MKGraphMixedUnitsError(
             _("Cannot create graph with metrics of different units: %(units)s")

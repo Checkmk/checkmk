@@ -79,13 +79,6 @@ class Graph:
             if bound is not None and not isinstance(bound, int | float):
                 yield bound
 
-    def drawn_quantities(self) -> Iterator[tuple[QuantityProtocol, bool]]:
-        for group in self.stacks:
-            for member in group.members:
-                yield member.quantity, group.inverse
-        for line in self.lines:
-            yield line.curve.quantity, line.inverse
-
     def curves(self) -> Iterator[Curve]:
         for stack in self.stacks:
             yield from stack.members

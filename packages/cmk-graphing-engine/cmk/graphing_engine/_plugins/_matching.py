@@ -13,6 +13,7 @@ from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing_engine._data._fetched import ScalarKind
 from cmk.graphing_engine._data._naming import MetricName
 from cmk.graphing_engine._data._units import CurveAttributes
+from cmk.graphing_engine._graphs._drawn_curves import drawn_curves
 from cmk.graphing_engine._graphs._graph import Curve, Graph, Line, Rule, Stack
 from cmk.graphing_engine._quantities._quantity import fetch_leaves
 from cmk.graphing_engine._rrd._fetch import FetchMetricNamesProtocol
@@ -62,10 +63,10 @@ def _with_predictive_lines(
     registered_metrics: Mapping[str, metrics_v1.Metric],
 ) -> Graph:
     inverse_by_metric: dict[MetricName, bool] = {}
-    for quantity, inverse in graph.drawn_quantities():
-        for metric in fetch_leaves(quantity):
+    for drawn in drawn_curves(graph.stacks, graph.lines):
+        for metric in fetch_leaves(drawn.curve.quantity):
             if isinstance(metric, RRDMetric):
-                inverse_by_metric.setdefault(metric.metric_name, inverse)
+                inverse_by_metric.setdefault(metric.metric_name, drawn.inverse)
 
     added: dict[MetricName, Line] = {}
     for base, inverse in inverse_by_metric.items():

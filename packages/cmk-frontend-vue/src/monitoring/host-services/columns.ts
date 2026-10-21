@@ -91,10 +91,10 @@ type ServiceModeField =
   | 'in_check_period'
   | 'check_crashed'
 
-export function useHostServicesColumns({
+export function useHostServicesColumns<Row extends HostServiceEntry = HostServiceEntry>({
   includeSelect,
   inlineActions = 0
-}: HostServicesColumnOptions): ColumnDef<HostServiceEntry>[] {
+}: HostServicesColumnOptions): ColumnDef<Row>[] {
   const { _t } = usei18n()
 
   const stateFilter: CheckboxListWithFlagsFilter<'state', 'is_flapping' | 'stale'> = {
@@ -207,7 +207,7 @@ export function useHostServicesColumns({
             minSize: 36,
             maxSize: 36,
             meta: { selectColumn: true, justify: 'center' }
-          } satisfies ColumnDef<HostServiceEntry>
+          } satisfies ColumnDef<Row>
         ]
       : []),
     {
@@ -325,10 +325,10 @@ export function useHostServicesColumns({
   ]
 }
 
-export function uncapNameWithoutSummary(
-  columns: ColumnDef<HostServiceEntry>[],
+export function uncapNameWithoutSummary<Row extends HostServiceEntry>(
+  columns: ColumnDef<Row>[],
   visibility: VisibilityState
-): ColumnDef<HostServiceEntry>[] {
+): ColumnDef<Row>[] {
   if (visibility['summary'] !== false) {
     return columns
   }

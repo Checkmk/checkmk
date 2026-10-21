@@ -86,6 +86,12 @@ const graphsApi = new ServiceGraphsApi()
 
 const open = computed(() => props.service !== null)
 
+const serviceKey = computed(() =>
+  props.service === null
+    ? ''
+    : JSON.stringify([props.host.site_id, props.host.name, props.service.name])
+)
+
 // The header outlives the tab body, so the loaded overview is kept here rather than only being
 // handed to the tab component.
 const overview = ref<ServiceOverview | null>(null)
@@ -183,13 +189,14 @@ function onActionPerformed(result: ActionFeedbackResult): void {
       clearTimeout(reloadTimer)
     }
     const description = props.service.name
+    const key = serviceKey.value
     // Scheduling a downtime or acknowledging a problem sends an external command to the core
     // and returns before the core has necessarily applied it, so an immediate reload can still
     // show the pre-action state. Delayed like the table's own post-action refresh, for the same
     // reason.
     reloadTimer = setTimeout(() => {
       reloadTimer = null
-      if (props.service?.name !== description) {
+      if (serviceKey.value !== key) {
         return
       }
       reloadToken.value++
@@ -224,10 +231,11 @@ watch(
 )
 
 async function loadOverview(description: string): Promise<ServiceOverview> {
+  const key = serviceKey.value
   const loaded = await servicesApi.fetchServiceOverview(serviceOfHost(description))
   // A request started for a service the user has since navigated away from must not win the
   // race against the one for the service now on screen.
-  if (props.service?.name === description) {
+  if (serviceKey.value === key) {
     overview.value = loaded
   }
   return loaded
@@ -323,11 +331,12 @@ const tabs = computed<SlideInTab[]>(() => {
 
 <template>
   <!--
-    Keyed on the service, so picking another row while the panel is open remounts the tabs:
+    Keyed on the service and its host, so picking another row while the panel is open remounts
+    the tabs, even for a service of the same name on another host:
     CmkSlideInTabbed only drops its cached tab data when `open` flips, which never happens here.
   -->
   <CmkSlideInTabbed
-    :key="service?.name ?? ''"
+    :key="serviceKey"
     :open="open"
     :tabs="tabs"
     :reload-token="reloadToken"

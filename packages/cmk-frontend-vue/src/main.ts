@@ -42,6 +42,7 @@ import ModeCreateOTelConfApp from './mode-otel/ModeCreateOTelConfApp.vue'
 import ModeCreatePrometheusConfApp from './mode-otel/ModeCreatePrometheusConfApp.vue'
 import ModeCreateRelayApp from './mode-relay/ModeCreateRelayApp.vue'
 import AllHostsApp from './monitoring/all-hosts/AllHostsApp.vue'
+import AllServicesApp from './monitoring/all-services/AllServicesApp.vue'
 import HostServicesApp from './monitoring/host-services/HostServicesApp.vue'
 import MonitoringPageLinkButton from './monitoring/shared/components/MonitoringPageLinkButton.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
@@ -86,6 +87,7 @@ defineCmkComponent('cmk-mode-create-oauth2-connection', ModeCreateOAuth2Connecti
 defineCmkComponent('cmk-oauth2-connection-info', OAuth2ConnectionInfoApp)
 defineCmkComponent('cmk-mode-redirect-oauth2-connection', ModeRedirectOAuth2ConnectionAppCopy)
 defineCmkComponent('cmk-monitoring-all-hosts', AllHostsApp)
+defineCmkComponent('cmk-monitoring-all-services', AllServicesApp)
 defineCmkComponent('cmk-monitoring-host-services', HostServicesApp)
 defineCmkComponent('cmk-monitoring-page-link-button', MonitoringPageLinkButton)
 defineCmkComponent('cmk-drill-up-button', DrillUpButton)

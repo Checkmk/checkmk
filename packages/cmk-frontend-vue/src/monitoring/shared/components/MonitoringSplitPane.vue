@@ -157,9 +157,9 @@ function onRightPaneCollapse(collapsed: boolean): void {
 <template>
   <CmkSplitPane
     :collapsed="!activeAction && !displayOptionsOpen"
-    :right-min-size="30"
-    :right-max-size="50"
-    :right-min-width="ACTION_PANE_MIN_WIDTH"
+    :pane-min-size="30"
+    :pane-max-size="50"
+    :pane-min-width="ACTION_PANE_MIN_WIDTH"
     :collapsible-on-resize="false"
     class="monitoring-split-pane"
     @update:collapsed="onRightPaneCollapse($event as boolean)"

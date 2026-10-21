@@ -12,7 +12,7 @@ const collapsed = ref(false)
 
 <template>
   <div style="width: 100%; height: 300px">
-    <CmkSplitPane v-model:collapsed="collapsed" :right-min-size="20" :right-max-size="50">
+    <CmkSplitPane v-model:collapsed="collapsed" :pane-min-size="20" :pane-max-size="50">
       <template #left>
         <p>Main content</p>
       </template>

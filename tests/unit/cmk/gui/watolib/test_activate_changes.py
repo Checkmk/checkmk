@@ -11,6 +11,7 @@ import os
 import tarfile
 import time
 from collections.abc import Mapping, Sequence
+from dataclasses import replace
 from pathlib import Path
 from typing import override
 
@@ -35,6 +36,7 @@ from cmk.gui.watolib import activate_changes
 from cmk.gui.watolib import activate_changes as activate_changes_module
 from cmk.gui.watolib.activate_changes import (
     _confirm_activated_changes,
+    _distribute_piggyback_hub_configs,
     activate_remote_site,
     ActivateChanges,
     ActivateChangesManager,
@@ -76,7 +78,7 @@ from cmk.livestatus_client import (
     SiteConfiguration,
     SiteConfigurations,
 )
-from cmk.messaging import rabbitmq
+from cmk.messaging import CMKConnectionError, rabbitmq
 from cmk.utils.automation_config import RemoteAutomationConfig
 from cmk.utils.config_warnings import ConfigurationWarnings
 from tests.testlib.unit.fake_site import pop_crash_report_file
@@ -1857,3 +1859,25 @@ def test_remote_activation_job_reports_other_errors_with_crash_report() -> None:
     assert status["crash_id"] == json.loads(crash_info)["id"]
     assert status["crash_id"] in "\n".join(status["exception"])
     assert status["traceback"] == ""
+
+
+def _fail_to_connect_to_broker(*_args: object) -> None:
+    raise CMKConnectionError("certificate verify failed: self-signed certificate")
+
+
+@pytest.mark.xfail(raises=CMKConnectionError, reason="Crash group 4014: CMKConnectionError")
+@pytest.mark.usefixtures("request_context")
+def test_failing_broker_connection_during_hub_config_distribution_is_logged(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    features = replace(
+        next(iter(activate_changes.activation_features_registry.values())),
+        distribute_piggyback_hub_configs=_fail_to_connect_to_broker,
+    )
+
+    with caplog.at_level(logging.WARNING, logger="cmk.web"):
+        _distribute_piggyback_hub_configs(
+            features, SiteConfigurations({}), [], make_folder_tree(Config())
+        )
+
+    assert any("message broker" in m for m in caplog.messages)

@@ -14,7 +14,7 @@ import ssl
 import sys
 import urllib.parse
 
-__version__ = "2.5.0p17"
+__version__ = "2.5.0p18"
 
 USER_AGENT = "checkmk-agent-mk_jolokia-" + __version__
 

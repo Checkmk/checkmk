@@ -45,7 +45,7 @@ import requests
 
 from cmk.server_side_programs.v1_unstable import vcrtrace
 
-__version__ = "2.5.0p17"
+__version__ = "2.5.0p18"
 
 USER_AGENT = f"checkmk-special-fritzbox-{__version__}"
 

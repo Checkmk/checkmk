@@ -23,6 +23,7 @@ from cmk.graphing_engine import (
     FetchMetricNamesProtocol,
     Graph,
     HostName,
+    RequestedMetric,
     RRDMetric,
     ServiceName,
     sort_registered_graph_plugins,
@@ -73,8 +74,8 @@ def get_graph_plugin_from_id(
     registered_graphs: Mapping[str, ApiGraph],
     graph_id: str,
 ) -> ApiGraph:
-    if graph_id.startswith("METRIC_"):
-        metric_name = graph_id[7:]
+    if isinstance(request := graph_request_of(graph_id), RequestedMetric):
+        metric_name = request.metric_name
         return graphs_v2_unstable.Graph(
             name=graph_id,
             title=TitleV1(""),

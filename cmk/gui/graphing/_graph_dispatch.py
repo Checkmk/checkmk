@@ -42,9 +42,13 @@ def legacy_graph_id(graph: Graph, registered_graphs: Sequence[ApiGraph]) -> str:
     return f"{_METRIC_PREFIX}{graph.name}"
 
 
+def metric_name_of(graph_id: str) -> MetricName:
+    return MetricName(graph_id.removeprefix(_METRIC_PREFIX))
+
+
 def graph_request_of(graph_id: str) -> GraphRequest:
     if graph_id.startswith(_METRIC_PREFIX):
-        return RequestedMetric(MetricName(graph_id.removeprefix(_METRIC_PREFIX)))
+        return RequestedMetric(metric_name_of(graph_id))
     return RequestedGraph(graph_id)
 
 

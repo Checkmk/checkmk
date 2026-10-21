@@ -41,6 +41,7 @@ from ._graph_dispatch import (
     GraphDispatcher,
     GraphDispatcherRegistry,
     legacy_graph_id,
+    metric_name_of,
     serialize_graphs,
 )
 from ._graph_display_config import (
@@ -240,6 +241,7 @@ __all__ = [
     "HTML_SIZE_PER_EX",
     "id_from_unit",
     "legacy_graph_id",
+    "metric_name_of",
     "line_type_with_mirroring",
     "LineType",
     "LivestatusQueryFunc",

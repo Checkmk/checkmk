@@ -7,10 +7,10 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from cmk.graphing_engine import ApiGraph, Graph
+from cmk.graphing_engine import ApiGraph, Graph, RequestedMetric
 from cmk.gui.i18n import _
 
-from ._graph_dispatch import legacy_graph_id
+from ._graph_dispatch import graph_request_of, legacy_graph_id
 
 
 @dataclass(frozen=True)
@@ -30,7 +30,7 @@ def graph_choices(graphs: Sequence[Graph], registered_graphs: Sequence[ApiGraph]
     single_metrics = []
     for graph in graphs:
         graph_id = legacy_graph_id(graph, registered_graphs)
-        if graph_id.startswith("METRIC_"):
+        if isinstance(graph_request_of(graph_id), RequestedMetric):
             single_metrics.append(
                 GraphPluginChoice(graph_id, _("Metric: %(title)s") % {"title": graph.title})
             )

@@ -8,6 +8,7 @@ py_library(
         "//cmk/gui_plugins/internal:__pkg__",
         "//cmk/plugins/checkmk/cli:__pkg__",
         "//non-free/packages/cmk-data-backend:__pkg__",
+        "//non-free/tests/testlib/system:__pkg__",
         "//non-free/tests/testlib/system/licensing:__pkg__",
         "//non-free/tests/testlib/unit:__pkg__",
         "//omd/packages/Python:__pkg__",

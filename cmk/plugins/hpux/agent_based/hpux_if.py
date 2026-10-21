@@ -25,10 +25,9 @@ _HPUX_FIELDS_TO_IF_FIELDS = {
 }
 
 
-def parse_hpux_if(
-    string_table: StringTable,
+def parse_hpux_if_pure(
+    string_table: StringTable, timestamp: float
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
-    timestamp = time.time()
     nics = []
     for line in string_table:
         if "***" in line:
@@ -75,6 +74,12 @@ def parse_hpux_if(
         iface.attributes.finalize()
 
     return nics
+
+
+def parse_hpux_if(
+    string_table: StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    return parse_hpux_if_pure(string_table, timestamp=time.time())
 
 
 def hpux_parse_speed(speed: str) -> float:

@@ -8,9 +8,8 @@
 import logging
 import os
 import threading
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any
 from unittest import mock
 
 import pytest
@@ -19,6 +18,7 @@ import cmk.ec.export as ec
 from cmk.ccc.site import SiteId
 from cmk.ec.config import Config
 from cmk.ec.helpers import ECLock
+from cmk.ec.history import History
 from cmk.ec.history_file import FileHistory
 from cmk.ec.history_mongo import MongoDBHistory
 from cmk.ec.history_sqlite import SQLiteHistory, SQLiteSettings
@@ -36,10 +36,16 @@ from cmk.ec.main import (
 from cmk.ec.perfcounters import Perfcounters
 from cmk.ec.settings import create_settings
 
+from .helpers import FakeConnection
+
 
 @pytest.fixture(name="settings")
 def fixture_settings(tmp_path: Path) -> ec.Settings:
-    return create_settings("1.2.3i45", tmp_path, ["mkeventd"])
+    settings = create_settings("1.2.3i45", tmp_path, ["mkeventd"])
+    # Like main(), make sure that the directories for the status files and the event pipe exist.
+    settings.paths.status_file.value.parent.mkdir(parents=True)
+    settings.paths.event_pipe.value.parent.mkdir(parents=True)
+    return settings
 
 
 @pytest.fixture(name="lock_configuration")
@@ -118,14 +124,32 @@ def fixture_perfcounters() -> Perfcounters:
     return Perfcounters(logging.getLogger("cmk.mkeventd.lock.perfcounters"))
 
 
-class RaisingConnection:
-    def query(self, query: str) -> Sequence[Sequence[Any]]:  # noqa: ARG002
-        raise Exception("no queries allowed")
+@pytest.fixture(name="core_connection")
+def fixture_core_connection() -> Iterator[FakeConnection]:
+    core_connection = FakeConnection()
+    yield core_connection
+    # The EC copes with failing queries itself, so don't let a test silently rely on that.
+    if core_connection.unexpected_queries:
+        pytest.fail(f"unexpected Livestatus queries: {core_connection.unexpected_queries!r}")
+
+
+@pytest.fixture(name="terminate_main_event")
+def fixture_terminate_main_event() -> threading.Event:
+    return threading.Event()
+
+
+@pytest.fixture(name="reload_config_event")
+def fixture_reload_config_event() -> threading.Event:
+    return threading.Event()
 
 
 @pytest.fixture(name="event_status")
 def fixture_event_status(
-    settings: ec.Settings, config: Config, perfcounters: Perfcounters, history: FileHistory
+    settings: ec.Settings,
+    config: Config,
+    perfcounters: Perfcounters,
+    history: History,
+    core_connection: FakeConnection,
 ) -> EventStatus:
     return EventStatus(
         settings,
@@ -133,7 +157,7 @@ def fixture_event_status(
         perfcounters,
         history,
         logging.getLogger("cmk.mkeventd.EventStatus"),
-        RaisingConnection(),
+        core_connection,
     )
 
 
@@ -144,8 +168,9 @@ def fixture_event_server(
     slave_status: SlaveStatus,
     perfcounters: Perfcounters,
     lock_configuration: ECLock,
-    history: FileHistory,
+    history: History,
     event_status: EventStatus,
+    core_connection: FakeConnection,
 ) -> EventServer:
     return EventServer(
         logging.getLogger("cmk.mkeventd.EventServer"),
@@ -157,7 +182,7 @@ def fixture_event_server(
         history,
         event_status,
         StatusTableEvents.columns,
-        RaisingConnection(),
+        core_connection,
         SiteId("hurz"),
         create_pipes_and_sockets=False,
     )
@@ -170,11 +195,14 @@ def fixture_status_server(
     slave_status: SlaveStatus,
     perfcounters: Perfcounters,
     lock_configuration: ECLock,
-    history: FileHistory,
+    history: History,
     event_status: EventStatus,
     event_server: EventServer,
-) -> StatusServer:
-    return StatusServer(
+    terminate_main_event: threading.Event,
+    reload_config_event: threading.Event,
+    core_connection: FakeConnection,
+) -> Iterator[StatusServer]:
+    status_server = StatusServer(
         logging.getLogger("cmk.mkeventd.StatusServer"),
         settings,
         config,
@@ -184,7 +212,10 @@ def fixture_status_server(
         history,
         event_status,
         event_server,
-        threading.Event(),
-        threading.Event(),
-        RaisingConnection(),
+        terminate_main_event,
+        reload_config_event,
+        core_connection,
     )
+    yield status_server
+    status_server.close_unix_socket()
+    status_server.close_tcp_socket()

@@ -8,15 +8,22 @@
 import ast
 import socket
 import time
+from collections.abc import Iterable, Sequence
 from typing import Any, override
 
 from cmk.ccc.hostaddress import HostName
+from cmk.ec.config import Rule, ServiceLevel
+from cmk.ec.core_queries import HostInfo
 from cmk.ec.event import Event
+from cmk.ec.history import History, HistoryWhat
+from cmk.ec.main import EventServer
+from cmk.ec.query import QueryGET
 
 
 class FakeStatusSocket(socket.socket):
     def __init__(self, query: bytes) -> None:
         super().__init__()
+        super().close()  # Only the type is needed, so don't leak the OS socket.
         self._query = query
         self._sent = False
         self._response = b""
@@ -62,9 +69,128 @@ def new_event(attrs: Event) -> Event:
         pid=0,
         priority=3,
         facility=1,  # user
-        match_groups=(""),
+        match_groups=(),
+        core_host=None,
+        host_in_downtime=False,
     )
 
     event = default_event.copy()
     event.update(attrs)
     return event
+
+
+def new_message(attrs: Event) -> Event:
+    """Returns an event like it is created from an incoming message, i.e. before applying rules"""
+    message = Event(
+        facility=1,  # user
+        priority=3,
+        text="",
+        host=HostName("test-host"),
+        ipaddress="127.0.0.1",
+        application="",
+        pid=0,
+        time=time.time(),
+        core_host=None,
+        host_in_downtime=False,
+    )
+    message.update(attrs)
+    return message
+
+
+def process_message(event_server: EventServer, attrs: Event | None = None) -> None:
+    """Lets the event server process an incoming message"""
+    event_server.process_potential_event(new_message(Event() if attrs is None else attrs))
+
+
+def new_rule(attrs: Rule) -> Rule:
+    """Returns a rule which matches any message and opens an OK event"""
+    rule = Rule(
+        id="rule",
+        actions=[],
+        actions_in_downtime=True,
+        autodelete=False,
+        cancel_action_phases="always",
+        cancel_actions=[],
+        comment="",
+        description="",
+        disabled=False,
+        docu_url="",
+        invert_matching=False,
+        sl=ServiceLevel(precedence="message", value=0),
+        state=0,
+    )
+    rule.update(attrs)
+    return rule
+
+
+class FakeConnection:
+    """A monitoring core answering the Livestatus queries of the Event Console
+
+    All columns of its status are 0, so e.g. notifications are disabled and no test accidentally
+    tries to notify via Checkmk. The EC copes with failing queries itself, e.g. it assumes that
+    notifications are enabled, so the queries the core can't answer are recorded, too.
+    The host configuration is read only once, so set the hosts before using them.
+    """
+
+    def __init__(self) -> None:
+        self.hosts: list[HostInfo] = []
+        self.hosts_in_downtime: set[HostName] = set()
+        self.unexpected_queries: list[str] = []
+
+    def query(self, query: str) -> Sequence[Sequence[Any]]:
+        match query.splitlines():
+            case ["GET status", columns, *_headers] if columns.startswith("Columns: "):
+                return [[0 for _column in columns.removeprefix("Columns: ").split()]]
+            case [
+                "GET hosts",
+                "Columns: name alias address custom_variables contacts contact_groups groups",
+            ]:
+                return [
+                    [
+                        host.name,
+                        host.alias,
+                        host.address,
+                        host.custom_variables,
+                        host.contacts,
+                        host.contact_groups,
+                        host.host_groups,
+                    ]
+                    for host in self.hosts
+                ]
+            case ["GET hosts", "Columns: scheduled_downtime_depth", host_filter]:
+                host_name = host_filter.removeprefix("Filter: host_name = ")
+                return [[1 if host_name in self.hosts_in_downtime else 0]]
+            case _:
+                self.unexpected_queries.append(query)
+                raise ValueError(f"unexpected Livestatus query {query!r}")
+
+
+class RecordingHistory(History):
+    """Records in memory what happened to which events"""
+
+    def __init__(self) -> None:
+        self.entries: list[tuple[HistoryWhat, Event]] = []
+
+    @property
+    def whats(self) -> list[HistoryWhat]:
+        return [what for what, _event in self.entries]
+
+    @override
+    def flush(self) -> None:
+        self.entries.clear()
+
+    @override
+    def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
+        self.entries.append((what, event.copy()))
+
+    @override
+    def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
+        raise NotImplementedError("querying is not recorded")
+
+    @override
+    def housekeeping(self) -> None:
+        pass
+
+    @override
+    def close(self) -> None:
+        pass

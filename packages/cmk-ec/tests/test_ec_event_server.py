@@ -20,25 +20,11 @@ from cmk.ec.main import (
     StatusTableHistory,
 )
 
-from .helpers import new_event
+from .helpers import new_event, new_rule, process_message
 
 
 def _make_rule(state: ec.State) -> ec.Rule:
-    return ec.Rule(
-        actions=[],
-        actions_in_downtime=True,
-        autodelete=False,
-        cancel_action_phases="always",
-        cancel_actions=[],
-        comment="",
-        description="",
-        disabled=False,
-        docu_url="",
-        id="patterns",
-        invert_matching=False,
-        sl=ec.ServiceLevel(precedence="message", value=0),
-        state=state,
-    )
+    return new_rule({"id": "patterns", "state": state})
 
 
 @pytest.mark.parametrize(
@@ -124,7 +110,8 @@ def _reload_configuration(
     config: Config,
     rule_packs: Sequence[ec.ECRulePack],
 ) -> None:
-    config_rule_packs = config | {"rule_packs": rule_packs}
+    # Unlike SQLite, recording the history in files leaves nothing open after the test.
+    config_rule_packs = config | {"rule_packs": rule_packs, "archive_mode": "file"}
     history = create_history(
         settings,
         config_rule_packs,
@@ -142,7 +129,7 @@ def test_rule_which_cannot_be_compiled_does_not_match(
     rule = _make_rule(("text_pattern", {"2": "(("}))
     _reload_configuration(event_server, settings, config, [ec.default_rule_pack([rule])])
 
-    event_server.process_potential_event(new_event(ec.Event(text="Something happened")))
+    process_message(event_server, ec.Event(text="Something happened"))
 
     assert event_status.events() == []
 
@@ -175,7 +162,7 @@ def test_disabled_rule_packs_and_rules_are_ignored(
     ]
     _reload_configuration(event_server, settings, config, rule_packs)
 
-    event_server.process_potential_event(new_event(ec.Event(text="Something happened")))
+    process_message(event_server, ec.Event(text="Something happened"))
 
     assert _rule_ids_of_events(event_status) == ["enabled"]
 
@@ -189,7 +176,7 @@ def test_a_rule_which_skips_its_rule_pack_skips_its_other_rules(
     ]
     _reload_configuration(event_server, settings, config, rule_packs)
 
-    event_server.process_potential_event(new_event(ec.Event(text="Something happened")))
+    process_message(event_server, ec.Event(text="Something happened"))
 
     assert _rule_ids_of_events(event_status) == ["next"]
 
@@ -200,7 +187,7 @@ def test_a_rule_which_drops_the_message_stops_processing_it(
     rule_packs = [_rule_pack("pack", _rule("dropping", drop=True), _rule("matching"))]
     _reload_configuration(event_server, settings, config, rule_packs)
 
-    event_server.process_potential_event(new_event(ec.Event(text="Something happened")))
+    process_message(event_server, ec.Event(text="Something happened"))
 
     assert _rule_ids_of_events(event_status) == []
 
@@ -212,10 +199,10 @@ def test_a_cancelling_match_cancels_the_events_of_the_rule(
     rule["match"] = "disk failed"
     rule["match_ok"] = "disk ok"
     _reload_configuration(event_server, settings, config, [_rule_pack("pack", rule)])
-    event_server.process_potential_event(new_event(ec.Event(text="disk failed")))
+    process_message(event_server, ec.Event(text="disk failed"))
     assert _rule_ids_of_events(event_status) == ["disk"]
 
-    event_server.process_potential_event(new_event(ec.Event(text="disk ok")))
+    process_message(event_server, ec.Event(text="disk ok"))
 
     assert _rule_ids_of_events(event_status) == []
 
@@ -229,6 +216,6 @@ def test_a_host_name_which_cannot_be_translated_is_empty(
         event_server, settings, config_with_translation, [_rule_pack("pack", _rule("matching"))]
     )
 
-    event_server.process_potential_event(new_event(ec.Event(text="Something happened")))
+    process_message(event_server, ec.Event(text="Something happened"))
 
     assert [event["host"] for event in event_status.events()] == [""]

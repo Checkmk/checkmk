@@ -22,6 +22,9 @@ const props = defineProps<{
 const emit = defineEmits<{ dismiss: [] }>()
 
 const tooltipElement = useTemplateRef<HTMLDivElement>('tooltip')
+
+// A caller may anchor something to the shown tooltip, such as a menu below it.
+defineExpose({ element: tooltipElement })
 const tooltipSize = ref({ width: 0, height: 0 })
 
 // The post-flush watcher runs before the browser paints, so the corrected position is never

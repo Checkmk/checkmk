@@ -10,6 +10,8 @@ import type {
   CustomServiceDefinition,
   CustomServiceExtensions,
   CustomServiceUpdate,
+  HostNameTemplateResolution,
+  HostNameTemplateResolutionRequest,
   TemplateAttributes,
   TemplateAttributesRequest
 } from './definition'
@@ -133,4 +135,22 @@ export async function fetchTemplateAttributes(
       body: request
     })
   )
+}
+
+export async function resolveHostNameTemplate(
+  request: HostNameTemplateResolutionRequest,
+  signal: AbortSignal
+): Promise<HostNameTemplateResolution> {
+  try {
+    return unwrap(
+      await client.POST('/domain-types/custom_service/actions/resolve_host_name_template/invoke', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body: request,
+        signal
+      })
+    )
+  } catch (error) {
+    const templateError = isClientError(error) ? templateErrorOf(error.body) : undefined
+    throw templateError === undefined ? error : new CmkSimpleError(templateError)
+  }
 }

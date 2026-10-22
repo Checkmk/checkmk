@@ -30,6 +30,16 @@ export type TemplateAttributesRequest = NonNullable<
 export type TemplateAttributes =
   paths[TemplateAttributesPath]['post']['responses'][200]['content']['application/json']
 
+type ResolveHostNameTemplatePath =
+  '/domain-types/custom_service/actions/resolve_host_name_template/invoke'
+
+export type HostNameTemplateResolutionRequest = NonNullable<
+  paths[ResolveHostNameTemplatePath]['post']['requestBody']
+>['content']['application/json']
+
+export type HostNameTemplateResolution =
+  paths[ResolveHostNameTemplatePath]['post']['responses'][200]['content']['application/json']
+
 const MACRO_PREFIXES = {
   resource: 'RESOURCE_ATTR',
   scope: 'SCOPE_ATTR',

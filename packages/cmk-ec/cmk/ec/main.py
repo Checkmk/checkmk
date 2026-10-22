@@ -381,6 +381,51 @@ class MKSignalException(MKException):
         self.signum = signum
 
 
+class SignalHandler:
+    """Turns the signals it handles into an MKSignalException, unless it holds them back
+
+    Raising the exception interrupts whatever the main thread is doing, e.g. waiting for the master
+    of a replication slave, so the main loop holds back the signals where that must not happen.
+    """
+
+    def __init__(self, logger: Logger) -> None:
+        self._logger = logger
+        self._holding_back = False
+        self._held_back: int | None = None
+
+    def __call__(self, signum: int, stack_frame: FrameType | None) -> None:  # noqa: ARG002
+        # Record the signal first, so a further signal arriving meanwhile, e.g. while logging, can't
+        # make it get lost. Terminating takes precedence over reloading.
+        if self._held_back is None or self._held_back == signal.SIGHUP:
+            self._held_back = signum
+        self._logger.log(VERBOSE, "Got signal %(signum)d.", {"signum": signum})
+        if not self._holding_back:
+            self._raise_held_back()
+
+    @contextlib.contextmanager
+    def holding_back(self) -> Iterator[None]:
+        """Holds back the signals arriving within the block, raising the exception afterwards"""
+        self._holding_back = True
+        try:
+            yield
+        finally:
+            self._holding_back = False
+            self._raise_held_back()
+
+    def _raise_held_back(self) -> None:
+        """Raises the exception for the recorded signal, if any
+
+        A further signal arriving meanwhile raises the exception for the signal taking precedence
+        instead, until the recorded signal is forgotten right before raising the exception: No call
+        is left in between, so no signal handler runs there.
+        """
+        if (signum := self._held_back) is None:
+            return
+        exception = MKSignalException(signum)
+        self._held_back = None
+        raise exception
+
+
 # .
 #   .--EventServer---------------------------------------------------------.
 #   |      _____                 _   ____                                  |
@@ -2610,6 +2655,7 @@ def run_eventd(
     reload_config_event: threading.Event,
     *,
     fetch_master_state: FetchMasterState,
+    signal_handler: SignalHandler,
 ) -> None:
     """Dispatching: starting and managing the two threads."""
     status_server.start()
@@ -2625,16 +2671,26 @@ def run_eventd(
                 # reloading a fixed one still works.
                 if reload_config_event.is_set():
                     reload_config_event.clear()
-                    config, history = reload_configuration(
-                        settings,
-                        logger,
-                        lock_configuration,
-                        history,
-                        event_status,
-                        event_server,
-                        status_server,
-                        slave_status,
-                    )
+                    # A signal must not interrupt the reload halfway, e.g. once the event server
+                    # uses the new configuration, so handle it only once the main loop uses it, too.
+                    with signal_handler.holding_back():
+                        try:
+                            config, history = reload_configuration(
+                                settings,
+                                logger,
+                                lock_configuration,
+                                history,
+                                event_status,
+                                event_server,
+                                status_server,
+                                slave_status,
+                            )
+                        except Exception:
+                            # A held back signal would replace the exception, so log it right away.
+                            # The previous configuration stays in effect.
+                            logger.exception("Cannot reload the configuration")
+                            if settings.options.debug:
+                                raise
 
                 # Wait until the next task is due or a reload is requested, but at most a minute: A
                 # termination requested by the SHUTDOWN command doesn't end the wait.
@@ -2688,16 +2744,7 @@ def run_eventd(
         except MKSignalException as e:
             if e.signum == 1:
                 logger.info("Received SIGHUP - going to reload configuration")
-                config, history = reload_configuration(
-                    settings,
-                    logger,
-                    lock_configuration,
-                    history,
-                    event_status,
-                    event_server,
-                    status_server,
-                    slave_status,
-                )
+                reload_config_event.set()  # like the RELOAD command
             else:
                 logger.info("Signalled to death by signal %(signum)d", {"signum": e.signum})
                 terminate(terminate_main_event, event_server, status_server)
@@ -3828,11 +3875,7 @@ def main() -> None:
             logger.info("Daemonized with PID %(pid)d.", {"pid": os.getpid()})
 
         with cmk.ccc.daemon.pid_file_lock(pid_path):
-
-            def signal_handler(signum: int, stack_frame: FrameType | None) -> None:  # noqa: ARG001
-                logger.log(VERBOSE, "Got signal %(signum)d.", {"signum": signum})
-                raise MKSignalException(signum)
-
+            signal_handler = SignalHandler(logger)
             signal.signal(signal.SIGHUP, signal_handler)
             signal.signal(signal.SIGINT, signal_handler)
             signal.signal(signal.SIGQUIT, signal_handler)
@@ -3853,6 +3896,7 @@ def main() -> None:
                 logger,
                 reload_config_event,
                 fetch_master_state=get_state_from_master,
+                signal_handler=signal_handler,
             )
 
             # We reach this point, if the server has been killed by

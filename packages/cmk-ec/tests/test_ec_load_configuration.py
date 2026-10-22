@@ -7,12 +7,13 @@
 import contextlib
 import logging
 import shlex
+import signal
 import sqlite3
 import threading
 import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import override
+from typing import override, Protocol
 from unittest.mock import Mock
 
 import pytest
@@ -29,11 +30,13 @@ from cmk.ec.main import (
     EventServer,
     EventStatus,
     load_configuration,
+    MKSignalException,
     PackedEventStatus,
     reload_configuration,
     run_eventd,
     save_master_config,
     save_slave_status,
+    SignalHandler,
     SlaveStatus,
     StatusServer,
     StatusTableEvents,
@@ -50,6 +53,7 @@ from .helpers import (
     new_rule,
     process_message,
     query_status_server,
+    RecordingHistory,
     replication_slave_config,
 )
 
@@ -450,8 +454,42 @@ def test_reload_completes_although_the_replication_status_cannot_be_updated(
     assert ticket_file.read_text() == "disk full"
 
 
+@pytest.fixture(name="signal_handler")
+def fixture_signal_handler(logger: logging.Logger) -> SignalHandler:
+    return SignalHandler(logger)
+
+
+class _SignalWhileLogging(logging.Handler):
+    """Lets a signal, by default a SIGTERM, arrive at the signal handler while a message with the
+    given beginning gets logged"""
+
+    def __init__(
+        self, beginning: str, signal_handler: SignalHandler, signum: int = signal.SIGTERM
+    ) -> None:
+        super().__init__()
+        self._beginning = beginning
+        self._signal_handler = signal_handler
+        self._signum = signum
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        if record.getMessage().startswith(self._beginning):
+            self._signal_handler(self._signum, None)
+
+
 type _Housekeeping = Callable[[], None]
-type _RunMainLoop = Callable[[ec.Settings, Config, _Housekeeping], list[ec.Replication | None]]
+
+
+class _RunMainLoop(Protocol):
+    def __call__(
+        self,
+        settings: ec.Settings,
+        config: Config,
+        housekeeping: _Housekeeping,
+        *,
+        initial_history: History | None = None,
+    ) -> list[ec.Replication | None]: ...
+
 
 _MAIN_LOOP_TIMEOUT = 5.0  # seconds, the main loop of a test usually takes milliseconds
 
@@ -466,16 +504,22 @@ def fixture_run_main_loop(
     slave_status: SlaveStatus,
     terminate_main_event: threading.Event,
     reload_config_event: threading.Event,
+    signal_handler: SignalHandler,
 ) -> _RunMainLoop:
     """Runs the main loop of an EC with the given settings, starting with the given configuration
 
-    Housekeeping is due immediately and runs the given function, also after reloading a
-    configuration activated by _activate_main_loop_config(). Returns the contacted masters.
-    Fails if the main loop doesn't end in time, instead of hanging until the test times out.
+    Unless another one is given, the EC starts with the history of its fixture. Housekeeping is due
+    immediately and runs the given function, also after reloading a configuration activated by
+    _activate_main_loop_config(). Returns the contacted masters. Fails if the main loop doesn't end
+    in time, instead of hanging until the test times out.
     """
 
     def run_main_loop(
-        settings: ec.Settings, config: Config, housekeeping: _Housekeeping
+        settings: ec.Settings,
+        config: Config,
+        housekeeping: _Housekeeping,
+        *,
+        initial_history: History | None = None,
     ) -> list[ec.Replication | None]:
         event_server = Mock(spec=EventServer)
         event_server.do_housekeeping.side_effect = housekeeping
@@ -504,7 +548,7 @@ def fixture_run_main_loop(
                 settings,
                 config | {"housekeeping_interval": 0.0},
                 lock_configuration,
-                history,
+                history if initial_history is None else initial_history,
                 perfcounters,
                 event_status,
                 event_server,
@@ -513,6 +557,7 @@ def fixture_run_main_loop(
                 logger,
                 reload_config_event,
                 fetch_master_state=fetch_master_state,
+                signal_handler=signal_handler,
             )
         finally:
             watchdog.cancel()
@@ -538,6 +583,18 @@ def fixture_debug_settings(settings: ec.Settings) -> ec.Settings:
     In debug mode, exceptions end the main loop instead of letting it retry forever.
     """
     return settings._replace(options=settings.options._replace(debug=True))
+
+
+def _sighup_during_first_housekeeping(terminate_main_event: threading.Event) -> _Housekeeping:
+    """The EC gets a SIGHUP during its first housekeeping and terminates after the second one."""
+    signals = [MKSignalException(signal.SIGHUP)]
+
+    def housekeeping() -> None:
+        if signals:
+            raise signals.pop()
+        terminate_main_event.set()
+
+    return housekeeping
 
 
 def test_reloaded_replication_applies_right_away(
@@ -603,3 +660,121 @@ def test_main_loop_recovers_from_a_reloaded_configuration_it_cannot_use(
     run_main_loop(settings, config, terminate_main_event.set)
 
     assert settings.paths.status_file.value.exists()
+
+
+def test_sighup_reloads_the_configuration(
+    debug_settings: ec.Settings,
+    config: Config,
+    run_main_loop: _RunMainLoop,
+    terminate_main_event: threading.Event,
+) -> None:
+    # The EC starts saving its status every minute, but reloads to save it continuously.
+    _activate_main_loop_config(debug_settings, "retention_interval = 0.0\n")
+
+    run_main_loop(debug_settings, config, _sighup_during_first_housekeeping(terminate_main_event))
+
+    assert debug_settings.paths.status_file.value.exists()
+
+
+def test_sighup_keeps_the_previous_configuration_if_the_new_one_is_broken(
+    monkeypatch: pytest.MonkeyPatch,
+    settings: ec.Settings,
+    config: Config,
+    slave_status: SlaveStatus,
+    run_main_loop: _RunMainLoop,
+    terminate_main_event: threading.Event,
+) -> None:
+    # Without debug mode, the main loop logs an exception and retries a second later. Don't wait,
+    # and end the main loop instead of retrying forever after any further exception.
+    retries: list[float] = []
+
+    def sleep(seconds: float) -> None:
+        retries.append(seconds)
+        if len(retries) > 1:
+            terminate_main_event.set()
+
+    monkeypatch.setattr(time, "sleep", sleep)
+    activate_config(settings, "replication = {\n")
+    slave_status["mode"] = "sync"
+
+    contacted_masters = run_main_loop(
+        settings,
+        config | {"replication": _REPLICATION},
+        _sighup_during_first_housekeeping(terminate_main_event),
+    )
+
+    assert contacted_masters == [_REPLICATION]
+
+
+def test_signal_during_a_reload_is_handled_once_the_reload_is_complete(
+    debug_settings: ec.Settings,
+    config: Config,
+    logger: logging.Logger,
+    signal_handler: SignalHandler,
+    run_main_loop: _RunMainLoop,
+    reload_config_event: threading.Event,
+    terminate_main_event: threading.Event,
+) -> None:
+    # The signal arrives after the event server got the new configuration and history.
+    _activate_main_loop_config(debug_settings, f"replication = {_REPLICATION!r}\n")
+    logger.addHandler(_SignalWhileLogging("Replication: slave configuration", signal_handler))
+    reload_config_event.set()
+    previous_history = RecordingHistory()
+
+    run_main_loop(
+        debug_settings, config, terminate_main_event.set, initial_history=previous_history
+    )
+
+    assert previous_history.closed
+
+
+def test_failed_reload_is_logged_although_a_signal_arrives_during_it(
+    settings: ec.Settings,
+    config: Config,
+    logger: logging.Logger,
+    signal_handler: SignalHandler,
+    run_main_loop: _RunMainLoop,
+    reload_config_event: threading.Event,
+    terminate_main_event: threading.Event,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    # The signal arrives before the EC fails to create its history in MongoDB, which isn't set up.
+    activate_config(settings, f'archive_mode = "mongodb"\nreplication = {_REPLICATION!r}\n')
+    logger.addHandler(_SignalWhileLogging("Replication: no previously saved", signal_handler))
+    reload_config_event.set()
+
+    run_main_loop(settings, config, terminate_main_event.set)
+
+    assert "Cannot reload the configuration" in caplog.messages
+
+
+def test_termination_is_not_lost_to_a_signal_arriving_meanwhile(
+    logger: logging.Logger, signal_handler: SignalHandler
+) -> None:
+    # A SIGHUP arrives while the signal handler logs the SIGTERM.
+    logger.setLevel(VERBOSE)
+    logger.addHandler(
+        _SignalWhileLogging(f"Got signal {signal.SIGTERM:d}", signal_handler, signal.SIGHUP)
+    )
+
+    with pytest.raises(MKSignalException) as excinfo:
+        signal_handler(signal.SIGTERM, None)
+
+    assert excinfo.value.signum == signal.SIGTERM
+
+
+@pytest.mark.parametrize(
+    "signums",
+    [
+        pytest.param((signal.SIGHUP, signal.SIGTERM), id="termination after a reload"),
+        pytest.param((signal.SIGTERM, signal.SIGHUP), id="reload after a termination"),
+    ],
+)
+def test_held_back_termination_takes_precedence_over_a_reload(
+    signal_handler: SignalHandler, signums: tuple[int, int]
+) -> None:
+    with pytest.raises(MKSignalException) as excinfo, signal_handler.holding_back():
+        for signum in signums:
+            signal_handler(signum, None)
+
+    assert excinfo.value.signum == signal.SIGTERM

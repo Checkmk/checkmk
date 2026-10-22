@@ -231,10 +231,11 @@ class FakeConnection:
 
 
 class RecordingHistory(History):
-    """Records in memory what happened to which events"""
+    """Records in memory what happened to which events, and whether it got closed"""
 
     def __init__(self) -> None:
         self.entries: list[tuple[HistoryWhat, Event]] = []
+        self.closed = False
 
     @property
     def whats(self) -> list[HistoryWhat]:
@@ -258,4 +259,4 @@ class RecordingHistory(History):
 
     @override
     def close(self) -> None:
-        pass
+        self.closed = True

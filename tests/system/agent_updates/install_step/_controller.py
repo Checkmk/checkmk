@@ -11,6 +11,7 @@ import subprocess
 from cmk.ccc.hostaddress import HostName
 from tests.system.agent_updates.install_step._agent import AGENT_USER, IntegratedUpdaterAgent
 from tests.system.agent_updates.install_step._units import wait_for_installer
+from tests.testlib.system.agent import controller_connection_json, controller_status_json
 from tests.testlib.system.host_under_test import HostUnderTest
 from tests.testlib.system.site import Site
 
@@ -22,15 +23,19 @@ def register_for_updates(
     agent: IntegratedUpdaterAgent,
     site: Site,
     hostname: HostName,
-) -> None:
-    """Register as cmkadmin, who may download every agent, and make the connection the source.
+    *,
+    user: str = "cmkadmin",
+    password: str | None = None,
+) -> subprocess.CompletedProcess[str]:
+    """Register as user, by default cmkadmin, and ask for the new connection as update source.
 
     Without --automatic-updates a registration sets no update source, because the controller's
     default for it is "manual".
     """
-    host.run(
+    return host.run(
         [
             agent.ctl.as_posix(),
+            "--verbose",
             "register",
             "--automatic-updates",
             "--server",
@@ -40,9 +45,9 @@ def register_for_updates(
             "--hostname",
             hostname,
             "--user",
-            "cmkadmin",
+            user,
             "--password",
-            site.admin_password,
+            site.admin_password if password is None else password,
             "--trust-cert",
         ],
         sudo=True,
@@ -60,6 +65,11 @@ def run_update(
     update = host.run([agent.ctl.as_posix(), "update", *options], user=AGENT_USER, check=False)
     wait_for_installer(host)
     return update
+
+
+def connection_uuid(host: HostUnderTest, agent: IntegratedUpdaterAgent, site: Site) -> str:
+    """The UUID of the controller's connection to site, whether it is the update source or not."""
+    return str(controller_connection_json(controller_status_json(agent.ctl, host), site)["uuid"])
 
 
 def installed_hash(host: HostUnderTest, agent: IntegratedUpdaterAgent) -> str:

@@ -12,6 +12,7 @@ py_library(
     imports = ["../../.."],
     deps = [
         requirement("pytest"),
+        requirement("requests"),
         "//tests/testlib/common",
         "//tests/testlib/system",
     ],

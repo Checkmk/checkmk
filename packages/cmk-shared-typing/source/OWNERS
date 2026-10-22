@@ -1,5 +1,7 @@
 
 
+per-file ai_assistant_panel.json=file:/component_owners/ai_control_plane/OWNERS_DEFINITION
+per-file ai_assistant_panel.json=set noparent
 per-file notifications.json=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file notifications.json=set noparent
 per-file welcome.json=file:/component_owners/getting_started/OWNERS_DEFINITION

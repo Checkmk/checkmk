@@ -22,7 +22,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config, get_page_heading
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.header import make_header
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import HTMLWriter, TSFunctionCall
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, response
 from cmk.gui.i18n import _, localize, ungettext
@@ -332,7 +332,9 @@ class LoginPage(Page):
             method="POST",
             add_transid=False,
             action="login.py",
-            onsubmit=f"document.getElementById('{LOGIN_BUTTON_ID}').classList.add('shimmer-input-button');",
+            ts_function=TSFunctionCall(
+                function_name="shimmer_button_on_submit", arguments={"button_id": LOGIN_BUTTON_ID}
+            ),
         ):
             html.hidden_field(LOGIN_BUTTON_ID, "1")
             html.hidden_field("_origtarget", origtarget)

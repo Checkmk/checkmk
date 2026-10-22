@@ -5,8 +5,7 @@
 
 
 import gettext
-import html as html_escaping
-import re
+import json
 import traceback
 
 import pytest
@@ -14,8 +13,8 @@ from werkzeug.test import create_environ
 
 from cmk.gui.ctx_stack import set_global_var
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
-from cmk.gui.htmllib.html import _collect_stylesheets, html, HTMLGenerator
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter, TSFunctionCall
+from cmk.gui.htmllib.html import _collect_stylesheets, html
 from cmk.gui.http import Request
 from cmk.gui.i18n import Translation
 from cmk.gui.logged_in import LoggedInUser, user
@@ -26,7 +25,7 @@ from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
-from tests.unit.cmk.gui.compare_html import compare_html
+from tests.unit.cmk.gui.compare_html import click_handling, compare_html, ts_function_call
 
 
 @pytest.mark.usefixtures("request_context")
@@ -288,24 +287,6 @@ def test_render_a() -> None:
     )
 
 
-def test_popup_trigger_passes_only_data_to_toggle_popup() -> None:
-    trigger = HTMLGenerator.render_popup_trigger(
-        HTML.with_escaping("menu"),
-        "my_popup",
-        MethodAjax(endpoint="action_menu", url_vars=None),
-        data={"key": "value"},
-        resizable=True,
-    )
-
-    onclick = re.search(r'onclick="([^"]*)"', str(trigger))
-    assert onclick is not None
-    assert html_escaping.unescape(onclick.group(1)) == (
-        'cmk.popup_menu.toggle_popup(event, this, "my_popup",'
-        ' {"type": "ajax", "endpoint": "action_menu", "url_vars": null},'
-        ' {"key": "value"}, true);'
-    )
-
-
 def test_render_a_href_must_be_first_attribute_when_rendered() -> None:
     a = HTMLWriter.render_a("link", target="_blank", href="wato.py")
     assert str(a) == '<a href="wato.py" target="_blank">link</a>'
@@ -427,3 +408,118 @@ def test_render_icon_button_with_confirm_link() -> None:
     assert rendered.startswith('<a href="#"')
     assert 'data-cmk_on_click="confirm_link"' in rendered
     assert "&quot;url&quot;: &quot;wato.py?a=1&amp;b=2&quot;" in rendered
+
+
+@pytest.mark.usefixtures("request_context")
+def test_form_calls_its_ts_function() -> None:
+    with html.output_funnel.plugged():
+        with html.form_context(
+            "login", ts_function=TSFunctionCall(function_name="set_focus_by_id", arguments={"x": 1})
+        ):
+            pass
+        output = html.output_funnel.drain()
+
+    assert ts_function_call(output, "form") == ("set_focus_by_id", {"x": 1})
+
+
+@pytest.mark.usefixtures("request_context")
+def test_form_can_not_call_a_ts_function_and_confirm_leaving_it() -> None:
+    with pytest.raises(ValueError):
+        html.begin_form(
+            "login",
+            confirm_on_leave=True,
+            ts_function=TSFunctionCall(function_name="set_focus_by_id"),
+        )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_buttonlink_follows_its_url_by_click_action() -> None:
+    with output_funnel.plugged():
+        html.buttonlink("wato.py?mode=folder", "Folder")
+        code = output_funnel.drain()
+
+    assert click_handling(code, "input") == (
+        None,
+        "follow_url",
+        {"url": "wato.py?mode=folder"},
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_loading_button_navigates_by_click_action() -> None:
+    code = str(
+        html.render_loading_button(
+            "create", "mkp.py?mode=create", "Create", waiting_message="Wait", remove_parent=True
+        )
+    )
+
+    assert click_handling(code, "input") == (
+        None,
+        "loading_button",
+        {"url": "mkp.py?mode=create", "waiting_message": "Wait", "remove_parent": "true"},
+    )
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_icon_loading_button_navigates_by_click_action() -> None:
+    with output_funnel.plugged():
+        html.icon_loading_button("mkp.py?mode=enable", "Enable", StaticIcon(IconNames.add), "Wait")
+        code = output_funnel.drain()
+
+    assert click_handling(code, "a") == (
+        None,
+        "icon_loading_button",
+        {"url": "mkp.py?mode=enable", "waiting_message": "Wait"},
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_more_button_toggles_by_click_action() -> None:
+    with output_funnel.plugged():
+        html.more_button("filters", dom_levels_up=2, show_mode="default")
+        code = output_funnel.drain()
+
+    assert click_handling(code, "a.more") == (
+        None,
+        "toggle_more",
+        {"id": "filters", "dom_levels_up": "2"},
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_popup_trigger_toggles_the_popup_by_click_action() -> None:
+    code = html.render_popup_trigger(
+        HTML.with_escaping("Menu"),
+        "menu_ident",
+        MethodAjax(endpoint="action_menu", url_vars=[("host", "h'1")]),
+        data=["host", "h'1"],
+    )
+
+    assert click_handling(code, "a.popup_trigger") == (
+        None,
+        "popup_menu_toggle",
+        {
+            "ident": "menu_ident",
+            "method": json.dumps(
+                {"type": "ajax", "endpoint": "action_menu", "url_vars": "host=h%271"}
+            ),
+            "data": json.dumps(["host", "h'1"]),
+            "resizable": "false",
+        },
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_popup_trigger_of_a_group_switches_the_popup_on_hover() -> None:
+    code = html.render_popup_trigger(
+        HTML.with_escaping("Menu"),
+        "menu_ident",
+        MethodAjax(endpoint="action_menu", url_vars=None),
+        popup_group="menu",
+        hover_switch_delay=150,
+    )
+
+    assert ts_function_call(code, "a.popup_trigger") == (
+        "popup_menu_group_switch",
+        {"popup_group": "menu", "delay": 150},
+    )

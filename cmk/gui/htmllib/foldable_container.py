@@ -17,9 +17,9 @@ from .tag_rendering import HTMLContent
 
 __all__ = [
     "foldable_container",
+    "foldable_container_click_action",
     "foldable_container_id",
     "foldable_container_img_id",
-    "foldable_container_onclick",
 ]
 
 
@@ -38,7 +38,7 @@ def foldable_container(
     padding: int = 15,
     save_state: bool = True,
 ) -> Iterator[bool]:
-    toggle = _toggle_click_action(treename, id_, fetch_url, save_state).data_attributes()
+    toggle = foldable_container_click_action(treename, id_, fetch_url, save_state).data_attributes()
     img_id = foldable_container_img_id(treename, id_)
     container_id = foldable_container_id(treename, id_)
 
@@ -82,7 +82,7 @@ def foldable_container(
         html.close_div()
 
 
-def _toggle_click_action(
+def foldable_container_click_action(
     treename: str,
     id_: str,
     fetch_url: str | None,
@@ -96,20 +96,6 @@ def _toggle_click_action(
             "fetch_url": fetch_url if fetch_url else "",
             "save_state": json.dumps(save_state),
         },
-    )
-
-
-def foldable_container_onclick(
-    treename: str,
-    id_: str,
-    fetch_url: str | None,
-    save_state: bool = True,
-) -> str:
-    return "cmk.foldable_container.toggle({}, {}, {}, {})".format(
-        json.dumps(treename),
-        json.dumps(id_),
-        json.dumps(fetch_url if fetch_url else ""),
-        json.dumps(save_state),
     )
 
 

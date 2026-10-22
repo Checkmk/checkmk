@@ -16,7 +16,7 @@ from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.table import table_element, table_search_term
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.web.utils.html import HTML
-from tests.unit.cmk.gui.compare_html import compare_html
+from tests.unit.cmk.gui.compare_html import click_handling, compare_html, ts_function_call
 from tests.unit.cmk.gui.helpers.setup_mode_test_helper import icon_titles
 
 
@@ -469,3 +469,41 @@ def test_a_table_with_draggable_rows_sorts_them_by_no_column_while_searching() -
     page = _table_with_draggable_rows()
 
     assert [row[-1] for row in read_out_simple_table(page)[1:]] == ["diskfull", "cpu"]
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_element_dragger_moves_the_row_by_its_drop_url() -> None:
+    with output_funnel.plugged():
+        with table_element("rules", "Rules", searchable=False, limit=100) as table:
+            table.row()
+            table.cell("Move")
+            table.element_dragger_url("tr", base_url="wato.py?mode=edit_ruleset")
+
+        written_text = output_funnel.drain()
+
+    assert ts_function_call(written_text, "a.element_dragger") == (
+        "element_dragger",
+        {
+            "dragging_tag": "TR",
+            "drop_handler": "url_drop_handler",
+            "drop_handler_arguments": {"base_url": "wato.py?mode=edit_ruleset"},
+        },
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_sortable_header_sorts_by_click_action(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda s: None)  # noqa: ARG005
+
+    with output_funnel.plugged():
+        with table_element("rules", "Rules", searchable=False, limit=100) as table:
+            table.row()
+            table.cell("Name", "rule")
+
+        written_text = output_funnel.drain()
+
+    assert click_handling(written_text, "th.sort") == (
+        None,
+        "follow_url",
+        {"url": "index.py?_rules_sort=0%2C0"},
+    )

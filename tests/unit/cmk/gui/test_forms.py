@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import base64
 
 import pytest
 
@@ -12,6 +13,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.wato.pages.rulesets import _is_var_to_delete
+from tests.unit.cmk.gui.compare_html import click_handling
 
 
 @pytest.mark.usefixtures("request_context")
@@ -33,6 +35,40 @@ def test_end_closes_table_when_header_open() -> None:
     assert "</tbody>" in rendered
     assert "</table>" in rendered
     assert not html.form_header_open
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_foldable_header_toggles_by_click_action() -> None:
+    with output_funnel.plugged():
+        forms.header("Title")
+        forms.end()
+        rendered = output_funnel.drain()
+
+    assert click_handling(rendered, "tr.heading td") == (
+        None,
+        "foldable_container_toggle",
+        {
+            "treename": "nform",
+            "id": base64.b64encode(b"Title").decode(),
+            "fetch_url": "",
+            "save_state": "true",
+        },
+    )
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_section_checkbox_toggles_attribute_by_click_action() -> None:
+    with output_funnel.plugged():
+        forms.header("Title")
+        forms.section("Alias", checkbox=("attr_alias", True, "alias"))
+        forms.end()
+        rendered = output_funnel.drain()
+
+    assert click_handling(rendered, "input[type=checkbox]") == (
+        None,
+        "wato_toggle_attribute",
+        {"attrname": "alias"},
+    )
 
 
 @pytest.mark.parametrize(

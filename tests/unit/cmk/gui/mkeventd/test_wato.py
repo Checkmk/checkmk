@@ -7,7 +7,6 @@ import copy
 import dataclasses
 import io
 import json
-import re
 import signal
 import socket
 import threading
@@ -935,8 +934,9 @@ def _rule_pack_list_rows(
 def _drop_vars(row: TableRow, index: str) -> dict[str, str]:
     """The query variables of dropping the row dragged with its handle at the position"""
     [dragger] = [a for cell in row.values() for a in cell.select("a.element_dragger")]
-    [base_url] = re.findall(r'url_drop_handler\(("(?:[^"\\]|\\.)*")', str(dragger["onmousedown"]))
-    return dict(parse_qsl(urlsplit(json.loads(base_url)).query)) | {"_index": index}
+    arguments = json.loads(str(dragger["data-cmk_call_ts_arguments"]))
+    base_url = arguments["drop_handler_arguments"]["base_url"]
+    return dict(parse_qsl(urlsplit(base_url).query)) | {"_index": index}
 
 
 def _rule_pack_list_action(config: Config, edition: Edition) -> ActionResult:

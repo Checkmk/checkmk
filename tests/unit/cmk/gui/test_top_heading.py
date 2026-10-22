@@ -13,7 +13,9 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.top_heading import requested_drill_up, top_heading
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.shared_typing.drill_up_button import DrillUpButton
+from tests.unit.cmk.gui.compare_html import click_handling
 
 
 class _VueComponentData(HTMLParser):
@@ -84,3 +86,26 @@ def test_top_heading_keeps_markup_in_the_source_title_as_text() -> None:
 
     assert "<b>Main</b>" not in rendered
     assert _drill_up_payload(rendered) == {"title": "<b>Main</b>"}
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_page_title_reloads_the_page_by_click_action() -> None:
+    with output_funnel.plugged():
+        top_heading(
+            html,
+            request,
+            "Hosts",
+            Breadcrumb(),
+            browser_reload=0.0,
+            debug=False,
+            hide_suggestions=True,
+            user_role_ids=[],
+            drill_up=None,
+        )
+        code = output_funnel.drain()
+
+    assert click_handling(code, "a.title") == (
+        None,
+        "reload_page_with_message",
+        {"message": "Reloading..."},
+    )

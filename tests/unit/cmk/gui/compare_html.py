@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import re
 
 from bs4 import BeautifulSoup, Tag
@@ -103,3 +104,41 @@ def compare_html(html1: HTML | str, html2: HTML | str) -> bool:
     compare_soup(html1, html2)
 
     return True
+
+
+def _select_one(html_text: HTML | str, selector: str) -> Tag:
+    tag = BeautifulSoup(str(html_text), "lxml").select_one(selector)
+    if tag is None:
+        raise AssertionError(f"No element matches {selector!r} in {str(html_text)!r}")
+    return tag
+
+
+def click_handling(html_text: HTML | str, selector: str) -> tuple[object, object, object]:
+    """The inline onclick handler, the click action and its arguments of an element"""
+    tag = _select_one(html_text, selector)
+    arguments = tag.get("data-cmk_on_click_arguments")
+    return (
+        tag.get("onclick"),
+        tag.get("data-cmk_on_click"),
+        None if arguments is None else json.loads(str(arguments)),
+    )
+
+
+def ts_function_call(html_text: HTML | str, selector: str) -> tuple[object, object]:
+    """The TypeScript function called on an element and its arguments"""
+    tag = _select_one(html_text, selector)
+    arguments = tag.get("data-cmk_call_ts_arguments")
+    return (
+        tag.get("data-cmk_call_ts_function"),
+        None if arguments is None else json.loads(str(arguments)),
+    )
+
+
+def inline_event_handlers(html_text: HTML | str) -> list[str]:
+    """All inline event handler attributes (onclick, onchange, ...) of all elements"""
+    return [
+        f"{tag.name}.{name}"
+        for tag in BeautifulSoup(str(html_text), "lxml").find_all(True)
+        for name in tag.attrs
+        if name.startswith("on")
+    ]

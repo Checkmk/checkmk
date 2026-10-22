@@ -13,7 +13,6 @@ from cmk.gui.htmllib.foldable_container import (
     foldable_container,
     foldable_container_id,
     foldable_container_img_id,
-    foldable_container_onclick,
 )
 from cmk.gui.utils.output_funnel import output_funnel
 from tests.unit.cmk.gui.compare_html import compare_html
@@ -93,24 +92,3 @@ def test_foldable_container_id() -> None:
 
 def test_foldable_container_img_id() -> None:
     assert foldable_container_img_id("name", "id") == "treeimg.name.id"
-
-
-def test_foldable_container_onclick_without_url() -> None:
-    assert (
-        foldable_container_onclick("name", "id", None)
-        == 'cmk.foldable_container.toggle("name", "id", "", true)'
-    )
-
-
-def test_foldable_container_onclick_no_save() -> None:
-    assert (
-        foldable_container_onclick("name", "id", None, False)
-        == 'cmk.foldable_container.toggle("name", "id", "", false)'
-    )
-
-
-def test_foldable_container_onclick_with_url() -> None:
-    assert (
-        foldable_container_onclick("name", "id", "http://bla")
-        == 'cmk.foldable_container.toggle("name", "id", "http://bla", true)'
-    )

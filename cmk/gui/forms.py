@@ -8,11 +8,11 @@ from collections.abc import Callable
 from typing import NamedTuple
 
 from cmk.gui.htmllib.foldable_container import (
+    foldable_container_click_action,
     foldable_container_id,
     foldable_container_img_id,
-    foldable_container_onclick,
 )
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
@@ -97,8 +97,8 @@ def _table_head(
     if foldable_attrs.class_:
         html.open_td(
             id_=f"nform.{treename}.{id_}",
-            onclick=foldable_container_onclick(treename, id_, fetch_url=None),
             colspan=2,
+            **foldable_container_click_action(treename, id_, fetch_url=None).data_attributes(),
         )
         html.img(
             id_=foldable_container_img_id(treename, id_),
@@ -178,7 +178,11 @@ def section(
             else:
                 name, active, attrname = checkbox
                 html.checkbox(
-                    name, active, onclick="cmk.wato.toggle_attribute(this, '%s')" % attrname
+                    name,
+                    active,
+                    **ClickAction(
+                        action="wato_toggle_attribute", arguments={"attrname": attrname}
+                    ).data_attributes(),
                 )
             html.close_div()
         html.close_td()

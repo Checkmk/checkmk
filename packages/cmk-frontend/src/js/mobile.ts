@@ -94,8 +94,13 @@ register_callable_functions({
   }
 } satisfies Partial<Record<KnownTSFunction, CallableFunction>>)
 
+// See click_actions.ts for the main GUI. Command forms render html.buttonlink with follow_url.
 register_click_actions({
-  reload_page: () => location.reload()
+  reload_page: () => location.reload(),
+  follow_url: (_element, options) => {
+    location.href = options.url!
+    return true
+  }
 } satisfies Partial<Record<KnownClickAction, ClickAction>>)
 
 $(document).ready(function () {

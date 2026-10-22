@@ -7,6 +7,7 @@
 
 
 import contextlib
+import dataclasses
 import json
 import pprint
 import re
@@ -46,7 +47,7 @@ from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, IconSizes, StaticIcon
 from cmk.web.utils.urls import requested_file_name
 
-from .generator import ClickAction, HTMLWriter
+from .generator import ClickAction, HTMLWriter, TSFunctionCall
 from .tag_rendering import (
     HTMLContent,
     HTMLTagAttributes,
@@ -110,6 +111,18 @@ EncType = typing.Literal[
     "application/x-www-form-urlencoded",
     "multipart/form-data",
 ]
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class DropHandler:
+    """Handles dropping an element moved by an element dragger
+
+    The handler is implemented under the same name in ``drop_handlers`` in
+    packages/cmk-frontend/src/js/modules/callable_functions.ts.
+    """
+
+    name: typing.Literal["url_drop_handler"]
+    arguments: Mapping[str, str]
 
 
 class HTMLGenerator(HTMLWriter):
@@ -481,6 +494,7 @@ class HTMLGenerator(HTMLWriter):
         require_confirmation: RequireConfirmation | None = None,
         confirm_on_leave: bool = False,
         only_close: bool = False,
+        ts_function: TSFunctionCall | None = None,
     ) -> typing.Iterator[None]:
         html.begin_form(
             name=name,
@@ -490,6 +504,7 @@ class HTMLGenerator(HTMLWriter):
             add_transid=add_transid,
             require_confirmation=require_confirmation,
             confirm_on_leave=confirm_on_leave,
+            ts_function=ts_function,
         )
 
         try:
@@ -510,7 +525,12 @@ class HTMLGenerator(HTMLWriter):
         add_transid: bool = True,
         require_confirmation: RequireConfirmation | None = None,
         confirm_on_leave: bool = False,
+        ts_function: TSFunctionCall | None = None,
     ) -> None:
+        """ts_function: Called on the rendered form, e.g. to register a submit handler. Can not
+        be combined with confirm_on_leave, which calls a function on the form, too."""
+        if confirm_on_leave and ts_function:
+            raise ValueError("A form can not call a TS function and confirm leaving it")
         self.form_name = name
         self.form_vars = []
         self.form_has_submit_button = False
@@ -525,29 +545,19 @@ class HTMLGenerator(HTMLWriter):
         enctype: EncType = "multipart/form-data"
 
         if confirm_on_leave:
-            html.open_ts_container(
-                container="form",
-                id_="form_%s" % name,
-                function_name="confirm_on_form_leave",
-                name=name,
-                class_=name,
-                action=action,
-                method=method,
-                onsubmit=onsubmit,
-                data_cmk_form_confirmation=data_cmk_form_confirmation,
-                enctype=enctype if method.lower() == "post" else None,
-            )
-        else:
-            self.open_form(
-                id_="form_%s" % name,
-                name=name,
-                class_=name,
-                action=action,
-                method=method,
-                onsubmit=onsubmit,
-                data_cmk_form_confirmation=data_cmk_form_confirmation,
-                enctype=enctype if method.lower() == "post" else None,
-            )
+            ts_function = TSFunctionCall(function_name="confirm_on_form_leave")
+
+        self.open_form(
+            id_="form_%s" % name,
+            name=name,
+            class_=name,
+            action=action,
+            method=method,
+            onsubmit=onsubmit,
+            data_cmk_form_confirmation=data_cmk_form_confirmation,
+            enctype=enctype if method.lower() == "post" else None,
+            **(ts_function.data_attributes() if ts_function else {}),
+        )
 
         if hasattr(session, "session_info"):
             self.hidden_field("_csrf_token", session.session_info.csrf_token)
@@ -698,20 +708,19 @@ class HTMLGenerator(HTMLWriter):
         waiting_message: str | None = None,
         remove_parent: bool = False,
     ) -> HTML:
-        create_flash_message = (
-            (f"cmk.forms.waiting_flash_message('page_menu_popups', '{waiting_message}');")
-            if waiting_message
-            else ""
-        )
-        remove_parent_action = "this.parentNode.remove();" if remove_parent else ""
-        redirect = f"location.href='{url}';"
-        disable_self = "this.onclick='return false;';"
         return self.render_input(
             name=name,
             type_="button",
             class_="button " + class_,
-            onclick=f"{create_flash_message}{remove_parent_action}{redirect}{disable_self}",
             value=label,
+            **ClickAction(
+                action="loading_button",
+                arguments={
+                    "url": url,
+                    "waiting_message": waiting_message or "",
+                    "remove_parent": json.dumps(remove_parent),
+                },
+            ).data_attributes(),
         )
 
     def render_button(
@@ -771,7 +780,7 @@ class HTMLGenerator(HTMLWriter):
             style=style,
             title=title,
             disabled=disabled,
-            onclick="location.href=%s" % json.dumps(href),
+            **ClickAction(action="follow_url", arguments={"url": href}).data_attributes(),
         )
 
     def empty_icon_button(self) -> None:
@@ -1503,16 +1512,9 @@ class HTMLGenerator(HTMLWriter):
             title=title,
             icon=icon,
             cssclass="icon_loading_button",
-            onclick=(
-                "for (let b of document.getElementsByClassName('icon_loading_button')) {"
-                "b.onclick = function() { return false; };"
-                "b.style.pointerEvents = 'none';"
-                "if (b !== this) { b.style.opacity = '0.5'; }"
-                "}"
-                "let i = this.getElementsByTagName('img')[0];"
-                r"i.src = i.src.replace(/facelift\/images\/.+$/,'facelift/images/load_graph.png');"
-                f"cmk.forms.waiting_flash_message('page_menu_popups', '{waiting_message}');"
-                f"location.href='{url}';"
+            click_action=ClickAction(
+                action="icon_loading_button",
+                arguments={"url": url, "waiting_message": waiting_message},
             ),
         )
 
@@ -1557,7 +1559,6 @@ class HTMLGenerator(HTMLWriter):
         self,
         id_: str,
         dom_levels_up: int,
-        additional_js: str = "",
         with_text: bool = False,
         *,
         show_mode: str,
@@ -1569,8 +1570,10 @@ class HTMLGenerator(HTMLWriter):
             href="#",
             id_="more_%s" % id_,
             class_=["more", "has_text" if with_text else ""],
-            onclick="cmk.utils.toggle_more(this, %s, %d);%s"
-            % (json.dumps(id_), dom_levels_up, additional_js),
+            **ClickAction(
+                action="toggle_more",
+                arguments={"id": id_, "dom_levels_up": str(dom_levels_up)},
+            ).data_attributes(),
         )
         self.open_div(title=_("Show more") if not with_text else "", class_="show_more")
         if with_text:
@@ -1620,16 +1623,23 @@ class HTMLGenerator(HTMLWriter):
         popup_group: str | None = None,
         hover_switch_delay: int | None = None,
     ) -> HTML:
-        onclick = f"cmk.popup_menu.toggle_popup(event, this, {json.dumps(ident)}, {json.dumps(method.asdict())}, {json.dumps(data if data else None)}, {json.dumps(resizable)});"
-
-        if popup_group:
-            onmouseenter: str | None = (
-                f"cmk.popup_menu.switch_popup_menu_group(this, {json.dumps(popup_group)}, {json.dumps(hover_switch_delay)})"
-            )
-            onmouseleave: str | None = "cmk.popup_menu.stop_popup_menu_group_switch(this)"
-        else:
-            onmouseenter = None
-            onmouseleave = None
+        toggle = ClickAction(
+            action="popup_menu_toggle",
+            arguments={
+                "ident": ident,
+                "method": json.dumps(method.asdict()),
+                "data": json.dumps(data if data else None),
+                "resizable": json.dumps(resizable),
+            },
+        )
+        group_switch = (
+            TSFunctionCall(
+                function_name="popup_menu_group_switch",
+                arguments={"popup_group": popup_group, "delay": hover_switch_delay},
+            ).data_attributes()
+            if popup_group
+            else {}
+        )
 
         atag = HTMLWriter.render_a(
             content,
@@ -1637,9 +1647,8 @@ class HTMLGenerator(HTMLWriter):
             href="#",
             # Needed to prevent wrong linking when views are parts of dashlets
             target="_self",
-            onclick=onclick,
-            onmouseenter=onmouseenter,
-            onmouseleave=onmouseleave,
+            **toggle.data_attributes(),
+            **group_switch,
         )
 
         classes = ["popup_trigger"]
@@ -1669,14 +1678,27 @@ class HTMLGenerator(HTMLWriter):
     # Currently only tested with tables. But with some small changes it may work with other
     # structures too.
     @staticmethod
-    def render_element_dragger(dragging_tag: str, drop_handler: str) -> HTML:
+    def render_element_dragger(dragging_tag: str, drop_handler: str | DropHandler) -> HTML:
         return HTMLWriter.render_a(
             HTMLGenerator.render_static_icon(
                 StaticIcon(IconNames.drag), title=_("Move this entry")
             ),
             href="#",
             class_=["element_dragger"],
-            onmousedown=f"cmk.element_dragging.start(event, this, {json.dumps(dragging_tag.upper())}, {drop_handler}",
+            **(
+                {
+                    "onmousedown": f"cmk.element_dragging.start(event, this, {json.dumps(dragging_tag.upper())}, {drop_handler}"
+                }
+                if isinstance(drop_handler, str)
+                else TSFunctionCall(
+                    function_name="element_dragger",
+                    arguments={
+                        "dragging_tag": dragging_tag.upper(),
+                        "drop_handler": drop_handler.name,
+                        "drop_handler_arguments": drop_handler.arguments,
+                    },
+                ).data_attributes()
+            ),
         )
 
     def date(

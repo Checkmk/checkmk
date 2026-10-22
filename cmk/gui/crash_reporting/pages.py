@@ -786,7 +786,7 @@ class ReportRendererGUI(ABCReportRenderer):
         html.open_tr(class_="data even0")
         html.td(_("HTTP parameters"), class_="left")
         html.open_td()
-        debug_vars(html, request, vars_=details["vars"], hide_with_mouse=False)
+        debug_vars(html, request, vars_=details["vars"])
         html.close_td()
         html.close_tr()
         _crash_row(_("Referer"), details.get("referer", _("Unknown")))

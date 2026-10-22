@@ -12,6 +12,7 @@ import * as background_job from '@/modules/background_job'
 import * as backup from '@/modules/backup'
 import * as bi from '@/modules/bi'
 import * as dashboard from '@/modules/dashboard'
+import * as element_dragging from '@/modules/element_dragging'
 import { figure_registry } from '@/modules/figures/cmk_figures'
 import * as forms from '@/modules/forms'
 import * as host_diagnose from '@/modules/host_diagnose'
@@ -22,6 +23,7 @@ import * as nodevis_utils from '@/modules/nodevis/utils'
 import * as ntop_host_details from '@/modules/ntop/ntop_host_details'
 import * as ntop_utils from '@/modules/ntop/ntop_utils'
 import * as page_menu from '@/modules/page_menu'
+import * as popup_menu from '@/modules/popup_menu'
 import { render_qr_code } from '@/modules/qrcode_rendering'
 import * as quicksearch from '@/modules/quicksearch'
 import * as selection from '@/modules/selection'
@@ -43,6 +45,15 @@ const license_usage_graphs: Record<string, (num_graphs: number, aggregation: any
   free_tests: license_usage_timeseries_graph.render_free_tests_usage_graph,
   metric_series: license_usage_timeseries_graph.render_metric_series_usage_graph,
   free_metric_series: license_usage_timeseries_graph.render_free_metric_series_usage_graph
+}
+
+// See cmk.gui.htmllib.html:DropHandler
+const drop_handlers: Record<
+  string,
+  (dragger: HTMLElement, args: Record<string, string>, index: number) => void
+> = {
+  url_drop_handler: (_dragger, args, index) =>
+    element_dragging.url_drop_handler(args.base_url!, index)
 }
 
 // The mobile functions are registered by the mobile bundle, see mobile.ts.
@@ -72,6 +83,27 @@ const callable_functions: Record<Exclude<KnownTSFunction, `mobile_${string}`>, C
   update_time: (_node, options) => utils.update_time(options.target, options.time),
   fade_out_element: (_node, options) =>
     utils.fade_out_element(options.element_id, options.delay_ms, options.selector),
+  shimmer_button_on_submit: (node, options) => {
+    node.addEventListener('submit', () => {
+      document.getElementById(options.button_id)!.classList.add('shimmer-input-button')
+    })
+  },
+
+  element_dragger: (node, options) => {
+    node.addEventListener('mousedown', (event) => {
+      element_dragging.start(event, node as HTMLAnchorElement, options.dragging_tag, (index) =>
+        drop_handlers[options.drop_handler]!(node, options.drop_handler_arguments, index)
+      )
+    })
+  },
+
+  // popup_menu
+  popup_menu_group_switch: (node, options) => {
+    node.addEventListener('mouseenter', () =>
+      popup_menu.switch_popup_menu_group(node, options.popup_group, options.delay)
+    )
+    node.addEventListener('mouseleave', () => popup_menu.stop_popup_menu_group_switch(node))
+  },
 
   // page_menu
   enable_menu_entry: (_node, options) => page_menu.enable_menu_entry(options.id, options.enabled),

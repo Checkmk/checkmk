@@ -96,6 +96,41 @@ class ClickAction:
         return cls(action="confirm_link", arguments=link.arguments())
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class TSFunctionCall:
+    """CSP-compatible replacement for inline event handlers other than ``onclick``
+
+    An enforcing Content Security Policy forbids inline event handlers like
+    ``onchange="..."``. Instead, the element calls a named TypeScript function
+    once it is rendered (see
+    packages/cmk-frontend/src/js/modules/ts_function_dispatcher.ts), which
+    registers the event listeners on the element. An element can only call one
+    function.
+
+    To add a new function:
+
+    1. Add its name to ``known_ts_function`` in
+       packages/cmk-shared-typing/source/legacy_frontend_hooks.json.
+    2. Implement the function under the same name in
+       packages/cmk-frontend/src/js/modules/callable_functions.ts.
+    3. Pass a ``TSFunctionCall`` to an HTML helper supporting it or render the
+       attributes returned by ``data_attributes`` on the element yourself.
+    """
+
+    function_name: KnownTSFunction
+    arguments: TSFunctionArguments | None = None
+
+    def data_attributes(self) -> dict[str, str]:
+        return {
+            "data_cmk_call_ts_function": self.function_name,
+            "data_cmk_call_ts_arguments": (
+                "{}"
+                if self.arguments is None
+                else _dump_standard_compliant_json(dict(self.arguments))
+            ),
+        }
+
+
 def _dump_standard_compliant_json(data: object) -> str:
     # default json.dumps produces non standard compliant output: NaN, Infinity, -Infinity are not
     # part of the JSON spec. in case you still serialize such a value with pythons default
@@ -750,15 +785,13 @@ class HTMLWriter:
         arguments: TSFunctionArguments | None = None,
         **kwargs: Any,
     ) -> None:
-        json_arguments: str
-        json_arguments = (
-            "{}" if arguments is None else _dump_standard_compliant_json(dict(arguments))
-        )
         self.write_html(
             render_start_tag(
                 container,
-                data_cmk_call_ts_function=function_name,
-                data_cmk_call_ts_arguments=json_arguments,
+                close_tag=False,
+                **TSFunctionCall(
+                    function_name=function_name, arguments=arguments
+                ).data_attributes(),
                 **kwargs,
             )
         )

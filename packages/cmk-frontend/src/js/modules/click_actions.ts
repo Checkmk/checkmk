@@ -22,7 +22,8 @@ import {
   add_to_visual,
   close_popup as close_icon_popup,
   graph_export,
-  pagetype_add_to_container
+  pagetype_add_to_container,
+  toggle_popup as toggle_popup_menu
 } from '@/modules/popup_menu'
 import { close_popup as close_quicksearch_popup, on_search_click } from '@/modules/quicksearch'
 import { toggle_all_rows } from '@/modules/selection'
@@ -35,9 +36,9 @@ import {
   virtual_host_tree_enter,
   wato_tree_click
 } from '@/modules/sidebar'
-import { makeLoadingTransition, makeuri, querySelectorID } from '@/modules/utils'
+import { makeLoadingTransition, makeuri, querySelectorID, toggle_more } from '@/modules/utils'
 import { duallist_switch, iconselector_toggle, list_choice_toggle_all } from '@/modules/valuespecs'
-import { randomize_secret } from '@/modules/wato'
+import { randomize_secret, toggle_attribute } from '@/modules/wato'
 
 import {
   type ClickAction,
@@ -90,9 +91,49 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
     // The header may contain links, e.g. to a view, which have to be followed
     return true
   },
+  follow_url: (_element, options) => {
+    location.href = options.url!
+    // Links inside the element, e.g. in a table header, still take precedence
+    return true
+  },
   graph_export: closing_dropdown((_element, options) => graph_export(options.page)),
+  icon_loading_button: (element, options) => {
+    // Prevent starting several long-running actions in parallel before the navigation completes
+    for (const button of document.getElementsByClassName(
+      'icon_loading_button'
+    ) as HTMLCollectionOf<HTMLElement>) {
+      delete button.dataset.cmk_on_click
+      button.style.pointerEvents = 'none'
+      if (button !== element) {
+        button.style.opacity = '0.5'
+      }
+    }
+    const img = element.getElementsByTagName('img')[0]
+    if (img) {
+      img.src = img.src.replace(/facelift\/images\/.+$/, 'facelift/images/load_graph.png')
+    }
+    waiting_flash_message('page_menu_popups', options.waiting_message!)
+    location.href = options.url!
+  },
+  loading_button: (element, options) => {
+    if (options.waiting_message) {
+      waiting_flash_message('page_menu_popups', options.waiting_message)
+    }
+    if (options.remove_parent === 'true') {
+      element.parentElement?.remove()
+    }
+    location.href = options.url!
+    // Only navigate once
+    delete element.dataset.cmk_on_click
+  },
   loading_transition: (_element, options, event) => {
-    makeLoadingTransition(options.template, 1000, options.title, event)
+    makeLoadingTransition(
+      options.template || null,
+      options.delay_ms ? parseInt(options.delay_ms) : 1000,
+      options.title,
+      event
+    )
+    // Follow the link inside the element
     return true
   },
   nodevis_toggle_compare_history: closing_dropdown(() => {
@@ -121,6 +162,16 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
   pagetype_add_to_container: closing_dropdown((_element, options) =>
     pagetype_add_to_container(options.page_type, options.page_name)
   ),
+  popup_menu_toggle: (element, options, event) => {
+    toggle_popup_menu(
+      event,
+      element,
+      options.ident!,
+      JSON.parse(options.method!),
+      JSON.parse(options.data!),
+      options.resizable === 'true'
+    )
+  },
   quicksearch_close_popup: () => {
     close_quicksearch_popup()
     // Clicks on the search results have to be followed
@@ -134,6 +185,10 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
   randomize_secret: (_element, options) =>
     randomize_secret(options.id, options.length, options.message),
   reload_page: () => location.reload(),
+  reload_page_with_message: (element, options) => {
+    element.textContent = options.message!
+    location.reload()
+  },
   service_discovery_start: closing_dropdown((_element, options) =>
     start_service_discovery(
       options.host_name,
@@ -160,6 +215,8 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
     toggle_all_rows(querySelectorID('main_page_content') ?? undefined)
   ),
   toggle_inline_help: closing_dropdown(() => toggle_inline_help()),
+  toggle_more: (element, options) =>
+    toggle_more(element, options.id!, parseInt(options.dom_levels_up!)),
   valuespec_duallist_switch: (_element, options) =>
     duallist_switch(options.field_suffix, options.varprefix, options.keeporder ? 1 : 0),
   valuespec_iconselector_toggle: (_element, options) =>
@@ -169,6 +226,11 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
   virtual_host_tree_enter: (_element, options) => virtual_host_tree_enter(options.path),
   waiting_flash_message: (_element, options) => {
     waiting_flash_message('top_heading', options.message)
+    return true
+  },
+  wato_toggle_attribute: (element, options) => {
+    toggle_attribute(element as HTMLInputElement, options.attrname!)
+    // Keep toggling the checkbox
     return true
   },
   wato_tree_click: (element, options) => {

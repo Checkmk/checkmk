@@ -8,7 +8,6 @@
 
 
 import contextlib
-import json
 import re
 import uuid
 from collections.abc import Callable, Iterator
@@ -17,8 +16,8 @@ from enum import auto, Enum
 from typing import Any, Final, Literal, NamedTuple
 
 from cmk.gui.htmllib.foldable_container import foldable_container
-from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
+from cmk.gui.htmllib.html import DropHandler, html
 from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.htmllib.type_defs import CSSSpec
 from cmk.gui.http import request, response
@@ -347,8 +346,7 @@ class Table:
         html.write_html(
             html.render_element_dragger(
                 dragging_tag,
-                drop_handler="function(index){return cmk.element_dragging.url_drop_handler(%s, index);})"
-                % json.dumps(base_url),
+                drop_handler=DropHandler(name="url_drop_handler", arguments={"base_url": base_url}),
             )
         )
 
@@ -569,7 +567,10 @@ class Table:
                 class_.append(row.css)
 
             html.open_tr(
-                class_=class_, id_=row.id_, onmouseover=row.onmouseover, onmouseout=row.onmouseout
+                class_=class_,
+                id_=row.id_,
+                onmouseover=row.onmouseover,
+                onmouseout=row.onmouseout,
             )
             for col_index, cell in enumerate(row.cells):
                 if self.options["omit_empty_columns"] and empty_columns[col_index]:
@@ -697,7 +698,9 @@ class Table:
                 html.open_th(
                     class_=css_class,
                     title=_("Sort by %(title)s") % {"title": header.title},
-                    onclick="location.href='%s'" % action_uri,
+                    **ClickAction(
+                        action="follow_url", arguments={"url": action_uri}
+                    ).data_attributes(),
                 )
 
             # Add the table action link

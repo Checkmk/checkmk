@@ -68,7 +68,9 @@ def top_heading(
         title=title,
         class_="title",
         href="#",
-        onclick="this.innerHTML='%s'; document.location.reload();" % _("Reloading..."),
+        **ClickAction(
+            action="reload_page_with_message", arguments={"message": _("Reloading...")}
+        ).data_attributes(),
     )
 
     if drill_up is not None:
@@ -164,4 +166,4 @@ def _dump_get_vars(
         isopen=True,
         title=_("GET/POST variables of this page"),
     ):
-        debug_vars(writer, request, hide_with_mouse=False)
+        debug_vars(writer, request)

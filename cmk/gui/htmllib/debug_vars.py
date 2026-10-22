@@ -17,12 +17,10 @@ def debug_vars(
     writer: HTMLWriter,
     request: Request,
     prefix: str | None = None,
-    hide_with_mouse: bool = True,
     vars_: Mapping[str, str] | None = None,
 ) -> None:
     it = request.itervars() if vars_ is None else vars_.items()
-    hover = "this.style.display='none';"
-    writer.open_table(class_=["debug_vars"], onmouseover=hover if hide_with_mouse else None)
+    writer.open_table(class_=["debug_vars"])
     oddeven = "even"
     writer.tr(writer.render_th(_("POST / GET Variables"), colspan="2"), class_=oddeven)
     for name, value in sorted(it):

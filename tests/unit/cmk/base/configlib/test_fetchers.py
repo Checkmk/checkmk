@@ -8,10 +8,12 @@ from collections.abc import Iterable, Mapping
 
 from cmk.base.configlib.fetchers import (
     make_metrics_identity_routing_config,
+    make_parsed_snmp_fetch_intervals_config,
     make_telemetry_custom_service_config,
 )
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.ruleset_matcher.matcher import RulesetMatcher, RuleSpec
 from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
@@ -148,3 +150,28 @@ def test_metrics_identity_routing_without_rules() -> None:
     )
 
     assert resolve(_MATCHING) == {}
+
+
+def test_snmp_fetch_every_time_overrides_a_lower_interval_rule() -> None:
+    """The first rule listing a section decides its fetch interval, per section."""
+    resolve = make_parsed_snmp_fetch_intervals_config(
+        dataclasses.replace(
+            EMPTY_CONFIG,
+            snmp_check_interval=[
+                RuleSpec(
+                    value=(["if64"], ("uncached", None)),
+                    condition={"host_name": [_MATCHING]},
+                    id="specific",
+                ),
+                RuleSpec(
+                    value=(["if64", "snmp_info"], ("cached", 300.0)),
+                    condition={},
+                    id="general",
+                ),
+            ],
+        ),
+        _matcher_with_hosts((_MATCHING,)),
+        lambda _: {},
+    )
+
+    assert resolve(_MATCHING) == {SNMPSectionName("snmp_info"): 300}

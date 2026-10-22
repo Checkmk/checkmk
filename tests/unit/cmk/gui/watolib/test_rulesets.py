@@ -106,6 +106,36 @@ def test_analyse_host_ruleset() -> None:
     assert isinstance(entry[2], Rule)
 
 
+# fmt: off
+@pytest.mark.parametrize(
+    ("ruleset_name", "value"),
+    [
+        pytest.param("snmp_exclude_sections", {"sections_disabled": ["if64"], "sections_enabled": []}, id="disabled or enabled sections"),
+        pytest.param("snmp_check_interval", (["if64"], ("cached", 300.0)), id="fetch intervals"),
+        pytest.param("snmpv3_contexts", ("if64", [""], "stop_on_timeout"), id="SNMPv3 contexts"),
+    ],
+)
+# fmt: on
+@pytest.mark.usefixtures(
+    "request_context", "with_admin_login", "mock_analyze_host_rule_matches_automation"
+)
+def test_every_matching_snmp_section_rule_is_effective(ruleset_name: str, value: object) -> None:
+    # The fetcher applies all matching rules of these rule sets, decided per section.
+    folder = FolderTree(config=HostsAndFoldersConfig.from_config(active_config)).root_folder()
+    _test_hosts(folder)
+    ruleset = Ruleset(ruleset_name)
+    first = Rule.from_ruleset(folder, ruleset, value)
+    second = Rule.from_ruleset(folder, ruleset, value)
+    ruleset.append_rule(folder, first)
+    ruleset.append_rule(folder, second)
+
+    _value, effective_rules = ruleset.analyse_ruleset(
+        HostName("ding"), None, None, {}, debug=False
+    )
+
+    assert [rule.id for _folder, _index, rule in effective_rules] == [first.id, second.id]
+
+
 def _test_hosts(folder: Folder) -> None:
     folder.create_hosts(
         [

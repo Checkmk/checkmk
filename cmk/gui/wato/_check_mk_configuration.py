@@ -6280,6 +6280,9 @@ def _valuespec_snmp_fetch_interval() -> Tuple:
             "This is especially important for counter-based checks such as the interface checks. A "
             "check interval which is shorter then the interval for fetching the data might result "
             "in misleading output (e.g. far too large interface throughputs) in such cases."
+            "<br><br>"
+            "All matching rules apply. If several of them list the same section, the first "
+            "one decides its fetch interval."
         ),
         elements=[
             DualListChoice(
@@ -6308,6 +6311,7 @@ def _valuespec_snmp_fetch_interval() -> Tuple:
 
 SnmpCheckInterval = HostRulespec(
     group=RulespecGroupAgentSNMP,
+    match_type="all",
     name="snmp_check_interval",  # legacy name, kept for compatibility
     valuespec=_valuespec_snmp_fetch_interval,
 )
@@ -6328,6 +6332,9 @@ def _valuespec_snmp_config_agent_sections() -> Dictionary:
             "of 32-bit network interface counters (section <tt>if</tt>, superseded by "
             "<tt>if64</tt>) in case the 64-bit counters reported by the device are useless "
             "due to broken firmware."
+            "<br><br>"
+            "All matching rules apply. If several of them list the same section, the first "
+            "one decides whether the section is disabled or enabled."
         ),
         elements=[
             (
@@ -6370,6 +6377,7 @@ def _validate_snmp_config_agent_sections(value: Mapping[str, Any], varprefix: st
 
 SnmpExcludeSections = HostRulespec(
     group=RulespecGroupAgentSNMP,
+    match_type="all",
     name="snmp_exclude_sections",
     valuespec=_valuespec_snmp_config_agent_sections,
 )
@@ -6403,6 +6411,9 @@ def _valuespec_snmpv3_contexts() -> Tuple:
             "The default context is only queried if it is selected here. "
             "If several contexts return the same OIDs, only the data of the first context "
             "is used."
+            "<br><br>"
+            "All matching rules apply. For each section, the first rule that names it or "
+            "applies to all SNMP sections is used."
         ),
         elements=[
             DropdownChoice(
@@ -6447,6 +6458,7 @@ def _valuespec_snmpv3_contexts() -> Tuple:
 
 Snmpv3Contexts = HostRulespec(
     group=RulespecGroupAgentSNMP,
+    match_type="all",
     name="snmpv3_contexts",
     valuespec=_valuespec_snmpv3_contexts,
 )

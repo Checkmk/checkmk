@@ -332,6 +332,7 @@ def get_undeclared_dependencies() -> Iterable[Import]:
 
 CEE_UNUSED_PACKAGES = [
     "aiohttp",  # not imported directly; pinned to keep vcrpy 6.0.0's stubs working (see Pipfile)
+    "certifi",  # not imported directly; CA bundle used by requests, pinned to bump it explicitly (see Pipfile)
     "cython",
     "grpcio",
     "itsdangerous",

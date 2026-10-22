@@ -23,6 +23,7 @@ from cmk.ec.settings import Settings
 
 HOUR = 3600
 START = 475_000 * HOUR + 100.0  # a bit after the start of an hour
+MASTER = ("master.example.com", 6558)  # of a replication slave
 
 
 class FakeStatusSocket(socket.socket):
@@ -173,7 +174,7 @@ def replication_slave_config(
     config: Config, *, takeover: int | None = None, fallback: int | None = None
 ) -> Config:
     """Turns the configuration of an EC into one of a replication slave"""
-    replication = Replication(connect_timeout=10, interval=60, master=("master.example.com", 6558))
+    replication = Replication(connect_timeout=10, interval=60, master=MASTER)
     if takeover is not None:
         replication["takeover"] = takeover
     if fallback is not None:

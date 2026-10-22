@@ -22,8 +22,12 @@ from cmk.ec.main import (
     default_slave_status_sync,
     EventServer,
     EventStatus,
+    load_configuration,
+    load_master_config,
     PackedEventStatus,
     replication_pull,
+    save_master_config,
+    save_slave_status,
     SlaveStatus,
     StatusServer,
     update_slave_status,
@@ -31,7 +35,15 @@ from cmk.ec.main import (
 from cmk.ec.perfcounters import Perfcounters
 from cmk.ec.query import MKClientError
 
-from .helpers import new_event, new_message, new_rule, query_status_server, replication_slave_config
+from .helpers import (
+    activate_config,
+    MASTER,
+    new_event,
+    new_message,
+    new_rule,
+    query_status_server,
+    replication_slave_config,
+)
 
 _NOW = 1_750_000_000.0
 
@@ -105,6 +117,24 @@ def _replicate(status_server: StatusServer, last_update: str) -> dict[str, Any]:
     return response
 
 
+def test_replication_slave_without_saved_status_starts_syncing(
+    settings: ec.Settings, config: Config
+) -> None:
+    slave_status = default_slave_status_master()
+
+    update_slave_status(slave_status, settings, replication_slave_config(config))
+
+    assert slave_status["mode"] == "sync"
+
+
+def test_former_replication_slave_becomes_master(settings: ec.Settings, config: Config) -> None:
+    slave_status = default_slave_status_sync()
+
+    update_slave_status(slave_status, settings, config)
+
+    assert slave_status["mode"] == "master"
+
+
 def test_former_replication_slave_forgets_its_saved_status(
     settings: ec.Settings, config: Config
 ) -> None:
@@ -113,6 +143,132 @@ def test_former_replication_slave_forgets_its_saved_status(
     update_slave_status(default_slave_status_sync(), settings, config)
 
     assert not settings.paths.slave_status_file.value.exists()
+
+
+def test_former_replication_slave_uses_its_own_rules(
+    settings: ec.Settings, slave_status: SlaveStatus
+) -> None:
+    own_rule_pack = ec.default_rule_pack([new_rule({"id": "own"})])
+    activate_config(settings, f"rule_packs = [{own_rule_pack!r}]\n")
+    # Saved when this EC was a replication slave
+    master_rule_pack = ec.default_rule_pack([new_rule({"id": "from_master"})])
+    save_master_config(
+        settings, MASTER, {"rules": [], "rule_packs": [master_rule_pack], "actions": []}
+    )
+
+    config = load_configuration(settings, logging.getLogger("test_ec_replication"), slave_status)
+
+    assert config["rule_packs"] == [own_rule_pack]
+
+
+def test_flushing_a_replication_slave_keeps_its_replication_status(
+    settings: ec.Settings,
+    config: Config,
+    history: History,
+    slave_status: SlaveStatus,
+    status_server: StatusServer,
+) -> None:
+    slave_config = replication_slave_config(config)
+    status_server.reload_configuration(slave_config, history)
+    save_master_config(settings, MASTER, {"rules": [], "rule_packs": [], "actions": []})
+    takeover_status = SlaveStatus(
+        last_master_down=1234.0, last_sync=1000.0, mode="takeover", success=False
+    )
+    slave_status.update(takeover_status)
+    save_slave_status(settings, slave_status)
+
+    query_status_server(status_server, "COMMAND FLUSH")
+
+    reloaded_slave_status = default_slave_status_master()
+    update_slave_status(reloaded_slave_status, settings, slave_config)
+    assert (slave_status, reloaded_slave_status) == (takeover_status, takeover_status)
+
+
+def test_flushing_a_replication_slave_keeps_the_rules_of_its_master(
+    settings: ec.Settings, config: Config, history: History, status_server: StatusServer
+) -> None:
+    slave_config = replication_slave_config(config)
+    status_server.reload_configuration(slave_config, history)
+    master_rule_pack = ec.default_rule_pack([new_rule({"id": "from_master"})])
+    save_master_config(
+        settings, MASTER, {"rules": [], "rule_packs": [master_rule_pack], "actions": []}
+    )
+
+    query_status_server(status_server, "COMMAND FLUSH")
+
+    reloaded_config = slave_config.copy()
+    load_master_config(settings, reloaded_config, logging.getLogger("cmk.mkeventd"))
+    assert reloaded_config["rule_packs"] == [master_rule_pack]
+
+
+def test_replication_slave_keeps_its_status_if_the_saved_one_is_unreadable(
+    settings: ec.Settings, config: Config
+) -> None:
+    takeover_status = SlaveStatus(
+        last_master_down=1234.0, last_sync=1000.0, mode="takeover", success=False
+    )
+    slave_status = takeover_status.copy()
+    settings.paths.slave_status_file.value.write_text("")  # e.g. after running out of disk space
+
+    update_slave_status(slave_status, settings, replication_slave_config(config))
+
+    assert slave_status == takeover_status
+
+
+def test_replication_slave_of_another_master_syncs_completely_with_it(
+    settings: ec.Settings, slave_status: SlaveStatus
+) -> None:
+    replication = ec.Replication(connect_timeout=10, interval=60, master=("other-master", 6558))
+    activate_config(settings, f"replication = {replication!r}\n")
+    # The slave synced with its previous master, which sent its rules.
+    save_master_config(settings, MASTER, {"rules": [], "rule_packs": [], "actions": []})
+    save_slave_status(
+        settings, SlaveStatus(last_master_down=None, last_sync=1000.0, mode="sync", success=True)
+    )
+
+    load_configuration(settings, logging.getLogger("test_ec_replication"), slave_status)
+
+    assert slave_status == default_slave_status_sync()
+
+
+def test_replication_slave_of_another_master_does_not_use_the_rules_of_the_previous_one(
+    settings: ec.Settings, slave_status: SlaveStatus
+) -> None:
+    own_rule_pack = ec.default_rule_pack([new_rule({"id": "own"})])
+    replication = ec.Replication(connect_timeout=10, interval=60, master=("other-master", 6558))
+    activate_config(settings, f"rule_packs = [{own_rule_pack!r}]\nreplication = {replication!r}\n")
+    previous_rule_pack = ec.default_rule_pack([new_rule({"id": "from_previous_master"})])
+    save_master_config(
+        settings, MASTER, {"rules": [], "rule_packs": [previous_rule_pack], "actions": []}
+    )
+
+    config = load_configuration(settings, logging.getLogger("test_ec_replication"), slave_status)
+
+    assert config["rule_packs"] == [own_rule_pack]
+
+
+@pytest.mark.parametrize(
+    "broken_master_config",
+    [
+        pytest.param("None", id="not a dict"),
+        pytest.param("{[1]: 2}", id="unparsable dict"),
+    ],
+)
+def test_replication_slave_starts_despite_a_broken_saved_master_configuration(
+    settings: ec.Settings, slave_status: SlaveStatus, broken_master_config: str
+) -> None:
+    replication = ec.Replication(connect_timeout=10, interval=60, master=MASTER)
+    activate_config(settings, f"replication = {replication!r}\n")
+    takeover_status = SlaveStatus(
+        last_master_down=1234.0, last_sync=1000.0, mode="takeover", success=False
+    )
+    save_slave_status(settings, takeover_status)
+    # Nobody validates files edited by hand.
+    settings.paths.master_config_file.value.write_text(broken_master_config)
+
+    load_configuration(settings, logging.getLogger("test_ec_replication"), slave_status)
+
+    assert slave_status == takeover_status
 
 
 def test_master_replicates_its_events(

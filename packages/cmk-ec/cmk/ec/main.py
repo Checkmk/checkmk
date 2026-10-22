@@ -41,6 +41,7 @@ from setproctitle import setthreadtitle
 
 import cmk.ccc.daemon
 import cmk.ccc.profile
+import cmk.ccc.store
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.log import CMKFormatter
@@ -2535,11 +2536,7 @@ class StatusServer(ECServerThread):
         self._history.flush()
         self._event_status.flush()
         self._event_status.save_status()
-        if is_replication_slave(self._config):
-            with contextlib.suppress(Exception):
-                self.settings.paths.master_config_file.value.unlink()
-                self.settings.paths.slave_status_file.value.unlink()
-                update_slave_status(self._slave_status, self.settings, self._config)
+        # The replication stays as it is, so e.g. a slave which took over keeps processing messages.
         self._logger.info("Flushed current status and historic events.")
 
     def handle_command_sync(self) -> None:
@@ -2675,6 +2672,7 @@ def run_eventd(
                     # uses the new configuration, so handle it only once the main loop uses it, too.
                     with signal_handler.holding_back():
                         try:
+                            previous_master = _replication_master(config)
                             config, history = reload_configuration(
                                 settings,
                                 logger,
@@ -2685,6 +2683,9 @@ def run_eventd(
                                 status_server,
                                 slave_status,
                             )
+                            # Like a new one, a slave of another master syncs with it right away.
+                            if _replication_master(config) != previous_master:
+                                last_replication = 0.0
                         except Exception:
                             # A held back signal would replace the exception, so log it right away.
                             # The previous configuration stays in effect.
@@ -2760,6 +2761,14 @@ def _next_replication(config: Config, last_replication: float) -> float | None:
     if replication is None or not is_replication_slave(config):  # None only helps mypy
         return None
     return last_replication + replication["interval"]
+
+
+def _replication_master(config: Config) -> tuple[str, int] | None:
+    """Returns the master of a replication slave, None for any other EC"""
+    replication = config["replication"]
+    if replication is None or not is_replication_slave(config):  # None only helps mypy
+        return None
+    return replication["master"]
 
 
 # .
@@ -3538,7 +3547,10 @@ def replication_update_state(
 ) -> None:
     # Keep a copy of the masters' rules and actions and also prepare using them
     if "rules" in new_state:
-        save_master_config(settings, new_state)
+        replication = config["replication"]
+        if replication is None:  # help mypy a bit
+            raise ValueError("no replication settings")
+        save_master_config(settings, replication["master"], new_state)
         event_server.compile_rules(new_state.get("rule_packs", []))
         config["actions"] = new_state["actions"]
 
@@ -3546,12 +3558,15 @@ def replication_update_state(
     event_status.unpack_status(new_state["status"])
 
 
-def save_master_config(settings: Settings, new_state: Mapping[str, object]) -> None:
+def save_master_config(
+    settings: Settings, master: tuple[str, int], new_state: Mapping[str, object]
+) -> None:
     path = settings.paths.master_config_file.value
     path_new = path.parent / (path.name + ".new")
     path_new.write_text(
         repr(
             {
+                "master": master,
                 "rules": new_state["rules"],
                 "rule_packs": new_state["rule_packs"],
                 "actions": new_state["actions"],
@@ -3563,10 +3578,20 @@ def save_master_config(settings: Settings, new_state: Mapping[str, object]) -> N
     path_new.rename(path)
 
 
-def load_master_config(settings: Settings, config: ConfigFromWATO, logger: Logger) -> None:
+def load_master_config(settings: Settings, config: ConfigFromWATO, logger: Logger) -> bool:
+    """Uses the saved configuration of the master of a replication slave
+
+    Returns whether it is from another master than the configured one, so the slave ignores it.
+    """
     path = settings.paths.master_config_file.value
     try:
         master_config = ast.literal_eval(path.read_text(encoding="utf-8"))
+        if _is_from_other_master(master_config, config):
+            logger.info(
+                "Replication: ignoring the saved configuration of the previous master %(master)r",
+                {"master": master_config["master"]},
+            )
+            return True
         config["rules"] = master_config["rules"]
         config["rule_packs"] = master_config.get("rule_packs", [])
         config["actions"] = master_config["actions"]
@@ -3579,8 +3604,20 @@ def load_master_config(settings: Settings, config: ConfigFromWATO, logger: Logge
             },
         )
     except Exception:
-        if is_replication_slave(config):
-            logger.exception("Replication: no previously saved master state available")
+        logger.exception("Replication: no previously saved master state available")
+    return False
+
+
+def _is_from_other_master(master_config: Mapping[str, object], config: ConfigFromWATO) -> bool:
+    """Whether a saved configuration of a master is from another one than the configured master
+
+    Older versions didn't save the master, so assume that it's the configured one then.
+    """
+    replication = config["replication"]
+    return (
+        replication is not None
+        and master_config.get("master", replication["master"]) != replication["master"]
+    )
 
 
 def get_state_from_master(config: Config, slave_status: SlaveStatus) -> Any:
@@ -3617,7 +3654,8 @@ def get_state_from_master(config: Config, slave_status: SlaveStatus) -> Any:
 
 
 def save_slave_status(settings: Settings, slave_status: SlaveStatus) -> None:
-    settings.paths.slave_status_file.value.write_text(repr(slave_status) + "\n", encoding="utf-8")
+    # The store never leaves a partially written file behind, even if threads save at once.
+    cmk.ccc.store.save_object_to_file(settings.paths.slave_status_file.value, slave_status)
 
 
 def default_slave_status_master() -> SlaveStatus:
@@ -3646,12 +3684,14 @@ def update_slave_status(
         try:
             slave_status.update(ast.literal_eval(path.read_text(encoding="utf-8")))
         except Exception:
-            slave_status = default_slave_status_sync()
+            # A new slave starts syncing, but e.g. a slave which took over keeps doing so.
+            if slave_status["mode"] == "master":
+                slave_status.update(default_slave_status_sync())
             save_slave_status(settings, slave_status)
     else:
         if path.exists():
             path.unlink()
-        slave_status = default_slave_status_master()
+        slave_status.update(default_slave_status_master())
 
 
 # .
@@ -3676,17 +3716,24 @@ def make_config(config: ConfigFromWATO) -> Config:
 
 
 def load_configuration(settings: Settings, logger: Logger, slave_status: SlaveStatus) -> Config:
-    config = _read_configuration(settings, logger)
+    config, start_over = _read_configuration(settings, logger)
     _set_log_levels(_configured_log_levels(settings, logger, config))
-    _update_replication_status(settings, logger, slave_status, config)
+    _update_replication_status(settings, logger, slave_status, config, start_over=start_over)
     return config
 
 
-def _read_configuration(settings: Settings, logger: Logger) -> Config:
+def _read_configuration(settings: Settings, logger: Logger) -> tuple[Config, bool]:
+    """Returns the configuration and whether the EC has to start over as a replication slave
+
+    That's the case if the saved configuration of the master is from another master.
+    """
     config = load_active_config(settings)
-    # Parts of the configuration of a replication slave will be overridden by values from the master.
-    load_master_config(settings, config, logger)
-    return make_config(config)
+    # Are we a replication slave? Parts of the configuration will be overridden by values from the
+    # master. Only slaves, not former ones, use the saved configuration of their master.
+    start_over = False
+    if is_replication_slave(config):
+        start_over = load_master_config(settings, config, logger)
+    return make_config(config), start_over
 
 
 def _configured_log_levels(settings: Settings, logger: Logger, config: Config) -> dict[Logger, int]:
@@ -3712,9 +3759,20 @@ def _set_log_levels(log_levels: Mapping[Logger, int]) -> None:
 
 
 def _update_replication_status(
-    settings: Settings, logger: Logger, slave_status: SlaveStatus, config: Config
+    settings: Settings,
+    logger: Logger,
+    slave_status: SlaveStatus,
+    config: Config,
+    *,
+    start_over: bool,
 ) -> None:
-    update_slave_status(slave_status, settings, config)
+    if start_over:
+        # Like a newly set up slave, sync completely with the new master.
+        settings.paths.master_config_file.value.unlink()
+        slave_status.update(default_slave_status_sync())
+        save_slave_status(settings, slave_status)
+    else:
+        update_slave_status(slave_status, settings, config)
     if is_replication_slave(config):
         logger.info(
             "Replication: slave configuration, current mode: %(mode)s",
@@ -3733,7 +3791,7 @@ def reload_configuration(
     slave_status: SlaveStatus,
 ) -> tuple[Config, History]:
     with lock_configuration:
-        config = _read_configuration(settings, logger)
+        config, start_over = _read_configuration(settings, logger)
         log_levels = _configured_log_levels(settings, logger, config)
         previous_log_levels = {each_logger: each_logger.level for each_logger in log_levels}
         try:
@@ -3754,7 +3812,9 @@ def reload_configuration(
         # failed reload keeps the previous one. As the event server uses the new configuration
         # already, complete the reload even if updating the replication status fails.
         try:
-            _update_replication_status(settings, logger, slave_status, config)
+            _update_replication_status(
+                settings, logger, slave_status, config, start_over=start_over
+            )
         except Exception:
             logger.exception("Cannot update the replication status")
 

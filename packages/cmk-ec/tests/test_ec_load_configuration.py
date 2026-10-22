@@ -155,7 +155,9 @@ def test_replication_slave_restores_the_rules_of_its_master(
 ) -> None:
     activate_config(settings, f"replication = {_REPLICATION!r}\n")
     rule_pack = ec.default_rule_pack([new_rule({"id": "from_master"})])
-    save_master_config(settings, {"rules": [], "rule_packs": [rule_pack], "actions": []})
+    save_master_config(
+        settings, _REPLICATION["master"], {"rules": [], "rule_packs": [rule_pack], "actions": []}
+    )
 
     config = load_configuration(settings, logger, slave_status)
 
@@ -597,6 +599,22 @@ def _sighup_during_first_housekeeping(terminate_main_event: threading.Event) -> 
     return housekeeping
 
 
+def test_ec_becoming_a_replication_slave_by_reloading_contacts_its_master(
+    debug_settings: ec.Settings,
+    config: Config,
+    run_main_loop: _RunMainLoop,
+    reload_config_event: threading.Event,
+    terminate_main_event: threading.Event,
+) -> None:
+    _activate_main_loop_config(debug_settings, f"replication = {_REPLICATION!r}\n")
+    reload_config_event.set()
+
+    # The EC terminates after its first housekeeping.
+    contacted_masters = run_main_loop(debug_settings, config, terminate_main_event.set)
+
+    assert contacted_masters == [_REPLICATION]
+
+
 def test_reloaded_replication_applies_right_away(
     debug_settings: ec.Settings,
     config: Config,
@@ -617,6 +635,35 @@ def test_reloaded_replication_applies_right_away(
     )
 
     assert contacted_masters == [other_replication]
+
+
+def test_slave_reloaded_to_replicate_from_another_master_syncs_with_it_right_away(
+    debug_settings: ec.Settings,
+    config: Config,
+    slave_status: SlaveStatus,
+    run_main_loop: _RunMainLoop,
+    reload_config_event: threading.Event,
+    terminate_main_event: threading.Event,
+) -> None:
+    # The syncing slave of one master syncs with it, and its second housekeeping reloads it to
+    # replicate from another one. The EC terminates during its third housekeeping.
+    other_replication = _REPLICATION | {"master": ("other-master", 6558)}
+    slave_status["mode"] = "sync"
+    housekeepings: list[None] = []
+
+    def housekeeping() -> None:
+        housekeepings.append(None)
+        if len(housekeepings) == 2:
+            _activate_main_loop_config(debug_settings, f"replication = {other_replication!r}\n")
+            reload_config_event.set()
+        elif len(housekeepings) == 3:
+            terminate_main_event.set()
+
+    contacted_masters = run_main_loop(
+        debug_settings, config | {"replication": _REPLICATION}, housekeeping
+    )
+
+    assert contacted_masters == [_REPLICATION, other_replication]
 
 
 def test_reloaded_intervals_apply_right_away(

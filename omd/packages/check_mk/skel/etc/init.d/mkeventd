@@ -159,7 +159,7 @@ case "$1" in
             exit_failure "failed: $result"
         fi
         echo -n "Deleting status and history files..."
-        rm -f "$OMD_ROOT"/var/mkeventd/{status,master_config,slave_status,history/*}
+        rm -f "$OMD_ROOT"/var/mkeventd/{status,history/*}
         exit_successfully 'OK'
         ;;
 

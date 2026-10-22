@@ -63,6 +63,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Version
 from cmk.crypto import keys
+from cmk.crypto.symmetric import DecryptionError
 from cmk.gui import forms, site_config, sites, user_sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -7359,7 +7360,16 @@ class Password(TextInput):
         if not value:
             return value
 
-        return Encrypter.decrypt(base64.b64decode(value.encode("ascii")))
+        try:
+            return Encrypter.decrypt(base64.b64decode(value.encode("ascii")))
+        except DecryptionError as e:
+            raise MKUserError(
+                varprefix,
+                _(
+                    "The previously entered password cannot be restored because your session "
+                    "changed since this page was opened. Please enter the password again."
+                ),
+            ) from e
 
 
 class PasswordSpec(Password):

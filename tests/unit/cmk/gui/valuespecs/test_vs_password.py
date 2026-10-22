@@ -9,7 +9,6 @@ import hashlib
 import pytest
 
 import cmk.gui.valuespec as vs
-from cmk.crypto.symmetric import DecryptionError
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.utils.encrypter import Encrypter
@@ -65,7 +64,6 @@ def test_password_from_html_vars_change_pw() -> None:
     assert pw.from_html_vars("pw") == "xyz"
 
 
-@pytest.mark.xfail(raises=DecryptionError, reason="Crash group 4612: DecryptionError")
 @pytest.mark.usefixtures("request_context")
 def test_password_from_html_vars_undecryptable_pw_is_a_user_error() -> None:
     encrypted = bytearray(Encrypter.encrypt("abc"))

@@ -6,7 +6,11 @@
 import { render } from '@testing-library/vue'
 
 import CmkRankedTable from '@/dashboard/components/CmkRankedTable/CmkRankedTable.vue'
-import type { RankedTableColumn, RankedTableRow } from '@/dashboard/components/CmkRankedTable/types'
+import type {
+  RankedTableCell,
+  RankedTableColumn,
+  RankedTableRow
+} from '@/dashboard/components/CmkRankedTable/types'
 
 const COLUMNS: RankedTableColumn[] = [
   { key: 'host', title: 'Host', render: 'text', bar: false },
@@ -19,6 +23,14 @@ const ROWS: RankedTableRow[] = [
   { host: 'A', services: 10, problems: 40 },
   { host: 'C', services: 1, problems: 20 }
 ]
+
+const TWO_DESTINATIONS: RankedTableCell = {
+  value: 'A',
+  choices: [
+    { title: 'Host', href: 'view.py?view_name=host' },
+    { title: 'Services', href: 'view.py?view_name=host_services' }
+  ]
+}
 
 function renderTable(rows: RankedTableRow[] = ROWS) {
   return render(CmkRankedTable, { props: { columns: COLUMNS, rows } })
@@ -119,4 +131,32 @@ test('offers the full text of truncatable cells as a tooltip, but not of figures
 
   expect(getByRole('link')).toHaveAttribute('title', host)
   expect(queryByTitle('1234')).toBeNull()
+})
+
+test('offers several destinations of a cell through a menu', () => {
+  const { getByRole } = renderTable([
+    {
+      host: TWO_DESTINATIONS,
+      services: 1,
+      problems: 5
+    }
+  ])
+
+  expect(getByRole('button', { name: 'A' })).toHaveAttribute('aria-haspopup', 'menu')
+})
+
+test('marks only a cell with several destinations with the menu arrow', () => {
+  const { container } = renderTable([
+    {
+      host: TWO_DESTINATIONS,
+      services: 1,
+      problems: 5
+    },
+    { host: { value: 'B', href: 'view.py?view_name=host' }, services: 1, problems: 2 }
+  ])
+
+  const arrows = [...container.querySelectorAll('tbody tr')].map(
+    (row) => row.querySelectorAll('.db-contextual-link-anchor__arrow').length
+  )
+  expect(arrows).toEqual([1, 0])
 })

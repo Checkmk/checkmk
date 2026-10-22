@@ -4,10 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkButton from 'cmk-ui-library/components/CmkButton'
 import { computed } from 'vue'
 
-import ContextualLinkChooser from '../ContextualLinkChooser.vue'
+import type { ContextualLinkEntry } from '@/dashboard/lib/contextualLinkUrl'
+
+import ContextualLinkAnchor from '../ContextualLinkAnchor.vue'
+import ContextualLinkArrow from '../ContextualLinkArrow.vue'
 import type {
   CmkRankedTableProps,
   RankedTableCell,
@@ -68,6 +70,15 @@ function barColorOf(column: RankedTableColumn, row: RankedTableRow): string {
 /** Whether a column's text may be cut with an ellipsis when the width runs short. */
 function truncates(column: RankedTableColumn): boolean {
   return !column.bar && !isNumeric(column)
+}
+
+/** Where a cell leads: one link, several to choose from, or none. */
+function linkEntries(column: RankedTableColumn, row: RankedTableRow): ContextualLinkEntry[] {
+  const { href, choices } = cell(column, row)
+  if (choices !== undefined) {
+    return choices
+  }
+  return href === undefined ? [] : [{ title: cellText(column, row), href }]
 }
 
 /** Links carry their own tooltip, so only plain text cells get one on the cell. */
@@ -135,29 +146,17 @@ const gridTemplateColumns = computed(() =>
               </span>
               <span class="db-cmk-ranked-table__bar-value">{{ cellText(column, row) }}</span>
             </div>
-            <ContextualLinkChooser
-              v-else-if="cell(column, row).choices !== undefined"
-              :entries="cell(column, row).choices!"
-            >
-              <CmkButton
-                class="db-cmk-ranked-table__link"
-                variant="text"
-                size="small"
-                :title="cellText(column, row)"
-              >
-                <span class="db-cmk-ranked-table__text">{{ cellText(column, row) }}</span>
-              </CmkButton>
-            </ContextualLinkChooser>
-            <CmkButton
-              v-else-if="cell(column, row).href !== undefined"
-              class="db-cmk-ranked-table__link"
-              variant="text"
-              size="small"
-              :href="cell(column, row).href"
+            <ContextualLinkAnchor
+              v-else-if="linkEntries(column, row).length > 0"
+              v-slot="{ several }"
+              :entries="linkEntries(column, row)"
               :title="cellText(column, row)"
             >
-              <span class="db-cmk-ranked-table__text">{{ cellText(column, row) }}</span>
-            </CmkButton>
+              <span class="db-contextual-link-anchor__text db-cmk-ranked-table__text">
+                {{ cellText(column, row) }}
+              </span>
+              <ContextualLinkArrow v-if="several" />
+            </ContextualLinkAnchor>
             <span v-else class="db-cmk-ranked-table__text">{{ cellText(column, row) }}</span>
           </td>
         </tr>
@@ -242,12 +241,9 @@ const gridTemplateColumns = computed(() =>
 
 .db-cmk-ranked-table__text {
   display: block;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.db-cmk-ranked-table__link {
-  max-width: 100%;
 }
 
 .db-cmk-ranked-table__bar {

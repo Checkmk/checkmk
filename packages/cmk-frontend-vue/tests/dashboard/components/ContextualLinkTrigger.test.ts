@@ -90,6 +90,31 @@ describe('ContextualLinkTrigger', () => {
     expect(screen.queryByRole('link')).toBeNull()
   })
 
+  it('makes several links a button that opens a menu', () => {
+    renderTrigger([SEARCHHOST, SEARCHSVC])
+
+    expect(screen.getByRole('button', { name: 'Down' })).toHaveAttribute('aria-haspopup', 'menu')
+  })
+
+  it('reports its open menu on the button', async () => {
+    renderTrigger([SEARCHHOST, SEARCHSVC])
+    const button = screen.getByRole('button', { name: 'Down' })
+
+    await userEvent.click(button)
+    await screen.findByRole('menu')
+
+    expect(button).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('tells its slot whether it offers several links', () => {
+    render(ContextualLinkTrigger, {
+      props: { links: [SEARCHHOST, SEARCHSVC], linkProperties: DOWN_HOSTS, filters: {} },
+      slots: { default: ({ several }: { several: boolean }) => (several ? 'several' : 'one') }
+    })
+
+    expect(screen.getByRole('button', { name: 'several' })).toBeInTheDocument()
+  })
+
   it('offers each of several links by its title', async () => {
     renderTrigger([SEARCHHOST, SEARCHSVC])
 

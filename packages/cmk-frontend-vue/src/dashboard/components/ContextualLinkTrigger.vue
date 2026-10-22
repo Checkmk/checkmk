@@ -10,13 +10,15 @@ import { useInjectDrillDownSource } from '@/dashboard/composables/useDrillDownSo
 import { contextualLinkEntries } from '@/dashboard/lib/contextualLinkUrl'
 import type { LinkProperties, ResolvedLink, VisualContext } from '@/dashboard/types/widget'
 
-import ContextualLinkChooser from './ContextualLinkChooser.vue'
+import ContextualLinkAnchor from './ContextualLinkAnchor.vue'
 
 const props = defineProps<{
   links: ResolvedLink[]
   linkProperties: LinkProperties
   filters: VisualContext
 }>()
+
+defineSlots<{ default(props: { several: boolean }): unknown }>()
 
 const drillDownSource = useInjectDrillDownSource()
 
@@ -26,16 +28,7 @@ const entries = computed(() =>
 </script>
 
 <template>
-  <a v-if="entries.length === 1" :href="entries[0]!.href"><slot /></a>
-  <ContextualLinkChooser v-else-if="entries.length > 1" :entries="entries">
-    <a role="button" tabindex="0" class="db-contextual-link-trigger__chooser"><slot /></a>
-  </ContextualLinkChooser>
-  <slot v-else />
+  <ContextualLinkAnchor v-slot="{ several }" :entries="entries">
+    <slot :several="several" />
+  </ContextualLinkAnchor>
 </template>
-
-<style scoped>
-/* Without an href, nothing would show that the element opens the menu. */
-.db-contextual-link-trigger__chooser {
-  cursor: pointer;
-}
-</style>

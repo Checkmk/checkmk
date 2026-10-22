@@ -821,7 +821,7 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(ecs_summary)
 
             ecs = ECS(cloudwatch_client, region, config)
-            distributor.add("ecs_summary", ecs)
+            distributor.add(ecs_summary.name, ecs)
             self._sections.append(ecs)
 
         if "elasticache" in services:
@@ -844,5 +844,5 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(elasticache_summary)
 
             elasticache = ElastiCache(cloudwatch_client, region, config)
-            distributor.add("elasticache_summary", elasticache)
+            distributor.add(elasticache_summary.name, elasticache)
             self._sections.append(elasticache)

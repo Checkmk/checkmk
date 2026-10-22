@@ -27,6 +27,7 @@ from .defaults import default_rule_pack as default_rule_pack
 from .event import Event as Event
 from .event import EventPhase as EventPhase
 from .event import translate_event_host as translate_event_host
+from .mib_compiler import compile_mib as compile_mib
 from .mkp import mkp_callbacks as mkp_callbacks
 from .rule_matcher import compile_active_rule as compile_active_rule
 from .rule_matcher import compile_rule as compile_rule
@@ -48,7 +49,6 @@ from .rule_packs import save_rule_packs as save_rule_packs
 from .settings import create_paths as create_paths
 from .settings import Paths as Paths
 from .settings import Settings as Settings
-from .snmp import compile_mib as compile_mib
 from .syslog import forward_to_unix_socket as forward_to_unix_socket
 from .syslog import SyslogFacility as SyslogFacility
 from .syslog import SyslogMessage as SyslogMessage

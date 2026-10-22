@@ -54,6 +54,19 @@ py_library(
 )
 
 py_library(
+    name = "mib_compiler",
+    srcs = ["cmk/ec/mib_compiler.py"],
+    imports = ["."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
+        "//packages:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [requirement("pysmi")],
+)
+
+py_library(
     name = "cmk-ec",
     srcs = [
         "cmk/ec/__init__.py",
@@ -89,6 +102,7 @@ py_library(
     ],
     deps = [
         ":event",
+        ":mib_compiler",
         ":syslog",
         "//packages/cmk-ccc:daemon",
         "//packages/cmk-ccc:exceptions",
@@ -107,7 +121,6 @@ py_library(
         requirement("pyasn1"),
         requirement("pymongo"),
         requirement("pysnmp"),
-        requirement("pysmi"),
         requirement("setproctitle"),
     ],
 )
@@ -119,6 +132,7 @@ py_doc_test(
         "cmk-ec",
         "event",
         "forwarder",
+        "mib_compiler",
         "syslog",
     ],
 )
@@ -130,6 +144,7 @@ py_cmk_test(
     deps = [
         ":cmk-ec",
         ":forwarder",
+        ":mib_compiler",
         requirement("time-machine"),
     ],
 )
@@ -145,6 +160,7 @@ py_wheel(
         ":cmk-ec",
         ":event",
         ":forwarder",
+        ":mib_compiler",
         ":py_typed",
         ":syslog",
     ],
@@ -185,6 +201,7 @@ py_requirements_test(
         ":syslog",
         ":forwarder",
         ":cmk-ec",
+        ":mib_compiler",
     ],
     requirements_in = "requirements.in",
 )

@@ -1,8 +1,9 @@
 # Agent controller tests
 
-Tests for the Checkmk agent controller, `cmk-agent-ctl`, and for how the agent package deploys it
-under systemd. Only the Rust tests live in this directory. The others sit with the code they test,
-or in the system test suites at the repository root.
+Tests for the Checkmk agent controller, `cmk-agent-ctl`, for how the agent package deploys it
+under systemd, and for its privileged install step, `cmk-agent-ctl install-agent`. Only the Rust
+tests live in this directory. The others sit with the code they test, or in the system test suites
+at the repository root.
 
 ## Documentation
 
@@ -27,6 +28,7 @@ or in the system test suites at the repository root.
 | Integration | The Rust unit and integration tests above, cross-built for Windows and run under Wine | as above                                                                                      | `//packages/cmk-agent-ctl:cmk-agent-ctl-tests-wine`, tagged `manual`        |
 | Integration | The `install-agent` mode, with stand-ins for `dpkg` and `rpm`                         | `tests/scripts/smoke-install-agent.sh`                                                        | `//packages/cmk-agent-ctl:smoke_install_agent`                              |
 | System      | The deployment of the site's agent package on a host with systemd                     | `tests/system/agent_updates/`                                                                 | `tests/run_tests.sh test-system-agent-updates-docker`                       |
+| System      | The privileged install step under systemd: trust anchors                              | `tests/system/agent_updates/install_step/`                                                    | `tests/run_tests.sh test-system-agent-updates-docker`                       |
 | System      | Registration and status against real sites                                            | `tests/system/multisite/agents/`, `tests/system/multisite/controller_site_interactions/`      | `tests/run_tests.sh test-system-multisite-docker`                           |
 
 Several other system suites install the agent as a prerequisite, through the helpers in

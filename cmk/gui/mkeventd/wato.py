@@ -54,7 +54,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FSTuple
 from cmk.gui.form_specs.unstable.validators import id_validators, validate_ip_network
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.type_defs import RequireConfirmation
 from cmk.gui.http import request
@@ -3823,7 +3823,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                             "_toggle_group",
                             type_="button",
                             class_="checkgroup",
-                            onclick="cmk.selection.toggle_all_rows();",
+                            **ClickAction(action="selection_toggle_all_rows").data_attributes(),
                             value="X",
                         )
                     )

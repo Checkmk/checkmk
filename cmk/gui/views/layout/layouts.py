@@ -16,6 +16,7 @@ from typing import Any, override
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.config import active_config
 from cmk.gui.data_source import row_id
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import ContentDispositionType, Request, request, response
 from cmk.gui.i18n import _
@@ -64,7 +65,7 @@ def render_group_checkbox_th() -> None:
         type_="button",
         class_="checkgroup",
         name="_toggle_group",
-        onclick="cmk.selection.toggle_group_rows(this);",
+        **ClickAction(action="selection_toggle_group_rows").data_attributes(),
         value="X",
     )
     html.close_th()
@@ -305,7 +306,10 @@ def grouped_row_title(
     )
     html.open_td(
         colspan=num_cells,
-        onclick="cmk.views.toggle_grouped_rows('grouped_rows', '%s', this, %d)" % (index, num_rows),
+        **ClickAction(
+            action="views_toggle_grouped_rows",
+            arguments={"tree": "grouped_rows", "id": index, "num_rows": str(num_rows)},
+        ).data_attributes(),
     )
 
     html.img(

@@ -13,7 +13,7 @@ from contextlib import AbstractContextManager, contextmanager
 from typing import Any, Literal, override, TypeGuard
 
 import cmk.gui.view_utils
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -171,11 +171,14 @@ class ABCFoldableTreeRenderer(abc.ABC):
     def _omit_content(self, path: tuple[str, ...]) -> bool:
         return self._lazy and not self._is_open(path)
 
-    def _get_mousecode(self, path: tuple[str, ...]) -> str:
-        return "%s(this, %d);" % (self._toggle_js_function(), self._omit_content(path))
+    def _get_mousecode(self, path: tuple[str, ...]) -> ClickAction:
+        return ClickAction(
+            action=self._toggle_click_action(),
+            arguments={"lazy": "true" if self._omit_content(path) else "false"},
+        )
 
     @abc.abstractmethod
-    def _toggle_js_function(self) -> str:
+    def _toggle_click_action(self) -> Literal["bi_toggle_box", "bi_toggle_subtree"]:
         raise NotImplementedError
 
     def _show_leaf(
@@ -221,7 +224,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
         self,
         tree: BIAggrTreeState | BILeafTreeState,
         show_host: bool,
-        mousecode: str | None = None,
+        mousecode: ClickAction | None = None,
         img_class: str | None = None,
         frozen_marker_rendered: bool = False,
     ) -> AbstractContextManager[None]:
@@ -235,10 +238,11 @@ class ABCFoldableTreeRenderer(abc.ABC):
             url=None,
             title=_("Assume another state for this item (reload page to activate)"),
             icon=DynamicIconName("assume_%s" % current_state),
-            onclick="cmk.bi.toggle_assumption(this, '{}', '{}', '{}');".format(
-                site, host, service.replace("\\", "\\\\") if service else ""
-            ),
             cssclass="assumption",
+            click_action=ClickAction(
+                action="bi_toggle_assumption",
+                arguments={"site": site, "host": host, "service": service or ""},
+            ),
         )
 
     def _render_bi_state(self, state: int) -> str:
@@ -259,8 +263,8 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
         return "aggrtree"
 
     @override
-    def _toggle_js_function(self) -> str:
-        return "cmk.bi.toggle_subtree"
+    def _toggle_click_action(self) -> Literal["bi_toggle_box", "bi_toggle_subtree"]:
+        return "bi_toggle_subtree"
 
     @override
     def _show_subtree(
@@ -374,7 +378,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
         self,
         tree: BIAggrTreeState | BILeafTreeState,
         show_host: bool,
-        mousecode: str | None = None,
+        mousecode: ClickAction | None = None,
         img_class: str | None = None,
         frozen_marker_rendered: bool = False,
     ) -> Iterator[None]:
@@ -400,7 +404,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
                 html.img(
                     src=theme.detect_icon_path("tree_closed", prefix="icon_"),
                     class_=["treeangle", img_class],
-                    onclick=mousecode,
+                    **mousecode.data_attributes(),
                 )
 
             html.open_span(class_=["content", "name"])
@@ -484,8 +488,8 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
         return "aggrtree_box"
 
     @override
-    def _toggle_js_function(self) -> str:
-        return "cmk.bi.toggle_box"
+    def _toggle_click_action(self) -> Literal["bi_toggle_box", "bi_toggle_subtree"]:
+        return "bi_toggle_box"
 
     @override
     def _show_subtree(
@@ -523,7 +527,7 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
             html.open_span(
                 id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
                 class_=classes,
-                onclick=mc,
+                **(mc.data_attributes() if mc else {}),
             )
 
             if is_leaf(tree):
@@ -549,7 +553,7 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
         self,
         tree: BIAggrTreeState | BILeafTreeState,
         show_host: bool,
-        mousecode: str | None = None,
+        mousecode: ClickAction | None = None,
         img_class: str | None = None,
         frozen_marker_rendered: bool = False,
     ) -> Iterator[None]:

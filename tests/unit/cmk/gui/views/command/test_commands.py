@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Sequence
 from datetime import datetime, timedelta
 from typing import Literal
@@ -21,6 +22,8 @@ from cmk.gui.views.command import commands
 from cmk.gui.views.command.base import Command, CommandSpec
 from cmk.gui.views.command.commands import (
     _query_downtime_ids_for_leaf,
+    command_acknowledge_render,
+    command_add_comment_render,
     CommandAcknowledge,
     CommandAddComment,
     CommandClearModifiedAttributes,
@@ -74,6 +77,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.web.utils.html import HTML
 from tests.testlib.unit.gui.global_settings import logged_in
 from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.unit.cmk.gui.compare_html import click_handling, inline_event_handlers, ts_function_call
 from tests.unit.cmk.gui.helpers.setup_mode_test_helper import set_request_vars
 
 ACK_COMMENT_TABLE = [
@@ -1005,3 +1009,79 @@ def test_a_downtime_preset_in_december_ends_in_the_next_year() -> None:
     start = datetime(2030, 12, 15, 10, 0).timestamp()
 
     assert datetime.fromtimestamp(time_interval_end("next_month", start)) == datetime(2031, 1, 1)
+
+
+def _handlers_but_submit_on_enter(code: str) -> list[str]:
+    # The text input helper itself still submits the form on Enter by an inline handler
+    return [handler for handler in inline_event_handlers(code) if handler != "input.onkeydown"]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_acknowledge_form_registers_its_handlers_without_inline_code() -> None:
+    with output_funnel.plugged():
+        command_acknowledge_render("host")
+        code = output_funnel.drain()
+
+    assert _handlers_but_submit_on_enter(code) == []
+    assert ts_function_call(code, "#ack_comment") == (
+        "enable_submit_buttons_on_input",
+        {"button_ids": ["_acknowledge"]},
+    )
+    assert click_handling(code, "#cb__ack_expire") == (
+        None,
+        "ack_problems_update_expiration_active_state",
+        None,
+    )
+    assert ts_function_call(code, "cmk-date-time-picker") == (
+        "ack_problems_expiration_on_change",
+        {},
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_add_comment_form_cancels_by_click_action() -> None:
+    with output_funnel.plugged():
+        command_add_comment_render("host")
+        code = output_funnel.drain()
+
+    assert click_handling(code, "#_cancel") == (
+        None,
+        "page_menu_close_popup",
+        {"reset_input_id": "comment"},
+    )
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_downtime_form_registers_its_handlers_without_inline_code(
+    set_config: SetConfig, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    form = CommandScheduleDowntimesForm(NoRecurringDowntimes())
+    monkeypatch.setattr(form, "_current_local_time", lambda: 0.0)
+
+    with (
+        set_config(user_downtime_timeranges=[{"title": "2 hours", "end": 7200}]),
+        output_funnel.plugged(),
+    ):
+        form.render("host")
+        code = output_funnel.drain()
+
+    assert _handlers_but_submit_on_enter(code) == []
+    assert ts_function_call(code, "#down_comment") == (
+        "enable_submit_buttons_on_input",
+        {"button_ids": ["_down_host", "_down_service"]},
+    )
+    assert ts_function_call(code, "cmk-date-time-picker") == (
+        "update_down_duration_button_on_change",
+        {},
+    )
+    _onclick, action, arguments = click_handling(code, "#_downrange__7200")
+    assert (action, arguments) == (
+        "downtime_duration_select",
+        {
+            "id": "_downrange__7200",
+            "from_date": time.strftime("%Y-%m-%d", time.localtime(0.0)),
+            "from_time": time.strftime("%H:%M", time.localtime(0.0)),
+            "to_date": time.strftime("%Y-%m-%d", time.localtime(7200.0)),
+            "to_time": time.strftime("%H:%M", time.localtime(7200.0)),
+        },
+    )

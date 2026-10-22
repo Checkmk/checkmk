@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from cmk.gui.config import Config
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.ruleset_matcher.tags import TagID
@@ -62,7 +63,8 @@ class Icon:
             | tuple[IconSpec, str, str]
             | tuple[IconSpec, str, str | None]
             | tuple[IconSpec, str, tuple[str, str]]
-            | tuple[IconSpec, str | None, tuple[str, str] | None],
+            | tuple[IconSpec, str | None, tuple[str, str] | None]
+            | tuple[IconSpec, str, ClickAction],
         ],
         columns: Sequence[ColumnName] = (),
         host_columns: Sequence[ColumnName] = (),
@@ -127,6 +129,7 @@ class Icon:
         | tuple[IconSpec, str, str | None]
         | tuple[IconSpec, str, tuple[str, str]]
         | tuple[IconSpec, str | None, tuple[str, str] | None]
+        | tuple[IconSpec, str, ClickAction]
     ):
         return self._render_func(what, row, tags, custom_vars, user_permissions, icon_config)
 

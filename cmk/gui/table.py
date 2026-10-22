@@ -16,7 +16,7 @@ from enum import auto, Enum
 from typing import Any, Final, Literal, NamedTuple
 
 from cmk.gui.htmllib.foldable_container import foldable_container
-from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter, TSFunctionCall
 from cmk.gui.htmllib.html import DropHandler, html
 from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.htmllib.type_defs import CSSSpec
@@ -57,6 +57,7 @@ class TableRow(NamedTuple):
     id_: str | None
     onmouseover: str | None
     onmouseout: str | None
+    ts_function: TSFunctionCall | None = None
 
 
 class GroupHeader(NamedTuple):
@@ -214,10 +215,19 @@ class Table:
         id_: str | None = None,
         onmouseover: str | None = None,
         onmouseout: str | None = None,
+        ts_function: TSFunctionCall | None = None,
     ) -> None:
+        """ts_function: Called on the rendered row, e.g. to register hover handlers"""
         self._finish_previous()
         self.next_func = lambda: self._add_row(
-            [] if css is None else css, state, collect_headers, fixed, id_, onmouseover, onmouseout
+            [] if css is None else css,
+            state,
+            collect_headers,
+            fixed,
+            id_,
+            onmouseover,
+            onmouseout,
+            ts_function,
         )
 
     def cell(
@@ -259,6 +269,7 @@ class Table:
         id_: str | None,
         onmouseover: str | None,
         onmouseout: str | None,
+        ts_function: TSFunctionCall | None,
     ) -> None:
         if self.next_header:
             self.rows.append(
@@ -271,7 +282,7 @@ class Table:
                 )
             )
             self.next_header = None
-        self.rows.append(TableRow([], css, state, fixed, id_, onmouseover, onmouseout))
+        self.rows.append(TableRow([], css, state, fixed, id_, onmouseover, onmouseout, ts_function))
         if collect_headers:
             if self.options["collect_headers"] is False:
                 self.options["collect_headers"] = True
@@ -571,6 +582,7 @@ class Table:
                 id_=row.id_,
                 onmouseover=row.onmouseover,
                 onmouseout=row.onmouseout,
+                **(row.ts_function.data_attributes() if row.ts_function else {}),
             )
             for col_index, cell in enumerate(row.cells):
                 if self.options["omit_empty_columns"] and empty_columns[col_index]:

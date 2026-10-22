@@ -22,7 +22,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.forms import open_submit_button_container_div
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.foldable_container import foldable_container
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter, TSFunctionCall
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, _u, ungettext
@@ -972,6 +972,10 @@ def command_acknowledge_confirm_dialog_additions(
     )
 
 
+# Activates the expiration of an acknowledgement when its date or time is changed
+_ACK_EXPIRATION_ON_CHANGE = TSFunctionCall(function_name="ack_problems_expiration_on_change")
+
+
 def command_acknowledge_render(what: str) -> None:  # noqa: ARG001
     submit_id = "_acknowledge"
     html.open_div(class_="group")
@@ -983,7 +987,9 @@ def command_acknowledge_render(what: str) -> None:  # noqa: ARG001
         label=_("Comment"),
         required=True,
         placeholder=_("e.g. ticket ID"),
-        oninput=f"cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['{submit_id}']);",
+        ts_function=TSFunctionCall(
+            function_name="enable_submit_buttons_on_input", arguments={"button_ids": [submit_id]}
+        ),
     )
     if request.get_str_input("_ack_comment"):
         html.call_ts_function(
@@ -1013,7 +1019,7 @@ def command_acknowledge_render(what: str) -> None:  # noqa: ARG001
         "_ack_expire",
         False,
         label=_("Expire on"),
-        onclick="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
+        **ClickAction(action="ack_problems_update_expiration_active_state").data_attributes(),
     )
     html.vue_component(
         "cmk-date-time-picker",
@@ -1027,7 +1033,7 @@ def command_acknowledge_render(what: str) -> None:  # noqa: ARG001
             + _("Server time (currently: %(current_time)s)")
             % {"current_time": time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time()))},
         },
-        onchange="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
+        **_ACK_EXPIRATION_ON_CHANGE.data_attributes(),
     )
     if is_community_edition:
         render_community_upgrade_button()
@@ -1216,14 +1222,14 @@ CommandAcknowledge = Command(
 def _vs_date() -> DatePicker:
     return DatePicker(
         title=_("Acknowledge problems date picker"),
-        onchange="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
+        onchange=_ACK_EXPIRATION_ON_CHANGE,
     )
 
 
 def _vs_time() -> TimePicker:
     return TimePicker(
         title=_("Acknowledge problems time picker"),
-        onchange="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
+        onchange=_ACK_EXPIRATION_ON_CHANGE,
     )
 
 
@@ -1358,7 +1364,9 @@ def command_add_comment_render(what: str) -> None:  # noqa: ARG001
     html.jsbutton(
         "_cancel",
         _("Cancel"),
-        onclick="cmk.page_menu.close_popup(this);document.getElementById('comment').value=''",
+        click_action=ClickAction(
+            action="page_menu_close_popup", arguments={"reset_input_id": "comment"}
+        ),
     )
     html.close_div()
 
@@ -1566,7 +1574,10 @@ class CommandScheduleDowntimesForm:
             required=not self._adhoc_downtime_configured(),
             placeholder=_("What is the occasion?"),
             submit="_down_custom",
-            oninput="cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['_down_host', '_down_service']);",
+            ts_function=TSFunctionCall(
+                function_name="enable_submit_buttons_on_input",
+                arguments={"button_ids": ["_down_host", "_down_service"]},
+            ),
         )
         if request.get_str_input("_down_comment"):
             html.call_ts_function(
@@ -1610,7 +1621,9 @@ class CommandScheduleDowntimesForm:
                 + _("Server time (currently: %(current_time)s)")
                 % {"current_time": time.strftime("%Y-%m-%d %H:%M", time.localtime())},
             },
-            onchange="cmk.page_menu.update_down_duration_button();",
+            **TSFunctionCall(
+                function_name="update_down_duration_button_on_change"
+            ).data_attributes(),
         )
         html.close_td()
         html.close_tr()
@@ -1633,7 +1646,9 @@ class CommandScheduleDowntimesForm:
                 + " "
                 + _("Server time"),
             },
-            onchange="cmk.page_menu.update_down_duration_button();",
+            **TSFunctionCall(
+                function_name="update_down_duration_button_on_change"
+            ).data_attributes(),
         )
         html.close_td()
         html.close_tr()
@@ -1670,13 +1685,14 @@ class CommandScheduleDowntimesForm:
                 )
                 css_class += ["active"]
 
+            varname = f"_downrange__{time_range['end']}"
             duration_options += html.render_input(
-                name=(varname := f"_downrange__{time_range['end']}"),
+                name=varname,
                 type_="button",
                 id_=varname,
                 class_=css_class,
                 value=_u(time_range["title"]),
-                onclick=self._get_onclick(time_range_end, varname),
+                **self._get_click_action(time_range_end, varname).data_attributes(),
                 submit="_set_date_and_time",
             )
         return duration_options
@@ -1696,20 +1712,23 @@ class CommandScheduleDowntimesForm:
             filename="global_settings.py",
         )
 
-    def _get_onclick(
+    def _get_click_action(
         self,
         time_range_end: int | Literal["next_day", "next_week", "next_month", "next_year"],
         id_: str,
-    ) -> str:
+    ) -> ClickAction:
         start_time = self._current_local_time()
         end_time = time_interval_end(time_range_end, start_time)
 
-        return (
-            f'cmk.page_menu.update_down_duration_button("{id_}");'
-            f'cmk.utils.update_time("date__down_from_date","{time.strftime("%Y-%m-%d", time.localtime(start_time))}");'
-            f'cmk.utils.update_time("time__down_from_time","{time.strftime("%H:%M", time.localtime(start_time))}");'
-            f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d", time.localtime(end_time))}");'
-            f'cmk.utils.update_time("time__down_to_time","{time.strftime("%H:%M", time.localtime(end_time))}");'
+        return ClickAction(
+            action="downtime_duration_select",
+            arguments={
+                "id": id_,
+                "from_date": time.strftime("%Y-%m-%d", time.localtime(start_time)),
+                "from_time": time.strftime("%H:%M", time.localtime(start_time)),
+                "to_date": time.strftime("%Y-%m-%d", time.localtime(end_time)),
+                "to_time": time.strftime("%H:%M", time.localtime(end_time)),
+            },
         )
 
     def _render_advanced_options(self, what: str) -> None:

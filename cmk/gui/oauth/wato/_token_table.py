@@ -12,6 +12,7 @@ the same grant table, one scoped to the caller's own grants.
 
 from collections.abc import Callable, Collection, Mapping
 
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
@@ -81,7 +82,9 @@ def render_selection_checkbox_cell(table: Table, grant_id: str) -> None:
             "_toggle_group",
             type_="button",
             class_="checkgroup",
-            onclick="cmk.selection.toggle_all_rows(this.form);",
+            **ClickAction(
+                action="selection_toggle_all_rows", arguments={"in_form": "true"}
+            ).data_attributes(),
             value="X",
         ),
         sortable=False,

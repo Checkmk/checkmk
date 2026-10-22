@@ -7,6 +7,7 @@ import json
 from collections.abc import Mapping
 
 from cmk.gui.config import RequestCacheConfig
+from cmk.gui.htmllib.generator import ClickAction, TSFunctionCall
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import SingleInfos, VisualContext
@@ -43,7 +44,7 @@ def show_filter_form(
         form_name,
         method="GET",
         add_transid=False,
-        onsubmit=f"cmk.forms.on_filter_form_submit_remove_vars({json.dumps('form_' + form_name)});",
+        ts_function=TSFunctionCall(function_name="filter_form_remove_vars_on_submit"),
     ):
         varprefix = ""
         vs_filters = VisualFilterListWithAddPopup(info_list=info_list, request_cache=request_cache)
@@ -86,8 +87,11 @@ def _show_filter_form_buttons(
 
     html.open_a(
         href="#",
-        onclick="cmk.page_menu.toggle_popup_filter_list(this, %s)" % json.dumps(filter_list_id),
         class_="add",
+        **ClickAction(
+            action="page_menu_toggle_popup_filter_list",
+            arguments={"filter_list_id": filter_list_id},
+        ).data_attributes(),
     )
     html.static_icon(StaticIcon(IconNames.add))
     html.div(_("Add filter"), class_="description")
@@ -99,13 +103,15 @@ def _show_filter_form_buttons(
         "%s_reset" % varprefix,
         _("Reset"),
         cssclass="reset",
-        onclick="cmk.valuespecs.visual_filter_list_reset(%s, %s, %s, %s, %s)"
-        % (
-            json.dumps(varprefix),
-            json.dumps(page_request_vars),
-            json.dumps(view_name),
-            json.dumps(reset_ajax_page),
-            json.dumps(context),
+        click_action=ClickAction(
+            action="valuespec_visual_filter_list_reset",
+            arguments={
+                "varprefix": varprefix,
+                "page_request_vars": json.dumps(page_request_vars),
+                "page_name": view_name,
+                "reset_ajax_page": reset_ajax_page,
+                "context": json.dumps(context),
+            },
         ),
     )
     html.close_div()

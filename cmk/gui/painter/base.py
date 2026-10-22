@@ -21,7 +21,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import visuals
 from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.display_options import DisplayOptions
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -533,17 +533,19 @@ class Cell:
 
     def paint_as_header(self, writer: HTMLWriter) -> None:
         classes: list[str] = []
-        onclick = ""
+        sort_action: dict[str, str] = {}
         title = ""
         if self._sort_url_parameter and (
             sort_url := self.painter_context().url_renderer.sort_url(self._sort_url_parameter)
         ):
             classes += ["sort"]
-            onclick = "location.href='%s'" % sort_url
+            sort_action = ClickAction(
+                action="follow_url", arguments={"url": sort_url}
+            ).data_attributes()
             title = _("Sort by %(title)s") % {"title": self.tooltip_title()}
         classes += self.painter().title_classes()
 
-        writer.open_th(class_=classes, onclick=onclick, title=title)
+        writer.open_th(class_=classes, title=title, **sort_action)
         writer.write_text_permissive(self.title())
         writer.close_th()
 

@@ -7,16 +7,22 @@ import type { KnownClickAction } from 'cmk-shared-typing/typescript/legacy_front
 
 import { activate_changes } from '@/modules/activation'
 import { call_ajax } from '@/modules/ajax'
+import { toggle_assumption, toggle_box, toggle_subtree } from '@/modules/bi'
 import { toggle as toggle_foldable_container } from '@/modules/foldable_container'
 import { confirm_link, waiting_flash_message } from '@/modules/forms'
 import { toggle as toggle_inline_help } from '@/modules/help'
 import {
+  ack_problems_update_expiration_active_state,
+  check_menu_entry_by_checkboxes,
   close_active_dropdown,
   close_popup,
   confirmed_form_submit,
   form_submit,
   toggle_popup,
-  toggle_suggestions
+  toggle_popup_filter_list,
+  toggle_suggestions,
+  update_down_duration_button,
+  update_filter_list_scroll
 } from '@/modules/page_menu'
 import {
   add_to_visual,
@@ -26,7 +32,7 @@ import {
   toggle_popup as toggle_popup_menu
 } from '@/modules/popup_menu'
 import { close_popup as close_quicksearch_popup, on_search_click } from '@/modules/quicksearch'
-import { toggle_all_rows } from '@/modules/selection'
+import { toggle_all_rows, toggle_group_rows } from '@/modules/selection'
 import { start as start_service_discovery } from '@/modules/service_discovery'
 import {
   add_bookmark,
@@ -36,7 +42,14 @@ import {
   virtual_host_tree_enter,
   wato_tree_click
 } from '@/modules/sidebar'
-import { makeLoadingTransition, makeuri, querySelectorID, toggle_more } from '@/modules/utils'
+import { details_period_click } from '@/modules/sla'
+import {
+  makeLoadingTransition,
+  makeuri,
+  querySelectorID,
+  toggle_more,
+  update_time
+} from '@/modules/utils'
 import { listof_entry_index } from '@/modules/valuespec_listof'
 import {
   duallist_switch,
@@ -53,8 +66,14 @@ import {
   passwordspec_randomize,
   rule_comment_prefix_date_and_user,
   toggle_hidden,
-  toggle_option
+  toggle_option,
+  visual_filter_list_reset
 } from '@/modules/valuespecs'
+import {
+  add_to_visual as add_view_to_visual,
+  reschedule_check,
+  toggle_grouped_rows
+} from '@/modules/views'
 import { randomize_secret, toggle_attribute } from '@/modules/wato'
 
 import {
@@ -78,8 +97,13 @@ function set_toggle_icon(selector: string, on: boolean) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const node_instance = () => (window as any).node_instance
 
-const dispatch_custom_event: ClickAction = (_element, options) =>
-  document.dispatchEvent(new CustomEvent(options.name, { detail: options.detail }))
+const dispatch_custom_event: ClickAction = (_element, options) => {
+  const custom_event = () => new CustomEvent(options.name, { detail: options.detail })
+  document.dispatchEvent(custom_event())
+  if (options.to_parent === true && window.parent !== window) {
+    window.parent.document.dispatchEvent(custom_event())
+  }
+}
 
 function toggle_foldable_container_by_options(options: ClickActionArguments) {
   toggle_foldable_container(
@@ -91,6 +115,11 @@ function toggle_foldable_container_by_options(options: ClickActionArguments) {
 }
 
 const click_actions: Record<KnownClickAction, ClickAction> = {
+  ack_problems_update_expiration_active_state: (element) => {
+    ack_problems_update_expiration_active_state(element as HTMLInputElement)
+    // Keep toggling the checkbox
+    return true
+  },
   activate_changes: closing_dropdown((_element, options) =>
     activate_changes(options.mode, options.site_id)
   ),
@@ -98,11 +127,22 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
   add_to_visual: closing_dropdown((_element, options) =>
     add_to_visual(options.visual_type, options.visual_name)
   ),
+  bi_toggle_assumption: (element, options) =>
+    toggle_assumption(element, options.site!, options.host!, options.service!),
+  bi_toggle_box: (element, options) => toggle_box(element, options.lazy === 'true'),
+  bi_toggle_subtree: (element, options) => toggle_subtree(element, options.lazy === 'true'),
   confirm_link: (_element, options) => {
     confirm_link(options.url, options.message, options.options, options.post_confirm_waiting_text)
     close_icon_popup()
   },
   dispatch_custom_event: dispatch_custom_event,
+  downtime_duration_select: (_element, options) => {
+    update_down_duration_button(options.id!)
+    update_time('date__down_from_date', options.from_date!)
+    update_time('time__down_from_time', options.from_time!)
+    update_time('date__down_to_date', options.to_date!)
+    update_time('time__down_to_time', options.to_time!)
+  },
   foldable_container_toggle: (_element, options) => {
     toggle_foldable_container_by_options(options)
     // The header may contain links, e.g. to a view, which have to be followed
@@ -162,7 +202,17 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
     set_toggle_icon('.suggestion.topology_layout_designer', new_state)
     set_toggle_icon('#menu_shortcut_edit_layout', new_state)
   }),
-  page_menu_close_popup: (element) => close_popup(element),
+  page_menu_check_entry_by_checkboxes: (_element, options) => {
+    check_menu_entry_by_checkboxes(options.id!)
+    // Keep toggling the checkbox
+    return true
+  },
+  page_menu_close_popup: (element, options) => {
+    close_popup(element as HTMLAnchorElement)
+    if (options.reset_input_id) {
+      ;(document.getElementById(options.reset_input_id) as HTMLInputElement).value = ''
+    }
+  },
   page_menu_confirmed_form_submit: closing_dropdown((_element, options) =>
     confirmed_form_submit(options.form_name, options.button_name, options.options)
   ),
@@ -175,6 +225,8 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
     location.href = makeuri(options.vars)
   },
   page_menu_toggle_popup: (_element, options) => toggle_popup(options.popup_id),
+  page_menu_toggle_popup_filter_list: (element, options) =>
+    toggle_popup_filter_list(element as HTMLAnchorElement, options.filter_list_id!),
   page_menu_toggle_suggestions: closing_dropdown(() => toggle_suggestions()),
   pagetype_add_to_container: closing_dropdown((_element, options) =>
     pagetype_add_to_container(options.page_type, options.page_name)
@@ -206,6 +258,15 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
     element.textContent = options.message!
     location.reload()
   },
+  selection_toggle_all_rows: (element, options) => {
+    toggle_all_rows(
+      options.in_form === 'true' ? ((element as HTMLInputElement).form ?? undefined) : undefined
+    )
+    if (options.menu_entry_id) {
+      check_menu_entry_by_checkboxes(options.menu_entry_id)
+    }
+  },
+  selection_toggle_group_rows: (element) => toggle_group_rows(element as HTMLInputElement),
   service_discovery_start: closing_dropdown((_element, options) =>
     start_service_discovery(
       options.host_name,
@@ -216,6 +277,8 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
       options.waiting_message
     )
   ),
+  sla_details_period_click: (element, options) =>
+    details_period_click(element as HTMLTableCellElement, options.sla_period!),
   switch_customer: (_element, options) => {
     switch_customer(options.customer_id, options.switch_state)
     switch_site(options.url)
@@ -257,12 +320,24 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
     listof_delete(options.varprefix!, listof_entry_index(element, options.varprefix!)),
   valuespec_listof_sort: (_element, options) =>
     listof_sort(options.varprefix!, options.magic!, parseInt(options.sort_by!)),
-  valuespec_listofmultiple_add: (_element, options) =>
-    listofmultiple_add(
-      options.varprefix!,
-      options.choice_page_name!,
-      JSON.parse(options.page_request_vars!)
-    ),
+  valuespec_listofmultiple_add: (element, options) => {
+    if (options.filter_list_id) {
+      // A choice in the filter list popup of a view
+      listofmultiple_add(
+        options.varprefix!,
+        options.choice_page_name!,
+        JSON.parse(options.page_request_vars!),
+        element as HTMLAnchorElement
+      )
+      update_filter_list_scroll(options.filter_list_id)
+    } else {
+      listofmultiple_add(
+        options.varprefix!,
+        options.choice_page_name!,
+        JSON.parse(options.page_request_vars!)
+      )
+    }
+  },
   valuespec_listofmultiple_delete: (_element, options) =>
     listofmultiple_del(options.varprefix!, options.ident!),
   valuespec_password_randomize: (element, options) =>
@@ -273,6 +348,33 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
   valuespec_toggle_option: (element, options) => {
     toggle_option(element as HTMLInputElement, options.div_id!, options.negate === 'true' ? 1 : 0)
     // Keep toggling the checkbox
+    return true
+  },
+  valuespec_visual_filter_list_reset: (_element, options) =>
+    visual_filter_list_reset(
+      options.varprefix!,
+      JSON.parse(options.page_request_vars!),
+      options.page_name!,
+      options.reset_ajax_page!,
+      JSON.parse(options.context!)
+    ),
+  views_add_to_visual: (_element, options) =>
+    add_view_to_visual(
+      options.visual_type!,
+      options.visual_name!,
+      options.source_type!,
+      JSON.parse(options.context!)
+    ),
+  views_reschedule_check: (element, options) =>
+    reschedule_check(element, options.site!, options.host!, options.service!, options.wait_svc!),
+  views_toggle_grouped_rows: (element, options) => {
+    toggle_grouped_rows(
+      options.tree!,
+      options.id!,
+      element as HTMLTableCellElement,
+      parseInt(options.num_rows!)
+    )
+    // Links in the group title have to be followed
     return true
   },
   virtual_host_tree_enter: (_element, options) => virtual_host_tree_enter(options.path),

@@ -14,6 +14,7 @@ from typing import Literal
 
 from cmk.gui.config import active_config
 from cmk.gui.dynamic_icon import resolve_icon_name
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.permissions import all_permissions
 from cmk.gui.theme.current_theme import theme
@@ -159,8 +160,11 @@ def resolved_icon(icon: StaticIcon | DynamicIcon) -> st.DefaultIcon | st.UserIco
 def _custom_icon(
     what: Literal["host", "service"], row: Row, entry: IconEntry, toplevel: bool
 ) -> CustomIcon | None:
+    if isinstance(entry.url_spec, ClickAction):
+        # Click actions (e.g. explain with AI) cannot be rendered as a native link.
+        return None
     url, target = (None, None) if entry.url_spec is None else transform_action_url(entry.url_spec)
-    if url is not None and (not toplevel or url.startswith("onclick:")):
+    if url is not None and not toplevel:
         return None
     icon = resolved_icon(entry.icon_name)
     return CustomIcon(

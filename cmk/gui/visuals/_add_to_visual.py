@@ -7,6 +7,7 @@
 
 """Add a visual to other visuals (dashboard, report)"""
 
+import json
 import re
 from typing import Literal
 
@@ -286,12 +287,15 @@ def _render_add_to_popup(add_to_type: Literal["dashboard", "report"], source_typ
         html.jsbutton(
             varname="_add_to",
             text=_("Add to"),
-            onclick=f"cmk.views.add_to_visual("
-            f'"{add_to_type}",'
-            f'"{request.var("view_name")}",'
-            f'"{source_type}",'
-            f"{g.get('page_context', {})}"
-            f")",
             cssclass="hot",
+            click_action=ClickAction(
+                action="views_add_to_visual",
+                arguments={
+                    "visual_type": add_to_type,
+                    "visual_name": str(request.var("view_name")),
+                    "source_type": source_type,
+                    "context": json.dumps(g.get("page_context", {})),
+                },
+            ),
         )
         return HTML.without_escaping(output_funnel.drain())

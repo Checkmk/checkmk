@@ -9,6 +9,7 @@ import { select } from 'd3'
 import $ from 'jquery'
 
 import * as activation from '@/modules/activation'
+import * as availability from '@/modules/availability'
 import * as background_job from '@/modules/background_job'
 import * as backup from '@/modules/backup'
 import * as bi from '@/modules/bi'
@@ -16,7 +17,9 @@ import * as dashboard from '@/modules/dashboard'
 import * as element_dragging from '@/modules/element_dragging'
 import { figure_registry } from '@/modules/figures/cmk_figures'
 import * as forms from '@/modules/forms'
+import * as graph_integration from '@/modules/graph_integration'
 import * as host_diagnose from '@/modules/host_diagnose'
+import * as hover from '@/modules/hover'
 import { insert_before } from '@/modules/layout'
 import * as license_usage_timeseries_graph from '@/modules/license_usage/license_usage_timeseries_graph'
 import * as nodevis from '@/modules/nodevis/main'
@@ -31,6 +34,7 @@ import * as selection from '@/modules/selection'
 import * as service_discovery from '@/modules/service_discovery'
 import * as sidebar from '@/modules/sidebar'
 import * as sites from '@/modules/sites'
+import * as sla from '@/modules/sla'
 import { render_stats_table } from '@/modules/tracking_display'
 import * as transfer from '@/modules/transfer'
 import * as utils from '@/modules/utils'
@@ -39,6 +43,7 @@ import * as valuespecs from '@/modules/valuespecs'
 import * as wato from '@/modules/wato'
 
 import { run_click_action } from './click_action_dispatcher'
+import { on_uncancelled_submit } from './form_submit'
 import { type CallableFunction, register_callable_functions } from './ts_function_dispatcher'
 
 const license_usage_graphs: Record<string, (num_graphs: number, aggregation: any) => void> = {
@@ -95,6 +100,17 @@ const callable_functions: Record<Exclude<KnownTSFunction, `mobile_${string}`>, C
   update_time: (_node, options) => utils.update_time(options.target, options.time),
   fade_out_element: (_node, options) =>
     utils.fade_out_element(options.element_id, options.delay_ms, options.selector),
+  hover_graphs: (node, options) => {
+    node.addEventListener('mouseover', (event) =>
+      graph_integration.show_hover_graphs(
+        event,
+        options.site_id,
+        options.host_name,
+        options.service_description
+      )
+    )
+    node.addEventListener('mouseout', () => hover.hide())
+  },
   shimmer_button_on_submit: (node, options) => {
     node.addEventListener('submit', () => {
       document.getElementById(options.button_id)!.classList.add('shimmer-input-button')
@@ -135,6 +151,17 @@ const callable_functions: Record<Exclude<KnownTSFunction, `mobile_${string}`>, C
       options.message_container_id
     ),
   init_filter_form: (_node, options) => page_menu.init_filter_form(options.filter_list_selected_id),
+  filter_form_remove_vars_on_submit: (node) => {
+    on_uncancelled_submit(node, () => forms.on_filter_form_submit_remove_vars(node.id))
+  },
+  ack_problems_expiration_on_change: (node) => {
+    node.addEventListener('change', () =>
+      page_menu.ack_problems_update_expiration_active_state(node as HTMLInputElement)
+    )
+  },
+  update_down_duration_button_on_change: (node) => {
+    node.addEventListener('change', () => page_menu.update_down_duration_button())
+  },
 
   // forms
   confirm_dialog_redirect: (node, options) =>
@@ -164,6 +191,8 @@ const callable_functions: Record<Exclude<KnownTSFunction, `mobile_${string}`>, C
   set_selection_enabled: (_node, options) => selection.set_selection_enabled(options.enabled),
   init_rowselect: (_node, options) => selection.init_rowselect(options.properties),
   update_bulk_moveto: (_node, options) => selection.update_bulk_moveto(options.value),
+  update_bulk_moveto_on_change: (node) =>
+    on_select_change(node, () => selection.update_bulk_moveto((node as HTMLSelectElement).value)),
 
   // valuespecs
   list_of_strings_init: (_node, options) =>
@@ -222,6 +251,8 @@ const callable_functions: Record<Exclude<KnownTSFunction, `mobile_${string}`>, C
 
   // bi
   bi_set_rule_argument_lookup: (_node, options) => bi.set_rule_argument_lookup(options.lookup),
+  bi_update_argument_hints_on_change: (node) =>
+    on_select_change(node, () => bi.update_argument_hints()),
   bi_rule_preview: (_node, options) => {
     new bi.BIRulePreview(options.root_node, options.varprefix)
   },
@@ -277,6 +308,41 @@ const callable_functions: Record<Exclude<KnownTSFunction, `mobile_${string}`>, C
       document.getElementById(options.input_id) as HTMLInputElement,
       options.button_ids
     ),
+  enable_submit_buttons_on_input: (node, options) => {
+    node.addEventListener('input', () =>
+      forms.enable_submit_buttons_on_nonempty_input(node as HTMLInputElement, options.button_ids)
+    )
+  },
+
+  // availability
+  availability_timeline_hover: (node, options) => {
+    node.addEventListener('mouseover', () =>
+      availability.timeline_hover(options.timeline_nr, options.row_nr, 1)
+    )
+    node.addEventListener('mouseout', () =>
+      availability.timeline_hover(options.timeline_nr, options.row_nr, 0)
+    )
+  },
+  availability_timetable_hover: (node, options) => {
+    node.addEventListener('mouseover', () =>
+      availability.timetable_hover(options.timeline_nr, options.row_nr, 1)
+    )
+    node.addEventListener('mouseout', () =>
+      availability.timetable_hover(options.timeline_nr, options.row_nr, 0)
+    )
+  },
+
+  // sla
+  sla_details_period_hover: (node, options) => {
+    const td = node as HTMLTableCellElement
+    td.addEventListener('mouseover', () => sla.details_period_hover(td, options.sla_period, 1))
+    td.addEventListener('mouseout', () => sla.details_period_hover(td, options.sla_period, 0))
+  },
+  sla_details_table_hover: (node, options) => {
+    const row = node as HTMLTableRowElement
+    row.addEventListener('mouseover', () => sla.details_table_hover(row, options.row_id, 1))
+    row.addEventListener('mouseout', () => sla.details_table_hover(row, options.row_id, 0))
+  },
 
   // backup
   refresh_backup_job_details: (_node, options) =>

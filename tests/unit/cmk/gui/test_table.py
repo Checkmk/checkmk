@@ -10,6 +10,7 @@ import bs4
 import pytest
 from pytest import MonkeyPatch
 
+from cmk.gui.htmllib.generator import TSFunctionCall
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import LoggedInNobody
@@ -507,3 +508,18 @@ def test_sortable_header_sorts_by_click_action(monkeypatch: MonkeyPatch) -> None
         "follow_url",
         {"url": "index.py?_rules_sort=0%2C0"},
     )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_row_calls_its_ts_function() -> None:
+    with output_funnel.plugged():
+        with table_element("rules", "Rules", searchable=False, sortable=False, limit=100) as table:
+            table.row(
+                id_="row_1",
+                ts_function=TSFunctionCall(function_name="set_focus_by_id", arguments={"x": 1}),
+            )
+            table.cell("Name", "rule")
+
+        written_text = output_funnel.drain()
+
+    assert ts_function_call(written_text, "tr#row_1") == ("set_focus_by_id", {"x": 1})

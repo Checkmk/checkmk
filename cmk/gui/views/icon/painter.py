@@ -6,6 +6,7 @@
 
 from collections.abc import Sequence
 
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import HTMLGenerator
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import LoggedInUser
@@ -154,7 +155,11 @@ def _paint_icons(
     output = HTML.empty()
     for icon in toplevel_icons:
         if isinstance(icon, IconEntry):
-            if icon.url_spec:
+            if isinstance(icon.url_spec, ClickAction):
+                output += HTMLGenerator.render_icon_button(
+                    None, icon.title or "", icon.icon_name, click_action=icon.url_spec
+                )
+            elif icon.url_spec:
                 url, target_frame = transform_action_url(icon.url_spec)
                 url = replace_action_url_macros(url, what, row)
 

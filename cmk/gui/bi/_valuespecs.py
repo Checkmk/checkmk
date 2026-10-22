@@ -31,6 +31,7 @@ from cmk.bi.type_defs import ActionKind, SearchKind
 from cmk.ccc import plugin_registry
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.generator import TSFunctionCall
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.valuespec import (
@@ -691,7 +692,9 @@ class BIConfigCallARuleAction(BICallARuleAction, ABCBIConfigAction):
                         DropdownChoice[str](
                             choices=sorted(pack_choices),
                             empty_text=_("There are no configured rules in this aggregation pack"),
-                            on_change="cmk.bi.update_argument_hints();",
+                            on_change=TSFunctionCall(
+                                function_name="bi_update_argument_hints_on_change"
+                            ),
                         ),
                     )
                 )

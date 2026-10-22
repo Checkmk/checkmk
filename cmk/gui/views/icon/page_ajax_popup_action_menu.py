@@ -8,6 +8,7 @@
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.display_options import display_options
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -53,7 +54,9 @@ def ajax_popup_action_menu(ctx: PageContext) -> None:
             html.close_li()
         elif isinstance(icon, IconEntry):
             html.open_li()
-            if icon.url_spec:
+            if isinstance(icon.url_spec, ClickAction):
+                html.open_a(href="#", **icon.url_spec.data_attributes())
+            elif icon.url_spec:
                 url, target_frame = transform_action_url(icon.url_spec)
                 url = replace_action_url_macros(url, what, row)
                 onclick = None

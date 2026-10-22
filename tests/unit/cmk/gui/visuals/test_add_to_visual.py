@@ -8,10 +8,16 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.gui.page_menu import make_simple_link, PageMenuDropdown, PageMenuEntry
+from cmk.gui.http import request
+from cmk.gui.page_menu import make_simple_link, PageMenuDropdown, PageMenuEntry, PageMenuPopup
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.visuals import page_menu_dropdown_add_to_visual
+from cmk.gui.visuals import (
+    page_menu_dropdown_add_to_visual,
+    page_menu_topic_add_to,
+    set_page_context,
+)
 from cmk.web.utils.icons import IconNames, StaticIcon
+from tests.unit.cmk.gui.compare_html import click_handling
 
 
 def _user_permissions() -> UserPermissions:
@@ -64,3 +70,24 @@ def test_add_to_visual_topics_for_pnpgraph_with_community_edition(mocker: Mocker
         "Add to dashboard",
         "My Dashboard",
     ]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_add_to_dashboard_popup_adds_by_click_action() -> None:
+    request.set_var("view_name", "allhosts")
+    set_page_context({"host": {"host": "it's"}})
+
+    [topic] = page_menu_topic_add_to("view", "allhosts", "view")
+    [entry, *_reports] = topic.entries
+    assert isinstance(entry.item, PageMenuPopup)
+
+    assert click_handling(entry.item.content, "input#_add_to") == (
+        None,
+        "views_add_to_visual",
+        {
+            "visual_type": "dashboard",
+            "visual_name": "allhosts",
+            "source_type": "view",
+            "context": '{"host": {"host": "it\'s"}}',
+        },
+    )

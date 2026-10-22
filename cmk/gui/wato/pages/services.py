@@ -1732,7 +1732,7 @@ class DiscoveryPageRenderer:
                 "_toggle_group",
                 type_="button",
                 class_="checkgroup",
-                onclick="cmk.selection.toggle_group_rows(this);",
+                **ClickAction(action="selection_toggle_group_rows").data_attributes(),
                 value="X",
             ),
             sortable=False,

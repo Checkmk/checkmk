@@ -38,5 +38,5 @@ class ServicesTable:
 
     def service_graphs_icon(self, host_name: str, service_name: str) -> Locator:
         return self.service_icons(host_name, service_name).locator(
-            "a[onmouseover*='show_hover_graphs']"
+            "a[data-cmk_call_ts_function='hover_graphs']"
         )

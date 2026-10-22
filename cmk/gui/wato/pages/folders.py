@@ -28,7 +28,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupSpecs
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import mandatory_parameter, request
 from cmk.gui.i18n import _, _l, ungettext
@@ -1262,7 +1262,9 @@ class ModeFolder(WatoMode):
                 "_toggle_group",
                 type_="button",
                 class_="checkgroup",
-                onclick="cmk.selection.toggle_all_rows(this.form);",
+                **ClickAction(
+                    action="selection_toggle_all_rows", arguments={"in_form": "true"}
+                ).data_attributes(),
                 value="X",
             ),
             sortable=False,

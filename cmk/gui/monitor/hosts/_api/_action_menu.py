@@ -17,6 +17,7 @@ from typing import Annotated
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.log import logger
@@ -91,7 +92,8 @@ def _icon_name(icon: StaticIcon | DynamicIcon) -> str:
 
 
 def _serialize_entry(entry: IconEntry, row: Row) -> ActionMenuItem | None:
-    if entry.url_spec is None:
+    if entry.url_spec is None or isinstance(entry.url_spec, ClickAction):
+        # Click actions (e.g. reschedule) cannot be rendered as a native link.
         return None
 
     url, target_frame = transform_action_url(entry.url_spec)

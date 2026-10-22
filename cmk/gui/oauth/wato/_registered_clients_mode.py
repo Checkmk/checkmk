@@ -10,6 +10,7 @@ from typing import override
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -133,7 +134,9 @@ class ModeRegisteredOAuthClients(WatoMode):
                             "_toggle_group",
                             type_="button",
                             class_="checkgroup",
-                            onclick="cmk.selection.toggle_all_rows(this.form);",
+                            **ClickAction(
+                                action="selection_toggle_all_rows", arguments={"in_form": "true"}
+                            ).data_attributes(),
                             value="X",
                         ),
                         sortable=False,

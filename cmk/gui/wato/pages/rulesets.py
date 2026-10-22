@@ -48,7 +48,7 @@ from cmk.gui.form_specs.unstable.catalog import Catalog
 from cmk.gui.form_specs.unstable.legacy_converter import resolve_title
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import mandatory_parameter, request
 from cmk.gui.i18n import _, localize_or_none, translate_to_current_language
@@ -3810,7 +3810,7 @@ class ModeUnknownRulesets(WatoMode):
                 "_toggle_group",
                 type_="button",
                 class_="checkgroup",
-                onclick="cmk.selection.toggle_group_rows(this);",
+                **ClickAction(action="selection_toggle_group_rows").data_attributes(),
                 value="X",
             ),
             sortable=False,
@@ -3869,7 +3869,7 @@ class ModeUnknownRulesets(WatoMode):
                 "_toggle_group",
                 type_="button",
                 class_="checkgroup",
-                onclick="cmk.selection.toggle_group_rows(this);",
+                **ClickAction(action="selection_toggle_group_rows").data_attributes(),
                 value="X",
             ),
             sortable=False,

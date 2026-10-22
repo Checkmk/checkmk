@@ -7,6 +7,7 @@
 //#   | Floating popup menus with content fetched via AJAX calls           |
 //#   '--------------------------------------------------------------------'
 import { call_ajax } from './ajax'
+import { init_callable_ts_functions } from './ts_function_dispatcher'
 import type { Nullable } from './utils'
 import {
   add_class,
@@ -335,6 +336,8 @@ function handle_render_popup_contents(
   if (data.content) {
     /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     data.content.innerHTML = response_text
+    // Register the event handlers of the contents, which replace inline handlers
+    init_callable_ts_functions(data.content)
     const menu = data.content.closest('div#popup_menu') as HTMLElement
     fix_popup_menu_position(data.event, menu)
   }

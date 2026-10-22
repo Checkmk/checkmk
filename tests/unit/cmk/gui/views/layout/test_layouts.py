@@ -18,15 +18,18 @@ from cmk.gui.views.layout.base import Layout
 from cmk.gui.views.layout.layouts import (
     create_matrices,
     get_group_spec,
+    grouped_row_title,
     LayoutBalancedBoxes,
     LayoutBalancedGraphBoxes,
     LayoutMatrix,
     LayoutSingleDataset,
     LayoutTable,
     LayoutTiled,
+    render_group_checkbox_th,
 )
 from cmk.gui.views.store import multisite_builtin_views
 from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.unit.cmk.gui.compare_html import click_handling
 from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
@@ -408,3 +411,25 @@ def test_a_matrix_exports_one_csv_line_per_service() -> None:
 
     lines = response.get_data(as_text=True).splitlines()
     assert [line.split(";")[0] for line in lines] == ["", "host title", "CPU", "Memory"]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_group_checkbox_toggles_the_group_rows_by_click_action() -> None:
+    with output_funnel.plugged():
+        render_group_checkbox_th()
+        code = output_funnel.drain()
+
+    assert click_handling(code, "input.checkgroup") == (None, "selection_toggle_group_rows", None)
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_grouped_row_title_toggles_the_group_by_click_action() -> None:
+    with output_funnel.plugged():
+        grouped_row_title("it's", GroupSpec(title="Group", pattern="", min_items=2), 3, "odd", 4)
+        code = output_funnel.drain()
+
+    assert click_handling(code, "td") == (
+        None,
+        "views_toggle_grouped_rows",
+        {"tree": "grouped_rows", "id": "it's", "num_rows": "3"},
+    )

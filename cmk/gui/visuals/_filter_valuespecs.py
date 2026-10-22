@@ -15,6 +15,7 @@ from typing import override
 from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -305,15 +306,16 @@ class VisualFilterListWithAddPopup(VisualFilterList):
                     html.a(
                         choice[1].title() or filter_name,
                         href="#",
-                        onclick="cmk.valuespecs.listofmultiple_add(%s, %s, %s, this);"
-                        "cmk.page_menu.update_filter_list_scroll(%s)"
-                        % (
-                            json.dumps(varprefix),
-                            json.dumps(self._choice_page_name),
-                            json.dumps(self._page_request_vars),
-                            json.dumps(filter_list_selected_id),
-                        ),
                         id_=f"{varprefix}_add_{filter_name}",
+                        **ClickAction(
+                            action="valuespec_listofmultiple_add",
+                            arguments={
+                                "varprefix": varprefix,
+                                "choice_page_name": self._choice_page_name,
+                                "page_request_vars": json.dumps(self._page_request_vars),
+                                "filter_list_id": filter_list_selected_id,
+                            },
+                        ).data_attributes(),
                     )
 
                     html.close_li()

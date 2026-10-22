@@ -49,7 +49,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, RequestCacheConfig
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import HTMLWriter, TSFunctionCall
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -667,8 +667,10 @@ def _render_availability_timeline(
         for row_nr, row in enumerate(timeline_layout["table"]):
             table.row(
                 id_="timetable_%d_entry_%d" % (timeline_nr, row_nr),
-                onmouseover="cmk.availability.timetable_hover(%d, %d, 1);" % (timeline_nr, row_nr),
-                onmouseout="cmk.availability.timetable_hover(%d, %d, 0);" % (timeline_nr, row_nr),
+                ts_function=TSFunctionCall(
+                    function_name="availability_timetable_hover",
+                    arguments={"timeline_nr": timeline_nr, "row_nr": row_nr},
+                ),
             )
 
             table.cell(_("Links"), css=["buttons"])
@@ -868,22 +870,23 @@ def render_timeline_bar(
     html.open_tr(class_="timeline")
     for row_nr, title, width, css in timeline_layout["spans"]:
         id_: str | None = None
-        onmouseover: str | None = None
-        onmouseout: str | None = None
+        hover: dict[str, str] = {}
         if row_nr is not None:
             id_ = "timeline_%d_entry_%d" % (timeline_nr, row_nr)
             if style == "standalone":
-                onmouseover = "cmk.availability.timeline_hover(%d, %d, 1);" % (timeline_nr, row_nr)
-                onmouseout = "cmk.availability.timeline_hover(%d, %d, 0);" % (timeline_nr, row_nr)
+                hover = TSFunctionCall(
+                    function_name="availability_timeline_hover",
+                    arguments={"timeline_nr": timeline_nr, "row_nr": row_nr},
+                ).data_attributes()
 
         html.td(
             "",
+            colspan=None,
             style="width: %.3f%%" % width,
             title=title,
             class_=css,
             id_=id_,
-            onmouseover=onmouseover,
-            onmouseout=onmouseout,
+            **hover,
         )
 
     html.close_tr()

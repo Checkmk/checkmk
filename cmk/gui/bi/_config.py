@@ -33,7 +33,7 @@ from cmk.gui.default_name import unique_clone_increment_suggestion
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.groups import GroupName
 from cmk.gui.htmllib.foldable_container import foldable_container
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter, TSFunctionCall
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
@@ -1013,10 +1013,10 @@ class ModeBIRules(ABCBIMode):
             html.dropdown(
                 "bulk_moveto",
                 move_choices,
-                onchange="cmk.selection.update_bulk_moveto(this.value)",
                 class_=["bulk_moveto"],
                 label=_("Move to pack: "),
                 form="form_bulk_action_form",
+                ts_function=TSFunctionCall(function_name="update_bulk_moveto_on_change"),
             )
 
             html.button(
@@ -1053,7 +1053,9 @@ class ModeBIRules(ABCBIMode):
                             "_toggle_group",
                             type_="button",
                             class_="checkgroup",
-                            onclick="cmk.selection.toggle_all_rows(this.form);",
+                            **ClickAction(
+                                action="selection_toggle_all_rows", arguments={"in_form": "true"}
+                            ).data_attributes(),
                             value="X",
                         ),
                         sortable=False,
@@ -2450,10 +2452,10 @@ class BIModeAggregations(ABCBIMode):
             html.dropdown(
                 "bulk_moveto",
                 move_choices,
-                onchange="cmk.selection.update_bulk_moveto(this.value)",
                 class_=["bulk_moveto"],
                 label=_("Move to pack: "),
                 form="form_bulk_action_form",
+                ts_function=TSFunctionCall(function_name="update_bulk_moveto_on_change"),
             )
 
             html.button(
@@ -2480,7 +2482,7 @@ class BIModeAggregations(ABCBIMode):
                         "_toggle_group",
                         type_="button",
                         class_="checkgroup",
-                        onclick="cmk.selection.toggle_all_rows();",
+                        **ClickAction(action="selection_toggle_all_rows").data_attributes(),
                         value="X",
                     ),
                     sortable=False,

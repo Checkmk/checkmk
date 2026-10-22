@@ -62,6 +62,11 @@ $(document).ready(function () {
 register_callable_functions({
   confirm_dialog_form_submit: (_node, options) =>
     forms.confirm_dialog_form_submit(options.dialog_options, options.form_id, options.cancel_url),
+  enable_submit_buttons_on_input: (node, options) => {
+    node.addEventListener('input', () =>
+      forms.enable_submit_buttons_on_nonempty_input(node as HTMLInputElement, options.button_ids)
+    )
+  },
   enable_submit_buttons_on_nonempty_input: (_node, options) =>
     forms.enable_submit_buttons_on_nonempty_input(
       document.getElementById(options.input_id) as HTMLInputElement,

@@ -18,6 +18,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
+from tests.unit.cmk.gui.compare_html import click_handling
 
 
 def test_static_permissions_returns_users_permission() -> None:
@@ -57,6 +58,34 @@ def test_page_renders_registered_client_details(
     assert "https://client.example/callback" in written
     assert "https://client.example/other" in written
     assert str(registered.ok.registered_at.year) in written
+
+
+@pytest.mark.usefixtures("request_context")
+def test_page_toggles_all_rows_of_the_form_by_click_action(
+    monkeypatch: pytest.MonkeyPatch, test_edition: Edition
+) -> None:
+    monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda self: None)  # noqa: ARG005
+    with get_client_store() as store:
+        assert store.register(["https://client.example/callback"], "Example Client").is_ok()
+
+    with output_funnel.plugged():
+        ModeRegisteredOAuthClients(
+            test_edition,
+            PageContext(
+                config=Config(),
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+            ),
+        ).page(Config())
+        written = "".join(output_funnel.drain())
+
+    assert click_handling(written, "input.checkgroup") == (
+        None,
+        "selection_toggle_all_rows",
+        {"in_form": "true"},
+    )
 
 
 @pytest.mark.usefixtures("request_context")

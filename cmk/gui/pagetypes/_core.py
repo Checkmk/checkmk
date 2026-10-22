@@ -1213,17 +1213,23 @@ class ListPage[T: Overridable](Page):
                             "_toggle_group",
                             type_="button",
                             class_="checkgroup",
-                            onclick="cmk.selection.toggle_all_rows(this.form);"
-                            "cmk.page_menu.check_menu_entry_by_checkboxes('delete')",
                             value="X",
+                            **ClickAction(
+                                action="selection_toggle_all_rows",
+                                arguments={"in_form": "true", "menu_entry_id": "delete"},
+                            ).data_attributes(),
                         ),
                         sortable=False,
                         css=["checkbox"],
                     )
                     html.checkbox(
                         f"_c_{instance.owner()}+{instance.name()}",
-                        onclick="cmk.page_menu.check_menu_entry_by_checkboxes('delete')",
+                        deflt=False,
                         class_="page_checkbox",
+                        **ClickAction(
+                            action="page_menu_check_entry_by_checkboxes",
+                            arguments={"id": "delete"},
+                        ).data_attributes(),
                     )
 
                 # Actions

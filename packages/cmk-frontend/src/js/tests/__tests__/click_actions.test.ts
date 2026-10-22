@@ -12,6 +12,8 @@ import '@/modules/click_actions'
 jest.mock('@/modules/ajax', () => ({ call_ajax: jest.fn() }))
 // Imported via the page menu, but loads d3, which jest can't import
 jest.mock('@/modules/valuespecs', () => ({}))
+// Imports d3 as an ES module as well
+jest.mock('@/modules/bi', () => ({}))
 
 function click(html: string, selector: string): MouseEvent {
   document.body.innerHTML = html

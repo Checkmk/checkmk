@@ -46,7 +46,7 @@ export function toggle_subtree(oImg: HTMLElement, lazy: boolean) {
 function bi_update_tree(container: HTMLElement) {
   // Deactivate clicking - the update can last a couple
   // of seconds. In that time we must inhibit further clicking.
-  container.onclick = null
+  delete container.dataset.cmk_on_click
 
   // First find enclosding <div class=bi_tree_container>
   let bi_container: null | HTMLElement = container
@@ -144,45 +144,47 @@ export function set_rule_argument_lookup(lookup: Record<string, string[]>) {
   update_argument_hints()
 }
 
-export function update_argument_hints() {
-  selectAll<HTMLSelectElement, unknown>("select[onchange='cmk.bi.update_argument_hints();']").each(
-    (_d, idx, nodes) => {
-      const node = select(nodes[idx])
-      const rule_arguments = bi_rule_argument_lookup[node.property('value')]
-      const rule_body = node.select(function () {
-        // @ts-ignore
-        return this.closest('tbody')
-      })
-      const span = node.select(function () {
-        // @ts-ignore
-        return this.closest('span')
-      })
-      const required_inputs = rule_arguments.length
-      if (span.style('display') == 'none') return
+// The rule choices of the "call a rule" actions, see cmk.gui.bi._valuespecs
+const RULE_CHOICE_SELECTOR =
+  "select[data-cmk_call_ts_function='bi_update_argument_hints_on_change']"
 
-      // Create nodes
-      let newNodes = rule_body
+export function update_argument_hints() {
+  selectAll<HTMLSelectElement, unknown>(RULE_CHOICE_SELECTOR).each((_d, idx, nodes) => {
+    const node = select(nodes[idx])
+    const rule_arguments = bi_rule_argument_lookup[node.property('value')]
+    const rule_body = node.select(function () {
+      // @ts-ignore
+      return this.closest('tbody')
+    })
+    const span = node.select(function () {
+      // @ts-ignore
+      return this.closest('span')
+    })
+    const required_inputs = rule_arguments.length
+    if (span.style('display') == 'none') return
+
+    // Create nodes
+    let newNodes = rule_body
+      .selectAll<HTMLDivElement, unknown>('div.listofstrings')
+      .selectAll<HTMLInputElement, unknown>('input.text')
+      .nodes()
+    while (required_inputs >= newNodes.length) {
+      list_of_strings_extend(newNodes[newNodes.length - 1], false, '')
+      newNodes = rule_body
         .selectAll<HTMLDivElement, unknown>('div.listofstrings')
         .selectAll<HTMLInputElement, unknown>('input.text')
         .nodes()
-      while (required_inputs >= newNodes.length) {
-        list_of_strings_extend(newNodes[newNodes.length - 1], false, '')
-        newNodes = rule_body
-          .selectAll<HTMLDivElement, unknown>('div.listofstrings')
-          .selectAll<HTMLInputElement, unknown>('input.text')
-          .nodes()
-      }
-
-      // Update placeholder
-      const input_nodes = rule_body.selectAll('div.listofstrings').selectAll('input.text')
-      input_nodes.attr('placeholder', '')
-      input_nodes.each((_d, idx, nodes) => {
-        if (idx >= rule_arguments.length) return
-        const argument_input = select(nodes[idx])
-        argument_input.attr('placeholder', rule_arguments[idx])
-      })
     }
-  )
+
+    // Update placeholder
+    const input_nodes = rule_body.selectAll('div.listofstrings').selectAll('input.text')
+    input_nodes.attr('placeholder', '')
+    input_nodes.each((_d, idx, nodes) => {
+      if (idx >= rule_arguments.length) return
+      const argument_input = select(nodes[idx])
+      argument_input.attr('placeholder', rule_arguments[idx])
+    })
+  })
 }
 
 export abstract class BIPreview {

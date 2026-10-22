@@ -19,6 +19,7 @@ import cmk.ccc.regex
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -50,7 +51,8 @@ class LegacyIconEntry(ABCIconEntry):
 class IconEntry(ABCIconEntry):
     icon_name: StaticIcon | DynamicIcon
     title: str | None = None
-    url_spec: None | tuple[str, str] | str = None
+    # A click action replaces the URL of icons running code in the browser
+    url_spec: None | tuple[str, str] | str | ClickAction = None
     ident: str | None = None
 
 
@@ -178,7 +180,7 @@ def _process_icon(
         return
 
     title: str | None = None
-    url: None | tuple[str, str] | str = None
+    url: None | tuple[str, str] | str | ClickAction = None
     icon_name: StaticIcon | DynamicIcon = StaticIcon(IconNames.trans)
     # DynamicIcon is an alias to str
     if isinstance(result, str | StaticIcon):

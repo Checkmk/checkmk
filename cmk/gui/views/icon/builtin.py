@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import re
 from collections.abc import Mapping, Sequence
 from typing import Literal
@@ -12,7 +11,7 @@ import cmk.utils.render
 from cmk.graphing_engine import split_predict_prefix
 from cmk.gui.display_options import display_options
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter, TSFunctionCall
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
@@ -147,9 +146,7 @@ def _render_reschedule_icon(
     user_permissions: UserPermissions,  # noqa: ARG001
     icon_config: IconConfig,  # noqa: ARG001
 ) -> (
-    tuple[StaticIcon | DynamicIcon, str]
-    | tuple[StaticIcon | DynamicIcon, str, tuple[str, str]]
-    | None
+    tuple[StaticIcon | DynamicIcon, str] | tuple[StaticIcon | DynamicIcon, str, ClickAction] | None
 ):
     if what == "service" and row["service_cached_at"]:
         output = _("This service is based on cached agent data and cannot be rescheduled.")
@@ -180,14 +177,19 @@ def _render_reschedule_icon(
                 icon = StaticIcon(IconNames.reload_cmk)
                 txt = _("Reschedule 'Check_MK' service")
 
-        url = "onclick:cmk.views.reschedule_check(this, {}, {}, {}, {});".format(
-            json.dumps(row["site"]),
-            json.dumps(row["host_name"]),
-            json.dumps(servicedesc),
-            json.dumps(wait_svc),
+        return (
+            icon,
+            txt,
+            ClickAction(
+                action="views_reschedule_check",
+                arguments={
+                    "site": row["site"],
+                    "host": row["host_name"],
+                    "service": servicedesc,
+                    "wait_svc": wait_svc,
+                },
+            ),
         )
-        # _self is needed to prevent wrong linking when views are parts of dashlets
-        return icon, txt, (url, "_self")
     return None
 
 
@@ -431,13 +433,16 @@ def _pnp_icon(row: Row, what: str) -> HTML | None:
     return HTMLWriter.render_a(
         content=html.render_static_icon(graph_icon_name),
         href=url,
-        onmouseout="cmk.hover.hide()",
-        onmouseover="cmk.graph_integration.show_hover_graphs(event, %s, %s, %s);"
-        % (
-            json.dumps(row["site"]),
-            json.dumps(row["host_name"]),
-            json.dumps(row["service_description"] if what == "service" else "_HOST_"),
-        ),
+        **TSFunctionCall(
+            function_name="hover_graphs",
+            arguments={
+                "site_id": row["site"],
+                "host_name": row["host_name"],
+                "service_description": (
+                    row["service_description"] if what == "service" else "_HOST_"
+                ),
+            },
+        ).data_attributes(),
     )
 
 

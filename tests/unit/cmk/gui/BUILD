@@ -283,6 +283,7 @@ py_cmk_test(
     env = {"EDITION": "community"},
     use_project_pytest_config = True,
     deps = [
+        ":compare_html",
         ":conftest",
         ":init_py",
         "//cmk/bi",
@@ -352,6 +353,7 @@ py_cmk_test(
     env = {"EDITION": "community"},
     use_project_pytest_config = True,
     deps = [
+        ":compare_html",
         ":conftest",
         ":helpers",
         ":init_py",
@@ -417,6 +419,7 @@ py_cmk_test(
     env = {"EDITION": "community"},
     use_project_pytest_config = True,
     deps = [
+        ":compare_html",
         ":conftest",
         ":init_py",
         "//cmk/gui:auth",

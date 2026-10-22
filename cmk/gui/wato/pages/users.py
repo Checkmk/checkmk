@@ -593,7 +593,9 @@ class ModeUsers(WatoMode):
                         "_toggle_group",
                         type_="button",
                         class_="checkgroup",
-                        onclick="cmk.selection.toggle_all_rows(this.form);",
+                        **ClickAction(
+                            action="selection_toggle_all_rows", arguments={"in_form": "true"}
+                        ).data_attributes(),
                         value="X",
                     ),
                     sortable=False,

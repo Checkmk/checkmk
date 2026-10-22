@@ -20,6 +20,8 @@ import { computed, ref, watch } from 'vue'
 
 import { fetchTemplateAttributes } from '../api'
 import { type TemplateAttributes, appendedAttributeNames, templateMacro } from '../definition'
+import type { TemplatePreview } from '../templatePreview'
+import TemplateHostMatches from './TemplateHostMatches.vue'
 
 const { _t } = usei18n()
 
@@ -29,6 +31,7 @@ const {
   consolidation,
   aggregator,
   appendSeriesAttributes,
+  templatePreview,
   templateErrors = []
 } = defineProps<{
   metricName: string | null
@@ -36,7 +39,12 @@ const {
   consolidation: ConsolidationFunction
   aggregator: Aggregator | undefined
   appendSeriesAttributes: boolean
+  templatePreview: TemplatePreview
   templateErrors?: string[]
+}>()
+
+const emit = defineEmits<{
+  refreshTemplatePreview: []
 }>()
 
 const serviceName = defineModel<string>('serviceName', { required: true })
@@ -244,6 +252,10 @@ const templateFieldId = useId()
                   >
                 </div>
               </div>
+              <TemplateHostMatches
+                :preview="templatePreview"
+                @refresh="emit('refreshTemplatePreview')"
+              />
             </div>
           </CmkTabContent>
         </template>

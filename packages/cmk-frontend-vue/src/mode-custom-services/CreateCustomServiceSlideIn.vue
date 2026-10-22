@@ -15,6 +15,7 @@ import { computed, ref, useTemplateRef, watch } from 'vue'
 import { createCustomService } from './save'
 import AssignHostStep from './steps/AssignHostStep.vue'
 import ConfigureNameStep from './steps/ConfigureNameStep.vue'
+import { useHostNameTemplatePreview } from './templatePreview'
 import { type ServiceModel, isReadyToCreate } from './types'
 
 const { open, initial } = defineProps<{
@@ -37,6 +38,8 @@ const saving = ref(false)
 const saveError = ref<string | null>(null)
 const templateErrors = ref<string[]>([])
 const nameStepRef = useTemplateRef<InstanceType<typeof ConfigureNameStep>>('nameStep')
+
+const templatePreview = useHostNameTemplatePreview(() => model.value)
 
 const canSave = computed(() => isReadyToCreate(model.value))
 
@@ -97,6 +100,8 @@ async function save(): Promise<void> {
         :aggregator="model.aggregator"
         :append-series-attributes="model.appendSeriesAttributes"
         :template-errors="templateErrors"
+        :template-preview="templatePreview.preview.value"
+        @refresh-template-preview="templatePreview.refresh"
       />
       <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
       <div class="mode-custom-services-create-custom-service-slide-in__actions">

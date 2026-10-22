@@ -19,6 +19,7 @@ import { type SaveResult, createCustomService, updateCustomService } from './sav
 import AssignHostStep from './steps/AssignHostStep.vue'
 import ConfigureNameStep from './steps/ConfigureNameStep.vue'
 import DefineMetricStep from './steps/DefineMetricStep.vue'
+import { useHostNameTemplatePreview } from './templatePreview'
 import { type ServiceModel, emptyService, isMetricSelected, isReadyToCreate } from './types'
 
 const props = defineProps<CustomServicesWizard>()
@@ -39,6 +40,10 @@ const nameStepRef = useTemplateRef<InstanceType<typeof ConfigureNameStep>>('name
 
 // A metric must be selected before the host-assignment step can be reached.
 const metricStepValid = computed(() => isMetricSelected(model.value))
+// Only looked up on the host step, so editing the metric step does not query on every change
+const templatePreview = useHostNameTemplatePreview(() =>
+  currentStep.value === 3 ? model.value : null
+)
 // A service name and a target host are both required before the service can be created.
 const hostStepValid = computed(() => isReadyToCreate(model.value))
 
@@ -186,11 +191,13 @@ async function saveService(): Promise<void> {
             v-model:host-name="model.hostName"
             v-model:host-name-template="model.hostNameTemplate"
             :template-errors="templateErrors"
+            :template-preview="templatePreview.preview.value"
             :metric-name="model.metricName"
             :attribute-filter="model.attributeFilter"
             :consolidation="model.consolidation"
             :aggregator="model.aggregator"
             :append-series-attributes="model.appendSeriesAttributes"
+            @refresh-template-preview="templatePreview.refresh"
           />
           <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
         </template>

@@ -21,6 +21,7 @@ const AUTOCOMPLETE_URL = `${API_BASE}/objects/autocomplete/:ident`
 const METRIC_NAMES_URL = `${API_BASE}/domain-types/telemetry_metrics/actions/names_with_types/invoke`
 const GRAPH_DATA_URL = `${API_BASE}/domain-types/custom_graph/actions/fetch_data/invoke`
 const TEMPLATE_ATTRIBUTES_URL = `${API_BASE}/domain-types/custom_service/actions/template_attributes/invoke`
+const RESOLVE_URL = `${API_BASE}/domain-types/custom_service/actions/resolve_host_name_template/invoke`
 
 const STORED_EXTENSIONS = {
   host_assignment: { mode: 'explicit_host', host_name: 'web01' },
@@ -85,6 +86,14 @@ const server = useMswServer(
     templateAttributesRequests += 1
     return HttpResponse.json({ availability: 'available', attributes: [], truncated: false })
   }),
+  http.post(RESOLVE_URL, () =>
+    HttpResponse.json({
+      matching_hosts: ['cart'],
+      unmatched_host_names: [],
+      hidden_match_count: 0,
+      truncated: false
+    })
+  ),
   http.post(GRAPH_DATA_URL, () =>
     HttpResponse.json({
       time_range: { start: 0, end: 3600, step: 60 },
@@ -251,6 +260,7 @@ test('a service assigned by host name template is written back with its template
   await goToHostStep()
 
   expect(await screen.findByDisplayValue('$RESOURCE_ATTR.service.name$')).toBeTruthy()
+  expect(await screen.findByText('cart')).toBeTruthy()
   await userEvent.click(await screen.findByRole('button', { name: 'Save & activate changes' }))
 
   await waitFor(() => expect(updateRequests).toBe(1))
@@ -281,6 +291,7 @@ test('a refused host name template is shown at the template field', async () => 
   )
   renderWizard()
   await goToHostStep()
+  await screen.findByText('cart')
 
   await userEvent.click(await screen.findByRole('button', { name: 'Save & activate changes' }))
 

@@ -13,6 +13,7 @@ import { afterEach, expect, test } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
 import AssignHostStep from '@/mode-custom-services/steps/AssignHostStep.vue'
+import type { TemplatePreview } from '@/mode-custom-services/templatePreview'
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
 
@@ -64,14 +65,17 @@ function renderStep(
     aggregator = undefined,
     appendSeriesAttributes = true,
     hostNameTemplate = null,
-    templateErrors = []
+    templateErrors = [],
+    templatePreview = { status: 'idle' }
   }: {
     aggregator?: Aggregator | undefined
     appendSeriesAttributes?: boolean
     hostNameTemplate?: string | null
     templateErrors?: string[]
+    templatePreview?: TemplatePreview
   } = {}
 ) {
+  const refreshes = ref(0)
   const service = ref(serviceName)
   const host = ref<string | null>(hostName)
   const template = ref<string | null>(hostNameTemplate)
@@ -86,7 +90,9 @@ function renderStep(
         consolidation: GAUGE,
         aggregator,
         appendSeriesAttributes,
-        templateErrors
+        templateErrors,
+        templatePreview,
+        refreshes
       }
     },
     template: `<AssignHostStep
@@ -99,10 +105,12 @@ function renderStep(
       :aggregator="aggregator"
       :append-series-attributes="appendSeriesAttributes"
       :template-errors="templateErrors"
+      :template-preview="templatePreview"
+      @refresh-template-preview="refreshes++"
     />`
   })
   render(wrapper)
-  return { service, host, template }
+  return { service, host, template, refreshes }
 }
 
 test('edits the service name', async () => {
@@ -250,4 +258,23 @@ test('asks for no attributes while the host is assigned by hand', async () => {
 
   await screen.findByText('web01')
   expect(templateAttributesRequest).toBeNull()
+})
+
+test('shows the hosts the template matches and passes a refresh on', async () => {
+  const { refreshes } = renderStep('HTTP duration', null, {
+    hostNameTemplate: 'pod-$RESOURCE_ATTR.k8s.pod.name$',
+    templatePreview: {
+      status: 'resolved',
+      resolution: {
+        matching_hosts: ['pod-cart'],
+        unmatched_host_names: [],
+        hidden_match_count: 0,
+        truncated: false
+      }
+    }
+  })
+
+  expect(screen.getByText('pod-cart')).toBeTruthy()
+  await userEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+  expect(refreshes.value).toBe(1)
 })

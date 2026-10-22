@@ -111,7 +111,6 @@ py_wheel(
         "apispec-oneofschema",
         "bcrypt",
         "cryptography",
-        "docstring-parser",
         "fastapi",
         "feedparser",
         "fido2",

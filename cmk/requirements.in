@@ -2,7 +2,6 @@ annotated_types
 apispec
 apispec-oneofschema
 cryptography
-docstring-parser
 exchangelib
 fastapi
 feedparser

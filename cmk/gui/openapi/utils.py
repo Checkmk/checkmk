@@ -11,7 +11,6 @@ from http import HTTPStatus
 from typing import Any, Literal, NewType, override
 from wsgiref.types import StartResponse, WSGIEnvironment
 
-import docstring_parser
 from werkzeug.exceptions import HTTPException
 
 from cmk.gui.http import Response
@@ -293,41 +292,6 @@ class ProblemException(HTTPException):
             fields=self.fields,
             ext=self.ext,
         )
-
-
-def param_description(
-    string: str | None,
-    param_name: str,
-    errors: Literal["raise", "ignore"] = "raise",
-) -> str | None:
-    """Get a param description of a docstring.
-
-    Args:
-        string:
-            The docstring from which to extract the parameter description.
-
-        param_name:
-            The name of the parameter.
-
-        errors:
-            Either 'raise' or 'ignore'.
-
-    Returns:
-        The description of the parameter, if possible.
-
-    """
-    if string is None:
-        if errors == "raise":
-            raise ValueError("No docstring was given.")
-        return None
-
-    docstring = docstring_parser.parse(string)
-    for param in docstring.params:
-        if param.arg_name == param_name and param.description is not None:
-            return param.description.replace("\n", " ")
-    if errors == "raise":
-        raise ValueError(f"Parameter {param_name!r} not found in docstring.")
-    return None
 
 
 def serve_json(

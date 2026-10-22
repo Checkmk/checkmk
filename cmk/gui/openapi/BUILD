@@ -16,7 +16,6 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui/openapi/restful_objects:type_defs",
         "//cmk/utils",
-        requirement("docstring-parser"),
         requirement("werkzeug"),
     ],
 )

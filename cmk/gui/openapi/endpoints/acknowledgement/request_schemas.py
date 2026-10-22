@@ -10,12 +10,6 @@ from marshmallow_oneofschema.one_of_schema import OneOfSchema
 from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.livestatus_utils.commands.acknowledgments import (
-    acknowledge_host_problem,
-    acknowledge_hostgroup_problem,
-)
-from cmk.gui.livestatus_utils.commands.downtimes import schedule_servicegroup_service_downtime
-from cmk.gui.openapi.utils import param_description
 from cmk.livestatus_client import tables
 
 
@@ -48,7 +42,7 @@ class ViaHostGroup(BaseSchema):
         required=True,
         should_exist=True,
         should_be_monitored=True,
-        description=param_description(acknowledge_hostgroup_problem.__doc__, "hostgroup_name"),
+        description="Host group name for which this acknowledgement is for.",
     )
 
 
@@ -95,8 +89,9 @@ class ViaServiceGroup(BaseSchema):
         required=True,
         should_exist=True,
         should_be_monitored=True,
-        description=param_description(
-            schedule_servicegroup_service_downtime.__doc__, "servicegroup_name"
+        description=(
+            "The name of the service group. The problems of all services in this group will be "
+            "acknowledged."
         ),
     )
 
@@ -116,33 +111,34 @@ class ViaServiceQuery(BaseSchema):
 
 
 class AcknowledgeProblemBase(BaseSchema):
-    # NOTE: the docstring param descriptions are generalized for both host and service problems.
-
     sticky = fields.Boolean(
         required=False,
         load_default=True,
         example=False,
-        description=param_description(acknowledge_host_problem.__doc__, "sticky"),
+        description=(
+            "If set, only a state-change to the UP/OK state will discard the acknowledgement. "
+            "Otherwise, it will be discarded on any state-change."
+        ),
     )
 
     persistent = fields.Boolean(
         required=False,
         load_default=False,
         example=False,
-        description=param_description(acknowledge_host_problem.__doc__, "persistent"),
+        description="If set, the comment will persist a restart.",
     )
 
     notify = fields.Boolean(
         required=False,
         load_default=True,
         example=False,
-        description=param_description(acknowledge_host_problem.__doc__, "notify"),
+        description="If set, notifications will be sent out to the configured contacts.",
     )
 
     comment = fields.String(
         required=True,
         example="This was expected.",
-        description=param_description(acknowledge_host_problem.__doc__, "comment"),
+        description="Comment to be stored alongside the acknowledgement.",
     )
 
     expire_on = fields.AwareDateTime(
@@ -150,8 +146,8 @@ class AcknowledgeProblemBase(BaseSchema):
         default_timezone=dt.UTC,
         example="2025-05-20T07:30:00Z",
         description=(
-            str(param_description(acknowledge_host_problem.__doc__, "expire_on"))
-            + " The timezone will default to UTC."
+            "If set, the acknowledgement will expire at this time. "
+            "The timezone will default to UTC."
         ),
     )
 

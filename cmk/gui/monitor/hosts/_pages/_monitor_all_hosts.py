@@ -14,7 +14,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.monitor.command import (
@@ -60,7 +60,7 @@ from .._access import ALL_HOSTS_PERMISSION, LEGACY_ALL_HOSTS_VIEW_NAME
 from .._api._list_hosts import LIMIT_TIERS
 from .._impl import LiveStatusHostRepository
 
-_PAGE_TITLE = _("All hosts")
+_PAGE_TITLE = _l("All hosts")
 
 
 def monitor_all_hosts_visual_spec() -> Visual:

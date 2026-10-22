@@ -2903,6 +2903,7 @@ class EventStatus:
         self._events = status["events"]
         self._rule_stats = status["rule_stats"]
         self._interval_starts = status["interval_starts"]
+        self._initialize_event_limit_status()
 
     def save_status(self) -> None:
         now = time.time()

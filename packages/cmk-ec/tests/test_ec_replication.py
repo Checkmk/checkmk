@@ -421,6 +421,27 @@ def test_slave_which_took_over_executes_the_actions_of_its_master(
     assert ticket_file.read_text() == "disk full"
 
 
+def test_slave_which_took_over_counts_the_events_of_its_master_towards_its_limits(
+    event_server: EventServer,
+    event_status: EventStatus,
+    config: Config,
+    history: History,
+    slave_status: SlaveStatus,
+    pull: _Pull,
+) -> None:
+    slave_config = replication_slave_config(config) | {
+        "event_limit": config["event_limit"] | {"by_host": ec.EventLimit(action="stop", limit=1)},
+        "rule_packs": [ec.default_rule_pack([new_rule({})])],
+    }
+    event_server.reload_configuration(slave_config, history)
+    pull(slave_config, _master(new_event(ec.Event(text="from master"))))
+    slave_status["mode"] = "takeover"
+
+    event_server.process_potential_event_instrumented([new_message(ec.Event(text="disk full"))])
+
+    assert [event["text"] for event in event_status.events()] == ["from master"]
+
+
 def test_successful_sync_is_recorded(
     slave_status: SlaveStatus, config: Config, pull: _Pull
 ) -> None:

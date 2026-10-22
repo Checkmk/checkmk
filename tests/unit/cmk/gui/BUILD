@@ -314,6 +314,7 @@ py_cmk_test(
         requirement("pytest-mock"),
         requirement("python-ldap"),
         requirement("time-machine"),
+        requirement("werkzeug"),
         "//packages/cmk-web/cmk/web/utils",
     ],
 )

@@ -68,6 +68,14 @@ describe('CmkBarplotFigure', () => {
     expect(screen.getByText('otherhost')).toBeInTheDocument()
   })
 
+  it('labels a host with several bars once', () => {
+    renderFigure({
+      bars: [bar('myhost', 40), { ...bar('myhost', 70), service_description: 'Memory' }]
+    })
+
+    expect(screen.getAllByText('myhost')).toHaveLength(1)
+  })
+
   it('hides the host labels when the bars are too narrow for them', () => {
     renderFigure({}, { height: 40 })
 
@@ -80,6 +88,15 @@ describe('CmkBarplotFigure', () => {
     expect(screen.getByText('0')).toBeInTheDocument()
     expect(screen.getByText('50%')).toBeInTheDocument()
     expect(screen.queryByText('100%')).toBeNull()
+  })
+
+  it('links a host label to where its bar leads', () => {
+    renderFigure()
+
+    expect(screen.getByText('myhost').closest('a')).toHaveAttribute(
+      'href',
+      expect.stringContaining('host=myhost')
+    )
   })
 
   it('wraps every bar in the contextual link trigger', () => {

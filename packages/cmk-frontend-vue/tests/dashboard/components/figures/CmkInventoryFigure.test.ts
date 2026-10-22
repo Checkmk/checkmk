@@ -42,6 +42,17 @@ function renderFigure(value: Partial<InventoryAttribute> = {}) {
 }
 
 describe('CmkInventoryFigure', () => {
+  it('marks an attribute with several links with the menu arrow', () => {
+    const { container } = renderFigure({
+      links: [...ATTRIBUTE.links, { ...ATTRIBUTE.links[0]!, title: 'Host' }],
+      link_properties: {
+        links: [...ATTRIBUTE.link_properties.links, ...ATTRIBUTE.link_properties.links]
+      }
+    })
+
+    expect(container.querySelector('.db-contextual-link-anchor__arrow')).not.toBeNull()
+  })
+
   it('draws the attribute as the server renders it', () => {
     renderFigure()
 

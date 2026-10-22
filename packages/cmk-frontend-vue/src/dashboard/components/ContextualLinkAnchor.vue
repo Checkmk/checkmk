@@ -54,6 +54,8 @@ defineSlots<{ default(props: { several: boolean }): unknown }>()
 }
 
 .db-contextual-link-anchor__arrow {
+  display: inline-block;
+  vertical-align: middle;
   opacity: 0.7;
 }
 

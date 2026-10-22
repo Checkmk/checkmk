@@ -16,6 +16,8 @@ import {
   valueDomain
 } from '@/graphing/components/TimeSeriesGraph/axes/tickStepping'
 
+import SvgLinkArrow from './lib/SvgLinkArrow.vue'
+
 const props = defineProps<{
   value: Barplot
   width: number
@@ -25,7 +27,7 @@ const props = defineProps<{
 
 const MARGIN = { top: 20, right: 10, bottom: 10, left: 10 }
 const TICK_SPACING = 85
-const LABEL_HEIGHT = 12
+const LABEL_HEIGHT = 14
 const LABEL_OFFSET = 9
 const BAR_OFFSET = 6
 
@@ -47,6 +49,15 @@ const hostNames = computed(() => [...new Set(props.value.bars.map((bar) => bar.h
 
 const yScale = computed(() =>
   scaleBand<string>().domain(hostNames.value).range([plotHeight.value, 0]).padding(0.2)
+)
+
+const firstBarOfEachHost = computed(
+  () =>
+    new Set(
+      hostNames.value.map((hostName) =>
+        props.value.bars.findIndex((bar) => bar.host_name === hostName)
+      )
+    )
 )
 
 const showLabels = computed(() => hostNames.value.length < plotHeight.value / LABEL_HEIGHT)
@@ -106,6 +117,7 @@ function barLabel(bar: BarplotBar): string {
     <g :transform="`translate(${MARGIN.left}, ${MARGIN.top})`">
       <ContextualLinkTrigger
         v-for="(bar, index) in value.bars"
+        v-slot="{ several }"
         :key="index"
         :links="value.links"
         :link-properties="bar.link_properties"
@@ -121,6 +133,23 @@ function barLabel(bar: BarplotBar): string {
           :height="barHeight"
           rx="2"
         />
+        <!-- A host's bars share one band, so only its first bar carries the label. -->
+        <template v-if="showLabels && firstBarOfEachHost.has(index)">
+          <text
+            class="db-contextual-link-anchor__text db-cmk-barplot-figure__label"
+            :x="LABEL_OFFSET"
+            :y="yScale(bar.host_name)"
+            dy="0.32em"
+            aria-hidden="true"
+          >
+            {{ bar.host_name }}
+          </text>
+          <SvgLinkArrow
+            v-if="several"
+            :layout="`${bar.host_name} ${yScale(bar.host_name)}`"
+            :size="7"
+          />
+        </template>
       </ContextualLinkTrigger>
       <text
         v-for="tick in ticks"
@@ -132,19 +161,6 @@ function barLabel(bar: BarplotBar): string {
       >
         {{ tick.text }}
       </text>
-      <template v-if="showLabels">
-        <text
-          v-for="hostName in hostNames"
-          :key="hostName"
-          class="db-cmk-barplot-figure__label"
-          :x="LABEL_OFFSET"
-          :y="yScale(hostName)"
-          dy="0.32em"
-          aria-hidden="true"
-        >
-          {{ hostName }}
-        </text>
-      </template>
       <line
         v-for="x in gridLines"
         :key="x"
@@ -165,24 +181,24 @@ function barLabel(bar: BarplotBar): string {
 }
 
 .db-cmk-barplot-figure__bar {
-  fill: rgb(0 185 255 / 95%);
-  stroke: rgb(0 0 0 / 20%);
+  --bar-fill: rgb(0 185 255 / 95%);
 
-  &:hover {
-    fill: rgb(0 220 255 / 90%);
-    stroke: black;
-  }
+  fill: var(--bar-fill);
+  stroke: rgb(0 0 0 / 20%);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-[data-theme='modern-dark'] .db-cmk-barplot-figure__bar,
-[data-theme='modern-dark'] .db-cmk-barplot-figure__bar:hover {
-  fill: rgb(60 194 255);
+[data-theme='modern-dark'] .db-cmk-barplot-figure__bar {
+  --bar-fill: rgb(60 194 255);
+}
+
+a:is(:hover, :focus-visible, [data-state='open']) .db-cmk-barplot-figure__bar {
+  fill: color-mix(in srgb, var(--bar-fill) 90%, white);
 }
 
 .db-cmk-barplot-figure__label {
   fill: var(--font-color);
-  font-size: 10px;
+  font-size: var(--font-size-normal);
 }
 
 .db-cmk-barplot-figure__grid {

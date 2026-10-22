@@ -121,7 +121,7 @@ def test_openapi_host_register_wrong_site(aut_user_auth_wsgi_app: WebTestAppForC
 def test_openapi_host_register_refuses_a_uuid_that_is_linked_to_another_host(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
-    """CMK-40803 AC-1"""
+    """CMK-40803 AC1"""
     uuid = UUID("1409ac78-6548-4138-9285-12484409ddf2")
     _uuid_link_manager().create_link(HostName("heute"), uuid, push_configured=False)
 
@@ -141,7 +141,7 @@ def test_openapi_host_register_refuses_a_uuid_that_is_linked_to_another_host(
 def test_openapi_host_register_refuses_a_uuid_that_is_linked_to_the_same_host(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
-    """CMK-40803 AC-1"""
+    """CMK-40803 AC1"""
     uuid = UUID("1409ac78-6548-4138-9285-12484409ddf2")
     _uuid_link_manager().create_link(HostName("example.com"), uuid, push_configured=False)
 

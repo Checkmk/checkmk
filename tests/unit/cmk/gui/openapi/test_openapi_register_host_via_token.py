@@ -142,7 +142,7 @@ class TestRegisterHostViaToken:
     def test_a_uuid_that_is_already_linked_is_refused_without_consuming_a_use(
         self, clients: ClientRegistry
     ) -> None:
-        """CMK-40803 AC-1"""
+        """CMK-40803 AC1"""
         uuid = str(uuid4())
         clients.HostConfig.register("example.com", uuid)
         token = _issue_token("heute")
@@ -160,7 +160,7 @@ class TestRegisterHostViaToken:
     def test_a_uuid_of_an_open_request_is_refused_without_consuming_a_use(
         self, clients: ClientRegistry, security_events: list[LoggedSecurityEvent]
     ) -> None:
-        """CMK-40803 AC-5"""
+        """CMK-40803 AC5"""
         uuid = uuid4()
         cmk.utils.paths.r4r_pending_dir.mkdir(parents=True)
         get_r4r_filepath(cmk.utils.paths.r4r_pending_dir, uuid).write_text(
@@ -192,7 +192,7 @@ class TestRegisterHostViaToken:
     def test_of_two_registrations_with_one_token_only_the_first_links_its_uuid(
         self, clients: ClientRegistry
     ) -> None:
-        """CMK-40803 AC-3: The second registration holds the token as its authentication read it, before the first registration consumed the use."""
+        """CMK-40803 AC3: The second registration holds the token as its authentication read it, before the first registration consumed the use."""
         token_as_both_authentications_read_it = _issue_token("heute")
         first_uuid = uuid4()
         clients.HostConfig.register_via_token(

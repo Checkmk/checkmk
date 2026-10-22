@@ -19,7 +19,7 @@ from tests.testlib.unit.rest_api_client import ClientRegistry
 def test_register_refuses_a_uuid_of_an_open_request(
     clients: ClientRegistry, security_events: list[LoggedSecurityEvent]
 ) -> None:
-    """CMK-40803 AC-5"""
+    """CMK-40803 AC5"""
     uuid = uuid4()
     cmk.utils.paths.r4r_new_dir.mkdir(parents=True)
     get_r4r_filepath(cmk.utils.paths.r4r_new_dir, uuid).write_text(

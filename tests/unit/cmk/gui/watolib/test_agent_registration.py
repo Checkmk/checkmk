@@ -20,7 +20,7 @@ from tests.testlib.unit.fake_site import LoggedSecurityEvent
 def test_a_refused_registration_of_a_linked_uuid_writes_a_security_event(
     security_events: list[LoggedSecurityEvent],
 ) -> None:
-    """CMK-40803 AC-2"""
+    """CMK-40803 AC2"""
     uuid = UUID("1409ac78-6548-4138-9285-12484409ddf2")
     registration = UUIDRegistration(
         agent_updates_permitted=None,

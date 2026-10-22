@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
@@ -46,6 +47,15 @@ const HOSTS: SiteOverviewHosts = {
   hosts: [host('alpha'), host('beta', { state: 'DOWN' })]
 }
 
+const TWO_LINKS: SiteOverviewHosts = {
+  ...HOSTS,
+  links: [...HOSTS.links, { ...HOSTS.links[0]!, title: 'Services' }],
+  hosts: HOSTS.hosts.map((entry) => ({
+    ...entry,
+    link_properties: { links: [...entry.link_properties.links, ...entry.link_properties.links] }
+  }))
+}
+
 function renderFigure(value: SiteOverviewHosts = HOSTS) {
   return render(CmkSiteOverviewHostsFigure, {
     props: {
@@ -61,6 +71,14 @@ function renderFigure(value: SiteOverviewHosts = HOSTS) {
 async function hoverFirstHost(): Promise<void> {
   const [area] = document.querySelectorAll('rect')
   await fireEvent.pointerMove(area!, { clientX: 44, clientY: 49 })
+}
+
+async function openFirstHostMenu(): Promise<void> {
+  await hoverFirstHost()
+  screen.getByRole('button', { name: 'alpha' }).focus()
+  await userEvent.keyboard('{Enter}')
+  await screen.findByRole('menu')
+  await screen.findByText('Host is up')
 }
 
 function highlights(): Element[] {
@@ -83,6 +101,56 @@ describe('CmkSiteOverviewHostsFigure', () => {
     await fireEvent.pointerLeave(document.querySelector('svg g')!)
 
     expect(highlights()).toHaveLength(0)
+  })
+
+  it('keeps the tooltip and the menu of a host after the pointer leaves', async () => {
+    renderFigure(TWO_LINKS)
+    await openFirstHostMenu()
+
+    await fireEvent.pointerLeave(document.querySelector('svg g')!)
+
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+    expect(screen.getByText('Host is up')).toBeInTheDocument()
+  })
+
+  it('lets the tooltip go once a refresh takes the menu of a host away', async () => {
+    const { rerender } = renderFigure(TWO_LINKS)
+    await openFirstHostMenu()
+
+    await rerender({ value: HOSTS })
+
+    expect(screen.queryByText('Host is up')).toBeNull()
+  })
+
+  it('closes the menu of a host once a refresh puts another host in its place', async () => {
+    const { rerender } = renderFigure(TWO_LINKS)
+    await openFirstHostMenu()
+
+    await rerender({ value: { ...TWO_LINKS, hosts: [...TWO_LINKS.hosts].reverse() } })
+
+    expect(screen.queryByRole('menu')).toBeNull()
+  })
+
+  it('closes the menu and the tooltip of a host on Escape', async () => {
+    renderFigure(TWO_LINKS)
+    await openFirstHostMenu()
+
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.queryByRole('menu')).toBeNull()
+    expect(screen.queryByText('Host is up')).toBeNull()
+  })
+
+  it('marks the tooltip of a host with several links with the menu arrow', async () => {
+    renderFigure(TWO_LINKS)
+
+    await hoverFirstHost()
+
+    expect(
+      (await screen.findByText('Host is up'))
+        .closest('.cmk-pointer-tooltip')!
+        .querySelector('.db-contextual-link-anchor__arrow')
+    ).not.toBeNull()
   })
 
   it('names the hosts by their state in its accessible name', () => {

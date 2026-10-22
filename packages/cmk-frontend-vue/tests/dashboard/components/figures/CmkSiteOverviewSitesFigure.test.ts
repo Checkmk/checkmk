@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
@@ -40,6 +41,19 @@ const SITES: SiteOverviewSites = {
   ]
 }
 
+const TWO_LINKS: SiteOverviewSites = {
+  ...SITES,
+  links: [...SITES.links, { ...SITES.links[0]!, title: 'Hosts' }],
+  sites: SITES.sites.map((site) =>
+    site.status === 'online'
+      ? {
+          ...site,
+          link_properties: { links: [...site.link_properties.links, ...site.link_properties.links] }
+        }
+      : site
+  )
+}
+
 function renderFigure(value: SiteOverviewSites = SITES) {
   return render(CmkSiteOverviewSitesFigure, {
     props: {
@@ -50,6 +64,16 @@ function renderFigure(value: SiteOverviewSites = SITES) {
       filters: {}
     }
   })
+}
+
+async function openSiteMenu(): Promise<HTMLElement> {
+  const site = screen.getByRole('button', { name: 'Local site' })
+  await fireEvent.pointerMove(site)
+  site.focus()
+  await userEvent.keyboard('{Enter}')
+  await screen.findByRole('menu')
+  await screen.findByText('hosts in total')
+  return site
 }
 
 describe('CmkSiteOverviewSitesFigure', () => {
@@ -74,6 +98,25 @@ describe('CmkSiteOverviewSitesFigure', () => {
     await fireEvent.pointerMove(screen.getByRole('link'))
 
     expect(await screen.findByText('hosts in total')).toBeInTheDocument()
+  })
+
+  it('keeps the tooltip and the menu of a site after the pointer leaves', async () => {
+    renderFigure(TWO_LINKS)
+    const site = (await openSiteMenu()).closest('g')!
+
+    await fireEvent.pointerLeave(site)
+
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+    expect(screen.getByText('hosts in total')).toBeInTheDocument()
+  })
+
+  it('lets the tooltip go once a refresh takes the menu of a site away', async () => {
+    const { rerender } = renderFigure(TWO_LINKS)
+    await openSiteMenu()
+
+    await rerender({ value: SITES })
+
+    expect(screen.queryByText('hosts in total')).toBeNull()
   })
 
   it('shows the missing icon for a site with an unknown status', () => {

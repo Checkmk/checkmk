@@ -18,16 +18,26 @@ import {
 
 import type { ContextualLinkEntry } from '@/dashboard/lib/contextualLinkUrl'
 
-defineProps<{ entries: ContextualLinkEntry[] }>()
+defineProps<{
+  entries: ContextualLinkEntry[]
+  /** Opens the menu below this element instead of below the trigger. */
+  reference?: HTMLElement | null | undefined
+}>()
+
+const open = defineModel<boolean>('open', { default: false })
 </script>
 
 <template>
-  <DropdownMenuRoot>
+  <DropdownMenuRoot v-model:open="open">
     <DropdownMenuTrigger as-child>
       <slot />
     </DropdownMenuTrigger>
     <DropdownMenuPortal>
-      <DropdownMenuContent class="cmk-vue-app db-contextual-link-chooser" :side-offset="4">
+      <DropdownMenuContent
+        class="cmk-vue-app db-contextual-link-chooser"
+        :side-offset="4"
+        v-bind="reference ? { reference, align: 'start' } : {}"
+      >
         <DropdownMenuItem v-for="(entry, index) in entries" :key="index" as-child>
           <a :href="entry.href" class="db-contextual-link-chooser__item">{{ entry.title }}</a>
         </DropdownMenuItem>

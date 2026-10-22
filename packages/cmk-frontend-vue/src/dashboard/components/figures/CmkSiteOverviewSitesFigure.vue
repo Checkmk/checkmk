@@ -11,9 +11,10 @@ import CmkPointerTooltip, {
 } from 'cmk-ui-library/components/CmkPointerTooltip.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { useTheme } from 'cmk-ui-library/lib/useTheme'
-import { computed, ref } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import ContextualLinkTrigger from '@/dashboard/components/ContextualLinkTrigger.vue'
+import { contextualLinkCount } from '@/dashboard/lib/contextualLinkUrl'
 import type {
   SiteOverviewContent,
   SiteOverviewSites,
@@ -131,9 +132,45 @@ const shapes = computed(() => {
 
 const hovered = ref<{ site: SiteElement; pointer: CmkPointerTooltipPointer } | null>(null)
 
+// While a site's link menu is open, its tooltip stays and the menu opens right below it.
+const menuOpenFor = ref<string | null>(null)
+const tooltipElement = useTemplateRef<InstanceType<typeof CmkPointerTooltip>>('tooltipElement')
+
+watch(menuOpenFor, (site) => {
+  if (site === null) {
+    hovered.value = null
+  }
+})
+
 function hover(site: SiteElement, event: PointerEvent): void {
-  hovered.value = { site, pointer: { clientX: event.clientX, clientY: event.clientY } }
+  if (menuOpenFor.value === null) {
+    hovered.value = { site, pointer: { clientX: event.clientX, clientY: event.clientY } }
+  }
 }
+
+function leave(): void {
+  if (menuOpenFor.value === null) {
+    hovered.value = null
+  }
+}
+
+function opensMenu(site: SiteElement | undefined): boolean {
+  return (
+    site?.status === 'online' && contextualLinkCount(props.value.links, site.link_properties) > 1
+  )
+}
+
+const several = computed(() => opensMenu(hovered.value?.site))
+
+// A refresh can take the menu away with its site, without the menu reporting that it closed.
+watch(
+  () => opensMenu(props.value.sites.find((site) => site.site_id === menuOpenFor.value)),
+  (menu) => {
+    if (!menu) {
+      menuOpenFor.value = null
+    }
+  }
+)
 
 const tooltip = computed<FigureTooltipContent | null>(() => {
   const site = hovered.value?.site
@@ -180,13 +217,16 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
       class="db-cmk-site-overview-sites-figure__site"
       :transform="shape.transform"
       @pointermove="hover(shape.site, $event)"
-      @pointerleave="hovered = null"
+      @pointerleave="leave"
     >
       <ContextualLinkTrigger
         v-if="shape.site.status === 'online'"
+        :open="menuOpenFor === shape.site.site_id"
         :links="value.links"
         :link-properties="shape.site.link_properties"
         :filters="filters"
+        :reference="tooltipElement?.element ?? null"
+        @update:open="(open: boolean) => (menuOpenFor = open ? shape.site.site_id : null)"
       >
         <g :aria-label="shape.site.alias">
           <path :d="shape.hitPath" fill="transparent" />
@@ -230,8 +270,8 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
       </foreignObject>
     </g>
   </svg>
-  <CmkPointerTooltip :pointer="hovered?.pointer ?? null" @dismiss="hovered = null">
-    <FigureTooltip v-if="tooltip" v-bind="tooltip" />
+  <CmkPointerTooltip ref="tooltipElement" :pointer="hovered?.pointer ?? null" @dismiss="leave">
+    <FigureTooltip v-if="tooltip" v-bind="tooltip" :several="several" />
   </CmkPointerTooltip>
 </template>
 

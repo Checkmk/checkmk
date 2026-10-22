@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import ContextualLinkArrow from '@/dashboard/components/ContextualLinkArrow.vue'
+
 export interface FigureTooltipRow {
   key: string
   count: number
@@ -19,13 +21,21 @@ export interface FigureTooltipContent {
   rows: readonly FigureTooltipRow[]
 }
 
-const props = defineProps<FigureTooltipContent>()
+const props = defineProps<
+  FigureTooltipContent & {
+    /** Marks an element whose click opens a menu of several links. */
+    several?: boolean
+  }
+>()
 
 const withColor = computed(() => props.rows.some((row) => row.color !== undefined))
 </script>
 
 <template>
-  <h3 class="db-figure-tooltip__title">{{ title }}</h3>
+  <h3 class="db-figure-tooltip__title">
+    {{ title }}
+    <ContextualLinkArrow v-if="several" />
+  </h3>
   <span v-if="state">{{ state }}</span>
   <table v-if="rows.length > 0">
     <tr v-for="row in rows" :key="row.key">

@@ -72,6 +72,11 @@ export interface ContextualLinkEntry {
   href: string
 }
 
+/** How many links of an element lead anywhere, as `contextualLinkEntries` lists them. */
+export function contextualLinkCount(links: ResolvedLink[], linkProperties: LinkProperties): number {
+  return links.filter((_link, index) => linkProperties.links[index] !== undefined).length
+}
+
 /** Each link of an element with its URL, in the order the widget offers them. */
 export function contextualLinkEntries(
   links: ResolvedLink[],

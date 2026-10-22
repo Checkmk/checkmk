@@ -15,7 +15,11 @@ import ContextualLinkChooser from './ContextualLinkChooser.vue'
 defineProps<{
   entries: ContextualLinkEntry[]
   title?: string | undefined
+  /** Opens the menu of several below this element instead of below the link. */
+  reference?: HTMLElement | null | undefined
 }>()
+
+const open = defineModel<boolean>('open', { default: false })
 
 defineSlots<{ default(props: { several: boolean }): unknown }>()
 </script>
@@ -29,7 +33,12 @@ defineSlots<{ default(props: { several: boolean }): unknown }>()
   >
     <slot :several="false" />
   </a>
-  <ContextualLinkChooser v-else-if="entries.length > 1" :entries="entries">
+  <ContextualLinkChooser
+    v-else-if="entries.length > 1"
+    v-model:open="open"
+    :entries="entries"
+    :reference="reference"
+  >
     <a role="button" tabindex="0" class="db-contextual-link-anchor" :title="title">
       <slot :several="true" />
     </a>

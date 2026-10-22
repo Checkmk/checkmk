@@ -7,9 +7,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkPointerTooltip, {
   type CmkPointerTooltipPointer
 } from 'cmk-ui-library/components/CmkPointerTooltip.vue'
-import { computed, ref, useTemplateRef } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import ContextualLinkTrigger from '@/dashboard/components/ContextualLinkTrigger.vue'
+import { contextualLinkCount } from '@/dashboard/lib/contextualLinkUrl'
 import type { LinkProperties, ResolvedLink, VisualContext } from '@/dashboard/types/widget'
 
 import {
@@ -42,7 +43,7 @@ const props = defineProps<{
   filters: VisualContext
 }>()
 
-defineSlots<{ tooltip(props: { index: number }): unknown }>()
+defineSlots<{ tooltip(props: { index: number; several: boolean }): unknown }>()
 
 const grid = computed(() =>
   hexagonGrid(props.cells.length, props.width, props.height, {
@@ -105,9 +106,41 @@ const hoveredBox = computed(() => {
   }
 })
 
+// While a host's link menu is open, its tooltip stays and the menu opens right below it.
+const menuOpen = ref(false)
+const tooltip = useTemplateRef<InstanceType<typeof CmkPointerTooltip>>('tooltip')
+
+watch(menuOpen, (open) => {
+  if (!open) {
+    hovered.value = null
+  }
+})
+
+/** Whether the hovered host offers several links, which its tooltip then marks. */
+const several = computed(() => {
+  const cell = hoveredBox.value?.cell
+  return cell !== undefined && contextualLinkCount(cell.links, cell.linkProperties) > 1
+})
+
+// A refresh can take the menu away, or put another host in its place, without the menu
+// reporting that it closed.
+const menuHost = computed(() => (several.value ? hoveredBox.value?.cell.label : undefined))
+watch(menuHost, () => {
+  menuOpen.value = false
+})
+
 const area = useTemplateRef<SVGRectElement>('area')
 
+function leave(): void {
+  if (!menuOpen.value) {
+    hovered.value = null
+  }
+}
+
 function track(event: PointerEvent): void {
+  if (menuOpen.value) {
+    return
+  }
   const layout = grid.value
   const origin = area.value?.getBoundingClientRect()
   if (layout === null || origin === undefined) {
@@ -128,7 +161,7 @@ function track(event: PointerEvent): void {
     :height="height"
     :viewBox="`0 0 ${width} ${height}`"
   >
-    <g @pointermove="track" @pointerleave="hovered = null">
+    <g @pointermove="track" @pointerleave="leave">
       <rect ref="area" :width="width" :height="height" fill="transparent" />
       <path
         v-for="{ key, path, style } in paths"
@@ -150,9 +183,11 @@ function track(event: PointerEvent): void {
       />
       <ContextualLinkTrigger
         v-if="hoveredBox"
+        v-model:open="menuOpen"
         :links="hoveredBox.cell.links"
         :link-properties="hoveredBox.cell.linkProperties"
         :filters="filters"
+        :reference="tooltip?.element ?? null"
       >
         <rect
           :x="hoveredBox.x"
@@ -165,8 +200,8 @@ function track(event: PointerEvent): void {
       </ContextualLinkTrigger>
     </g>
   </svg>
-  <CmkPointerTooltip :pointer="hovered?.pointer ?? null" @dismiss="hovered = null">
-    <slot v-if="hoveredBox" name="tooltip" :index="hoveredBox.index" />
+  <CmkPointerTooltip ref="tooltip" :pointer="hovered?.pointer ?? null" @dismiss="leave">
+    <slot v-if="hoveredBox" name="tooltip" :index="hoveredBox.index" :several="several" />
   </CmkPointerTooltip>
 </template>
 

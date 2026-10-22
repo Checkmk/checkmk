@@ -16,7 +16,11 @@ const props = defineProps<{
   links: ResolvedLink[]
   linkProperties: LinkProperties
   filters: VisualContext
+  /** Opens the menu of several below this element instead of below the link. */
+  reference?: HTMLElement | null | undefined
 }>()
+
+const open = defineModel<boolean>('open', { default: false })
 
 defineSlots<{ default(props: { several: boolean }): unknown }>()
 
@@ -28,7 +32,12 @@ const entries = computed(() =>
 </script>
 
 <template>
-  <ContextualLinkAnchor v-slot="{ several }" :entries="entries">
+  <ContextualLinkAnchor
+    v-slot="{ several }"
+    v-model:open="open"
+    :entries="entries"
+    :reference="reference"
+  >
     <slot :several="several" />
   </ContextualLinkAnchor>
 </template>

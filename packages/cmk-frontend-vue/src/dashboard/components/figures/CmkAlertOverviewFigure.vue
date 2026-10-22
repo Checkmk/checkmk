@@ -86,8 +86,8 @@ function tooltip(index: number): FigureTooltipContent {
     :max-box-width="HEXAGON_MAX_BOX_WIDTH.default"
     :filters="filters"
   >
-    <template #tooltip="{ index }">
-      <FigureTooltip v-bind="tooltip(index)" />
+    <template #tooltip="{ index, several }">
+      <FigureTooltip v-bind="tooltip(index)" :several="several" />
     </template>
   </HexagonGridFigure>
 </template>

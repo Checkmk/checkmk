@@ -56,6 +56,12 @@ def get_context_url_variables(context: VisualContext) -> list[tuple[str, str]]:
     return list(add_vars.items())
 
 
+_UNFILTERED_TOTAL_PAGES: Mapping[str, str] = {
+    "hosts": "monitor_all_hosts.py",
+    "services": "monitor_all_services.py",
+}
+
+
 def total_url(
     what: str,
     context: VisualContext,
@@ -64,14 +70,15 @@ def total_url(
 ) -> str:
     """The URL behind a row's "total" count.
 
-    A "hosts" row without an active filter links to the new Vue "All hosts" page. Every
-    other row - a filtered "hosts" row included, since that page does not understand the
-    legacy filter context - keeps linking to the classic view.
+    A "hosts" or "services" row without an active filter links to the new Vue "All hosts" or
+    "All services" page. Every other row - a filtered one included, since those pages do not
+    understand the legacy filter context - keeps linking to the classic view.
     """
-    if what == "hosts" and not any(
+    page = _UNFILTERED_TOTAL_PAGES.get(what)
+    if page is not None and not any(
         value for filter_vars in context.values() for value in filter_vars.values()
     ):
-        return makeuri_contextless(request, [], filename="monitor_all_hosts.py")
+        return makeuri_contextless(request, [], filename=page)
     return makeuri_contextless(request, [*total_view_vars, *context_vars], filename="view.py")
 
 

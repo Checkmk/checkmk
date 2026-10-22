@@ -9,9 +9,11 @@ import logging
 import shlex
 import sqlite3
 import threading
+import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import override
+from unittest.mock import Mock
 
 import pytest
 
@@ -27,7 +29,9 @@ from cmk.ec.main import (
     EventServer,
     EventStatus,
     load_configuration,
+    PackedEventStatus,
     reload_configuration,
+    run_eventd,
     save_master_config,
     save_slave_status,
     SlaveStatus,
@@ -48,6 +52,8 @@ from .helpers import (
     query_status_server,
     replication_slave_config,
 )
+
+_REPLICATION = ec.Replication(connect_timeout=10, interval=60, master=("master", 6558))
 
 
 @pytest.fixture(name="logger")
@@ -76,7 +82,7 @@ def fixture_reload(
     new_histories: list[History] = []
 
     def reload(history: History) -> History:
-        new_history = reload_configuration(
+        _config, new_history = reload_configuration(
             settings,
             logger,
             lock_configuration,
@@ -143,8 +149,7 @@ def test_configured_log_levels_apply_unless_the_verbosity_is_given(
 def test_replication_slave_restores_the_rules_of_its_master(
     settings: ec.Settings, logger: logging.Logger, slave_status: SlaveStatus
 ) -> None:
-    replication = ec.Replication(connect_timeout=10, interval=60, master=("master", 6558))
-    activate_config(settings, f"replication = {replication!r}\n")
+    activate_config(settings, f"replication = {_REPLICATION!r}\n")
     rule_pack = ec.default_rule_pack([new_rule({"id": "from_master"})])
     save_master_config(settings, {"rules": [], "rule_packs": [rule_pack], "actions": []})
 
@@ -443,3 +448,158 @@ def test_reload_completes_although_the_replication_status_cannot_be_updated(
     query_status_server(status_server, "COMMAND ACTION;1;harry;ticket")
 
     assert ticket_file.read_text() == "disk full"
+
+
+type _Housekeeping = Callable[[], None]
+type _RunMainLoop = Callable[[ec.Settings, Config, _Housekeeping], list[ec.Replication | None]]
+
+_MAIN_LOOP_TIMEOUT = 5.0  # seconds, the main loop of a test usually takes milliseconds
+
+
+@pytest.fixture(name="run_main_loop")
+def fixture_run_main_loop(
+    logger: logging.Logger,
+    lock_configuration: ECLock,
+    history: History,
+    perfcounters: Perfcounters,
+    event_status: EventStatus,
+    slave_status: SlaveStatus,
+    terminate_main_event: threading.Event,
+    reload_config_event: threading.Event,
+) -> _RunMainLoop:
+    """Runs the main loop of an EC with the given settings, starting with the given configuration
+
+    Housekeeping is due immediately and runs the given function, also after reloading a
+    configuration activated by _activate_main_loop_config(). Returns the contacted masters.
+    Fails if the main loop doesn't end in time, instead of hanging until the test times out.
+    """
+
+    def run_main_loop(
+        settings: ec.Settings, config: Config, housekeeping: _Housekeeping
+    ) -> list[ec.Replication | None]:
+        event_server = Mock(spec=EventServer)
+        event_server.do_housekeeping.side_effect = housekeeping
+        contacted_masters: list[ec.Replication | None] = []
+
+        def fetch_master_state(config: Config, _slave_status: SlaveStatus) -> dict[str, object]:
+            contacted_masters.append(config["replication"])
+            return {
+                "status": PackedEventStatus(
+                    next_event_id=1, events=[], rule_stats={}, interval_starts={}
+                )
+            }
+
+        timed_out = threading.Event()
+
+        def time_out() -> None:
+            timed_out.set()
+            terminate_main_event.set()
+
+        # Housekeeping is always due, so the main loop never waits and notices the timeout at once.
+        watchdog = threading.Timer(_MAIN_LOOP_TIMEOUT, time_out)
+        watchdog.start()
+        try:
+            run_eventd(
+                terminate_main_event,
+                settings,
+                config | {"housekeeping_interval": 0.0},
+                lock_configuration,
+                history,
+                perfcounters,
+                event_status,
+                event_server,
+                Mock(spec=StatusServer),
+                slave_status,
+                logger,
+                reload_config_event,
+                fetch_master_state=fetch_master_state,
+            )
+        finally:
+            watchdog.cancel()
+        if timed_out.is_set():
+            raise AssertionError(f"main loop still running after {_MAIN_LOOP_TIMEOUT} seconds")
+        return contacted_masters
+
+    return run_main_loop
+
+
+def _activate_main_loop_config(settings: ec.Settings, config_text: str) -> None:
+    """Activates the configuration for the main loop to reload, keeping the housekeeping due
+
+    Unlike in SQLite, the reloaded history in files leaves nothing open after the test.
+    """
+    activate_config(settings, f'housekeeping_interval = 0.0\narchive_mode = "file"\n{config_text}')
+
+
+@pytest.fixture(name="debug_settings")
+def fixture_debug_settings(settings: ec.Settings) -> ec.Settings:
+    """The settings of the EC in debug mode
+
+    In debug mode, exceptions end the main loop instead of letting it retry forever.
+    """
+    return settings._replace(options=settings.options._replace(debug=True))
+
+
+def test_reloaded_replication_applies_right_away(
+    debug_settings: ec.Settings,
+    config: Config,
+    slave_status: SlaveStatus,
+    run_main_loop: _RunMainLoop,
+    reload_config_event: threading.Event,
+    terminate_main_event: threading.Event,
+) -> None:
+    # The syncing slave of one master reloads to replicate from another one.
+    other_replication = _REPLICATION | {"master": ("other-master", 6558)}
+    slave_status["mode"] = "sync"
+    _activate_main_loop_config(debug_settings, f"replication = {other_replication!r}\n")
+    reload_config_event.set()
+
+    # The EC terminates after its first housekeeping.
+    contacted_masters = run_main_loop(
+        debug_settings, config | {"replication": _REPLICATION}, terminate_main_event.set
+    )
+
+    assert contacted_masters == [other_replication]
+
+
+def test_reloaded_intervals_apply_right_away(
+    debug_settings: ec.Settings,
+    config: Config,
+    run_main_loop: _RunMainLoop,
+    reload_config_event: threading.Event,
+    terminate_main_event: threading.Event,
+) -> None:
+    # The EC starts saving its status every minute, but reloads to save it continuously.
+    _activate_main_loop_config(debug_settings, "retention_interval = 0.0\n")
+    reload_config_event.set()
+
+    # The EC terminates after its first housekeeping.
+    run_main_loop(debug_settings, config, terminate_main_event.set)
+
+    assert debug_settings.paths.status_file.value.exists()
+
+
+def test_main_loop_recovers_from_a_reloaded_configuration_it_cannot_use(
+    monkeypatch: pytest.MonkeyPatch,
+    settings: ec.Settings,
+    config: Config,
+    run_main_loop: _RunMainLoop,
+    reload_config_event: threading.Event,
+    terminate_main_event: threading.Event,
+) -> None:
+    # Nobody validates settings written by hand.
+    _activate_main_loop_config(settings, 'retention_interval = "60"\n')
+    reload_config_event.set()
+
+    # Without debug mode, the main loop logs an exception and retries a second later. Don't wait,
+    # but fix the configuration in the meantime.
+    def sleep(_seconds: float) -> None:
+        _activate_main_loop_config(settings, "retention_interval = 0.0\n")
+        reload_config_event.set()
+
+    monkeypatch.setattr(time, "sleep", sleep)
+
+    # The EC terminates after its first housekeeping.
+    run_main_loop(settings, config, terminate_main_event.set)
+
+    assert settings.paths.status_file.value.exists()

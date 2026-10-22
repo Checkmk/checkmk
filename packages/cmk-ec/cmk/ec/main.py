@@ -2614,30 +2614,18 @@ def run_eventd(
     """Dispatching: starting and managing the two threads."""
     status_server.start()
     event_server.start()
-    now = time.time()
-    next_housekeeping = now + config["housekeeping_interval"]
-    next_retention = now + config["retention_interval"]
-    next_statistics = now + config["statistics_interval"]
-    next_replication = 0.0  # force immediate replication after restart
+    # Each task is due an interval after its last run, so reloaded intervals apply right away.
+    last_housekeeping = last_retention = last_statistics = time.time()
+    last_replication = 0.0  # force immediate replication after restart
 
     while not terminate_main_event.is_set():
         try:
             try:
-                # Wait until either housekeeping or retention is due, but at
-                # maximum 60 seconds. That way changes of the interval from a very
-                # high to a low value will never require more than 60 seconds
-
-                event_list = [next_housekeeping, next_retention, next_statistics]
-                if is_replication_slave(config):
-                    event_list.append(next_replication)
-
-                time_left = max(0, min(event_list) - time.time())
-                reload_config_event.wait(min(time_left, 60))
-                now = time.time()
-
+                # Reload before using the configuration: If a reloaded one breaks the code below,
+                # reloading a fixed one still works.
                 if reload_config_event.is_set():
                     reload_config_event.clear()
-                    history = reload_configuration(
+                    config, history = reload_configuration(
                         settings,
                         logger,
                         lock_configuration,
@@ -2648,21 +2636,36 @@ def run_eventd(
                         slave_status,
                     )
 
-                if now > next_housekeeping:
-                    event_server.do_housekeeping()
-                    next_housekeeping = now + config["housekeeping_interval"]
+                # Wait until the next task is due or a reload is requested, but at most a minute: A
+                # termination requested by the SHUTDOWN command doesn't end the wait.
+                event_list = [
+                    last_housekeeping + config["housekeeping_interval"],
+                    last_retention + config["retention_interval"],
+                    last_statistics + config["statistics_interval"],
+                ]
+                if (next_replication := _next_replication(config, last_replication)) is not None:
+                    event_list.append(next_replication)
 
-                if now > next_retention:
+                time_left = max(0, min(event_list) - time.time())
+                if reload_config_event.wait(min(time_left, 60)):
+                    continue  # reload before running any task
+                now = time.time()
+
+                if now > last_housekeeping + config["housekeeping_interval"]:
+                    event_server.do_housekeeping()
+                    last_housekeeping = now
+
+                if now > last_retention + config["retention_interval"]:
                     with event_status.lock:
                         event_status.save_status()
-                    next_retention = now + config["retention_interval"]
+                    last_retention = now
 
-                if now > next_statistics:
+                if now > last_statistics + config["statistics_interval"]:
                     perfcounters.do_statistics()
-                    next_statistics = now + config["statistics_interval"]
+                    last_statistics = now
 
-                # Beware: replication might be turned on during this loop!
-                if is_replication_slave(config) and now > next_replication:
+                next_replication = _next_replication(config, last_replication)
+                if next_replication is not None and now > next_replication:
                     replication_pull(
                         settings,
                         config,
@@ -2674,10 +2677,7 @@ def run_eventd(
                         logger,
                         fetch_master_state=fetch_master_state,
                     )
-                    replication_settings = config["replication"]
-                    if replication_settings is None:  # help mypy a bit
-                        raise ValueError("no replication settings")
-                    next_replication = now + replication_settings["interval"]
+                    last_replication = now
             except MKSignalException as e:
                 raise e
             except Exception:
@@ -2688,7 +2688,7 @@ def run_eventd(
         except MKSignalException as e:
             if e.signum == 1:
                 logger.info("Received SIGHUP - going to reload configuration")
-                history = reload_configuration(
+                config, history = reload_configuration(
                     settings,
                     logger,
                     lock_configuration,
@@ -2705,6 +2705,14 @@ def run_eventd(
     # Now wait for termination of the server threads
     event_server.join()
     status_server.join()
+
+
+def _next_replication(config: Config, last_replication: float) -> float | None:
+    """Returns when a replication slave syncs with its master next, None for any other EC"""
+    replication = config["replication"]
+    if replication is None or not is_replication_slave(config):  # None only helps mypy
+        return None
+    return last_replication + replication["interval"]
 
 
 # .
@@ -3676,7 +3684,7 @@ def reload_configuration(
     event_server: EventServer,
     status_server: StatusServer,
     slave_status: SlaveStatus,
-) -> History:
+) -> tuple[Config, History]:
     with lock_configuration:
         config = _read_configuration(settings, logger)
         log_levels = _configured_log_levels(settings, logger, config)
@@ -3714,7 +3722,7 @@ def reload_configuration(
         except Exception:
             logger.exception("Cannot close the previous history")
     logger.info("Reloaded configuration.")
-    return new_history
+    return config, new_history
 
 
 # .

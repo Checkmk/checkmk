@@ -23,6 +23,7 @@ from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -211,7 +212,9 @@ class ModeAnalyzeConfig(WatoMode):
             None,
             _("Toggle result details"),
             StaticIcon(IconNames.toggle_details),
-            onclick="cmk.wato.toggle_container('test_result_details_%s')" % test_id,
+            click_action=ClickAction(
+                action="wato_toggle_container", arguments={"id": "test_result_details_%s" % test_id}
+            ),
         )
 
         # Disabling of test in total

@@ -188,6 +188,7 @@ py_cmk_test(
     env = {"EDITION": "community"},
     use_project_pytest_config = True,
     deps = [
+        ":compare_html",
         ":conftest",
         ":helpers",
         ":init_py",

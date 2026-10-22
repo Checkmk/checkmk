@@ -11,7 +11,7 @@ from typing import cast, Literal
 from cmk.ccc.hostaddress import HostName
 from cmk.gui import forms
 from cmk.gui.config import Config
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
@@ -293,12 +293,15 @@ def configure_attributes(
                 )
                 checkbox_code += html.render_hidden_field(checkbox_name, "on")
             else:
-                onclick = (
-                    "cmk.wato.fix_visibility(); cmk.wato.toggle_attribute(this, '%s');" % attrname
-                )
                 checkbox_kwargs = {"disabled": "disabled"} if disabled else {}
                 checkbox_code = html.render_checkbox(
-                    checkbox_name, active, onclick=onclick, **checkbox_kwargs
+                    checkbox_name,
+                    active,
+                    **ClickAction(
+                        action="wato_toggle_attribute",
+                        arguments={"attrname": attrname, "fix_visibility": "true"},
+                    ).data_attributes(),
+                    **checkbox_kwargs,
                 )
 
             forms.section(

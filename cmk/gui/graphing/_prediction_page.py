@@ -19,6 +19,7 @@ from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.graphing_engine import SiteID as EngineSiteID
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.header import make_header
+from cmk.gui.htmllib.generator import TSFunctionCall
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request as request_
 from cmk.gui.i18n import _, translate_to_current_language
@@ -138,7 +139,7 @@ def _render_selection_form(available: Sequence[str], selected: str) -> None:
             "prediction_selection",
             ((title, title) for title in available),
             deflt=selected,
-            onchange="document.prediction.submit();",
+            ts_function=TSFunctionCall(function_name="submit_form_on_change"),
         )
         html.hidden_fields()
 

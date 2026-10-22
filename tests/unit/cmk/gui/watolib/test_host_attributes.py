@@ -13,9 +13,12 @@ from cmk.ccc.site import omd_site
 from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.type_defs import CustomHostAttrSpec
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttributeLockedBy
 from cmk.gui.watolib.host_attributes import all_host_attributes
+from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
 from cmk.rulesets.v1 import Help, Title
+from tests.unit.cmk.gui.compare_html import click_handling, ts_function_call
 from tests.unit.cmk.gui.helpers.host_attributes_test_helper import BASE_EXPECTED_ATTRIBUTES
 
 
@@ -457,3 +460,34 @@ def test_locked_by_accepts_connection_id_with_dot() -> None:
 
     valuespec.validate_datatype(value, "locked_by")
     valuespec.validate_value(value, "locked_by")
+
+
+def _rendered_tag_attribute(tags: list[tuple[str, str]]) -> str:
+    tag_group = TagGroup.from_config(
+        {
+            "id": TagGroupID("my_group"),
+            "title": "My group",
+            "tags": [
+                {"id": TagID(tag_id), "title": title, "aux_tags": []} for tag_id, title in tags
+            ],
+        }
+    )
+    attribute = all_host_attributes([], [("Custom", [tag_group])])["tag_my_group"]
+    assert isinstance(attribute, attrs.ABCHostAttributeTag)
+    with output_funnel.plugged():
+        attribute.valuespec().render_input("vp", attribute.default_value())
+        return output_funnel.drain()
+
+
+@pytest.mark.usefixtures("request_context")
+def test_tag_dropdown_fixes_the_visibility_on_change() -> None:
+    code = _rendered_tag_attribute([("a", "A"), ("b", "B")])
+
+    assert ts_function_call(code, "select") == ("wato_fix_visibility_on_change", {})
+
+
+@pytest.mark.usefixtures("request_context")
+def test_tag_checkbox_fixes_the_visibility_by_click_action() -> None:
+    code = _rendered_tag_attribute([("a", "A")])
+
+    assert click_handling(code, "input[type=checkbox]") == (None, "wato_fix_visibility", None)

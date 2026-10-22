@@ -37,6 +37,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.config import Config, get_default_config, make_config_object
 from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.http import request
 from cmk.gui.logged_in import (
     LoggedInNobody,
     LoggedInSuperUser,
@@ -44,9 +45,13 @@ from cmk.gui.logged_in import (
     UserDefaultConfig,
 )
 from cmk.gui.logged_in import user as logged_in_user
+from cmk.gui.pages import PageContext
 from cmk.gui.search.matchers import MatchItem, MatchItemConfig
 from cmk.gui.utils.host_relations import RelationLink, relations_or_empty
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.audit_log import AuditLogStore, make_audit_log_change_hook
 from cmk.gui.watolib.builtin_attributes import validate_host_parents, validate_host_relations
@@ -84,6 +89,7 @@ from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.host_storage import PickleHostsStorage
 from cmk.utils.redis import disable_redis
+from tests.unit.cmk.gui.compare_html import click_handling
 from tests.unit.cmk.gui.watolib.host_relations_fakes import refuse_relations_across_sites
 
 # Cheap in-memory acting user with all permissions. Avoids the expensive
@@ -3667,4 +3673,28 @@ def test_folder_of_an_invalid_host_name_is_the_root_folder(tree: FolderTree) -> 
     assert (
         folder_from_request(tree, var_folder=None, host_name="invalid host name")
         == tree.root_folder()
+    )
+
+
+@pytest.mark.usefixtures("with_host", "patch_theme")
+def test_host_action_menu_removes_tls_registration_by_click_action() -> None:
+    request.set_var("hostname", "heute")
+    request.set_var("show_remove_tls_link", "1")
+
+    with output_funnel.plugged():
+        hosts_and_folders.ajax_popup_host_action_menu(
+            PageContext(
+                config=Config(),
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions({}, {}, {}, []),
+            )
+        )
+        code = output_funnel.drain()
+
+    _onclick, action, arguments = click_handling(code, "a[data-cmk_on_click]")
+    assert (action, isinstance(arguments, dict) and arguments["button_name"]) == (
+        "confirmed_form_submit_for_single_host",
+        "_remove_tls_registration_from_selection",
     )

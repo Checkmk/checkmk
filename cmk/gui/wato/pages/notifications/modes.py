@@ -56,7 +56,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
 from cmk.gui.htmllib.foldable_container import foldable_container
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, ungettext
@@ -1727,7 +1727,10 @@ class ModeAnalyzeNotifications(ModeNotifications):
                     None,
                     _("Show / hide notification context"),
                     StaticIcon(IconNames.toggle_context),
-                    onclick="cmk.wato.toggle_container('notification_context_%d')" % nr,
+                    click_action=ClickAction(
+                        action="wato_toggle_container",
+                        arguments={"id": "notification_context_%d" % nr},
+                    ),
                 )
 
                 replay_url = makeactionuri(request, transactions.get(), [("_replay", str(nr))])
@@ -2209,7 +2212,9 @@ class ModeTestNotifications(ModeNotifications):
                 None,
                 _("Show / hide notification context"),
                 StaticIcon(IconNames.toggle_context),
-                onclick="cmk.wato.toggle_container('notification_context_test')",
+                click_action=ClickAction(
+                    action="wato_toggle_container", arguments={"id": "notification_context_test"}
+                ),
             )
 
             if analyse:
@@ -2546,14 +2551,20 @@ class ModeTestNotifications(ModeNotifications):
         html.jsbutton(
             varname=(varname := "test_on_host"),
             text="Host",
-            onclick=f'cmk.wato.toggle_test_notification_visibility("{varname}", "test_on_service", true)',
             cssclass=f"{varname} active",
+            click_action=ClickAction(
+                action="toggle_test_notification_visibility",
+                arguments={"source": varname, "target": "test_on_service", "hide_options": "true"},
+            ),
         )
         html.jsbutton(
             varname=(varname := "test_on_service"),
             text="Service",
-            onclick=f'cmk.wato.toggle_test_notification_visibility("{varname}", "test_on_host")',
             cssclass=varname,
+            click_action=ClickAction(
+                action="toggle_test_notification_visibility",
+                arguments={"source": varname, "target": "test_on_host"},
+            ),
         )
         html.close_td()
         html.close_tr()

@@ -385,9 +385,12 @@ class UserTwoFactorOverview(Page):
         copy_button = html.render_input(
             "copy codes",
             type_="button",
-            onclick=f"cmk.utils.copy_to_clipboard({json.dumps(backup_codes)}, {json.dumps(success_message)})",
             value=_("Copy codes to clipboard"),
             class_=["button buttonlink"],
+            **ClickAction(
+                action="copy_to_clipboard",
+                arguments={"text": backup_codes, "success_msg": success_message},
+            ).data_attributes(),
         )
         return HTML.empty().join([header_msg, message1, codesdiv, message2, copy_button])
 
@@ -974,13 +977,15 @@ class RegisterTotpSecret(Page):
                 html.render_span(base32_secret)
                 + html.render_static_icon(StaticIcon(IconNames.insert)),
                 href="#",
-                onclick="cmk.utils.copy_to_clipboard(%s, %s);"
-                % (
-                    json.dumps(base32_secret),
-                    json.dumps(_("Successfully copied to clipboard")),
-                ),
                 title=_("Copy secret to clipboard"),
                 class_="copy_to_clipboard",
+                **ClickAction(
+                    action="copy_to_clipboard",
+                    arguments={
+                        "text": base32_secret,
+                        "success_msg": _("Successfully copied to clipboard"),
+                    },
+                ).data_attributes(),
             )
             html.close_div()
 

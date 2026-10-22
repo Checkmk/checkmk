@@ -54,7 +54,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FSTuple
 from cmk.gui.form_specs.unstable.validators import id_validators, validate_ip_network
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter, TSFunctionCall
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.type_defs import RequireConfirmation
 from cmk.gui.http import request
@@ -3030,7 +3030,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     html.dropdown(
                         "_move_to_" + rule_ref.form_value(),
                         [("", ""), *move_choices],
-                        onchange="move_to.submit();",
+                        ts_function=TSFunctionCall(function_name="submit_form_on_change"),
                     )
 
     def _filter_mkeventd_rules(

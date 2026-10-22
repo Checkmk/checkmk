@@ -11,6 +11,7 @@ from typing import override
 from cmk.gui import forms, message
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.header import make_header
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
@@ -223,8 +224,7 @@ def show_message_actions(
             "",
             _("Acknowledge message"),
             StaticIcon(IconNames.werk_ack),
-            onclick="cmk.utils.acknowledge_user_message('%s');cmk.utils.reload_whole_page();"
-            % msg_id,
+            click_action=ClickAction(action="user_message_acknowledge", arguments={"id": msg_id}),
         )
 
     if must_expire:
@@ -234,16 +234,14 @@ def show_message_actions(
             css_classes=["colorless"],
         )
     else:
-        onclick = (
-            "cmk.utils.delete_user_message('%s', this);cmk.utils.reload_whole_page();" % msg_id
-            if what == "gui_hint"
-            else "cmk.utils.delete_user_message('%s', this);" % msg_id
-        )
         html.icon_button(
             "",
             _("Delete"),
             StaticIcon(IconNames.delete),
-            onclick=onclick,
+            click_action=ClickAction(
+                action="user_message_delete",
+                arguments={"id": msg_id, "reload": "true" if what == "gui_hint" else "false"},
+            ),
         )
 
 

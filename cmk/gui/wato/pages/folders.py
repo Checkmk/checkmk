@@ -28,7 +28,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupSpecs
-from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter, TSFunctionCall
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import mandatory_parameter, request
 from cmk.gui.i18n import _, _l, ungettext
@@ -54,7 +54,7 @@ from cmk.gui.table import show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
-from cmk.gui.utils.loading_transition import loading_transition_onclick, LoadingTransition
+from cmk.gui.utils.loading_transition import loading_transition_click_action, LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.regex import compile_search_pattern, validate_regex
@@ -1001,7 +1001,10 @@ class ModeFolder(WatoMode):
             html.close_div()
             html.open_div(
                 class_=["floatfolder", "unlocked", "newfolder"],
-                onclick="location.href='%s'" % self._folder.url([("mode", "newfolder")]),
+                **ClickAction(
+                    action="follow_url",
+                    arguments={"url": self._folder.url([("mode", "newfolder")])},
+                ).data_attributes(),
             )
             html.write_text_permissive("+")
             html.close_div()
@@ -1014,7 +1017,9 @@ class ModeFolder(WatoMode):
                 "unlocked" if subfolder.permissions.may("read", user) else "locked",
             ],
             id_="folder_%s" % subfolder.name(),
-            onclick="cmk.wato.open_folder(event, '%s');" % subfolder.url(),
+            **ClickAction(
+                action="wato_open_folder", arguments={"url": subfolder.url()}
+            ).data_attributes(),
         )
         self._show_subfolder_hoverarea(subfolder, show_file_names=show_file_names)
         self._show_subfolder_infos(subfolder)
@@ -1026,8 +1031,7 @@ class ModeFolder(WatoMode):
         if subfolder.permissions.may("read", user):
             html.open_div(
                 class_="hoverarea",
-                onmouseover="cmk.wato.toggle_folder(event, this, true);",
-                onmouseout="cmk.wato.toggle_folder(event, this, false);",
+                **TSFunctionCall(function_name="wato_folder_hoverarea").data_attributes(),
             )
             self._show_subfolder_buttons(subfolder, show_file_names=show_file_names)
             html.close_div()  # hoverarea
@@ -1308,7 +1312,9 @@ class ModeFolder(WatoMode):
         html.a(
             hostname,
             href=host.edit_url(),
-            onclick=loading_transition_onclick(LoadingTransition.catalog, title=hostname),
+            **loading_transition_click_action(
+                LoadingTransition.catalog, title=hostname
+            ).data_attributes(),
         )
 
         # Show attributes
@@ -1460,17 +1466,16 @@ class ModeFolder(WatoMode):
                 )
                 html.icon_button(
                     url=None,
-                    onclick="cmk.selection.execute_bulk_action_for_single_host(this,"
-                    " cmk.page_menu.confirmed_form_submit, %s); cmk.popup_menu.close_popup()"
-                    % json.dumps(
-                        [
-                            "hosts",
-                            "_bulk_delete_confirmed",
-                            delete_host_options,
-                        ],
-                    ),
                     title=_("Delete host"),
                     icon=StaticIcon(IconNames.delete),
+                    click_action=ClickAction(
+                        action="confirmed_form_submit_for_single_host",
+                        arguments={
+                            "form_name": "hosts",
+                            "button_name": "_bulk_delete_confirmed",
+                            "options": json.dumps(delete_host_options),
+                        },
+                    ),
                 )
 
             self._show_host_actions_menu(host)
@@ -1569,7 +1574,12 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
             choices=choices,
             deflt="@",
             size=10,
-            onchange=f"location.href='{self._back_url}&_ident={self._ident}&_move_{self._what}_to=' + this.value;",
+            ts_function=TSFunctionCall(
+                function_name="wato_move_to_folder_on_change",
+                arguments={
+                    "url_prefix": f"{self._back_url}&_ident={self._ident}&_move_{self._what}_to="
+                },
+            ),
         )
         return None
 

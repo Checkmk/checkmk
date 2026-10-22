@@ -1771,7 +1771,7 @@ class DiscoveryPageRenderer:
                         title=_("Accept service properties"),
                         icon=StaticIcon(IconNames.accept),
                         class_=button_classes,
-                        onclick=_start_js_call(
+                        click_action=_start_click_action(
                             self._host,
                             self._options._replace(
                                 action=DiscoveryAction.SINGLE_UPDATE_SERVICE_PROPERTIES
@@ -1942,7 +1942,7 @@ class DiscoveryPageRenderer:
             title=_("Move to %(descr_target)s services") % {"descr_target": descr_target},
             icon=icon,
             class_=button_classes,
-            onclick=_start_js_call(
+            click_action=_start_click_action(
                 self._host,
                 options,
                 request_vars={
@@ -1963,7 +1963,7 @@ class DiscoveryPageRenderer:
             title=_("Remove service"),
             icon=StaticIcon(IconNames.service_to_removed),
             class_=button_classes,
-            onclick=_start_js_call(
+            click_action=_start_click_action(
                 self._host,
                 options,
                 request_vars={
@@ -2745,19 +2745,6 @@ def _start_args(
         "request_vars": request_vars,
         "waiting_message": waiting_message,
     }
-
-
-def _start_js_call(
-    host: Host,
-    options: DiscoveryOptions,
-    request_vars: dict | None = None,
-    waiting_message: str | None = None,
-) -> str:
-    params = ", ".join(
-        json.dumps(param)
-        for param in _start_args(host, options, request_vars, waiting_message).values()
-    )
-    return f"cmk.service_discovery.start({params})"
 
 
 def _start_click_action(

@@ -71,7 +71,7 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError, RequestTimeout
 from cmk.gui.groups import GroupName
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
@@ -5416,14 +5416,14 @@ def ajax_popup_host_action_menu(ctx: PageContext) -> None:
         )
         html.open_a(
             href=None,
-            onclick="cmk.selection.execute_bulk_action_for_single_host(this, cmk.page_menu.confirmed_form_submit, %s); cmk.popup_menu.close_popup()"
-            % json.dumps(
-                [
-                    form_name,
-                    "_remove_tls_registration_from_selection",
-                    remove_tls_options,
-                ]
-            ),
+            **ClickAction(
+                action="confirmed_form_submit_for_single_host",
+                arguments={
+                    "form_name": form_name,
+                    "button_name": "_remove_tls_registration_from_selection",
+                    "options": json.dumps(remove_tls_options),
+                },
+            ).data_attributes(),
         )
         html.static_icon(StaticIcon(IconNames.tls, emblem="remove"))
         html.write_text_permissive(_("Remove TLS registration"))

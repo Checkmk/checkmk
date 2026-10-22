@@ -44,6 +44,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
 from cmk.gui.hooks import request_memoize
+from cmk.gui.htmllib.generator import ClickAction, TSFunctionCall
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
@@ -1372,7 +1373,7 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
                 title=self._tag_group.title,
                 choices=choices,
                 default_value=choices[0][0],
-                on_change="cmk.wato.fix_visibility();",
+                on_change=TSFunctionCall(function_name="wato_fix_visibility_on_change"),
                 encode_value=False,
             ),
             to_valuespec=lambda s: "" if s is None else s,
@@ -1417,7 +1418,7 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
             label=_u(choice[1]),
             true_label=self._tag_group.title,
             false_label="{} {}".format(_("Not"), self._tag_group.title),
-            onclick="cmk.wato.fix_visibility();",
+            onclick=ClickAction(action="wato_fix_visibility"),
         )
 
     @override

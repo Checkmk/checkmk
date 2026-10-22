@@ -116,6 +116,11 @@ const callable_functions: Record<Exclude<KnownTSFunction, `mobile_${string}`>, C
       document.getElementById(options.button_id)!.classList.add('shimmer-input-button')
     })
   },
+  waiting_flash_message_on_submit: (node, options) => {
+    node.addEventListener('submit', () =>
+      forms.waiting_flash_message('top_heading', options.message)
+    )
+  },
 
   element_dragger: (node, options) => {
     node.addEventListener('mousedown', (event) => {
@@ -301,6 +306,8 @@ const callable_functions: Record<Exclude<KnownTSFunction, `mobile_${string}`>, C
     ),
 
   // misc
+  submit_form_on_change: (node) =>
+    on_select_change(node, () => (node as HTMLSelectElement).form!.submit()),
   submit_crash_report: (_node, options) =>
     transfer.submit_crash_report(options.url, options.post_data),
   enable_submit_buttons_on_nonempty_input: (_node, options) =>
@@ -418,6 +425,15 @@ const callable_functions: Record<Exclude<KnownTSFunction, `mobile_${string}`>, C
       options.divid
     ),
   fetch_site_status: () => sites.fetch_site_status(),
+  wato_fix_visibility_on_change: (node) => on_select_change(node, () => wato.fix_visibility()),
+  wato_folder_hoverarea: (node) => {
+    node.addEventListener('mouseover', (event) => wato.toggle_folder(event, node, true))
+    node.addEventListener('mouseout', (event) => wato.toggle_folder(event, node, false))
+  },
+  wato_move_to_folder_on_change: (node, options) =>
+    on_select_change(node, () => {
+      location.href = options.url_prefix + (node as HTMLSelectElement).value
+    }),
   wato_message: (_node, options) =>
     wato.message(options.message, options.message_type, options.del_var),
   set_button_loading_state_on_click: (_node, options) =>

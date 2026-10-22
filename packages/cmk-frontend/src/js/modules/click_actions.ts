@@ -32,7 +32,11 @@ import {
   toggle_popup as toggle_popup_menu
 } from '@/modules/popup_menu'
 import { close_popup as close_quicksearch_popup, on_search_click } from '@/modules/quicksearch'
-import { toggle_all_rows, toggle_group_rows } from '@/modules/selection'
+import {
+  execute_bulk_action_for_single_host,
+  toggle_all_rows,
+  toggle_group_rows
+} from '@/modules/selection'
 import { start as start_service_discovery } from '@/modules/service_discovery'
 import {
   add_bookmark,
@@ -44,9 +48,14 @@ import {
 } from '@/modules/sidebar'
 import { details_period_click } from '@/modules/sla'
 import {
+  acknowledge_user_message,
+  copy_dom_element_content_to_clipboard,
+  copy_to_clipboard,
+  delete_user_message,
   makeLoadingTransition,
   makeuri,
   querySelectorID,
+  reload_whole_page,
   toggle_more,
   update_time
 } from '@/modules/utils'
@@ -74,7 +83,14 @@ import {
   reschedule_check,
   toggle_grouped_rows
 } from '@/modules/views'
-import { randomize_secret, toggle_attribute } from '@/modules/wato'
+import {
+  fix_visibility,
+  open_folder,
+  randomize_secret,
+  toggle_attribute,
+  toggle_container,
+  toggle_test_notification_visibility
+} from '@/modules/wato'
 
 import {
   type ClickAction,
@@ -135,6 +151,17 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
     confirm_link(options.url, options.message, options.options, options.post_confirm_waiting_text)
     close_icon_popup()
   },
+  confirmed_form_submit_for_single_host: (element, options) => {
+    execute_bulk_action_for_single_host(element, confirmed_form_submit as () => void, [
+      options.form_name!,
+      options.button_name!,
+      JSON.parse(options.options!)
+    ])
+    close_icon_popup()
+  },
+  copy_dom_element_content_to_clipboard: (_element, options) =>
+    copy_dom_element_content_to_clipboard(options.node_id!, options.success_msg),
+  copy_to_clipboard: (_element, options) => copy_to_clipboard(options.text!, options.success_msg),
   dispatch_custom_event: dispatch_custom_event,
   downtime_duration_select: (_element, options) => {
     update_down_duration_button(options.id!)
@@ -153,6 +180,11 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
     // Links inside the element, e.g. in a table header, still take precedence
     return true
   },
+  form_submit_for_single_host: (element, options) =>
+    execute_bulk_action_for_single_host(element, form_submit as () => void, [
+      options.form_name!,
+      options.button_name!
+    ]),
   graph_export: closing_dropdown((_element, options) => graph_export(options.page)),
   icon_loading_button: (element, options) => {
     // Prevent starting several long-running actions in parallel before the navigation completes
@@ -297,6 +329,22 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
   toggle_inline_help: closing_dropdown(() => toggle_inline_help()),
   toggle_more: (element, options) =>
     toggle_more(element, options.id!, parseInt(options.dom_levels_up!)),
+  toggle_test_notification_visibility: (_element, options) =>
+    toggle_test_notification_visibility(
+      options.source!,
+      options.target!,
+      options.hide_options === 'true'
+    ),
+  user_message_acknowledge: (_element, options) => {
+    acknowledge_user_message(options.id!)
+    reload_whole_page()
+  },
+  user_message_delete: (element, options) => {
+    delete_user_message(options.id!, element as HTMLButtonElement)
+    if (options.reload === 'true') {
+      reload_whole_page()
+    }
+  },
   valuespec_duallist_switch: (_element, options) =>
     duallist_switch(options.field_suffix, options.varprefix, options.keeporder ? 1 : 0),
   valuespec_iconselector_select: (_element, options, event) =>
@@ -382,11 +430,25 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
     waiting_flash_message('top_heading', options.message)
     return true
   },
+  wato_fix_visibility: () => {
+    fix_visibility()
+    // Keep toggling the checkbox
+    return true
+  },
+  wato_open_folder: (_element, options, event) => {
+    open_folder(event, options.url!)
+    // Links inside the folder, e.g. its edit button, have to be followed
+    return true
+  },
   wato_toggle_attribute: (element, options) => {
+    if (options.fix_visibility === 'true') {
+      fix_visibility()
+    }
     toggle_attribute(element as HTMLInputElement, options.attrname!)
     // Keep toggling the checkbox
     return true
   },
+  wato_toggle_container: (_element, options) => toggle_container(options.id!),
   wato_tree_click: (element, options) => {
     wato_tree_click(options.folder_path)
     // The link is the title of the folder's foldable container, which is toggled by a click, too

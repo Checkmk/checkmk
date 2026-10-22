@@ -10,7 +10,6 @@
 
 import abc
 import contextlib
-import json
 import re
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -3619,7 +3618,10 @@ class ModeExportRule(ABCEditRuleMode):
                 url=None,
                 title=_("Copy rule value representation to clipboard"),
                 icon=StaticIcon(IconNames.clone),
-                onclick=f"cmk.utils.copy_dom_element_content_to_clipboard({json.dumps(content_id)}, {json.dumps(success_msg)})",
+                click_action=ClickAction(
+                    action="copy_dom_element_content_to_clipboard",
+                    arguments={"node_id": content_id, "success_msg": success_msg},
+                ),
             )
 
     @override

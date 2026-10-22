@@ -9,8 +9,9 @@ import pytest
 
 from cmk.gui import message
 from cmk.gui.message import Message
-from cmk.gui.user_message.user_message import show_user_messages
+from cmk.gui.user_message.user_message import show_message_actions, show_user_messages
 from cmk.gui.utils.output_funnel import output_funnel
+from tests.unit.cmk.gui.compare_html import click_handling
 
 
 def _message(msg_id: str, timestamp: int, **extra: object) -> Message:
@@ -49,3 +50,21 @@ def test_show_user_messages_with_message_lacking_the_security_flag(
 
     assert "content of legacy" in rendered
     assert "content of recent" in rendered
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_message_actions_acknowledge_and_delete_by_click_actions() -> None:
+    with output_funnel.plugged():
+        show_message_actions("gui_hint", "msg-1", is_acknowledged=False, must_expire=False)
+        code = output_funnel.drain()
+
+    assert click_handling(code, "a:nth-of-type(1)") == (
+        None,
+        "user_message_acknowledge",
+        {"id": "msg-1"},
+    )
+    assert click_handling(code, "a:nth-of-type(2)") == (
+        None,
+        "user_message_delete",
+        {"id": "msg-1", "reload": "true"},
+    )

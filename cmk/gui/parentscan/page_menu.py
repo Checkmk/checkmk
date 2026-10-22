@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from collections.abc import Iterator
 
 from cmk.ccc.hostaddress import HostName
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -54,8 +54,10 @@ def host_action_menu_is_shown(_host: Host, folder: Folder | SearchFolder) -> boo
 def render_host_action_menu_entry(_host_name: HostName, form_name: str) -> None:
     html.open_a(
         href=None,
-        onclick="cmk.selection.execute_bulk_action_for_single_host(this, cmk.page_menu.form_submit, %s);"
-        % json.dumps([form_name, "_parentscan"]),
+        **ClickAction(
+            action="form_submit_for_single_host",
+            arguments={"form_name": form_name, "button_name": "_parentscan"},
+        ).data_attributes(),
     )
     html.static_icon(StaticIcon(IconNames.parentscan))
     html.write_text_permissive(_("Detect network parents"))

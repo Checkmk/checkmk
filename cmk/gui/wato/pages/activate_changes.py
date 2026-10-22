@@ -818,7 +818,10 @@ class ModeActivateChanges(WatoMode):
                         cssclass="activate_site",
                         title=_("This site is not update and needs a replication. Start it now."),
                         icon=StaticIcon(IconNames.need_replicate),
-                        onclick='cmk.activation.activate_changes("site", "%s")' % site_id,
+                        click_action=ClickAction(
+                            action="activate_changes",
+                            arguments={"mode": "site", "site_id": site_id},
+                        ),
                     )
 
                 if can_activate_all and need_restart:
@@ -830,7 +833,10 @@ class ModeActivateChanges(WatoMode):
                             "This site needs a restart for activating the changes. Start it now."
                         ),
                         icon=StaticIcon(IconNames.need_restart),
-                        onclick='cmk.activation.activate_changes("site", "%s")' % site_id,
+                        click_action=ClickAction(
+                            action="activate_changes",
+                            arguments={"mode": "site", "site_id": site_id},
+                        ),
                     )
 
                 if can_activate_all and not need_action:

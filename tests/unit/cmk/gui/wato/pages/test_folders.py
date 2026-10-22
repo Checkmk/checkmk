@@ -13,10 +13,16 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect
-from cmk.gui.http import Request
+from cmk.gui.http import Request, request
 from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.page_menu import PageMenuEntry
+from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.selection_id import SelectionId
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import (
     FolderBulkAction,
     FolderBulkActionRegistry,
@@ -24,6 +30,7 @@ from cmk.gui.wato.pages.folders import (
     FolderMenuEntryRegistry,
     FolderMenuLocation,
     ModeFolder,
+    PageAjaxPopupMoveToFolder,
 )
 from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -32,6 +39,7 @@ from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChan
 from cmk.livestatus_client import SiteConfigurations
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.unit.cmk.gui.compare_html import inline_event_handlers, ts_function_call
 from tests.unit.cmk.gui.helpers.setup_mode_test_helper import (
     end_request,
     page_context,
@@ -191,3 +199,28 @@ def test_bulk_delete_deletes_the_selected_hosts_once_confirmed(
 
     assert isinstance(result, HTTPRedirect)
     assert _hosts_in_setup(config) == {"h2"}
+
+
+@pytest.mark.usefixtures("request_context")
+def test_move_to_folder_popup_moves_on_change_without_inline_handler() -> None:
+    request.set_var("what", "host")
+    request.set_var("ident", "my-host")
+    request.set_var("back_url", "wato.py?folder=sub")
+
+    with output_funnel.plugged():
+        PageAjaxPopupMoveToFolder().handle_page(
+            PageContext(
+                config=Config(),
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+            )
+        )
+        code = output_funnel.drain()
+
+    assert inline_event_handlers(code) == []
+    assert ts_function_call(code, "select") == (
+        "wato_move_to_folder_on_change",
+        {"url_prefix": "wato.py?folder=sub&_ident=my-host&_move_host_to="},
+    )

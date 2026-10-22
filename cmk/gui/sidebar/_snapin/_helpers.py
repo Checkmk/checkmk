@@ -63,7 +63,7 @@ def render_link(
     text: str | HTML,
     url: str,
     target: str | None = None,
-    onclick: str | None = None,
+    *,
     title: str | None = None,
     click_action: ClickAction | None = None,
 ) -> HTML:
@@ -79,7 +79,6 @@ def render_link(
         href=url,
         class_="link",
         target=target or "",
-        onclick=onclick or None,
         title=title,
         **(click_action.data_attributes() if click_action else {}),
     )
@@ -89,23 +88,17 @@ def link(
     text: str | HTML,
     url: str,
     target: str | None = None,
-    onclick: str | None = None,
+    *,
     title: str | None = None,
     click_action: ClickAction | None = None,
 ) -> None:
-    html.write_html(
-        render_link(
-            text, url, target=target, onclick=onclick, title=title, click_action=click_action
-        )
-    )
+    html.write_html(render_link(text, url, target=target, title=title, click_action=click_action))
 
 
-def bulletlink(
-    text: str, url: str | None, target: str | None = None, onclick: str | None = None
-) -> None:
+def bulletlink(text: str, url: str | None, target: str | None = None) -> None:
     if url:
         html.open_li(class_="sidebar")
-        link(text, url, target, onclick)
+        link(text, url, target)
         html.close_li()
 
 

@@ -26,6 +26,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
+from tests.unit.cmk.gui.compare_html import click_handling
 
 
 class RecordingSiteConfig:
@@ -179,10 +180,13 @@ def test_show_offers_the_bulk_switches(
         states={SiteId("heute"): SiteStatus(state="online")},
     )
 
-    assert "Enable all" in rendered
-    assert "Disable all" in rendered
-    assert "set_all_sites.py?_new_state=online" in rendered
-    assert "set_all_sites.py?_new_state=disabled" in rendered
+    assert [
+        click_handling(rendered, f"a.link:-soup-contains('{title}')")
+        for title in ("Enable all", "Disable all")
+    ] == [
+        (None, "switch_site", {"url": "set_all_sites.py?_new_state=online"}),
+        (None, "switch_site", {"url": "set_all_sites.py?_new_state=disabled"}),
+    ]
 
 
 def _page_context(config: Config) -> PageContext:

@@ -108,12 +108,9 @@ def test_render_link_only_absolutizes_relative_urls(url: str, expected_href: str
 
 
 def test_render_link_passes_through_optional_attributes() -> None:
-    rendered = str(
-        render_link("Text", "view.py", target="main", onclick="do_it()", title="Tooltip")
-    )
+    rendered = str(render_link("Text", "view.py", target="main", title="Tooltip"))
 
     assert 'target="main"' in rendered
-    assert 'onclick="do_it()"' in rendered
     assert 'title="Tooltip"' in rendered
     assert 'class="link"' in rendered
 
@@ -121,7 +118,6 @@ def test_render_link_passes_through_optional_attributes() -> None:
 def test_render_link_omits_empty_optional_attributes() -> None:
     rendered = str(render_link("Text", "view.py"))
 
-    assert "onclick=" not in rendered
     assert "title=" not in rendered
 
 

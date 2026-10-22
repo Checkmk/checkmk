@@ -12,7 +12,6 @@
 import contextlib
 import copy
 import json
-import textwrap
 import traceback
 from collections.abc import Callable, Sequence
 from dataclasses import asdict
@@ -22,23 +21,20 @@ from typing import Any, override
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.gui import hooks, pagetypes, sites
-from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.dashboard.type_defs import SnapinDashletConfig as SnapinDashletConfig
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.legacy_plugins import load_web_plugins
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
-from cmk.gui.main_menu import main_menu_registry, MainMenuRegistry
+from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_navigation import MainNavigation
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
-from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.permissions import PermissionSectionRegistry
 from cmk.gui.product_usage_analytics.popup import render_product_usage_analytics_popup
@@ -53,8 +49,6 @@ from cmk.shared_typing.sidebar import SidebarConfig
 from cmk.shared_typing.sidebar import SidebarSnapin as SidebarSnapinConfig
 from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.html import HTML
-from cmk.web.utils.icons import IconNames, StaticIcon
-from cmk.web.utils.urls import makeuri_contextless
 
 from . import _snapin
 from ._openapi.registration import register as register_openapi_endpoints
@@ -122,7 +116,6 @@ def register(
     page_registry.register(PageEndpoint("side", page_side))
     page_registry.register(PageEndpoint("sidebar_snapin", ajax_snapin))
     page_registry.register(PageEndpoint("sidebar_move_snapin", move_snapin))
-    page_registry.register(PageEndpoint("sidebar_add_snapin", page_add_snapin))
     page_registry.register(PageEndpoint("sidebar_ajax_set_snapin_site", ajax_set_snapin_site))
     page_registry.register(PageEndpoint("sidebar_message_read", ajax_message_read))
     page_registry.register(PageEndpoint("ajax_sidebar_get_messages", PageAjaxSidebarGetMessages()))
@@ -651,149 +644,6 @@ class SidebarRenderer:
             ),
         )
 
-    def _show_snapins(
-        self, config: Config, user_config: UserSidebarConfig
-    ) -> tuple[list, list, list]:
-        refresh_snapins = []
-        restart_snapins = []
-        static_snapins = []
-
-        for snapin in user_config.snapins:
-            name = snapin.snapin_type.type_name()
-
-            # Performs the initial rendering and might return an optional refresh url,
-            # when the snapin contents are refreshed from an external source
-            refresh_url = self.render_snapin(config, snapin)
-
-            if snapin.snapin_type.refresh_regularly():
-                refresh_snapins.append([name, refresh_url])
-            elif snapin.snapin_type.refresh_on_restart():
-                refresh_snapins.append([name, refresh_url])
-                restart_snapins.append(name)
-            else:
-                static_snapins.append(name)
-
-        return refresh_snapins, restart_snapins, static_snapins
-
-    def _show_add_snapin_button(self) -> None:
-        html.open_div(id_="add_snapin")
-        html.open_a(
-            href=makeuri_contextless(request, [], filename="sidebar_add_snapin.py"),
-        )
-        html.static_icon(StaticIcon(IconNames.add), title=_("Add elements to your sidebar"))
-        html.close_a()
-        html.close_div()
-
-    def render_snapin(self, config: Config, snapin: UserSidebarSnapin) -> str:
-        snapin_class = snapin.snapin_type
-        name = snapin_class.type_name()
-        snapin_instance = snapin_class()
-
-        more_id = "sidebar_snapin_%s" % name
-
-        show_more = user.get_show_more_setting(more_id)
-        html.open_div(
-            id_="snapin_container_%s" % name,
-            class_=["snapin", ("more" if show_more else "less")],
-        )
-
-        self._render_snapin_styles(snapin_instance)
-        # When not permitted to open/close snapins, the snapins are always opened
-        if snapin.visible == SnapinVisibility.OPEN or not user.may("general.configure_sidebar"):
-            style = None
-        else:
-            style = "display:none"
-
-        toggle_url = "sidebar_openclose.py?name=%s&state=" % name
-
-        # If the user may modify the sidebar then add code for dragging the snapin
-        head_actions: dict[str, str] = {}
-        if user.may("general.configure_sidebar"):
-            head_actions = {
-                "onmouseover": "document.body.style.cursor='move';",
-                "onmouseout ": "document.body.style.cursor='';",
-                "onmousedown": "cmk.sidebar.snapin_start_drag(event)",
-                "onmouseup": "cmk.sidebar.snapin_stop_drag(event)",
-            }
-
-        html.open_div(class_=["head", snapin.visible.value], **head_actions)
-
-        show_more = snapin_instance.has_show_more_items()
-        may_configure = user.may("general.configure_sidebar")
-
-        if show_more:
-            html.open_div()
-            html.open_span(
-                class_=["moresnapin"]
-                + (["hidden"] if snapin.visible == SnapinVisibility.CLOSED else [""])
-            )
-            html.more_button(more_id, dom_levels_up=4, show_mode=user.show_mode)
-            html.close_span()
-            html.close_div()
-
-        # The heading. A click on the heading mini/maximizes the snapin
-        toggle_actions: dict[str, str] = {}
-        img_id = f"treeangle.snapin.{name}"
-        onclick = f"cmk.sidebar.toggle_sidebar_snapin(this, {json.dumps(toggle_url)}, {json.dumps(img_id)})"
-        if user.may("general.configure_sidebar"):
-            toggle_actions = {
-                "onclick": onclick,
-                "onmouseover": "this.style.cursor='pointer'",
-                "onmouseout": "this.style.cursor='auto'",
-            }
-
-        if may_configure:
-            html.img(
-                id_=img_id,
-                title=_("Open/close this element"),
-                class_=[
-                    "treeangle",
-                    "open" if snapin.visible == SnapinVisibility.OPEN else "closed",
-                ],
-                src=theme.detect_icon_path("tree_closed", "icon_"),
-                onclick=onclick,
-            )
-        html.b(
-            textwrap.shorten(snapin_class.title(), width=27, placeholder="..."),
-            class_=["heading"],
-            **toggle_actions,
-        )
-        # End of header
-        html.close_div()
-
-        # Now comes the content
-        html.open_div(class_="content", id_="snapin_%s" % name, style=style)
-        refresh_url = ""
-        try:
-            snapin_instance.show(config)
-        except Exception as e:
-            logger.exception("error rendering snapin %(snapin_name)s", {"snapin_name": name})
-            write_snapin_exception(e)
-        html.close_div()
-        if may_configure:
-            # Button for closing (removing) a snapin
-            html.open_div(
-                class_=["closesnapin"]
-                + (["hidden"] if snapin.visible == SnapinVisibility.CLOSED else [""])
-            )
-            close_url = "sidebar_openclose.py?name=%s&state=off" % name
-            html.icon_button(
-                url=None,
-                title=_("Remove this element"),
-                icon=StaticIcon(IconNames.delete),
-                onclick="cmk.sidebar.remove_sidebar_snapin(this, '%s')" % close_url,
-            )
-            html.close_div()
-        html.close_div()
-        return refresh_url
-
-    def _render_snapin_styles(self, snapin_instance: SidebarSnapin) -> None:
-        styles = snapin_instance.styles()
-        if styles:
-            html.open_style()
-            html.write_text_permissive(styles)
-            html.close_style()
-
     def _show_main_menu(self, start_url: str, user_permissions: UserPermissions) -> None:
         html.vue_component(
             "cmk-main-menu",
@@ -981,72 +831,6 @@ def move_snapin(ctx: PageContext) -> None:
 #   |       /_/   \_\__,_|\__,_| |____/|_| |_|\__,_| .__/|_|_| |_|         |
 #   |                                              |_|                     |
 #   '----------------------------------------------------------------------'
-
-
-def page_add_snapin(ctx: PageContext) -> None:
-    if not user.may("general.configure_sidebar"):
-        raise MKGeneralException(_("You are not allowed to change the sidebar."))
-
-    title = _("Add sidebar element")
-    breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_customize(), title)
-    make_header(
-        html,
-        title=title,
-        breadcrumb=breadcrumb,
-        page_menu=_add_snapins_page_menu(breadcrumb),
-        debug=ctx.config.debug,
-        lang=user.language,
-        inject_js_profiling_code=ctx.config.inject_js_profiling_code,
-        load_frontend_vue=ctx.config.load_frontend_vue,
-        custom_style_sheet=ctx.config.custom_style_sheet,
-        screenshotmode=ctx.config.screenshotmode,
-        inline_help_as_text=user.inline_help_as_text,
-        hide_suggestions=not user.get_tree_state("suggestions", "all", True),
-        user_role_ids=user.role_ids,
-    )
-
-    used_snapins = _used_snapins(ctx.config, ctx.user_permissions)
-
-    html.open_div(class_=["add_snapin"])
-    for name, snapin_class in sorted(all_snapins().items()):
-        if name in used_snapins:
-            continue
-        if not snapin_class.may_see(ctx.user_permissions):
-            continue  # not allowed for this user
-
-        html.open_div(
-            class_="snapinadder",
-            onmouseover="this.style.cursor='pointer';",
-            onclick="window.top.cmk.sidebar.add_snapin('%s')" % name,
-        )
-
-        html.open_div(class_=["snapin_preview"])
-        html.div("", class_=["clickshield"])
-        SidebarRenderer().render_snapin(ctx.config, UserSidebarSnapin.from_snapin_type_id(name))
-        html.close_div()
-        html.div(snapin_class.description(), class_=["description"])
-        html.close_div()
-
-    html.close_div()
-    html.footer()
-
-
-def _add_snapins_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
-    return PageMenu(
-        dropdowns=[
-            PageMenuDropdown(
-                name="related",
-                title=_("Related"),
-                topics=[
-                    PageMenuTopic(
-                        title=_("Configure"),
-                        entries=list(CustomSnapins.page_menu_entry_list()),
-                    ),
-                ],
-            ),
-        ],
-        breadcrumb=breadcrumb,
-    )
 
 
 def _used_snapins(config: Config, user_permissions: UserPermissions) -> list[Any]:

@@ -210,113 +210,6 @@ def test_legacy_dict_snapins_default_the_optional_keys(monkeypatch: pytest.Monke
             permission_registry.unregister("sidesnap.legacy")
 
 
-@pytest.mark.usefixtures("patch_theme", "extra_snapins")
-def test_render_snapin_shortens_a_long_title(load_config: Config) -> None:
-    """The snap-in head is only a few characters wide, so a long title has to be cut rather
-    than pushing the close button out of the sidebar."""
-    with output_funnel.plugged():
-        SidebarRenderer().render_snapin(load_config, _user_snapin(QuietSnapin))
-        rendered = output_funnel.drain()
-
-    with output_funnel.plugged():
-        SidebarRenderer().render_snapin(load_config, _user_snapin(NoisySnapin))
-        long_title = output_funnel.drain()
-
-    assert "Quiet" in rendered
-    assert "..." in long_title
-
-
-@pytest.mark.usefixtures("patch_theme", "extra_snapins")
-def test_render_snapin_reports_a_failing_snapin_inline(load_config: Config) -> None:
-    """One broken snap-in must not take the whole sidebar with it."""
-    with output_funnel.plugged():
-        SidebarRenderer().render_snapin(load_config, _user_snapin(NoisySnapin))
-        rendered = output_funnel.drain()
-
-    assert "snapinexception" in rendered
-    assert "snapin exploded" in rendered
-
-
-@pytest.mark.usefixtures("patch_theme", "extra_snapins")
-def test_render_snapin_injects_the_snapin_styles(load_config: Config) -> None:
-    with output_funnel.plugged():
-        SidebarRenderer().render_snapin(load_config, _user_snapin(NoisySnapin))
-        rendered = output_funnel.drain()
-
-    assert ".noisy { color: red; }" in rendered
-
-
-@pytest.mark.usefixtures("patch_theme", "extra_snapins")
-def test_render_snapin_hides_the_body_of_a_closed_snapin(load_config: Config) -> None:
-    with output_funnel.plugged():
-        SidebarRenderer().render_snapin(
-            load_config, _user_snapin(QuietSnapin, SnapinVisibility.CLOSED)
-        )
-        rendered = output_funnel.drain()
-
-    assert 'style="display:none"' in rendered
-    assert 'class="closesnapin hidden"' in rendered
-
-
-@pytest.mark.usefixtures("patch_theme", "extra_snapins")
-def test_render_snapin_always_opens_a_snapin_the_user_may_not_configure(
-    monkeypatch: pytest.MonkeyPatch, load_config: Config
-) -> None:
-    """Without the configure permission there is no way to reopen a snap-in, so a closed one
-    would be invisible forever."""
-    with monkeypatch.context() as m:
-        m.setattr(user, "may", lambda x: x != "general.configure_sidebar")
-        with output_funnel.plugged():
-            SidebarRenderer().render_snapin(
-                load_config, _user_snapin(QuietSnapin, SnapinVisibility.CLOSED)
-            )
-            rendered = output_funnel.drain()
-
-    assert 'style="display:none"' not in rendered
-    assert "closesnapin" not in rendered
-    assert "snapin_start_drag" not in rendered
-
-
-@pytest.mark.usefixtures("patch_theme", "extra_snapins")
-def test_render_snapin_offers_dragging_and_closing_to_configuring_users(
-    load_config: Config,
-) -> None:
-    with output_funnel.plugged():
-        SidebarRenderer().render_snapin(load_config, _user_snapin(QuietSnapin))
-        rendered = output_funnel.drain()
-
-    assert "cmk.sidebar.snapin_start_drag(event)" in rendered
-    assert "cmk.sidebar.remove_sidebar_snapin" in rendered
-    assert "cmk.sidebar.toggle_sidebar_snapin" in rendered
-
-
-@pytest.mark.usefixtures("patch_theme", "extra_snapins")
-def test_render_snapin_offers_the_more_button_for_show_more_snapins(
-    load_config: Config,
-) -> None:
-    with output_funnel.plugged():
-        SidebarRenderer().render_snapin(load_config, _user_snapin(QuietSnapin))
-        with_more = output_funnel.drain()
-
-    with output_funnel.plugged():
-        SidebarRenderer().render_snapin(load_config, _user_snapin(NoisySnapin))
-        without_more = output_funnel.drain()
-
-    assert "moresnapin" in with_more
-    assert "moresnapin" not in without_more
-
-
-@pytest.mark.usefixtures("extra_snapins")
-def test_snapin_styles_are_only_rendered_when_there_are_any() -> None:
-    with output_funnel.plugged():
-        SidebarRenderer()._render_snapin_styles(QuietSnapin())  # noqa: SLF001
-        assert output_funnel.drain() == ""
-
-    with output_funnel.plugged():
-        SidebarRenderer()._render_snapin_styles(NoisySnapin())  # noqa: SLF001
-        assert "<style>" in output_funnel.drain()
-
-
 @pytest.mark.usefixtures("extra_snapins")
 def test_vue_snapin_config_carries_the_refresh_behaviour(
     monkeypatch: pytest.MonkeyPatch,
@@ -339,62 +232,6 @@ def test_vue_snapin_config_of_a_closed_snapin() -> None:
     )
 
     assert config.open is False
-
-
-@pytest.mark.usefixtures("patch_theme", "extra_snapins", "monkeypatch")
-def test_show_snapins_sorts_the_snapins_by_refresh_behaviour(load_config: Config) -> None:
-    """The sidebar polls the regularly refreshed snap-ins, re-renders the restart-dependent
-    ones only after a core restart, and never touches the static ones."""
-
-    class RegularSnapin(QuietSnapin):
-        @classmethod
-        @override
-        def type_name(cls) -> str:
-            return "regular"
-
-        @classmethod
-        @override
-        def refresh_regularly(cls) -> bool:
-            return True
-
-    class RestartSnapin(QuietSnapin):
-        @classmethod
-        @override
-        def type_name(cls) -> str:
-            return "restart"
-
-        @classmethod
-        @override
-        def refresh_on_restart(cls) -> bool:
-            return True
-
-    user_config = sidebar.UserSidebarConfig(user, load_config.sidebar, USER_PERMISSIONS)
-    del user_config.snapins[:]
-    user_config.snapins.extend(
-        [
-            _user_snapin(RegularSnapin),
-            _user_snapin(RestartSnapin),
-            _user_snapin(QuietSnapin),
-        ]
-    )
-
-    with output_funnel.plugged():
-        refresh, restart, static = SidebarRenderer()._show_snapins(load_config, user_config)  # noqa: SLF001
-        output_funnel.drain()
-
-    assert [name for name, _url in refresh] == ["regular", "restart"]
-    assert restart == ["restart"]
-    assert static == ["quiet"]
-
-
-@pytest.mark.usefixtures("patch_theme")
-def test_add_snapin_button_links_to_the_add_page() -> None:
-    with output_funnel.plugged():
-        SidebarRenderer()._show_add_snapin_button()  # noqa: SLF001
-        rendered = output_funnel.drain()
-
-    assert 'id="add_snapin"' in rendered
-    assert "sidebar_add_snapin.py" in rendered
 
 
 def test_icon_path_is_none_without_a_custom_logo(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -692,16 +529,6 @@ def test_set_snapin_site_stores_a_configured_site(
         sidebar.ajax_set_snapin_site(_page_context(load_config))
 
     assert saved == {"sidebar_sites": {"quiet": "NO_SITE"}}
-
-
-@pytest.mark.usefixtures("patch_theme")
-def test_add_snapin_page_needs_the_configure_permission(
-    monkeypatch: pytest.MonkeyPatch, load_config: Config
-) -> None:
-    with monkeypatch.context() as m:
-        m.setattr(user, "may", lambda x: x != "general.configure_sidebar")
-        with pytest.raises(MKGeneralException, match="not allowed"):
-            sidebar.page_add_snapin(_page_context(load_config))
 
 
 class _NeverCalled:

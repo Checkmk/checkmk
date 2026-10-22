@@ -117,7 +117,6 @@ def test_registered_pages() -> None:
         "search_open",
         "set_all_sites",
         "side",
-        "sidebar_add_snapin",
         "sidebar_ajax_add_snapin",
         "sidebar_ajax_set_snapin_site",
         "sidebar_ajax_speedometer",

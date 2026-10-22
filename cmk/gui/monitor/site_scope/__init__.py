@@ -4,8 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._extractor import SiteScopedFilter, SiteScopeExtractor
+from ._sites import MonitorSite, MonitorSites
 
 __all__ = [
+    "MonitorSite",
+    "MonitorSites",
     "SiteScopedFilter",
     "SiteScopeExtractor",
 ]

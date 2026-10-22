@@ -104,6 +104,40 @@ def get_fake_host_services_repository(
     return HostServicesFakeRepository()
 
 
+class FakeServicesRepository:
+    def __init__(self, services: Sequence[Service], *, matched: int | None = None) -> None:
+        self._services = list(services)
+        self._matched = matched
+        self.count_matched_calls = 0
+
+    def fetch(
+        self,
+        *,
+        limit: int | None,  # noqa: ARG002
+        query: str,
+        sorters: Sequence[ServiceSort],
+        filters: ServiceFilter,  # noqa: ARG002
+        fields: Set[ServiceOptionalField],  # noqa: ARG002
+    ) -> Sequence[Service]:
+        return sorted(self._matching(query), key=service_sorter(sorters))
+
+    def count_total(self) -> int:
+        return len(self._services)
+
+    def count_matched(
+        self,
+        *,
+        query: str,
+        filters: ServiceFilter,  # noqa: ARG002
+        fields: Set[ServiceOptionalField],  # noqa: ARG002
+    ) -> int:
+        self.count_matched_calls += 1
+        return len(self._matching(query)) if self._matched is None else self._matched
+
+    def _matching(self, query: str) -> list[Service]:
+        return [s for s in self._services if query.lower() in f"{s.host_name} {s.name}".lower()]
+
+
 @contextmanager
 def login_with(permissions: dict[str, bool]) -> Iterator[None]:
     """A logged-in user whose role spells out exactly these permissions."""

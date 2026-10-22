@@ -13,7 +13,7 @@ import time_machine
 from cmk.ccc.user import UserId
 from cmk.graphing.v1 import perfometers
 from cmk.gui.graphing import perfometers_from_api
-from cmk.gui.monitor.services._api._list_host_services import _MAX_HOST_SVC_LIMIT
+from cmk.gui.monitor.services._api._limits import MAX_SERVICE_LIMIT
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry
@@ -1359,7 +1359,7 @@ class TestMonitorHostServicessLimitPermissions:
                 f"Columns: {_SERVICES_COLUMNS}",
                 f"Filter: host_name = {_HOSTNAME}",
                 _DEFAULT_ORDER_BY,
-                f"Limit: {_MAX_HOST_SVC_LIMIT}",
+                f"Limit: {MAX_SERVICE_LIMIT}",
             ],
             sites=[_SITE_ID],
             match_type="loose",
@@ -1377,7 +1377,7 @@ class TestMonitorHostServicessLimitPermissions:
         with mock_livestatus(expect_status_query=True):
             resp = client.list_host_services(hostname=_HOSTNAME, site_id=_SITE_ID, limit=None)
 
-        assert resp.json["meta"]["limit"] == _MAX_HOST_SVC_LIMIT
+        assert resp.json["meta"]["limit"] == MAX_SERVICE_LIMIT
 
     def test_limit_removal_honored_with_permission(
         self,

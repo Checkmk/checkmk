@@ -33,7 +33,7 @@ from cmk.gui.monitor.export import EXPORT_EVENT, MonitorReportExportMenu
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
 from cmk.gui.monitor.services._access import HOST_SERVICES_PERMISSION, LEGACY_HOST_VIEW_NAME
 from cmk.gui.monitor.services._ai_explain import ai_explain
-from cmk.gui.monitor.services._api._list_host_services import LIMIT_TIERS
+from cmk.gui.monitor.services._api._limits import LIMIT_TIERS
 from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
 from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.pages import Page, PageContext

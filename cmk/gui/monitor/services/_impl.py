@@ -16,6 +16,7 @@ from typing import cast
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
+from cmk.gui.monitor.site_scope import MonitorSites
 from cmk.livestatus_client import (
     LivestatusClient,
     MultiSiteConnection,
@@ -25,6 +26,7 @@ from cmk.livestatus_client.expressions import And, NothingExpression, Or, QueryE
 from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables import Hosts, Services
 from cmk.livestatus_client.types import Column
+from cmk.ruleset_matcher.labels import BuiltinLabelsKey
 
 from ._exceptions import ServiceNotFoundError
 from ._models import (
@@ -200,6 +202,53 @@ class LiveStatusHostServicesRepository:
         )
 
 
+class LiveStatusServicesRepository:
+    def __init__(self, *, connection: MultiSiteConnection, sites: MonitorSites) -> None:
+        self._connection = connection
+        self._sites = sites
+
+    def fetch(
+        self,
+        *,
+        limit: int | None,
+        query: str,
+        sorters: Sequence[ServiceSort],
+        filters: ServiceFilter,
+        fields: Set[ServiceOptionalField],
+    ) -> Sequence[Service]:
+        return _fetch_services(
+            self._connection,
+            self._search_filter(_sanitize_query(query), fields),
+            limit=limit,
+            sorters=sorters,
+            filters=filters,
+            fields=fields,
+        )
+
+    def count_total(self) -> int:
+        return _count_services(self._connection, NothingExpression(), ServiceFilter(""))
+
+    def count_matched(
+        self, *, query: str, filters: ServiceFilter, fields: Set[ServiceOptionalField]
+    ) -> int:
+        return _count_services(
+            self._connection, self._search_filter(_sanitize_query(query), fields), filters
+        )
+
+    def _search_filter(self, query: str, fields: Set[ServiceOptionalField]) -> QueryExpression:
+        if not query:
+            return NothingExpression()
+
+        return Or(
+            _build_query_filter(query, fields),
+            Services.host_name.contains(query, ignore_case=True),
+            *(
+                Services.host_labels.op("=", f"{BuiltinLabelsKey.SITE} {site_id}")
+                for site_id in self._sites.matching(query)
+            ),
+        )
+
+
 def _fetch_services(
     connection: MultiSiteConnection,
     filter_expr: QueryExpression,
@@ -369,7 +418,9 @@ def _build_primary_sort(sorters: Sequence[ServiceSort]) -> str:
     own services get in the default order can be expressed in an ``OrderBy``, so both are applied by
     the Python re-sort afterwards. In the default order, a host with more services than the limit
     whose names all sort before "Check_MK" would therefore lose those rows, same as in the legacy
-    view.
+    view. The same holds for every multi-column order, e.g. the All services default of host name,
+    then service name: when the limit cuts through a host, that host keeps whichever of its
+    services the core returned first, not its first ones by name.
 
     A sorter without a livestatus column, like the site, is skipped: the first sorter that has one
     is what orders the rows within each site's answer.

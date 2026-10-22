@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence, Set
 from http import HTTPStatus
-from typing import Annotated, Final, Self
+from typing import Annotated, Self
 
 from annotated_types import Interval
 from pydantic import PlainValidator, ValidationError
@@ -51,19 +51,16 @@ from ._filters import (
     SERVICE_FILTER_NODE,
     ServiceFilterNode,
 )
+from ._limits import (
+    DEFAULT_SERVICE_LIMIT,
+    MAX_SERVICE_LIMIT,
+    MIN_SERVICE_LIMIT,
+    resolve_service_limit,
+)
 from ._modes import build_service_modes_by_id, ServiceModeInfo
 from ._perfometer import ServicePerfometer
 from ._reschedule_offer import build_reschedule_offer, ServiceRescheduleOffer
 from ._validators import parse_service_search_query, parse_service_sort_options
-
-# View-local limits, deliberately not coupled to the global soft/hard query limit settings so they
-# never affect the legacy views.
-_MIN_HOST_SVC_LIMIT = 0
-_MAX_HOST_SVC_LIMIT = 5_000
-_DEFAULT_LIMIT = 1_000
-
-# The row limits the services of a host page offers: the default first, the maximum last.
-LIMIT_TIERS: Final = (_DEFAULT_LIMIT, _MAX_HOST_SVC_LIMIT)
 
 # Requesting no sorter is not the same as requesting no order: the repository reads an empty list
 # as "the page default", which leads with Checkmk's own services.
@@ -156,7 +153,12 @@ class HostServiceEntry:
 
     @classmethod
     def from_domain(cls, service: Service) -> Self:
+        return cls._from_domain(service)
+
+    @classmethod
+    def _from_domain(cls, service: Service, **extra: str) -> Self:
         return cls(
+            **extra,
             name=service.name,
             state=service.state_label,
             is_flapping=service.is_flapping,
@@ -203,16 +205,14 @@ class HostServicesResponse:
 
 @api_model
 class ServicesRequestBody:
-    limit: Annotated[int, Interval(ge=_MIN_HOST_SVC_LIMIT, le=_MAX_HOST_SVC_LIMIT)] | None = (
-        api_field(
-            description=(
-                "Number of services to return. Pass null to remove the limit entirely; this requires "
-                "the 'general.ignore_hard_limit' permission and otherwise falls back to the maximum "
-                f"of {_MAX_HOST_SVC_LIMIT}."
-            ),
-            example=_DEFAULT_LIMIT,
-            default=_DEFAULT_LIMIT,
-        )
+    limit: Annotated[int, Interval(ge=MIN_SERVICE_LIMIT, le=MAX_SERVICE_LIMIT)] | None = api_field(
+        description=(
+            "Number of services to return. Pass null to remove the limit entirely; this requires "
+            "the 'general.ignore_hard_limit' permission and otherwise falls back to the maximum "
+            f"of {MAX_SERVICE_LIMIT}."
+        ),
+        example=DEFAULT_SERVICE_LIMIT,
+        default=DEFAULT_SERVICE_LIMIT,
     )
     sort: Annotated[
         list[ServiceSort] | ApiOmitted,
@@ -268,22 +268,11 @@ def list_services(
     body: ServicesRequestBody = ServicesRequestBody(),
 ) -> HostServicesResponse:
     """List services of a host to be consumed by the host services monitoring page."""
-    # A `None` request means "remove the limit". We only honor that for users allowed to ignore
-    # the hard limit; everyone else is clamped to the safety ceiling. Numeric requests are
-    # already bounded to the ceiling by the request schema, so they pass through unchanged.
-    match body.limit:
-        case None if api_context.user.may("general.ignore_hard_limit"):
-            limit = None
-        case None:
-            limit = _MAX_HOST_SVC_LIMIT
-        case _:
-            limit = body.limit
-
     try:
         return HostServicesTable(api_context.config.sites).list(
             hostname=hostname,
             site_id=site_id,
-            limit=limit,
+            limit=resolve_service_limit(body.limit, api_context.user),
             query="" if isinstance(body.q, ApiOmitted) else body.q,
             sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
             filter_node=None if isinstance(body.filter, ApiOmitted) else body.filter,
@@ -362,7 +351,7 @@ def _handle_list_services(
     *,
     hostname: str,
     site_id: str,
-    limit: int | None = _DEFAULT_LIMIT,
+    limit: int | None = DEFAULT_SERVICE_LIMIT,
     query: str = "",
     sorters: Sequence[ServiceSort] = _DEFAULT_SORT,
     filters: ServiceFilter = ServiceFilter(""),

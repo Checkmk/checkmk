@@ -58,3 +58,27 @@ class HostServicesRepository(Protocol):
     ) -> int:
         """Count the services of a host matching the given criteria."""
         ...
+
+
+class ServicesRepository(Protocol):
+    def fetch(
+        self,
+        *,
+        limit: int | None,
+        query: str,
+        sorters: Sequence[ServiceSort],
+        filters: ServiceFilter,
+        fields: Set[ServiceOptionalField],
+    ) -> Sequence[Service]:
+        """Fetch services of every host, reading only the columns `fields` asks for."""
+        ...
+
+    def count_total(self) -> int:
+        """Count the services of every host in your environment."""
+        ...
+
+    def count_matched(
+        self, *, query: str, filters: ServiceFilter, fields: Set[ServiceOptionalField]
+    ) -> int:
+        """Count the services of every host matching the given criteria."""
+        ...

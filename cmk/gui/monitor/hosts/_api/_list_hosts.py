@@ -12,6 +12,7 @@ from pydantic import PlainValidator
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.monitor.setup_folders import SetupFolderSource
+from cmk.gui.monitor.site_scope import MonitorSite, MonitorSites
 from cmk.gui.monitor.table_widget import TableRows
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -45,7 +46,6 @@ from .._models import (
     UnixTimestamp,
 )
 from .._repositories import HostRepository
-from .._site import MonitorSite, MonitorSites
 from .._table_catalog import DEFAULT_HOST_SORT, HOST_TABLE
 from ..context_filters import translate_filters
 from ._family import MONITOR_HOSTS_FAMILY

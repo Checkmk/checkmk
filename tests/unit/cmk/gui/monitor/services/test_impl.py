@@ -7,6 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.monitor.services._impl import (
     _build_primary_sort,
@@ -14,6 +15,7 @@ from cmk.gui.monitor.services._impl import (
     _LIVESTATUS_SORT_COLUMNS,
     _OPTIONAL_COLUMNS,
     LiveStatusHostServicesRepository,
+    LiveStatusServicesRepository,
 )
 from cmk.gui.monitor.services._models import (
     ServiceFilter,
@@ -22,6 +24,7 @@ from cmk.gui.monitor.services._models import (
     ServiceSortColumn,
     ServiceSortDirection,
 )
+from cmk.gui.monitor.site_scope import MonitorSite, MonitorSites
 from cmk.livestatus_client.testing import expect_single_query, MockLiveStatusConnection
 from tests.testlib.unit.gui.web_test_app import SetConfig
 
@@ -677,3 +680,69 @@ def test_get_overview_puts_each_detail_of_the_long_output_on_its_own_line(
         )
 
     assert overview.long_output == "Used: 29.61%\nInodes used: 10.26%"
+
+
+def test_all_services_fetch_has_no_host_filter() -> None:
+    with expect_single_query(
+        f"GET services\nColumns: {_SERVICES_COLUMNS}\n{_DEFAULT_ORDER_BY}\nLimit: 500",
+    ) as live:
+        LiveStatusServicesRepository(connection=live, sites=MonitorSites()).fetch(
+            limit=500, query="", sorters=[], filters=ServiceFilter(""), fields=frozenset()
+        )
+
+
+def test_all_services_fetch_pushes_down_only_the_first_sorter() -> None:
+    with expect_single_query(
+        f"GET services\nColumns: {_SERVICES_COLUMNS}\nOrderBy: host_name asc natural\nLimit: 500",
+    ) as live:
+        LiveStatusServicesRepository(connection=live, sites=MonitorSites()).fetch(
+            limit=500,
+            query="",
+            sorters=[
+                ServiceSort(ServiceSortColumn.HOST_NAME, ServiceSortDirection.ASC),
+                ServiceSort(ServiceSortColumn.NAME, ServiceSortDirection.ASC),
+            ],
+            filters=ServiceFilter(""),
+            fields=frozenset(),
+        )
+
+
+_SITES = MonitorSites(
+    [
+        MonitorSite(id=SiteId("heute")),
+        MonitorSite(id=SiteId("stable")),
+        MonitorSite(id=SiteId("remote_muc"), customer="Heumann GmbH"),
+    ]
+)
+
+
+def test_all_services_search_covers_host_name_and_sites_by_id_or_customer() -> None:
+    with expect_single_query(
+        f"GET services\nColumns: {_SERVICES_COLUMNS}\n"
+        "Filter: description ~~ heu\nFilter: plugin_output ~~ heu\nOr: 2\n"
+        "Filter: host_name ~~ heu\n"
+        "Filter: host_labels = cmk/site heute\n"
+        "Filter: host_labels = cmk/site remote_muc\n"
+        f"Or: 4\n{_DEFAULT_ORDER_BY}",
+    ) as live:
+        LiveStatusServicesRepository(connection=live, sites=_SITES).fetch(
+            limit=None, query="heu", sorters=[], filters=ServiceFilter(""), fields=frozenset()
+        )
+
+
+def test_all_services_count_total_counts_every_service() -> None:
+    with expect_single_query("GET services\nStats: state >= 0") as live:
+        assert (
+            LiveStatusServicesRepository(connection=live, sites=MonitorSites()).count_total() == 0
+        )
+
+
+def test_all_services_count_matched_applies_filters() -> None:
+    with expect_single_query("GET services\nStats: state >= 0\nFilter: state = 1") as live:
+        repo = LiveStatusServicesRepository(connection=live, sites=MonitorSites())
+        assert (
+            repo.count_matched(
+                query="", filters=ServiceFilter("Filter: state = 1"), fields=frozenset()
+            )
+            == 0
+        )

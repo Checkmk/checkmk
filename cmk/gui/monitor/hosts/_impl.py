@@ -18,6 +18,7 @@ from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
+from cmk.gui.monitor.site_scope import MonitorSites
 from cmk.gui.sites import SiteStates
 from cmk.gui.utils.host_relation_kinds import kind_accepts
 from cmk.gui.utils.host_relations import (
@@ -61,7 +62,6 @@ from ._models import (
     ServiceCounts,
     UnixTimestamp,
 )
-from ._site import MonitorSites
 from ._sorting import host_sorter
 
 

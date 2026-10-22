@@ -31,7 +31,7 @@ from cmk.gui.monitor.hosts._models import (
     HostSortDirection,
     MAX_RESOLVED_RELATIONS,
 )
-from cmk.gui.monitor.hosts._site import MonitorSite, MonitorSites
+from cmk.gui.monitor.site_scope import MonitorSite, MonitorSites
 from cmk.gui.sites import SiteStates, SiteStatus
 from cmk.livestatus_client.testing import expect_single_query, MockLiveStatusConnection
 from tests.testlib.unit.gui.web_test_app import SetConfig

@@ -180,7 +180,10 @@ const widgetTitles = useComputeWidgetTitles(
   dashboardFilters.baseFilters,
   dashboardWidgets.widgetCores
 )
-const dashboardWidgetWorkflows = getDashboardWidgetWorkflows(props.available_features.ntop_active)
+const dashboardWidgetWorkflows = getDashboardWidgetWorkflows({
+  ntopActive: props.available_features.ntop_active,
+  mayEditCustomGraph: props.permissions.edit_custom_graph
+})
 
 useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApplied, () => {
   openDashboardFilterSettings.value = true

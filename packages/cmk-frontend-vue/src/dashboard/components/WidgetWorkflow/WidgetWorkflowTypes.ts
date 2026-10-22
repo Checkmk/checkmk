@@ -41,7 +41,15 @@ export function findParentWorkflowKey(
   return null
 }
 
-export function getDashboardWidgetWorkflows(ntopActive: boolean = false): WorkflowCatalog {
+interface DashboardWidgetWorkflowOptions {
+  ntopActive?: boolean
+  mayEditCustomGraph?: boolean
+}
+
+export function getDashboardWidgetWorkflows({
+  ntopActive = false,
+  mayEditCustomGraph = false
+}: DashboardWidgetWorkflowOptions = {}): WorkflowCatalog {
   const workflows: WorkflowCatalog = {
     metrics_graphs: {
       title: _t('Metrics & graphs'),
@@ -66,7 +74,9 @@ export function getDashboardWidgetWorkflows(ntopActive: boolean = false): Workfl
           subtitle: _t('Configure and edit an existing custom graph'),
           icon: 'graph',
           icon_emblem: 'add',
-          unavailableReason: _t('Not available yet.')
+          unavailableReason: mayEditCustomGraph
+            ? _t('Not available yet.')
+            : _t('Requires the permission "Customize and use custom graphs".')
         },
         link_custom_graph: {
           title: _t('Link existing custom graph'),

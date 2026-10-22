@@ -164,4 +164,16 @@ describe('AddWidgetDialog', () => {
 
     expect(screen.getByRole('button', { name: /^Custom graphs/ })).toBeDisabled()
   })
+
+  it('shows a disabled clone entry with its reason as tooltip', () => {
+    renderAddWidgetDialog({
+      startingGroupKey: 'custom_graphs',
+      catalog: getDashboardWidgetWorkflows({ mayEditCustomGraph: false })
+    })
+
+    expect(screen.getByRole('button', { name: /Clone custom graph/ })).toBeDisabled()
+    expect(
+      screen.getByTitle('Requires the permission "Customize and use custom graphs".')
+    ).toBeInTheDocument()
+  })
 })

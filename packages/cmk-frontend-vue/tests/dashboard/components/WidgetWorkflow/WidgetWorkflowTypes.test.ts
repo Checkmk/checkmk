@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   type WorkflowCatalog,
+  type WorkflowGroup,
   type WorkflowItem,
   findParentWorkflowKey,
   getDashboardWidgetWorkflows
@@ -54,5 +55,15 @@ describe('getDashboardWidgetWorkflows', () => {
     const parentKey = findParentWorkflowKey(dashboardCatalog, 'link_custom_graph')
 
     expect(parentKey).toBe('custom_graphs')
+  })
+
+  it('disables cloning for users who may not edit custom graphs', () => {
+    const dashboardCatalog = getDashboardWidgetWorkflows({ mayEditCustomGraph: false })
+
+    const cloneEntry = (dashboardCatalog['custom_graphs'] as WorkflowGroup).subWorkflows[
+      'clone_custom_graph'
+    ]
+
+    expect(cloneEntry?.unavailableReason).toContain('Customize and use custom graphs')
   })
 })

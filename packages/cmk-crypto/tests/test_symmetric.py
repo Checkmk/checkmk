@@ -7,7 +7,9 @@
 import secrets
 from base64 import b64decode
 
-from cmk.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
+import pytest
+
+from cmk.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, DecryptionError, TaggedCiphertext
 
 
 def test_decrypt() -> None:
@@ -28,3 +30,11 @@ def test_roundtrip() -> None:
     assert plain == aes_gcm_decrypt(
         key, nonce, TaggedCiphertext(encrypted.ciphertext, encrypted.tag)
     )
+
+
+def test_decrypt_with_wrong_key() -> None:
+    nonce = secrets.token_bytes(16)
+    encrypted = aes_gcm_encrypt(secrets.token_bytes(16), nonce, "HI MOM!")
+
+    with pytest.raises(DecryptionError):
+        aes_gcm_decrypt(secrets.token_bytes(16), nonce, encrypted)

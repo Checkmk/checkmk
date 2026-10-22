@@ -12,7 +12,15 @@ from cmk.ec.config import Config
 from cmk.ec.event import LimitKind
 from cmk.ec.main import EventServer, EventStatus
 
-from .helpers import new_count, new_event, new_rule, process_message, RecordingHistory
+from .helpers import (
+    FakeConnection,
+    new_count,
+    new_event,
+    new_host,
+    new_rule,
+    process_message,
+    RecordingHistory,
+)
 
 
 @pytest.fixture(name="history")
@@ -27,12 +35,15 @@ _LIMIT_KINDS = [
 ]
 
 
+_UNLIMITED = ec.EventLimit(action="stop", limit=1000)
+_NO_LIMITS = ec.EventLimits(overall=_UNLIMITED, by_host=_UNLIMITED, by_rule=_UNLIMITED)
+
+
 def _only_limit(kind: LimitKind, limit: ec.EventLimit) -> ec.EventLimits:
-    unlimited = ec.EventLimit(action="stop", limit=1000)
     return ec.EventLimits(
-        overall=limit if kind == "overall" else unlimited,
-        by_host=limit if kind == "by_host" else unlimited,
-        by_rule=limit if kind == "by_rule" else unlimited,
+        overall=limit if kind == "overall" else _UNLIMITED,
+        by_host=limit if kind == "by_host" else _UNLIMITED,
+        by_rule=limit if kind == "by_rule" else _UNLIMITED,
     )
 
 
@@ -41,17 +52,22 @@ def _configure(
     config: Config,
     history: RecordingHistory,
     event_limits: ec.EventLimits,
+    rule: ec.Rule | None = None,
 ) -> None:
+    rule_packs = [ec.default_rule_pack([new_rule({}) if rule is None else rule])]
     event_server.reload_configuration(
-        config
-        | {"event_limit": event_limits, "rule_packs": [ec.default_rule_pack([new_rule({})])]},
-        history,
+        config | {"event_limit": event_limits, "rule_packs": rule_packs}, history
     )
 
 
 def _process_messages(event_server: EventServer, *texts: str) -> None:
     for text in texts:
         process_message(event_server, ec.Event(text=text))
+
+
+def _status(event_server: EventServer) -> dict[str, object]:
+    [row] = event_server.get_status()
+    return dict(zip((name for name, _default in EventServer.status_columns()), row, strict=True))
 
 
 def _texts_of_events(event_status: EventStatus) -> list[str]:
@@ -84,13 +100,12 @@ def test_counting_rule_does_not_open_an_event_dropped_by_a_reached_limit(
     # Each disk gets an event of its own, which its first message opens.
     count = new_count(1, period=60) | {"separate_match_groups": True}
     rule = new_rule({"match": r"disk (\S+) failed", "count": count})
-    event_server.reload_configuration(
-        config
-        | {
-            "event_limit": _only_limit("by_rule", ec.EventLimit(action="stop", limit=1)),
-            "rule_packs": [ec.default_rule_pack([rule])],
-        },
+    _configure(
+        event_server,
+        config,
         history,
+        _only_limit("by_rule", ec.EventLimit(action="stop", limit=1)),
+        rule,
     )
 
     _process_messages(event_server, "disk sda failed", "disk sdb failed")
@@ -142,13 +157,12 @@ def test_deleting_events_for_one_limit_can_keep_the_event_from_reaching_another_
     event_status.new_event(new_event(ec.Event(text="of another rule")))
     # The rule keeps only its newest event.
     rule = new_rule({"event_limit": ec.EventLimit(action="delete_oldest", limit=1)})
-    event_server.reload_configuration(
-        config
-        | {
-            "event_limit": _only_limit("overall", ec.EventLimit(action="stop_overflow", limit=3)),
-            "rule_packs": [ec.default_rule_pack([rule])],
-        },
+    _configure(
+        event_server,
+        config,
         history,
+        _only_limit("overall", ec.EventLimit(action="stop_overflow", limit=3)),
+        rule,
     )
     _process_messages(event_server, "1st")
 
@@ -299,13 +313,12 @@ def test_messages_are_not_counted_into_the_overflow_event_of_their_rule(
     event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
 ) -> None:
     # All messages count up the same event, which the second one opens.
-    event_server.reload_configuration(
-        config
-        | {
-            "event_limit": _only_limit("by_rule", ec.EventLimit(action="stop_overflow", limit=1)),
-            "rule_packs": [ec.default_rule_pack([new_rule({"count": new_count(2, period=60)})])],
-        },
+    _configure(
+        event_server,
+        config,
         history,
+        _only_limit("by_rule", ec.EventLimit(action="stop_overflow", limit=1)),
+        new_rule({"count": new_count(2, period=60)}),
     )
     _process_messages(event_server, "1st")
 
@@ -327,11 +340,7 @@ def test_missing_expected_messages_are_not_merged_into_the_overflow_event_of_the
     event_status.remove_event(event, "DELETE")
     # The rule expects messages now, so an event about a missing one is merged into an open one.
     expecting_rule = new_rule({"expect": ec.Expect(interval=3600, count=1, merge="open")})
-    event_server.reload_configuration(
-        config
-        | {"event_limit": event_limits, "rule_packs": [ec.default_rule_pack([expecting_rule])]},
-        history,
-    )
+    _configure(event_server, config, history, event_limits, expecting_rule)
     with time_machine.travel(1_700_000_000.0, tick=False) as traveller:
         event_server.do_housekeeping()
         traveller.shift(3600)
@@ -358,9 +367,7 @@ def test_messages_are_not_counted_into_an_overflow_event_of_an_older_version(
     )
     # All messages count up the same event, which the second one opens.
     rule = new_rule({"count": new_count(2, period=60)})
-    event_server.reload_configuration(
-        config | {"rule_packs": [ec.default_rule_pack([rule])]}, history
-    )
+    _configure(event_server, config, history, _NO_LIMITS, rule)
 
     _process_messages(event_server, "1st", "2nd")
 
@@ -385,3 +392,50 @@ def test_limit_does_not_act_on_an_event_which_a_further_limit_drops(
     _process_messages(event_server, "2nd")
 
     assert _texts_of_events(event_status) == ["1st"]
+
+
+def test_limit_of_a_rule_overrides_the_general_rule_limit(
+    event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
+) -> None:
+    rule = new_rule({"event_limit": ec.EventLimit(action="stop", limit=1)})
+    _configure(event_server, config, history, _NO_LIMITS, rule)
+
+    _process_messages(event_server, "1st", "2nd")
+
+    assert _texts_of_events(event_status) == ["1st"]
+
+
+def test_limit_of_a_host_overrides_the_general_host_limit(
+    event_server: EventServer,
+    event_status: EventStatus,
+    config: Config,
+    history: RecordingHistory,
+    core_connection: FakeConnection,
+) -> None:
+    core_connection.hosts = [new_host("test-host", custom_variables={"EC_EVENT_LIMIT": "1:stop"})]
+    _configure(event_server, config, history, _NO_LIMITS)
+
+    _process_messages(event_server, "1st", "2nd")
+
+    assert _texts_of_events(event_status) == ["1st"]
+
+
+def test_status_shows_the_reached_limits(
+    event_server: EventServer, config: Config, history: RecordingHistory
+) -> None:
+    one_event = ec.EventLimit(action="stop", limit=1)
+    _configure(
+        event_server,
+        config,
+        history,
+        ec.EventLimits(overall=one_event, by_host=one_event, by_rule=one_event),
+        new_rule({"id": "disk"}),
+    )
+
+    _process_messages(event_server, "disk full")
+
+    assert {
+        "status_event_limit_active_hosts": ["test-host"],
+        "status_event_limit_active_rules": ["disk"],
+        "status_event_limit_active_overall": True,
+    }.items() <= _status(event_server).items()

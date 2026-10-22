@@ -191,6 +191,7 @@ py_library(
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-agent-registration-extended:__subpackages__",
         "//non-free/packages/cmk-bakery:__subpackages__",
+        "//non-free/packages/cmk-check-engine-nonfree:__subpackages__",
         "//non-free/packages/cmk-data-backend:__subpackages__",
         "//non-free/packages/cmk-dcd:__subpackages__",
         "//non-free/packages/cmk-licensing-nonfree:__subpackages__",

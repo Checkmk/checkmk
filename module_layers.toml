@@ -255,6 +255,17 @@ allows = [
   "cmk.utils",
 ]
 
+[plugin_families.violations.rtc]
+allows = [
+  # "cmk --real-time-checks" runs the keepalive helper of the base.
+  "cmk.base.configlib",
+  "cmk.base.nonfree.keepalive",
+  "cmk.ccc",
+  "cmk.checkengine.plugin_backend",
+  "cmk.ruleset_matcher",
+  "cmk.utils.password_store",
+]
+
 # This hosts internal plugins. They can not be subjected to
 # any common dependency restrictions.
 [plugin_families.violations.agent_controller]

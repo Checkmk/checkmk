@@ -54,6 +54,7 @@ from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_vi
 from cmk.gui.views.store import get_permitted_views, get_view_by_name
 from cmk.gui.visuals import get_merged_context, get_only_sites_from_context
 from cmk.gui.visuals.info import visual_info_registry
+from cmk.shared_typing.drill_up_button import DrillUpButton
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.request_cache import RequestCache
 
@@ -173,6 +174,7 @@ class ViewWidgetIFramePageHelper:
         is_debug: bool,  # noqa: ARG003
         is_preview: bool = False,
         is_public: bool = False,
+        drilled_from: DrillUpButton | None = None,
     ) -> None:
         # include the views context, but override it with the provided widget context
         context = get_merged_context(view_spec.get("context", {}), context)
@@ -189,7 +191,9 @@ class ViewWidgetIFramePageHelper:
                 user_permissions=user_permissions,
             ),
             request_cache=RequestCache(config),
-            column_drilldowns=column_drilldowns(view_spec, column_links, context, user_permissions),
+            column_drilldowns=column_drilldowns(
+                view_spec, column_links, context, user_permissions, drilled_from=drilled_from
+            ),
         )
         view.row_limit = row_limit
         view.only_sites = get_only_sites_from_context(context)
@@ -313,6 +317,7 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
     limit: Literal["soft", "hard", "none"]
     raw_debug: str | None
     is_preview: bool
+    drill_down_source_title: str | None
 
     @classmethod
     @override
@@ -330,6 +335,7 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
                     "underscore_display_options": request.get_str_input("_display_options"),
                     "raw_debug": request.get_str_input("debug"),
                     "is_preview": request.get_str_input("is_preview", "false"),
+                    "drill_down_source_title": request.get_str_input("drill_down_source_title"),
                 }
             )
         except ValidationError as e:
@@ -343,6 +349,12 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
                 _("Cannot specify both 'view_name' and 'embedded_id' parameters."),
             )
         return self
+
+    def drill_up(self) -> DrillUpButton | None:
+        """The way back the column drill-downs offer, to the dashboard around the iframe."""
+        if not self.drill_down_source_title:
+            return None
+        return DrillUpButton(title=self.drill_down_source_title)
 
     def is_debug(self) -> bool:
         return self.raw_debug == "1"
@@ -474,6 +486,7 @@ class ViewWidgetIFramePage(Page):
             is_reload=parameters.is_reload(),
             is_debug=parameters.is_debug(),
             is_preview=parameters.is_preview,
+            drilled_from=parameters.drill_up(),
         )
 
 

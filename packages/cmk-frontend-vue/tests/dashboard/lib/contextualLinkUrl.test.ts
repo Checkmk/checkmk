@@ -25,8 +25,20 @@ function variablesOf(url: string): Record<string, string> {
 }
 
 describe('contextualLinkUrl', () => {
+  it('names the page it leaves', () => {
+    const url = contextualLinkUrl(SEARCHHOST, DOWN_HOSTS, {}, 'Overview')
+
+    expect(variablesOf(url)._drilled_from).toBe('Overview')
+  })
+
+  it('names no page without one to name', () => {
+    const url = contextualLinkUrl(SEARCHHOST, DOWN_HOSTS, {}, null)
+
+    expect(variablesOf(url)).not.toHaveProperty('_drilled_from')
+  })
+
   it('addresses a view through view.py with view_name', () => {
-    const url = contextualLinkUrl(SEARCHHOST, {}, {})
+    const url = contextualLinkUrl(SEARCHHOST, {}, {}, null)
 
     expect(url.startsWith('view.py?view_name=searchhost&')).toBe(true)
   })
@@ -35,7 +47,8 @@ describe('contextualLinkUrl', () => {
     const url = contextualLinkUrl(
       { ...SEARCHHOST, location: { type: 'views', name: 'searchhost', owner: 'harry' } },
       {},
-      {}
+      {},
+      null
     )
 
     expect(variablesOf(url).owner).toBe('harry')
@@ -45,14 +58,15 @@ describe('contextualLinkUrl', () => {
     const url = contextualLinkUrl(
       { ...SEARCHHOST, location: { type: 'views', name: 'searchhost', owner: '' } },
       {},
-      {}
+      {},
+      null
     )
 
     expect(variablesOf(url).owner).toBe('')
   })
 
   it('appends the encoded variables, filled_in and _show_filter_form', () => {
-    const url = contextualLinkUrl(SEARCHHOST, DOWN_HOSTS, {})
+    const url = contextualLinkUrl(SEARCHHOST, DOWN_HOSTS, {}, null)
 
     expect(variablesOf(url)).toEqual({
       view_name: 'searchhost',
@@ -66,17 +80,23 @@ describe('contextualLinkUrl', () => {
     const url = contextualLinkUrl(
       { ...SEARCHHOST, location: { type: 'dashboards', name: 'site', owner: null } },
       {},
-      {}
+      {},
+      null
     )
 
     expect(url.startsWith('dashboard.py?name=site&')).toBe(true)
   })
 
   it('merges the effective context under the link own filters', () => {
-    const url = contextualLinkUrl(SEARCHHOST, DOWN_HOSTS, {
-      host: { host: 'web01' },
-      hoststate: { hst0: 'on' }
-    })
+    const url = contextualLinkUrl(
+      SEARCHHOST,
+      DOWN_HOSTS,
+      {
+        host: { host: 'web01' },
+        hoststate: { hst0: 'on' }
+      },
+      null
+    )
 
     expect(variablesOf(url)).toEqual({
       view_name: 'searchhost',
@@ -95,7 +115,8 @@ describe('contextualLinkUrl', () => {
         host_labels: { status: 'dropped', reason: 'no_such_key', missing_keys: ['env'] },
         opthostgroup: { status: 'dropped', reason: 'no_value' }
       },
-      {}
+      {},
+      null
     )
 
     expect(variablesOf(url)._dropped_filters).toBe(
@@ -113,7 +134,8 @@ describe('contextualLinkUrl', () => {
           missing_keys: ['ip-v6']
         }
       },
-      {}
+      {},
+      null
     )
 
     expect(variablesOf(url)).toMatchObject({
@@ -126,7 +148,8 @@ describe('contextualLinkUrl', () => {
     const url = contextualLinkUrl(
       SEARCHHOST,
       { opthostgroup: { status: 'dropped', reason: 'no_value' } },
-      { opthostgroup: { opthost_group: 'linux' } }
+      { opthostgroup: { opthost_group: 'linux' } },
+      null
     )
 
     expect(variablesOf(url)).toEqual({
@@ -138,13 +161,13 @@ describe('contextualLinkUrl', () => {
   })
 
   it('sends _show_filter_form from the link flag', () => {
-    const url = contextualLinkUrl({ ...SEARCHHOST, show_filter_form: false }, {}, {})
+    const url = contextualLinkUrl({ ...SEARCHHOST, show_filter_form: false }, {}, {}, null)
 
     expect(variablesOf(url)._show_filter_form).toBe('0')
   })
 
   it('adds no time range variable', () => {
-    const url = contextualLinkUrl({ ...SEARCHHOST, include_time_range: true }, {}, {})
+    const url = contextualLinkUrl({ ...SEARCHHOST, include_time_range: true }, {}, {}, null)
 
     expect(Object.keys(variablesOf(url))).toEqual(['view_name', 'filled_in', '_show_filter_form'])
   })

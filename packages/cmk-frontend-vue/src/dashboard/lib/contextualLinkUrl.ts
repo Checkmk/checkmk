@@ -9,6 +9,7 @@ import type {
   ResolvedLink,
   VisualContext
 } from '@/dashboard/types/widget'
+import { DRILLED_FROM_PARAM } from '@/page-header/drillUp'
 
 const PAGE_BY_LOCATION_TYPE: Record<ResolvedLink['location']['type'], [string, string]> = {
   views: ['view.py', 'view_name'],
@@ -19,7 +20,8 @@ const PAGE_BY_LOCATION_TYPE: Record<ResolvedLink['location']['type'], [string, s
 export function contextualLinkUrl(
   link: ResolvedLink,
   properties: Record<string, FilterResult>,
-  effectiveContext: VisualContext
+  effectiveContext: VisualContext,
+  drilledFrom: string | null
 ): string {
   const [page, nameVariable] = PAGE_BY_LOCATION_TYPE[link.location.type]
   const filters: VisualContext = {
@@ -59,6 +61,9 @@ export function contextualLinkUrl(
   if (dropped.length > 0) {
     params.set('_dropped_filters', dropped.join(','))
   }
+  if (drilledFrom) {
+    params.set(DRILLED_FROM_PARAM, drilledFrom)
+  }
   return `${page}?${params.toString()}`
 }
 
@@ -71,13 +76,19 @@ export interface ContextualLinkEntry {
 export function contextualLinkEntries(
   links: ResolvedLink[],
   linkProperties: LinkProperties,
-  effectiveContext: VisualContext
+  effectiveContext: VisualContext,
+  drilledFrom: string | null
 ): ContextualLinkEntry[] {
   return links.flatMap((link, index) => {
     const properties = linkProperties.links[index]
     return properties === undefined
       ? []
-      : [{ title: link.title, href: contextualLinkUrl(link, properties, effectiveContext) }]
+      : [
+          {
+            title: link.title,
+            href: contextualLinkUrl(link, properties, effectiveContext, drilledFrom)
+          }
+        ]
   })
 }
 
@@ -85,12 +96,13 @@ export function contextualLinkEntries(
 export function firstContextualLinkUrl(
   links: ResolvedLink[],
   linkProperties: LinkProperties,
-  effectiveContext: VisualContext
+  effectiveContext: VisualContext,
+  drilledFrom: string | null
 ): string | null {
   const link = links[0]
   const properties = linkProperties.links[0]
   if (link === undefined || properties === undefined) {
     return null
   }
-  return contextualLinkUrl(link, properties, effectiveContext)
+  return contextualLinkUrl(link, properties, effectiveContext, drilledFrom)
 }

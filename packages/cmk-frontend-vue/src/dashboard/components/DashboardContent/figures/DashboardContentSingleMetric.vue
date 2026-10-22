@@ -12,6 +12,7 @@ import CmkKpiStatCard, {
   type KpiState
 } from '@/dashboard/components/CmkKpiStatCard'
 import { useRangedComputedWidget } from '@/dashboard/composables/useComputedWidget'
+import { useInjectDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
 import { firstContextualLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
 import type { ComputedSingleMetric, SingleMetricContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
@@ -26,12 +27,15 @@ const { state, retry } = useRangedComputedWidget(
   () => props.content.time_range !== 'current' && props.content.time_range.window === 'dashboard'
 )
 
+const drillDownSource = useInjectDrillDownSource()
+
 function href(metric: ComputedSingleMetric): string | undefined {
   return (
     firstContextualLinkUrl(
       metric.links,
       metric.link_properties,
-      props.effective_filter_context.filters
+      props.effective_filter_context.filters,
+      drillDownSource.value
     ) ?? undefined
   )
 }

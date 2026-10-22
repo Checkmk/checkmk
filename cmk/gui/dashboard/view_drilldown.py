@@ -10,6 +10,7 @@ from functools import partial
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.http import request
 from cmk.gui.painter import CellDrilldown
+from cmk.gui.top_heading import DRILLED_FROM_VAR
 from cmk.gui.type_defs import (
     ColumnName,
     ContextualLinkEntryConfig,
@@ -32,6 +33,7 @@ from cmk.gui.views.drilldown_filters import (
     filter_keys,
 )
 from cmk.gui.visuals.filter.drilldowns import Drilldown
+from cmk.shared_typing.drill_up_button import DrillUpButton
 from cmk.web.utils.urls import makeuri_contextless
 
 from .api.model.contextual_link import (
@@ -58,6 +60,7 @@ def column_drilldowns(
     column_links: Mapping[int, ContextualLinkEntryConfig],
     context: VisualContext,
     user_permissions: UserPermissions,
+    drilled_from: DrillUpButton | None = None,
 ) -> dict[int, CellDrilldown]:
     """The drill-downs of an embedded view's columns, by painter index."""
     if (
@@ -98,6 +101,7 @@ def column_drilldowns(
                     configured,
                     carried,
                     show_filter_form=link["show_filter_form"],
+                    drilled_from=drilled_from,
                 ),
             )
         elif object_infos:
@@ -110,6 +114,7 @@ def column_drilldowns(
                     object_infos,
                     [info for info in target["single_infos"] if info in object_infos],
                     show_filter_form=link["show_filter_form"],
+                    drilled_from=drilled_from,
                 ),
             )
     return drilldowns
@@ -148,13 +153,19 @@ def _inherited_url(
     row: Row,
     *,
     show_filter_form: bool,
+    drilled_from: DrillUpButton | None,
 ) -> str | None:
     object_filters = _object_filters(row, object_infos)
     # The object filters are named after the infos they fill.
     if any(info not in object_filters for info in target_infos):
         return None
     # The clicked object goes last, so it wins over the same filter in the context.
-    return _target_url(location, {**context, **object_filters}, show_filter_form=show_filter_form)
+    return _target_url(
+        location,
+        {**context, **object_filters},
+        show_filter_form=show_filter_form,
+        drilled_from=drilled_from,
+    )
 
 
 def _custom_url(
@@ -165,6 +176,7 @@ def _custom_url(
     row: Row,
     *,
     show_filter_form: bool,
+    drilled_from: DrillUpButton | None,
 ) -> str:
     valued: dict[FilterName, FilterHTTPVariables] = {}
     dropped: list[Dropped] = []
@@ -184,6 +196,7 @@ def _custom_url(
         location,
         filters,
         show_filter_form=show_filter_form,
+        drilled_from=drilled_from,
         # A filter the context carries in place of the row's value still travels.
         dropped=[
             entry
@@ -198,6 +211,7 @@ def _target_url(
     context: VisualContext,
     *,
     show_filter_form: bool,
+    drilled_from: DrillUpButton | None,
     dropped: Sequence[Dropped] = (),
 ) -> str:
     page, name_variable = _PAGE_BY_TARGET_TYPE[location.type]
@@ -213,4 +227,6 @@ def _target_url(
     variables["_show_filter_form"] = "1" if show_filter_form else "0"
     if dropped:
         variables[DROPPED_FILTERS_VAR] = dropped_filters_variable(dropped)
+    if drilled_from is not None:
+        variables[DRILLED_FROM_VAR] = drilled_from.title
     return makeuri_contextless(request, list(variables.items()), filename=page)

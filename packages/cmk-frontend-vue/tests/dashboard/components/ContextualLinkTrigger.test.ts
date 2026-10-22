@@ -6,8 +6,10 @@
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
+import { defineComponent, h, ref } from 'vue'
 
 import ContextualLinkTrigger from '@/dashboard/components/ContextualLinkTrigger.vue'
+import { useProvideDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
 import type { LinkProperties, ResolvedLink } from '@/dashboard/types/widget'
 
 const SEARCHHOST: ResolvedLink = {
@@ -35,7 +37,31 @@ function renderTrigger(links: ResolvedLink[], linkProperties: LinkProperties = D
   })
 }
 
+function renderTriggerOnDashboard(title: string) {
+  const dashboard = defineComponent({
+    setup() {
+      useProvideDrillDownSource(ref(title))
+      return () =>
+        h(
+          ContextualLinkTrigger,
+          { links: [SEARCHHOST], linkProperties: DOWN_HOSTS, filters: {} },
+          { default: () => h('span', 'Down') }
+        )
+    }
+  })
+  return render(dashboard)
+}
+
 describe('ContextualLinkTrigger', () => {
+  it('names the dashboard its link leaves', () => {
+    renderTriggerOnDashboard('Overview')
+
+    expect(screen.getByRole('link', { name: 'Down' })).toHaveAttribute(
+      'href',
+      'view.py?view_name=searchhost&hst1=on&filled_in=filter&_show_filter_form=1&_drilled_from=Overview'
+    )
+  })
+
   it('wraps its slot in an anchor for one link', () => {
     renderTrigger([SEARCHHOST])
 

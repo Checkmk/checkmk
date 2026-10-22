@@ -10,7 +10,11 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
-from cmk.gui.dashboard.page_view_widget import ViewWidgetEditPage, ViewWidgetIFrameTokenPage
+from cmk.gui.dashboard.page_view_widget import (
+    _ViewWidgetIFrameRequestParameters,
+    ViewWidgetEditPage,
+    ViewWidgetIFrameTokenPage,
+)
 from cmk.gui.dashboard.store import DashboardStore, get_all_dashboards, save_all_dashboards
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
@@ -25,6 +29,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.shared_typing.drill_up_button import DrillUpButton
 from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
 from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.unit.cmk.gui.helpers.dashboard_api_test_helper import create_dashboard_payload
@@ -169,3 +174,30 @@ def test_widget_iframe_token_redirects_to_shared_dashboard() -> None:
     assert "shared_dashboard.py?cmk-token=" in page
     # No error message follows the redirect
     assert page.rstrip().endswith("</html>")
+
+
+def _set_iframe_request(**drill_down_source: str) -> None:
+    for variable, value in {
+        "dashboard_name": "main",
+        "dashboard_owner": "",
+        "widget_id": "view-1",
+        "embedded_id": "view-1",
+        **drill_down_source,
+    }.items():
+        request.set_var(variable, value)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_drill_up_names_the_dashboard_around_the_iframe() -> None:
+    _set_iframe_request(drill_down_source_title="Overview")
+
+    assert _ViewWidgetIFrameRequestParameters.from_request(request).drill_up() == DrillUpButton(
+        title="Overview"
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_drill_up_is_none_without_a_dashboard_to_name() -> None:
+    _set_iframe_request()
+
+    assert _ViewWidgetIFrameRequestParameters.from_request(request).drill_up() is None

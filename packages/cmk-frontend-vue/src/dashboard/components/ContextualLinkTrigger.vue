@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { useInjectDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
 import { contextualLinkEntries } from '@/dashboard/lib/contextualLinkUrl'
 import type { LinkProperties, ResolvedLink, VisualContext } from '@/dashboard/types/widget'
 
@@ -17,8 +18,10 @@ const props = defineProps<{
   filters: VisualContext
 }>()
 
+const drillDownSource = useInjectDrillDownSource()
+
 const entries = computed(() =>
-  contextualLinkEntries(props.links, props.linkProperties, props.filters)
+  contextualLinkEntries(props.links, props.linkProperties, props.filters, drillDownSource.value)
 )
 </script>
 

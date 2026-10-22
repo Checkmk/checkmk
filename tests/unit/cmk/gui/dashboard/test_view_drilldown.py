@@ -23,6 +23,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import multisite_builtin_views
+from cmk.shared_typing.drill_up_button import DrillUpButton
 from cmk.web.utils.request_cache import RequestCache
 
 _HOST_ROW: Row = {"site": "heute_site", "host_name": "heute"}
@@ -38,6 +39,7 @@ _CUSTOM_HOST_ROW: Row = {
     "host_has_been_checked": 1,
 }
 _CONTEXT: VisualContext = {"opthostgroup": {"opthost_group": "linux"}}
+_MAIN = DrillUpButton(title="Main")
 
 
 @pytest.fixture(name="admin_permissions")
@@ -87,8 +89,11 @@ def _url_of_first_column(
     link: ContextualLinkEntryConfig,
     row: Row,
     user_permissions: UserPermissions,
+    drilled_from: DrillUpButton | None = None,
 ) -> tuple[str, dict[str, str]]:
-    drilldowns = column_drilldowns(view_spec, {0: link}, _CONTEXT, user_permissions)
+    drilldowns = column_drilldowns(
+        view_spec, {0: link}, _CONTEXT, user_permissions, drilled_from=drilled_from
+    )
     url = drilldowns[0].url(row)
     assert url is not None
     parts = urlsplit(url)
@@ -553,3 +558,29 @@ def test_column_drilldowns_custom_link_drills_down_from_a_host_group(
     )
 
     assert variables["hostgroup"] == "linux"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_column_drilldowns_inherited_link_names_the_dashboard_it_leaves(
+    admin_permissions: UserPermissions,
+) -> None:
+    _path, variables = _url_of_first_column(
+        _view_spec("allhosts"), _inherited(), _HOST_ROW, admin_permissions, _MAIN
+    )
+
+    assert variables["_drilled_from"] == "Main"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_column_drilldowns_custom_link_names_the_dashboard_it_leaves(
+    admin_permissions: UserPermissions,
+) -> None:
+    _path, variables = _url_of_first_column(
+        _view_spec("allhosts"),
+        _custom(ContextFilterConfig(filter_id="host")),
+        _CUSTOM_HOST_ROW,
+        admin_permissions,
+        _MAIN,
+    )
+
+    assert variables["_drilled_from"] == "Main"

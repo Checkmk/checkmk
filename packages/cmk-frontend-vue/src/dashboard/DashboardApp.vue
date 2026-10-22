@@ -49,6 +49,7 @@ import { useDashboardTimeControl } from '@/dashboard/composables/useDashboardTim
 import { useDashboardVisualTitle } from '@/dashboard/composables/useDashboardVisualTitle.ts'
 import { useDashboardWidgets } from '@/dashboard/composables/useDashboardWidgets.ts'
 import { useDashboardsManager } from '@/dashboard/composables/useDashboardsManager.ts'
+import { useProvideDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
 import { useProvideDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction.ts'
 import { useProvideVisualInfos } from '@/dashboard/composables/useProvideVisualInfos'
@@ -289,6 +290,8 @@ const dashboardVisualTitle = useDashboardVisualTitle(
   filterDefinitions,
   dashboardFilters.baseFilters
 )
+
+useProvideDrillDownSource(dashboardVisualTitle)
 
 watch(dashboardVisualTitle, (newTitle) => {
   // We only set the title for the current document.

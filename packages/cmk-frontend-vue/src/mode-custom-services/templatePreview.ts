@@ -26,6 +26,27 @@ export interface HostNameTemplatePreview {
   refresh: () => void
 }
 
+/**
+ * Blocks what saving is known to refuse. A failed lookup does not block: saving resolves the
+ * template again and states its own refusal.
+ */
+export function templatePreviewBlocksSave(preview: TemplatePreview): boolean {
+  switch (preview.status) {
+    case 'loading':
+      return true
+    case 'resolved': {
+      const { resolution } = preview
+      return (
+        resolution.matching_hosts.length === 0 ||
+        resolution.hidden_match_count > 0 ||
+        resolution.truncated
+      )
+    }
+    default:
+      return false
+  }
+}
+
 function requestOf(model: ServiceModel | null): HostNameTemplateResolutionRequest | null {
   if (model === null) {
     return null

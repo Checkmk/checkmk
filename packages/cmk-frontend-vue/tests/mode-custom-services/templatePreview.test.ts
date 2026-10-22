@@ -8,7 +8,11 @@ import { HttpResponse, delay, http } from 'msw'
 import { afterEach, expect, test, vi } from 'vitest'
 import { type EffectScope, effectScope, nextTick, ref } from 'vue'
 
-import { useHostNameTemplatePreview } from '@/mode-custom-services/templatePreview'
+import {
+  type TemplatePreview,
+  templatePreviewBlocksSave,
+  useHostNameTemplatePreview
+} from '@/mode-custom-services/templatePreview'
 import { type ServiceModel, emptyService } from '@/mode-custom-services/types'
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
@@ -227,4 +231,28 @@ test('a lookup that takes too long is reported', async () => {
     status: 'failed',
     error: 'Looking up the matching hosts took too long.'
   })
+})
+
+test.each<[string, TemplatePreview, boolean]>([
+  ['nothing to look up', { status: 'idle' }, false],
+  ['a pending lookup', { status: 'loading' }, true],
+  ['a failed lookup', { status: 'failed', error: 'down' }, false],
+  ['matching hosts', { status: 'resolved', resolution: RESOLUTION }, false],
+  [
+    'no matching host',
+    { status: 'resolved', resolution: { ...RESOLUTION, matching_hosts: [] } },
+    true
+  ],
+  [
+    'a match hidden from the user',
+    { status: 'resolved', resolution: { ...RESOLUTION, hidden_match_count: 1 } },
+    true
+  ],
+  [
+    'an incomplete list',
+    { status: 'resolved', resolution: { ...RESOLUTION, truncated: true } },
+    true
+  ]
+])('saving with %s', (_, preview, blocked) => {
+  expect(templatePreviewBlocksSave(preview)).toBe(blocked)
 })

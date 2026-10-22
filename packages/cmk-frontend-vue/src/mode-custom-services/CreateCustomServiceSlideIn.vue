@@ -15,7 +15,7 @@ import { computed, ref, useTemplateRef, watch } from 'vue'
 import { createCustomService } from './save'
 import AssignHostStep from './steps/AssignHostStep.vue'
 import ConfigureNameStep from './steps/ConfigureNameStep.vue'
-import { useHostNameTemplatePreview } from './templatePreview'
+import { templatePreviewBlocksSave, useHostNameTemplatePreview } from './templatePreview'
 import { type ServiceModel, isReadyToCreate } from './types'
 
 const { open, initial } = defineProps<{
@@ -41,7 +41,9 @@ const nameStepRef = useTemplateRef<InstanceType<typeof ConfigureNameStep>>('name
 
 const templatePreview = useHostNameTemplatePreview(() => model.value)
 
-const canSave = computed(() => isReadyToCreate(model.value))
+const canSave = computed(
+  () => isReadyToCreate(model.value) && !templatePreviewBlocksSave(templatePreview.preview.value)
+)
 
 watch(
   () => model.value.hostNameTemplate,

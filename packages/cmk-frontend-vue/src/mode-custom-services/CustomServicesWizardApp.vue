@@ -19,7 +19,7 @@ import { type SaveResult, createCustomService, updateCustomService } from './sav
 import AssignHostStep from './steps/AssignHostStep.vue'
 import ConfigureNameStep from './steps/ConfigureNameStep.vue'
 import DefineMetricStep from './steps/DefineMetricStep.vue'
-import { useHostNameTemplatePreview } from './templatePreview'
+import { templatePreviewBlocksSave, useHostNameTemplatePreview } from './templatePreview'
 import { type ServiceModel, emptyService, isMetricSelected, isReadyToCreate } from './types'
 
 const props = defineProps<CustomServicesWizard>()
@@ -44,8 +44,10 @@ const metricStepValid = computed(() => isMetricSelected(model.value))
 const templatePreview = useHostNameTemplatePreview(() =>
   currentStep.value === 3 ? model.value : null
 )
-// A service name and a target host are both required before the service can be created.
-const hostStepValid = computed(() => isReadyToCreate(model.value))
+// A service name and a host, or a host name template whose matches allow saving, are required.
+const hostStepValid = computed(
+  () => isReadyToCreate(model.value) && !templatePreviewBlocksSave(templatePreview.preview.value)
+)
 
 watch(
   () => model.value.hostNameTemplate,

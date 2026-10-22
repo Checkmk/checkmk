@@ -181,9 +181,8 @@ filegroup(
 vitest_test(
     name = "unit-test",
     data = [
-        "tsconfig.test.json",
         "vite.config.ts",
         "//packages/cmk-frontend:theme_images",
-        "//packages/cmk-profiling/tests/frontend",
     ],
+    project = ":tests",
 )

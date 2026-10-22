@@ -557,6 +557,7 @@ vitest_test(
     name = "unit-test",
     timeout = "long",
     data = TEST_DATA,
+    project = ":tests",
     shard_count = 8,
 )
 

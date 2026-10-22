@@ -38,13 +38,11 @@ vitest_test(
     name = "test",
     data = [
         "package.json",
-        ":node_modules/@types",
-        ":tests",
-        "//:node_modules/vitest",
     ] + glob(["config/**"]) + glob(
         ["changelog/**"],
         allow_empty = True,
     ),
+    project = ":tests",
 )
 
 py_library(

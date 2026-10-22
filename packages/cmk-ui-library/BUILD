@@ -125,11 +125,10 @@ vue_library(
 vitest_test(
     name = "unit-test",
     data = [
-        "tsconfig.test.json",
         "vite.config.ts",
-        ":tests",
         ":vitest_isolated",
         "//packages/cmk-frontend:theme_images",
     ],
+    project = ":tests",
     shard_count = 4,
 )

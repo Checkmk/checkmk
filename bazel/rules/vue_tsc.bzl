@@ -197,10 +197,26 @@ vue_tsconfig = rule(
     },
 )
 
-def _vue_type_check_impl(ctx):
-    report = ctx.attr.project[_VueTscInfo].report
+def _report(project):
+    report = project[_VueTscInfo].report
     if not report:
-        fail("{} is no vue-tsc project: it lists no vue_tsconfig in `srcs`".format(ctx.attr.project.label))
+        fail("{} is no vue_library: it lists no vue_tsconfig in `srcs`".format(project.label))
+    return report
+
+def _vue_tsc_project_impl(ctx):
+    _report(ctx.attr.project)
+    return [ctx.attr.project[JsInfo], ctx.attr.project[DefaultInfo]]
+
+vue_tsc_project = rule(
+    doc = "Passes on `project`, which must be a vue_library.",
+    implementation = _vue_tsc_project_impl,
+    attrs = {
+        "project": attr.label(aspects = [_vue_tsc_aspect], mandatory = True, providers = [JsInfo]),
+    },
+)
+
+def _vue_type_check_impl(ctx):
+    report = _report(ctx.attr.project)
     passed = ctx.actions.declare_file(ctx.label.name + ".passed")
     ctx.actions.run(
         executable = ctx.executable._report,

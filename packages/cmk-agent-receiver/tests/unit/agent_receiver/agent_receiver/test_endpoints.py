@@ -120,7 +120,7 @@ def test_register_existing_reports_the_update_permission_of_the_registration(
     uuid: UUID4,
     serialized_csr: str,
 ) -> None:
-    """CMK-39504: the registration response reports agent_update_authorization from the registration file of the UUID."""
+    """CMK-39504 AC1, AC6"""
     mocker.patch(
         "cmk.agent_receiver.agent_receiver.endpoints.register",
         lambda *_args, **_kwargs: _register_permitting_updates_at_the_site(tmp_path, uuid),
@@ -142,7 +142,7 @@ def test_register_existing_token_reports_the_update_permission_of_the_registrati
     uuid: UUID4,
     serialized_csr: str,
 ) -> None:
-    """CMK-39504: the registration response reports agent_update_authorization from the registration file of the UUID."""
+    """CMK-39504 AC6"""
     mocker.patch(
         "cmk.agent_receiver.agent_receiver.endpoints.register_token",
         lambda *_args, **_kwargs: _register_permitting_updates_at_the_site(tmp_path, uuid),
@@ -547,7 +547,7 @@ def test_register_new_ongoing_reports_the_update_permission_of_the_registration(
     client: TestClient,
     uuid: UUID4,
 ) -> None:
-    """CMK-39504: the registration response reports agent_update_authorization from the registration file of the UUID."""
+    """CMK-39504 AC1, AC6"""
     R4R(
         status=R4RStatus.DISCOVERABLE,
         request=RequestForRegistration(

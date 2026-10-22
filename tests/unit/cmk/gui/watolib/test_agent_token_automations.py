@@ -105,7 +105,7 @@ class TestAutomationAgentRegistrationTokenCreate:
     def test_the_token_carries_the_update_permission_that_the_issuing_site_checked(
         self,
     ) -> None:
-        """CMK-39504: a one-time token carries the update permission of its issuer, checked at the issuance."""
+        """CMK-39504 AC1, AC3"""
         api_request = AgentRegistrationTokenCreateRequest(
             issuer=UserId("admin"),
             host_name=HostName("my-host"),

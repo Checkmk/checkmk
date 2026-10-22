@@ -91,7 +91,7 @@ def _write_registration_file(uuid: UUID4, content: str) -> None:
 
 
 def test_a_registration_that_permits_updates_is_authorized(uuid: UUID4) -> None:
-    """CMK-39504: the registration response reports agent_update_authorization from the registration file of the UUID."""
+    """CMK-39504 AC6"""
     _write_registration_file(
         uuid,
         '{"agent_updates_permitted": true, "subject": "automation",'
@@ -102,7 +102,7 @@ def test_a_registration_that_permits_updates_is_authorized(uuid: UUID4) -> None:
 
 
 def test_a_registration_without_the_permission_is_not_permitted(uuid: UUID4) -> None:
-    """CMK-39504: the registration response reports agent_update_authorization from the registration file of the UUID."""
+    """CMK-39504 AC6"""
     _write_registration_file(
         uuid,
         '{"agent_updates_permitted": false, "subject": "automation",'
@@ -113,7 +113,7 @@ def test_a_registration_without_the_permission_is_not_permitted(uuid: UUID4) -> 
 
 
 def test_a_registration_without_a_result_is_unavailable(uuid: UUID4) -> None:
-    """CMK-39504: the registration response reports unavailable when the registration file is missing or holds no result."""
+    """CMK-39504 AC6"""
     _write_registration_file(
         uuid,
         '{"agent_updates_permitted": null, "subject": "automation",'
@@ -124,7 +124,7 @@ def test_a_registration_without_a_result_is_unavailable(uuid: UUID4) -> None:
 
 
 def test_an_unreadable_registration_file_is_unavailable(uuid: UUID4) -> None:
-    """CMK-39504: the registration response reports unavailable when the registration file is missing or holds no result."""
+    """CMK-39504 AC6"""
     (registrations_dir := get_config().registrations_dir).mkdir(parents=True, exist_ok=True)
     (registrations_dir / f"{uuid}.json").write_bytes(b'{"agent_updates_permitted": \xff')
 
@@ -132,5 +132,5 @@ def test_an_unreadable_registration_file_is_unavailable(uuid: UUID4) -> None:
 
 
 def test_a_registration_without_a_file_is_unavailable(uuid: UUID4) -> None:
-    """CMK-39504: the registration response reports unavailable when the registration file is missing or holds no result."""
+    """CMK-39504 AC6"""
     assert agent_update_authorization(uuid) is AgentUpdateAuthorization.UNAVAILABLE

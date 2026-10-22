@@ -296,7 +296,7 @@ _REGISTRATION = UUIDRegistration(
 
 
 def test_uuid_link_manager_records_the_registration_with_the_link() -> None:
-    """CMK-39504: the link of a UUID records the update permission, the subject, the registration route and the time."""
+    """CMK-39504 AC5"""
     uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
 
     _uuid_link_manager().link_registration(
@@ -310,7 +310,7 @@ def test_uuid_link_manager_records_the_registration_with_the_link() -> None:
 
 
 def test_uuid_link_manager_writes_the_registration_file_that_the_agent_receiver_reads() -> None:
-    """CMK-39504: the link of a UUID records the update permission, the subject, the registration route and the time."""
+    """CMK-39504 AC1, AC5"""
     uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
 
     _uuid_link_manager().link_registration(
@@ -326,7 +326,7 @@ def test_uuid_link_manager_writes_the_registration_file_that_the_agent_receiver_
 
 
 def test_uuid_link_manager_removes_the_record_when_it_unlinks_the_host() -> None:
-    """CMK-39504: removing the link of a UUID removes its record, and a rename or a change of the link target keeps it."""
+    """CMK-39504 AC5"""
     uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
     _uuid_link_manager().link_registration(
         HostName("my-hostname"), uuid, push_configured=False, registration=_REGISTRATION
@@ -338,7 +338,7 @@ def test_uuid_link_manager_removes_the_record_when_it_unlinks_the_host() -> None
 
 
 def test_uuid_link_manager_removes_the_record_of_a_uuid_that_a_new_registration_replaces() -> None:
-    """CMK-39504: removing the link of a UUID removes its record, and a rename or a change of the link target keeps it."""
+    """CMK-39504 AC5"""
     old_uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
     _uuid_link_manager().link_registration(
         HostName("my-hostname"), old_uuid, push_configured=False, registration=_REGISTRATION
@@ -355,7 +355,7 @@ def test_uuid_link_manager_removes_the_record_of_a_uuid_that_a_new_registration_
 
 
 def test_uuid_link_manager_removes_the_record_of_a_host_that_the_configuration_lacks() -> None:
-    """CMK-39504: removing the link of a UUID removes its record, and a rename or a change of the link target keeps it."""
+    """CMK-39504 AC5"""
     uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
     _uuid_link_manager().link_registration(
         HostName("my-hostname"), uuid, push_configured=False, registration=_REGISTRATION
@@ -367,7 +367,7 @@ def test_uuid_link_manager_removes_the_record_of_a_host_that_the_configuration_l
 
 
 def test_uuid_link_manager_keeps_the_record_when_it_renames_the_host() -> None:
-    """CMK-39504: removing the link of a UUID removes its record, and a rename or a change of the link target keeps it."""
+    """CMK-39504 AC5"""
     uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
     _uuid_link_manager().link_registration(
         HostName("my-hostname"), uuid, push_configured=False, registration=_REGISTRATION
@@ -379,7 +379,7 @@ def test_uuid_link_manager_keeps_the_record_when_it_renames_the_host() -> None:
 
 
 def test_uuid_link_manager_keeps_the_record_when_the_link_target_changes() -> None:
-    """CMK-39504: removing the link of a UUID removes its record, and a rename or a change of the link target keeps it."""
+    """CMK-39504 AC5"""
     uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
     _uuid_link_manager().link_registration(
         HostName("my-hostname"), uuid, push_configured=False, registration=_REGISTRATION

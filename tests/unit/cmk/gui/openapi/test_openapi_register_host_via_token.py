@@ -229,7 +229,7 @@ class TestRegisterHostViaToken:
     def test_the_registration_records_the_update_permission_that_the_token_carries(
         self, clients: ClientRegistry
     ) -> None:
-        """CMK-39504: the token registration records the update permission that the token carries."""
+        """CMK-39504 AC3"""
         token = get_token_store().issue(
             token_details=AgentRegistrationToken(
                 host_name=HostName("heute"), agent_updates_permitted=True

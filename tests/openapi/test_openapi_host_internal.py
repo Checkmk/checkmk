@@ -161,7 +161,7 @@ def test_openapi_host_register_refuses_a_uuid_that_is_linked_to_the_same_host(
 def test_openapi_host_register_records_no_update_permission_on_a_site_without_agent_updates(
     aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
 ) -> None:
-    """CMK-39504: a registration on a site without agent updates, such as a Community site, records no result."""
+    """CMK-39504 AC5"""
     uuid = UUID("1409ac78-6548-4138-9285-12484409ddf2")
 
     aut_user_auth_wsgi_app.call_method(

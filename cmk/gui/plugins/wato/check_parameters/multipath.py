@@ -97,6 +97,7 @@ def _parameter_valuespec_multipath() -> Migrate:
             elements=[
                 ("levels", _multipath_lower_levels()),
             ],
+            ignored_keys=["discovered_paths"],
         ),
         migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )

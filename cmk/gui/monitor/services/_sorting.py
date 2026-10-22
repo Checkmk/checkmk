@@ -30,6 +30,10 @@ def service_sorter(sorters: Sequence[ServiceSort]) -> Callable[[Service], Any]:
         match column:
             case ServiceSortColumn.NAME:
                 return service.name
+            case ServiceSortColumn.HOST_NAME:
+                return service.host_name
+            case ServiceSortColumn.SITE_ID:
+                return service.site_id
             case ServiceSortColumn.STATE:
                 return service.state
             case ServiceSortColumn.SUMMARY:

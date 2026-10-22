@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import dataclasses
 import re
 from collections.abc import Callable, Mapping
 from typing import Annotated, Final, Literal
@@ -13,6 +12,8 @@ from pydantic import AfterValidator, PlainValidator, StringConstraints, TypeAdap
 
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
+from cmk.gui.monitor.site_scope import SiteScopedFilter as GenericSiteScopedFilter
+from cmk.gui.monitor.site_scope import SiteScopeExtractor
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label
 from cmk.livestatus_client import lqencode, quote_dict
@@ -284,99 +285,21 @@ type FilterNode = AndNode | OrNode | NotNode | ConditionNode
 FILTER_NODE: Final = TypeAdapter[FilterNode](FilterNode)
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
-class SiteScopedFilter:
-    node: FilterNode | None
-    sites: frozenset[SiteId] | None
-    exclude_sites: bool
+SiteScopedFilter = GenericSiteScopedFilter[FilterNode]
 
-    def site_scope(self, all_site_ids: frozenset[SiteId]) -> list[SiteId] | None:
-        """The sites to query, or `None` for every site.
 
-        Named sites are kept even if not in `all_site_ids`; excluded ones are taken from it.
-        """
-        if self.sites is None:
-            return None
-        return list(all_site_ids - self.sites if self.exclude_sites else self.sites)
+_SITE_SCOPE: SiteScopeExtractor[FilterNode] = SiteScopeExtractor(
+    site_condition=SiteChoiceCondition,
+    and_node=AndNode,
+    or_node=OrNode,
+    not_node=NotNode,
+    make_and=lambda children: AndNode(type="and", children=children),
+)
 
 
 def scope_filter_by_site(node: FilterNode) -> SiteScopedFilter:
-    """Split the tree's 'site_id' condition, if any, off the rest of the tree.
-
-    'site_id' is not a Livestatus column; it restricts which sites are queried instead.
-
-    Only a single 'site_id' condition is supported, optionally wrapped with a 'not' condition.
-    If a site condition is combined with the rest of the tree with anything but an 'and'
-    condition, a `ValueError` is raised.
-
-    Additional details:
-
-    - Combining it with an unrelated condition via 'or' would need hosts from every other site
-      too (e.g. "site A's hosts OR any DOWN host"), which can't be reduced to a site restriction.
-    - Negating a mixed (site + non-site) subtree hits the same problem:
-      NOT(site_id=A AND cond) = (site_id!=A OR NOT cond), which turns the 'and' into an 'or'.
-    - The only one site condition is done to constrain the current parsing logic. This constraint
-      can be lifted when the need arises, but will come with added complexity.
-    """
-    found: list[tuple[SiteChoiceCondition, bool]] = []
-
-    def record(condition: SiteChoiceCondition, *, negated: bool, and_only: bool) -> None:
-        if not and_only:
-            raise ValueError(
-                "'site_id' conditions may only be combined via 'and'; they cannot appear "
-                "inside 'or', or inside 'not' together with other conditions."
-            )
-        if found:
-            raise ValueError("Only one 'site_id' condition is allowed per filter.")
-        found.append((condition, negated))
-
-    def walk(current: FilterNode, and_only: bool) -> FilterNode | None:
-        match current:
-            case SiteChoiceCondition():
-                record(current, negated=False, and_only=and_only)
-                return None
-
-            case NotNode(child=SiteChoiceCondition() as site_condition):
-                record(site_condition, negated=True, and_only=and_only)
-                return None
-
-            case NotNode(child=child):
-                # Passes through unchanged unless a 'site_id' condition turns up further inside,
-                # which `and_only=False` rejects (see docstring: mixed-subtree negation).
-                walk(child, and_only=False)
-                return current
-
-            case AndNode(children=children):
-                residual_children = [
-                    residual
-                    for residual in (walk(child, and_only) for child in children)
-                    if residual is not None
-                ]
-                match residual_children:
-                    case []:
-                        return None
-                    case [single]:
-                        return single
-                    case _:
-                        return AndNode(type="and", children=residual_children)
-
-            case OrNode(children=children):
-                # 'or' can never be reduced to a site restriction, so any 'site_id' condition
-                # anywhere inside is rejected by `record`; nothing is ever extracted here.
-                for child in children:
-                    walk(child, and_only=False)
-                return current
-
-            case _:
-                return current
-
-    residual = walk(node, and_only=True)
-
-    if not found:
-        return SiteScopedFilter(node=residual, sites=None, exclude_sites=False)
-
-    condition, negated = found[0]
-    return SiteScopedFilter(node=residual, sites=frozenset(condition.value), exclude_sites=negated)
+    """Split off the tree's 'site_id' condition, see `SiteScopeExtractor`."""
+    return _SITE_SCOPE.scope(node)
 
 
 def _no_folders() -> Mapping[str, str]:

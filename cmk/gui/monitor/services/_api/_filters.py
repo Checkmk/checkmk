@@ -10,7 +10,9 @@ from typing import Annotated, Final, Literal
 from annotated_types import MinLen
 from pydantic import AfterValidator, PlainValidator, StringConstraints, TypeAdapter
 
+from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
+from cmk.gui.monitor.site_scope import SiteScopedFilter, SiteScopeExtractor
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label
 from cmk.livestatus_client import lqencode, quote_dict
@@ -48,7 +50,7 @@ class ServiceStringCondition:
     type: Literal["condition"] = api_field(
         description="Node type discriminator", example="condition"
     )
-    field: Literal["name", "summary", "contacts"] = api_field(
+    field: Literal["name", "host_name", "summary", "contacts"] = api_field(
         description="String service field to filter on", example="name"
     )
     op: ServiceStringOp = api_field(description="String match operation", example="contains")
@@ -70,6 +72,20 @@ class ServiceStateChoiceCondition:
             example=["OK", "WARN"],
         )
     )
+
+
+@api_model
+class ServiceSiteChoiceCondition:
+    type: Literal["condition"] = api_field(
+        description="Node type discriminator", example="condition"
+    )
+    field: Literal["site_id"] = api_field(description="Site field", example="site_id")
+    op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
+    value: Annotated[
+        list[SiteId],
+        MinLen(1),
+        AfterValidator(validate_uniqueness),
+    ] = api_field(description="Site IDs to match", example=["local"])
 
 
 @api_model
@@ -168,6 +184,7 @@ class ServiceNameChoiceCondition:
 type ServiceConditionNode = (
     ServiceStateChoiceCondition
     | ServiceStringCondition
+    | ServiceSiteChoiceCondition
     | ServiceBooleanCondition
     | ServiceTimestampCondition
     | ServiceLabelChoiceCondition
@@ -214,6 +231,20 @@ class ServiceNotNode:
 type ServiceFilterNode = ServiceAndNode | ServiceOrNode | ServiceNotNode | ServiceConditionNode
 
 SERVICE_FILTER_NODE: Final = TypeAdapter[ServiceFilterNode](ServiceFilterNode)
+
+
+_SITE_SCOPE: SiteScopeExtractor[ServiceFilterNode] = SiteScopeExtractor(
+    site_condition=ServiceSiteChoiceCondition,
+    and_node=ServiceAndNode,
+    or_node=ServiceOrNode,
+    not_node=ServiceNotNode,
+    make_and=lambda children: ServiceAndNode(type="and", children=children),
+)
+
+
+def scope_filter_by_site(node: ServiceFilterNode) -> SiteScopedFilter[ServiceFilterNode]:
+    """Split off the tree's 'site_id' condition, see `SiteScopeExtractor`."""
+    return _SITE_SCOPE.scope(node)
 
 
 def parse_as_livestatus_filter(node: ServiceFilterNode) -> ServiceFilter:
@@ -356,6 +387,9 @@ def _accumulate_filters(node: ServiceFilterNode, filters: list[str]) -> None:
 
             if len(node.value) > 1:
                 filters.append(f"Or: {len(node.value)}")
+
+        case ServiceSiteChoiceCondition():
+            raise AssertionError("Site conditions are not fully supported as filter nodes.")
 
         case ServiceAndNode() | ServiceOrNode():
             for child in node.children:

@@ -288,3 +288,44 @@ def test_a_service_filter_tree_from_the_page_url_parses_into_filter_nodes() -> N
 def test_an_invalid_service_filter_tree_is_rejected(raw: str) -> None:
     with pytest.raises(InvalidServiceFilterError):
         HostServicesTable.parse_filter(raw)
+
+
+_SITE_CONDITION = {"type": "condition", "field": "site_id", "op": "one_of", "value": ["NO_SITE"]}
+_NAME_CONDITION = {"type": "condition", "field": "name", "op": "contains", "value": "CPU"}
+
+
+@pytest.mark.parametrize(
+    "service_filter, expected_detail",
+    [
+        pytest.param(_SITE_CONDITION, "'site_id' query parameter", id="bare"),
+        pytest.param(
+            {"type": "not", "child": _SITE_CONDITION}, "'site_id' query parameter", id="negated"
+        ),
+        pytest.param(
+            {"type": "or", "children": [_SITE_CONDITION, _NAME_CONDITION]},
+            "only be combined via 'and'",
+            id="under or",
+        ),
+        pytest.param(
+            {"type": "and", "children": [_SITE_CONDITION, _SITE_CONDITION]},
+            "Only one 'site_id' condition",
+            id="second site condition",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("with_admin_login")
+def test_list_host_services_rejects_a_site_condition(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+    service_filter: dict[str, object],
+    expected_detail: str,
+) -> None:
+    with mock_livestatus:
+        resp = aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/internal/monitor/hosts/heute/services?site_id=NO_SITE",
+            params=json.dumps({"filter": service_filter}),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    assert expected_detail in resp.json["detail"]

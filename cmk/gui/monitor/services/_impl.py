@@ -61,99 +61,14 @@ class LiveStatusHostServicesRepository:
         filters: ServiceFilter,
         fields: Set[ServiceOptionalField],
     ) -> Sequence[Service]:
-        extra_headers = [*_split_filter_lines(filters), _build_primary_sort(sorters)]
-
-        if limit is not None:
-            extra_headers.append(f"Limit: {limit}")
-
-        q = Query(
-            [
-                Services.description,
-                Services.host_name,
-                Services.state,
-                Services.has_been_checked,
-                Services.plugin_output,
-                Services.acknowledged,
-                Services.scheduled_downtime_depth,
-                Services.notifications_enabled,
-                Services.comments,
-                Services.modified_attributes_list,
-                Services.active_checks_enabled,
-                Services.accept_passive_checks,
-                Services.in_notification_period,
-                Services.in_service_period,
-                Services.in_check_period,
-                Services.in_passive_check_period,
-                Services.is_flapping,
-                Services.staleness,
-                Services.last_check,
-                Services.last_state_change,
-                Services.perf_data,
-                Services.check_command,
-                Services.check_type,
-                Services.cached_at,
-                Services.cache_interval,
-                *(
-                    column
-                    for field, columns in _OPTIONAL_COLUMNS.items()
-                    if field in fields
-                    for column in columns
-                ),
-            ],
-            filter_expr=_build_host_services_filter(hostname, _sanitize_query(query), fields),
-            extra_headers=extra_headers,
+        return _fetch_services(
+            self._connection,
+            _build_host_services_filter(hostname, _sanitize_query(query), fields),
+            limit=limit,
+            sorters=sorters,
+            filters=filters,
+            fields=fields,
         )
-
-        with detailed_connection(self._connection) as conn:
-            return sorted(
-                [
-                    Service(
-                        name=row["description"],
-                        state=(
-                            ServiceState.PENDING
-                            if row["has_been_checked"] == 0
-                            else ServiceState(row["state"])
-                        ),
-                        acknowledged=bool(row["acknowledged"]),
-                        in_downtime=row["scheduled_downtime_depth"] > 0,
-                        notifications_enabled=bool(row["notifications_enabled"]),
-                        num_comments=len(row["comments"]),
-                        active_checks_manually_disabled=_manually_disabled(
-                            row, "active_checks_enabled"
-                        ),
-                        passive_checks_disabled=_manually_disabled(
-                            row, "passive_checks_enabled", column="accept_passive_checks"
-                        ),
-                        in_notification_period=bool(row["in_notification_period"]),
-                        in_service_period=bool(row["in_service_period"]),
-                        in_check_period=_in_check_period(row),
-                        is_flapping=bool(row["is_flapping"]),
-                        stale=row["staleness"] >= active_config.staleness_threshold,
-                        summary=row["plugin_output"],
-                        last_check=int(row["last_check"]) or None,
-                        last_state_change=int(row["last_state_change"]) or None,
-                        perf_data=row["perf_data"],
-                        check_command=row["check_command"],
-                        active_checks_enabled=bool(row["active_checks_enabled"]),
-                        check_type=CheckType(row["check_type"]),
-                        cached_at=int(row["cached_at"]) or None,
-                        cache_interval=int(row["cache_interval"]),
-                        labels=(
-                            ServiceLabelValue.by_label(row["labels"], row["label_sources"])
-                            if "labels" in row
-                            else None
-                        ),
-                        tags=dict(row["tags"]) if "tags" in row else None,
-                        contacts=list(row["contacts"]) if "contacts" in row else None,
-                        contact_groups=(
-                            list(row["contact_groups"]) if "contact_groups" in row else None
-                        ),
-                        groups=list(row["groups"]) if "groups" in row else None,
-                    )
-                    for row in q.iterate(conn)
-                ],
-                key=service_sorter(sorters),
-            )
 
     def get_overview(self, *, hostname: str, service_name: str, site_id: str) -> ServiceOverview:
         q = Query(
@@ -278,16 +193,131 @@ class LiveStatusHostServicesRepository:
         filters: ServiceFilter = ServiceFilter(""),
         fields: Set[ServiceOptionalField] = frozenset(),
     ) -> int:
-        filter_expr = _build_host_services_filter(hostname, _sanitize_query(query), fields)
-        stats_query = "\n".join(
-            (
-                f"GET {Services.__tablename__}",
-                "Stats: state >= 0",
-                *(": ".join(line) for line in filter_expr.render()),
-                *_split_filter_lines(filters),
-            )
+        return _count_services(
+            self._connection,
+            _build_host_services_filter(hostname, _sanitize_query(query), fields),
+            filters,
         )
-        return sum(int(row[-1]) for row in self._connection.query(stats_query))
+
+
+def _fetch_services(
+    connection: MultiSiteConnection,
+    filter_expr: QueryExpression,
+    *,
+    limit: int | None,
+    sorters: Sequence[ServiceSort],
+    filters: ServiceFilter,
+    fields: Set[ServiceOptionalField],
+) -> list[Service]:
+    extra_headers = [*_split_filter_lines(filters), _build_primary_sort(sorters)]
+
+    if limit is not None:
+        extra_headers.append(f"Limit: {limit}")
+
+    q = Query(
+        [
+            Services.description,
+            Services.host_name,
+            Services.state,
+            Services.has_been_checked,
+            Services.plugin_output,
+            Services.acknowledged,
+            Services.scheduled_downtime_depth,
+            Services.notifications_enabled,
+            Services.comments,
+            Services.modified_attributes_list,
+            Services.active_checks_enabled,
+            Services.accept_passive_checks,
+            Services.in_notification_period,
+            Services.in_service_period,
+            Services.in_check_period,
+            Services.in_passive_check_period,
+            Services.is_flapping,
+            Services.staleness,
+            Services.last_check,
+            Services.last_state_change,
+            Services.perf_data,
+            Services.check_command,
+            Services.check_type,
+            Services.cached_at,
+            Services.cache_interval,
+            *(
+                column
+                for field, columns in _OPTIONAL_COLUMNS.items()
+                if field in fields
+                for column in columns
+            ),
+        ],
+        filter_expr=filter_expr,
+        extra_headers=extra_headers,
+    )
+
+    with detailed_connection(connection) as conn:
+        return sorted(
+            [
+                Service(
+                    name=row["description"],
+                    host_name=row["host_name"],
+                    site_id=row["site"],
+                    state=(
+                        ServiceState.PENDING
+                        if row["has_been_checked"] == 0
+                        else ServiceState(row["state"])
+                    ),
+                    acknowledged=bool(row["acknowledged"]),
+                    in_downtime=row["scheduled_downtime_depth"] > 0,
+                    notifications_enabled=bool(row["notifications_enabled"]),
+                    num_comments=len(row["comments"]),
+                    active_checks_manually_disabled=_manually_disabled(
+                        row, "active_checks_enabled"
+                    ),
+                    passive_checks_disabled=_manually_disabled(
+                        row, "passive_checks_enabled", column="accept_passive_checks"
+                    ),
+                    in_notification_period=bool(row["in_notification_period"]),
+                    in_service_period=bool(row["in_service_period"]),
+                    in_check_period=_in_check_period(row),
+                    is_flapping=bool(row["is_flapping"]),
+                    stale=row["staleness"] >= active_config.staleness_threshold,
+                    summary=row["plugin_output"],
+                    last_check=int(row["last_check"]) or None,
+                    last_state_change=int(row["last_state_change"]) or None,
+                    perf_data=row["perf_data"],
+                    check_command=row["check_command"],
+                    active_checks_enabled=bool(row["active_checks_enabled"]),
+                    check_type=CheckType(row["check_type"]),
+                    cached_at=int(row["cached_at"]) or None,
+                    cache_interval=int(row["cache_interval"]),
+                    labels=(
+                        ServiceLabelValue.by_label(row["labels"], row["label_sources"])
+                        if "labels" in row
+                        else None
+                    ),
+                    tags=dict(row["tags"]) if "tags" in row else None,
+                    contacts=list(row["contacts"]) if "contacts" in row else None,
+                    contact_groups=(
+                        list(row["contact_groups"]) if "contact_groups" in row else None
+                    ),
+                    groups=list(row["groups"]) if "groups" in row else None,
+                )
+                for row in q.iterate(conn)
+            ],
+            key=service_sorter(sorters),
+        )
+
+
+def _count_services(
+    connection: MultiSiteConnection, filter_expr: QueryExpression, filters: ServiceFilter
+) -> int:
+    stats_query = "\n".join(
+        (
+            f"GET {Services.__tablename__}",
+            "Stats: state >= 0",
+            *(": ".join(line) for line in filter_expr.render()),
+            *_split_filter_lines(filters),
+        )
+    )
+    return sum(int(row[-1]) for row in connection.query(stats_query))
 
 
 # Everything beyond the columns every service row needs is read only when a caller asks
@@ -301,11 +331,17 @@ _OPTIONAL_COLUMNS: Mapping[ServiceOptionalField, tuple[Column, ...]] = {
 }
 
 
-# The domain names the columns after what the table shows, which for some of them differs from the
-# livestatus column they are read from.
-_LIVESTATUS_COLUMN_OVERRIDES: Mapping[ServiceSortColumn, str] = {
+# The livestatus column each sort column orders by. Every sort column is listed, also those whose
+# livestatus column has the same name. `None` means there is no livestatus column to order by (the
+# site), so those rows are ordered in Python only and `_build_primary_sort` skips the sorter.
+_LIVESTATUS_SORT_COLUMNS: Mapping[ServiceSortColumn, str | None] = {
     ServiceSortColumn.NAME: "description",
+    ServiceSortColumn.HOST_NAME: "host_name",
+    ServiceSortColumn.SITE_ID: None,
+    ServiceSortColumn.STATE: "state",
     ServiceSortColumn.SUMMARY: "plugin_output",
+    ServiceSortColumn.LAST_CHECK: "last_check",
+    ServiceSortColumn.LAST_STATE_CHANGE: "last_state_change",
 }
 
 
@@ -334,13 +370,20 @@ def _build_primary_sort(sorters: Sequence[ServiceSort]) -> str:
     the Python re-sort afterwards. In the default order, a host with more services than the limit
     whose names all sort before "Check_MK" would therefore lose those rows, same as in the legacy
     view.
+
+    A sorter without a livestatus column, like the site, is skipped: the first sorter that has one
+    is what orders the rows within each site's answer.
     """
-    if not sorters:
+    sortable = (
+        (sorter, column)
+        for sorter in sorters
+        if (column := _LIVESTATUS_SORT_COLUMNS[sorter.column]) is not None
+    )
+    if (first := next(sortable, None)) is None:
         # The default order sorts by name, so pre-sort the same way the Python re-sort will.
         return "OrderBy: description asc natural"
 
-    primary = sorters[0]
-    column = _LIVESTATUS_COLUMN_OVERRIDES.get(primary.column, primary.column.value)
+    primary, column = first
     natural_sort_flag = " natural" if primary.column.natural_sort else ""
 
     return f"OrderBy: {column} {primary.direction}{natural_sort_flag}"

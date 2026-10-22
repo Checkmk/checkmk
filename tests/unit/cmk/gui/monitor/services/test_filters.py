@@ -8,8 +8,10 @@ from typing import Literal
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
+from cmk.ccc.site import SiteId
 from cmk.gui.monitor.services._api._filters import (
     parse_as_livestatus_filter,
+    scope_filter_by_site,
     ServiceAndNode,
     ServiceBooleanCondition,
     ServiceFilterNode,
@@ -17,6 +19,7 @@ from cmk.gui.monitor.services._api._filters import (
     ServiceNameChoiceCondition,
     ServiceNotNode,
     ServiceOrNode,
+    ServiceSiteChoiceCondition,
     ServiceStateChoiceCondition,
     ServiceStringCondition,
     ServiceStringOp,
@@ -545,3 +548,63 @@ def test_timestamp_condition_only_accepts_unix_timestamps(value: object) -> None
         TypeAdapter(ServiceFilterNode).validate_python(  # astrein: disable=pydantic-type-adapter
             payload, strict=False
         )
+
+
+def test_query_builder_host_name_condition() -> None:
+    condition = ServiceStringCondition(
+        type="condition", field="host_name", op="matches", value="^web"
+    )
+    assert parse_as_livestatus_filter(condition) == "Filter: host_name ~ ^web"
+
+
+_SITE = SiteId("NO_SITE")
+_OTHER_SITE = SiteId("other")
+_SITE_CONDITION = ServiceSiteChoiceCondition(
+    type="condition", field="site_id", op="one_of", value=[_SITE]
+)
+_NAME_CONDITION = ServiceStringCondition(type="condition", field="name", op="contains", value="CPU")
+
+
+def test_scope_filter_by_site_restricts_to_the_named_sites() -> None:
+    scoped = scope_filter_by_site(
+        ServiceAndNode(type="and", children=[_SITE_CONDITION, _NAME_CONDITION])
+    )
+
+    assert (scoped.node, scoped.site_scope(frozenset({_SITE, _OTHER_SITE}))) == (
+        _NAME_CONDITION,
+        [_SITE],
+    )
+
+
+def test_scope_filter_by_site_negated_condition_is_a_complement() -> None:
+    scoped = scope_filter_by_site(ServiceNotNode(type="not", child=_SITE_CONDITION))
+
+    assert (scoped.node, scoped.site_scope(frozenset({_SITE, _OTHER_SITE}))) == (
+        None,
+        [_OTHER_SITE],
+    )
+
+
+def test_scope_filter_by_site_leaves_a_site_free_tree_unaffected() -> None:
+    scoped = scope_filter_by_site(_NAME_CONDITION)
+
+    assert (scoped.node, scoped.sites) == (_NAME_CONDITION, None)
+
+
+def test_scope_filter_by_site_rejects_a_site_condition_under_or() -> None:
+    node = ServiceOrNode(type="or", children=[_SITE_CONDITION, _NAME_CONDITION])
+
+    with pytest.raises(ValueError, match="only be combined via 'and'"):
+        scope_filter_by_site(node)
+
+
+def test_site_condition_accepts_a_site_that_is_not_configured() -> None:
+    payload = {"type": "condition", "field": "site_id", "op": "one_of", "value": ["gone"]}
+
+    node = TypeAdapter(ServiceFilterNode).validate_python(  # astrein: disable=pydantic-type-adapter
+        payload, strict=False
+    )
+
+    assert node == ServiceSiteChoiceCondition(
+        type="condition", field="site_id", op="one_of", value=[SiteId("gone")]
+    )

@@ -80,6 +80,8 @@ class ServiceLabelValue:
 @dataclasses.dataclass(frozen=True)
 class Service:
     name: str
+    host_name: str
+    site_id: str
     state: ServiceState
     acknowledged: bool
     in_downtime: bool
@@ -143,12 +145,10 @@ class Service:
 
 @dataclasses.dataclass(frozen=True)
 class ServiceOverview(Service):
-    host_name: str
     host_alias: str
     host_state: HostState
     host_acknowledged: bool
     host_in_downtime: bool
-    site_id: str
     long_output: str
     current_attempt: int
     max_check_attempts: int
@@ -186,6 +186,8 @@ class ServiceOptionalField(enum.StrEnum):
 
 class ServiceSortColumn(enum.StrEnum):
     NAME = "name"
+    HOST_NAME = "host_name"
+    SITE_ID = "site_id"
     STATE = "state"
     SUMMARY = "summary"
     LAST_CHECK = "last_check"
@@ -203,6 +205,8 @@ class ServiceSortColumn(enum.StrEnum):
 _NATURAL_SORT_COLUMNS = frozenset(
     {
         ServiceSortColumn.NAME,
+        ServiceSortColumn.HOST_NAME,
+        ServiceSortColumn.SITE_ID,
         ServiceSortColumn.SUMMARY,
     }
 )

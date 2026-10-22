@@ -45,7 +45,12 @@ from .._models import (
 )
 from .._repositories import HostServicesRepository
 from ._family import MONITOR_SERVICES_FAMILY
-from ._filters import parse_as_livestatus_filter, SERVICE_FILTER_NODE, ServiceFilterNode
+from ._filters import (
+    parse_as_livestatus_filter,
+    scope_filter_by_site,
+    SERVICE_FILTER_NODE,
+    ServiceFilterNode,
+)
 from ._modes import build_service_modes_by_id, ServiceModeInfo
 from ._perfometer import ServicePerfometer
 from ._reschedule_offer import build_reschedule_offer, ServiceRescheduleOffer
@@ -150,7 +155,7 @@ class HostServiceEntry:
     )
 
     @classmethod
-    def from_domain(cls, service: Service, *, hostname: str, site_id: str) -> Self:
+    def from_domain(cls, service: Service) -> Self:
         return cls(
             name=service.name,
             state=service.state_label,
@@ -159,7 +164,9 @@ class HostServiceEntry:
             summary=service.summary,
             last_check=service.last_check,
             last_state_change=service.last_state_change,
-            modes=build_service_modes_by_id(service, hostname=hostname, site_id=site_id)
+            modes=build_service_modes_by_id(
+                service, hostname=service.host_name, site_id=service.site_id
+            )
             or ApiOmitted(),
             labels=service.labels if service.labels is not None else ApiOmitted(),
             tags=service.tags if service.tags is not None else ApiOmitted(),
@@ -171,7 +178,7 @@ class HostServiceEntry:
             perfometer=ServicePerfometer.from_perf_data(
                 service.perf_data,
                 service.check_command,
-                host_name=hostname,
+                host_name=service.host_name,
                 service_name=service.name,
             )
             or ApiOmitted(),
@@ -288,6 +295,10 @@ def list_services(
             title="The requested host was not found",
             detail=str(exc),
         ) from None
+    except InvalidServiceFilterError as exc:
+        raise ProblemException(
+            status=HTTPStatus.BAD_REQUEST, title="Invalid filter", detail=str(exc)
+        ) from None
 
 
 class HostServicesTable:
@@ -327,10 +338,23 @@ class HostServicesTable:
                 filters=(
                     ServiceFilter("")
                     if filter_node is None
-                    else parse_as_livestatus_filter(filter_node)
+                    else _parse_host_services_filter(filter_node)
                 ),
                 fields=fields,
             )
+
+
+def _parse_host_services_filter(node: ServiceFilterNode) -> ServiceFilter:
+    try:
+        scoped = scope_filter_by_site(node)
+    except ValueError as exc:
+        raise InvalidServiceFilterError(str(exc)) from exc
+    if scoped.sites is not None:
+        raise InvalidServiceFilterError(
+            "The services of a host take their site from the 'site_id' query parameter, "
+            "so the filter must not contain a 'site_id' condition."
+        )
+    return parse_as_livestatus_filter(node)
 
 
 def _handle_list_services(
@@ -361,10 +385,7 @@ def _handle_list_services(
         matched_service_count = total_service_count
 
     return HostServicesResponse(
-        services=[
-            HostServiceEntry.from_domain(service, hostname=hostname, site_id=site_id)
-            for service in services
-        ],
+        services=[HostServiceEntry.from_domain(service) for service in services],
         meta=HostServicesPageMeta(
             hostname=hostname,
             site_id=site_id,

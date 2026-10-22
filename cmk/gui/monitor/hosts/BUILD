@@ -15,6 +15,7 @@ py_library(
         "//cmk/gui/monitor/export",
         "//cmk/gui/monitor/legacy_context",
         "//cmk/gui/monitor/setup_folders",
+        "//cmk/gui/monitor/site_scope",
         "//cmk/gui/monitor/table_widget",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/restful_objects",

@@ -11,6 +11,7 @@ from cmk.gui import sites
 from cmk.gui.monitor.services._impl import (
     _build_primary_sort,
     _build_query_filter,
+    _LIVESTATUS_SORT_COLUMNS,
     _OPTIONAL_COLUMNS,
     LiveStatusHostServicesRepository,
 )
@@ -229,6 +230,60 @@ def test_count_total_query_shape() -> None:
         assert repo.count_total(_UNKNOWN_HOSTNAME) == 0
 
 
+def _service_row(description: str) -> dict[str, object]:
+    return {
+        "description": description,
+        "host_name": _UNKNOWN_HOSTNAME,
+        "state": 0,
+        "has_been_checked": 1,
+        "plugin_output": "OK",
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "in_passive_check_period": 1,
+        "is_flapping": 0,
+        "staleness": 0.0,
+        "last_check": 0,
+        "last_state_change": 0,
+        "perf_data": "",
+        "check_command": "check_cpu",
+        "check_type": 0,
+        "cached_at": 0,
+        "cache_interval": 0,
+    }
+
+
+@pytest.mark.usefixtures("request_context")
+def test_fetch_reads_the_host_and_the_site_from_each_row(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.set_sites(["NO_SITE", "remote"])
+    mock_livestatus.add_table("services", [_service_row("CPU load")], site="NO_SITE")
+    mock_livestatus.add_table("services", [_service_row("Memory")], site="remote")
+    mock_livestatus.expect_query("GET services", match_type="loose")
+    with mock_livestatus(expect_status_query=True):
+        services = LiveStatusHostServicesRepository(connection=sites.live()).fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=None,
+            query="",
+            sorters=[],
+            filters=ServiceFilter(""),
+            fields=frozenset(),
+        )
+
+    assert [(s.name, s.host_name, s.site_id) for s in services] == [
+        ("CPU load", _UNKNOWN_HOSTNAME, "NO_SITE"),
+        ("Memory", _UNKNOWN_HOSTNAME, "remote"),
+    ]
+
+
 @pytest.mark.parametrize(
     "sorters, expected",
     [
@@ -258,6 +313,24 @@ def test_count_total_query_shape() -> None:
             id="timestamp column",
         ),
         pytest.param(
+            [ServiceSort(ServiceSortColumn.HOST_NAME, ServiceSortDirection.DESC)],
+            "OrderBy: host_name desc natural",
+            id="host name column",
+        ),
+        pytest.param(
+            [ServiceSort(ServiceSortColumn.SITE_ID, ServiceSortDirection.ASC)],
+            "OrderBy: description asc natural",
+            id="site has no livestatus column",
+        ),
+        pytest.param(
+            [
+                ServiceSort(ServiceSortColumn.SITE_ID, ServiceSortDirection.ASC),
+                ServiceSort(ServiceSortColumn.STATE, ServiceSortDirection.DESC),
+            ],
+            "OrderBy: state desc",
+            id="site is skipped for the next sorter",
+        ),
+        pytest.param(
             [
                 ServiceSort(ServiceSortColumn.STATE, ServiceSortDirection.DESC),
                 ServiceSort(ServiceSortColumn.NAME, ServiceSortDirection.ASC),
@@ -275,6 +348,11 @@ def test_build_primary_sort(sorters: Sequence[ServiceSort], expected: str) -> No
 def test_every_optional_field_names_the_columns_it_needs() -> None:
     """A new ServiceOptionalField must say which livestatus columns it reads."""
     assert set(_OPTIONAL_COLUMNS) == set(ServiceOptionalField)
+
+
+def test_every_sort_column_says_how_livestatus_orders_by_it() -> None:
+    """A sort column with no entry would fail every request sorted by it."""
+    assert set(_LIVESTATUS_SORT_COLUMNS) == set(ServiceSortColumn)
 
 
 def test_build_query_filter_without_a_query_matches_everything() -> None:

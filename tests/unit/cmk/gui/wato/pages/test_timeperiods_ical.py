@@ -6,12 +6,13 @@
 import datetime
 from zoneinfo import ZoneInfo
 
+import pytest
 import recurring_ical_events  # type: ignore[import-untyped,unused-ignore]
 import time_machine
 from icalendar import Calendar
 
 from cmk.gui.wato.pages.timeperiods import TimeperiodUsage
-from cmk.gui.wato.pages.timeperiods_ical import ICalEvent
+from cmk.gui.wato.pages.timeperiods_ical import ICalEvent, import_ical
 
 ICAL_DATA_LIST = list[dict[str, str]]
 
@@ -263,3 +264,78 @@ def test_convert_multiple_ranges_per_days_exceptions() -> None:
             exception_map[examine_date] = [timerange]
 
     assert exception_map[examine_date] == [("00:00", "08:00"), ("18:00", "24:00")]
+
+
+_NOW = datetime.datetime(2027, 1, 1)
+_ONE_YEAR = datetime.timedelta(days=365)
+
+
+def _calendar(*events: str, properties: str = "") -> bytes:
+    vevents = "".join(
+        f"BEGIN:VEVENT\nUID:event-{index}\n{event}\nEND:VEVENT\n"
+        for index, event in enumerate(events)
+    )
+    return f"BEGIN:VCALENDAR\nVERSION:2.0\n{properties}{vevents}END:VCALENDAR\n".encode()
+
+
+def test_import_ical_expands_recurring_events() -> None:
+    content = _calendar("DTSTART:20270105T090000\nDTEND:20270105T120000\nRRULE:FREQ=WEEKLY;COUNT=3")
+
+    result = import_ical(content, filename="cal.ics", now=_NOW, horizon=_ONE_YEAR)
+
+    assert result.exceptions == {
+        "2027-01-05": [("09:00", "12:00")],
+        "2027-01-12": [("09:00", "12:00")],
+        "2027-01-19": [("09:00", "12:00")],
+    }
+
+
+def test_import_ical_ignores_events_outside_horizon() -> None:
+    content = _calendar(
+        "DTSTART;VALUE=DATE:20270110\nDTEND;VALUE=DATE:20270111",
+        "DTSTART;VALUE=DATE:20280110\nDTEND;VALUE=DATE:20280111",
+    )
+
+    result = import_ical(content, filename="cal.ics", now=_NOW, horizon=_ONE_YEAR)
+
+    assert result.exceptions == {"2027-01-10": [("00:00", "24:00")]}
+
+
+def test_import_ical_collects_time_ranges_of_a_day() -> None:
+    content = _calendar(
+        "DTSTART:20270105T080000\nDTEND:20270105T090000",
+        "DTSTART:20270105T180000\nDTEND:20270105T190000",
+    )
+
+    result = import_ical(content, filename="cal.ics", now=_NOW, horizon=_ONE_YEAR)
+
+    assert sorted(result.exceptions["2027-01-05"]) == [("08:00", "09:00"), ("18:00", "19:00")]
+
+
+def test_import_ical_full_day_event_replaces_other_time_ranges_of_the_day() -> None:
+    content = _calendar(
+        "DTSTART:20270105T080000\nDTEND:20270105T090000",
+        "DTSTART;VALUE=DATE:20270105\nDTEND;VALUE=DATE:20270106",
+    )
+
+    result = import_ical(content, filename="cal.ics", now=_NOW, horizon=_ONE_YEAR)
+
+    assert result.exceptions == {"2027-01-05": [("00:00", "24:00")]}
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    ("properties", "expected_alias"),
+    [
+        pytest.param("X-WR-CALDESC:Description\nX-WR-CALNAME:Name\n", "Description", id="description first"),
+        pytest.param("X-WR-CALNAME:Name\n", "Name", id="name without description"),
+        pytest.param("", "cal.ics", id="file name without both"),
+    ],
+)
+# fmt: on
+def test_import_ical_alias_prefers_description_then_name_then_file_name(properties: str, expected_alias: str) -> None:
+    content = _calendar(properties=properties)
+
+    result = import_ical(content, filename="cal.ics", now=_NOW, horizon=_ONE_YEAR)
+
+    assert result.alias == expected_alias

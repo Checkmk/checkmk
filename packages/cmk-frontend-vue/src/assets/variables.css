@@ -138,6 +138,7 @@
   --font-size-xsmall: 8px;
   --font-weight-default: 400;
   --font-weight-medium: 500;
+  --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
   /* Spacings */
@@ -322,9 +323,6 @@
     --font-color-breadcrumb-inactive: var(--color-conference-grey-70);
     --font-color-breadcrumb-interactive: var(--color-conference-grey-100);
     --font-color-breadcrumb-hover: var(--interactive-accent-strong);
-
-    /* Cmk Link colors */
-    --cmk-link-hover-color: var(--interactive-accent-strong);
 
     /* Cmk Alert Box */
     --cmk-alert-box-error-bg-color: var(--color-dark-red-20);
@@ -516,9 +514,6 @@
     --font-color-breadcrumb-inactive: var(--color-white-70);
     --font-color-breadcrumb-interactive: var(--color-white-100);
     --font-color-breadcrumb-hover: var(--interactive-accent-strong);
-
-    /* Cmk Link colors */
-    --cmk-link-hover-color: var(--interactive-accent-strong);
 
     /* Cmk Alert Box */
     --cmk-alert-box-error-bg-color: var(--color-dark-red-80);

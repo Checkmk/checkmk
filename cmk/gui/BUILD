@@ -739,6 +739,7 @@ py_library(
         "//cmk/gui/mobile",
         "//cmk/gui/monitor/command",
         "//cmk/gui/monitor/hosts",
+        "//cmk/gui/monitor/router",
         "//cmk/gui/monitor/services",
         "//cmk/gui/monitor/setup_folders",
         "//cmk/gui/nagvis",

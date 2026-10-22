@@ -165,6 +165,7 @@ def test_registered_pages() -> None:
         "download_product_usage",
         "monitor_all_hosts",
         "monitor_host_services",
+        "monitor_search",
     ]
 
     assert sorted(cmk.gui.pages.page_registry) == sorted(expected_pages)

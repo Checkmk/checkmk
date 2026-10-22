@@ -292,11 +292,13 @@ py_cmk_test(
         "//cmk/gui/monitor/export",
         "//cmk/gui/monitor/hosts",
         "//cmk/gui/monitor/legacy_context",
+        "//cmk/gui/monitor/router",
         "//cmk/gui/monitor/services",
         "//cmk/gui/monitor/setup_folders",
         "//cmk/gui/nagvis",
         "//cmk/gui/png",
         "//cmk/gui/png/renderer",
+        "//cmk/gui/search/spec",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",
         "//cmk/utils",
@@ -316,7 +318,7 @@ py_cmk_test(
         requirement("python-ldap"),
         requirement("time-machine"),
         requirement("werkzeug"),
-        "//packages/cmk-web/cmk/web/utils",
+        "//packages/cmk-web",
     ],
 )
 

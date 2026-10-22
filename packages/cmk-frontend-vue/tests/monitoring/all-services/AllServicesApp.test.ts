@@ -118,6 +118,13 @@ test('lists the services of every host from the all services endpoint', async ()
   )
 })
 
+test('shows the site of each service by default', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  expect(await screen.findByRole('columnheader', { name: 'Site' })).toBeInTheDocument()
+})
+
 test('requests the services sorted by host name on a click of the Host header', async () => {
   mockServices([makeApiEntry()])
   renderApp()

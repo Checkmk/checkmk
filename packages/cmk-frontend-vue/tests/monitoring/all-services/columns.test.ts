@@ -27,14 +27,6 @@ describe('useAllServicesColumns', () => {
     ])
   })
 
-  test('hides the site by default', () => {
-    const site = useAllServicesColumns({ includeSelect: false, sites: SITES }).find(
-      (column) => columnId(column) === 'site_id'
-    )
-
-    expect(site?.meta?.hidden).toBe(true)
-  })
-
   test('offers the sites by alias in the site filter', () => {
     const site = useAllServicesColumns({ includeSelect: false, sites: SITES }).find(
       (column) => columnId(column) === 'site_id'

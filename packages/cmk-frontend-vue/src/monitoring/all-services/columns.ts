@@ -65,7 +65,7 @@ export function useAllServicesColumns({
       sortDescFirst: false,
       minSize: 100,
       maxSize: 300,
-      meta: { filter: siteFilter, hidden: true }
+      meta: { filter: siteFilter }
     }
   ]
 

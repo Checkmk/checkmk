@@ -8,7 +8,7 @@ import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import { type ComputedRef, computed, ref, watch } from 'vue'
 
 import { useGlobalTimeRange } from '../GlobalTimePicker/globalTimeState'
-import type { PanelKey, RangeChange, RangeChangeSource, RequestedTimeRange } from '../types'
+import type { RangeChange, RangeChangeSource, RequestedTimeRange } from '../types'
 import { sameRequestedTimeRange } from '../utils/timeRange'
 
 export function toRequestedTimeRange(range: DateTimeRange): RequestedTimeRange {
@@ -32,7 +32,7 @@ const DEFAULT_RANGE_SECONDS = 4 * 3600
 
 export interface RequestedTimeRangeState {
   requestedTimeRange: ComputedRef<RequestedTimeRange>
-  setRequestedTimeRange: (range: RequestedTimeRange, source: PanelKey) => void
+  setRequestedTimeRange: (range: RequestedTimeRange, source: RangeChangeSource) => void
   rangeChange: ComputedRef<RangeChange | undefined>
 }
 
@@ -88,7 +88,7 @@ export function useRequestedTimeRange(initial?: RequestedTimeRange): RequestedTi
     )
   })
 
-  function setRequestedTimeRange(range: RequestedTimeRange, source: PanelKey): void {
+  function setRequestedTimeRange(range: RequestedTimeRange, source: RangeChangeSource): void {
     request.value = { start: range.start, end: range.end }
     rangeChange.value = nextRangeChange(rangeChange.value, source)
   }

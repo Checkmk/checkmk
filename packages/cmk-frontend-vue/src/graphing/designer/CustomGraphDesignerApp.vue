@@ -31,11 +31,12 @@ import DesignerBody from './components/DesignerBody.vue'
 import DesignerHeader from './components/DesignerHeader.vue'
 import type { SelectableGraph } from './components/GraphSelector.vue'
 import { type SaveAction, type SaveFailure, useSaveFailures } from './composables/saveFailure'
+import { useBlockingIssues } from './composables/useBlockingIssues'
 import { useGraphItems } from './composables/useGraphItems'
 import { fromApiDataSource, toApiDataSources } from './drafts'
-import type { GraphItem, ItemId } from './types'
+import type { GraphItem } from './types'
 import { pushUrlState, replaceUrlState } from './urlState'
-import { type RowIssue, isValid, validateDesign } from './validation'
+import { isValid } from './validation'
 
 const ANY_VERSION = '*'
 
@@ -103,30 +104,15 @@ watch(selectedGraph, (selected) => {
 
 const saveFailure = ref<SaveFailure | null>(null)
 const isSaving = ref(false)
-/** Until a save has been tried, an unfinished source is work in progress, not an error. */
-const hasAttemptedSave = ref(false)
 const issuesAlert = ref<HTMLElement | null>(null)
 
-const blockingIssues = computed(() => validateDesign(store.items.value, filterDefinitions.value))
-
-const issuesByRow = computed(() => {
-  const byRow = new Map<ItemId, RowIssue[]>()
-  if (!hasAttemptedSave.value) {
-    return byRow
-  }
-  for (const issue of blockingIssues.value) {
-    byRow.set(issue.id, [...(byRow.get(issue.id) ?? []), issue])
-  }
-  return byRow
-})
+const { blockingIssues, issuesByRow, blockedIds, hasAttemptedSave } = useBlockingIssues(
+  store.items,
+  () => filterDefinitions.value
+)
 
 const showsSaveIssues = computed(() => hasAttemptedSave.value && blockingIssues.value.length > 0)
 const showsAlerts = computed(() => showsSaveIssues.value || saveFailure.value !== null)
-
-const blockedIds = computed(() => {
-  const blocked = new Set(blockingIssues.value.map((issue) => issue.id))
-  return store.items.value.filter((item) => blocked.has(item.id)).map((item) => item.id)
-})
 
 const blockedSummary = computed(() =>
   _tn(

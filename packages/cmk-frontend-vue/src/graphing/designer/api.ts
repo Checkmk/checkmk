@@ -21,6 +21,8 @@ export type FetchCustomGraphDataRequest = components['schemas']['FetchCustomGrap
 export type CustomGraphMetric = components['schemas']['CustomGraphMetric']
 
 export type CustomGraphOptions = components['schemas']['CustomGraphOptions']
+/** What the designer needs of the site and the user, for designers outside their own page. */
+export type CustomGraphDesignerConfig = components['schemas']['CustomGraphDesignerConfig']
 export type CustomGraphUnitNotationTypes =
   components['schemas']['CustomGraphUnitNotationWithSymbol']['notation']
 
@@ -88,6 +90,11 @@ export async function updateCustomGraph(
     body
   })
   return { graph: unwrap(result), etag: requireEtag(result.response) }
+}
+
+/** Fetch the designer config, which the designer's own page ships with its page props. */
+export async function getDesignerConfig(): Promise<CustomGraphDesignerConfig> {
+  return unwrap(await client.GET('/domain-types/custom_graph/actions/designer_config/invoke'))
 }
 
 /** Evaluate an unsaved custom-graph definition over a time range (preview). */

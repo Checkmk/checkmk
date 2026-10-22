@@ -34,8 +34,10 @@ import {
   useGraphNotice,
   useNoDataNotice
 } from '../../composables/useGraphNotice'
+import { useLocalTimeRange } from '../../composables/useLocalTimeRange'
 import { useRequestedTimeRange } from '../../composables/useRequestedTimeRange'
 import type { PanelKey, RequestedTimeRange, TimeRange, TimeRangeCommitKind } from '../../types'
+import { sameRequestedTimeRange } from '../../utils/timeRange'
 import type { CustomGraphMetric, CustomGraphOptions } from '../api'
 import {
   type CalculationPlacement,
@@ -70,7 +72,8 @@ const {
   createServicesAvailable,
   telemetryMetricsDefaultTitle,
   titleMacros,
-  issuesByRow
+  issuesByRow,
+  timeRange
 } = defineProps<{
   store: GraphItemsStore
   graphOptions: CustomGraphOptions
@@ -84,6 +87,8 @@ const {
   telemetryMetricsDefaultTitle: string
   titleMacros: TitleMacroGroup[]
   issuesByRow: ReadonlyMap<ItemId, RowIssue[]>
+  /** If provided, keeps the preview to this range instead of the page's time picker. */
+  timeRange?: RequestedTimeRange | undefined
 }>()
 
 const emit = defineEmits<{
@@ -97,9 +102,24 @@ const { _t } = usei18n()
 const { validItems } = useItemValidation(store.items)
 
 const consolidationFn = ref<ConsolidationFn>('max')
-// The app seeds the global time range from the configured default before we mount.
-const { requestedTimeRange, setRequestedTimeRange, rangeChange } = useRequestedTimeRange()
 const PREVIEW_PANEL_KEY: PanelKey = 0
+// The app seeds the global time range from the configured default before we mount.
+const { requestedTimeRange, setRequestedTimeRange, rangeChange } =
+  timeRange === undefined ? useRequestedTimeRange() : useLocalTimeRange(timeRange)
+watch(
+  () => timeRange,
+  (range, previous) => {
+    // A new object with the same range is no new range: the zoom stands.
+    if (
+      range !== undefined &&
+      (previous === undefined || !sameRequestedTimeRange(range, previous))
+    ) {
+      // Not from the time picker, but tagged like it so the panel ends its zoom instead of
+      // ignoring the range as its own commit.
+      setRequestedTimeRange(range, 'time_picker')
+    }
+  }
+)
 
 const brush = useBrushSnapshot<{ metrics: CustomGraphMetric[]; dataTimeRange: TimeRange }>({
   getNow: () => Math.floor(Date.now() / 1000),
@@ -260,6 +280,8 @@ function closeCalculation(): void {
     }
   })
 }
+
+defineExpose({ closeCalculation })
 
 function applyRefVisibility(refVisibility: RefVisibility): void {
   if (refVisibility !== null) {

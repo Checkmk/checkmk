@@ -38,7 +38,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
     inheritAttrs: false,
     props: ['metrics', 'highlightedMetricNames', 'panEnabled', 'view_time_range', 'options'],
-    emits: ['pan', 'update:valueResolution'],
+    emits: ['pan', 'reset', 'update:valueResolution'],
     template: `<div data-testid="time-series-graph">
       <span data-testid="drawn">{{ metrics.map((m) => m.metadata.title).join(',') }}</span>
       <span data-testid="highlighted">{{ highlightedMetricNames.join(',') }}</span>
@@ -52,6 +52,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
         data-testid="report-value-resolution"
         @click="$emit('update:valueResolution', 0.005)"
       />
+      <button data-testid="reset" @click="$emit('reset')" />
       <button
         data-testid="pan-back"
         @click="$emit('pan', {
@@ -680,6 +681,84 @@ test.each(['view', 'edit'] as const)('the %s-mode preview arms the pan gesture',
   renderBody(mode)
 
   expect(await screen.findByTestId('pan-enabled')).toHaveTextContent('true')
+})
+
+test('a given time range keeps the preview off the page time picker', async () => {
+  useGlobalTimeRange().setActiveTimeRange(PAST_WINDOW, 'time_picker')
+  const postSpy = echoingPostSpy()
+  const timeRange = { start: 1_700_000_000 - 4 * 3600, end: 1_700_000_000 }
+  const harness = defineComponent({
+    setup() {
+      useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
+      return () => h(DesignerBody, { ...bodyProps(), timeRange })
+    }
+  })
+  render(harness)
+
+  await waitFor(() => expect(postSpy).toHaveBeenCalled())
+  expect(requestedRangeOf(postSpy.mock.calls[0]!)).toMatchObject(timeRange)
+})
+
+test('a new time range replaces a zoom on the preview, so a reset returns to the new range', async () => {
+  const postSpy = echoingPostSpy()
+  const lastFourHours = { start: 1_700_000_000 - 4 * 3600, end: 1_700_000_000 }
+  const lastHour = { start: 1_700_000_000 - 3600, end: 1_700_000_000 }
+  const timeRange = ref(lastFourHours)
+  const harness = defineComponent({
+    setup() {
+      useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
+      return () => h(DesignerBody, { ...bodyProps(), timeRange: timeRange.value })
+    }
+  })
+  render(harness)
+  const lastRequested = () => requestedRangeOf(postSpy.mock.calls.at(-1)!)
+  await waitFor(() => expect(postSpy).toHaveBeenCalled())
+
+  await fireEvent.click(await screen.findByTestId('pan-back'))
+  await waitFor(
+    () => expect(lastRequested()).toMatchObject({ start: lastFourHours.start - PAN_SECONDS }),
+    { timeout: PAN_REFETCH_TIMEOUT_MS }
+  )
+  timeRange.value = lastHour
+  await waitFor(() => expect(lastRequested()).toMatchObject(lastHour))
+  await fireEvent.click(screen.getByTestId('pan-back'))
+  await waitFor(
+    () => expect(lastRequested()).toMatchObject({ start: lastHour.start - PAN_SECONDS }),
+    { timeout: PAN_REFETCH_TIMEOUT_MS }
+  )
+  await fireEvent.click(screen.getByTestId('reset'))
+
+  await waitFor(() => expect(lastRequested()).toMatchObject(lastHour), {
+    timeout: PAN_REFETCH_TIMEOUT_MS
+  })
+})
+
+test('the same time range in a new object leaves a zoom on the preview in place', async () => {
+  const postSpy = echoingPostSpy()
+  const lastFourHours = { start: 1_700_000_000 - 4 * 3600, end: 1_700_000_000 }
+  const timeRange = ref(lastFourHours)
+  const harness = defineComponent({
+    setup() {
+      useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
+      return () => h(DesignerBody, { ...bodyProps(), timeRange: timeRange.value })
+    }
+  })
+  render(harness)
+  const lastRequested = () => requestedRangeOf(postSpy.mock.calls.at(-1)!)
+  await waitFor(() => expect(postSpy).toHaveBeenCalled())
+  await fireEvent.click(await screen.findByTestId('pan-back'))
+  await waitFor(
+    () => expect(lastRequested()).toMatchObject({ start: lastFourHours.start - PAN_SECONDS }),
+    { timeout: PAN_REFETCH_TIMEOUT_MS }
+  )
+
+  timeRange.value = { ...lastFourHours }
+  await nextTick()
+  await fireEvent.click(screen.getByTestId('reset'))
+
+  await waitFor(() => expect(lastRequested()).toMatchObject(lastFourHours), {
+    timeout: PAN_REFETCH_TIMEOUT_MS
+  })
 })
 
 test('a pan on the preview refetches the shifted window, keeping its span', async () => {

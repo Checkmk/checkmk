@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-20 17:31+0000\n"
+"PO-Revision-Date: 2026-10-21 17:31+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -3008,6 +3008,12 @@ msgstr "Dispositivos sensores ALLNET IP"
 
 msgid "AP name"
 msgstr "nome AP"
+
+msgid ""
+"APACHE_FORWARDED_HEADERS is set to 'manual', but no matching RequestHeader "
+"configuration was found in the usual system Apache locations. Is this "
+"intentional?"
+msgstr ""
 
 #, fuzzy
 msgid "APC InRow system events"
@@ -7511,6 +7517,9 @@ msgstr ""
 
 msgid "Apache Server"
 msgstr "Servidor Apache"
+
+msgid "Apache X-Forwarded-Proto/-Ssl headers"
+msgstr ""
 
 #, fuzzy
 msgid "Apache config"
@@ -14259,6 +14268,13 @@ msgstr ""
 #, fuzzy
 msgid "Checkmk with times metrics"
 msgstr "Checkmk com dados de desempenho temporal"
+
+msgid ""
+"Checkmk's OAuth and MCP endpoints need to know whether the original client "
+"request arrived via HTTP or HTTPS. By default (<tt>APACHE_FORWARDED_HEADERS "
+"auto</tt>), the system Apache sets the X-Forwarded-Proto and X-Forwarded-Ssl "
+"headers for the site itself, based on what it sees on its own connection."
+msgstr ""
 
 #, fuzzy
 msgid "Checkmk: API: bytes"
@@ -29144,6 +29160,14 @@ msgstr ""
 "alterar esta senha."
 
 #, python-format
+msgid ""
+"Found a RequestHeader for X-Forwarded-Proto/X-Forwarded-Ssl in %(files)s. "
+"Checkmk already sets this header itself; remove the manual entry to avoid "
+"duplicate or conflicting configuration, or set APACHE_FORWARDED_HEADERS to "
+"'manual' if this Apache needs it."
+msgstr ""
+
+#, python-format
 msgid "Found all %d groups."
 msgstr "Encontrei todos os grupos %d."
 
@@ -36601,6 +36625,20 @@ msgstr ""
 "lista de padrões regex. Apenas os espaços de nomes correspondentes serão "
 "monitorizados. Note que isto diz respeito a tudo o que faz parte dos "
 "namespaces correspondentes, como as cápsulas, por exemplo."
+
+msgid ""
+"If your system Apache sits behind another proxy or load balancer that "
+"terminates TLS and forwards plain HTTP to it, that automatic value would be "
+"wrong. Run <tt>omd config set APACHE_FORWARDED_HEADERS manual</tt> for the "
+"site and set the headers yourself in the system Apache configuration "
+"instead, e.g. <tt>RequestHeader set X-Forwarded-Proto \"https\"</tt>."
+msgstr ""
+
+msgid ""
+"If your system Apache terminates TLS itself, or sits behind a proxy or load "
+"balancer that does, the 'Apache X-Forwarded-Proto/-Ssl headers' test covers "
+"whether the Checkmk GUI is correctly told about it."
+msgstr ""
 
 msgid "Ignore"
 msgstr "Ignorar"
@@ -55293,15 +55331,6 @@ msgstr ""
 "Note que o mapeamento para o estado numérico ServiceNow pode ser alterado no "
 "seu sistema e pode diferir das nossas definições. Neste caso, use a opção "
 "abaixo."
-
-msgid ""
-"Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "
-"\"https\"</tt> in your system Apache configuration to tell the Checkmk GUI "
-"about the SSL setup."
-msgstr ""
-"Observe que é necessário definir <tt>RequestHeader set X-Forwarded-Proto "
-"\"https\"</tt> na configuração do Apache do sistema para informar a GUI do "
-"Checkmk sobre a configuração do SSL."
 
 msgid "Please note that your site will be deleted when the trial period ends. "
 msgstr ""
@@ -93118,6 +93147,12 @@ msgstr "Nome alternativo do assunto do certificado errado"
 msgid "Wrong customer"
 msgstr "Cliente errado"
 
+msgid "X-Forwarded-Proto/-Ssl are configured manually, as configured"
+msgstr ""
+
+msgid "X-Forwarded-Proto/-Ssl are set automatically"
+msgstr ""
+
 msgid "XDA hitratio"
 msgstr "índice de acerto XDA"
 
@@ -102973,6 +103008,15 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "
+#~ "\"https\"</tt> in your system Apache configuration to tell the Checkmk "
+#~ "GUI about the SSL setup."
+#~ msgstr ""
+#~ "Observe que é necessário definir <tt>RequestHeader set X-Forwarded-Proto "
+#~ "\"https\"</tt> na configuração do Apache do sistema para informar a GUI "
+#~ "do Checkmk sobre a configuração do SSL."
 
 #~ msgid "&lt;None&gt;"
 #~ msgstr "&lt;Nenhum&gt;"

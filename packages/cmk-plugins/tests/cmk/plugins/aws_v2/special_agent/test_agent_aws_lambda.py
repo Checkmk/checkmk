@@ -47,13 +47,14 @@ class PaginatorListFunctions:
 
 
 class PaginatorProvisionedConcurrencyConfigs:
-    # "FunctionName" must occur in the function signature, but is not used in the current implementation => disable warning
-    def paginate(self, FunctionName: str) -> Iterator[Mapping[str, Any]]:  # noqa: ARG002
-        yield {
-            "ProvisionedConcurrencyConfigs": LambdaListProvisionedConcurrencyConfigsIB.create_instances(
-                2
+    def paginate(self, FunctionName: str) -> Iterator[Mapping[str, Any]]:
+        configs = LambdaListProvisionedConcurrencyConfigsIB.create_instances(2)
+        # The ARN of an alias starts with the ARN of its function.
+        for idx, config in enumerate(configs):
+            config["FunctionArn"] = (
+                f"arn:aws:lambda:eu-central-1:123456789:function:{FunctionName}:Alias-{idx}"
             )
-        }
+        yield {"ProvisionedConcurrencyConfigs": configs}
 
 
 class FakeLambdaClient:
@@ -188,10 +189,12 @@ def test_agent_aws_lambda_summary(
     assert lambda_summary.cache_interval == 300
     assert lambda_summary.period == 600
     assert lambda_summary.name == "lambda_summary"
-    assert len(lambda_summary_results) == 1
-    for result in lambda_summary_results:
-        assert result.piggyback_hostname is SOURCE_HOST
-        assert [lambda_function["FunctionName"] for lambda_function in result.content] == expected
+    assert {
+        result.piggyback_hostname: [
+            lambda_function["FunctionName"] for lambda_function in result.content
+        ]
+        for result in lambda_summary_results
+    } == {function_name: [function_name] for function_name in expected}
 
 
 @pytest.mark.parametrize("names,tags", no_tags_or_names_params)
@@ -216,8 +219,7 @@ def test_agent_aws_lambda_cloudwatch(names: Sequence[str], tags: OverallTags) ->
     assert lambda_cloudwatch.cache_interval == 300
     assert lambda_cloudwatch.period == 600
     assert lambda_cloudwatch.name == "lambda"
-    for result in _lambda_cloudwatch_results:
-        assert len(result.content) == 84  # all metrics
+    assert sum(len(result.content) for result in _lambda_cloudwatch_results) == 84  # all metrics
 
 
 @pytest.mark.parametrize("names,tags", no_tags_or_names_params)
@@ -345,7 +347,100 @@ def test_agent_aws_lambda_tags_are_filtered(
     ) = get_lambda_sections(None, (None, None), tag_import)
     results = lambda_summary.run().results
 
-    assert len(results) == 1
     # We assume all functions follow the same schema so we don't repeat the test n times
     row = results[0].content[0]
     assert list(row["TagsForCmkLabels"].keys()) == expected_tags
+
+
+def test_agent_aws_lambda_puts_each_function_on_its_own_host() -> None:
+    (
+        _lambda_limits,
+        lambda_summary,
+        lambda_provisioned_concurrency_configuration,
+        _lambda_cloudwatch,
+        lambda_cloudwatch_insights,
+    ) = get_lambda_sections(None, (None, None))
+    lambda_summary.run()
+
+    results = {
+        section.name: {
+            result.piggyback_hostname: list(result.content) for result in section.run().results
+        }
+        for section in (lambda_provisioned_concurrency_configuration, lambda_cloudwatch_insights)
+    }
+
+    function_arn = "arn:aws:lambda:eu-central-1:123456789:function:FunctionName"
+    assert results == {
+        "lambda_provisioned_concurrency": {
+            "FunctionName-0": [f"{function_arn}-0"],
+            "FunctionName-1": [f"{function_arn}-1"],
+        },
+        # In the simulation data, only FunctionName-0 has a log group.
+        "lambda_cloudwatch_insights": {"FunctionName-0": [f"{function_arn}-0"]},
+    }
+
+
+def test_agent_aws_lambda_puts_the_aliases_on_the_host_of_their_function() -> None:
+    (
+        _lambda_limits,
+        lambda_summary,
+        lambda_provisioned_concurrency_configuration,
+        lambda_cloudwatch,
+        _lambda_cloudwatch_insights,
+    ) = get_lambda_sections(None, (None, None))
+    lambda_summary.run()
+    lambda_provisioned_concurrency_configuration.run()
+
+    results = lambda_cloudwatch.run().results
+
+    function_arn = "arn:aws:lambda:eu-central-1:123456789:function:FunctionName"
+    assert {
+        result.piggyback_hostname: {row["Label"] for row in result.content} for result in results
+    } == {
+        f"FunctionName-{i}": {
+            f"{function_arn}-{i}",
+            f"{function_arn}-{i}:Alias-0",
+            f"{function_arn}-{i}:Alias-1",
+        }
+        for i in range(2)
+    }
+
+
+def test_agent_aws_lambda_region_limits_go_to_the_account_and_each_function_host() -> None:
+    (
+        lambda_limits,
+        lambda_summary,
+        _lambda_provisioned_concurrency_configuration,
+        _lambda_cloudwatch,
+        _lambda_cloudwatch_insights,
+    ) = get_lambda_sections(None, (None, None))
+    lambda_summary.run()
+
+    results = lambda_limits.run().results
+
+    assert {
+        result.piggyback_hostname: [limit.key for limit in result.content] for result in results
+    } == {
+        host: ["total_code_size", "concurrent_executions", "unreserved_concurrent_executions"]
+        for host in (SOURCE_HOST, "FunctionName-0", "FunctionName-1")
+    }
+
+
+def test_agent_aws_lambda_labels_function_hosts_as_lambda() -> None:
+    (
+        _lambda_limits,
+        lambda_summary,
+        lambda_provisioned_concurrency_configuration,
+        lambda_cloudwatch,
+        lambda_cloudwatch_insights,
+    ) = get_lambda_sections(None, (None, None))
+
+    results = [
+        *lambda_summary.run().results,
+        *lambda_provisioned_concurrency_configuration.run().results,
+        *lambda_cloudwatch.run().results,
+        *lambda_cloudwatch_insights.run().results,
+    ]
+
+    assert results
+    assert all(result.piggyback_host_labels == {"cmk/aws/service": "lambda"} for result in results)

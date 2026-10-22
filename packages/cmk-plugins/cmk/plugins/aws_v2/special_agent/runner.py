@@ -177,7 +177,9 @@ def datetime_serializer(obj):
 #     |
 #     '-- WAFV2WebACL
 
-# LambdaSummary, LambdaRegionLimits
+# LambdaSummary
+# |
+# |-- LambdaRegionLimits
 # |
 # '-- LambdaProvisionedConcurrency
 #     |
@@ -509,7 +511,7 @@ def _create_lamdba_sections(
         config,
         distributor,
     )
-    distributor.add(lambda_limits.name, lambda_summary)
+    distributor.add(lambda_summary.name, lambda_limits)
     lambda_provisioned_concurrency_configuration = LambdaProvisionedConcurrency(
         lambda_client,
         region,
@@ -768,9 +770,10 @@ class AWSSectionsGeneric(AWSSections):
                 config,
                 distributor,
             )
+            # lambda_limits needs the functions of lambda_summary.
+            self._sections.append(lambda_summary)
             if config.service_config.get("lambda_limits"):
                 self._sections.append(lambda_limits)
-            self._sections.append(lambda_summary)
             self._sections.append(lambda_provisioned_concurrency_configuration)
             self._sections.append(lambda_cloudwatch)
             self._sections.append(lambda_cloudwatch_insights)

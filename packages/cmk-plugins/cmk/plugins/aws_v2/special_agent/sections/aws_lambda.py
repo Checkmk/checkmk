@@ -43,6 +43,8 @@ if TYPE_CHECKING:
 
 ProvisionedConcurrencyConfigs = Mapping[str, Sequence[Mapping[str, str]]]
 
+LAMBDA_HOST_LABELS: Mapping[str, str] = {"cmk/aws/service": "lambda"}
+
 
 class LambdaRegionLimits(AWSSectionLimits):
     @property
@@ -62,7 +64,10 @@ class LambdaRegionLimits(AWSSectionLimits):
 
     @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
-        return AWSColleagueContents(None, 0.0)
+        colleague = self._received_results.get("lambda_summary")
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents([], 0.0)
 
     @override
     def get_live_data(self, *args):
@@ -73,33 +78,35 @@ class LambdaRegionLimits(AWSSectionLimits):
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         limits = raw_content.content
-        self._add_limit(
+        region_limits = [
             AWSLimit(
                 "total_code_size",
                 "Total Code Size",
                 100,
                 int(limits["AccountLimit"]["TotalCodeSize"]),
             ),
-            region=self._region,
-        )
-        self._add_limit(
             AWSLimit(
                 "concurrent_executions",
                 "Concurrent Executions",
                 100,
                 int(limits["AccountLimit"]["ConcurrentExecutions"]),
             ),
-            region=self._region,
-        )
-        self._add_limit(
             AWSLimit(
                 "unreserved_concurrent_executions",
                 "Unreserved Concurrent Executions",
                 100,
                 int(limits["AccountLimit"]["UnreservedConcurrentExecutions"]),
             ),
-            region=self._region,
-        )
+        ]
+        for limit in region_limits:
+            self._add_limit(limit, region=self._region)
+            # The checks of a function compare it with the limits of its region.
+            for function in colleague_contents.content:
+                self._add_limit(
+                    limit,
+                    region=self._region,
+                    resource=hosts.LambdaFunction(function["FunctionName"]),
+                )
         return AWSComputedContent(limits, raw_content.cache_timestamp)
 
 
@@ -171,7 +178,14 @@ class LambdaSummary(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.LambdaFunction(function["FunctionName"])),
+                [function],
+                LAMBDA_HOST_LABELS,
+            )
+            for function in computed_content.content
+        ]
 
 
 def _function_arn_to_function_name_dim(function_arn: str) -> str:
@@ -288,7 +302,18 @@ class LambdaCloudwatch(AWSSectionCloudwatch):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
+        # The label of a row is the ARN of a function or of one of its aliases.
+        rows_by_function: dict[str, list[Mapping[str, object]]] = {}
+        for row in computed_content.content:
+            rows_by_function.setdefault(
+                _function_arn_to_function_name_dim(row["Label"]), []
+            ).append(row)
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.LambdaFunction(function_name)), rows, LAMBDA_HOST_LABELS
+            )
+            for function_name, rows in rows_by_function.items()
+        ]
 
 
 class LambdaProvisionedConcurrency(AWSSection):
@@ -346,7 +371,16 @@ class LambdaProvisionedConcurrency(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
+        return [
+            AWSSectionResult(
+                self._target_host(
+                    hosts.LambdaFunction(_function_arn_to_function_name_dim(function_arn))
+                ),
+                {function_arn: function_content},
+                LAMBDA_HOST_LABELS,
+            )
+            for function_arn, function_content in computed_content.content.items()
+        ]
 
     @override
     def _validate_result_content(self, content: list | dict) -> None:
@@ -542,7 +576,16 @@ class LambdaCloudwatchInsights(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
+        return [
+            AWSSectionResult(
+                self._target_host(
+                    hosts.LambdaFunction(_function_arn_to_function_name_dim(function_arn))
+                ),
+                {function_arn: function_content},
+                LAMBDA_HOST_LABELS,
+            )
+            for function_arn, function_content in computed_content.content.items()
+        ]
 
     @override
     def _validate_result_content(self, content: list | dict) -> None:

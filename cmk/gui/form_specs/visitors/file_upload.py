@@ -15,6 +15,7 @@ from typing import override
 
 from werkzeug.datastructures import FileStorage
 
+from cmk.crypto.symmetric import DecryptionError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _, translate_to_current_language
@@ -146,6 +147,17 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel, FileUploadM
                 reason=_("Invalid data. Missing file name"), fallback_value=FileUploadModel()
             )
 
+        try:
+            self.decrypt_content(value["file_content_encrypted"])
+        except DecryptionError:
+            return InvalidValue(
+                reason=_(
+                    "The previously uploaded file cannot be restored because your session "
+                    "changed since this page was opened. Please upload the file again."
+                ),
+                fallback_value=FileUploadModel(),
+            )
+
         # Existing file, all data is already in value
         return FileUploadModel(
             input_uuid=input_uuid,
@@ -161,6 +173,7 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel, FileUploadM
         ).decode("ascii")
 
     @classmethod
+    @request_memoize(maxsize=8)
     def decrypt_content(cls, content: str) -> bytes:
         return base64.b64decode(Encrypter.decrypt(base64.b64decode(content)))
 

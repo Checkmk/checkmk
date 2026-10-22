@@ -7,6 +7,7 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
+import base64
 import datetime
 from binascii import unhexlify
 from collections.abc import Sequence
@@ -19,6 +20,7 @@ import cmk.gui.valuespec as vs
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
+from cmk.gui.utils.encrypter import Encrypter
 
 
 @pytest.mark.parametrize(
@@ -403,3 +405,16 @@ def test_nvalid_hostnames_rejected(hostname: str) -> None:
 
     with pytest.raises(MKUserError):
         vs.Hostname().validate_value(hostname, "varprefix")
+
+
+@pytest.mark.usefixtures("request_context")
+def test_ssh_key_pair_from_html_vars_undecryptable_key_is_a_user_error() -> None:
+    encrypted = bytearray(Encrypter.encrypt("private key"))
+    encrypted[-1] ^= 0xFF
+    request.set_var(
+        "key",
+        f"{base64.b64encode(bytes(encrypted)).decode('ascii')}|"
+        f"{base64.b64encode(b'ssh-ed25519 AAAA').decode('ascii')}",
+    )
+    with pytest.raises(MKUserError, match="open this page again"):
+        vs.SSHKeyPair().from_html_vars("key")

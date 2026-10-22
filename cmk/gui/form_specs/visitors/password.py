@@ -10,6 +10,7 @@
 import base64
 from typing import Literal, override
 
+from cmk.crypto.symmetric import DecryptionError
 from cmk.gui.i18n import _
 from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.watolib.password_store import passwordstore_choices
@@ -85,8 +86,20 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
         ):
             return InvalidValue(reason=_("Invalid data format"), fallback_value=fallback_value)
 
-        if encrypted:
-            password = Encrypter.decrypt(base64.b64decode(password.encode("ascii")))
+        if password_type == "stored_password":
+            password = ""
+        elif encrypted:
+            try:
+                password = Encrypter.decrypt(base64.b64decode(password.encode("ascii")))
+            except DecryptionError:
+                return InvalidValue(
+                    reason=_(
+                        "The previously entered password cannot be restored because your "
+                        "session changed since this page was opened. Please enter the "
+                        "password again."
+                    ),
+                    fallback_value=(password_type, password_id, "", False),
+                )
 
         return "cmk_postprocessed", password_type, (password_id, password)
 

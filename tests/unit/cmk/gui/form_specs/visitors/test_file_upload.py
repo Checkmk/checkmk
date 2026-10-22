@@ -2,6 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import base64
 import io
 
 import pytest
@@ -101,3 +102,24 @@ def test_file_upload_new_file_from_frontend(
         assert disk_value[0] == "some_filename"
         assert disk_value[1] == "text/plain"
         assert disk_value[2] == b"some data"
+
+
+def test_file_upload_undecryptable_existing_file_is_a_validation_error(
+    spec: FileUpload,
+    with_user: tuple[UserId, str],
+) -> None:
+    with UserContext(with_user[0], UserPermissions({}, {}, {}, [])):
+        encrypted = bytearray(base64.b64decode(FileUploadVisitor.encrypt_content(b"FOO")))
+        encrypted[-1] ^= 0xFF
+        visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
+        [error] = visitor.validate(
+            RawFrontendData(
+                {
+                    "input_uuid": "some_uuid",
+                    "file_name": "my_file",
+                    "file_type": "text/ascii",
+                    "file_content_encrypted": base64.b64encode(bytes(encrypted)).decode("ascii"),
+                }
+            )
+        )
+        assert "upload the file again" in error.message

@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="misc"
 
+import base64
 from typing import cast, Literal
 from unittest.mock import ANY, patch
 
@@ -17,6 +18,7 @@ from cmk.gui.form_specs import (
     RawFrontendData,
     VisitorOptions,
 )
+from cmk.gui.utils.encrypter import Encrypter
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, migrate_to_password, Password
 
 PasswordOnDisk = tuple[
@@ -147,3 +149,30 @@ def test_password_migrates_password_on_disk(
     )
     disk_visitor_password = disk_visitor.to_disk(old)
     assert new == disk_visitor_password
+
+
+def _undecryptable_password() -> str:
+    encrypted = bytearray(Encrypter.encrypt("abc"))
+    encrypted[-1] ^= 0xFF
+    return base64.b64encode(bytes(encrypted)).decode("ascii")
+
+
+@patch("cmk.gui.form_specs.visitors.password.passwordstore_choices", return_value=[])
+def test_password_undecryptable_password_is_a_validation_error(
+    patch_pwstore: None, request_context: None
+) -> None:
+    visitor = get_visitor(Password(), VisitorOptions(migrate_values=True, mask_values=False))
+    [error] = visitor.validate(
+        RawFrontendData(("explicit_password", "pw_id", _undecryptable_password(), True))
+    )
+    assert "enter the password again" in error.message
+
+
+@patch("cmk.gui.form_specs.visitors.password.passwordstore_choices", return_value=[])
+def test_password_stored_password_ignores_undecryptable_password(
+    patch_pwstore: None, request_context: None
+) -> None:
+    visitor = get_visitor(Password(), VisitorOptions(migrate_values=True, mask_values=False))
+    value = RawFrontendData(("stored_password", "password_1", _undecryptable_password(), True))
+    assert not visitor.validate(value)
+    assert visitor.to_disk(value) == ("cmk_postprocessed", "stored_password", ("password_1", ""))

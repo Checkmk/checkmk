@@ -76,3 +76,15 @@ def test_simple_password_encrypts_frontend_password(
     if not frontend_value[1]:
         raise Exception("Password is not encrypted")
     assert frontend_value[0] != password[0]
+
+
+def test_simple_password_undecryptable_password_is_a_validation_error(
+    request_context: None,
+) -> None:
+    encrypted = bytearray(Encrypter.encrypt("abc"))
+    encrypted[-1] ^= 0xFF
+    visitor = get_visitor(SimplePassword(), VisitorOptions(migrate_values=True, mask_values=False))
+    [error] = visitor.validate(
+        RawFrontendData([base64.b64encode(bytes(encrypted)).decode("ascii"), True])
+    )
+    assert "enter the password again" in error.message

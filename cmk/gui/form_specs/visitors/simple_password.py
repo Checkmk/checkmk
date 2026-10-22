@@ -11,6 +11,7 @@ import base64
 from collections.abc import Callable, Sequence
 from typing import Any, override
 
+from cmk.crypto.symmetric import DecryptionError
 from cmk.gui.form_specs.unstable import not_empty
 from cmk.gui.form_specs.unstable.legacy_converter import SimplePassword
 from cmk.gui.i18n import _
@@ -49,9 +50,19 @@ class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, _ParsedValueModel, _
         if not isinstance(password, str):
             return InvalidValue(reason=_("No password provided"), fallback_value=("", False))
 
-        return (
-            Encrypter.decrypt(base64.b64decode(password.encode("ascii"))) if encrypted else password
-        )
+        if not encrypted:
+            return password
+        try:
+            return Encrypter.decrypt(base64.b64decode(password.encode("ascii")))
+        except DecryptionError:
+            return InvalidValue(
+                reason=_(
+                    "The previously entered password cannot be restored because your "
+                    "session changed since this page was opened. Please enter the "
+                    "password again."
+                ),
+                fallback_value=("", False),
+            )
 
     @override
     def _validators(self) -> Sequence[Callable[[Any], object]]:

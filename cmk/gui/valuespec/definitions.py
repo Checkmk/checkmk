@@ -8226,9 +8226,18 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
         return (json_value[0], json_value[1])
 
     def from_html_vars(self, varprefix: str) -> SSHKeyPairValue:
-        if request.has_var(varprefix):
+        if not request.has_var(varprefix):
+            return self._generate_ssh_key()
+        try:
             return self._decode_key_from_url(request.get_ascii_input_mandatory(varprefix))
-        return self._generate_ssh_key()
+        except DecryptionError as e:
+            raise MKUserError(
+                varprefix,
+                _(
+                    "The SSH key pair cannot be restored because your session changed since "
+                    "this page was opened. Please open this page again and repeat your changes."
+                ),
+            ) from e
 
     @staticmethod
     def _encode_key_for_url(value: SSHKeyPairValue) -> str:

@@ -250,3 +250,14 @@ def _update_offer(
         host, site, integrated_updater_agent, integrated_updater_agent.trusted_key
     ):
         yield
+
+
+@pytest.fixture(name="untrusted_update_offer")
+def _untrusted_update_offer(
+    host: HostUnderTest, site: Site, integrated_updater_agent: IntegratedUpdaterAgent
+) -> Iterator[None]:
+    """An offer signed only with a key that the update configuration of the host does not trust."""
+    reset_failed_instances(host)
+    with _update_offered(host, site, integrated_updater_agent, generate_signing_key("untrusted")):
+        yield
+    reset_failed_instances(host)

@@ -52,9 +52,12 @@ def register_for_updates(
 def run_update(
     host: HostUnderTest,
     agent: IntegratedUpdaterAgent,
+    *,
+    skip_signatures: bool = False,
 ) -> subprocess.CompletedProcess[str]:
     """Run one update cycle as the agent user, and wait until the installer instance has finished."""
-    update = host.run([agent.ctl.as_posix(), "update"], user=AGENT_USER, check=False)
+    options = ["--skip-signatures"] if skip_signatures else []
+    update = host.run([agent.ctl.as_posix(), "update", *options], user=AGENT_USER, check=False)
     wait_for_installer(host)
     return update
 

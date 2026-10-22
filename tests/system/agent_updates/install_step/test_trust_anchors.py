@@ -15,6 +15,7 @@ from tests.system.agent_updates.install_step._agent import (
     generate_signing_key,
     IntegratedUpdaterAgent,
 )
+from tests.system.agent_updates.install_step._controller import installed_hash, run_update
 from tests.system.agent_updates.install_step._installer import (
     hand_over,
     is_installed,
@@ -96,4 +97,39 @@ def test_a_writable_copy_of_the_update_configuration_has_no_effect(
     assert _refused_by_the_signature_check(host), (
         f"No failed installer instance logged the refusal by the signature check.\n"
         f"{instance_diagnostics(host)}"
+    )
+
+
+@pytest.mark.usefixtures("update_offer")
+def test_skipping_the_controllers_check_still_installs_a_trusted_package(
+    host: HostUnderTest, integrated_updater_agent: IntegratedUpdaterAgent
+) -> None:
+    """Without this, the refusal below could come from the path of --skip-signatures itself."""
+    hash_before = installed_hash(host, integrated_updater_agent)
+
+    update = run_update(host, integrated_updater_agent, skip_signatures=True)
+
+    assert installed_hash(host, integrated_updater_agent) != hash_before, (
+        f"The installer did not install a package signed with the trusted key.\n"
+        f"{update.stdout}{update.stderr}\n{instance_diagnostics(host)}"
+    )
+
+
+@pytest.mark.usefixtures("untrusted_update_offer")
+def test_skipping_the_controllers_check_gets_no_package_installed(
+    host: HostUnderTest, integrated_updater_agent: IntegratedUpdaterAgent
+) -> None:
+    """TC-AU-021: the installer refuses a package that the controller handed over without its own
+    signature check."""
+    hash_before = installed_hash(host, integrated_updater_agent)
+
+    update = run_update(host, integrated_updater_agent, skip_signatures=True)
+
+    assert installed_hash(host, integrated_updater_agent) == hash_before, (
+        f"The installer installed a package signed with an untrusted key.\n"
+        f"{update.stdout}{update.stderr}\n{instance_diagnostics(host)}"
+    )
+    assert _refused_by_the_signature_check(host), (
+        f"No failed installer instance logged the refusal by the signature check, so the request "
+        f"did not reach root's check.\n{update.stdout}{update.stderr}\n{instance_diagnostics(host)}"
     )

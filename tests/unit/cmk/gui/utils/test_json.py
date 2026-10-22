@@ -15,17 +15,16 @@ from cmk.web.htmllib.builder import HtmlBuilder
 from cmk.web.utils.speaklater import LazyString
 
 
-def test_json_dumps_prevent_close_tag_attack_via_onclick_attribute() -> None:
+def test_json_dumps_prevent_close_tag_attack_via_attribute() -> None:
     assert str(
         HTMLWriter.render_a(
             "abc",
-            href="javascript:void(0);",
-            target="_self",
-            onclick=f"js_func({json.dumps({'1': '</a><script>alert(1)</script>'})})",
+            href="#",
+            data_cmk_on_click_arguments=json.dumps({"1": "</a><script>alert(1)</script>"}),
         )
     ) == (
-        '<a href="javascript:void(0);" target="_self" '
-        r'onclick="js_func({&quot;1&quot;: &quot;&lt;/a&gt;&lt;script&gt;alert(1)&lt;/script&gt;&quot;})">abc</a>'
+        '<a href="#" '
+        r'data-cmk_on_click_arguments="{&quot;1&quot;: &quot;&lt;/a&gt;&lt;script&gt;alert(1)&lt;/script&gt;&quot;}">abc</a>'
     )
 
 

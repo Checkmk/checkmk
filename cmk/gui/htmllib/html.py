@@ -1458,7 +1458,7 @@ class HTMLGenerator(HTMLWriter):
         title: str,
         icon: DynamicIcon | StaticIcon,
         id_: str | None = None,
-        onclick: HTMLTagAttributeValue | None = None,
+        *,
         style: str | None = None,
         target: str | None = None,
         cssclass: str | None = None,
@@ -1480,7 +1480,7 @@ class HTMLGenerator(HTMLWriter):
             classes.append(class_)  # type: ignore[unreachable]
 
         # Keep a real URL next to a click action: actions returning true let the browser follow it
-        href = "#" if onclick or not url else url
+        href = url or "#"
 
         if isinstance(icon, StaticIcon):
             icon_content = HTMLGenerator.render_static_icon(icon, css_classes=["iconbutton"])
@@ -1495,7 +1495,6 @@ class HTMLGenerator(HTMLWriter):
             class_=classes,
             style=style,
             target=target if target else "",
-            onclick=onclick,
             download=download,
             **(click_action.data_attributes() if click_action else {}),
         )
@@ -1522,7 +1521,7 @@ class HTMLGenerator(HTMLWriter):
         title: str,
         icon: DynamicIcon | StaticIcon,
         id_: str | None = None,
-        onclick: HTMLTagAttributeValue | None = None,
+        *,
         style: str | None = None,
         target: str | None = None,
         cssclass: str | None = None,
@@ -1539,11 +1538,10 @@ class HTMLGenerator(HTMLWriter):
                 title,
                 icon,
                 id_,
-                onclick,
-                style,
-                target,
-                cssclass,
-                class_,
+                style=style,
+                target=target,
+                cssclass=cssclass,
+                class_=class_,
                 theme=theme,
                 download=download,
                 click_action=click_action,

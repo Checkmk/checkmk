@@ -425,12 +425,6 @@ def test_render_action_link_with_click_action() -> None:
     )
 
 
-def test_render_action_link_with_onclick() -> None:
-    assert HTMLWriter.render_action_link("Toggle", onclick="toggle()") == HTML.without_escaping(
-        '<a href="#" onclick="toggle()">Toggle</a>'
-    )
-
-
 @pytest.mark.usefixtures("request_context")
 def test_icon_button_with_click_action_keeps_its_url() -> None:
     rendered = str(

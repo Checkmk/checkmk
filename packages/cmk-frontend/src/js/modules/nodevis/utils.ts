@@ -281,13 +281,15 @@ export class LiveSearch {
   _update_active = false
   _enabled = false
   _interval_id = 0
-  _original_submit_handler: string
   constructor(root_node_selector: string, update_handler: () => void) {
     // root_node_selector should point to a <form> tag
     this._root_node = select(root_node_selector)
     this._search_button = this._root_node.select<HTMLInputElement>('input#_apply')
     this._update_handler = update_handler
-    this._original_submit_handler = this._root_node.attr('onsubmit')
+    // The live search updates the data itself, so the form must not be submitted
+    this._root_node.on('submit.live_search', (event: SubmitEvent) => {
+      if (this._enabled) event.preventDefault()
+    })
   }
 
   enable(): void {
@@ -300,7 +302,6 @@ export class LiveSearch {
     this._initialize_last_body()
     // @ts-ignore
     this._interval_id = setInterval(() => this._check_update(), this._check_interval)
-    this._root_node.attr('onsubmit', 'return false')
   }
 
   disable(): void {
@@ -310,7 +311,6 @@ export class LiveSearch {
     this._search_button.property('value', 'Apply')
     this._search_button.attr('title', null)
     this._search_button.style('pointer-events', 'all')
-    this._root_node.attr('onsubmit', this._original_submit_handler)
   }
 
   _update_pending(_eta: number): void {

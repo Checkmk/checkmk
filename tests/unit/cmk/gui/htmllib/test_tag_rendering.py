@@ -59,14 +59,20 @@ def test_render_start_tag_style_separator() -> None:
     assert str(tag) == '<a style="width: 10px; height:10px">'
 
 
-def test_render_start_tag_on_separator() -> None:
-    tag = render_start_tag("a", onclick=["func1()", "func2()"])
-    assert str(tag) == '<a onclick="func1(); func2()">'
-
-
-def test_render_start_tag_on_separator_skip_empty_element() -> None:
-    tag = render_start_tag("a", onclick=["func1()", "", "func2()"])
-    assert str(tag) == '<a onclick="func1(); func2()">'
+@pytest.mark.parametrize(
+    "key",
+    [
+        pytest.param("onclick", id="click handler"),
+        pytest.param("onchange", id="change handler"),
+        pytest.param("onmouseover", id="hover handler"),
+        pytest.param("ONKEYDOWN", id="upper case"),
+        pytest.param("onsubmit_", id="trailing underscore"),
+        pytest.param("on_click", id="underscore spelling"),
+    ],
+)
+def test_render_element_rejects_inline_event_handlers(key: str) -> None:
+    with pytest.raises(ValueError, match="Content Security Policy"):
+        render_element("div", "content", **{key: "alert(1)"})
 
 
 def test_render_start_tag_a_first_attr_href() -> None:

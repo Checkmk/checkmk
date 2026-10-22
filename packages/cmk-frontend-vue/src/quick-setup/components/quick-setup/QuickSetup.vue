@@ -26,8 +26,13 @@ onMounted(() => {
   // The "old" world sets the title to "Reloading..." if a reload is
   // triggered. This would lead to a wrong title in case the user clicks
   // "Cancel" in the browser dialog
-  document.querySelectorAll('a.title').forEach((link) => {
-    link.setAttribute('onclick', 'document.location.reload();')
+  document.querySelectorAll<HTMLElement>('a.title').forEach((link) => {
+    delete link.dataset.cmk_on_click
+    delete link.dataset.cmk_on_click_arguments
+    link.addEventListener('click', (event) => {
+      event.preventDefault()
+      document.location.reload()
+    })
   })
 })
 

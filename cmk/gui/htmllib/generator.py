@@ -169,8 +169,9 @@ class HTMLWriter:
 
             'class' attributes will be concatenated using one whitespace
             'style' attributes will be concatenated using the semicolon and one whitespace
-            Behaviorial attributes such as 'onclick', 'onmouseover' will bec concatenated using
-            a semicolon and one whitespace.
+
+      - Inline event handler attributes (on*) are rejected because of the Content Security
+        Policy. Use a ClickAction or a TSFunctionCall instead.
 
       - All attributes will be escaped, i.e. the characters '&', '<', '>', '"' will be replaced by
         non HtML relevant signs '&amp;', '&lt;', '&gt;' and '&quot;'."""

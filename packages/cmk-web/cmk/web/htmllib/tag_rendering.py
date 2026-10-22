@@ -65,9 +65,18 @@ def render_element(
 
 
 def _render_attributes(**attrs: HTMLTagAttributeValue) -> Iterator[str]:
+    _reject_inline_event_handlers(attrs)
     normalized = _attrs_with_normalized_class(attrs)
     yield from (f' {key}="{value}"' for key, value in _extract_attrs(normalized))
     yield from (f" {key}=''" for key in _extract_options(normalized))
+
+
+def _reject_inline_event_handlers(attrs: HTMLTagAttributes) -> None:
+    for key in attrs:
+        name = key.rstrip("_").lower()
+        if name.startswith("on"):
+            # Elements use click actions or call TS functions instead, see cmk.gui.htmllib.generator
+            raise ValueError(f"Inline event handlers violate the Content Security Policy: {key!r}")
 
 
 def _extract_attrs(
@@ -112,8 +121,6 @@ def _format_value(key: str, value: str | list[str]) -> str:
 
 
 def _get_separator(key: str) -> str:
-    if key.startswith("on"):
-        return "; "
     # TODO: Can we drop this special Feature? No idea what it is used for. (defaults to "_")
     return {"class": " ", "style": "; "}.get(key, "_")
 

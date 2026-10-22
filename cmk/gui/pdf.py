@@ -39,7 +39,8 @@ from cmk.gui.type_defs import RGBColor, RowShading, SizeMM, SizePT
 from cmk.gui.utils.images import CMKImage, ImageType
 
 if TYPE_CHECKING:
-    from reportlab.lib.utils import ImageReader
+    # Only for the annotations, reportlab is restricted to this module, see Document.__init__()
+    from reportlab.lib.utils import ImageReader  # noqa: TID251
 
 # Points per mm, the same value as reportlab.lib.units.mm
 mm = 72.0 / 2.54 * 0.1
@@ -178,8 +179,10 @@ class Document:
         self._bottom = self._margin_bottom
 
         # create PDF document
-        # Import software from reportlab (thanks to them!)
-        from reportlab.pdfgen import canvas
+        # cmk.gui.pdf is the only module allowed to import reportlab (TID251): reportlab adds
+        # several MB to every process importing it. It is imported inside the functions using it
+        # (TID253), so that only processes rendering a PDF load it.
+        from reportlab.pdfgen import canvas  # noqa: TID251
 
         self._output_buffer = io.BytesIO()
         self._canvas = canvas.Canvas(self._output_buffer, pagesize=self._pagesize)
@@ -1049,8 +1052,9 @@ class Document:
 
     @staticmethod
     def _register_fonts() -> None:
-        from reportlab.pdfbase import pdfmetrics
-        from reportlab.pdfbase.ttfonts import TTFont
+        # reportlab is restricted to this module and imported inside functions, see __init__()
+        from reportlab.pdfbase import pdfmetrics  # noqa: TID251
+        from reportlab.pdfbase.ttfonts import TTFont  # noqa: TID251
 
         # Vera comes included in reportlab, so we can use it directly
         pdfmetrics.registerFont(TTFont("Vera", "Vera.ttf"))
@@ -1060,7 +1064,8 @@ class Document:
 
 
 def _image_reader(image: CMKImage) -> ImageReader:
-    from reportlab.lib.utils import ImageReader
+    # reportlab is restricted to this module and imported inside functions, see Document.__init__()
+    from reportlab.lib.utils import ImageReader  # noqa: TID251
 
     return ImageReader(image.pil())
 

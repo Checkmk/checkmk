@@ -59,7 +59,7 @@ def test_suppression_above_clean_line_is_reported_as_unused(tmp_path: Path) -> N
 
 
 def test_suppression_for_checker_not_run_is_not_reported(tmp_path: Path) -> None:
-    assert _run(tmp_path, "import PIL  # astrein: disable=pillow-import\n") == []
+    assert _run(tmp_path, "tarfile.open(path)  # astrein: disable=tarfile-open-read\n") == []
 
 
 def test_suppression_for_unknown_checker_is_reported_when_all_checkers_ran(

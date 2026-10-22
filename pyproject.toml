@@ -60,6 +60,8 @@ select = [
   "W",                      # pycodestyle (warning)
   "T10",                    # flake8: debugger
   "T20",                    # flake8: print
+  "TID251",                 # flake8-tidy-imports: banned-api
+  "TID253",                 # flake8-tidy-imports: banned-module-level-imports
   "TRY400",                 # tryceratops: use logger.exception() instead of logger.error() in except blocks
   "pytest-fixture-autouse", # ruff (preview): ban autouse pytest fixtures (selected by name, no code)
 ]
@@ -87,6 +89,24 @@ ignore = [
 
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!
+
+# Files allowed to import one of these modules suppress TID251 with a noqa
+# comment. The large modules have to be imported inside the functions using
+# them (TID253), unless the importing process always uses them.
+[tool.ruff.lint.flake8-tidy-imports]
+banned-module-level-imports = [
+  "grpc",
+  "opentelemetry.exporter.otlp.proto.grpc",
+  "pypdf",
+  "reportlab",
+]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"grpc".msg = "It adds several MB to every process importing it"
+"opentelemetry.exporter.otlp.proto.grpc".msg = "It adds several MB to every process importing it, use cmk.trace"
+"PIL".msg = "Use the images module at the correct layer, e.g. cmk.gui.utils.images"
+"pypdf".msg = "It adds several MB to every process importing it"
+"reportlab".msg = "It adds several MB to every process importing it, use cmk.gui.pdf"
 
 [tool.ruff.lint.isort]
 # Same-package detection looks for __init__.py files next to the linted file.

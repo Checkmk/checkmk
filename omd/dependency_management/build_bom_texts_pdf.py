@@ -17,15 +17,17 @@ from hashlib import sha1
 from pathlib import Path
 from typing import Any, override
 
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import ParagraphStyle as PS
-from reportlab.lib.units import cm, inch
-from reportlab.pdfbase.pdfmetrics import registerFont
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import Flowable, Image, PageBreak, Paragraph, SimpleDocTemplate, Spacer
-from reportlab.platypus.doctemplate import PageTemplate
-from reportlab.platypus.frames import Frame
-from reportlab.platypus.tableofcontents import TableOfContents
+# Build tool generating the license texts PDF. It is not loaded by any Checkmk process, so
+# it may import reportlab at module level, unlike cmk.gui.pdf.
+from reportlab.lib.pagesizes import letter  # noqa: TID251, TID253
+from reportlab.lib.styles import ParagraphStyle as PS  # noqa: TID251, TID253
+from reportlab.lib.units import cm, inch  # noqa: TID251, TID253
+from reportlab.pdfbase.pdfmetrics import registerFont  # noqa: TID251, TID253
+from reportlab.pdfbase.ttfonts import TTFont  # noqa: TID251, TID253
+from reportlab.platypus import Flowable, Image, PageBreak, Paragraph, SimpleDocTemplate, Spacer  # noqa: TID251, TID253
+from reportlab.platypus.doctemplate import PageTemplate  # noqa: TID251, TID253
+from reportlab.platypus.frames import Frame  # noqa: TID251, TID253
+from reportlab.platypus.tableofcontents import TableOfContents  # noqa: TID251, TID253
 from svglib.svglib import svg2rlg
 
 

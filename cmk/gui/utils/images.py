@@ -11,7 +11,9 @@ from io import BytesIO
 from pathlib import Path
 from typing import NamedTuple
 
-from PIL import (
+# This module is the only one allowed to import PIL (TID251), so that the GUI handles images
+# in one place. Other GUI modules use CMKImage. Code at other layers needs its own module.
+from PIL import (  # noqa: TID251
     Image,
     PngImagePlugin,
     UnidentifiedImageError,

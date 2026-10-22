@@ -13,7 +13,10 @@ import opentelemetry.sdk.trace as sdk_trace
 import pytest
 from opentelemetry import context as otel_context
 from opentelemetry import trace as otel_trace
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+
+# Tests the exporter created by cmk.trace. Not loaded by any Checkmk process, so the import at
+# module level does not affect them.
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter  # noqa: TID251, TID253
 
 from cmk import trace
 from cmk.trace import export, logs

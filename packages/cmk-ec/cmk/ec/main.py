@@ -877,7 +877,7 @@ class EventServer(ECServerThread):
             self._perfcounters.count("messages")
             before = time.time()
             # In replication slave mode (when not took over), ignore all events
-            if not is_replication_slave(self._config) or self._slave_status["mode"] != "sync":
+            if not is_syncing_replication_slave(self._config, self._slave_status):
                 self.process_potential_event(event)
             elif self.settings.options.debug:
                 self._logger.info("Replication: we are in slave mode, ignoring event")
@@ -894,10 +894,13 @@ class EventServer(ECServerThread):
         )
 
     def do_housekeeping(self) -> None:
-        with self._event_status.lock, self._lock_configuration:
-            self.hk_handle_event_timeouts()
-            self.hk_check_expected_messages()
-            self.hk_cleanup_downtime_events()
+        # In replication slave mode (when not took over), the master handles the events. Every sync
+        # replaces them, so handling them here would only duplicate the master's actions.
+        if not is_syncing_replication_slave(self._config, self._slave_status):
+            with self._event_status.lock, self._lock_configuration:
+                self.hk_handle_event_timeouts()
+                self.hk_check_expected_messages()
+                self.hk_cleanup_downtime_events()
         self._history.housekeeping()
 
     def hk_cleanup_downtime_events(self) -> None:
@@ -3391,11 +3394,24 @@ def is_replication_slave(config: ConfigFromWATO) -> bool:
     return repl_settings is not None and not repl_settings.get("disabled")
 
 
+def is_syncing_replication_slave(config: ConfigFromWATO, slave_status: SlaveStatus) -> bool:
+    """Whether the EC replicates its events from its master, which then handles them"""
+    return is_replication_slave(config) and slave_status["mode"] == "sync"
+
+
+# The next sync replaces the events of a syncing slave anyway.
+_COMMANDS_CHANGING_THE_SYNCED_STATUS = {
+    "ACTION",
+    "CHANGESTATE",
+    "DELETE",
+    "UPDATE",
+}
+
+
 def replication_allow_command(config: Config, command: str, slave_status: SlaveStatus) -> None:
     if (
-        is_replication_slave(config)
-        and slave_status["mode"] == "sync"
-        and command in {"DELETE", "UPDATE", "CHANGESTATE", "ACTION"}
+        is_syncing_replication_slave(config, slave_status)
+        and command in _COMMANDS_CHANGING_THE_SYNCED_STATUS
     ):
         raise MKClientError(
             "This command is not allowed on a replication slave while it is in sync mode."

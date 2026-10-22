@@ -7,10 +7,11 @@
 # mypy: disable-error-code="explicit-any"
 
 import logging
+import os
 import shlex
 from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from unittest.mock import Mock
 
 import pytest
@@ -440,6 +441,49 @@ def test_slave_which_took_over_counts_the_events_of_its_master_towards_its_limit
     event_server.process_potential_event_instrumented([new_message(ec.Event(text="disk full"))])
 
     assert [event["text"] for event in event_status.events()] == ["from master"]
+
+
+@pytest.mark.parametrize(
+    "mode, expected_phases",
+    [
+        pytest.param("sync", ["delayed"], id="syncing"),
+        pytest.param("takeover", ["open"], id="taken over"),
+    ],
+)
+def test_slave_does_the_housekeeping_of_the_events_only_after_taking_over(
+    event_server: EventServer,
+    event_status: EventStatus,
+    config: Config,
+    history: History,
+    slave_status: SlaveStatus,
+    pull: _Pull,
+    mode: Literal["sync", "takeover"],
+    expected_phases: list[str],
+) -> None:
+    slave_config = replication_slave_config(config)
+    event_server.reload_configuration(slave_config, history)
+    # The master delayed this event, and the delay is over now.
+    pull(slave_config, _master(new_event(ec.Event(phase="delayed", delay_until=_NOW))))
+    slave_status["mode"] = mode
+
+    with time_machine.travel(_NOW, tick=False):
+        event_server.do_housekeeping()
+
+    assert [event["phase"] for event in event_status.events()] == expected_phases
+
+
+def test_syncing_slave_still_expires_its_own_history(
+    settings: ec.Settings, event_server: EventServer, config: Config, history: History
+) -> None:
+    event_server.reload_configuration(replication_slave_config(config), history)
+    expired_log_file = settings.paths.history_dir.value / "expired.log"
+    expired_log_file.parent.mkdir(parents=True, exist_ok=True)
+    expired_log_file.touch()
+    os.utime(expired_log_file, (0, 0))
+
+    event_server.do_housekeeping()
+
+    assert not expired_log_file.exists()
 
 
 def test_successful_sync_is_recorded(

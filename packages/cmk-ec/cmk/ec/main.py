@@ -2594,6 +2594,7 @@ def run_eventd(
                         event_server,
                         slave_status,
                         logger,
+                        fetch_master_state=get_state_from_master,
                     )
                     replication_settings = config["replication"]
                     if replication_settings is None:  # help mypy a bit
@@ -3250,6 +3251,8 @@ def replication_pull(
     event_server: EventServer,
     slave_status: SlaveStatus,
     logger: Logger,
+    *,
+    fetch_master_state: Callable[[Config, SlaveStatus], dict[str, Any]],
 ) -> None:
     """
     We distinguish two modes:
@@ -3279,7 +3282,7 @@ def replication_pull(
     if need_sync:
         with event_status.lock, lock_configuration:
             try:
-                new_state = get_state_from_master(config, slave_status)
+                new_state = fetch_master_state(config, slave_status)
                 replication_update_state(settings, config, event_status, event_server, new_state)
                 if repl_settings.get("logging"):
                     logger.info("Successfully synchronized with master")

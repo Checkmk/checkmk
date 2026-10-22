@@ -893,7 +893,9 @@ clickhouse-connect==1.11.0 \
     --hash=sha256:f7fe7e632996b97e486d2df652cdd76c17c10876157e435866f0d870eb596642 \
     --hash=sha256:fa47022d87797b30146c0e569e62e98540f200d6b02e7294c221399237e84512 \
     --hash=sha256:feb3e17850d768a45ff8aa064ce53f89ce79c7be870abc608d3df775aed48ba4
-    # via -r non-free/packages/cmk-data-backend/requirements.in
+    # via
+    #   -r non-free/packages/cmk-data-backend/requirements.in
+    #   -r non-free/packages/cmk-robotmk/requirements.in
 cmk-dev-site==1.22.0 \
     --hash=sha256:1fcc231a1dd311322f732254f55fdb098b40256662cf4d7a1f0c2dac16108504 \
     --hash=sha256:2723110eb12e46402da4608c862eced832cec987d88d3010245c3025a848adf7

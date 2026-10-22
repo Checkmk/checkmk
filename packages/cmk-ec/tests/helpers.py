@@ -14,10 +14,14 @@ from typing import Any, override
 from cmk.ccc.hostaddress import HostName
 from cmk.ec.config import Count, Rule, ServiceLevel
 from cmk.ec.core_queries import HostInfo
+from cmk.ec.defaults import default_rule_pack
 from cmk.ec.event import Event
 from cmk.ec.history import History, HistoryWhat
 from cmk.ec.main import EventServer
 from cmk.ec.query import QueryGET
+
+HOUR = 3600
+START = 475_000 * HOUR + 100.0  # a bit after the start of an hour
 
 
 class FakeStatusSocket(socket.socket):
@@ -121,6 +125,11 @@ def new_rule(attrs: Rule) -> Rule:
     )
     rule.update(attrs)
     return rule
+
+
+def use_rules(event_server: EventServer, *rules: Rule) -> None:
+    """Makes the event server use the given rules without reloading its configuration"""
+    event_server.compile_rules([default_rule_pack(rules)])
 
 
 def new_count(count: int, period: int) -> Count:

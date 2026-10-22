@@ -1058,10 +1058,12 @@ class EventServer(ECServerThread):
                     ):
                         # time has elapsed. Now lets see if we have reached
                         # the necessary count:
+                        # Either way, the counting event is no longer needed.
                         if event["count"] < expect["count"]:  # no -> trigger alarm
                             events_to_delete.append((event, "AUTODELETE"))
                             self._handle_absent_event(rule, expect, event["count"], event["last"])
                         else:  # yes -> everything is fine.
+                            events_to_delete.append((event, "COUNTREACHED"))
                             self._event_status.clear_interval_start(rule["id"])
                             self._logger.info(
                                 "Rule %(pack)s/%(rule_id)s has reached %(count)d occurrences (%(required)d required). "
@@ -1073,8 +1075,6 @@ class EventServer(ECServerThread):
                                     "required": expect["count"],
                                 },
                             )
-                        # Counting event is no longer needed.
-                        events_to_delete.append((event, "COUNTREACHED"))
                         break
 
                 # Ou ou, no event found at all.

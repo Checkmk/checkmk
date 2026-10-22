@@ -48,6 +48,12 @@ def fixture_settings(tmp_path: Path) -> ec.Settings:
     return settings
 
 
+@pytest.fixture(name="logger")
+def fixture_logger(request: pytest.FixtureRequest) -> logging.Logger:
+    """A logger of each test's own, so its configured levels don't affect other tests"""
+    return logging.getLogger(f"{request.module.__name__}.{request.node.name}")
+
+
 @pytest.fixture(name="lock_configuration")
 def fixture_lock_configuration() -> ECLock:
     return ECLock(logging.getLogger("cmk.mkeventd.configuration"))

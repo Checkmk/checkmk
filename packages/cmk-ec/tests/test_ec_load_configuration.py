@@ -60,12 +60,6 @@ from .helpers import (
 _REPLICATION = ec.Replication(connect_timeout=10, interval=60, master=("master", 6558))
 
 
-@pytest.fixture(name="logger")
-def fixture_logger(request: pytest.FixtureRequest) -> logging.Logger:
-    """A logger of each test's own, so its configured levels don't affect other tests"""
-    return logging.getLogger(f"test_ec_load_configuration.{request.node.name}")
-
-
 type _Reload = Callable[[History], History]
 
 

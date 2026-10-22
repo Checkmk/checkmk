@@ -7,14 +7,17 @@
 # mypy: disable-error-code="explicit-any"
 
 import logging
+import shlex
 from collections.abc import Callable, Sequence
+from pathlib import Path
 from typing import Any
+from unittest.mock import Mock
 
 import pytest
 import time_machine
 
 import cmk.ec.export as ec
-from cmk.ec.config import Config
+from cmk.ec.config import Config, ScriptAction, ScriptActionConfig
 from cmk.ec.helpers import ECLock
 from cmk.ec.history import History
 from cmk.ec.main import (
@@ -25,6 +28,7 @@ from cmk.ec.main import (
     load_configuration,
     load_master_config,
     PackedEventStatus,
+    reload_configuration,
     replication_pull,
     save_master_config,
     save_slave_status,
@@ -84,9 +88,11 @@ def fixture_pull(
 
 
 def _master(
-    *events: ec.Event, rule_packs: Sequence[ec.ECRulePack] | None = None
+    *events: ec.Event,
+    rule_packs: Sequence[ec.ECRulePack] | None = None,
+    actions: Sequence[ec.Action] = (),
 ) -> _FetchMasterState:
-    """A reachable master with some events and optionally a changed configuration"""
+    """A reachable master with some events and, given its rule packs, a changed configuration"""
 
     def fetch_master_state(_config: Config, _slave_status: SlaveStatus) -> dict[str, object]:
         state: dict[str, object] = {
@@ -101,7 +107,7 @@ def _master(
             )
         }
         if rule_packs is not None:
-            state |= {"rules": [], "rule_packs": rule_packs, "actions": []}
+            state |= {"rules": [], "rule_packs": rule_packs, "actions": list(actions)}
         return state
 
     return fetch_master_state
@@ -281,11 +287,15 @@ def test_master_replicates_its_events(
     assert [event["text"] for event in response["status"]["events"]] == ["disk full"]
 
 
+_STATUS_AND_CONFIGURATION = {"status", "rules", "rule_packs", "actions"}
+
+
 @pytest.mark.parametrize(
     "seconds_from_reload_to_last_update, expected_keys",
     [
-        pytest.param(-1, {"status", "rules", "rule_packs", "actions"}, id="outdated slave"),
-        pytest.param(0, {"status"}, id="up-to-date slave"),
+        pytest.param(-1, _STATUS_AND_CONFIGURATION, id="outdated slave"),
+        pytest.param(0, _STATUS_AND_CONFIGURATION, id="slave synced in the second of the reload"),
+        pytest.param(1, {"status"}, id="up-to-date slave"),
     ],
 )
 def test_master_replicates_its_configuration_only_if_it_changed(
@@ -299,6 +309,37 @@ def test_master_replicates_its_configuration_only_if_it_changed(
     )
 
     assert set(response) == expected_keys
+
+
+def test_master_replicates_its_configuration_to_a_slave_which_synced_during_the_reload(
+    settings: ec.Settings,
+    logger: logging.Logger,
+    lock_configuration: ECLock,
+    history: History,
+    event_status: EventStatus,
+    status_server: StatusServer,
+    slave_status: SlaveStatus,
+) -> None:
+    # Unlike SQLite, recording the history in files leaves nothing open after the test.
+    activate_config(settings, 'archive_mode = "file"\n')
+    with time_machine.travel(_NOW, tick=False) as traveller:
+        # Reloading takes a while, e.g. to compile many rules, and a slave syncs after a second.
+        slow_event_server = Mock(spec=EventServer)
+        slow_event_server.reload_configuration.side_effect = lambda *_args: traveller.shift(2)
+        reload_configuration(
+            settings,
+            logger,
+            lock_configuration,
+            history,
+            event_status,
+            slow_event_server,
+            status_server,
+            slave_status,
+        )
+
+    response = _replicate(status_server, str(int(_NOW) + 1))
+
+    assert set(response) == _STATUS_AND_CONFIGURATION
 
 
 def test_master_refuses_invalid_replication_requests(status_server: StatusServer) -> None:
@@ -332,6 +373,52 @@ def test_syncing_slave_gets_the_rules_of_its_master(
     event_server.process_potential_event_instrumented([new_message(ec.Event(text="disk full"))])
 
     assert [event["rule_id"] for event in event_status.events()] == ["from_master"]
+
+
+def test_syncing_slave_passes_the_rules_of_its_master_on_right_away(
+    status_server: StatusServer, config: Config, history: History, pull: _Pull
+) -> None:
+    # The slave reloaded its configuration a minute ago, a slave of its own synced since then.
+    slave_config = replication_slave_config(config) | {"last_reload": int(_NOW) - 60}
+    status_server.reload_configuration(slave_config, history)
+    master_rule_pack = ec.default_rule_pack([new_rule({"id": "from_master"})])
+    pull(slave_config, _master(rule_packs=[master_rule_pack]))
+
+    response = _replicate(status_server, str(int(_NOW) - 30))
+
+    assert response.get("rule_packs") == [master_rule_pack]
+
+
+def test_slave_which_took_over_executes_the_actions_of_its_master(
+    tmp_path: Path,
+    event_status: EventStatus,
+    status_server: StatusServer,
+    config: Config,
+    history: History,
+    slave_status: SlaveStatus,
+    pull: _Pull,
+) -> None:
+    slave_config = replication_slave_config(config)
+    status_server.reload_configuration(slave_config, history)
+    # Only the master knows this action.
+    ticket_file = tmp_path / "ticket"
+    master_action = ScriptAction(
+        id="ticket",
+        title="Open a ticket",
+        hidden=False,
+        disabled=False,
+        action=(
+            "script",
+            ScriptActionConfig(script=f'printf %s "$CMK_TEXT" > {shlex.quote(str(ticket_file))}'),
+        ),
+    )
+    pull(slave_config, _master(rule_packs=[], actions=[master_action]))
+    slave_status["mode"] = "takeover"
+    event_status.new_event(new_event(ec.Event(text="disk full")))
+
+    query_status_server(status_server, "COMMAND ACTION;1;harry;ticket")
+
+    assert ticket_file.read_text() == "disk full"
 
 
 def test_successful_sync_is_recorded(

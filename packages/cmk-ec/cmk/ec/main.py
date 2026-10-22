@@ -3430,7 +3430,9 @@ def replication_send(
     response: dict[str, object] = {}
     with lock_configuration:
         response["status"] = event_status.pack_status()
-        if last_update < config["last_reload"]:
+        # Both are whole seconds, so if the slave synced in the second of the reload, it might have
+        # synced before the reload: Better send the configuration once more.
+        if last_update <= config["last_reload"]:
             response["rules"] = config[
                 "rules"
             ]  # Remove one bright day, where legacy rules are not needed anymore
@@ -3551,8 +3553,11 @@ def replication_update_state(
         if replication is None:  # help mypy a bit
             raise ValueError("no replication settings")
         save_master_config(settings, replication["master"], new_state)
-        event_server.compile_rules(new_state.get("rule_packs", []))
-        config["actions"] = new_state["actions"]
+        # Like loading the configuration of a slave, use the master's rules and actions.
+        slave_config = make_config(_with_master_config(config, new_state))
+        event_server.compile_rules(slave_config["rule_packs"])
+        # Update the configuration in place, as the main loop and the threads share it.
+        config.update(slave_config)
 
     # Update to the masters' event state
     event_status.unpack_status(new_state["status"])
@@ -3578,6 +3583,16 @@ def save_master_config(
     path_new.rename(path)
 
 
+def _with_master_config(config: ConfigFromWATO, master_config: Mapping[str, Any]) -> ConfigFromWATO:
+    """Returns the configuration of a replication slave using the rules and actions of its master"""
+    return {
+        **config,
+        "rules": master_config["rules"],
+        "rule_packs": master_config.get("rule_packs", []),
+        "actions": master_config["actions"],
+    }
+
+
 def load_master_config(settings: Settings, config: ConfigFromWATO, logger: Logger) -> bool:
     """Uses the saved configuration of the master of a replication slave
 
@@ -3592,9 +3607,7 @@ def load_master_config(settings: Settings, config: ConfigFromWATO, logger: Logge
                 {"master": master_config["master"]},
             )
             return True
-        config["rules"] = master_config["rules"]
-        config["rule_packs"] = master_config.get("rule_packs", [])
-        config["actions"] = master_config["actions"]
+        config.update(_with_master_config(config, master_config))
         logger.info(
             "Replication: restored %(rule_packs)d rule packs and %(actions)d actions from %(path)s",
             {
@@ -3708,11 +3721,12 @@ def update_slave_status(
 
 
 def make_config(config: ConfigFromWATO) -> Config:
-    return Config(
+    """Adds the fields derived from the configuration, replacing any existing ones"""
+    return {
         **config,
-        action={action["id"]: action for action in config["actions"]},
-        last_reload=int(time.time()),
-    )
+        "action": {action["id"]: action for action in config["actions"]},
+        "last_reload": int(time.time()),
+    }
 
 
 def load_configuration(settings: Settings, logger: Logger, slave_status: SlaveStatus) -> Config:
@@ -3818,6 +3832,10 @@ def reload_configuration(
         except Exception:
             logger.exception("Cannot update the replication status")
 
+    # Until now, the status server answered replication requests with the previous configuration,
+    # so stamp the reload only now: A slave which synced meanwhile gets the new one with its next
+    # sync then.
+    config["last_reload"] = int(time.time())
     event_status.reload_configuration(config, new_history)
     status_server.reload_configuration(config, new_history)
     # Once a status query still reading it is answered, only the event server may still use the

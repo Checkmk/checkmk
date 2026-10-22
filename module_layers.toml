@@ -1806,6 +1806,10 @@ allows = [
   "cmk.ruleset_matcher",
 ]
 
+# The query client reads the synthetic monitoring database through the data backend.
+[components."cmk.robotmk.telemetry"]
+allows = ["cmk.data_backend"]
+
 [components."cmk.otel_collector"]
 allows = ["@ccc"]
 

@@ -19,6 +19,7 @@ from cmk.ec.event import Event
 from cmk.ec.history import History, HistoryWhat
 from cmk.ec.main import EventServer, StatusServer
 from cmk.ec.query import QueryGET
+from cmk.ec.settings import Settings
 
 HOUR = 3600
 START = 475_000 * HOUR + 100.0  # a bit after the start of an hour
@@ -178,6 +179,13 @@ def replication_slave_config(
     if fallback is not None:
         replication["fallback"] = fallback
     return config | {"replication": replication}
+
+
+def activate_config(settings: Settings, config_text: str) -> None:
+    """Makes the given configuration the active one of the EC, like activating changes does"""
+    path = settings.paths.active_config_dir.value / "mkeventd.mk"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(config_text)
 
 
 class FakeConnection:

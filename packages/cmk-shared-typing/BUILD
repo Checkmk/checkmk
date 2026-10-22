@@ -27,6 +27,7 @@ exports_files([
 npm_link_all_packages(name = "node_modules")
 
 SOURCES_COMMON = [
+    "ai_assistant_panel.json",
     "ai_button.json",
     "changes.json",
     "configuration_entity.json",

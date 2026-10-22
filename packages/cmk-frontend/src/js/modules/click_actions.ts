@@ -37,7 +37,24 @@ import {
   wato_tree_click
 } from '@/modules/sidebar'
 import { makeLoadingTransition, makeuri, querySelectorID, toggle_more } from '@/modules/utils'
-import { duallist_switch, iconselector_toggle, list_choice_toggle_all } from '@/modules/valuespecs'
+import { listof_entry_index } from '@/modules/valuespec_listof'
+import {
+  duallist_switch,
+  iconselector_select,
+  iconselector_toggle,
+  iconselector_toggle_names,
+  label_group_delete,
+  list_choice_toggle_all,
+  listof_add,
+  listof_delete,
+  listof_sort,
+  listofmultiple_add,
+  listofmultiple_del,
+  passwordspec_randomize,
+  rule_comment_prefix_date_and_user,
+  toggle_hidden,
+  toggle_option
+} from '@/modules/valuespecs'
 import { randomize_secret, toggle_attribute } from '@/modules/wato'
 
 import {
@@ -219,10 +236,45 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
     toggle_more(element, options.id!, parseInt(options.dom_levels_up!)),
   valuespec_duallist_switch: (_element, options) =>
     duallist_switch(options.field_suffix, options.varprefix, options.keeporder ? 1 : 0),
+  valuespec_iconselector_select: (_element, options, event) =>
+    iconselector_select(event!, options.varprefix!, options.icon!),
   valuespec_iconselector_toggle: (_element, options) =>
     iconselector_toggle(options.varprefix, options.category_name),
+  valuespec_iconselector_toggle_names: (_element, options, event) =>
+    iconselector_toggle_names(event!, options.varprefix!),
+  valuespec_label_group_delete: (element, options) =>
+    label_group_delete(
+      options.varprefix!,
+      listof_entry_index(element, options.varprefix!),
+      JSON.parse(options.first_elem_choices_or_label!),
+      options.show_empty_group_by_default === 'true'
+    ),
   valuespec_list_choice_toggle_all: (_element, options) =>
     list_choice_toggle_all(options.varprefix),
+  valuespec_listof_add: (_element, options) =>
+    listof_add(options.varprefix!, options.magic!, options.style!),
+  valuespec_listof_delete: (element, options) =>
+    listof_delete(options.varprefix!, listof_entry_index(element, options.varprefix!)),
+  valuespec_listof_sort: (_element, options) =>
+    listof_sort(options.varprefix!, options.magic!, parseInt(options.sort_by!)),
+  valuespec_listofmultiple_add: (_element, options) =>
+    listofmultiple_add(
+      options.varprefix!,
+      options.choice_page_name!,
+      JSON.parse(options.page_request_vars!)
+    ),
+  valuespec_listofmultiple_delete: (_element, options) =>
+    listofmultiple_del(options.varprefix!, options.ident!),
+  valuespec_password_randomize: (element, options) =>
+    passwordspec_randomize(element as HTMLAnchorElement, parseInt(options.length!)),
+  valuespec_password_toggle_hidden: (element) => toggle_hidden(element as HTMLAnchorElement),
+  valuespec_rule_comment_prefix: (element, options) =>
+    rule_comment_prefix_date_and_user(element as HTMLAnchorElement, options.text!),
+  valuespec_toggle_option: (element, options) => {
+    toggle_option(element as HTMLInputElement, options.div_id!, options.negate === 'true' ? 1 : 0)
+    // Keep toggling the checkbox
+    return true
+  },
   virtual_host_tree_enter: (_element, options) => virtual_host_tree_enter(options.path),
   waiting_flash_message: (_element, options) => {
     waiting_flash_message('top_heading', options.message)

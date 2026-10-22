@@ -11,8 +11,14 @@ import pytest
 
 import cmk.gui.valuespec as vs
 from cmk.gui.utils.output_funnel import output_funnel
+from tests.unit.cmk.gui.compare_html import inline_event_handlers, ts_function_call
 
-from .utils import expect_validate_failure, expect_validate_success, request_var
+from .utils import (
+    expect_validate_failure,
+    expect_validate_success,
+    render_input,
+    request_var,
+)
 
 CHOICES: Sequence[vs.ListChoiceChoice] = [
     (1, "eins"),
@@ -89,3 +95,26 @@ def test_duallist_controls_render_click_actions() -> None:
 
     assert rendered.count('data-cmk_on_click="valuespec_duallist_switch"') == 2
     assert "javascript:" not in rendered
+
+
+@pytest.mark.usefixtures("request_context")
+def test_dual_list_choice_switches_choices_by_handlers() -> None:
+    valuespec = vs.DualListChoice(choices=CHOICES, enlarge_active=True)
+
+    assert ts_function_call(render_input(valuespec, [1]), "select#vp_unselected") == (
+        "valuespec_dual_list_choice",
+        {
+            "field_suffix": "unselected",
+            "varprefix": "vp",
+            "keeporder": False,
+            "instant_add": False,
+            "enlarge": True,
+        },
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_dual_list_choice_renders_without_inline_event_handlers() -> None:
+    valuespec = vs.DualListChoice(choices=CHOICES, instant_add=True)
+
+    assert inline_event_handlers(render_input(valuespec, [1])) == []

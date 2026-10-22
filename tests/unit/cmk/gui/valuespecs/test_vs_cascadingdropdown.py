@@ -8,11 +8,13 @@ import pytest
 
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
+from tests.unit.cmk.gui.compare_html import ts_function_call
 
 from .utils import (
     expect_validate_failure,
     expect_validate_failure_untypeable,
     expect_validate_success,
+    render_input,
     request_var,
 )
 
@@ -135,3 +137,13 @@ class TestCascadingDropDown:
         assert get_cascading_dropdown().value_from_json(["long", "smth"]) == ("long", "smth")
         # see long comment on (long, 2222) test case in test_value_to_json
         assert get_cascading_dropdown().value_from_json(["long", 2222]) == ("long", 2222)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_cascading_dropdown_shows_the_selected_choice_by_change_handler() -> None:
+    code = render_input(get_cascading_dropdown(), ("long", "text"))
+
+    assert ts_function_call(code, "select#vp_sel") == (
+        "valuespec_cascading_change",
+        {"varprefix": "vp", "count": 6},
+    )

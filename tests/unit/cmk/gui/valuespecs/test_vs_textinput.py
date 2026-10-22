@@ -7,8 +7,9 @@ import pytest
 
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
+from tests.unit.cmk.gui.compare_html import inline_event_handlers, ts_function_call
 
-from .utils import expect_validate_failure, expect_validate_success, request_var
+from .utils import expect_validate_failure, expect_validate_success, render_input, request_var
 
 
 class TestValueSpecTextInput:
@@ -67,3 +68,15 @@ class TestValueSpecTextInput:
         valuespec = vs.TextInput()
         assert valuespec.transform_value("lala") == "lala"
         assert valuespec.transform_value("AAA") == "AAA"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_auto_sized_text_area_resizes_by_handlers() -> None:
+    code = render_input(vs.TextAreaUnicode(rows="auto"), "line")
+
+    assert ts_function_call(code, "textarea") == ("valuespec_textarea_autoresize", {})
+
+
+@pytest.mark.usefixtures("request_context")
+def test_auto_sized_text_area_renders_without_inline_event_handlers() -> None:
+    assert inline_event_handlers(render_input(vs.TextAreaUnicode(rows="auto"), "line")) == []

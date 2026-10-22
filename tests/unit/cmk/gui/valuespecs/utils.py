@@ -14,6 +14,7 @@ import pytest
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
+from cmk.gui.utils.output_funnel import output_funnel
 
 
 @contextmanager
@@ -68,3 +69,10 @@ def expect_validate_success_migrate_or_transform(
 
 def raise_exception() -> None:
     raise Exception("This is an exception")
+
+
+def render_input[T](valuespec: vs.ValueSpec[T], value: T, varprefix: str = "vp") -> str:
+    """The HTML code of the input elements of the valuespec"""
+    with output_funnel.plugged():
+        valuespec.render_input(varprefix, value)
+        return output_funnel.drain()

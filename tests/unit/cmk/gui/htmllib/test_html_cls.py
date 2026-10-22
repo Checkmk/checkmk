@@ -270,6 +270,18 @@ def test_text_input() -> None:
 
 
 @pytest.mark.usefixtures("request_context")
+def test_text_input_calls_its_ts_function() -> None:
+    with output_funnel.plugged():
+        html.text_input(
+            varname="comment",
+            ts_function=TSFunctionCall(function_name="set_focus_by_id", arguments={"x": 1}),
+        )
+        written_text = output_funnel.drain()
+
+    assert ts_function_call(written_text, "input") == ("set_focus_by_id", {"x": 1})
+
+
+@pytest.mark.usefixtures("request_context")
 def test_render_a() -> None:
     a = HTMLWriter.render_a("bla", href="blu", class_=["eee"], target="_blank")
     assert compare_html(a, '<a href="blu" target="_blank" class="eee">bla</a>')
@@ -471,6 +483,15 @@ def test_icon_loading_button_navigates_by_click_action() -> None:
         "icon_loading_button",
         {"url": "mkp.py?mode=enable", "waiting_message": "Wait"},
     )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_jsbutton_triggers_its_click_action() -> None:
+    with output_funnel.plugged():
+        html.jsbutton("toggle", "Toggle", click_action=ClickAction(action="add_bookmark"))
+        code = output_funnel.drain()
+
+    assert click_handling(code, "input") == (None, "add_bookmark", None)
 
 
 @pytest.mark.usefixtures("request_context")

@@ -68,8 +68,8 @@ from cmk.gui import forms, site_config, sites, user_sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
-from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
-from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter, TSFunctionCall
+from cmk.gui.htmllib.html import DropHandler, html
 from cmk.gui.htmllib.tag_rendering import HTMLTagAttributes
 from cmk.gui.http import request, UploadedFile
 from cmk.gui.i18n import _
@@ -2035,13 +2035,7 @@ class TextAreaUnicode(TextInput):
         if value is None:
             value = ""  # should never happen, but avoids exception for invalid input
         if self._rows == "auto":
-            func = "cmk.valuespecs.textarea_resize(this);"
-            attrs = {
-                "onkeyup": func,
-                "onmousedown": func,
-                "onmouseup": func,
-                "onmouseout": func,
-            }
+            attrs = TSFunctionCall(function_name="valuespec_textarea_autoresize").data_attributes()
             if request.has_var(varprefix):
                 rows = len(self.from_html_vars(varprefix).splitlines())
             else:
@@ -2507,14 +2501,17 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
             raise NotImplementedError
 
     def _list_buttons(self, varprefix: str) -> None:
-        onclick: str = f"cmk.valuespecs.listof_add({json.dumps(varprefix)}, {json.dumps(self._magic)}, {json.dumps(self._style.value)})"
+        add = ClickAction(
+            action="valuespec_listof_add",
+            arguments={"varprefix": varprefix, "magic": self._magic, "style": self._style.value},
+        )
         if self._add_icon:
             html.open_a(
                 id_=varprefix + "_add",
                 class_=["vlof_add_button"],
                 href="#",
-                onclick=onclick,
                 target="",
+                **add.data_attributes(),
             )
             html.static_icon(self._add_icon)
             html.span(self._add_label)
@@ -2523,14 +2520,21 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
             html.jsbutton(
                 varname=varprefix + "_add",
                 text=self._add_label,
-                onclick=onclick,
+                click_action=add,
             )
 
         if self._sort_by is not None:
             html.jsbutton(
                 varprefix + "_sort",
                 _("Sort"),
-                f"cmk.valuespecs.listof_sort({json.dumps(varprefix)}, {json.dumps(self._magic)}, {json.dumps(self._sort_by)})",
+                click_action=ClickAction(
+                    action="valuespec_listof_sort",
+                    arguments={
+                        "varprefix": varprefix,
+                        "magic": self._magic,
+                        "sort_by": str(self._sort_by),
+                    },
+                ),
             )
 
     def _show_reference_entry(self, varprefix: str, index: str, value: T) -> None:
@@ -2623,10 +2627,11 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
             class_=["orig_index"],
         )
         if self._movable:
-            html.element_dragger_js(
-                "tr",
-                drop_handler="cmk.valuespecs.listof_drop_handler",
-                handler_args={"cur_index": index, "varprefix": varprefix},
+            html.write_html(
+                html.render_element_dragger(
+                    "tr",
+                    DropHandler(name="listof_drop_handler", arguments={"varprefix": varprefix}),
+                )
             )
         self._del_button(varprefix, index)
         html.close_td()
@@ -2640,10 +2645,14 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
             self._valuespec.render_input(varprefix + "_" + index, value)
         html.close_td()
 
-    def _del_button(self, vp: str, nr: str) -> None:
-        js = f"cmk.valuespecs.listof_delete({json.dumps(vp)}, {json.dumps(nr)})"
+    def _del_button(self, vp: str, nr: str) -> None:  # noqa: ARG002
+        # The entry to delete is the one containing the button, also for entries added later
         html.icon_button(
-            "#", self._del_label, StaticIcon(IconNames.close), onclick=js, class_=["delete_button"]
+            "#",
+            self._del_label,
+            StaticIcon(IconNames.close),
+            click_action=ClickAction(action="valuespec_listof_delete", arguments={"varprefix": vp}),
+            class_=["delete_button"],
         )
 
     @override
@@ -2782,9 +2791,15 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         return self._allow_empty
 
     def del_button(self, varprefix: str, ident: str) -> None:
-        js = f"cmk.valuespecs.listofmultiple_del({json.dumps(varprefix)}, {json.dumps(ident)})"
         html.icon_button(
-            "#", self._del_label, StaticIcon(IconNames.close), onclick=js, class_=["delete_button"]
+            "#",
+            self._del_label,
+            StaticIcon(IconNames.close),
+            click_action=ClickAction(
+                action="valuespec_listofmultiple_delete",
+                arguments={"varprefix": varprefix, "ident": ident},
+            ),
+            class_=["delete_button"],
         )
 
     @override
@@ -2853,11 +2868,13 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         html.jsbutton(
             varprefix + "_add",
             self._add_label,
-            "cmk.valuespecs.listofmultiple_add(%s, %s, %s)"
-            % (
-                json.dumps(varprefix),  #
-                json.dumps(self._choice_page_name),
-                json.dumps(self._page_request_vars),
+            click_action=ClickAction(
+                action="valuespec_listofmultiple_add",
+                arguments={
+                    "varprefix": varprefix,
+                    "choice_page_name": self._choice_page_name,
+                    "page_request_vars": json.dumps(self._page_request_vars),
+                },
             ),
         )
 
@@ -3090,7 +3107,8 @@ class Checkbox(ValueSpec[bool]):
         label: str | None = None,
         true_label: str | None = None,
         false_label: str | None = None,
-        onclick: str | None = None,
+        # Click actions have to keep the default action (return true) to toggle the checkbox
+        onclick: str | ClickAction | None = None,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,  # noqa: A002
@@ -3115,7 +3133,16 @@ class Checkbox(ValueSpec[bool]):
 
     @override
     def render_input(self, varprefix: str, value: bool) -> None:
-        html.checkbox(varprefix, value, label=self._label, onclick=self._onclick)
+        html.checkbox(
+            varprefix,
+            value,
+            label=self._label,
+            **(
+                self._onclick.data_attributes()
+                if isinstance(self._onclick, ClickAction)
+                else {"onclick": self._onclick}
+            ),
+        )
 
     @override
     def mask(self, value: bool) -> bool:
@@ -3153,6 +3180,14 @@ DropdownChoices = Promise[DropdownChoiceEntries]
 DropdownInvalidChoice = Literal[None, "complain", "replace"]
 
 
+def _cascading_change(varprefix: str, count: int) -> TSFunctionCall:
+    """Shows the sub valuespec of the selected choice"""
+    return TSFunctionCall(
+        function_name="valuespec_cascading_change",
+        arguments={"varprefix": varprefix, "count": count},
+    )
+
+
 class DropdownChoice[T](ValueSpec[T | None]):
     """A type-safe dropdown choice
 
@@ -3179,7 +3214,7 @@ class DropdownChoice[T](ValueSpec[T | None]):
         invalid_choice_title: str | None = None,
         invalid_choice_error: str | None = None,
         no_preselect_title: str | None = None,
-        on_change: str | None = None,
+        on_change: str | TSFunctionCall | None = None,
         read_only: bool = False,
         encode_value: bool = True,
         html_attrs: HTMLTagAttributes | None = None,
@@ -3287,7 +3322,8 @@ class DropdownChoice[T](ValueSpec[T | None]):
             self._options_for_html(options),
             deflt=self._option_for_html(defval),
             locked_choice=None,
-            onchange=self._on_change,
+            onchange=self._on_change if isinstance(self._on_change, str) else None,
+            ts_function=self._on_change if isinstance(self._on_change, TSFunctionCall) else None,
             ordered=self._sorted,
             label=None,
             class_=[],
@@ -3413,7 +3449,7 @@ class AjaxDropdownChoice(DropdownChoice[str]):
         # DropdownChoice
         label: str | None = None,
         html_attrs: HTMLTagAttributes | None = None,
-        on_change: str | None = None,
+        on_change: str | TSFunctionCall | None = None,
         # From ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,  # noqa: A002
@@ -3486,7 +3522,8 @@ class AjaxDropdownChoice(DropdownChoice[str]):
             self._options_for_html(clean_choices),
             deflt=self._option_for_html(value),
             locked_choice=None,
-            onchange=self._on_change,
+            onchange=self._on_change if isinstance(self._on_change, str) else None,
+            ts_function=self._on_change if isinstance(self._on_change, TSFunctionCall) else None,
             ordered=self._sorted,
             label=None,
             class_=["ajax-vals", self._cssclass if self._cssclass else ""],
@@ -3926,13 +3963,15 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
                 def_val = str(nr)
 
         vp = varprefix + "_sel"
-        onchange = "cmk.valuespecs.cascading_change(this, '%s', %d);" % (
-            varprefix,
-            len(choices),
-        )
         if self._label:
             html.span(self._label, class_="vs_floating_text")
-        html.dropdown(vp, options, deflt=def_val, onchange=onchange, ordered=self._sorted)
+        html.dropdown(
+            vp,
+            options,
+            deflt=def_val,
+            ordered=self._sorted,
+            ts_function=_cascading_change(varprefix, len(choices)),
+        )
 
         # make sure, that the visibility is done correctly, in both
         # cases:
@@ -4440,15 +4479,6 @@ class DualListChoice(ListChoice):
                 else:
                     unselected.append(e)
 
-        select_func = "cmk.valuespecs.duallist_switch('unselected', '%s', %d);" % (
-            varprefix,
-            1 if self._custom_order else 0,
-        )
-        unselect_func = "cmk.valuespecs.duallist_switch('selected', '%s', %d);" % (
-            varprefix,
-            1 if self._custom_order else 0,
-        )
-
         html.open_table(
             class_=["vs_duallist"],
             style="width: %dpx;" % (self._size * 6.4) if self._size else None,
@@ -4491,14 +4521,7 @@ class DualListChoice(ListChoice):
         html.close_tr()
 
         html.open_tr()
-        for suffix, choices, select_function in [
-            ("unselected", unselected, select_func),
-            ("selected", selected, unselect_func),
-        ]:
-            onchange_func = select_function if self._instant_add else ""
-            if self._enlarge_active:
-                onchange_func = f"cmk.valuespecs.duallist_enlarge({json.dumps(suffix)}, {json.dumps(varprefix)});"
-
+        for suffix, choices in [("unselected", unselected), ("selected", selected)]:
             html.open_td()
             html.dropdown(
                 f"{varprefix}_{suffix}",
@@ -4507,9 +4530,17 @@ class DualListChoice(ListChoice):
                 ordered=self._custom_order,
                 multiple=True,
                 style=("height:auto" if self._autoheight else "height: %dpx" % (self._rows * 16)),
-                ondblclick=select_function if not self._instant_add else "",
-                onchange=onchange_func,
                 locked_choice=(self._locked_choice_text(value) if suffix == "selected" else None),
+                ts_function=TSFunctionCall(
+                    function_name="valuespec_dual_list_choice",
+                    arguments={
+                        "field_suffix": suffix,
+                        "varprefix": varprefix,
+                        "keeporder": self._custom_order,
+                        "instant_add": self._instant_add,
+                        "enlarge": self._enlarge_active,
+                    },
+                ),
             )
 
             html.close_td()
@@ -4641,7 +4672,10 @@ class OptionalDropdownChoice[T](DropdownChoice[T]):
             varprefix,
             options,
             deflt=defval,  # style="float:left;",
-            onchange="cmk.valuespecs.toggle_dropdown(this, '%s_ex');" % varprefix,
+            ts_function=TSFunctionCall(
+                function_name="valuespec_optional_dropdown_choice",
+                arguments={"div_id": "%s_ex" % varprefix},
+            ),
         )
         if request.has_var(varprefix):
             div_is_open = request.var(varprefix) == "other"
@@ -5813,6 +5847,14 @@ def TimeFormat(
     )
 
 
+def _toggle_option_click_action(div_id: str, negate: bool = False) -> ClickAction:
+    """Shows the element with the given ID while the clicked checkbox is (not) checked"""
+    return ClickAction(
+        action="valuespec_toggle_option",
+        arguments={"div_id": div_id, "negate": json.dumps(negate)},
+    )
+
+
 class Optional[T](ValueSpec[None | T]):
     """Make a configuration value optional, i.e. it may be None.
 
@@ -5863,7 +5905,7 @@ class Optional[T](ValueSpec[None | T]):
             "%s_use" % varprefix,
             checked,
             label=self._get_label(),
-            onclick=f"cmk.valuespecs.toggle_option(this, {json.dumps(div_id)}, {1 if self._negate else 0!r})",
+            **_toggle_option_click_action(div_id, negate=self._negate).data_attributes(),
         )
         if self._sameline:
             html.nbsp()
@@ -6002,12 +6044,6 @@ class Alternative(ValueSpec[AlternativeModel]):
                 sel_option = str(nr)
             the_title = vs.title()
             options.append((str(nr), "???" if the_title is None else the_title))
-        onchange = "cmk.valuespecs.cascading_change(this, '%s', %d);" % (
-            varprefix,
-            len(options),
-        )
-        if self._on_change:
-            onchange += self._on_change
         if self._orientation == "horizontal":
             html.open_table(class_="alternative")
             html.open_tr()
@@ -6016,7 +6052,13 @@ class Alternative(ValueSpec[AlternativeModel]):
             varprefix + "_use",
             options,
             deflt=("???" if sel_option is None else sel_option),
-            onchange=onchange,
+            onchange=(
+                "cmk.valuespecs.cascading_change(this, %s, %d);%s"
+                % (json.dumps(varprefix), len(options), self._on_change)
+                if self._on_change
+                else None
+            ),
+            ts_function=None if self._on_change else _cascading_change(varprefix, len(options)),
         )
         if self._orientation == "vertical":
             html.br()
@@ -6462,7 +6504,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
                 checkbox_varname,
                 visible,
                 label=label,
-                onclick="cmk.valuespecs.toggle_option(this, %s)" % json.dumps(div_id),
+                **_toggle_option_click_action(div_id).data_attributes(),
             )
         else:
             visible = True
@@ -6603,7 +6645,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
                 checkbox_code = html.render_checkbox(
                     vp + "_USE",
                     deflt=visible,
-                    onclick="cmk.valuespecs.toggle_option(this, %s)" % json.dumps(div_id),
+                    **_toggle_option_click_action(div_id).data_attributes(),
                 )
                 forms.section(
                     vs.title(),
@@ -7466,13 +7508,15 @@ class PasswordSpec(Password):
                 "#",
                 _("Randomize password"),
                 StaticIcon(IconNames.random),
-                onclick=f"cmk.valuespecs.passwordspec_randomize(this, {self._pwlen});",
+                click_action=ClickAction(
+                    action="valuespec_password_randomize", arguments={"length": str(self._pwlen)}
+                ),
             )
         html.icon_button(
             "#",
             _("Show/hide password"),
             StaticIcon(IconNames.showhide),
-            onclick="cmk.valuespecs.toggle_hidden(this);",
+            click_action=ClickAction(action="valuespec_password_toggle_hidden"),
         )
 
         self.password_plaintext_warning()
@@ -8012,7 +8056,7 @@ class _SingleLabel(AjaxDropdownChoice):
         strict: Literal["True", "False"] = "False",
         object_type: Literal["host", "service"] | None = None,
         # DropdownChoice
-        on_change: str | None = None,
+        on_change: str | TSFunctionCall | None = None,
     ):
         html_attrs: HTMLTagAttributes = {"data-world": world.value}
         if object_type is not None:
@@ -8028,7 +8072,11 @@ class _SingleLabel(AjaxDropdownChoice):
             ),
             strict=strict,
             html_attrs=html_attrs,
-            on_change=(on_change if on_change else "cmk.valuespecs.single_label_on_change(this)"),
+            on_change=(
+                on_change
+                if on_change
+                else TSFunctionCall(function_name="valuespec_single_label_change")
+            ),
             cssclass=self.ident,
             default_value="",
         )
@@ -8095,12 +8143,20 @@ class LabelGroup(ListOf):
         choices_or_label: DropdownChoices | str = (
             self._first_element_choices or self._first_element_label or self._choices
         )
-        js = (
-            f"cmk.valuespecs.label_group_delete({json.dumps(vp)}, {json.dumps(nr)},"
-            f"{json.dumps(choices_or_label)}, {json.dumps(self._show_empty_group_by_default)});"
-        )
+        # The entry to delete is the one containing the button, also for entries added later
         html.icon_button(
-            "#", self._del_label, StaticIcon(IconNames.close), onclick=js, class_=["delete_button"]
+            "#",
+            self._del_label,
+            StaticIcon(IconNames.close),
+            click_action=ClickAction(
+                action="valuespec_label_group_delete",
+                arguments={
+                    "varprefix": vp,
+                    "first_elem_choices_or_label": json.dumps(choices_or_label),
+                    "show_empty_group_by_default": json.dumps(self._show_empty_group_by_default),
+                },
+            ),
+            class_=["delete_button"],
         )
 
     @override
@@ -8355,8 +8411,11 @@ class IconSelector(ValueSpec[IconSelectorModel]):
                 html.open_a(
                     href=None,
                     class_="icon",
-                    onclick=f"cmk.valuespecs.iconselector_select(event, {json.dumps(varprefix)}, {json.dumps(icon)})",
                     title=icon,
+                    **ClickAction(
+                        action="valuespec_iconselector_select",
+                        arguments={"varprefix": varprefix, "icon": icon},
+                    ).data_attributes(),
                 )
 
                 icon_path = (
@@ -8379,7 +8438,9 @@ class IconSelector(ValueSpec[IconSelectorModel]):
         html.jsbutton(
             "_toggle_names",
             _("Toggle names"),
-            onclick="cmk.valuespecs.iconselector_toggle_names(event, %s)" % json.dumps(varprefix),
+            click_action=ClickAction(
+                action="valuespec_iconselector_toggle_names", arguments={"varprefix": varprefix}
+            ),
         )
 
         if user.may("wato.icons"):
@@ -9002,7 +9063,9 @@ class RuleComment(TextAreaUnicode):
             None,
             title=_("Prefix the comment with the current date and your username."),
             icon=StaticIcon(IconNames.insertdate),
-            onclick="cmk.valuespecs.rule_comment_prefix_date_and_user(this, '%s');" % date_and_user,
+            click_action=ClickAction(
+                action="valuespec_rule_comment_prefix", arguments={"text": date_and_user}
+            ),
         )
         html.close_div()
 
@@ -9044,6 +9107,13 @@ def type_name(v: object) -> str:
         return escaping.escape_attribute(str(type(v)))
 
 
+def _picker_change_attributes(onchange: str | TSFunctionCall | None) -> dict[str, str]:
+    """The change handler of the inputs of a picker, which is called on the rendered picker"""
+    if isinstance(onchange, TSFunctionCall):
+        return onchange.data_attributes()
+    return {"onchange": onchange} if onchange else {}
+
+
 class DatePicker(ValueSpec[str]):
     def __init__(
         self,
@@ -9052,7 +9122,7 @@ class DatePicker(ValueSpec[str]):
         help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
-        onchange: str | None = None,
+        onchange: str | TSFunctionCall | None = None,
     ):
         self._onchange = onchange
         self._label = label
@@ -9075,7 +9145,7 @@ class DatePicker(ValueSpec[str]):
                 "date_varprefix": varprefix,
                 "date_value": value,
             },
-            onchange=self._onchange or "",
+            **_picker_change_attributes(self._onchange),
         )
 
     @override
@@ -9113,7 +9183,7 @@ class TimePicker(ValueSpec[str]):
         help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
-        onchange: str | None = None,
+        onchange: str | TSFunctionCall | None = None,
         server_time_text: str | None = None,
     ):
         self._onchange = onchange
@@ -9137,7 +9207,7 @@ class TimePicker(ValueSpec[str]):
         html.vue_component(
             "cmk-date-time-picker",
             data=data,
-            onchange=self._onchange or "",
+            **_picker_change_attributes(self._onchange),
         )
 
     @override

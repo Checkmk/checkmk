@@ -6,9 +6,12 @@
 import re
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 import cmk.gui.valuespec as vs
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.web.utils.icons import DynamicIconName
+from tests.unit.cmk.gui.compare_html import click_handling
 
 from .utils import (
     expect_validate_failure,
@@ -164,3 +167,29 @@ class TestValueSpecFloat:
     # internally there is still a lot of hard coded "empty" stuff.
 
     # value_to_html seems to ignore emblem!
+
+
+def _render_popup(monkeypatch: pytest.MonkeyPatch) -> str:
+    # Do not look for the icons in the file system
+    monkeypatch.setattr(vs.IconSelector, "available_icons", lambda _self: {"crash": "misc"})
+    with output_funnel.plugged():
+        vs.IconSelector().render_popup_input("vp", "crash")
+        return output_funnel.drain()
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_icon_selector_popup_selects_icons_by_click_action(monkeypatch: pytest.MonkeyPatch) -> None:
+    assert click_handling(_render_popup(monkeypatch), "a.icon[title=crash]") == (
+        None,
+        "valuespec_iconselector_select",
+        {"varprefix": "vp", "icon": "crash"},
+    )
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_icon_selector_popup_toggles_names_by_click_action(monkeypatch: pytest.MonkeyPatch) -> None:
+    assert click_handling(_render_popup(monkeypatch), "input#_toggle_names") == (
+        None,
+        "valuespec_iconselector_toggle_names",
+        {"varprefix": "vp"},
+    )

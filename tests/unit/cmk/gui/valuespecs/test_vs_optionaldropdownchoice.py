@@ -6,8 +6,14 @@
 import pytest
 
 import cmk.gui.valuespec as vs
+from tests.unit.cmk.gui.compare_html import ts_function_call
 
-from .utils import expect_validate_failure, expect_validate_success, request_var
+from .utils import (
+    expect_validate_failure,
+    expect_validate_success,
+    render_input,
+    request_var,
+)
 
 
 class TestOptionalDropdownChoice:
@@ -52,3 +58,15 @@ class TestOptionalDropdownChoice:
             vs.OptionalDropdownChoice[str](explicit=vs.TextInput(), choices=[]).canonical_value()
             == ""
         )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_optional_dropdown_choice_shows_the_explicit_input_by_change_handler() -> None:
+    valuespec = vs.OptionalDropdownChoice[str](
+        explicit=vs.TextInput(), choices=[("id_a", "title_a")]
+    )
+
+    assert ts_function_call(render_input(valuespec, "id_a"), "select#vp") == (
+        "valuespec_optional_dropdown_choice",
+        {"div_id": "vp_ex"},
+    )

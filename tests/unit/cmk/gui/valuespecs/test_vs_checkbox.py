@@ -7,8 +7,15 @@
 import pytest
 
 import cmk.gui.valuespec as vs
+from cmk.gui.htmllib.generator import ClickAction
+from tests.unit.cmk.gui.compare_html import click_handling
 
-from .utils import expect_validate_failure_untypeable, expect_validate_success, request_var
+from .utils import (
+    expect_validate_failure_untypeable,
+    expect_validate_success,
+    render_input,
+    request_var,
+)
 
 
 class TestCheckbox:
@@ -42,3 +49,14 @@ class TestCheckbox:
         assert vs.Checkbox().value_to_json(False) is False
         assert vs.Checkbox().value_from_json(True) is True
         assert vs.Checkbox().value_from_json(False) is False
+
+
+@pytest.mark.usefixtures("request_context")
+def test_checkbox_triggers_its_click_action() -> None:
+    checkbox = vs.Checkbox(onclick=ClickAction(action="wato_toggle_attribute"))
+
+    assert click_handling(render_input(checkbox, False), "input[type=checkbox]") == (
+        None,
+        "wato_toggle_attribute",
+        None,
+    )

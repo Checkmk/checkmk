@@ -6,6 +6,7 @@
 /* eslint-disable import-x/no-namespace -- Lazily resolved to avoid import cycles */
 import type { KnownTSFunction } from 'cmk-shared-typing/typescript/legacy_frontend_hooks'
 import { select } from 'd3'
+import $ from 'jquery'
 
 import * as activation from '@/modules/activation'
 import * as background_job from '@/modules/background_job'
@@ -33,6 +34,7 @@ import * as sites from '@/modules/sites'
 import { render_stats_table } from '@/modules/tracking_display'
 import * as transfer from '@/modules/transfer'
 import * as utils from '@/modules/utils'
+import { listof_entry_index } from '@/modules/valuespec_listof'
 import * as valuespecs from '@/modules/valuespecs'
 import * as wato from '@/modules/wato'
 
@@ -47,11 +49,21 @@ const license_usage_graphs: Record<string, (num_graphs: number, aggregation: any
   free_metric_series: license_usage_timeseries_graph.render_free_metric_series_usage_graph
 }
 
+// Register the handler with jQuery, which also calls it on changes triggered by select2
+function on_select_change(select: HTMLElement, handler: () => void) {
+  $(select).on('change', handler)
+}
+
 // See cmk.gui.htmllib.html:DropHandler
 const drop_handlers: Record<
   string,
   (dragger: HTMLElement, args: Record<string, string>, index: number) => void
 > = {
+  listof_drop_handler: (dragger, args) =>
+    valuespecs.listof_drop_handler({
+      cur_index: listof_entry_index(dragger, args.varprefix!),
+      varprefix: args.varprefix!
+    }),
   url_drop_handler: (_dragger, args, index) =>
     element_dragging.url_drop_handler(args.base_url!, index)
 }
@@ -169,6 +181,36 @@ const callable_functions: Record<Exclude<KnownTSFunction, `mobile_${string}`>, C
     valuespecs.update_unit_selector(options.varprefix, options.metric_ref_prefix),
   init_on_change_validation: (_node, options) =>
     valuespecs.init_on_change_validation(options.varname, options.filter_ident),
+  valuespec_cascading_change: (node, options) =>
+    on_select_change(node, () =>
+      valuespecs.cascading_change(node as HTMLInputElement, options.varprefix, options.count)
+    ),
+  valuespec_optional_dropdown_choice: (node, options) =>
+    on_select_change(node, () =>
+      valuespecs.toggle_dropdown(node as HTMLInputElement, options.div_id)
+    ),
+  valuespec_single_label_change: (node) =>
+    on_select_change(node, () => valuespecs.single_label_on_change(node as HTMLSelectElement)),
+  valuespec_textarea_autoresize: (node) => {
+    for (const type of ['keyup', 'mousedown', 'mouseup', 'mouseout']) {
+      node.addEventListener(type, () => valuespecs.textarea_resize(node as HTMLInputElement))
+    }
+  },
+  valuespec_dual_list_choice: (node, options) => {
+    const keeporder = options.keeporder ? 1 : 0
+    const switch_choices = () =>
+      valuespecs.duallist_switch(options.field_suffix, options.varprefix, keeporder)
+    if (!options.instant_add) {
+      node.addEventListener('dblclick', switch_choices)
+    }
+    if (options.enlarge) {
+      node.addEventListener('change', () =>
+        valuespecs.duallist_enlarge(options.field_suffix, options.varprefix)
+      )
+    } else if (options.instant_add) {
+      node.addEventListener('change', switch_choices)
+    }
+  },
   remove_label_filter_hidden_fields: (_node, options) =>
     forms.remove_label_filter_hidden_fields(options.varprefix),
   render_input_range: (_node, options) =>

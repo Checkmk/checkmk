@@ -9,11 +9,14 @@ import pytest
 
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.generator import TSFunctionCall
+from tests.unit.cmk.gui.compare_html import ts_function_call
 
 from .utils import (
     expect_validate_failure,
     expect_validate_failure_untypeable,
     expect_validate_success,
+    render_input,
     request_var,
 )
 
@@ -163,3 +166,16 @@ class TestValueSpecDropdownChoice:
             ).value_to_html("b")
             == "bee"
         )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_dropdown_choice_calls_its_change_function() -> None:
+    dropdown = vs.DropdownChoice[str](
+        choices=[("a", "ant")],
+        on_change=TSFunctionCall(function_name="valuespec_single_label_change"),
+    )
+
+    assert ts_function_call(render_input(dropdown, "a"), "select#vp") == (
+        "valuespec_single_label_change",
+        {},
+    )

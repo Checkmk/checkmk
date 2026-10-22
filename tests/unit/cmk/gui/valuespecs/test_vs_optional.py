@@ -7,11 +7,13 @@
 import pytest
 
 import cmk.gui.valuespec as vs
+from tests.unit.cmk.gui.compare_html import click_handling
 
 from .utils import (
     expect_validate_failure,
     expect_validate_failure_untypeable,
     expect_validate_success,
+    render_input,
     request_var,
 )
 
@@ -48,3 +50,14 @@ class TestOptional:
         assert vs.Optional(vs.TextInput()).value_to_html(None) == "(unset)"
         assert vs.Optional(vs.TextInput(), none_label="smth").value_to_html(None) == "smth"
         assert vs.Optional(vs.TextInput()).value_to_html("value") == "value"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_optional_shows_its_valuespec_by_click_action() -> None:
+    code = render_input(vs.Optional(valuespec=vs.Integer(), negate=True), None)
+
+    assert click_handling(code, "input[type=checkbox]") == (
+        None,
+        "valuespec_toggle_option",
+        {"div_id": "option_vp", "negate": "true"},
+    )

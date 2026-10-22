@@ -4,16 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="type-arg"
+from typing import Literal
 
 import pytest
 
 import cmk.gui.valuespec as vs
 from cmk.web.utils.html import HTML
+from tests.unit.cmk.gui.compare_html import click_handling
 
 from .utils import (
     expect_validate_failure,
     expect_validate_failure_untypeable,
     expect_validate_success,
+    render_input,
     request_var,
 )
 
@@ -201,3 +204,21 @@ class TestValueSpecDictionary:
                 ("a", vs.TextInput()),
             ]
         ).transform_value({"a": "lala"}) == {"a": "lala"}
+
+
+@pytest.mark.parametrize(
+    "render",
+    [
+        pytest.param("normal", id="normal"),
+        pytest.param("form", id="form"),
+    ],
+)
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_dictionary_shows_optional_keys_by_click_action(render: Literal["normal", "form"]) -> None:
+    dictionary = vs.Dictionary(elements=[("port", vs.Integer(title="Port"))], render=render)
+
+    assert click_handling(render_input(dictionary, {}), "input[type=checkbox]") == (
+        None,
+        "valuespec_toggle_option",
+        {"div_id": "vp_d_port", "negate": "false"},
+    )

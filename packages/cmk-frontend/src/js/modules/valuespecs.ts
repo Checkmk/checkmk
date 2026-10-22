@@ -363,6 +363,8 @@ function list_of_strings_add_new_field(input: HTMLInputElement | HTMLSelectEleme
     new_div.appendChild(new_select)
   }
   enable_dynamic_form_elements(new_div)
+  // The copied element has to register its handlers, which it does not take over from the original
+  init_callable_ts_functions(new_div)
   container.appendChild(new_div)
 
   return new_div.getElementsByTagName(tagtype)[0] as HTMLInputElement | HTMLSelectElement
@@ -504,54 +506,6 @@ function listof_get_new_entry_html_code(varprefix: string, magic: string, str_co
       const new_name = varprefix + element + str_count
       html_code = html_code.replace(new RegExp(old_name, 'g'), new_name)
     })
-  })
-
-  // Complex magic replacements within functions
-  // Note: the listof_drop_handler will also work with a broken magic.. but we should convert it anyway
-  const complex_replacements: [string, string][] = [
-    [
-      'listof_drop_handler\\({&quot;cur_index&quot;: &quot;' +
-        magic +
-        '&quot;, &quot;varprefix&quot;: &quot;' +
-        varprefix +
-        '&quot;}',
-      'listof_drop_handler({&quot;cur_index&quot;: &quot;' +
-        str_count +
-        '&quot;, &quot;varprefix&quot;: &quot;' +
-        varprefix +
-        '&quot;}'
-    ],
-    [
-      'listof_drop_handler\\({&quot;cur_index&quot;: &quot;' +
-        encoded_magic +
-        '&quot;, &quot;varprefix&quot;: &quot;' +
-        varprefix +
-        '&quot;}',
-      'listof_drop_handler({&quot;cur_index&quot;: &quot;' +
-        str_count +
-        '&quot;, &quot;varprefix&quot;: &quot;' +
-        varprefix +
-        '&quot;}'
-    ],
-    [
-      'listof_delete\\(&quot;' + varprefix + '&quot;, &quot;' + magic + '&quot;\\)',
-      'listof_delete(&quot;' + varprefix + '&quot;, &quot;' + str_count + '&quot;)'
-    ],
-    [
-      'listof_delete\\(&quot;' + varprefix + '&quot;, &quot;' + encoded_magic + '&quot;\\)',
-      'listof_delete(&quot;' + varprefix + '&quot;, &quot;' + str_count + '&quot;)'
-    ],
-    [
-      'label_group_delete\\(&quot;' + varprefix + '&quot;, &quot;' + magic + '&quot;',
-      // we do not escape the bracket here as we cannot know all the function arguments and
-      // thus cannot close the brackets. escaping only the opening bracket would make the
-      // function call fail.
-      'label_group_delete(&quot;' + varprefix + '&quot;, &quot;' + str_count + '&quot;'
-    ]
-  ]
-  complex_replacements.forEach((element) => {
-    const [key, replacement] = element
-    html_code = html_code.replace(new RegExp(key, 'g'), replacement)
   })
 
   return html_code

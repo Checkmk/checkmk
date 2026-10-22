@@ -12,8 +12,15 @@ import pytest
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
 from cmk.web.utils.html import HTML
+from tests.unit.cmk.gui.compare_html import inline_event_handlers, ts_function_call
 
-from .utils import expect_validate_failure, expect_validate_success, raise_exception, request_var
+from .utils import (
+    expect_validate_failure,
+    expect_validate_success,
+    raise_exception,
+    render_input,
+    request_var,
+)
 
 FAILURE_MATCH = "The data type of the value does not match any of the allowed alternatives."
 
@@ -127,3 +134,20 @@ class TestValuespecAlternative:
         # TODO: this is wrong! should be transformed into a tuple,
         # see comment on Value_from_json
         assert get_alternative().value_from_json([2, 3]) == [2, 3]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_alternative_shows_the_selected_alternative_by_change_handler() -> None:
+    alternative = vs.Alternative(elements=[vs.Integer(), vs.TextInput()])
+
+    assert ts_function_call(render_input(alternative, 1), "select#vp_use") == (
+        "valuespec_cascading_change",
+        {"varprefix": "vp", "count": 2},
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_alternative_renders_without_inline_event_handlers() -> None:
+    alternative = vs.Alternative(elements=[vs.Integer(), vs.TextInput()])
+
+    assert inline_event_handlers(render_input(alternative, 1)) == []

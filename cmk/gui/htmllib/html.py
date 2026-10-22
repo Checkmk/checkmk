@@ -121,7 +121,7 @@ class DropHandler:
     packages/cmk-frontend/src/js/modules/callable_functions.ts.
     """
 
-    name: typing.Literal["url_drop_handler"]
+    name: typing.Literal["listof_drop_handler", "url_drop_handler"]
     arguments: Mapping[str, str]
 
 
@@ -798,12 +798,13 @@ class HTMLGenerator(HTMLWriter):
         self,
         varname: str,
         text: str,
-        onclick: str,
+        onclick: str | None = None,
         style: str = "",
         cssclass: str | None = None,
         title: str = "",
         disabled: bool = False,
         class_: CSSSpec | None = None,
+        click_action: ClickAction | None = None,
     ) -> None:
         classes = (
             ["button"]
@@ -830,6 +831,7 @@ class HTMLGenerator(HTMLWriter):
             disabled=disabled_arg,
             value=text,
             title=title,
+            **(click_action.data_attributes() if click_action else {}),
         )
 
     def user_error(self, e: MKUserError, show_as_warning: bool = False) -> None:
@@ -876,7 +878,9 @@ class HTMLGenerator(HTMLWriter):
         data_attrs: HTMLTagAttributes | None = None,
         required: bool = False,
         title: str | None = None,
+        ts_function: TSFunctionCall | None = None,
     ) -> None:
+        """ts_function: Called on the rendered input field, e.g. to register an input handler"""
         # Model
         error = user_errors.get(varname)
         value = self.request.get_str_input(varname, default_value)
@@ -928,6 +932,7 @@ class HTMLGenerator(HTMLWriter):
             "required": "" if required else None,
             "title": title,
             **(data_attrs or {}),
+            **(ts_function.data_attributes() if ts_function else {}),
         }
 
         if error:
@@ -1116,8 +1121,11 @@ class HTMLGenerator(HTMLWriter):
         size: int = 1,
         multiple: bool = False,
         read_only: bool = False,
+        ts_function: TSFunctionCall | None = None,
         **attrs: HTMLTagAttributeValue,
     ) -> None:
+        """ts_function: Called on the rendered select field, e.g. to register a change handler.
+        Register it with jQuery to also handle the changes triggered by select2."""
         current = self.request.get_str_input(varname, deflt)
         error = user_errors.get(varname)
         if varname:
@@ -1169,6 +1177,7 @@ class HTMLGenerator(HTMLWriter):
             label=label,
             class_=css_classes,
             **attrs,
+            **(ts_function.data_attributes() if ts_function else {}),
         )
 
         for group in grouped:

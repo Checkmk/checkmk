@@ -94,6 +94,7 @@ def _parameter_valuespec_multipath() -> Dictionary:
         elements=[
             ("levels", _multipath_lower_levels()),
         ],
+        ignored_keys=["discovered_paths"],
     )
 
 

@@ -8,5 +8,6 @@ py_cmk_test(
     deps = [
         "//packages/cmk-plugins/cmk/plugins/prism",
         requirement("requests"),
+        requirement("responses"),
     ],
 )

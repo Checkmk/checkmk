@@ -8,6 +8,7 @@ from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.pages import PageEndpoint, PageRegistry
 
 from .._page_menu import HostMenus
+from ._monitor_all_services import MonitorAllServicesPage
 from ._monitor_host_services import MonitorHostServicesPage
 
 
@@ -29,5 +30,11 @@ def register_pages(
                 teleport_target,
                 setup_folders=setup_folders,
             ),
+        )
+    )
+    page_registry.register(
+        PageEndpoint(
+            "monitor_all_services",
+            MonitorAllServicesPage(command_registry, recurrences, teleport_target),
         )
     )

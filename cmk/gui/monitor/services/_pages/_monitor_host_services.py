@@ -35,6 +35,7 @@ from cmk.gui.monitor.services._access import HOST_SERVICES_PERMISSION, LEGACY_HO
 from cmk.gui.monitor.services._ai_explain import ai_explain
 from cmk.gui.monitor.services._api._limits import LIMIT_TIERS
 from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
+from cmk.gui.monitor.services._supported_actions import SERVICE_SUPPORTED_ACTIONS
 from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
@@ -52,13 +53,6 @@ from cmk.shared_typing.monitoring.host_services import (
 )
 from cmk.utils import paths
 from cmk.web.utils.urls import makeuri_contextless
-
-_SUPPORTED_ACTIONS: tuple[str, ...] = (
-    "acknowledge",
-    "reschedule",
-    "schedule_downtimes",
-)
-
 
 _HOST_STATUS_VIEW_NAME = "hoststatus"
 _ALL_HOSTS_PERMISSION = "view.allhosts"
@@ -108,7 +102,9 @@ class MonitorHostServicesPage(Page):
     def _permitted_actions(self) -> list[MonitoringAction]:
         return [
             MonitoringAction(ident=command.ident, title=str(command.title), icon=command.icon)
-            for command in self._commands.permitted_actions(user, "service", _SUPPORTED_ACTIONS)
+            for command in self._commands.permitted_actions(
+                user, "service", SERVICE_SUPPORTED_ACTIONS
+            )
         ]
 
     def _permitted_host_actions(self) -> list[MonitoringAction]:

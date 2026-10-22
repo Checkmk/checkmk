@@ -12,7 +12,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ec.main import EventStatus, StatusServer
 from cmk.ec.query import MKClientError
 
-from .helpers import FakeStatusSocket, new_event
+from .helpers import FakeStatusSocket, new_event, query_status_server
 
 
 def test_handle_client(status_server: StatusServer) -> None:
@@ -200,3 +200,78 @@ def test_invalid_regex_fails_before_replying(
         status_server.handle_client(status_socket, True, "127.0.0.1")
 
     assert status_socket.get_raw_response() == b""
+
+
+def test_rules_table_shows_the_rule_hits(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    event_status.count_rule_match("disk")
+
+    status_socket = query_status_server(status_server, "GET rules")
+
+    assert status_socket.get_response() == [["rule_id", "rule_hits"], ["disk", 1]]
+
+
+def test_status_table_shows_the_number_of_open_events(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    event_status.new_event(new_event({"text": "disk full"}))
+
+    status_socket = query_status_server(
+        status_server, "GET status\nColumns: status_num_open_events"
+    )
+
+    assert status_socket.get_response() == [["status_num_open_events"], [1]]
+
+
+def test_history_table_shows_what_happened_to_the_events(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    event_status.new_event(new_event({"text": "disk full"}))
+
+    status_socket = query_status_server(
+        status_server, "GET history\nColumns: history_what event_text"
+    )
+
+    assert status_socket.get_response() == [["history_what", "event_text"], ["NEW", "disk full"]]
+
+
+def test_unknown_table_is_refused(status_server: StatusServer) -> None:
+    with pytest.raises(MKClientError, match="Invalid table: hosts"):
+        query_status_server(status_server, "GET hosts")
+
+
+@pytest.mark.parametrize(
+    "output_format, expected_response",
+    [
+        pytest.param("plain", b"event_text\tevent_count\ndisk full\t1\n", id="plain"),
+        pytest.param("json", b'[["event_text", "event_count"], ["disk full", 1]]\n', id="JSON"),
+        pytest.param("python", b"[['event_text', 'event_count'], ['disk full', 1]]\n", id="Python"),
+    ],
+)
+def test_events_are_shown_in_the_requested_output_format(
+    event_status: EventStatus,
+    status_server: StatusServer,
+    output_format: str,
+    expected_response: bytes,
+) -> None:
+    event_status.new_event(new_event({"text": "disk full"}))
+
+    status_socket = query_status_server(
+        status_server,
+        f"GET events\nColumns: event_text event_count\nOutputFormat: {output_format}",
+    )
+
+    assert status_socket.get_raw_response() == expected_response
+
+
+def test_several_queries_on_one_connection_are_answered_in_order(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    event_status.count_rule_match("disk")
+
+    status_socket = query_status_server(
+        status_server, "GET rules\nColumns: rule_id\n\nGET rules\nColumns: rule_hits"
+    )
+
+    assert status_socket.get_raw_response() == b"[['rule_id'], ['disk']]\n[['rule_hits'], [1]]\n"

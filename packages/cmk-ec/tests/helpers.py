@@ -22,7 +22,8 @@ from cmk.ec.query import QueryGET
 from cmk.ec.settings import Settings
 
 HOUR = 3600
-START = 475_000 * HOUR + 100.0  # a bit after the start of an hour
+INTERVAL_START = 475_000 * HOUR
+START = INTERVAL_START + 100.0  # a bit after the start of an hour
 MASTER = ("master.example.com", 6558)  # of a replication slave
 
 

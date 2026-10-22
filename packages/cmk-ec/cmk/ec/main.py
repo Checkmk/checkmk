@@ -1110,7 +1110,7 @@ class EventServer(ECServerThread):
                         # Either way, the counting event is no longer needed.
                         if event["count"] < expect["count"]:  # no -> trigger alarm
                             events_to_delete.append((event, "AUTODELETE"))
-                            self._handle_absent_event(rule, expect, event["count"], event["last"])
+                            self._handle_absent_event(rule, expect, event["count"], interval_start)
                         else:  # yes -> everything is fine.
                             events_to_delete.append((event, "COUNTREACHED"))
                             self._event_status.clear_interval_start(rule["id"])

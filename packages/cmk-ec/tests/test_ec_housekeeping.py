@@ -5,6 +5,7 @@
 """Periodic housekeeping of the events: timeouts, expected messages and downtimes"""
 
 import logging
+import time
 from collections.abc import Sequence
 from typing import Literal
 
@@ -20,6 +21,7 @@ from cmk.ec.main import EventServer, EventStatus, StatusServer
 from .helpers import (
     FakeConnection,
     HOUR,
+    INTERVAL_START,
     new_count,
     new_host,
     new_rule,
@@ -195,7 +197,7 @@ def test_event_expires_after_its_lifetime_only_in_the_configured_phases(
     assert _phases(event_status) == expected_phases
 
 
-def test_missing_expected_message_opens_an_event(
+def test_missing_expected_message_opens_an_event_since_the_start_of_the_interval(
     event_server: EventServer, event_status: EventStatus
 ) -> None:
     use_rules(event_server, _expecting_rule(count=1))
@@ -205,23 +207,26 @@ def test_missing_expected_message_opens_an_event(
 
         event_server.do_housekeeping()
 
+    interval_start = time.strftime("%F %T", time.localtime(INTERVAL_START))
     [event] = event_status.events()
-    assert event["text"].startswith("Expected message did not arrive since ")
+    assert event["text"] == f"Expected message did not arrive since {interval_start}"
 
 
-def test_too_few_expected_messages_open_an_event(
+def test_too_few_expected_messages_open_an_event_since_the_start_of_the_interval(
     event_server: EventServer, event_status: EventStatus
 ) -> None:
     use_rules(event_server, _expecting_rule(count=2))
     with time_machine.travel(START, tick=False) as traveller:
         event_server.do_housekeeping()
+        traveller.shift(600)
         process_message(event_server)
         traveller.shift(HOUR)
 
         event_server.do_housekeeping()
 
+    interval_start = time.strftime("%F %T", time.localtime(INTERVAL_START))
     [event] = event_status.events()
-    assert event["text"].startswith("Expected message arrived only 1 out of 2 times since ")
+    assert event["text"] == f"Expected message arrived only 1 out of 2 times since {interval_start}"
 
 
 def test_failed_expectation_logs_no_errors(

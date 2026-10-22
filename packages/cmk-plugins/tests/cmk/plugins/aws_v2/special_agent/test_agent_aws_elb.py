@@ -22,7 +22,6 @@ from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.elb import (
     ELB,
     ELBHealth,
-    ELBLabelsGeneric,
     ELBLimits,
     ELBSummaryGeneric,
 )
@@ -78,7 +77,7 @@ class FakeELBClient:
         raise NotImplementedError
 
 
-ELBSectionsOut = tuple[ELBLimits, ELBSummaryGeneric, ELBLabelsGeneric, ELBHealth, ELB]
+ELBSectionsOut = tuple[ELBLimits, ELBSummaryGeneric, ELBHealth, ELB]
 
 
 class ELBSections(Protocol):
@@ -118,15 +117,13 @@ def get_elb_sections() -> ELBSections:
             distributor,
             resource="elb",
         )
-        elb_labels = ELBLabelsGeneric(fake_elb_client, region, config, resource="elb")
         elb_health = ELBHealth(fake_elb_client, region, config)
         elb = ELB(fake_cloudwatch_client, region, config)
 
         distributor.add(elb_limits.name, elb_summary)
-        distributor.add(elb_summary.name, elb_labels)
         distributor.add(elb_summary.name, elb_health)
         distributor.add(elb_summary.name, elb)
-        return elb_limits, elb_summary, elb_labels, elb_health, elb
+        return elb_limits, elb_summary, elb_health, elb
 
     return _create_elb_sections
 
@@ -182,7 +179,7 @@ def test_agent_aws_elb_limits(
     found_instances: Sequence[str],  # noqa: ARG001
     found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
-    elb_limits, _elb_summary, _elb_labels, _elb_health, _elb = get_elb_sections(names, tags)
+    elb_limits, _elb_summary, _elb_health, _elb = get_elb_sections(names, tags)
     elb_limits_results = elb_limits.run().results
 
     assert elb_limits.cache_interval == 300
@@ -199,7 +196,7 @@ def test_agent_aws_elb_limits(
 def test_agent_aws_elb_limits_go_to_the_account_first_then_to_each_load_balancer(
     get_elb_sections: ELBSections,
 ) -> None:
-    elb_limits, _elb_summary, _elb_labels, _elb_health, _elb = get_elb_sections()
+    elb_limits, _elb_summary, _elb_health, _elb = get_elb_sections()
 
     elb_limits_results = elb_limits.run().results
 
@@ -214,7 +211,7 @@ def test_agent_aws_elb_limits_go_to_the_account_first_then_to_each_load_balancer
 def test_agent_aws_elb_metrics_go_to_the_host_of_their_load_balancer(
     get_elb_sections: ELBSections,
 ) -> None:
-    _elb_limits, elb_summary, _elb_labels, _elb_health, elb = get_elb_sections()
+    _elb_limits, elb_summary, _elb_health, elb = get_elb_sections()
     elb_summary.run()
 
     elb_results = elb.run().results
@@ -234,7 +231,7 @@ def test_agent_aws_elb_summary(
     found_instances: Sequence[str],
     found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
-    elb_limits, elb_summary, _elb_labels, _elb_health, _elb = get_elb_sections(names, tags)
+    elb_limits, elb_summary, _elb_health, _elb = get_elb_sections(names, tags)
     _elb_limits_results = elb_limits.run().results
     elb_summary_results = elb_summary.run().results
 
@@ -253,27 +250,6 @@ def test_agent_aws_elb_summary(
 
 
 @pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elb_params)
-def test_agent_aws_elb_labels(
-    get_elb_sections: ELBSections,
-    names: Sequence[str] | None,
-    tags: OverallTags,
-    found_instances: Sequence[str],  # noqa: ARG001
-    found_instances_with_labels: Sequence[str],
-) -> None:
-    elb_limits, elb_summary, elb_labels, _elb_health, _elb = get_elb_sections(names, tags)
-    _elb_limits_results = elb_limits.run().results
-    _elb_summary_results = elb_summary.run().results
-    elb_labels_results = elb_labels.run().results
-
-    assert elb_labels.cache_interval == 300
-    assert elb_labels.period == 600
-    assert elb_labels.name == "elb_generic_labels"
-    assert len(elb_labels_results) == len(found_instances_with_labels)
-    for result in elb_labels_results:
-        assert result.piggyback_hostname != ACCOUNT_HOST
-
-
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elb_params)
 def test_agent_aws_elb_health(
     get_elb_sections: ELBSections,
     names: Sequence[str] | None,
@@ -281,7 +257,7 @@ def test_agent_aws_elb_health(
     found_instances: Sequence[str],
     found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
-    elb_limits, elb_summary, _elb_labels, elb_health, _elb = get_elb_sections(names, tags)
+    elb_limits, elb_summary, elb_health, _elb = get_elb_sections(names, tags)
     _elb_limits_results = elb_limits.run().results
     _elb_summary_results = elb_summary.run().results
     elb_health_results = elb_health.run().results
@@ -302,7 +278,7 @@ def test_agent_aws_elb(
     found_instances: Sequence[str],
     found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
-    elb_limits, elb_summary, _elb_labels, _elb_health, elb = get_elb_sections(names, tags)
+    elb_limits, elb_summary, _elb_health, elb = get_elb_sections(names, tags)
     _elb_limits_results = elb_limits.run().results
     _elb_summary_results = elb_summary.run().results
     elb_results = elb.run().results
@@ -325,7 +301,7 @@ def test_agent_aws_elb_summary_without_limits(
     found_instances: Sequence[str],
     found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
-    _elb_limits, elb_summary, _elb_labels, _elb_health, _elb = get_elb_sections(names, tags)
+    _elb_limits, elb_summary, _elb_health, _elb = get_elb_sections(names, tags)
     elb_summary_results = elb_summary.run().results
 
     assert elb_summary.cache_interval == 300
@@ -343,26 +319,6 @@ def test_agent_aws_elb_summary_without_limits(
 
 
 @pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elb_params)
-def test_agent_aws_elb_labels_without_limits(
-    get_elb_sections: ELBSections,
-    names: Sequence[str] | None,
-    tags: OverallTags,
-    found_instances: Sequence[str],  # noqa: ARG001
-    found_instances_with_labels: Sequence[str],
-) -> None:
-    _elb_limits, elb_summary, elb_labels, _elb_health, _elb = get_elb_sections(names, tags)
-    _elb_summary_results = elb_summary.run().results
-    elb_labels_results = elb_labels.run().results
-
-    assert elb_labels.cache_interval == 300
-    assert elb_labels.period == 600
-    assert elb_labels.name == "elb_generic_labels"
-    assert len(elb_labels_results) == len(found_instances_with_labels)
-    for result in elb_labels_results:
-        assert result.piggyback_hostname != ACCOUNT_HOST
-
-
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elb_params)
 def test_agent_aws_elb_health_without_limits(
     get_elb_sections: ELBSections,
     names: Sequence[str] | None,
@@ -370,7 +326,7 @@ def test_agent_aws_elb_health_without_limits(
     found_instances: Sequence[str],
     found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
-    _elb_limits, elb_summary, _elb_labels, elb_health, _elb = get_elb_sections(names, tags)
+    _elb_limits, elb_summary, elb_health, _elb = get_elb_sections(names, tags)
     _elb_summary_results = elb_summary.run().results
     elb_health_results = elb_health.run().results
 
@@ -390,7 +346,7 @@ def test_agent_aws_elb_without_limits(
     found_instances: Sequence[str],
     found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
-    _elb_limits, elb_summary, _elb_labels, _elb_health, elb = get_elb_sections(names, tags)
+    _elb_limits, elb_summary, _elb_health, elb = get_elb_sections(names, tags)
     _elb_summary_results = elb_summary.run().results
     elb_results = elb.run().results
 
@@ -417,17 +373,16 @@ def test_agent_aws_elb_filters_tags(
     tag_import: TagsOption,
     expected_tags: Sequence[str],
 ) -> None:
-    _elb_limits, elb_summary, elb_labels, _elb_health, _elb = get_elb_sections(
-        tag_import=tag_import
-    )
+    _elb_limits, elb_summary, _elb_health, elb = get_elb_sections(tag_import=tag_import)
     elb_summary_results = elb_summary.run().results
-    elb_labels_results = elb_labels.run().results
+    elb_results = elb.run().results
 
-    if expected_tags:
-        labels_row = elb_labels_results[0].content
-        assert list(labels_row.keys()) == expected_tags
-    else:
-        assert len(elb_labels_results) == 0
+    labels = {result.piggyback_hostname: result.piggyback_host_labels for result in elb_results}[
+        "DNSName-0"
+    ]
+    assert [key for key in labels if key.startswith("cmk/aws/tag/")] == [
+        f"cmk/aws/tag/{tag}" for tag in expected_tags
+    ]
 
     for result in elb_summary_results:
         assert list(result.content[0]["TagsForCmkLabels"].keys()) == expected_tags
@@ -436,12 +391,11 @@ def test_agent_aws_elb_filters_tags(
 def test_agent_aws_elb_load_balancer_hosts_get_the_resource_labels(
     get_elb_sections: ELBSections,
 ) -> None:
-    _elb_limits, elb_summary, _elb_labels, _elb_health, elb = get_elb_sections()
+    _elb_limits, elb_summary, _elb_health, elb = get_elb_sections()
     elb_summary.run()
 
     results = elb.run().results
 
-    # The tags reach the host through the elb_generic_labels section.
     assert {result.piggyback_hostname: result.piggyback_host_labels for result in results}[
         "DNSName-0"
     ] == {
@@ -449,4 +403,7 @@ def test_agent_aws_elb_load_balancer_hosts_get_the_resource_labels(
         "cmk/aws/name": "LoadBalancerName-0",
         "cmk/aws/resource_id": "LoadBalancerName-0",
         "cmk/aws/region": "region",
+        "cmk/aws/tag/Key-0": "Value-0",
+        "cmk/aws/tag/Key-1": "Value-1",
+        "cmk/aws/tag/Key-2": "Value-2",
     }

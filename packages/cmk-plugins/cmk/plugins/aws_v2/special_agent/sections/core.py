@@ -484,24 +484,6 @@ class AWSSectionLimits(AWSSection):
                 yield Quota(**quota)
 
 
-class AWSSectionLabels(AWSSection):
-    @override
-    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        assert isinstance(computed_content.content, dict), (
-            "%s: Computed result of Labels section must be of type 'dict'" % self.name
-        )
-        for pb in computed_content.content:
-            assert pb, "%s: Piggyback host name is not allowed to be empty" % self.name
-        return [
-            AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in computed_content.content.items()
-        ]
-
-    @override
-    def _validate_result_content(self, content: list | dict) -> None:
-        assert isinstance(content, dict), "%s: Result content must be of type 'dict'" % self.name
-
-
 class AWSSectionCloudwatch(AWSSection):
     @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:

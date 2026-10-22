@@ -296,14 +296,13 @@ def _load_balancer_labels(
     if load_balancer is None:
         # The load balancer is gone from the summary since its metrics were cached.
         return None
-    # The tags reach the host through the elbv2_generic_labels section.
     return resource_labels(
         "elbv2",
         load_balancer["LoadBalancerName"],
         # A load balancer has no ID of its own, only its ARN.
         load_balancer["LoadBalancerName"],
         region,
-        {},
+        load_balancer["TagsForCmkLabels"],
     )
 
 

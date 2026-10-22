@@ -23,7 +23,6 @@ from .core import (
     AWSRawContent,
     AWSSection,
     AWSSectionCloudwatch,
-    AWSSectionLabels,
     AWSSectionLimits,
     AWSSectionResult,
     Metrics,
@@ -238,57 +237,6 @@ class ELBSummaryGeneric(AWSSection):
         ]
 
 
-class ELBLabelsGeneric(AWSSectionLabels):
-    def __init__(
-        self,
-        client: BaseClient,
-        region: str,
-        config: AWSConfig,
-        distributor: ResultDistributor | None = None,
-        resource: str = "",
-    ) -> None:
-        self._resource = resource
-        super().__init__(client, region, config, distributor=distributor)
-
-    @property
-    @override
-    def name(self) -> str:
-        return "%s_generic_labels" % self._resource
-
-    @property
-    @override
-    def cache_interval(self) -> int:
-        return 300
-
-    @property
-    @override
-    def granularity(self) -> int:
-        return 300
-
-    @override
-    def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("%s_summary" % self._resource)
-        if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents({}, 0.0)
-
-    @override
-    def get_live_data(self, *args: AWSColleagueContents) -> object:
-        (colleague_contents,) = args
-        return colleague_contents.content
-
-    @override
-    def _compute_content(
-        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
-    ) -> AWSComputedContent:
-        computed_content = {
-            elb_instance_id: data.get("TagsForCmkLabels")
-            for elb_instance_id, data in raw_content.content.items()
-            if data.get("TagsForCmkLabels")
-        }
-        return AWSComputedContent(computed_content, raw_content.cache_timestamp)
-
-
 class ELBHealth(AWSSection):
     @property
     @override
@@ -432,14 +380,13 @@ class ELB(AWSSectionCloudwatch):
         if load_balancer is None:
             # The load balancer is gone from the summary since its metrics were cached.
             return self.host_labels
-        # The tags reach the host through the elb_generic_labels section.
         # A classic load balancer has no ID of its own.
         return resource_labels(
             "elb",
             load_balancer["LoadBalancerName"],
             load_balancer["LoadBalancerName"],
             self._region,
-            {},
+            load_balancer["TagsForCmkLabels"],
         )
 
     @override

@@ -31,7 +31,6 @@ from .core import (
     AWSRawContent,
     AWSSection,
     AWSSectionCloudwatch,
-    AWSSectionLabels,
     AWSSectionLimits,
     AWSSectionResult,
     chunks,
@@ -500,48 +499,6 @@ class EC2Summary(AWSSection):
         ]
 
 
-class EC2Labels(AWSSectionLabels):
-    @property
-    @override
-    def name(self) -> str:
-        return "ec2_labels"
-
-    @property
-    @override
-    def cache_interval(self) -> int:
-        return 300
-
-    @property
-    @override
-    def granularity(self) -> int:
-        return 300
-
-    @override
-    def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("ec2_summary")
-        if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents({}, 0.0)
-
-    @override
-    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, str]] | None:
-        (colleague_contents,) = args
-        return colleague_contents.content
-
-    @override
-    def _compute_content(
-        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
-    ) -> AWSComputedContent:
-        return AWSComputedContent(
-            {
-                ec2_instance_id: inst.get("TagsForCmkLabels", [])
-                for ec2_instance_id, inst in raw_content.content.items()
-                if inst.get("TagsForCmkLabels")
-            },
-            raw_content.cache_timestamp,
-        )
-
-
 class EC2SecurityGroups(AWSSection):
     def __init__(
         self,
@@ -708,14 +665,15 @@ class EC2(AWSSectionCloudwatch):
         if instance is None:
             # The instance is gone from the summary since its metrics were cached.
             return self.host_labels
-        # The tags reach the host through the ec2_labels section.
         # An instance has no name of its own. The AWS console shows its Name tag.
         name = next(
             (tag["Value"] for tag in instance.get("Tags", []) if tag["Key"] == "Name"), None
         )
         return {
             **self.host_labels,
-            **resource_labels("ec2", name, instance["InstanceId"], self._region, {}),
+            **resource_labels(
+                "ec2", name, instance["InstanceId"], self._region, instance["TagsForCmkLabels"]
+            ),
         }
 
     @override

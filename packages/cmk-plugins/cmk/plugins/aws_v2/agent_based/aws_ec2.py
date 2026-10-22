@@ -21,14 +21,12 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.aws_v2.lib import (
-    aws_host_labels,
     AWSMetric,
     check_aws_metrics,
     discover_aws_generic,
     discover_aws_generic_single,
     extract_aws_metrics_by_labels,
     parse_aws,
-    parse_aws_labels,
 )
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.cpu_util import check_cpu_util
@@ -75,12 +73,6 @@ def parse_aws_ec2(string_table: StringTable) -> Section:
 agent_section_aws_v2_ec2 = AgentSection(
     name="aws_v2_ec2",
     parse_function=parse_aws_ec2,
-)
-
-agent_section_aws_v2_ec2_labels = AgentSection(
-    name="aws_v2_ec2_labels",
-    parse_function=parse_aws_labels,
-    host_label_function=aws_host_labels,
 )
 
 #   .--status check--------------------------------------------------------.

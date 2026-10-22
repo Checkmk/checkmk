@@ -22,26 +22,12 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.aws_v2.lib import (
     aws_get_counts_rate_human_readable,
-    aws_host_labels,
     AWSMetric,
     check_aws_http_errors,
     check_aws_metrics,
     discover_aws_generic_single,
     extract_aws_metrics_by_labels,
     parse_aws,
-    parse_aws_labels,
-)
-
-agent_section_aws_v2_elb_labels = AgentSection(
-    name="aws_v2_elb_generic_labels",
-    parse_function=parse_aws_labels,
-    host_label_function=aws_host_labels,
-)
-
-agent_section_aws_v2_elbv2_labels = AgentSection(
-    name="aws_v2_elbv2_generic_labels",
-    parse_function=parse_aws_labels,
-    host_label_function=aws_host_labels,
 )
 
 Section = Mapping[str, float]

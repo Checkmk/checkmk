@@ -17,8 +17,6 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckResult,
     DiscoveryResult,
-    HostLabel,
-    HostLabelGenerator,
     IgnoreResultsError,
     Metric,
     render,
@@ -28,7 +26,6 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.aws_v2.constants import AWS_REGIONS
-from cmk.plugins.lib.labels import ensure_valid_labels
 
 _AWS_REGIONS = dict(AWS_REGIONS)
 
@@ -89,34 +86,6 @@ def discover_lambda_functions(
         return
     for lambda_function in section_aws_lambda_summary:
         yield Service(item=lambda_function)
-
-
-def parse_aws_labels(string_table: StringTable) -> Mapping[str, str]:
-    """Load json dicts.
-
-    Example:
-
-        <<<ec2_labels:sep(0)>>>
-        {"tier": "control-plane", "component": "kube-scheduler"}
-
-    """
-    labels = {}
-    for line in string_table:
-        labels.update(json.loads(line[0]))
-    return labels
-
-
-def aws_host_labels(section: Mapping[str, str]) -> HostLabelGenerator:
-    """Generate aws host labels.
-
-    Labels:
-        cmk/aws/tag/{key}:{value}:
-            These labels are yielded for each tag of an AWS resource
-            that is monitored as its own host.
-    """
-    labels = ensure_valid_labels(section)
-    for key, value in labels.items():
-        yield HostLabel(f"cmk/aws/tag/{key}", value)
 
 
 def parse_aws(string_table: StringTable) -> GenericAWSSection:

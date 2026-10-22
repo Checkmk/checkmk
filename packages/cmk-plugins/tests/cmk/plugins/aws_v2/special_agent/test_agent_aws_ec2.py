@@ -21,7 +21,6 @@ from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.ec2 import (
     EC2,
-    EC2Labels,
     EC2Limits,
     EC2SecurityGroups,
     EC2Summary,
@@ -126,7 +125,7 @@ class FakeEC2Client:
         }
 
 
-EC2SectionsOut = tuple[EC2Limits, EC2Summary, EC2Labels, EC2SecurityGroups, EC2]
+EC2SectionsOut = tuple[EC2Limits, EC2Summary, EC2SecurityGroups, EC2]
 
 
 class EC2Sections(Protocol):
@@ -172,15 +171,13 @@ def get_ec2_sections() -> EC2Sections:
             fake_service_quotas_client,
         )
         ec2_summary = EC2Summary(fake_ec2_client, region, config, distributor)
-        ec2_labels = EC2Labels(fake_ec2_client, region, config)
         ec2_security_groups = EC2SecurityGroups(fake_ec2_client, region, config)
         ec2 = EC2(fake_cloudwatch_client, region, config)
 
         distributor.add(ec2_limits.name, ec2_summary)
-        distributor.add(ec2_summary.name, ec2_labels)
         distributor.add(ec2_summary.name, ec2_security_groups)
         distributor.add(ec2_summary.name, ec2)
-        return ec2_limits, ec2_summary, ec2_labels, ec2_security_groups, ec2
+        return ec2_limits, ec2_summary, ec2_security_groups, ec2
 
     return _create_ec2_sections
 
@@ -211,9 +208,7 @@ def test_agent_aws_ec2_limits(
     found_ec2: int,  # noqa: ARG001
     found_ec2_with_labels: int,  # noqa: ARG001
 ) -> None:
-    ec2_limits, _ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
-        names, tags
-    )
+    ec2_limits, _ec2_summary, _ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
     ec2_limits_results = ec2_limits.run().results
 
     assert ec2_limits.cache_interval == 300
@@ -263,7 +258,7 @@ def test_agent_aws_ec2_summary(
     found_ec2: int,
     found_ec2_with_labels: int,  # noqa: ARG001
 ) -> None:
-    ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
+    ec2_limits, ec2_summary, _ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
     _ec2_limits_results = ec2_limits.run().results
     ec2_summary_results = ec2_summary.run().results
 
@@ -283,26 +278,6 @@ def test_agent_aws_ec2_summary(
 
 
 @pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
-def test_agent_aws_ec2_labels(
-    get_ec2_sections: EC2Sections,
-    names: Sequence[str] | None,
-    tags: OverallTags,
-    found_ec2: int,  # noqa: ARG001
-    found_ec2_with_labels: int,
-) -> None:
-    ec2_limits, ec2_summary, ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
-    _ec2_limits_results = ec2_limits.run().results
-    _ec2_summary_results = ec2_summary.run().results
-    ec2_labels_results = ec2_labels.run().results
-
-    assert ec2_labels.cache_interval == 300
-    assert ec2_labels.period == 600
-    assert ec2_labels.name == "ec2_labels"
-
-    assert len(ec2_labels_results) == found_ec2_with_labels
-
-
-@pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
 def test_agent_aws_ec2_security_groups(
     get_ec2_sections: EC2Sections,
     names: Sequence[str] | None,
@@ -310,7 +285,7 @@ def test_agent_aws_ec2_security_groups(
     found_ec2: int,
     found_ec2_with_labels: int,  # noqa: ARG001
 ) -> None:
-    ec2_limits, ec2_summary, _ec2_labels, ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
+    ec2_limits, ec2_summary, ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
     _ec2_limits_results = ec2_limits.run().results
     _ec2_summary_results = ec2_summary.run().results
     ec2_security_groups_results = ec2_security_groups.run().results
@@ -333,7 +308,7 @@ def test_agent_aws_ec2(
     found_ec2: int,
     found_ec2_with_labels: int,  # noqa: ARG001
 ) -> None:
-    ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections(names, tags)
+    ec2_limits, ec2_summary, _ec2_security_groups, ec2 = get_ec2_sections(names, tags)
     _ec2_limits_results = ec2_limits.run().results
     _ec2_summary_results = ec2_summary.run().results
     ec2_results = ec2.run().results
@@ -354,7 +329,7 @@ def test_agent_aws_ec2(
 def test_agent_aws_ec2_summary_without_limits(
     get_ec2_sections: EC2Sections,
 ) -> None:
-    _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections()
+    _ec2_limits, ec2_summary, _ec2_security_groups, _ec2 = get_ec2_sections()
     ec2_summary_results = ec2_summary.run().results
 
     assert ec2_summary.cache_interval == 300
@@ -368,24 +343,10 @@ def test_agent_aws_ec2_summary_without_limits(
     assert len(result.content) == 3
 
 
-def test_agent_aws_ec2_labels_without_limits(
-    get_ec2_sections: EC2Sections,
-) -> None:
-    _ec2_limits, ec2_summary, ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections()
-    _ec2_summary_results = ec2_summary.run().results
-    ec2_labels_results = ec2_labels.run().results
-
-    assert ec2_labels.cache_interval == 300
-    assert ec2_labels.period == 600
-    assert ec2_labels.name == "ec2_labels"
-
-    assert len(ec2_labels_results) == 1
-
-
 def test_agent_aws_ec2_security_groups_without_limits(
     get_ec2_sections: EC2Sections,
 ) -> None:
-    _ec2_limits, ec2_summary, _ec2_labels, ec2_security_groups, _ec2 = get_ec2_sections()
+    _ec2_limits, ec2_summary, ec2_security_groups, _ec2 = get_ec2_sections()
     _ec2_summary_results = ec2_summary.run().results
     ec2_security_groups_results = ec2_security_groups.run().results
 
@@ -400,7 +361,7 @@ def test_agent_aws_ec2_security_groups_without_limits(
 
 
 def test_agent_aws_ec2_without_limits(get_ec2_sections: EC2Sections) -> None:
-    _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections()
+    _ec2_limits, ec2_summary, _ec2_security_groups, ec2 = get_ec2_sections()
     _ec2_summary_results = ec2_summary.run().results
     ec2_results = ec2.run().results
 
@@ -420,7 +381,7 @@ def test_agent_aws_ec2_without_limits(get_ec2_sections: EC2Sections) -> None:
 def test_agent_aws_ec2_metrics_go_to_ip_region_instance_hosts(
     get_ec2_sections: EC2Sections,
 ) -> None:
-    _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections(
+    _ec2_limits, ec2_summary, _ec2_security_groups, ec2 = get_ec2_sections(
         naming_convention=NamingConvention.ip_region_instance
     )
     ec2_summary.run()
@@ -437,7 +398,7 @@ def test_agent_aws_ec2_metrics_go_to_ip_region_instance_hosts(
 def test_agent_aws_ec2_metrics_go_to_private_dns_name_hosts(
     get_ec2_sections: EC2Sections,
 ) -> None:
-    _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections(
+    _ec2_limits, ec2_summary, _ec2_security_groups, ec2 = get_ec2_sections(
         naming_convention=NamingConvention.private_dns_name
     )
     ec2_summary.run()
@@ -454,7 +415,7 @@ def test_agent_aws_ec2_metrics_go_to_private_dns_name_hosts(
 def test_agent_aws_ec2_security_groups_go_to_the_host_of_their_instance(
     get_ec2_sections: EC2Sections,
 ) -> None:
-    _ec2_limits, ec2_summary, _ec2_labels, ec2_security_groups, _ec2 = get_ec2_sections()
+    _ec2_limits, ec2_summary, ec2_security_groups, _ec2 = get_ec2_sections()
     ec2_summary.run()
 
     ec2_security_groups_results = ec2_security_groups.run().results
@@ -482,7 +443,7 @@ def test_agent_aws_ec2_no_crash_when_keys_missing(
     found_ec2_with_labels: int,  # noqa: ARG001
     skip_entities: Mapping[str, Collection[str]],
 ) -> None:
-    ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
+    ec2_limits, ec2_summary, _ec2_security_groups, _ec2 = get_ec2_sections(
         names, tags, skip_entities=skip_entities
     )
     ec2_limits_results = ec2_limits.run().results
@@ -503,17 +464,18 @@ def test_agent_aws_ec2_filters_labels(
     tag_import: TagsOption,
     expected_tags: Sequence[str],
 ) -> None:
-    _ec2_limits, ec2_summary, ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
+    _ec2_limits, ec2_summary, _ec2_security_groups, ec2 = get_ec2_sections(
         None, (None, None), tag_import=tag_import
     )
     ec2_summary_results = ec2_summary.run().results
-    ec2_labels_results = ec2_labels.run().results
+    ec2_results = ec2.run().results
 
-    if expected_tags:
-        labels_row = ec2_labels_results[0].content
-        assert list(labels_row.keys()) == expected_tags
-    else:
-        assert len(ec2_labels_results) == 0
+    labels = {result.piggyback_hostname: result.piggyback_host_labels for result in ec2_results}[
+        "PrivateIpAddress-0-region-InstanceId-0"
+    ]
+    assert [key for key in labels if key.startswith("cmk/aws/tag/")] == [
+        f"cmk/aws/tag/{tag}" for tag in expected_tags
+    ]
 
     for result in ec2_summary_results:
         assert list(result.content[0]["TagsForCmkLabels"].keys()) == expected_tags
@@ -537,7 +499,11 @@ def test_agent_aws_ec2_limits_go_to_the_account_host_of_a_listed_account() -> No
 @pytest.mark.parametrize(
     ("name_tags", "expected_name"),
     [
-        pytest.param({"InstanceId-0": "web-server"}, {"cmk/aws/name": "web-server"}, id="Name tag"),
+        pytest.param(
+            {"InstanceId-0": "web-server"},
+            {"cmk/aws/name": "web-server", "cmk/aws/tag/Name": "web-server"},
+            id="Name tag",
+        ),
         pytest.param({}, {}, id="no Name tag"),
     ],
 )
@@ -546,14 +512,11 @@ def test_agent_aws_ec2_instance_hosts_get_the_resource_labels(
     name_tags: Mapping[str, str],
     expected_name: Mapping[str, str],
 ) -> None:
-    _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections(
-        name_tags=name_tags
-    )
+    _ec2_limits, ec2_summary, _ec2_security_groups, ec2 = get_ec2_sections(name_tags=name_tags)
     ec2_summary.run()
 
     results = ec2.run().results
 
-    # The tags reach the host through the ec2_labels section.
     host = "PrivateIpAddress-0-region-InstanceId-0"
     assert {result.piggyback_hostname: result.piggyback_host_labels for result in results}[
         host
@@ -563,4 +526,7 @@ def test_agent_aws_ec2_instance_hosts_get_the_resource_labels(
         **expected_name,
         "cmk/aws/resource_id": "InstanceId-0",
         "cmk/aws/region": "region",
+        "cmk/aws/tag/Key-0": "Value-0",
+        "cmk/aws/tag/Key-1": "Value-1",
+        "cmk/aws/tag/Key-2": "Value-2",
     }

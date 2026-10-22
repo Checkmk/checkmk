@@ -42,16 +42,15 @@ from .sections.core import AWSSection, AWSSectionResult, ResultDistributor
 from .sections.costs_and_usage import CostsAndUsage, ReservationUtilization
 from .sections.dynamodb import (
     DynamoDB,
-    DynamoDBLabelsGeneric,
     DynamoDBLimits,
     DynamoDBSummary,
     DynamoDBTable,
 )
 from .sections.ebs import EBS, EBSLimits, EBSSummary
-from .sections.ec2 import EC2, EC2Labels, EC2Limits, EC2SecurityGroups, EC2Summary
+from .sections.ec2 import EC2, EC2Limits, EC2SecurityGroups, EC2Summary
 from .sections.ecs import ECS, ECSLimits, ECSSummary
 from .sections.elasticache import ElastiCache, ElastiCacheLimits, ElastiCacheSummary
-from .sections.elb import ELB, ELBHealth, ELBLabelsGeneric, ELBLimits, ELBSummaryGeneric
+from .sections.elb import ELB, ELBHealth, ELBLimits, ELBSummaryGeneric
 from .sections.elbv2 import (
     ELBv2Application,
     ELBv2ApplicationTargetGroupsHTTP,
@@ -102,8 +101,6 @@ def datetime_serializer(obj):
 # |
 # '-- EC2Summary
 #     |
-#     |-- EC2Labels
-#     |
 #     |-- EC2SecurityGroups
 #     |
 #     '-- EC2
@@ -134,8 +131,6 @@ def datetime_serializer(obj):
 # |
 # '-- ELBSummaryGeneric
 #     |
-#     |-- ELBLabelsGeneric
-#     |
 #     |-- ELBHealth
 #     |
 #     '-- ELB
@@ -143,8 +138,6 @@ def datetime_serializer(obj):
 # ELBv2Limits
 # |
 # '-- ELBSummaryGeneric
-#     |
-#     |-- ELBLabelsGeneric
 #     |
 #     |-- ELBv2TargetGroups
 #     |
@@ -593,11 +586,9 @@ class AWSSectionsGeneric(AWSSections):
 
         if "ec2" in services:
             ec2_summary = EC2Summary(ec2_client, region, config, distributor)
-            ec2_labels = EC2Labels(ec2_client, region, config)
             ec2_security_groups = EC2SecurityGroups(ec2_client, region, config)
             ec2 = EC2(cloudwatch_client, region, config)
             distributor.add("ec2_limits", ec2_summary)
-            distributor.add(ec2_summary.name, ec2_labels)
             distributor.add(ec2_summary.name, ec2_security_groups)
             distributor.add(ec2_summary.name, ec2)
             distributor.add(ec2_summary.name, ebs_summary)
@@ -612,7 +603,6 @@ class AWSSectionsGeneric(AWSSections):
                     )
                 )
             self._sections.append(ec2_summary)
-            self._sections.append(ec2_labels)
             self._sections.append(ec2_security_groups)
             self._sections.append(ec2)
 
@@ -627,18 +617,15 @@ class AWSSectionsGeneric(AWSSections):
 
         if "elb" in services:
             elb_client = self._init_client("elb")
-            elb_labels = ELBLabelsGeneric(elb_client, region, config, resource="elb")
             elb_health = ELBHealth(elb_client, region, config)
             elb = ELB(cloudwatch_client, region, config)
             elb_summary = ELBSummaryGeneric(elb_client, region, config, distributor, resource="elb")
             distributor.add("elb_limits", elb_summary)
-            distributor.add(elb_summary.name, elb_labels)
             distributor.add(elb_summary.name, elb_health)
             distributor.add(elb_summary.name, elb)
             if config.service_config.get("elb_limits"):
                 self._sections.append(ELBLimits(elb_client, region, config, distributor))
             self._sections.append(elb_summary)
-            self._sections.append(elb_labels)
             self._sections.append(elb_health)
             self._sections.append(elb)
 
@@ -648,7 +635,6 @@ class AWSSectionsGeneric(AWSSections):
             elbv2_summary = ELBSummaryGeneric(
                 elbv2_client, region, config, distributor, resource="elbv2"
             )
-            elbv2_labels = ELBLabelsGeneric(elbv2_client, region, config, resource="elbv2")
             elbv2_target_groups = ELBv2TargetGroups(elbv2_client, region, config)
             elbv2_application = ELBv2Application(cloudwatch_client, region, config)
             elbv2_application_target_groups_http = ELBv2ApplicationTargetGroupsHTTP(
@@ -659,7 +645,6 @@ class AWSSectionsGeneric(AWSSections):
             )
             elbv2_network = ELBv2Network(cloudwatch_client, region, config)
             distributor.add(elbv2_limits.name, elbv2_summary)
-            distributor.add(elbv2_summary.name, elbv2_labels)
             distributor.add(elbv2_summary.name, elbv2_target_groups)
             distributor.add(elbv2_summary.name, elbv2_application)
             distributor.add(elbv2_summary.name, elbv2_application_target_groups_http)
@@ -668,7 +653,6 @@ class AWSSectionsGeneric(AWSSections):
             if config.service_config.get("elbv2_limits"):
                 self._sections.append(elbv2_limits)
             self._sections.append(elbv2_summary)
-            self._sections.append(elbv2_labels)
             self._sections.append(elbv2_target_groups)
             self._sections.append(elbv2_application)
             self._sections.append(elbv2_application_target_groups_http)
@@ -743,20 +727,15 @@ class AWSSectionsGeneric(AWSSections):
         if "dynamodb" in services:
             dynamodb_client = self._init_client("dynamodb")
             dynamodb = DynamoDB(dynamodb_client, region, config)
-            dynamodb_labels = DynamoDBLabelsGeneric(
-                dynamodb_client, region, config, resource="dynamodb"
-            )
             dynamodb_limits = DynamoDBLimits(dynamodb_client, region, config, distributor)
             dynamodb_summary = DynamoDBSummary(dynamodb_client, region, config, distributor)
             dynamodb_table = DynamoDBTable(cloudwatch_client, region, config)
             distributor.add(dynamodb_limits.name, dynamodb_summary)
-            distributor.add(dynamodb_summary.name, dynamodb_labels)
             distributor.add(dynamodb_summary.name, dynamodb)
             distributor.add(dynamodb_summary.name, dynamodb_table)
             if config.service_config.get("dynamodb_limits"):
                 self._sections.append(dynamodb_limits)
             self._sections.append(dynamodb_summary)
-            self._sections.append(dynamodb_labels)
             self._sections.append(dynamodb)
             self._sections.append(dynamodb_table)
 

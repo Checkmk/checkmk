@@ -19,7 +19,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
 )
 from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
-from cmk.plugins.aws_v2.special_agent.sections.elb import ELBLabelsGeneric, ELBSummaryGeneric
+from cmk.plugins.aws_v2.special_agent.sections.elb import ELBSummaryGeneric
 from cmk.plugins.aws_v2.special_agent.sections.elbv2 import (
     ELBv2Application,
     ELBv2ApplicationTargetGroupsHTTP,
@@ -104,7 +104,6 @@ class FakeELBv2Client:
 class ELBv2SectionsOut(NamedTuple):
     elbv2_limits: ELBv2Limits
     elbv2_summary: ELBSummaryGeneric
-    elbv2_labels: ELBLabelsGeneric
     elbv2_target_groups: ELBv2TargetGroups
     elbv2_application: tuple[
         ELBv2Application, ELBv2ApplicationTargetGroupsHTTP, ELBv2ApplicationTargetGroupsLambda
@@ -149,7 +148,6 @@ def get_elbv2_sections() -> ELBv2Sections:
             distributor,
             resource="elbv2",
         )
-        elbv2_labels = ELBLabelsGeneric(fake_elbv2_client, region, config, resource="elbv2")
         elbv2_target_groups = ELBv2TargetGroups(fake_elbv2_client, region, config)
         elbv2_application = ELBv2Application(fake_cloudwatch_client, region, config)
         elbv2_application_target_groups_http = ELBv2ApplicationTargetGroupsHTTP(
@@ -165,7 +163,6 @@ def get_elbv2_sections() -> ELBv2Sections:
         elbv2_network = ELBv2Network(fake_cloudwatch_client, region, config)
 
         distributor.add(elbv2_limits.name, elbv2_summary)
-        distributor.add(elbv2_summary.name, elbv2_labels)
         distributor.add(elbv2_summary.name, elbv2_target_groups)
         distributor.add(elbv2_summary.name, elbv2_application)
         distributor.add(elbv2_summary.name, elbv2_application_target_groups_http)
@@ -175,7 +172,6 @@ def get_elbv2_sections() -> ELBv2Sections:
         return ELBv2SectionsOut(
             elbv2_limits=elbv2_limits,
             elbv2_summary=elbv2_summary,
-            elbv2_labels=elbv2_labels,
             elbv2_target_groups=elbv2_target_groups,
             elbv2_application=(
                 elbv2_application,
@@ -392,28 +388,6 @@ def test_agent_aws_elbv2_summary(
 
 
 @pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
-def test_agent_aws_elbv2_labels(
-    get_elbv2_sections: ELBv2Sections,
-    names: Sequence[str] | None,
-    tags: OverallTags,
-    found_instances: Sequence[str],  # noqa: ARG001
-    found_instances_with_labels: Sequence[str],
-) -> None:
-    elbv2_sections = get_elbv2_sections(names, tags)
-    elbv2_sections.elbv2_limits.run()
-    elbv2_sections.elbv2_summary.run()
-    elbv2_labels = elbv2_sections.elbv2_labels
-    elbv2_labels_results = elbv2_labels.run().results
-
-    assert elbv2_labels.cache_interval == 300
-    assert elbv2_labels.period == 600
-    assert elbv2_labels.name == "elbv2_generic_labels"
-    assert len(elbv2_labels_results) == len(found_instances_with_labels)
-    for result in elbv2_labels_results:
-        assert result.piggyback_hostname != ACCOUNT_HOST
-
-
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
 def test_agent_aws_elbv2_target_groups(
     get_elbv2_sections: ELBv2Sections,
     names: Sequence[str] | None,
@@ -534,27 +508,6 @@ def test_agent_aws_elbv2_summary_without_limits(
 
 
 @pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
-def test_agent_aws_elbv2_labels_without_limits(
-    get_elbv2_sections: ELBv2Sections,
-    names: Sequence[str] | None,
-    tags: OverallTags,
-    found_instances: Sequence[str],  # noqa: ARG001
-    found_instances_with_labels: Sequence[str],
-) -> None:
-    elbv2_sections = get_elbv2_sections(names, tags)
-    elbv2_sections.elbv2_summary.run()
-    elbv2_labels = elbv2_sections.elbv2_labels
-    elbv2_labels_results = elbv2_labels.run().results
-
-    assert elbv2_labels.cache_interval == 300
-    assert elbv2_labels.period == 600
-    assert elbv2_labels.name == "elbv2_generic_labels"
-    assert len(elbv2_labels_results) == len(found_instances_with_labels)
-    for result in elbv2_labels_results:
-        assert result.piggyback_hostname != ACCOUNT_HOST
-
-
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
 def test_agent_aws_elbv2_target_groups_without_limits(
     get_elbv2_sections: ELBv2Sections,
     names: Sequence[str] | None,
@@ -661,13 +614,15 @@ def test_agent_aws_elbv2_filters_tags(
 ) -> None:
     sections = get_elbv2_sections(tag_import=tag_import)
     elb_summary_results = sections.elbv2_summary.run().results
-    elb_labels_results = sections.elbv2_labels.run().results
+    elbv2_application, _http, _lambda = sections.elbv2_application
+    elbv2_results = elbv2_application.run().results
 
-    if expected_tags:
-        labels_row = elb_labels_results[0].content
-        assert list(labels_row.keys()) == expected_tags
-    else:
-        assert len(elb_labels_results) == 0
+    labels = {result.piggyback_hostname: result.piggyback_host_labels for result in elbv2_results}[
+        "DNSName-0"
+    ]
+    assert [key for key in labels if key.startswith("cmk/aws/tag/")] == [
+        f"cmk/aws/tag/{tag}" for tag in expected_tags
+    ]
 
     for result in elb_summary_results:
         assert list(result.content[0]["TagsForCmkLabels"].keys()) == expected_tags
@@ -682,13 +637,19 @@ def test_agent_aws_elbv2_load_balancer_hosts_get_the_resource_labels(
 
     results = elbv2_application.run().results
 
-    # The tags reach the host through the elbv2_generic_labels section.
+    # The third load balancer has no tags.
+    tags = {
+        "cmk/aws/tag/Key-0": "Value-0",
+        "cmk/aws/tag/Key-1": "Value-1",
+        "cmk/aws/tag/Key-2": "Value-2",
+    }
     assert {result.piggyback_hostname: result.piggyback_host_labels for result in results} == {
         f"DNSName-{i}": {
             "cmk/aws/service": "elbv2",
             "cmk/aws/name": f"LoadBalancerName-{i}",
             "cmk/aws/resource_id": f"LoadBalancerName-{i}",
             "cmk/aws/region": "region",
+            **(tags if i < 2 else {}),
         }
         for i in range(3)
     }

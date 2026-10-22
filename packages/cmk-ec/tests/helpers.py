@@ -12,12 +12,12 @@ from collections.abc import Iterable, Sequence
 from typing import Any, override
 
 from cmk.ccc.hostaddress import HostName
-from cmk.ec.config import Count, Rule, ServiceLevel
+from cmk.ec.config import Config, Count, Replication, Rule, ServiceLevel
 from cmk.ec.core_queries import HostInfo
 from cmk.ec.defaults import default_rule_pack
 from cmk.ec.event import Event
 from cmk.ec.history import History, HistoryWhat
-from cmk.ec.main import EventServer
+from cmk.ec.main import EventServer, StatusServer
 from cmk.ec.query import QueryGET
 
 HOUR = 3600
@@ -54,6 +54,15 @@ class FakeStatusSocket(socket.socket):
 
     def get_raw_response(self) -> bytes:
         return self._response
+
+
+def query_status_server(
+    status_server: StatusServer, query: str, *, allow_commands: bool = True
+) -> FakeStatusSocket:
+    """Lets the status server handle a single query of a client"""
+    status_socket = FakeStatusSocket(query.encode())
+    status_server.handle_client(status_socket, allow_commands, "127.0.0.1")
+    return status_socket
 
 
 def new_event(attrs: Event) -> Event:
@@ -144,6 +153,18 @@ def new_count(count: int, period: int) -> Count:
         separate_application=False,
         separate_match_groups=False,
     )
+
+
+def replication_slave_config(
+    config: Config, *, takeover: int | None = None, fallback: int | None = None
+) -> Config:
+    """Turns the configuration of an EC into one of a replication slave"""
+    replication = Replication(connect_timeout=10, interval=60, master=("master.example.com", 6558))
+    if takeover is not None:
+        replication["takeover"] = takeover
+    if fallback is not None:
+        replication["fallback"] = fallback
+    return config | {"replication": replication}
 
 
 class FakeConnection:

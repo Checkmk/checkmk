@@ -177,6 +177,7 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
     <g
       v-for="shape in shapes"
       :key="shape.site.site_id"
+      class="db-cmk-site-overview-sites-figure__site"
       :transform="shape.transform"
       @pointermove="hover(shape.site, $event)"
       @pointerleave="hovered = null"
@@ -198,6 +199,7 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
         </g>
       </ContextualLinkTrigger>
       <g v-else :aria-label="shape.site.alias">
+        <path :d="shape.hitPath" fill="transparent" />
         <path :d="shape.iconPath ?? ''" class="db-cmk-site-overview-sites-figure__offline" />
         <image
           :href="getIconPath(OFFLINE_SITE[shape.site.status].icon, theme)"
@@ -207,6 +209,11 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
           height="24"
         />
       </g>
+      <path
+        :d="shape.hitPath"
+        class="db-cmk-site-overview-sites-figure__highlight"
+        pointer-events="none"
+      />
       <foreignObject
         v-if="shape.label"
         :x="-shape.label.width / 2"
@@ -231,6 +238,15 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
 <style scoped>
 .db-cmk-site-overview-sites-figure {
   display: block;
+}
+
+.db-cmk-site-overview-sites-figure__highlight {
+  fill: transparent;
+}
+
+.db-cmk-site-overview-sites-figure__site:is(:hover, :has(:focus-visible))
+  .db-cmk-site-overview-sites-figure__highlight {
+  fill: color-mix(in srgb, var(--font-color) 10%, transparent);
 }
 
 .db-cmk-site-overview-sites-figure__offline {

@@ -63,7 +63,28 @@ async function hoverFirstHost(): Promise<void> {
   await fireEvent.pointerMove(area!, { clientX: 44, clientY: 49 })
 }
 
+function highlights(): Element[] {
+  return [...document.querySelectorAll('.db-hexagon-grid-figure__highlight')]
+}
+
 describe('CmkSiteOverviewHostsFigure', () => {
+  it('highlights the hovered host only', async () => {
+    renderFigure()
+
+    await hoverFirstHost()
+
+    expect(highlights()).toHaveLength(1)
+  })
+
+  it('removes the highlight once the pointer leaves', async () => {
+    renderFigure()
+    await hoverFirstHost()
+
+    await fireEvent.pointerLeave(document.querySelector('svg g')!)
+
+    expect(highlights()).toHaveLength(0)
+  })
+
   it('names the hosts by their state in its accessible name', () => {
     renderFigure()
 

@@ -100,7 +100,8 @@ const hoveredBox = computed(() => {
     x: center.x - layout.boxWidth / 2,
     y: center.y - layout.boxHeight / 2,
     width: layout.boxWidth,
-    height: layout.boxHeight
+    height: layout.boxHeight,
+    highlight: hexagonPath(layout.radius, center)
   }
 })
 
@@ -141,6 +142,12 @@ function track(event: PointerEvent): void {
         }"
         pointer-events="none"
       />
+      <path
+        v-if="hoveredBox"
+        class="db-hexagon-grid-figure__highlight"
+        :d="hoveredBox.highlight"
+        pointer-events="none"
+      />
       <ContextualLinkTrigger
         v-if="hoveredBox"
         :links="hoveredBox.cell.links"
@@ -166,5 +173,9 @@ function track(event: PointerEvent): void {
 <style scoped>
 .db-hexagon-grid-figure {
   display: block;
+}
+
+.db-hexagon-grid-figure__highlight {
+  fill: color-mix(in srgb, var(--font-color) 10%, transparent);
 }
 </style>

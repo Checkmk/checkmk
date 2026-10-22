@@ -29,9 +29,7 @@ def test_select_checkers_with_all() -> None:
     checkers = all_checkers()
     selected = _select_checkers("all", checkers)
 
-    assert len(selected) == 15
-    assert LocalizationChecker in selected
-    assert ModuleLayersChecker in selected
+    assert selected == list(checkers.values())
 
 
 def test_select_checkers_with_specific_checker() -> None:

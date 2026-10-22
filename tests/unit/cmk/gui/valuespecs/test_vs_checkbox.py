@@ -53,7 +53,7 @@ class TestCheckbox:
 
 @pytest.mark.usefixtures("request_context")
 def test_checkbox_triggers_its_click_action() -> None:
-    checkbox = vs.Checkbox(onclick=ClickAction(action="wato_toggle_attribute"))
+    checkbox = vs.Checkbox(click_action=ClickAction(action="wato_toggle_attribute"))
 
     assert click_handling(render_input(checkbox, False), "input[type=checkbox]") == (
         None,

@@ -5,6 +5,7 @@
 
 import pytest
 
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.monitor.hosts._api import _action_menu
 from cmk.gui.monitor.hosts._api._action_menu import _EXCLUDED_IDENTS, _icon_name, _serialize_entry
 from cmk.gui.openapi.framework.model import ApiOmitted
@@ -40,13 +41,12 @@ def test_serialize_entry_skips_entries_without_url() -> None:
     assert _serialize_entry(entry, {}) is None
 
 
-@pytest.mark.usefixtures("passthrough_macros")
-def test_serialize_entry_skips_onclick_commands() -> None:
+def test_serialize_entry_skips_click_actions() -> None:
     entry = IconEntry(
         sort_index=30,
         icon_name=StaticIcon(IconNames.reload),
         title="Reschedule",
-        url_spec="onclick:reschedule();",
+        url_spec=ClickAction(action="views_reschedule_check"),
     )
     assert _serialize_entry(entry, {}) is None
 

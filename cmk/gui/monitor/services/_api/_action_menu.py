@@ -120,9 +120,6 @@ def _serialize_entry(entry: IconEntry, row: Row) -> ServiceActionMenuItem | None
 
     url, target_frame = transform_action_url(entry.url_spec)
     url = replace_action_url_macros(url, "service", row)
-    if url.startswith("onclick:"):
-        # JavaScript command actions (e.g. reschedule) cannot be rendered as a native link.
-        return None
 
     icon = resolved_icon(entry.icon_name)
     return ServiceActionMenuItem(
@@ -166,7 +163,7 @@ def _icon_items(row: Row, hostname: str, service_name: str) -> list[ServiceActio
 
     items: list[ServiceActionMenuItem] = []
     for entry in entries:
-        # The dropdown only renders native links. Command icons (onclick JavaScript) and legacy
+        # The dropdown only renders native links. Command icons (click actions) and legacy
         # raw-HTML icons cannot be represented as one and are dropped; log them so a missing
         # action that still shows in the legacy view is diagnosable.
         if not isinstance(entry, IconEntry):

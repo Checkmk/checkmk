@@ -489,7 +489,7 @@ class HTMLGenerator(HTMLWriter):
         name: str,
         action: str | None = None,
         method: str = "GET",
-        onsubmit: str | None = None,
+        *,
         add_transid: bool = True,
         require_confirmation: RequireConfirmation | None = None,
         confirm_on_leave: bool = False,
@@ -500,7 +500,6 @@ class HTMLGenerator(HTMLWriter):
             name=name,
             action=action,
             method=method,
-            onsubmit=onsubmit,
             add_transid=add_transid,
             require_confirmation=require_confirmation,
             confirm_on_leave=confirm_on_leave,
@@ -521,7 +520,7 @@ class HTMLGenerator(HTMLWriter):
         name: str,
         action: str | None = None,
         method: str = "GET",
-        onsubmit: str | None = None,
+        *,
         add_transid: bool = True,
         require_confirmation: RequireConfirmation | None = None,
         confirm_on_leave: bool = False,
@@ -553,7 +552,6 @@ class HTMLGenerator(HTMLWriter):
             class_=name,
             action=action,
             method=method,
-            onsubmit=onsubmit,
             data_cmk_form_confirmation=data_cmk_form_confirmation,
             enctype=enctype if method.lower() == "post" else None,
             **(ts_function.data_attributes() if ts_function else {}),
@@ -798,7 +796,7 @@ class HTMLGenerator(HTMLWriter):
         self,
         varname: str,
         text: str,
-        onclick: str | None = None,
+        *,
         style: str = "",
         cssclass: str | None = None,
         title: str = "",
@@ -826,7 +824,6 @@ class HTMLGenerator(HTMLWriter):
             id_=varname,
             class_=classes,
             autocomplete="off",
-            onclick=onclick,
             style=style,
             disabled=disabled_arg,
             value=text,
@@ -872,15 +869,14 @@ class HTMLGenerator(HTMLWriter):
         autocomplete: str | None = None,
         style: str | None = None,
         type_: str | None = None,
-        oninput: str | None = None,
-        onblur: str | None = None,
         placeholder: str | None = None,
         data_attrs: HTMLTagAttributes | None = None,
         required: bool = False,
         title: str | None = None,
         ts_function: TSFunctionCall | None = None,
     ) -> None:
-        """ts_function: Called on the rendered input field, e.g. to register an input handler"""
+        """submit: ID of the button which is clicked when Enter is pressed in the field
+        ts_function: Called on the rendered input field, e.g. to register an input handler"""
         # Model
         error = user_errors.get(varname)
         value = self.request.get_str_input(varname, default_value)
@@ -921,13 +917,8 @@ class HTMLGenerator(HTMLWriter):
             "autocomplete": autocomplete,
             "readonly": "true" if read_only else None,
             "value": value,
-            "onblur": onblur,
-            "oninput": oninput,
-            "onkeydown": (
-                ("cmk.forms.textinput_enter_submit(event, %s);" % json.dumps(submit))
-                if submit
-                else None
-            ),
+            # See packages/cmk-frontend/src/js/modules/enter_submit.ts
+            "data_cmk_enter_submit": submit or None,
             "placeholder": placeholder,
             "required": "" if required else None,
             "title": title,
@@ -953,14 +944,14 @@ class HTMLGenerator(HTMLWriter):
         self, content: HTMLContent, status: str, title: str, **attrs: HTMLTagAttributeValue
     ) -> None:
         """Shows a colored badge with text (used on Setup activation page for the site status)"""
-        self.status_label_button(content, status, title, onclick=None, click_action=None, **attrs)
+        self.status_label_button(content, status, title, click_action=None, **attrs)
 
     def status_label_button(
         self,
         content: HTMLContent,
         status: str,
         title: str,
-        onclick: str | None = None,
+        *,
         click_action: ClickAction | None = None,
         **attrs: HTMLTagAttributeValue,
     ) -> None:
@@ -968,8 +959,7 @@ class HTMLGenerator(HTMLWriter):
         self.div(
             content,
             title=title,
-            class_=["status_label"] + (["button"] if onclick or click_action else []) + [status],
-            onclick=onclick,
+            class_=["status_label"] + (["button"] if click_action else []) + [status],
             **attrs,
             **(click_action.data_attributes() if click_action else {}),
         )
@@ -980,7 +970,7 @@ class HTMLGenerator(HTMLWriter):
         help_txt: str,
         class_: CSSSpec | None = None,
         href: str = "#",
-        onclick: str | None = None,
+        *,
         click_action: ClickAction | None = None,
     ) -> None:
         class_ = [] if class_ is None else class_
@@ -990,7 +980,6 @@ class HTMLGenerator(HTMLWriter):
             url=href,
             title=help_txt,
             icon=StaticIcon(IconNames.toggle_on if enabled else IconNames.toggle_off),
-            onclick=onclick,
             click_action=click_action,
             class_=class_,
         )
@@ -1568,8 +1557,8 @@ class HTMLGenerator(HTMLWriter):
         self,
         id_: str,
         dom_levels_up: int,
-        with_text: bool = False,
         *,
+        with_text: bool = False,
         show_mode: str,
     ) -> None:
         if show_mode == "enforce_show_more":
@@ -1599,6 +1588,7 @@ class HTMLGenerator(HTMLWriter):
         content: HTML,
         ident: str,
         method: PopupMethod,
+        *,
         data: Any = None,
         style: str | None = None,
         cssclass: CSSSpec | None = None,
@@ -1611,12 +1601,12 @@ class HTMLGenerator(HTMLWriter):
                 content,
                 ident,
                 method,
-                data,
-                style,
-                cssclass,
-                resizable,
-                popup_group,
-                hover_switch_delay,
+                data=data,
+                style=style,
+                cssclass=cssclass,
+                resizable=resizable,
+                popup_group=popup_group,
+                hover_switch_delay=hover_switch_delay,
             )
         )
 
@@ -1625,6 +1615,7 @@ class HTMLGenerator(HTMLWriter):
         content: HTML,
         ident: str,
         method: PopupMethod,
+        *,
         data: Any = None,
         style: str | None = None,
         cssclass: CSSSpec | None = None,
@@ -1674,40 +1665,24 @@ class HTMLGenerator(HTMLWriter):
             style=style,
         )
 
-    def element_dragger_js(
-        self, dragging_tag: str, drop_handler: str, handler_args: Mapping[str, Any]
-    ) -> None:
-        self.write_html(
-            HTMLGenerator.render_element_dragger(
-                dragging_tag,
-                drop_handler=f"function(new_index){{return {drop_handler}({json.dumps(handler_args)}, new_index);}})",
-            )
-        )
-
     # Currently only tested with tables. But with some small changes it may work with other
     # structures too.
     @staticmethod
-    def render_element_dragger(dragging_tag: str, drop_handler: str | DropHandler) -> HTML:
+    def render_element_dragger(dragging_tag: str, drop_handler: DropHandler) -> HTML:
         return HTMLWriter.render_a(
             HTMLGenerator.render_static_icon(
                 StaticIcon(IconNames.drag), title=_("Move this entry")
             ),
             href="#",
             class_=["element_dragger"],
-            **(
-                {
-                    "onmousedown": f"cmk.element_dragging.start(event, this, {json.dumps(dragging_tag.upper())}, {drop_handler}"
-                }
-                if isinstance(drop_handler, str)
-                else TSFunctionCall(
-                    function_name="element_dragger",
-                    arguments={
-                        "dragging_tag": dragging_tag.upper(),
-                        "drop_handler": drop_handler.name,
-                        "drop_handler_arguments": drop_handler.arguments,
-                    },
-                ).data_attributes()
-            ),
+            **TSFunctionCall(
+                function_name="element_dragger",
+                arguments={
+                    "dragging_tag": dragging_tag.upper(),
+                    "drop_handler": drop_handler.name,
+                    "drop_handler_arguments": drop_handler.arguments,
+                },
+            ).data_attributes(),
         )
 
     def date(
@@ -1715,7 +1690,6 @@ class HTMLGenerator(HTMLWriter):
         var: str,
         value: str,
         id_: str,
-        onchange: str | None = None,
     ) -> None:
         self.write_html(
             self.render_input(
@@ -1723,7 +1697,6 @@ class HTMLGenerator(HTMLWriter):
                 value=value,
                 type_="date",
                 id=id_,
-                onchange=onchange,
             )
         )
 
@@ -1732,7 +1705,6 @@ class HTMLGenerator(HTMLWriter):
         var: str,
         value: str,
         id_: str,
-        onchange: str | None = None,
     ) -> None:
         self.write_html(
             self.render_input(
@@ -1740,7 +1712,6 @@ class HTMLGenerator(HTMLWriter):
                 value=value,
                 type_="time",
                 id=id_,
-                onchange=onchange,
             )
         )
 

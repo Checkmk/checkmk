@@ -1380,7 +1380,7 @@ class IPMICredentials(Alternative):
         self,
         match: Callable[[AlternativeModel], int] | None = None,
         show_alternative_title: bool = False,
-        on_change: str | None = None,
+        *,
         orientation: Literal["horizontal", "vertical"] = "vertical",
         # ValueSpec
         title: str | None = None,
@@ -1399,7 +1399,6 @@ class IPMICredentials(Alternative):
             ],
             match=match,
             show_alternative_title=show_alternative_title,
-            on_change=on_change,
             orientation=orientation,
             title=title,
             help=help,

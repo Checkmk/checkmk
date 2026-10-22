@@ -1222,14 +1222,14 @@ CommandAcknowledge = Command(
 def _vs_date() -> DatePicker:
     return DatePicker(
         title=_("Acknowledge problems date picker"),
-        onchange=_ACK_EXPIRATION_ON_CHANGE,
+        on_change=_ACK_EXPIRATION_ON_CHANGE,
     )
 
 
 def _vs_time() -> TimePicker:
     return TimePicker(
         title=_("Acknowledge problems time picker"),
-        onchange=_ACK_EXPIRATION_ON_CHANGE,
+        on_change=_ACK_EXPIRATION_ON_CHANGE,
     )
 
 

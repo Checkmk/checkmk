@@ -55,8 +55,6 @@ class TableRow(NamedTuple):
     state: int
     fixed: bool
     id_: str | None
-    onmouseover: str | None
-    onmouseout: str | None
     ts_function: TSFunctionCall | None = None
 
 
@@ -64,8 +62,6 @@ class GroupHeader(NamedTuple):
     title: str
     fixed: bool
     id_: str | None
-    onmouseover: str | None
-    onmouseout: str | None
 
 
 TableRows = list[TableRow | GroupHeader]
@@ -213,8 +209,6 @@ class Table:
         collect_headers: bool = True,
         fixed: bool = False,
         id_: str | None = None,
-        onmouseover: str | None = None,
-        onmouseout: str | None = None,
         ts_function: TSFunctionCall | None = None,
     ) -> None:
         """ts_function: Called on the rendered row, e.g. to register hover handlers"""
@@ -225,8 +219,6 @@ class Table:
             collect_headers,
             fixed,
             id_,
-            onmouseover,
-            onmouseout,
             ts_function,
         )
 
@@ -267,8 +259,6 @@ class Table:
         collect_headers: bool,
         fixed: bool,
         id_: str | None,
-        onmouseover: str | None,
-        onmouseout: str | None,
         ts_function: TSFunctionCall | None,
     ) -> None:
         if self.next_header:
@@ -277,12 +267,10 @@ class Table:
                     title=self.next_header,
                     fixed=True,
                     id_=id_,
-                    onmouseover=onmouseover,
-                    onmouseout=onmouseout,
                 )
             )
             self.next_header = None
-        self.rows.append(TableRow([], css, state, fixed, id_, onmouseover, onmouseout, ts_function))
+        self.rows.append(TableRow([], css, state, fixed, id_, ts_function))
         if collect_headers:
             if self.options["collect_headers"] is False:
                 self.options["collect_headers"] = True
@@ -580,8 +568,6 @@ class Table:
             html.open_tr(
                 class_=class_,
                 id_=row.id_,
-                onmouseover=row.onmouseover,
-                onmouseout=row.onmouseout,
                 **(row.ts_function.data_attributes() if row.ts_function else {}),
             )
             for col_index, cell in enumerate(row.cells):

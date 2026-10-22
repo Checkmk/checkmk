@@ -26,7 +26,7 @@ def test_picker_renders_without_inline_event_handlers(picker: vs.ValueSpec[str])
 
 @pytest.mark.usefixtures("request_context")
 def test_date_picker_calls_its_change_function() -> None:
-    picker = vs.DatePicker(onchange=TSFunctionCall(function_name="set_focus_by_id"))
+    picker = vs.DatePicker(on_change=TSFunctionCall(function_name="set_focus_by_id"))
 
     assert ts_function_call(render_input(picker, ""), "cmk-date-time-picker") == (
         "set_focus_by_id",

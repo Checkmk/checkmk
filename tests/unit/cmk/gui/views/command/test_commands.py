@@ -1011,18 +1011,13 @@ def test_a_downtime_preset_in_december_ends_in_the_next_year() -> None:
     assert datetime.fromtimestamp(time_interval_end("next_month", start)) == datetime(2031, 1, 1)
 
 
-def _handlers_but_submit_on_enter(code: str) -> list[str]:
-    # The text input helper itself still submits the form on Enter by an inline handler
-    return [handler for handler in inline_event_handlers(code) if handler != "input.onkeydown"]
-
-
 @pytest.mark.usefixtures("request_context")
 def test_acknowledge_form_registers_its_handlers_without_inline_code() -> None:
     with output_funnel.plugged():
         command_acknowledge_render("host")
         code = output_funnel.drain()
 
-    assert _handlers_but_submit_on_enter(code) == []
+    assert inline_event_handlers(code) == []
     assert ts_function_call(code, "#ack_comment") == (
         "enable_submit_buttons_on_input",
         {"button_ids": ["_acknowledge"]},
@@ -1065,7 +1060,7 @@ def test_downtime_form_registers_its_handlers_without_inline_code(
         form.render("host")
         code = output_funnel.drain()
 
-    assert _handlers_but_submit_on_enter(code) == []
+    assert inline_event_handlers(code) == []
     assert ts_function_call(code, "#down_comment") == (
         "enable_submit_buttons_on_input",
         {"button_ids": ["_down_host", "_down_service"]},

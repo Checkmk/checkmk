@@ -957,7 +957,6 @@ class TextInput(ValueSpec[str]):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        oninput: str | None = None,
         autocomplete: str | None = None,
         placeholder: str | None = None,
         # ValueSpec
@@ -993,7 +992,6 @@ class TextInput(ValueSpec[str]):
         )
         self._minlen = minlen
         self._maxlen = maxlen
-        self._oninput = oninput
         self._placeholder = placeholder
         self._autocomplete = autocomplete
 
@@ -1019,7 +1017,6 @@ class TextInput(ValueSpec[str]):
             cssclass=self._cssclass,
             type_="text",
             autocomplete=self._autocomplete,
-            oninput=self._oninput if self._oninput else None,
             placeholder=self._placeholder,
         )
 
@@ -1132,7 +1129,6 @@ def ID(
     forbidden_chars: str = "",
     minlen: int | None = None,
     maxlen: int | None = None,
-    oninput: str | None = None,
     autocomplete: str | None = None,
     placeholder: str | None = None,
     # ValueSpec
@@ -1160,7 +1156,6 @@ def ID(
         regex_error=regex_requirement_message,
         minlen=minlen,
         maxlen=maxlen,
-        oninput=oninput,
         autocomplete=autocomplete,
         placeholder=placeholder,
         title=title,
@@ -1183,7 +1178,6 @@ def UserID(
     forbidden_chars: str = "",
     minlen: int | None = None,
     maxlen: int | None = None,
-    oninput: str | None = None,
     autocomplete: str | None = None,
     placeholder: str | None = None,
     # ValueSpec
@@ -1219,7 +1213,6 @@ def UserID(
         forbidden_chars=forbidden_chars,
         minlen=minlen,
         maxlen=maxlen,
-        oninput=oninput,
         autocomplete=autocomplete,
         placeholder=placeholder,
         title=title,
@@ -1256,7 +1249,6 @@ class RegExp(TextInput):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        oninput: str | None = None,
         autocomplete: str | None = None,
         placeholder: str | None = None,
         # From ValueSpec
@@ -1279,7 +1271,6 @@ class RegExp(TextInput):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            oninput=oninput,
             autocomplete=autocomplete,
             title=title,
             help=help,
@@ -1412,7 +1403,6 @@ class EmailAddress(TextInput):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        oninput: str | None = None,
         autocomplete: str | None = None,
         # From ValueSpec
         title: str | None = None,
@@ -1464,7 +1454,6 @@ class EmailAddress(TextInput):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            oninput=oninput,
             autocomplete=autocomplete,
             title=title,
             help=help,
@@ -1653,7 +1642,6 @@ class HostAddress(TextInput):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        oninput: str | None = None,
         autocomplete: str | None = None,
         # ValueSpec
         title: str | None = None,
@@ -1675,7 +1663,6 @@ class HostAddress(TextInput):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            oninput=oninput,
             autocomplete=autocomplete,
             title=title,
             help=help,
@@ -1807,7 +1794,6 @@ class Url(TextInput):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        oninput: str | None = None,
         autocomplete: str | None = None,
         placeholder: str | None = None,
         # ValueSpec
@@ -1830,7 +1816,6 @@ class Url(TextInput):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            oninput=oninput,
             autocomplete=autocomplete,
             placeholder=placeholder,
             title=title,
@@ -1989,7 +1974,6 @@ class TextAreaUnicode(TextInput):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        oninput: str | None = None,
         autocomplete: str | None = None,
         # ValueSpec
         title: str | None = None,
@@ -2011,7 +1995,6 @@ class TextAreaUnicode(TextInput):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            oninput=oninput,
             autocomplete=autocomplete,
             title=title,
             help=help,
@@ -2091,7 +2074,6 @@ class Filename(TextInput):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        oninput: str | None = None,
         autocomplete: str | None = None,
         # ValueSpec
         title: str | None = None,
@@ -2113,7 +2095,6 @@ class Filename(TextInput):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            oninput=oninput,
             autocomplete=autocomplete,
             title=title,
             help=help,
@@ -3107,8 +3088,9 @@ class Checkbox(ValueSpec[bool]):
         label: str | None = None,
         true_label: str | None = None,
         false_label: str | None = None,
+        *,
         # Click actions have to keep the default action (return true) to toggle the checkbox
-        onclick: str | ClickAction | None = None,
+        click_action: ClickAction | None = None,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,  # noqa: A002
@@ -3125,7 +3107,7 @@ class Checkbox(ValueSpec[bool]):
         self._label = label
         self._true_label = true_label if true_label is not None else _("on")
         self._false_label = false_label if false_label is not None else _("off")
-        self._onclick = onclick
+        self._click_action = click_action
 
     @override
     def canonical_value(self) -> bool:
@@ -3137,11 +3119,7 @@ class Checkbox(ValueSpec[bool]):
             varprefix,
             value,
             label=self._label,
-            **(
-                self._onclick.data_attributes()
-                if isinstance(self._onclick, ClickAction)
-                else {"onclick": self._onclick}
-            ),
+            **(self._click_action.data_attributes() if self._click_action else {}),
         )
 
     @override
@@ -3214,7 +3192,7 @@ class DropdownChoice[T](ValueSpec[T | None]):
         invalid_choice_title: str | None = None,
         invalid_choice_error: str | None = None,
         no_preselect_title: str | None = None,
-        on_change: str | TSFunctionCall | None = None,
+        on_change: TSFunctionCall | None = None,
         read_only: bool = False,
         encode_value: bool = True,
         html_attrs: HTMLTagAttributes | None = None,
@@ -3322,8 +3300,7 @@ class DropdownChoice[T](ValueSpec[T | None]):
             self._options_for_html(options),
             deflt=self._option_for_html(defval),
             locked_choice=None,
-            onchange=self._on_change if isinstance(self._on_change, str) else None,
-            ts_function=self._on_change if isinstance(self._on_change, TSFunctionCall) else None,
+            ts_function=self._on_change,
             ordered=self._sorted,
             label=None,
             class_=[],
@@ -3449,7 +3426,7 @@ class AjaxDropdownChoice(DropdownChoice[str]):
         # DropdownChoice
         label: str | None = None,
         html_attrs: HTMLTagAttributes | None = None,
-        on_change: str | TSFunctionCall | None = None,
+        on_change: TSFunctionCall | None = None,
         # From ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,  # noqa: A002
@@ -3522,8 +3499,7 @@ class AjaxDropdownChoice(DropdownChoice[str]):
             self._options_for_html(clean_choices),
             deflt=self._option_for_html(value),
             locked_choice=None,
-            onchange=self._on_change if isinstance(self._on_change, str) else None,
-            ts_function=self._on_change if isinstance(self._on_change, TSFunctionCall) else None,
+            ts_function=self._on_change,
             ordered=self._sorted,
             label=None,
             class_=["ajax-vals", self._cssclass if self._cssclass else ""],
@@ -3684,7 +3660,7 @@ def MonitoringState(
     invalid_choice_title: str | None = None,
     invalid_choice_error: str | None = None,
     no_preselect_title: str | None = None,
-    on_change: str | None = None,
+    on_change: TSFunctionCall | None = None,
     read_only: bool = False,
     encode_value: bool = True,
     html_attrs: HTMLTagAttributes | None = None,
@@ -3741,7 +3717,7 @@ class HostState(DropdownChoice):
         invalid_choice_title: str | None = None,
         invalid_choice_error: str | None = None,
         no_preselect_title: str | None = None,
-        on_change: str | None = None,
+        on_change: TSFunctionCall | None = None,
         read_only: bool = False,
         encode_value: bool = True,
         html_attrs: HTMLTagAttributes | None = None,
@@ -4618,7 +4594,7 @@ class OptionalDropdownChoice[T](DropdownChoice[T]):
         invalid_choice_title: str | None = None,
         invalid_choice_error: str | None = None,
         no_preselect_title: str | None = None,
-        on_change: str | None = None,
+        on_change: TSFunctionCall | None = None,
         read_only: bool = False,
         encode_value: bool = True,
         # ValueSpec
@@ -4749,7 +4725,7 @@ def Weekday(
     invalid_choice_title: str | None = None,
     invalid_choice_error: str | None = None,
     no_preselect_title: str | None = None,
-    on_change: str | None = None,
+    on_change: TSFunctionCall | None = None,
     read_only: bool = False,
     encode_value: bool = True,
     html_attrs: HTMLTagAttributes | None = None,
@@ -4802,7 +4778,7 @@ class RelativeDate(OptionalDropdownChoice[int]):
         invalid_choice_title: str | None = None,
         invalid_choice_error: str | None = None,
         no_preselect_title: str | None = None,
-        on_change: str | None = None,
+        on_change: TSFunctionCall | None = None,
         read_only: bool = False,
         encode_value: bool = True,
         # ValueSpec
@@ -5753,7 +5729,7 @@ def DateFormat(
     invalid_choice_title: str | None = None,
     invalid_choice_error: str | None = None,
     no_preselect_title: str | None = None,
-    on_change: str | None = None,
+    on_change: TSFunctionCall | None = None,
     read_only: bool = False,
     encode_value: bool = False,  # NOTE: Different!
     html_attrs: HTMLTagAttributes | None = None,
@@ -5806,7 +5782,7 @@ def TimeFormat(
     invalid_choice_title: str | None = None,
     invalid_choice_error: str | None = None,
     no_preselect_title: str | None = None,
-    on_change: str | None = None,
+    on_change: TSFunctionCall | None = None,
     read_only: bool = False,
     encode_value: bool = True,
     html_attrs: HTMLTagAttributes | None = None,
@@ -6000,7 +5976,7 @@ class Alternative(ValueSpec[AlternativeModel]):
         elements: Sequence[ValueSpec[AlternativeModel]],
         match: Callable[[AlternativeModel], int] | None = None,
         show_alternative_title: bool = False,
-        on_change: str | None = None,
+        *,
         orientation: Literal["horizontal", "vertical"] = "vertical",
         # ValueSpec
         title: str | None = None,
@@ -6013,7 +5989,6 @@ class Alternative(ValueSpec[AlternativeModel]):
         self._elements = elements
         self._match = match  # custom match function, returns index in elements
         self._show_alternative_title = show_alternative_title
-        self._on_change = on_change
         self._orientation = orientation  # or horizontal
 
     # Return the alternative (i.e. valuespec)
@@ -6052,13 +6027,7 @@ class Alternative(ValueSpec[AlternativeModel]):
             varprefix + "_use",
             options,
             deflt=("???" if sel_option is None else sel_option),
-            onchange=(
-                "cmk.valuespecs.cascading_change(this, %s, %d);%s"
-                % (json.dumps(varprefix), len(options), self._on_change)
-                if self._on_change
-                else None
-            ),
-            ts_function=None if self._on_change else _cascading_change(varprefix, len(options)),
+            ts_function=_cascading_change(varprefix, len(options)),
         )
         if self._orientation == "vertical":
             html.br()
@@ -7237,7 +7206,6 @@ class LDAPDistinguishedName(TextInput):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        oninput: str | None = None,
         autocomplete: str | None = None,
         placeholder: str | None = None,
         # ValueSpec
@@ -7260,7 +7228,6 @@ class LDAPDistinguishedName(TextInput):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            oninput=oninput,
             autocomplete=autocomplete,
             placeholder=placeholder,
             title=title,
@@ -7324,7 +7291,6 @@ class Password(TextInput):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        oninput: str | None = None,
         autocomplete: str | None = "new-password",  # NOTE: Different!
         placeholder: str | None = None,
         # ValueSpec
@@ -7365,7 +7331,6 @@ class Password(TextInput):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            oninput=oninput,
             autocomplete=autocomplete,
             placeholder=placeholder,
             title=title,
@@ -7465,7 +7430,6 @@ class PasswordSpec(Password):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        oninput: str | None = None,
         autocomplete: str | None = "new-password",  # NOTE: Different!
         placeholder: str | None = None,
         # ValueSpec
@@ -7491,7 +7455,6 @@ class PasswordSpec(Password):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            oninput=oninput,
             autocomplete=autocomplete,
             placeholder=placeholder,
             title=title,
@@ -7706,7 +7669,7 @@ class UploadOrPasteTextFile(Alternative):
         # NOTE: Match defaut is different!
         match: Callable[[Any], int] | None = lambda val: 0 if isinstance(val, tuple) else 1,
         show_alternative_title: bool = False,
-        on_change: str | None = None,
+        *,
         orientation: Literal["horizontal", "vertical"] = "vertical",
         allowed_extensions: Iterable[str] | None = None,
         mime_types: Iterable[str] | None = None,
@@ -7735,7 +7698,6 @@ class UploadOrPasteTextFile(Alternative):
             elements=list(elements) + additional_elements,
             match=match,
             show_alternative_title=show_alternative_title,
-            on_change=on_change,
             orientation=orientation,
             title=title,
             help=help,
@@ -7767,7 +7729,7 @@ class TextOrRegExp(Alternative):
         allow_empty: bool = True,
         # Alternative
         show_alternative_title: bool = False,
-        on_change: str | None = None,
+        *,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,  # noqa: A002
@@ -7801,7 +7763,6 @@ class TextOrRegExp(Alternative):
             # Use RegExp field when value is prefixed with "~"
             match=lambda v: 1 if v and v[0] == "~" else 0,
             show_alternative_title=show_alternative_title,
-            on_change=on_change,
             orientation="horizontal",
             title=title,
             help=help,
@@ -8056,7 +8017,7 @@ class _SingleLabel(AjaxDropdownChoice):
         strict: Literal["True", "False"] = "False",
         object_type: Literal["host", "service"] | None = None,
         # DropdownChoice
-        on_change: str | TSFunctionCall | None = None,
+        on_change: TSFunctionCall | None = None,
     ):
         html_attrs: HTMLTagAttributes = {"data-world": world.value}
         if object_type is not None:
@@ -8296,9 +8257,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
                 icon_categories.append((category_name, category_alias, by_cat[category_name]))
         return icon_categories
 
-    def _render_icon(
-        self, icon: str | None, onclick: str = "", title: str = "", id_: str = ""
-    ) -> HTML:
+    def _render_icon(self, icon: str | None, title: str = "", id_: str = "") -> HTML:
         if not icon:
             icon = self._empty_img
 
@@ -8307,9 +8266,6 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             html.write_text_permissive(" + ")
         else:
             icon_tag = html.render_icon(DynamicIconName(icon), title=title, id_=id_)
-
-        if onclick:
-            icon_tag = HTMLWriter.render_a(icon_tag, href="#", onclick=onclick)
 
         return icon_tag
 
@@ -8347,7 +8303,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             selection_text = _("Choose another %(kind)s") % {
                 "kind": "Emblem" if is_emblem else "Icon"
             }
-            content = self._render_icon(value, "", selection_text, id_=varprefix + "_img")
+            content = self._render_icon(value, selection_text, id_=varprefix + "_img")
         else:
             content = HTML.with_escaping(_("Select an Icon"))
 
@@ -8596,6 +8552,7 @@ def Fontsize(
 class Color(ValueSpec[None | str]):
     def __init__(
         self,
+        *,
         allow_empty: bool = True,
         # ValueSpec
         title: str | None = None,
@@ -8880,7 +8837,7 @@ class SetupSiteChoice(DropdownChoice):
         invalid_choice: DropdownInvalidChoice = "complain",
         invalid_choice_error: str | None = None,
         no_preselect_title: str | None = None,
-        on_change: str | None = None,
+        on_change: TSFunctionCall | None = None,
         read_only: bool = False,
         encode_value: bool = True,
         html_attrs: HTMLTagAttributes | None = None,
@@ -8952,7 +8909,7 @@ def LogLevelChoice(
     invalid_choice_title: str | None = None,
     invalid_choice_error: str | None = None,
     no_preselect_title: str | None = None,
-    on_change: str | None = None,
+    on_change: TSFunctionCall | None = None,
     read_only: bool = False,
     encode_value: bool = True,
     html_attrs: HTMLTagAttributes | None = None,
@@ -9107,13 +9064,6 @@ def type_name(v: object) -> str:
         return escaping.escape_attribute(str(type(v)))
 
 
-def _picker_change_attributes(onchange: str | TSFunctionCall | None) -> dict[str, str]:
-    """The change handler of the inputs of a picker, which is called on the rendered picker"""
-    if isinstance(onchange, TSFunctionCall):
-        return onchange.data_attributes()
-    return {"onchange": onchange} if onchange else {}
-
-
 class DatePicker(ValueSpec[str]):
     def __init__(
         self,
@@ -9122,9 +9072,10 @@ class DatePicker(ValueSpec[str]):
         help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
-        onchange: str | TSFunctionCall | None = None,
+        # Called on the rendered picker, e.g. to register a change handler
+        on_change: TSFunctionCall | None = None,
     ):
-        self._onchange = onchange
+        self._on_change = on_change
         self._label = label
         super().__init__(
             title=title,
@@ -9145,7 +9096,7 @@ class DatePicker(ValueSpec[str]):
                 "date_varprefix": varprefix,
                 "date_value": value,
             },
-            **_picker_change_attributes(self._onchange),
+            **(self._on_change.data_attributes() if self._on_change else {}),
         )
 
     @override
@@ -9183,10 +9134,11 @@ class TimePicker(ValueSpec[str]):
         help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
-        onchange: str | TSFunctionCall | None = None,
+        # Called on the rendered picker, e.g. to register a change handler
+        on_change: TSFunctionCall | None = None,
         server_time_text: str | None = None,
     ):
-        self._onchange = onchange
+        self._on_change = on_change
         self._server_time_text = server_time_text
         super().__init__(
             title=title,
@@ -9207,7 +9159,7 @@ class TimePicker(ValueSpec[str]):
         html.vue_component(
             "cmk-date-time-picker",
             data=data,
-            **_picker_change_attributes(self._onchange),
+            **(self._on_change.data_attributes() if self._on_change else {}),
         )
 
     @override

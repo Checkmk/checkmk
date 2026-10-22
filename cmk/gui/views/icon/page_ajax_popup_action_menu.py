@@ -59,11 +59,7 @@ def ajax_popup_action_menu(ctx: PageContext) -> None:
             elif icon.url_spec:
                 url, target_frame = transform_action_url(icon.url_spec)
                 url = replace_action_url_macros(url, what, row)
-                onclick = None
-                if url.startswith("onclick:"):
-                    onclick = url[8:]
-                    url = "#"
-                html.open_a(href=url, target=target_frame, onclick=onclick)
+                html.open_a(href=url, target=target_frame)
 
             if isinstance(icon.icon_name, StaticIcon):
                 html.static_icon(icon.icon_name)

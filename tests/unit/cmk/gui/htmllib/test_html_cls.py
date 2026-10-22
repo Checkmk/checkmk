@@ -25,7 +25,13 @@ from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
-from tests.unit.cmk.gui.compare_html import click_handling, compare_html, ts_function_call
+from tests.unit.cmk.gui.compare_html import (
+    click_handling,
+    compare_html,
+    enter_submit_button,
+    inline_event_handlers,
+    ts_function_call,
+)
 
 
 @pytest.mark.usefixtures("request_context")
@@ -279,6 +285,34 @@ def test_text_input_calls_its_ts_function() -> None:
         written_text = output_funnel.drain()
 
     assert ts_function_call(written_text, "input") == ("set_focus_by_id", {"x": 1})
+
+
+@pytest.mark.usefixtures("request_context")
+def test_text_input_clicks_its_submit_button_on_enter_without_inline_code() -> None:
+    with output_funnel.plugged():
+        html.text_input(varname="comment", submit="_save")
+        written_text = output_funnel.drain()
+
+    assert (inline_event_handlers(written_text), enter_submit_button(written_text, "input")) == (
+        [],
+        "_save",
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_text_input_submits_on_enter_and_calls_its_ts_function() -> None:
+    with output_funnel.plugged():
+        html.text_input(
+            varname="comment",
+            submit="_save",
+            ts_function=TSFunctionCall(function_name="set_focus_by_id"),
+        )
+        written_text = output_funnel.drain()
+
+    assert (
+        enter_submit_button(written_text, "input"),
+        ts_function_call(written_text, "input"),
+    ) == ("_save", ("set_focus_by_id", {}))
 
 
 @pytest.mark.usefixtures("request_context")

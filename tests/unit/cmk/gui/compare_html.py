@@ -134,6 +134,11 @@ def ts_function_call(html_text: HTML | str, selector: str) -> tuple[object, obje
     )
 
 
+def enter_submit_button(html_text: HTML | str, selector: str) -> object:
+    """The ID of the button an input field clicks when Enter is pressed in it"""
+    return _select_one(html_text, selector).get("data-cmk_enter_submit")
+
+
 def inline_event_handlers(html_text: HTML | str) -> list[str]:
     """All inline event handler attributes (onclick, onchange, ...) of all elements"""
     return [

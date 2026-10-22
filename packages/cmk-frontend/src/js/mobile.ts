@@ -15,6 +15,7 @@ import {
   prevent_hash_link_navigation,
   register_click_actions
 } from './modules/click_action_dispatcher'
+import { init_enter_submit_dispatcher } from './modules/enter_submit'
 import * as forms from './modules/forms'
 import {
   type CallableFunction,
@@ -112,6 +113,7 @@ register_click_actions({
 $(document).ready(function () {
   init_callable_ts_functions(document)
   init_click_action_dispatcher()
+  init_enter_submit_dispatcher()
 })
 
 export const cmk_export = {

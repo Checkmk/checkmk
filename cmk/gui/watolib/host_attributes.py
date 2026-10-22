@@ -1418,7 +1418,7 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
             label=_u(choice[1]),
             true_label=self._tag_group.title,
             false_label="{} {}".format(_("Not"), self._tag_group.title),
-            onclick=ClickAction(action="wato_fix_visibility"),
+            click_action=ClickAction(action="wato_fix_visibility"),
         )
 
     @override

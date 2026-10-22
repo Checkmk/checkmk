@@ -162,14 +162,8 @@ def _paint_icons(
             elif icon.url_spec:
                 url, target_frame = transform_action_url(icon.url_spec)
                 url = replace_action_url_macros(url, what, row)
-
-                onclick = ""
-                if url.startswith("onclick:"):
-                    onclick = url[8:]
-                    url = "#"
-
                 output += HTMLGenerator.render_icon_button(
-                    url, icon.title or "", icon.icon_name, onclick=onclick, target=target_frame
+                    url, icon.title or "", icon.icon_name, target=target_frame
                 )
             elif isinstance(icon.icon_name, StaticIcon):
                 output += HTMLGenerator.render_static_icon(icon.icon_name, title=icon.title)

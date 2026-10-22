@@ -13,6 +13,7 @@ import $ from 'jquery'
 import '@/modules/callable_functions'
 import * as click_action_dispatcher from '@/modules/click_action_dispatcher'
 import '@/modules/click_actions'
+import { init_enter_submit_dispatcher } from '@/modules/enter_submit'
 import * as ts_function_dispatcher from '@/modules/ts_function_dispatcher'
 
 import * as activation from './modules/activation'
@@ -81,6 +82,8 @@ $(() => {
 
   // CSP-compatible replacement for inline onclick handlers
   click_action_dispatcher.init_click_action_dispatcher()
+  // CSP-compatible replacement for inline onkeydown handlers submitting on Enter
+  init_enter_submit_dispatcher()
 
   document
     .querySelectorAll<HTMLFormElement>('form[data-cmk_form_confirmation]')

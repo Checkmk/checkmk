@@ -354,18 +354,6 @@ function ajax_call_autocomplete_labels(
   })
 }
 
-// Handle Enter key in textfields
-export function textinput_enter_submit(event: KeyboardEvent, submit: string): boolean | void {
-  const keyCode = event.which || event.keyCode
-  if (keyCode == 13) {
-    if (submit) {
-      const button = document.getElementById(submit)
-      if (button) button.click()
-    }
-    return prevent_default_events(event)
-  }
-}
-
 export function confirm_dialog_form_submit(
   dialog_options: any,
   form_id: string,

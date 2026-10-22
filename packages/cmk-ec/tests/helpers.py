@@ -8,10 +8,10 @@
 import ast
 import socket
 import time
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, override
 
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ec.config import Config, Count, Replication, Rule, ServiceLevel
 from cmk.ec.core_queries import HostInfo
 from cmk.ec.defaults import default_rule_pack
@@ -152,6 +152,19 @@ def new_count(count: int, period: int) -> Count:
         separate_host=False,
         separate_application=False,
         separate_match_groups=False,
+    )
+
+
+def new_host(name: str, custom_variables: Mapping[str, str] | None = None) -> HostInfo:
+    """Returns a host of the monitoring core"""
+    return HostInfo(
+        name=HostName(name),
+        alias="",
+        address=HostAddress(""),
+        custom_variables={} if custom_variables is None else custom_variables,
+        contacts=set(),
+        contact_groups=set(),
+        host_groups=set(),
     )
 
 

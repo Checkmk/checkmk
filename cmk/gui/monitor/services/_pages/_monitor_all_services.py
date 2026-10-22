@@ -6,6 +6,7 @@ from dataclasses import asdict
 from typing import override
 
 from cmk.ccc.site import omd_site
+from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.header import make_header
@@ -29,6 +30,7 @@ from cmk.gui.monitor.services._supported_actions import SERVICE_SUPPORTED_ACTION
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.type_defs import Visual
 from cmk.gui.user_sites import sorted_sites
 from cmk.shared_typing.monitoring.all_services import (
     AcknowledgeDefaults,
@@ -42,12 +44,35 @@ from cmk.shared_typing.monitoring.all_services import (
     Site,
 )
 from cmk.utils import paths
+from cmk.web.utils.icons import DynamicIconName
 from cmk.web.utils.urls import makeuri_contextless
 
 _PAGE_TITLE = _l("All services")
 
 _LEGACY_VIEW_NAME = "allservices"
 _LEGACY_VIEW_PERMISSION = f"view.{_LEGACY_VIEW_NAME}"
+
+
+def monitor_all_services_visual_spec() -> Visual:
+    return {
+        "owner": UserId.builtin(),
+        "description": "",
+        "hidebutton": False,
+        "public": True,
+        "topic": "overview",
+        "title": _PAGE_TITLE,
+        "name": "monitor_all_services",
+        "sort_index": 25,
+        "is_show_more": False,
+        "icon": DynamicIconName("services"),
+        "hidden": False,
+        "single_infos": [],
+        "context": {},
+        "link_from": {},
+        "add_context_to_title": True,
+        "packaged": False,
+        "main_menu_search_terms": [],
+    }
 
 
 class MonitorAllServicesPage(Page):

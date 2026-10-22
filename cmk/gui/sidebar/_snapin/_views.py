@@ -18,6 +18,9 @@ from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_menu_pages import main_menu_page_registry
 from cmk.gui.main_menu_types import MainMenuItem
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
+from cmk.gui.monitor.services._pages._monitor_all_services import (
+    monitor_all_services_visual_spec,
+)
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import all_permissions
@@ -139,6 +142,9 @@ def view_menu_items(user_permissions: UserPermissions) -> list[VisualMenuItem]:
     if user.may("view.allhosts"):
         all_hosts_visual_spec = monitor_all_hosts_visual_spec()
         pages_to_show.append((all_hosts_visual_spec["name"], all_hosts_visual_spec))
+    if user.may("view.allservices"):
+        all_services_visual_spec = monitor_all_services_visual_spec()
+        pages_to_show.append((all_services_visual_spec["name"], all_services_visual_spec))
     # Pages a feature plugin registered, rather than hardcoded above: this module is
     # edition-independent and must not import the non-free plugins themselves.
     for main_menu_page in main_menu_page_registry.values():

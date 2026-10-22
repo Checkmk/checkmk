@@ -94,7 +94,9 @@ Interfaces
 
   * Classic: ``view`` (``cmk/gui/views/page_show_view.py``).
   * Monitoring pages: ``monitor_all_hosts``
-    (``cmk/gui/monitor/hosts/_pages/_monitor_all_hosts.py``) and
+    (``cmk/gui/monitor/hosts/_pages/_monitor_all_hosts.py``),
+    ``monitor_all_services``
+    (``cmk/gui/monitor/services/_pages/_monitor_all_services.py``) and
     ``monitor_host_services``
     (``cmk/gui/monitor/services/_pages/_monitor_host_services.py``).
 

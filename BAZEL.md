@@ -35,6 +35,11 @@ $ bazel lint --fix //packages/cmk-ccc/...
 
 # Type-check the whole repo with mypy
 $ bazel build --config=mypy //...
+
+# Format-check, lint and type-check only your changes, see --delta below
+$ bazel run //:format.check -- --delta
+$ bazel run //:lint.check -- --delta
+$ bazel run //:mypy.check -- --delta
 ```
 
 ## Running tests
@@ -96,6 +101,24 @@ Formatting and linting are intentionally kept separate. Each step is predictable
 and has no hidden side effects. This model applies consistently across all
 supported languages.
 
+With `--delta`, `//:format`, `//:format.check`, `//:lint`, `//:lint.check` and
+`//:mypy.check` cover only the files changed compared to the branch your
+checkout belongs to (origin/master, or origin/<version> on a stable branch):
+those committed on your branch since it split off, plus staged, unstaged and
+untracked ones, no matter where in the repo you run the command. A summary at
+the end lists what each tool covered. The `.check` targets only report;
+`//:format` and `//:lint` also fix.
+
+`//:lint`, `//:lint.check` and `//:mypy.check` work on the Bazel targets that
+list the changed files in their srcs or hdrs: a changed file no target lists is
+not checked, and findings in unchanged files of those targets are reported too.
+`//:mypy.check` also checks the targets that depend on them.
+
+Bazel flags go after `--delta`, e.g.
+`bazel run //:mypy.check -- --delta --cmk_edition=pro`: `//:lint`,
+`//:lint.check` and `//:mypy.check` pass them on to the `bazel lint` or
+`bazel build` they run, as those given to `bazel run` don't reach it.
+
 ### Formatting
 
 ```console
@@ -104,6 +127,10 @@ $ bazel run //:format path/to/file.py other/file.py
 
 # Check formatting without modifying (CI-safe)
 $ bazel run //:format.check path/to/file.py
+
+# Format or check only the files you changed
+$ bazel run //:format -- --delta
+$ bazel run //:format.check -- --delta
 ```
 
 Formatting **only** adjusts layout: whitespace, indentation, line breaks. It
@@ -129,6 +156,11 @@ $ bazel lint --fix //packages/cmk-ccc/...
 
 # Lint the whole repo (slow on the first run)
 $ bazel lint ...
+
+# Lint the targets holding the files you changed, plus buildifier's checks on
+# the changed Starlark files; //:lint also applies the fixes
+$ bazel run //:lint.check -- --delta
+$ bazel run //:lint -- --delta
 ```
 
 Linting enforces language rules and best practices, runs static analysis, and
@@ -146,7 +178,18 @@ $ bazel build --config=mypy //packages/cmk-agent-based:all
 
 # Type-check everything under cmk (edition-aware)
 $ bazel build --config=mypy //cmk/...
+
+# Type-check the targets holding the files you changed and all targets that
+# depend on them, also the users of non-Python files such as the sources of
+# generated code; for a deleted Python file or a changed BUILD or .bzl file,
+# the Python targets of the packages concerned and their users
+$ bazel run //:mypy.check -- --delta
 ```
+
+`//:mypy.check -- --delta` cannot tell what changes to mypy's own setup
+affect, such as `pyproject.toml`, `bazel/tools/aspects.bzl` or the Python
+requirements. It then names the changed files, exits with 1 and asks you to
+run `bazel build --config=mypy //...`.
 
 ## Key CLI flags
 

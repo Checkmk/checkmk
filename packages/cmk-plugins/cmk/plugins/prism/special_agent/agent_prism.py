@@ -23,8 +23,8 @@ from typing import Any, NotRequired, TypedDict
 import requests
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.plugins.prism.special_agent.session import base_url, new_session
 from cmk.server_side_programs.v1 import (
-    HostnameValidationAdapter,
     report_agent_crashes,
     vcrtrace,
 )
@@ -58,13 +58,11 @@ class SessionManager:
     def __init__(
         self, username: str, password: str, timeout: int, cert_check: bool | str, base_url: str
     ) -> None:
-        self._session = requests.Session()
+        self._session = new_session(base_url, cert_check)
         auth_encoded = base64.b64encode(f"{username}:{password}".encode()).decode()
         self._session.headers.update({"Authorization": f"Basic {auth_encoded}"})
         self._verify = cert_check is not False
         self._timeout = timeout
-        if isinstance(cert_check, str):
-            self._session.mount(base_url, HostnameValidationAdapter(cert_check))
 
     def get(self, url: str, params: dict[str, str] | None = None) -> Any:
         resp = self._session.get(url, params=params, verify=self._verify, timeout=self._timeout)
@@ -153,16 +151,16 @@ def fetch_from_gateway(
     server: str, port: int, username: str, password: str, timeout: int, cert_check: bool | str
 ) -> GatewayData:
     LOGGING.info("setup HTTPS connection..")
-    base_url = f"https://{server}:{port}"
+    url = base_url(server, port)
     session_manager = SessionManager(
         username=username,
         password=password,
         timeout=timeout,
         cert_check=cert_check,
-        base_url=base_url,
+        base_url=url,
     )
-    base_url_v1 = f"{base_url}/PrismGateway/services/rest/v1"
-    base_url_v2 = f"{base_url}/PrismGateway/services/rest/v2.0"
+    base_url_v1 = f"{url}/PrismGateway/services/rest/v1"
+    base_url_v2 = f"{url}/PrismGateway/services/rest/v2.0"
 
     hosts_obj = session_manager.get(f"{base_url_v2}/hosts")
     hosts_networks = {}

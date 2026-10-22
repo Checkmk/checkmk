@@ -56,6 +56,6 @@ class CustomServices(CmkPage):
         return self.services_table.locator("tr.data", has_text=service_name)
 
     def edit_button(self, service_name: str) -> Locator:
-        return self.service_row(service_name).locator(
-            "td.buttons a[title='Edit this custom service']"
+        return self.service_row(service_name).get_by_role(
+            "link", name="Edit this custom service", exact=True
         )

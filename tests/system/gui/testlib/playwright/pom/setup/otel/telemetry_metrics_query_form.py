@@ -64,8 +64,18 @@ class TelemetryMetricsQueryForm:
         self._search_suggestions(value)
         self._pick_suggestion(value)
         self._leave_editing()
-        condition = self.attribute_filter.get_by_role("group", name=f"{attribute_key} is {value}")
-        expect(condition, "The condition was not applied").to_be_visible()
+        expect(
+            self.attribute_condition(attribute_key, value), "The condition was not applied"
+        ).to_be_visible()
+
+    def attribute_condition(self, attribute_key: str, value: str) -> Locator:
+        return self.attribute_filter.get_by_role("group", name=f"{attribute_key} is {value}")
+
+    def remove_attribute_condition(self, attribute_key: str, value: str) -> None:
+        logger.info("Remove the filter on '%s' is '%s'", attribute_key, value)
+        condition = self.attribute_condition(attribute_key, value)
+        condition.get_by_role("button", name="Remove condition", exact=True).click()
+        expect(condition, "The condition was not removed").not_to_be_visible()
 
     @property
     def group_by_summary(self) -> Locator:
@@ -89,6 +99,28 @@ class TelemetryMetricsQueryForm:
         expect(self.group_by_summary, "The group key was not applied").to_contain_text(
             attribute_key
         )
+
+    @property
+    def consolidation_summary(self) -> Locator:
+        return self.root.get_by_role("group", name="Consolidation", exact=True)
+
+    def change_consolidation(self, function_title: str, lookback_minutes: int) -> None:
+        """Set the consolidation function, as its dropdown names it (e.g. "Max"), and lookback."""
+        logger.info(
+            "Change the consolidation to '%s' over the last %d minutes",
+            function_title,
+            lookback_minutes,
+        )
+        self.consolidation_summary.get_by_role("button", name="Edit consolidation").click()
+        self.root.get_by_role("combobox", name="Consolidation function", exact=True).click()
+        self._pick_suggestion(function_title)
+        self.root.get_by_role("spinbutton", name="Lookback Minutes", exact=True).fill(
+            str(lookback_minutes)
+        )
+        self._leave_editing()
+        expect(
+            self.consolidation_summary, "The consolidation function was not changed"
+        ).to_contain_text(function_title, ignore_case=True)
 
     def _leave_editing(self) -> None:
         """Click outside the editor, which leaves editing and keeps what was entered.

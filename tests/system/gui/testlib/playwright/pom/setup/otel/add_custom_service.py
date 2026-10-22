@@ -6,7 +6,7 @@ import logging
 import re
 from typing import override
 
-from playwright.sync_api import expect, Locator
+from playwright.sync_api import expect, Locator, Page
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
 from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
@@ -22,23 +22,13 @@ from tests.system.gui.testlib.playwright.pom.setup.otel.telemetry_metrics_query_
 logger = logging.getLogger(__name__)
 
 
-class AddCustomService(CmkPage):
-    """Represent the page `Setup -> Telemetry -> Custom Services -> Add custom service`.
+class CustomServiceWizard(CmkPage):
+    """The wizard of a custom service: name the configuration, define the metric, assign a host.
 
-    Hosts the creation wizard: name the configuration, define the metric, assign a host.
+    Editing a service opens it at the metric step; the configuration name stays as it is.
     """
 
-    page_title = "Add custom service"
-
-    @override
-    def navigate(self) -> None:
-        logger.info("Navigate to '%s' page", self.page_title)
-        custom_services_page = CustomServices(self.page)
-        self.click_and_wait_for_navigation(
-            custom_services_page.add_custom_service_button,
-            frame_url=re.compile("mode=create_otel_custom_service"),
-        )
-        self.validate_page()
+    page_title: str
 
     @override
     def validate_page(self) -> None:
@@ -75,12 +65,6 @@ class AddCustomService(CmkPage):
             self.step_heading(heading), f"The wizard did not move on to the step {heading!r}"
         ).to_be_visible()
 
-    # Step 1: General configuration properties
-
-    @property
-    def configuration_name_input(self) -> Locator:
-        return self.active_step.get_by_role("textbox", name="Configuration name")
-
     # Step 2: Define metric
 
     @property
@@ -112,10 +96,6 @@ class AddCustomService(CmkPage):
         self._pick_suggestion(host_name)
         expect(self.host_select, f"Host {host_name!r} was not selected").to_contain_text(host_name)
 
-    @property
-    def create_and_activate_button(self) -> Locator:
-        return self.active_step.get_by_role("button", name="Create & activate changes", exact=True)
-
     # Dropdowns of every step
 
     @property
@@ -130,3 +110,51 @@ class AddCustomService(CmkPage):
         option = self._open_suggestions.get_by_role("option", name=title, exact=True)
         expect(option, f"No suggestion titled {title!r} was offered").to_be_visible()
         option.click()
+
+
+class AddCustomService(CustomServiceWizard):
+    """Represent the page `Setup -> Telemetry -> Custom Services -> Add custom service`."""
+
+    page_title = "Add custom service"
+
+    @override
+    def navigate(self) -> None:
+        logger.info("Navigate to '%s' page", self.page_title)
+        custom_services_page = CustomServices(self.page)
+        self.click_and_wait_for_navigation(
+            custom_services_page.add_custom_service_button,
+            frame_url=re.compile("mode=create_otel_custom_service"),
+        )
+        self.validate_page()
+
+    @property
+    def configuration_name_input(self) -> Locator:
+        return self.active_step.get_by_role("textbox", name="Configuration name")
+
+    @property
+    def create_and_activate_button(self) -> Locator:
+        return self.active_step.get_by_role("button", name="Create & activate changes", exact=True)
+
+
+class EditCustomService(CustomServiceWizard):
+    """Represent the page `Setup -> Telemetry -> Custom Services -> Edit custom service`."""
+
+    page_title = "Edit custom service"
+
+    def __init__(self, page: Page, service_name: str, navigate_to_page: bool = True) -> None:
+        self.service_name = service_name
+        super().__init__(page, navigate_to_page)
+
+    @override
+    def navigate(self) -> None:
+        logger.info("Navigate to '%s' page of '%s'", self.page_title, self.service_name)
+        custom_services_page = CustomServices(self.page)
+        self.click_and_wait_for_navigation(
+            custom_services_page.edit_button(self.service_name),
+            frame_url=re.compile("mode=edit_otel_custom_service"),
+        )
+        self.validate_page()
+
+    @property
+    def save_and_activate_button(self) -> Locator:
+        return self.active_step.get_by_role("button", name="Save & activate changes", exact=True)

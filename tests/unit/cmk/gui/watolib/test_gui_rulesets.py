@@ -7,6 +7,7 @@ from collections.abc import Callable, Mapping
 
 # pylint: disable=redefined-outer-name
 from dataclasses import dataclass
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -19,6 +20,7 @@ from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
+from cmk.utils.hostaddress import HostName
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets import ruleset_matcher
 from cmk.utils.rulesets.definition import RuleGroup
@@ -809,6 +811,35 @@ def test_matches_search_with_rules_invalid_host_regex(with_admin_login: UserId) 
     ruleset.append_rule(folder, rule)
 
     assert ruleset.matches_search_with_rules({"rule_host_list": "foobar123"}) is False
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    ("ruleset_name", "value"),
+    [
+        pytest.param("snmp_exclude_sections", {"sections_disabled": ["if64"], "sections_enabled": []}, id="disabled or enabled sections"),
+        pytest.param("snmp_check_interval", (["if64"], ("cached", 300.0)), id="fetch intervals"),
+        pytest.param("snmpv3_contexts", ("if64", [""], "stop_on_timeout"), id="SNMPv3 contexts"),
+    ],
+)
+# fmt: on
+@pytest.mark.usefixtures("with_host")
+def test_every_matching_snmp_section_rule_is_effective(ruleset_name: str, value: object) -> None:
+    # The fetcher applies all matching rules of these rule sets, decided per section.
+    (Path(paths.default_config_dir) / "main.mk").touch()
+    folder = folder_tree().root_folder()
+    ruleset = _ruleset(ruleset_name)
+    for rule_id in ("1", "2"):
+        ruleset.append_rule(
+            folder,
+            rulesets.Rule.from_config(
+                folder, ruleset, {"id": rule_id, "value": value, "condition": {}}
+            ),
+        )
+
+    _value, effective_rules = ruleset.analyse_ruleset(HostName("heute"), None, None, {})
+
+    assert [rule.id for _folder, _index, rule in effective_rules] == ["1", "2"]
 
 
 @dataclass

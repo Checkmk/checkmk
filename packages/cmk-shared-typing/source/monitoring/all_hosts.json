@@ -13,7 +13,7 @@
     },
     "sites": {
       "type": "array",
-      "items": { "$ref": "#/$defs/site" }
+      "items": { "$ref": "monitoring/_base.json#/$defs/site" }
     },
     "edition": { "$ref": "monitoring/_base.json#/$defs/edition" },
     "show_relations": {
@@ -24,15 +24,5 @@
       "type": "string"
     }
   },
-  "required": ["user_id", "site", "sites", "edition", "export_event"],
-  "$defs": {
-    "site": {
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "alias": { "type": "string" }
-      },
-      "required": ["id", "alias"]
-    }
-  }
+  "required": ["user_id", "site", "sites", "edition", "export_event"]
 }

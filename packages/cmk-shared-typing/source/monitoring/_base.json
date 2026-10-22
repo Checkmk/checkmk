@@ -107,6 +107,14 @@
         "url": { "type": "string" }
       },
       "required": ["ident", "title", "icon", "url"]
+    },
+    "site": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "alias": { "type": "string" }
+      },
+      "required": ["id", "alias"]
     }
   }
 }

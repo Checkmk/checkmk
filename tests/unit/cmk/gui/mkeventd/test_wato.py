@@ -548,7 +548,7 @@ def test_unexpected_errors_while_matching_a_rule_are_logged(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     # Nobody validates rule packs written by hand or shipped in an MKP.
-    rule = ec.Rule(id="rule", match_priority=5)  # type: ignore[typeddict-item]
+    rule = ec.Rule(id="rule", match_sl=5)  # type: ignore[typeddict-item]
 
     _simulate(rule, simulated_site=SiteId("remote"))
 
@@ -559,15 +559,13 @@ def test_unexpected_errors_while_matching_a_rule_are_logged(
 def test_unexpected_errors_while_matching_a_rule_without_time_periods_are_logged(
     mock_livestatus: MockLiveStatusConnection, caplog: pytest.LogCaptureFixture
 ) -> None:
-    # Nobody validates rule packs written by hand or shipped in an MKP.
-    rule = ec.Rule(
-        id="rule",
-        match_priority=5,  # type: ignore[typeddict-item]
-        match_timeperiod=ec.TimeperiodName("workhours"),
-    )
+    # Compiling a rule checks its priority ranges, so only a broken event can still make matching
+    # fail after looking up the time periods.
+    simulator = _simulator(simulated_site=SiteId("unconnected"), text=None)  # type: ignore[arg-type]
+    rule = ec.Rule(id="rule", match="disk", match_timeperiod=ec.TimeperiodName("workhours"))
 
     with mock_livestatus(expect_status_query=True):
-        _simulate(rule, simulated_site=SiteId("unconnected"))
+        simulator.match_rule(_rule_pack(), rule)
 
     assert "Cannot match rule pack/rule against the simulated event" in caplog.messages
 

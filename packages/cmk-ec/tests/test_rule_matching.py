@@ -172,21 +172,21 @@ def test_match_message(
         # No condition at all
         (2, None, None, MatchPriority(has_match=True, has_canceling_match=False)),
         # positive
-        (2, (0, 10), None, MatchPriority(has_match=True, has_canceling_match=False)),
+        (2, (0, 7), None, MatchPriority(has_match=True, has_canceling_match=False)),
         (2, (2, 2), None, MatchPriority(has_match=True, has_canceling_match=False)),
         (2, (1, 1), None, None),
         (2, (3, 5), None, None),
-        (2, (10, 0), None, MatchPriority(has_match=True, has_canceling_match=False)),
+        (2, (7, 0), None, MatchPriority(has_match=True, has_canceling_match=False)),
         (2, (5, 3), None, None),
         # cancel
         (2, None, (2, 2), MatchPriority(has_match=True, has_canceling_match=True)),
         (2, (3, 5), (2, 2), MatchPriority(has_match=False, has_canceling_match=True)),
-        (2, None, (0, 10), MatchPriority(has_match=True, has_canceling_match=True)),
+        (2, None, (0, 7), MatchPriority(has_match=True, has_canceling_match=True)),
         (2, None, (1, 1), MatchPriority(has_match=True, has_canceling_match=False)),
         (2, None, (3, 5), MatchPriority(has_match=True, has_canceling_match=False)),
         (2, (3, 5), (3, 5), None),
         (2, (5, 3), (2, 2), MatchPriority(has_match=False, has_canceling_match=True)),
-        (2, None, (10, 0), MatchPriority(has_match=True, has_canceling_match=True)),
+        (2, None, (7, 0), MatchPriority(has_match=True, has_canceling_match=True)),
         (2, None, (5, 3), MatchPriority(has_match=True, has_canceling_match=False)),
         (2, (5, 3), (5, 3), None),
         # positive + cancel
@@ -205,6 +205,7 @@ def test_match_priority(
         rule["match_priority"] = match_priority
     if cancel_priority is not None:
         rule["cancel_priority"] = cancel_priority
+    ec.compile_rule(rule)
     event = ec.Event(priority=priority)
     assert m.event_rule_determine_match_priority(rule, event) == expected
 

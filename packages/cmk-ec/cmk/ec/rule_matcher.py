@@ -132,8 +132,23 @@ def compile_state_pattern(state_patterns: StatePatterns, key: Literal["0", "1", 
         state_patterns[key] = compiled_value
 
 
+def compile_priority_range(rule: Rule, key: Literal["match_priority", "cancel_priority"]) -> None:
+    """Sorts a priority range, which users can enter in both directions.
+
+    Anything but a pair of syslog priorities, e.g. a priority beyond debug in a rule written by
+    hand, raises an exception like an invalid regex does, so the rule gets ignored.
+    """
+    if key not in rule:
+        return
+    match rule[key]:
+        case (int() as first, int() as second) if 0 <= first <= 7 and 0 <= second <= 7:
+            rule[key] = (min(first, second), max(first, second))
+        case invalid:
+            raise ValueError(f"invalid {key} {invalid!r} of rule {rule['id']}")
+
+
 def compile_rule(rule: Rule) -> None:
-    """Tries to convert strings to compiled regex patterns.
+    """Tries to convert strings to compiled regex patterns and sorts the priority ranges.
 
     Only top-level values of the rule are replaced, so compiling a shallow copy of a rule keeps
     the original rule intact.
@@ -143,6 +158,8 @@ def compile_rule(rule: Rule) -> None:
     compile_rule_attribute(rule, "match_host")
     compile_rule_attribute(rule, "match_application")
     compile_rule_attribute(rule, "cancel_application")
+    compile_priority_range(rule, "match_priority")
+    compile_priority_range(rule, "cancel_priority")
     if "state" in rule and isinstance(rule["state"], tuple) and rule["state"][0] == "text_pattern":
         state_patterns = rule["state"][1].copy()
         compile_state_pattern(state_patterns, "2")
@@ -355,13 +372,13 @@ class RuleMatcher:
         p = event["priority"]
 
         if "match_priority" in rule:
-            prio_from, prio_to = sorted(rule["match_priority"])
+            prio_from, prio_to = rule["match_priority"]  # sorted by compile_rule()
             has_match = prio_from <= p <= prio_to
         else:
             has_match = True
 
         if "cancel_priority" in rule:
-            cancel_from, cancel_to = sorted(rule["cancel_priority"])
+            cancel_from, cancel_to = rule["cancel_priority"]  # sorted by compile_rule()
             has_canceling_match = cancel_from <= p <= cancel_to
         else:
             has_canceling_match = False

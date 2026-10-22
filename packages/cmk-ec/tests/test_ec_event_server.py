@@ -219,3 +219,97 @@ def test_a_host_name_which_cannot_be_translated_is_empty(
     process_message(event_server, ec.Event(text="Something happened"))
 
     assert [event["host"] for event in event_status.events()] == [""]
+
+
+_RULE_OPTIMIZER = [
+    pytest.param(True, id="with rule optimizer"),
+    pytest.param(False, id="without rule optimizer"),
+]
+
+
+@pytest.mark.parametrize("rule_optimizer", _RULE_OPTIMIZER)
+@pytest.mark.parametrize(
+    "priorities",
+    [
+        pytest.param((4, 0), id="descending range"),
+        pytest.param((0, 4), id="ascending range"),
+    ],
+)
+def test_rule_matches_messages_within_its_priority_range(
+    event_server: EventServer,
+    event_status: EventStatus,
+    settings: ec.Settings,
+    config: Config,
+    rule_optimizer: bool,
+    priorities: tuple[int, int],
+) -> None:
+    rule = _rule("critical")
+    rule["match_priority"] = priorities
+    _reload_configuration(
+        event_server, settings, config | {"rule_optimizer": rule_optimizer}, [_rule_pack("p", rule)]
+    )
+
+    process_message(event_server, ec.Event(text="Something happened", priority=2))
+
+    assert _rule_ids_of_events(event_status) == ["critical"]
+
+
+@pytest.mark.parametrize("rule_optimizer", _RULE_OPTIMIZER)
+@pytest.mark.parametrize(
+    "cancel_priorities",
+    [
+        pytest.param((7, 5), id="descending range"),
+        pytest.param((5, 7), id="ascending range"),
+    ],
+)
+def test_message_within_the_cancel_priority_range_cancels_the_event(
+    event_server: EventServer,
+    event_status: EventStatus,
+    settings: ec.Settings,
+    config: Config,
+    rule_optimizer: bool,
+    cancel_priorities: tuple[int, int],
+) -> None:
+    rule = _rule("critical")
+    rule["match_priority"] = (2, 0)
+    rule["cancel_priority"] = cancel_priorities
+    _reload_configuration(
+        event_server, settings, config | {"rule_optimizer": rule_optimizer}, [_rule_pack("p", rule)]
+    )
+    process_message(event_server, ec.Event(text="Disk failed", priority=2))
+    assert _rule_ids_of_events(event_status) == ["critical"]
+
+    process_message(event_server, ec.Event(text="Disk OK", priority=6))
+
+    assert _rule_ids_of_events(event_status) == []
+
+
+@pytest.mark.parametrize("rule_optimizer", _RULE_OPTIMIZER)
+@pytest.mark.parametrize(
+    "priorities",
+    [
+        pytest.param((8, 0), id="descending range"),
+        pytest.param((0, 8), id="ascending range"),
+    ],
+)
+def test_rule_with_a_priority_beyond_debug_is_ignored(
+    event_server: EventServer,
+    event_status: EventStatus,
+    settings: ec.Settings,
+    config: Config,
+    rule_optimizer: bool,
+    priorities: tuple[int, int],
+) -> None:
+    # Nobody validates rules written by hand.
+    invalid_rule = _rule("invalid")
+    invalid_rule["match_priority"] = priorities
+    _reload_configuration(
+        event_server,
+        settings,
+        config | {"rule_optimizer": rule_optimizer},
+        [_rule_pack("p", invalid_rule, _rule("valid"))],
+    )
+
+    process_message(event_server, ec.Event(text="Something happened", priority=2))
+
+    assert _rule_ids_of_events(event_status) == ["valid"]

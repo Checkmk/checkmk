@@ -1191,7 +1191,7 @@ class EventServer(ECServerThread):
                         raise
                     count_disabled += 1
                     self._logger.exception(
-                        "Ignoring rule '%(pack)s/%(rule_id)s' because of an invalid regex.",
+                        "Ignoring rule '%(pack)s/%(rule_id)s' because it is invalid.",
                         {"pack": rule_pack["id"], "rule_id": rule["id"]},
                     )
                     continue
@@ -1249,15 +1249,15 @@ class EventServer(ECServerThread):
         needed_prios = [False] * 8
 
         if "match_priority" in rule:
-            prio_from, prio_to = rule["match_priority"]
-            for p in range(prio_to, prio_from + 1):  # Beware: from > to!
+            prio_from, prio_to = rule["match_priority"]  # sorted by compile_rule()
+            for p in range(prio_from, prio_to + 1):
                 needed_prios[p] = True
         else:  # all priorities match
             needed_prios = [True] * 8  # needed to check this rule for all event priorities
 
         if "cancel_priority" in rule:
-            prio_from, prio_to = rule["cancel_priority"]
-            for p in range(prio_to, prio_from + 1):  # Beware: from > to!
+            prio_from, prio_to = rule["cancel_priority"]  # sorted by compile_rule()
+            for p in range(prio_from, prio_to + 1):
                 needed_prios[p] = True
         elif "match_ok" in rule:  # a cancelling rule where all priorities cancel
             needed_prios = [True] * 8  # needed to check this rule for all event priorities

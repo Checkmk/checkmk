@@ -8,7 +8,14 @@ import ipaddress
 
 import pytest
 
-from cmk.ec.main import allowed_ip, unmap_ipv4_address
+from cmk.ec.config import MatchGroups
+from cmk.ec.main import (
+    allowed_ip,
+    create_event_from_trap,
+    parse_address,
+    replace_groups,
+    unmap_ipv4_address,
+)
 from cmk.ec.rule_matcher import match_ip_network
 
 ACCESS_LIST = [
@@ -195,3 +202,76 @@ def test_match_ipv6_network_all_ip(ip: str) -> None:
     assert match_ip_network(f"{ip}/0", ip) is True
     assert match_ip_network(ip, f"{ip}/128") is False
     assert match_ip_network(f"{ip}/0", "") is True
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "template, expected",
+    [
+        pytest.param(r"[\0]", "[disk sda at 98%]", id="whole text"),
+        pytest.param(r"\2% on \1", "98% on sda", id="message groups by number"),
+        pytest.param("$MATCH_GROUPS_MESSAGE_1$", "sda", id="message groups by name"),
+        pytest.param("$MATCH_GROUPS_SYSLOG_APPLICATION_1$", "smartd", id="application groups by name"),
+        pytest.param(r"\3 $MATCH_GROUPS_MESSAGE_3$", r"\3 $MATCH_GROUPS_MESSAGE_3$", id="missing groups"),
+    ],
+)
+# fmt: on
+def test_references_to_the_matched_message_are_replaced(template: str, expected: str) -> None:
+    match_groups = MatchGroups(
+        match_groups_message=("sda", "98"), match_groups_syslog_application=("smartd",)
+    )
+
+    assert replace_groups(template, "disk sda at 98%", match_groups) == expected
+
+
+def test_ipv4_mapped_remote_address_is_unmapped() -> None:
+    assert parse_address("syslog", ("::ffff:192.0.2.1", 514)) == ("192.0.2.1", 514)
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        pytest.param("", id="UNIX socket address"),
+        pytest.param((514, "192.0.2.1"), id="swapped host and port"),
+    ],
+)
+def test_malformed_remote_address_is_refused(address: object) -> None:
+    with pytest.raises(ValueError, match="Invalid remote address"):
+        parse_address("syslog", address)
+
+
+@pytest.mark.parametrize(
+    "trap_oid_name",
+    [
+        pytest.param("SNMPv2-MIB::snmpTrapOID.0", id="translated"),
+        pytest.param("1.3.6.1.6.3.1.1.4.1.0", id="untranslated"),
+    ],
+)
+def test_trap_oid_becomes_the_application_and_the_other_variables_the_text(
+    trap_oid_name: str,
+) -> None:
+    event = create_event_from_trap(
+        [
+            ("SNMPv2-MIB::sysUpTime.0", "42"),
+            (trap_oid_name, "IF-MIB::linkDown"),
+            ("IF-MIB::ifIndex.2", "2"),
+        ],
+        "192.0.2.1",
+    )
+
+    assert (event["application"], event["text"]) == (
+        "IF-MIB::linkDown",
+        "SNMPv2-MIB::sysUpTime.0: 42, IF-MIB::ifIndex.2: 2",
+    )
+
+
+def test_trap_without_oid_has_no_application() -> None:
+    event = create_event_from_trap([("SNMPv2-MIB::sysUpTime.0", "42")], "192.0.2.1")
+
+    assert event["application"] == ""
+
+
+def test_trap_sender_becomes_the_host() -> None:
+    event = create_event_from_trap([], "192.0.2.1")
+
+    assert (event["host"], event["ipaddress"]) == ("192.0.2.1", "192.0.2.1")

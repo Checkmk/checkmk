@@ -1671,12 +1671,10 @@ def _rbn_match_ec_priority(
     options: ConditionEventConsoleAlertsType, context: EventContext
 ) -> str | None:
     if "match_priority" in options:
-        prio_from, prio_to = options["match_priority"]
-        if prio_from > prio_to:
-            prio_to, prio_from = prio_from, prio_to
-            p = int(context["EC_PRIORITY"])
-            if p < prio_from or p > prio_to:
-                return f"Event has priority {p}, but matched range is {prio_from} .. {prio_to}"
+        prio_from, prio_to = sorted(options["match_priority"])
+        p = int(context["EC_PRIORITY"])
+        if p < prio_from or p > prio_to:
+            return f"Event has priority {p}, but matched range is {prio_from} .. {prio_to}"
     return None
 
 

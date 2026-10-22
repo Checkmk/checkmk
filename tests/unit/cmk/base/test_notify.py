@@ -38,6 +38,7 @@ from cmk.events.notify_types import (
     NotifyBulkParameters,
     NotifyBulkType,
     NotifyPluginParamsDict,
+    SyslogPriorityIntType,
     TimeperiodBulkParameters,
 )
 from cmk.livestatus_client import MKLivestatusException
@@ -2179,14 +2180,24 @@ def test_event_type_of_non_state_change_service_notification(
     )
 
 
-@pytest.mark.xfail(
-    strict=True, raises=AssertionError, reason="An ascending priority range is not checked at all"
+@pytest.mark.parametrize(
+    "priority_range, priority, matches",
+    [
+        pytest.param((0, 3), "2", True, id="within an ascending range"),
+        pytest.param((0, 3), "7", False, id="outside an ascending range"),
+        pytest.param((2, 2), "2", True, id="the single priority of a range"),
+        pytest.param((2, 2), "5", False, id="another than the single priority of a range"),
+    ],
 )
-def test_ec_alert_outside_ascending_priority_range_is_not_matched() -> None:
-    rule = _make_rule() | {"match_ec": {"match_priority": (0, 3)}}
-    context = EventContext({"EC_ID": "1", "EC_PRIORITY": "7"})
+def test_ec_alerts_are_filtered_by_ascending_and_single_priority_ranges(
+    priority_range: tuple[SyslogPriorityIntType, SyslogPriorityIntType],
+    priority: str,
+    matches: bool,
+) -> None:
+    rule = _make_rule() | {"match_ec": {"match_priority": priority_range}}
+    context = EventContext({"EC_ID": "1", "EC_PRIORITY": priority})
 
-    assert notify.rbn_match_event_console(rule, context, False, {}) is not None
+    assert (notify.rbn_match_event_console(rule, context, False, {}) is None) is matches
 
 
 def test_bulk_parameter_context_escapes_line_breaks() -> None:

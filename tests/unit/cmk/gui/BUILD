@@ -209,6 +209,7 @@ py_cmk_test(
         "//cmk/gui/rule_specs:legacy_converter",
         "//cmk/gui/rule_specs:types",
         "//cmk/gui/search",
+        "//cmk/gui/search/spec",
         "//cmk/gui/userdb",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",

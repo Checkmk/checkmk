@@ -20,6 +20,7 @@ from tests.system.agent_updates.install_step._controller import (
     connection_uuid,
     installed_hash,
     register_for_updates,
+    run_update,
     UPDATE_HOST,
 )
 from tests.testlib.system.agent import get_package_type
@@ -33,6 +34,8 @@ _UUID_LINKS_DIR = Path("var", "agent-receiver", "received-outputs")
 _SECURITY_LOG = Path("var", "log", "security.log")
 _UNAUTHORIZED_UPDATE_REQUEST = "agent update request of an unauthorized UUID refused"
 _UPDATE_PERMISSIONS = ("wato.download_all_agents", "wato.download_agents")
+# What the controller logs with --verbose when no connection may serve as the update source.
+_NO_UPDATE_SOURCE = "no update source is recorded"
 
 
 @dataclass(frozen=True)
@@ -174,4 +177,34 @@ def test_a_registration_without_the_permission_replaces_the_authorized_one(
     assert _refused_uuids(site).count(new_uuid) == 1, (
         f"The security log does not record exactly one refusal of {new_uuid}: "
         f"{_refused_uuids(site)}"
+    )
+
+
+@pytest.mark.usefixtures("update_offer")
+def test_a_correct_controller_does_not_ask_through_a_registration_without_the_permission(
+    host: HostUnderTest,
+    site: Site,
+    integrated_updater_agent: IntegratedUpdaterAgent,
+    registrar_without_update_permission: _User,
+) -> None:
+    """TC-AU-084: after a registration without the update permission replaced the authorized one,
+    the controller has no update source and sends no update request."""
+    earlier_uuid = connection_uuid(host, integrated_updater_agent, site)
+    new_uuid, said = _register_as(
+        host, integrated_updater_agent, site, registrar_without_update_permission
+    )
+
+    check = run_update(host, integrated_updater_agent, check_only=True)
+
+    assert all(permission in said for permission in _UPDATE_PERMISSIONS), (
+        f"The registration did not name the missing permission:\n{said}"
+    )
+    assert new_uuid != earlier_uuid, (
+        f"The registration did not replace the connection {earlier_uuid}"
+    )
+    assert _NO_UPDATE_SOURCE in check.stdout + check.stderr, (
+        f"The controller kept an update source:\n{check.stdout}{check.stderr}"
+    )
+    assert new_uuid not in _refused_uuids(site), (
+        f"The controller asked through the registration {new_uuid} without the permission"
     )

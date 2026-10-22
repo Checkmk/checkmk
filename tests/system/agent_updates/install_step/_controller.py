@@ -59,10 +59,16 @@ def run_update(
     agent: IntegratedUpdaterAgent,
     *,
     skip_signatures: bool = False,
+    check_only: bool = False,
 ) -> subprocess.CompletedProcess[str]:
     """Run one update cycle as the agent user, and wait until the installer instance has finished."""
-    options = ["--skip-signatures"] if skip_signatures else []
-    update = host.run([agent.ctl.as_posix(), "update", *options], user=AGENT_USER, check=False)
+    options = [
+        *(["--skip-signatures"] if skip_signatures else []),
+        *(["--check-only"] if check_only else []),
+    ]
+    update = host.run(
+        [agent.ctl.as_posix(), "--verbose", "update", *options], user=AGENT_USER, check=False
+    )
     wait_for_installer(host)
     return update
 

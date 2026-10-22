@@ -26,6 +26,8 @@ _READ_ONLY_TOOL_ENDPOINTS = [
     ("get_metric_history", "post", "/domain-types/metric/actions/get/invoke"),
     ("get_metric_history", "post", "/domain-types/graph/actions/translate_metric_names/invoke"),
     ("get_config_changes", "get", "/domain-types/audit_log/collections/all"),
+    ("get_inventory", "post", "/domain-types/host/collections/all"),
+    ("get_inventory", "get", "/domain-types/inventory/collections/all"),
     ("read_setup_configuration", "get", "/objects/host_config/{host_name}"),
     ("read_setup_configuration", "get", "/objects/folder_config/{folder}"),
 ]

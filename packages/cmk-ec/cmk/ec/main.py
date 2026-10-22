@@ -141,6 +141,9 @@ class SlaveStatus(TypedDict):
     success: bool
 
 
+# Fetches the state of the master of a replication slave, see get_state_from_master()
+FetchMasterState = Callable[[Config, SlaveStatus], dict[str, Any]]
+
 FileDescr = int  # mypy calls this FileDescriptor, but this clashes with our definition
 
 # What all events counting towards the same event limit of some kind share: nothing for the
@@ -2590,6 +2593,8 @@ def run_eventd(
     slave_status: SlaveStatus,
     logger: Logger,
     reload_config_event: threading.Event,
+    *,
+    fetch_master_state: FetchMasterState,
 ) -> None:
     """Dispatching: starting and managing the two threads."""
     status_server.start()
@@ -2619,7 +2624,7 @@ def run_eventd(
                     reload_config_event.clear()
                     history = reload_configuration(
                         settings,
-                        getLogger("cmk.mkeventd"),
+                        logger,
                         lock_configuration,
                         history,
                         event_status,
@@ -2652,7 +2657,7 @@ def run_eventd(
                         event_server,
                         slave_status,
                         logger,
-                        fetch_master_state=get_state_from_master,
+                        fetch_master_state=fetch_master_state,
                     )
                     replication_settings = config["replication"]
                     if replication_settings is None:  # help mypy a bit
@@ -3365,7 +3370,7 @@ def replication_pull(
     slave_status: SlaveStatus,
     logger: Logger,
     *,
-    fetch_master_state: Callable[[Config, SlaveStatus], dict[str, Any]],
+    fetch_master_state: FetchMasterState,
 ) -> None:
     """
     We distinguish two modes:
@@ -3775,6 +3780,7 @@ def main() -> None:
                 slave_status,
                 logger,
                 reload_config_event,
+                fetch_master_state=get_state_from_master,
             )
 
             # We reach this point, if the server has been killed by

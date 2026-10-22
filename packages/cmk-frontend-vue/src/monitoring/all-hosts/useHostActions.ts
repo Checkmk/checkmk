@@ -7,10 +7,10 @@ import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import type { HostRef } from '@/monitoring/shared/api/types'
-import type { DowntimeRecurrenceOption } from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
 import { acknowledgeDefaults } from '@/monitoring/shared/components/action/actions/acknowledge'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import { downtimePresets } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
+import type { MonitoringCommandsPayload } from '@/monitoring/shared/components/action/commandsPayload'
 import {
   type MonitoringActionRegistry,
   createActionRegistry
@@ -22,21 +22,9 @@ import { useRescheduleHostsAction } from './actions/rescheduleHosts'
 import { useScheduleHostDowntimeAction } from './actions/scheduleHostDowntime'
 import { HostActionMenuApi } from './api/actionMenu'
 
-/**
- * What a page sends about the host commands and Setup links it offers, structurally typed so this
- * stays independent of which page's generated module it arrived in.
- */
-export interface HostActionsPayload {
-  actions?: { ident: string; title: string; icon: string }[] | undefined
+/** What a page sends about the host commands and the Setup links it offers. */
+export interface HostActionsPayload extends MonitoringCommandsPayload {
   row_actions?: { ident: string; title: string; icon: string; url: string }[] | undefined
-  acknowledge_presets_url?: string | null | undefined
-  notification_rules_url?: string | null | undefined
-  acknowledge_defaults?:
-    | { sticky: boolean; persistent: boolean; notify: boolean; expire_seconds: number }
-    | undefined
-  downtime_recurrences?: DowntimeRecurrenceOption[] | undefined
-  downtime_presets?: { title: string; end: number | string }[] | undefined
-  downtime_presets_url?: string | null | undefined
 }
 
 export interface HostActions {

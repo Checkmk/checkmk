@@ -20,7 +20,7 @@ import HostServicesRow from '@/monitoring/host-services/components/HostServicesR
 import ServiceSlideIn, {
   SERVICE_GRAPHS_TAB_ID
 } from '@/monitoring/host-services/components/ServiceSlideIn.vue'
-import type { HostRef, ServiceEntry, ServiceRef, ServiceState } from '@/monitoring/shared/api/types'
+import type { HostRef, ServiceEntry, ServiceRef } from '@/monitoring/shared/api/types'
 import DisplayOptionsPane from '@/monitoring/shared/components/DisplayOptionsPane.vue'
 import MonitoringExportFeedback from '@/monitoring/shared/components/MonitoringExportFeedback.vue'
 import MonitoringHeaderActions from '@/monitoring/shared/components/MonitoringHeaderActions.vue'
@@ -31,13 +31,7 @@ import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTab
 import MonitoringToolbar from '@/monitoring/shared/components/MonitoringToolbar.vue'
 import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '@/monitoring/shared/components/action/ActionFeedback.vue'
-import { acknowledgeDefaults } from '@/monitoring/shared/components/action/actions/acknowledge'
-import { useAcknowledgeServicesAction } from '@/monitoring/shared/components/action/actions/acknowledgeServices'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
-import { useRescheduleServicesAction } from '@/monitoring/shared/components/action/actions/rescheduleServices'
-import { downtimePresets } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
-import { useScheduleServiceDowntimeAction } from '@/monitoring/shared/components/action/actions/scheduleServiceDowntime'
-import { createActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
@@ -55,6 +49,10 @@ import {
   buildDisplayOptionsStorageKey,
   sanitizeDisplayOptions
 } from '@/monitoring/shared/services/MonitoringService'
+import {
+  IMMEDIATE_SERVICE_COMMAND_IDS,
+  useServiceListing
+} from '@/monitoring/shared/services/useServiceListing'
 import { buildTableStateSchema } from '@/monitoring/shared/tableState/schema'
 import { readTableStateFromUrl, tableStateWriter } from '@/monitoring/shared/tableState/urlState'
 import { filterTimestampsAsShown } from '@/monitoring/shared/timestampFilters'
@@ -74,7 +72,7 @@ import { AllServicesApi } from './api/services'
 import { buildAllServicesColumnPinning, useAllServicesColumns } from './columns'
 import { AllServicesService } from './services/AllServicesService'
 
-const { _t, _tn } = usei18n()
+const { _t } = usei18n()
 
 useKeyboardHints(_t('All services'), [
   ...tableKeyboardHints(),
@@ -83,19 +81,9 @@ useKeyboardHints(_t('All services'), [
 
 const props = defineProps<MonitoringAllServicesApp>()
 
-const serviceActions: CellAction[] = (props.actions ?? []).map((action) => ({
-  id: action.ident,
-  label: action.title as TranslatedString,
-  icon: action.icon as SimpleIcons
-}))
+const serviceListing = useServiceListing(props)
 
 const actionMenuApi = new ServiceActionMenuApi()
-
-const IMMEDIATE_ROW_COMMAND_IDS: readonly string[] = [RESCHEDULE_ACTION_ID]
-
-const mayReschedule = serviceActions.some((action) => action.id === RESCHEDULE_ACTION_ID)
-
-const mayActOnSelection = serviceActions.length > 0
 
 const aiExplain = props.ai_explain ?? false
 
@@ -116,10 +104,12 @@ async function loadActionMenu(host: HostRef, service: string): Promise<CellActio
 }
 
 const columns = useAllServicesColumns({
-  includeSelect: mayActOnSelection,
+  includeSelect: serviceListing.mayActOnSelection,
   sites: props.sites
 })
-const columnPinning = buildAllServicesColumnPinning({ includeSelect: mayActOnSelection })
+const columnPinning = buildAllServicesColumnPinning({
+  includeSelect: serviceListing.mayActOnSelection
+})
 
 const schema = buildTableStateSchema({
   columns,
@@ -145,27 +135,7 @@ const allServicesService = new AllServicesService(servicesApi, getKeyShortcutSer
   columns,
   initialState,
   initialFilterState,
-  quickFilters: [
-    {
-      label: _t('Unhandled service problems'),
-      tooltip: _t(
-        'Show only services in a problem state (WARN, CRIT or UNKNOWN) that are neither acknowledged nor in a scheduled downtime'
-      ),
-      filter: {
-        type: 'and',
-        children: [
-          {
-            type: 'condition',
-            field: 'state',
-            op: 'one_of',
-            value: ['WARN', 'CRIT', 'UNKNOWN'] as ServiceState[]
-          },
-          { type: 'condition', field: 'acknowledged', op: 'eq', value: false },
-          { type: 'condition', field: 'in_downtime', op: 'eq', value: false }
-        ]
-      }
-    }
-  ]
+  quickFilters: serviceListing.quickFilters
 })
 
 const modeColumnSize = useModeColumnWidth(() => allServicesService.items.value)
@@ -191,22 +161,6 @@ const tableColumns = computed(() =>
   )
 )
 
-const actionRegistry = createActionRegistry<ServiceRef>([
-  useAcknowledgeServicesAction(
-    {
-      presetsUrl: props.acknowledge_presets_url ?? null,
-      notificationRulesUrl: props.notification_rules_url ?? null
-    },
-    acknowledgeDefaults(props.acknowledge_defaults)
-  ),
-  useRescheduleServicesAction(),
-  useScheduleServiceDowntimeAction(
-    props.downtime_recurrences ?? [],
-    downtimePresets(props.downtime_presets),
-    props.downtime_presets_url ?? null
-  )
-])
-
 const toolbar = useTemplateRef<{ focus: () => void }>('toolbar')
 
 const root = useTemplateRef<HTMLElement>('root')
@@ -218,20 +172,7 @@ useContextMenuKey(root)
 const exportFeedback = useRowExport(allServicesService, {
   exportEvent: props.export_event,
   build: () => allServicesService.export(),
-  texts: {
-    exporting: _t('Exporting services…'),
-    notLoaded: _t('The services could not be loaded, so nothing was exported.'),
-    truncated: (counts, canShowMore) =>
-      canShowMore
-        ? _t(
-            'Exported %{exported} of %{matched} services. Show more services to export more.',
-            counts
-          )
-        : _t(
-            'Exported %{exported} of %{matched} services. Narrow the filters to export all of them.',
-            counts
-          )
-  }
+  texts: serviceListing.exportTexts
 })
 
 onMounted(() => {
@@ -355,19 +296,6 @@ function serviceActionTargets(rows: ServiceEntry[], actionId: string): ServiceRe
   return [...targets.values()]
 }
 
-function serviceSelectionLabel(count: number): TranslatedString {
-  return _tn('Selected service: %{count}', 'Selected services: %{count}', count, { count })
-}
-
-function serviceCountsLabel(selected: number, total: number): TranslatedString {
-  return _tn(
-    'Selected service: %{selected} | Total services: %{total}',
-    'Selected services: %{selected} | Total services: %{total}',
-    selected,
-    { selected, total }
-  )
-}
-
 function onActionPerformed(result: ActionFeedbackResult): void {
   if (result.variant === 'success') {
     allServicesService.refresh(ACTION_REFRESH_DELAY_MS)
@@ -397,24 +325,24 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       <MonitoringExportFeedback v-model="exportFeedback" />
       <MonitoringSplitPane
         :service="allServicesService"
-        :actions="actionRegistry"
-        :bulk-actions="serviceActions"
+        :actions="serviceListing.registry"
+        :bulk-actions="serviceListing.permittedActions"
         :columns="tableColumns"
         :column-pinning="columnPinning"
         :get-row-key="rowKey"
         :get-action-target="serviceRef"
         :get-action-targets="serviceActionTargets"
-        :immediate-action-ids="IMMEDIATE_ROW_COMMAND_IDS"
-        :selection-label="serviceSelectionLabel"
+        :immediate-action-ids="IMMEDIATE_SERVICE_COMMAND_IDS"
+        :selection-label="serviceListing.selectionLabel"
         :actions-label="_t('Actions for selected services')"
-        :counts-label="serviceCountsLabel"
+        :counts-label="serviceListing.countsLabel"
         @performed="onActionPerformed"
       >
         <template #row="{ row, tableRow, onCommand }">
           <HostServicesRow
             :row="row"
             :table-row="tableRow"
-            :may-reschedule="mayReschedule"
+            :may-reschedule="serviceListing.mayReschedule"
             :load-action-menu="(service: string) => loadActionMenu(hostOf(row), service)"
             :display-options="displayOptions"
             @open="openSlideIn(row)"
@@ -447,8 +375,8 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :service="slideInService"
         :host="slideInHost"
         :ai-explain="aiExplain"
-        :actions="actionRegistry"
-        :permitted-actions="serviceActions"
+        :actions="serviceListing.registry"
+        :permitted-actions="serviceListing.permittedActions"
         :load-action-menu="loadSlideInActionMenu"
         @close="closeSlideIn"
         @performed="onActionPerformed"

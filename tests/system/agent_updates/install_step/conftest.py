@@ -25,6 +25,12 @@ from tests.system.agent_updates.install_step._agent import (
     IntegratedUpdaterAgent,
     SigningKey,
 )
+from tests.system.agent_updates.install_step._installer import (
+    build_marker_package,
+    MarkerPackage,
+    remove_marker_package,
+)
+from tests.system.agent_updates.install_step._units import reset_failed_instances
 from tests.testlib.system.agent import (
     bake_agents,
     download_agent_package,
@@ -156,3 +162,12 @@ def _integrated_updater_agent(
             _remove_agent(host)
         finally:
             install_agent_package(agent_package, host)
+
+
+@pytest.fixture(name="marker_package")
+def _marker_package(host: HostUnderTest, tmp_path: Path) -> Iterator[MarkerPackage]:
+    reset_failed_instances(host)
+    package = build_marker_package(host, tmp_path)
+    yield package
+    remove_marker_package(host, package)
+    reset_failed_instances(host)

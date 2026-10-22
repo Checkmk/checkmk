@@ -84,7 +84,7 @@ class ReportSubmitDetails(TypedDict):
 
 class CrashReportsRowFetcher(Protocol):
     def get_crash_report_rows(
-        self, only_sites: livestatus.OnlySites, filter_headers: str
+        self, only_sites: livestatus.OnlySites, filter_headers: str, *, with_agent_output: bool
     ) -> Iterator[CrashReportRow]: ...
 
 
@@ -113,6 +113,7 @@ class CrashReport:
                 fetcher.get_crash_report_rows(
                     only_sites=[SiteId(site_id)],
                     filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id),
+                    with_agent_output=True,
                 )
             )
         except StopIteration:
@@ -880,7 +881,9 @@ def _show_output_box(title: str, content: str) -> None:
 
 def _show_agent_output(row: CrashReportRow) -> None:
     agent_output = row.get("agent_output")
-    if isinstance(agent_output, str):
+    if isinstance(agent_output, bytes):
+        agent_output = agent_output.decode(errors="surrogateescape")
+    if agent_output:
         _show_output_box(_("Agent output"), agent_output)
 
 

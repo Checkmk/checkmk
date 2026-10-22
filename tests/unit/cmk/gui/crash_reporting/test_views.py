@@ -141,6 +141,80 @@ def test_get_crash_report_rows_queries(
 
 
 @pytest.mark.usefixtures("request_context")
+def test_get_crash_report_rows_with_agent_output(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    crash_info = json.dumps({"crash_type": "check", "crash_id": "abc-123"}).encode()
+    mock_livestatus.add_table(
+        "crashreports",
+        [
+            {
+                "id": "abc-123",
+                "component": "check",
+                "file:crash_info:check/abc-123/crash.info": crash_info,
+                "file:agent_output:check/abc-123/agent_output": b"<<<check_mk>>>\n",
+            }
+        ],
+    )
+    with mock_livestatus(expect_status_query=True) as live:
+        live.expect_query("GET crashreports\nColumns: id component")
+        live.expect_query(
+            "GET crashreports\n"
+            "Columns: file:crash_info:check/abc-123/crash.info"
+            " file:agent_output:check/abc-123/agent_output\n"
+            "Filter: id = abc-123\n"
+            "ColumnHeaders: off"
+        )
+        rows = list(
+            CrashReportsRowTable().get_crash_report_rows(
+                only_sites=None, filter_headers="", with_agent_output=True
+            )
+        )
+    assert rows == [
+        {
+            "site": "NO_SITE",
+            "crash_id": "abc-123",
+            "crash_type": "check",
+            "crash_info": crash_info,
+            "agent_output": b"<<<check_mk>>>\n",
+        }
+    ]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_get_crash_report_rows_without_agent_output_file(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    crash_info = json.dumps({"crash_type": "check", "crash_id": "abc-123"}).encode()
+    mock_livestatus.add_table(
+        "crashreports",
+        [
+            {
+                "id": "abc-123",
+                "component": "check",
+                "file:crash_info:check/abc-123/crash.info": crash_info,
+                "file:agent_output:check/abc-123/agent_output": None,
+            }
+        ],
+    )
+    with mock_livestatus(expect_status_query=True) as live:
+        live.expect_query("GET crashreports\nColumns: id component")
+        live.expect_query(
+            "GET crashreports\n"
+            "Columns: file:crash_info:check/abc-123/crash.info"
+            " file:agent_output:check/abc-123/agent_output\n"
+            "Filter: id = abc-123\n"
+            "ColumnHeaders: off"
+        )
+        rows = list(
+            CrashReportsRowTable().get_crash_report_rows(
+                only_sites=None, filter_headers="", with_agent_output=True
+            )
+        )
+    assert [row.keys() for row in rows] == [{"site", "crash_id", "crash_type", "crash_info"}]
+
+
+@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize(
     "user, may_see_exception",
     [

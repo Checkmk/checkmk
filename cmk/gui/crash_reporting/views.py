@@ -153,7 +153,7 @@ class CrashReportsRowTable(RowTableLivestatus):
             }
 
     def get_crash_report_rows(
-        self, only_sites: OnlySites, filter_headers: str
+        self, only_sites: OnlySites, filter_headers: str, *, with_agent_output: bool = False
     ) -> Iterator[dict[str, str | bytes]]:
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
@@ -161,15 +161,23 @@ class CrashReportsRowTable(RowTableLivestatus):
             file_path = "/".join([crash_info["crash_type"], crash_info["crash_id"]])
 
             headers = ["site", "crash_info"]
+            columns = [
+                Crashreports.file.dynamic("crash_info", escape_filename(f"{file_path}/crash.info"))
+            ]
+
+            # The agent output can be huge, so only load it for a single crash report
+            if with_agent_output and crash_info["crash_type"] in ("check", "section"):
+                headers.append("agent_output")
+                columns.append(
+                    Crashreports.file.dynamic(
+                        "agent_output", escape_filename(f"{file_path}/agent_output")
+                    )
+                )
 
             try:
                 raw_row = query_row(
                     Query(
-                        [
-                            Crashreports.file.dynamic(
-                                "crash_info", escape_filename(f"{file_path}/crash.info")
-                            )
-                        ],
+                        columns,
                         Crashreports.id == crash_info["crash_id"],
                     ),
                     only_sites=only_sites,
@@ -180,7 +188,7 @@ class CrashReportsRowTable(RowTableLivestatus):
                 continue
 
             row: dict[str, str | bytes] = dict(crash_info)
-            row.update(dict(zip(headers, raw_row)))
+            row.update({k: v for k, v in zip(headers, raw_row) if v is not None})
             yield row
 
     def _get_crash_report_info(

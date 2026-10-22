@@ -41,15 +41,24 @@ class CrashInfoFactory(TypedDictFactory[AggregatedCrashInfo]):
 
 
 class FakeCrashReportsRowFetcher:
-    def __init__(self, row: CrashReportRow | None = None) -> None:
+    def __init__(
+        self, row: CrashReportRow | None = None, agent_output: bytes | None = None
+    ) -> None:
         self._row = row
+        self._agent_output = agent_output
 
     def get_crash_report_rows(
         self,
         only_sites: OnlySites,  # noqa: ARG002
         filter_headers: str,  # noqa: ARG002
+        *,
+        with_agent_output: bool,
     ) -> Iterator[CrashReportRow]:
-        if self._row is not None:
+        if self._row is None:
+            return
+        if with_agent_output and self._agent_output is not None:
+            yield {**self._row, "agent_output": self._agent_output}
+        else:
             yield self._row
 
 
@@ -61,6 +70,17 @@ def test_build_crash_report() -> None:
     assert report.site_id == "heute"
     assert report.crash_id == "1"
     assert report.row["crash_info"] == json.dumps(report.info)
+
+
+def test_build_crash_report_loads_agent_output() -> None:
+    report = CrashReport.build(
+        Request(create_environ(query_string="crash_id=1&site=heute")),
+        FakeCrashReportsRowFetcher(
+            {"crash_info": json.dumps(CrashInfoFactory.build())},
+            agent_output=b"<<<check_mk>>>\n",
+        ),
+    )
+    assert report.row["agent_output"] == b"<<<check_mk>>>\n"
 
 
 def test_build_crash_report_missing_row() -> None:
@@ -197,6 +217,18 @@ def test_agent_output_with_undecodable_bytes_is_rendered() -> None:
         _show_agent_output(row)
         rendered = "".join(output_funnel.drain())
 
+    assert "check_mk" in rendered
+
+
+@pytest.mark.usefixtures("request_context")
+def test_agent_output_as_bytes_is_rendered() -> None:
+    row: CrashReportRow = {"agent_output": b"<<<check_mk>>>\nHostname: IS\xff48186\n"}
+
+    with output_funnel.plugged():
+        _show_agent_output(row)
+        rendered = "".join(output_funnel.drain())
+
+    assert "Agent output" in rendered
     assert "check_mk" in rendered
 
 

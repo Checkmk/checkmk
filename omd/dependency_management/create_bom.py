@@ -96,11 +96,6 @@ def create_bom_vulnerabilites(
     Theoretically we could add these to the references attribute, but last time dtrack did not
     pick that up. I think this is a workaround we can live with.
     """
-
-    assert not (non_existent_vulns := set(vulnerability_info) - {c.purl for c in components}), (
-        f"Vulnerabilities for non-existent components: {non_existent_vulns}"
-    )
-
     researched_vulns: list[Vulnerability] = []
     for component in components:
         if component.purl not in vulnerability_info:

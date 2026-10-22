@@ -29,6 +29,8 @@ HOST_CONFIG = HostConfig(
             [
                 "--server",
                 "address",
+                "--hostname",
+                "host name",
                 "--username",
                 "",
                 "--password-id",
@@ -51,6 +53,8 @@ HOST_CONFIG = HostConfig(
             [
                 "--server",
                 "address",
+                "--hostname",
+                "host name",
                 "--username",
                 "userid",
                 "--password-id",
@@ -75,6 +79,8 @@ HOST_CONFIG = HostConfig(
             [
                 "--server",
                 "address",
+                "--hostname",
+                "host name",
                 "--username",
                 "userid",
                 "--password-id",
@@ -98,6 +104,8 @@ HOST_CONFIG = HostConfig(
             [
                 "--server",
                 "address",
+                "--hostname",
+                "host name",
                 "--username",
                 "userid",
                 "--password-id",

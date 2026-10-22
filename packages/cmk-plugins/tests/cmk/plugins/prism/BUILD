@@ -5,6 +5,7 @@ py_cmk_test(
     name = "prism-test",
     size = "small",
     srcs = glob(["**/*.py"]),
+    data = glob(["**/*.json"]),
     deps = [
         "//packages/cmk-plugins/cmk/plugins/prism",
         requirement("requests"),

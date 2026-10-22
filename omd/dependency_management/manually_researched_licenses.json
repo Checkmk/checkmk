@@ -118,7 +118,7 @@
   "pkg:pypi/pytokens@0.4.1": "MIT",
   "pkg:pypi/pywin32@312": " PSF-2.0",
   "pkg:pypi/redfish@3.4.1": "BSD-3-Clause",
-  "pkg:pypi/reportlab@5.0.1": "BSD-3-Clause",
+  "pkg:pypi/reportlab@5.1.0": "BSD-3-Clause",
   "pkg:pypi/requests-unixsocket@0.4.1": "Apache-2.0",
   "pkg:pypi/rfc3339-validator@0.1.4": "MIT",
   "pkg:pypi/robotframework@7.5": "Apache-2.0",

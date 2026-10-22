@@ -205,6 +205,7 @@ anthropic==1.17.0 \
     --hash=sha256:ccb98b85e1a14f81cf1e2ba348393f341f342bad9e07e014f96c9b69f853aaa7 \
     --hash=sha256:dcf77a74dde89a9fd12405fca798b012725a107f7c9488454234a74e275c2163
     # via
+    #   -c constraints.txt
     #   -c requirements.txt
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   pydantic-ai-slim
@@ -389,16 +390,16 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.43.116 \
-    --hash=sha256:89fa15e7d1788fb17cbd694b034beba57f43f30f58f4506913a5b62220f8ba01 \
-    --hash=sha256:9dca4dbd464b189041b27b5a02280bd5e02c3051bebf6bd03cd0e47aaf558030
+boto3==1.43.117 \
+    --hash=sha256:a5b6cd7e67653987fcf0e212187c16f7b58af2ae192e368f7212ddab7c05b25d \
+    --hash=sha256:f3d314908d866b577ee6b74ed432c21e565c4c4dbd640ef3fd5e0da30fa13a98
     # via
     #   -c requirements.txt
     #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-plugins/requirements.in
-botocore==1.43.116 \
-    --hash=sha256:00b1fbfc1c024b56633538385628a1bbc7ab15aca0b5b53e5fe188841d96c8ce \
-    --hash=sha256:92f1efe8434183f08f91a61478925f5f8d23082024556f269f916477040e26f4
+botocore==1.43.117 \
+    --hash=sha256:5920ef9b3002e1361846549078549d9154a6e0004c22853c01ce7b279d05d495 \
+    --hash=sha256:71993702832cc37c2495048b9945f2929d306fccb3fb767e9964e437e637fa6c
     # via
     #   -c requirements.txt
     #   -r packages/cmk-plugins/requirements.in
@@ -1009,9 +1010,9 @@ exchangelib==5.6.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-fastapi==0.156.4 \
-    --hash=sha256:a09d29fdd6635e94ae00199bae331a04350e0e46ba4334d50809007cd3119db5 \
-    --hash=sha256:e7dd3889a6d6f0c2976a89d6fb34be92fb3ee77bb5f9d1a40e68e9af09c96968
+fastapi==0.159.1 \
+    --hash=sha256:49b94c29afec2fca1390e9c39be202c59755d5cda8e4f1148a133761e4313e7e \
+    --hash=sha256:b45b1ec57f3aa4d2f80f09bfbcf068b46764a2ee892e56753f35bb3d9d845ce2
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -1350,9 +1351,9 @@ googleapis-common-protos[grpc]==1.75.0 \
     #   grpcio-status
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-griffelib==2.4.0 \
-    --hash=sha256:0a7db47b0bdf5123a6ceca2f71aa996742a4f04d9048046778f4a9006772d27f \
-    --hash=sha256:a277a462c56ff4479efe5cbcb4f882dc9a63cfa5ab6404a3e60957c6c8d2f7c9
+griffelib==2.4.1 \
+    --hash=sha256:40c028dd2e623f464423f0e11e3c553158f1cf4f1368239a370534d73e1407ff \
+    --hash=sha256:76bc562f936ad1ce198d2cf6d0731bd5c92a7d934b69ef828ef22ee0ffdb62ce
     # via
     #   -c requirements.txt
     #   pydantic-ai-slim
@@ -1464,9 +1465,9 @@ httpcore==1.0.9 \
     # via
     #   -c requirements.txt
     #   httpx
-httpcore2==2.15.1 \
-    --hash=sha256:730f603058c260a3288378217b464713350c23e3b8fe8bba753701054032d98a \
-    --hash=sha256:a94b6b3e6260e1a3f035915408d3dcd7dc8e844c2b544b642e227cf98a747af0
+httpcore2==2.16.0 \
+    --hash=sha256:5c4358319f2602d984ad93182c9fee5160f22e9da7babdda870a5e7c4e2dc34f \
+    --hash=sha256:c72cd0413563b17e1cd8354677dff887466f8ec2551679759e93126534428643
     # via
     #   -c requirements.txt
     #   httpx2
@@ -1485,9 +1486,9 @@ httpx==0.28.1 \
     #   -r packages/cmk-maps/requirements.in
     #   google-genai
     #   meraki
-httpx2==2.15.1 \
-    --hash=sha256:75841cd83d16b417f7d6da8f2089ce8120806efdbf96af37d46c5129c49015be \
-    --hash=sha256:ff75485308fbe441e75b1218546e4e78d884df41e1a9741c1f79335ed8fcfef7
+httpx2==2.16.0 \
+    --hash=sha256:0d54c98128e8f2ff7fbbde0fca8c359e5f032edeaaaac443cdb7f31f685bcd7f \
+    --hash=sha256:fd2c5d7909e8d86fe92d53020c310ca0e4e431b838c207c5754b9bbf0308d49a
     # via
     #   -c requirements.txt
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
@@ -1517,9 +1518,9 @@ idna==3.20 \
     #   httpx2
     #   requests
     #   yarl
-inflect==7.5.0 \
-    --hash=sha256:2aea70e5e70c35d8350b8097396ec155ffd68def678c7ff97f51aa69c1d92344 \
-    --hash=sha256:faf19801c3742ed5a05a8ce388e0d8fe1a07f8d095c82201eb904f5d27ad571f
+inflect==7.6.0 \
+    --hash=sha256:9fefad5c0c174d8a38f8c33d3033817e38fca8475f7f226c62efc39d46c83e8a \
+    --hash=sha256:b46875b50534a7cd5fcfb5a7c971bb93fe68948c43ca53e9833bd1e1a69221bd
     # via
     #   -c requirements.txt
     #   datamodel-code-generator
@@ -1548,6 +1549,12 @@ itsdangerous==2.2.0 \
     # via
     #   -c requirements.txt
     #   flask
+jaraco-functools==4.6.0 \
+    --hash=sha256:880c577ec9720b3a052d5bc611fb9f2269b3d87902ef42440df443b88e443280 \
+    --hash=sha256:99e3dc0060c5cbe8fcd1cdb36258e2a65ca40f1566b2033b12abb1bb44dd3c30
+    # via
+    #   -c requirements.txt
+    #   inflect
 jinja2==3.1.6 \
     --hash=sha256:0137fb05990d35f1275a587e9aee6d56da821fc83491a0fb838183be43f66d6d \
     --hash=sha256:85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67
@@ -2499,6 +2506,7 @@ more-itertools==11.2.1 \
     # via
     #   -c requirements.txt
     #   inflect
+    #   jaraco-functools
 msal==1.39.0 \
     --hash=sha256:2d2577886906cd7293850dffa2da29119966c213bfc6ec0cecf8bf7621e1ca77 \
     --hash=sha256:6ab7de335e6d7f5717e2c7e1dbf86e4dda2f6acf3c56773b78dc53ebc6395b5f
@@ -2789,9 +2797,9 @@ oauthlib==4.0.0 \
     #   -r cmk/requirements.in
     #   exchangelib
     #   requests-oauthlib
-openai==3.35.1 \
-    --hash=sha256:264fd0fafc889021f526b7c1e5a2df5ca3e8dea874738ecd31da666434f25967 \
-    --hash=sha256:b33e6561b90586e450def8a388e7d364755325da6884fc71348be5542e043bd0
+openai==3.36.1 \
+    --hash=sha256:4c15b6765fe1792c5ad753556f44c7f82c2920c5e9e40219c0fca97369e923d3 \
+    --hash=sha256:ad8e5d56f20198915d98726ac1edb12ae38e7ecfa9bd560057e84642168b20c9
     # via
     #   -c requirements.txt
     #   pydantic-ai-slim
@@ -3897,9 +3905,9 @@ pyparsing==3.3.3 \
     #   -r cmk/requirements.in
     #   httplib2
     #   matplotlib
-pypdf==6.21.1 \
-    --hash=sha256:2d62c383acd6e0dff0a96322ba8b1135229343b084d73c6f6cfd947fd291afcb \
-    --hash=sha256:553e2d42f5bb3bb2a785a7d3de8ef90bb7df74b5413eff5a7b4388007ea9254b
+pypdf==6.21.2 \
+    --hash=sha256:0a3e1c5c886a1be03646c16a04827cc166c2a0575c971b26a4bf89686551c2d4 \
+    --hash=sha256:1d44d1a3a200f25062adff0085b02040e4646431ac2ccac22e42679e91466084
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -4327,9 +4335,9 @@ regex==2026.9.29 \
     # via
     #   -c requirements.txt
     #   tiktoken
-reportlab==5.0.1 \
-    --hash=sha256:1c36e6bb0e71780c72331eba60da7f602e8d4389a8723825af71342e49d791e8 \
-    --hash=sha256:ebd13154be1c8515e665de70bd2d303ae9ddc3ef47e44afd5116441ca0283a26
+reportlab==5.1.0 \
+    --hash=sha256:59fdbaec5efe437095ad1d7292ec9a271c8ca2d3ec75e889c6e61400929b90df \
+    --hash=sha256:6878200464527e87672d19e9f7cfc6bb890e3a6931e74ac6a1a8d1754aa55671
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -4872,9 +4880,9 @@ tzdata==2026.5 \
     #   icalendar
     #   recurring-ical-events
     #   x-wr-timezone
-tzlocal==5.4.4 \
-    --hash=sha256:8dbb8660838688a7b6ba4fed31d18dedf842afb4d47ca050d6d891c2c15f3be4 \
-    --hash=sha256:aae09f0126a8a86fa736be266eb4a471380d26a0de3bc14844e7821fee3e2a15
+tzlocal==5.4.5 \
+    --hash=sha256:ba976898bad27945178c9ca25c222c19e322b30c10342b9f40b46714f70d2d5f \
+    --hash=sha256:ecab534f6d65d9deb4c4ea52c121ab6dd5958e9b878e71dcb102578269752454
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in

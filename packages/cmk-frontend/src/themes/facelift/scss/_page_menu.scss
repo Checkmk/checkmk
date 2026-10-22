@@ -68,6 +68,24 @@ div#top_heading {
     }
   }
 
+  /* The way back a drill-down offers sits in front of the title. */
+  div.title_row {
+    display: flex;
+    align-items: center;
+    gap: $spacing-half;
+    margin: 8px 0 0;
+
+    a.title {
+      margin: 0;
+    }
+
+    /* Without a way back there is no button, and then no gap either. The element always holds the
+       Vue app's wrapper, so :empty never matches. */
+    cmk-drill-up-button:not(:has(button)) {
+      display: none;
+    }
+  }
+
   div.page_state {
     position: relative;
     display: flex;

@@ -44,7 +44,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.page_menu_entry import toggle_page_menu_entries
 from cmk.gui.page_menu_utils import collect_context_links, get_context_page_menu_dropdowns
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.top_heading import top_heading
+from cmk.gui.top_heading import requested_drill_up, top_heading
 from cmk.gui.type_defs import InfoName, Rows, ViewSpec, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
@@ -235,6 +235,7 @@ class GUIViewRenderer(ABCViewRenderer):
                 debug=debug,
                 hide_suggestions=not user.get_tree_state("suggestions", "all", True),
                 user_role_ids=user.role_ids,
+                drill_up=requested_drill_up(request),
             )
             if self.view.renders_engine_graphs:
                 self._render_time_picker()

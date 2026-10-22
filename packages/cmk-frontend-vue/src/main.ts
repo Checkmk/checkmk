@@ -45,6 +45,7 @@ import AllHostsApp from './monitoring/all-hosts/AllHostsApp.vue'
 import HostServicesApp from './monitoring/host-services/HostServicesApp.vue'
 import MonitoringPageLinkButton from './monitoring/shared/components/MonitoringPageLinkButton.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
+import DrillUpButton from './page-header/DrillUpButton.vue'
 import ProductUsageAnalyticsApp from './product-usage-analytics/ProductUsageAnalyticsApp.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import AgentDownload from './setup/AgentDownloadApp.vue'
@@ -87,6 +88,7 @@ defineCmkComponent('cmk-mode-redirect-oauth2-connection', ModeRedirectOAuth2Conn
 defineCmkComponent('cmk-monitoring-all-hosts', AllHostsApp)
 defineCmkComponent('cmk-monitoring-host-services', HostServicesApp)
 defineCmkComponent('cmk-monitoring-page-link-button', MonitoringPageLinkButton)
+defineCmkComponent('cmk-drill-up-button', DrillUpButton)
 defineCmkComponent('cmk-unified-search', UnifiedSearchApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)
 defineCmkComponent('cmk-welcome-snapin', WelcomeSnapin)

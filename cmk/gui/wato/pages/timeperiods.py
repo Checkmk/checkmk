@@ -13,12 +13,8 @@
 import logging
 import time
 from collections.abc import Collection
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any, cast, override
-
-import recurring_ical_events
-from icalendar import Calendar, Event
-from icalendar.prop import vDDDTypes
 
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
@@ -97,128 +93,6 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeTimeperiods)
     mode_registry.register(ModeTimeperiodImportICal)
     mode_registry.register(ModeEditTimeperiod)
-
-
-class ICalEvent(Event):
-    def __init__(self, event: Event):
-        super().__init__(**event)
-        self.time_ranges: list[tuple[str, str]] = []
-
-    def _as_datetime(self, key: str) -> datetime:
-        if key not in self:
-            raise ValueError(f"Event obj doesn't have the key {key}")
-
-        vddd: vDDDTypes = self[key]
-        dt = vddd.dt
-
-        if isinstance(dt, datetime):
-            return dt.astimezone()
-
-        if isinstance(dt, date):
-            return datetime.combine(dt, datetime.min.time()).astimezone()
-
-        raise ValueError(f"Error getting datetime obj for the key: {key}")
-
-    @property
-    def dtstart_dt(self) -> datetime:
-        return self._as_datetime("DTSTART")
-
-    @property
-    def dtstart_str(self) -> str:
-        return self.dtstart_dt.strftime("%Y-%m-%d")
-
-    @property
-    def _dtend(self) -> datetime:
-        return self._as_datetime("DTEND")
-
-    @property
-    def _description(self) -> str:
-        if "DESCRIPTION" not in self:
-            return ""
-        return self.decoded("DESCRIPTION").decode("UTF-8")
-
-    @property
-    def summary(self) -> str:
-        if "SUMMARY" not in self:
-            return self._description
-        return self.decoded("SUMMARY").decode("UTF-8")
-
-    @property
-    def _duration(self) -> timedelta:
-        if "DURATION" in self:
-            dur: vDDDTypes = self["DURATION"]
-            if isinstance(dur.dt, timedelta):
-                return dur.dt
-
-        return self._dtend - self.dtstart_dt
-
-    @property
-    def _timerange_to(self) -> str:
-        duration = self._duration
-        if duration.days >= 1 and duration.seconds == 0 and duration.microseconds == 0:
-            return "24:00"
-
-        return (self.dtstart_dt + self._duration).strftime("%H:%M")
-
-    @property
-    def timerange(self) -> tuple[str, str]:
-        return self.dtstart_dt.strftime("%H:%M"), self._timerange_to
-
-    @property
-    def timeranges(self) -> set[tuple[str, str]]:
-        self.time_ranges.append(self.timerange)
-        if ("00:00", "24:00") in self.time_ranges:
-            return {("00:00", "24:00")}
-        return set(self.time_ranges)
-
-    def add_timerange(self, new_timerange: tuple[str, str]) -> None:
-        self.time_ranges.append(new_timerange)
-
-    @override
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({super().__repr__()})"
-
-    def to_timeperiod_exception(self) -> dict[str, TimeperiodUsage]:
-        """An event can take several days. Moreover, it does not necessarily have to take up the whole day.
-        This method returns a dict that relates each of the days involved to the corresponding time slot.
-
-        Examples:
-        From 2024-08-01 00:00
-        To 2024-08-02 00:00:00
-        Output {'2024-08-01': ("00:00", "24:00")}
-
-        From 2024-08-01 12:00:00
-        To 2024-08-03 12:00:00
-        Output {'2024-08-01': ("12:00", "24:00"), '2024-08-02': ("00:00", "24:00"), '2024-8-03': ("00:00", "12:00")}
-
-        From 2024-08-01 09:00
-        To 2024-08-01 18:00
-        Output {'2024-08-01': ("09:00", "18:00")}
-
-        """
-        start_date = self.dtstart_dt
-        event_lenght = self._duration
-        end_date = start_date + event_lenght
-        end_date_str = end_date.strftime("%Y-%m-%d")
-
-        result: dict[str, tuple[str, str]] = {}
-        current_day = start_date
-        current_time_start = start_date.strftime("%H:%M")
-        current_time_end = "24:00"
-
-        while current_day.date() <= end_date.date():
-            current_day_str = current_day.strftime("%Y-%m-%d")
-            if current_day_str == end_date_str and (end_date.hour == 0 and end_date.minute == 0):
-                break
-
-            if current_day_str == end_date_str:
-                current_time_end = end_date.strftime("%H:%M")
-
-            result[current_day_str] = (current_time_start, current_time_end)
-            current_day += timedelta(days=1)
-            current_time_start = "00:00"
-
-        return result
 
 
 class ModeTimeperiods(WatoMode):
@@ -501,34 +375,20 @@ class ModeTimeperiodImportICal(WatoMode):
         vs_ical.validate_value(ical, "ical")
 
         filename, _ty, content = ical["file"]
-        cal_obj: Calendar = Calendar.from_ical(content)  # type: ignore[assignment]
 
-        exception_map: dict[str, list[TimeperiodUsage]] = {}
-        now = datetime.now()
-        for e in recurring_ical_events.of(cal_obj).between(
-            now, now + timedelta(days=365 * ical["horizon"])
-        ):
-            ice = ICalEvent(e)
-            if ice.dtstart_dt is None:
-                continue  # type: ignore[unreachable]
+        # The import is deliberately done here and not at module level: the iCalendar libraries
+        # add about 4 MB to every process importing them, and every process loading the GUI
+        # imports this module. This way they are only loaded when an iCalendar file is imported.
+        from cmk.gui.wato.pages.timeperiods_ical import import_ical
 
-            exceptions = ice.to_timeperiod_exception()
-            for dt, timerange in exceptions.items():
-                if existing_event := exception_map.get(dt):
-                    existing_event.append(timerange)
-                    continue
-                exception_map[dt] = [timerange]
-
-        # If a time period exception has the full day, we can ignore the others (if available)
-        for timeranges in exception_map.values():
-            if ("00:00", "24:00") in timeranges:
-                timeranges[:] = [("00:00", "24:00")]
-
-        get_vars = {
-            "timeperiod_p_alias": str(
-                cal_obj.get("X-WR-CALDESC", cal_obj.get("X-WR-CALNAME", filename))
-            ),
-        }
+        ical_import = import_ical(
+            content,
+            filename=filename,
+            now=datetime.now(),
+            horizon=timedelta(days=365 * ical["horizon"]),
+        )
+        exception_map = ical_import.exceptions
+        get_vars = {"timeperiod_p_alias": ical_import.alias}
 
         for day in dateutils.weekday_ids():
             get_vars["%s_0_from" % day] = ""

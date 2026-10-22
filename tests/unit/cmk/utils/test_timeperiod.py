@@ -11,7 +11,8 @@ import recurring_ical_events  # type: ignore[import-untyped,unused-ignore]
 import time_machine
 from icalendar import Calendar
 
-from cmk.gui.wato.pages.timeperiods import ICalEvent, TimeperiodUsage
+from cmk.gui.wato.pages.timeperiods import TimeperiodUsage
+from cmk.gui.wato.pages.timeperiods_ical import ICalEvent
 from cmk.utils.timeperiod import (
     is_timeperiod_active,
     TimeperiodName,

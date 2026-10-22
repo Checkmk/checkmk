@@ -33,6 +33,14 @@ class SigningKey:
     def certificate(self) -> str:
         return self.key.certificate
 
+    @property
+    def key_id(self) -> str:
+        return self.key.alias
+
+    @property
+    def passphrase(self) -> str:
+        return _PASSPHRASE.raw
+
     def sign(self, data: bytes) -> bytes:
         # SHA-256, because that is what verification.rs of the controller checks.
         return self.key.to_certificate_with_private_key(_PASSPHRASE).private_key.rsa_sign_data(
@@ -71,6 +79,10 @@ class IntegratedUpdaterAgent:
     @property
     def update_config(self) -> PurePosixPath:
         return self.install_dir / "package" / "config" / "cmk-agent-ctl-update.toml"
+
+    @property
+    def agent_info(self) -> PurePosixPath:
+        return self.install_dir / "package" / "agent" / "agent_info.json"
 
     @property
     def controller_dir(self) -> PurePosixPath:

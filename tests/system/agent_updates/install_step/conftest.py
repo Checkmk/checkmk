@@ -10,6 +10,7 @@ only in a package baked for the single directory deployment with the integrated 
 cases install such a package for their own duration and put the generic one back afterwards.
 """
 
+import itertools
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -25,6 +26,10 @@ from tests.system.agent_updates.install_step._agent import (
     IntegratedUpdaterAgent,
     SigningKey,
 )
+from tests.system.agent_updates.install_step._controller import (
+    register_for_updates,
+    UPDATE_HOST,
+)
 from tests.system.agent_updates.install_step._installer import (
     build_marker_package,
     MarkerPackage,
@@ -34,6 +39,7 @@ from tests.system.agent_updates.install_step._units import reset_failed_instance
 from tests.testlib.common.utils import wait_until
 from tests.testlib.system.agent import (
     bake_agents,
+    clean_up_host,
     download_agent_package,
     get_package_type,
     install_agent_package,
@@ -43,8 +49,10 @@ from tests.testlib.system.host_under_test import HostUnderTest
 from tests.testlib.system.site import Site
 from tests.testlib.system.systemd import wait_for_unit_active
 
-_SIGNATURE_KEY_ID = "cmk-40788"
 _SIGNATURE_KEYS_FILE = Path("etc", "check_mk", "multisite.d", "wato", "agent_signature_keys.mk")
+_GLOBAL_SETTINGS_FILE = Path("etc", "check_mk", "multisite.d", "wato", "global.mk")
+# Every offer bakes with another interval, so that its package differs from the installed one.
+_UPDATE_INTERVALS = itertools.count(3601)
 
 
 @contextmanager
@@ -52,7 +60,8 @@ def _rules(site: Site, rules: Iterable[tuple[str, object]]) -> Iterator[None]:
     """Create the given agent rules and activate them, then delete them again on exit.
 
     The site serves the whole suite. A rule left behind would change what any later bake on the
-    site produces.
+    site produces. Each update offer creates its own rule for the agent updater, so the rule of the
+    previous offer has to be gone, or two such rules would match the host.
     """
     rule_ids = [site.openapi.rules.create(value, ruleset_name) for ruleset_name, value in rules]
     try:
@@ -65,14 +74,59 @@ def _rules(site: Site, rules: Iterable[tuple[str, object]]) -> Iterator[None]:
 
 
 @contextmanager
-def _signature_key_on_site(site: Site, signing_key: SigningKey) -> Iterator[None]:
-    """Make signing_key a signature key of the site, then delete the key file again on exit."""
-    keys = {_SIGNATURE_KEY_ID: signing_key.key.model_dump()}
+def _signature_keys_on_site(site: Site, *signing_keys: SigningKey) -> Iterator[None]:
+    """Make signing_keys the signature keys of the site, then delete the key file again on exit.
+
+    The site can sign the baked agents only with a key it holds.
+    """
+    keys = {key.key_id: key.key.model_dump() for key in signing_keys}
     site.write_file(_SIGNATURE_KEYS_FILE, f"agent_signature_keys.update({keys!r})\n")
     try:
         yield
     finally:
         site.delete_file(_SIGNATURE_KEYS_FILE)
+
+
+@contextmanager
+def _agent_deployment_enabled(site: Site) -> Iterator[None]:
+    """Switch on agent deployment, then restore the earlier global settings on exit.
+
+    Without this global setting, the site refuses every agent download with 403.
+    """
+    before = site.read_global_settings(_GLOBAL_SETTINGS_FILE)
+    site.update_global_settings(_GLOBAL_SETTINGS_FILE, {"agent_deployment_enabled": True})
+    try:
+        yield
+    finally:
+        site.write_global_settings(_GLOBAL_SETTINGS_FILE, before)
+
+
+def _integrated_updater_rules(
+    trusted_key: SigningKey, interval: int = 3600
+) -> list[tuple[str, object]]:
+    """The two agent rules for which the bakery adds the installer units to the package.
+
+    The single directory deployment and the integrated activation are both required. trusted_key
+    becomes the only trust anchor of the package.
+    """
+    return [
+        (
+            RuleGroup.AgentConfig("customize_agent_package"),
+            {
+                "deployment_mode": ("root", {"user": AGENT_USER, "creation_options": "auto"}),
+                "directory": {"installation_directory": str(INSTALLATION_DIRECTORY)},
+                "agent_controller_arch": "x86",
+            },
+        ),
+        (
+            RuleGroup.AgentConfig("cmk_update_agent"),
+            {
+                "activated": "integrated_only",
+                "signature_keys": [trusted_key.certificate],
+                "interval": float(interval),
+            },
+        ),
+    ]
 
 
 def _bake_integrated_updater_package(
@@ -84,33 +138,40 @@ def _bake_integrated_updater_package(
     starts from a site without them.
     """
     with (
-        _signature_key_on_site(site, trusted_key),
-        _rules(
-            site,
-            [
-                (
-                    RuleGroup.AgentConfig("customize_agent_package"),
-                    {
-                        "deployment_mode": (
-                            "root",
-                            {"user": AGENT_USER, "creation_options": "auto"},
-                        ),
-                        "directory": {"installation_directory": str(INSTALLATION_DIRECTORY)},
-                        "agent_controller_arch": "x86",
-                    },
-                ),
-                (
-                    RuleGroup.AgentConfig("cmk_update_agent"),
-                    {
-                        "activated": "integrated_only",
-                        "signature_keys": [trusted_key.certificate],
-                    },
-                ),
-            ],
-        ),
+        _signature_keys_on_site(site, trusted_key),
+        _rules(site, _integrated_updater_rules(trusted_key)),
     ):
         bake_agents(site)
         return download_agent_package(site, get_package_type(host), target_dir)
+
+
+@contextmanager
+def _update_offered(
+    host: HostUnderTest,
+    site: Site,
+    agent: IntegratedUpdaterAgent,
+    signing_key: SigningKey,
+) -> Iterator[None]:
+    """Make the site offer this host a new agent package, signed with signing_key only.
+
+    The rules have to stay in place while the controller asks: the site offers the package that
+    matches the current configuration of the host.
+    """
+    with (
+        _signature_keys_on_site(site, agent.trusted_key, signing_key),
+        _agent_deployment_enabled(site),
+        _rules(site, _integrated_updater_rules(agent.trusted_key, next(_UPDATE_INTERVALS))),
+        clean_up_host(site, UPDATE_HOST),
+    ):
+        site.openapi.hosts.create(UPDATE_HOST, attributes={"ipaddress": site.http_address})
+        site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
+        bake_agents(site)
+        site.openapi.agents.sign(key_id=signing_key.key_id, passphrase=signing_key.passphrase)
+        register_for_updates(host, agent, site, UPDATE_HOST)
+        try:
+            yield
+        finally:
+            host.run([agent.ctl.as_posix(), "delete-all"], sudo=True)
 
 
 def _remove_agent(host: HostUnderTest) -> None:
@@ -179,3 +240,13 @@ def _marker_package(host: HostUnderTest, tmp_path: Path) -> Iterator[MarkerPacka
     yield package
     remove_marker_package(host, package)
     reset_failed_instances(host)
+
+
+@pytest.fixture(name="update_offer")
+def _update_offer(
+    host: HostUnderTest, site: Site, integrated_updater_agent: IntegratedUpdaterAgent
+) -> Iterator[None]:
+    with _update_offered(
+        host, site, integrated_updater_agent, integrated_updater_agent.trusted_key
+    ):
+        yield

@@ -12,6 +12,7 @@ import pytest
 import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
 from cmk.ec.config import Config, MatchGroups
+from cmk.ec.history import History
 from cmk.ec.main import (
     create_history,
     EventServer,
@@ -328,3 +329,31 @@ def test_rule_with_a_priority_beyond_debug_is_ignored(
     process_message(event_server, ec.Event(text="Something happened", priority=2))
 
     assert _rule_ids_of_events(event_status) == ["valid"]
+
+
+@pytest.mark.parametrize(
+    "rule_optimizer",
+    [
+        pytest.param(True, id="switching it off"),
+        pytest.param(False, id="switching it on"),
+    ],
+)
+def test_rules_match_while_a_reload_switches_the_rule_optimizer(
+    event_server: EventServer,
+    event_status: EventStatus,
+    config: Config,
+    history: History,
+    rule_optimizer: bool,
+) -> None:
+    reloaded_config = config | {
+        "rule_optimizer": rule_optimizer,
+        "rule_packs": [_rule_pack("p", _rule("matching"))],
+    }
+    event_server.reload_configuration(reloaded_config, history)
+    # Like during a further reload, the setting changes before the rules compiled for it replace
+    # the current ones.
+    reloaded_config["rule_optimizer"] = not rule_optimizer
+
+    process_message(event_server, ec.Event(text="Something happened"))
+
+    assert _rule_ids_of_events(event_status) == ["matching"]

@@ -428,7 +428,7 @@ class EventServer(ECServerThread):
 
         self._rules: list[Rule] = []
         self._rule_by_id: dict[str | None, Rule] = {}
-        self._rule_hash: dict[int, dict[int, Any]] = {}
+        self._rule_hash: dict[int, dict[int, Any]] | None = None  # None without rule optimizer
         self._hash_stats: list[list[int]] = []  # facility/priority
         for _unused_facility in range(32):
             self._hash_stats.append([0] * 8)
@@ -1181,12 +1181,18 @@ class EventServer(ECServerThread):
                 self._event_status.remove_event(event, "AUTODELETE")
 
     def reload_configuration(self, config: Config, history: History) -> None:
+        # Prepare everything which can fail before changing anything, so a failed reload keeps the
+        # previous configuration.
+        snmp_trap_parser = SNMPTrapParser(
+            self.settings, config, self._logger.getChild("snmp")
+        ).parse
+        compiled_rules = self._compile_rules(
+            config["rule_packs"], rule_optimizer=config["rule_optimizer"]
+        )
         self._config = config
         self._history = history
-        self._snmp_trap_parser = SNMPTrapParser(
-            self.settings, self._config, self._logger.getChild("snmp")
-        ).parse
-        self.compile_rules(self._config["rule_packs"])
+        self._snmp_trap_parser = snmp_trap_parser
+        self._rules, self._rule_by_id, self._rule_hash = compiled_rules
         self.host_config = HostConfig(self._logger, self._connection)
         self._rule_matcher = RuleMatcher(
             logger=self._logger if config["debug_rules"] else None,
@@ -1196,10 +1202,22 @@ class EventServer(ECServerThread):
 
     def compile_rules(self, rule_packs: Sequence[ECRulePack]) -> None:
         """Precompile regular expressions and similar stuff."""
-        self._rules = []
-        self._rule_by_id = {}
+        self._rules, self._rule_by_id, self._rule_hash = self._compile_rules(
+            rule_packs, rule_optimizer=self._config["rule_optimizer"]
+        )
+
+    def _compile_rules(
+        self, rule_packs: Sequence[ECRulePack], *, rule_optimizer: bool
+    ) -> tuple[list[Rule], dict[str | None, Rule], dict[int, dict[int, Any]] | None]:
+        """Compiles the rules into new structures, so messages never see partially compiled rules
+
+        Without the rule optimizer, there is no rule hash, so messages tell from the compiled rules
+        alone whether to use it, even while a reload changes the rule optimizer setting.
+        """
+        rules: list[Rule] = []
+        rule_by_id: dict[str | None, Rule] = {}
         # Speedup-Hash for rule execution
-        self._rule_hash = {}
+        rule_hash: dict[int, dict[int, Any]] = {}
         count_disabled = 0
         count_rules = 0
         count_unspecific = 0
@@ -1223,10 +1241,10 @@ class EventServer(ECServerThread):
                     continue
 
                 count_rules += 1
-                self._rules.append(active_rule)
-                self._rule_by_id[active_rule["id"]] = active_rule
-                if self._config["rule_optimizer"]:
-                    self.hash_rule(active_rule)
+                rules.append(active_rule)
+                rule_by_id[active_rule["id"]] = active_rule
+                if rule_optimizer:
+                    self.hash_rule(rule_hash, active_rule)
                     if (
                         "match_facility" not in active_rule
                         and "match_priority" not in active_rule
@@ -1239,36 +1257,39 @@ class EventServer(ECServerThread):
             "Compiled %(count_rules)d active rules (ignoring %(count_disabled)d disabled rules)",
             {"count_rules": count_rules, "count_disabled": count_disabled},
         )
-        if self._config["rule_optimizer"]:
+        if rule_optimizer:
             self._logger.info(
                 "Rule hash: %(total)d rules - %(hashed)d hashed, %(unspecific)d unspecific",
                 {
-                    "total": len(self._rules),
-                    "hashed": len(self._rules) - count_unspecific,
+                    "total": len(rules),
+                    "hashed": len(rules) - count_unspecific,
                     "unspecific": count_unspecific,
                 },
             )
             for facility in list(range(23)) + [31]:
-                if facility in self._rule_hash:
+                if facility in rule_hash:
                     stats = [
                         f"{SyslogPriority(prio)}({len(entries)})"
-                        for prio, entries in self._rule_hash[facility].items()
+                        for prio, entries in rule_hash[facility].items()
                     ]
                     self._logger.info(
                         " %(facility)-12s: %(stats)s",
                         {"facility": SyslogFacility(facility), "stats": " ".join(stats)},
                     )
+        return rules, rule_by_id, rule_hash if rule_optimizer else None
 
-    def hash_rule(self, rule: Rule) -> None:
+    @classmethod
+    def hash_rule(cls, rule_hash: dict[int, dict[int, Any]], rule: Rule) -> None:
         """Construct rule hash for faster execution."""
         facility = rule.get("match_facility")
         if facility and not rule.get("invert_matching"):
-            self.hash_rule_facility(rule, facility)
+            cls.hash_rule_facility(rule_hash, rule, facility)
         else:
             for facility in range(32):  # all syslog facilities
-                self.hash_rule_facility(rule, facility)
+                cls.hash_rule_facility(rule_hash, rule, facility)
 
-    def hash_rule_facility(self, rule: Rule, facility: int) -> None:
+    @staticmethod
+    def hash_rule_facility(rule_hash: dict[int, dict[int, Any]], rule: Rule, facility: int) -> None:
         needed_prios = [False] * 8
 
         if "match_priority" in rule:
@@ -1288,7 +1309,7 @@ class EventServer(ECServerThread):
         if rule.get("invert_matching"):
             needed_prios = [True] * 8
 
-        prio_hash = self._rule_hash.setdefault(facility, {})
+        prio_hash = rule_hash.setdefault(facility, {})
         for prio, need in enumerate(needed_prios):
             if need:
                 prio_hash.setdefault(prio, []).append(rule)
@@ -1323,10 +1344,11 @@ class EventServer(ECServerThread):
         if self._config["log_messages"]:
             self.log_message(event)
 
-        # Rule optimizer
-        if self._config["rule_optimizer"]:
+        # Rule optimizer: Rely on the compiled rules instead of the setting, which a reload changes
+        # before replacing the rules.
+        if (rule_hash := self._rule_hash) is not None:
             self._hash_stats[event["facility"]][event["priority"]] += 1
-            rule_candidates = self._rule_hash.get(event["facility"], {}).get(event["priority"], [])
+            rule_candidates = rule_hash.get(event["facility"], {}).get(event["priority"], [])
         else:
             rule_candidates = self._rules
 
@@ -1917,35 +1939,25 @@ def partition[T](pred: Callable[[T], bool], iterable: Iterable[T]) -> tuple[list
 
 
 class Queries:
-    """Parsing and processing of status queries."""
+    """Reading the status queries of a client"""
 
-    def __init__(
-        self,
-        get_table: Callable[[str], StatusTable],
-        sock: socket.socket,
-        logger: Logger,
-    ) -> None:
-        self._get_table = get_table
+    def __init__(self, sock: socket.socket) -> None:
         self._socket = sock
-        self._logger = logger
         self._buffer = b""
 
-    def _query(self, request: bytes) -> Query:
-        return Query.make(self._get_table, request.decode("utf-8").splitlines(), self._logger)
-
-    def __iter__(self) -> Iterator[Query]:
+    def __iter__(self) -> Iterator[bytes]:
         while True:
             parts = self._buffer.split(b"\n\n", 1)
             if len(parts) > 1:
                 request, self._buffer = parts
-                yield self._query(request)
+                yield request
             else:
                 data = self._socket.recv(4096)
                 if data:
                     self._buffer += data
                 elif self._buffer:
                     request, self._buffer = [self._buffer, b""]
-                    yield self._query(request)
+                    yield request
                 else:
                     break
 
@@ -2304,10 +2316,13 @@ class StatusServer(ECServerThread):
     def handle_client(
         self, client_socket: socket.socket, allow_commands: bool, client_ip: str
     ) -> None:
-        for query in Queries(self.table, client_socket, self._logger):
-            self._logger.log(VERBOSE, "Client livestatus query: %(query)r", {"query": query})
-
+        for request in Queries(client_socket):
             with self._event_status.lock:
+                # Reloading the configuration closes the previous history while holding the lock,
+                # so parse the query only now, when its table can't be that history anymore.
+                query = Query.make(self.table, request.decode("utf-8").splitlines(), self._logger)
+                self._logger.log(VERBOSE, "Client livestatus query: %(query)r", {"query": query})
+
                 # TODO: What we really want is a method in Query returning a response instead of this dispatching horror.
                 if isinstance(query, QueryGET):
                     response: Response = query.table.query(query)
@@ -3606,26 +3621,50 @@ def make_config(config: ConfigFromWATO) -> Config:
 
 
 def load_configuration(settings: Settings, logger: Logger, slave_status: SlaveStatus) -> Config:
+    config = _read_configuration(settings, logger)
+    _set_log_levels(_configured_log_levels(settings, logger, config))
+    _update_replication_status(settings, logger, slave_status, config)
+    return config
+
+
+def _read_configuration(settings: Settings, logger: Logger) -> Config:
     config = load_active_config(settings)
-    # If not set by command line, set the log level by configuration
-    if settings.options.verbosity == 0:
-        levels = config["log_level"]
-        logger.setLevel(levels["cmk.mkeventd"])
-        logger.getChild("EventServer").setLevel(levels["cmk.mkeventd.EventServer"])
-        if "cmk.mkeventd.EventServer.snmp" in levels:
-            logger.getChild("EventServer.snmp").setLevel(levels["cmk.mkeventd.EventServer.snmp"])
-        logger.getChild("EventStatus").setLevel(levels["cmk.mkeventd.EventStatus"])
-        logger.getChild("StatusServer").setLevel(levels["cmk.mkeventd.StatusServer"])
-        logger.getChild("lock").setLevel(levels["cmk.mkeventd.lock"])
-    # Are we a replication slave? Parts of the configuration will be overridden by values from the master.
+    # Parts of the configuration of a replication slave will be overridden by values from the master.
+    load_master_config(settings, config, logger)
+    return make_config(config)
+
+
+def _configured_log_levels(settings: Settings, logger: Logger, config: Config) -> dict[Logger, int]:
+    """Returns the log levels of the configuration, unless the command line sets the verbosity"""
+    if settings.options.verbosity != 0:
+        return {}
+    levels = config["log_level"]
+    log_levels = {
+        logger: levels["cmk.mkeventd"],
+        logger.getChild("EventServer"): levels["cmk.mkeventd.EventServer"],
+        logger.getChild("EventStatus"): levels["cmk.mkeventd.EventStatus"],
+        logger.getChild("StatusServer"): levels["cmk.mkeventd.StatusServer"],
+        logger.getChild("lock"): levels["cmk.mkeventd.lock"],
+    }
+    if "cmk.mkeventd.EventServer.snmp" in levels:
+        log_levels[logger.getChild("EventServer.snmp")] = levels["cmk.mkeventd.EventServer.snmp"]
+    return log_levels
+
+
+def _set_log_levels(log_levels: Mapping[Logger, int]) -> None:
+    for each_logger, level in log_levels.items():
+        each_logger.setLevel(level)
+
+
+def _update_replication_status(
+    settings: Settings, logger: Logger, slave_status: SlaveStatus, config: Config
+) -> None:
     update_slave_status(slave_status, settings, config)
     if is_replication_slave(config):
         logger.info(
             "Replication: slave configuration, current mode: %(mode)s",
             {"mode": slave_status["mode"]},
         )
-    load_master_config(settings, config, logger)
-    return make_config(config)
 
 
 def reload_configuration(
@@ -3639,18 +3678,43 @@ def reload_configuration(
     slave_status: SlaveStatus,
 ) -> History:
     with lock_configuration:
-        config = load_configuration(settings, logger, slave_status)
+        config = _read_configuration(settings, logger)
+        log_levels = _configured_log_levels(settings, logger, config)
+        previous_log_levels = {each_logger: each_logger.level for each_logger in log_levels}
+        try:
+            # Creating the history depends on the log levels, so set them first.
+            _set_log_levels(log_levels)
+            new_history = create_history(
+                settings, config, logger, StatusTableEvents.columns, StatusTableHistory.columns
+            )
+            try:
+                event_server.reload_configuration(config, new_history)
+            except Exception:
+                new_history.close()
+                raise
+        except Exception:
+            _set_log_levels(previous_log_levels)
+            raise
+        # Update the replication status only now that the new configuration is in effect, so a
+        # failed reload keeps the previous one. As the event server uses the new configuration
+        # already, complete the reload even if updating the replication status fails.
+        try:
+            _update_replication_status(settings, logger, slave_status, config)
+        except Exception:
+            logger.exception("Cannot update the replication status")
 
-        history.close()
-        history = create_history(
-            settings, config, logger, StatusTableEvents.columns, StatusTableHistory.columns
-        )
-        event_server.reload_configuration(config, history)
-
-    event_status.reload_configuration(config, history)
-    status_server.reload_configuration(config, history)
+    event_status.reload_configuration(config, new_history)
+    status_server.reload_configuration(config, new_history)
+    # Once a status query still reading it is answered, only the event server may still use the
+    # previous history, e.g. to record an action it started before the reload. With SQLite,
+    # recording that then fails, which the action logs, while MongoDB reconnects.
+    with event_status.lock:
+        try:
+            history.close()
+        except Exception:
+            logger.exception("Cannot close the previous history")
     logger.info("Reloaded configuration.")
-    return history
+    return new_history
 
 
 # .

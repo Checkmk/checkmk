@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import base64
+import ipaddress
 import logging
 import sys
 from collections.abc import Iterable, Mapping, Sequence
@@ -21,6 +22,14 @@ from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default
 from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 
 LOGGING = logging.getLogger("agent_prism")
+
+
+def base_url(server: str, port: int) -> str:
+    try:
+        is_ipv6 = ipaddress.ip_address(server).version == 6
+    except ValueError:
+        is_ipv6 = False
+    return f"https://[{server}]:{port}" if is_ipv6 else f"https://{server}:{port}"
 
 
 class GatewayData(TypedDict):
@@ -127,16 +136,16 @@ def fetch_from_gateway(
     server: str, port: int, username: str, password: str, timeout: int, cert_check: bool | str
 ) -> GatewayData:
     LOGGING.info("setup HTTPS connection..")
-    base_url = f"https://{server}:{port}"
+    url = base_url(server, port)
     session_manager = SessionManager(
         username=username,
         password=password,
         timeout=timeout,
         cert_check=cert_check,
-        base_url=base_url,
+        base_url=url,
     )
-    base_url_v1 = f"{base_url}/PrismGateway/services/rest/v1"
-    base_url_v2 = f"{base_url}/PrismGateway/services/rest/v2.0"
+    base_url_v1 = f"{url}/PrismGateway/services/rest/v1"
+    base_url_v2 = f"{url}/PrismGateway/services/rest/v2.0"
 
     hosts_obj = session_manager.get(f"{base_url_v2}/hosts")
     hosts_networks = {}

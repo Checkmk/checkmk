@@ -27,7 +27,6 @@ from .defaults import default_rule_pack as default_rule_pack
 from .event import Event as Event
 from .event import EventPhase as EventPhase
 from .event import translate_event_host as translate_event_host
-from .mib_compiler import compile_mib as compile_mib
 from .mkp import mkp_callbacks as mkp_callbacks
 from .rule_matcher import compile_active_rule as compile_active_rule
 from .rule_matcher import compile_rule as compile_rule

@@ -3953,7 +3953,13 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     def _validate_and_compile_mib(self, *, mibname: str, content: str, debug: bool) -> str:  # noqa: ARG002
         if not content or content.isspace():
             raise Exception(_("The file is empty"))
-        results = ec.compile_mib(
+
+        # The import is deliberately done here and not at module level: the MIB compiler adds
+        # about 4 MB to every process importing it, and every process loading the GUI imports
+        # this module. This way it is only loaded when a MIB is uploaded.
+        from cmk.ec.mib_compiler import compile_mib  # astrein: disable=module-layers
+
+        results = compile_mib(
             mibname=mibname,
             content=content,
             source_dirs=[path for path, _title, _deletable in self._mib_dirs()],

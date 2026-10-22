@@ -43,6 +43,7 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ec",
+        "//packages/cmk-ec:mib_compiler",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-web/cmk/web/utils",
     ],

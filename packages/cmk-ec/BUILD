@@ -102,7 +102,6 @@ py_library(
     ],
     deps = [
         ":event",
-        ":mib_compiler",
         ":syslog",
         "//packages/cmk-ccc:daemon",
         "//packages/cmk-ccc:exceptions",

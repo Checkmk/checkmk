@@ -222,6 +222,28 @@ def test_deleting_the_oldest_events_keeps_the_newest_one_even_with_a_zero_limit(
     assert _texts_of_events(event_status) == ["2nd"]
 
 
+def test_reached_host_limit_deletes_the_oldest_events_counted_towards_it(
+    event_server: EventServer,
+    event_status: EventStatus,
+    config: Config,
+    history: RecordingHistory,
+    core_connection: FakeConnection,
+) -> None:
+    # The host's events from before it was in the core are counted separately.
+    event_status.new_event(new_event(ec.Event(text="before the core knew the host")))
+    core_connection.hosts = [new_host("test-host")]
+    _configure(
+        event_server,
+        config,
+        history,
+        _only_limit("by_host", ec.EventLimit(action="delete_oldest", limit=2)),
+    )
+
+    _process_messages(event_server, "1st", "2nd", "3rd")
+
+    assert _texts_of_events(event_status) == ["before the core knew the host", "2nd", "3rd"]
+
+
 @pytest.mark.parametrize("kind", _LIMIT_KINDS)
 def test_reached_limit_creates_an_overflow_event(
     event_server: EventServer,

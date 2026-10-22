@@ -3026,39 +3026,16 @@ class EventStatus:
 
     # protected by self.lock
     def remove_oldest_event(self, ty: LimitKind, event: Event) -> None:
-        match ty:
-            case "overall":
-                if self._events:
-                    self._logger.log(VERBOSE, "  Removing oldest event")
-                    self.remove_event(self._events[0], "AUTODELETE")
-            case "by_rule":
-                if event["rule_id"] is not None:
-                    self._logger.log(
-                        VERBOSE,
-                        '  Removing oldest event of rule "%(rule_id)s"',
-                        {"rule_id": event["rule_id"]},
-                    )
-                    self._remove_oldest_event_of_rule(event["rule_id"])
-            case "by_host":
+        """Removes the oldest event counting towards the same limit of the given kind as the event"""
+        key = self._limit_key(ty, event)
+        for other in self._events:
+            if self._limit_key(ty, other) == key:
                 self._logger.log(
                     VERBOSE,
-                    '  Removing oldest event of host "%(host)s"',
-                    {"host": event["host"]},
+                    "  Removing oldest event %(event_id)d of the %(type)s limit",
+                    {"event_id": other["id"], "type": ty},
                 )
-                self._remove_oldest_event_of_host(event["host"])
-
-    # protected by self.lock
-    def _remove_oldest_event_of_rule(self, rule_id: str) -> None:
-        for event in self._events:
-            if event["rule_id"] == rule_id:
-                self.remove_event(event, "AUTODELETE")
-                return
-
-    # protected by self.lock
-    def _remove_oldest_event_of_host(self, hostname: str) -> None:
-        for event in self._events:
-            if event["host"] == hostname:
-                self.remove_event(event, "AUTODELETE")
+                self.remove_event(other, "AUTODELETE")
                 return
 
     # protected by self.lock

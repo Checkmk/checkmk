@@ -40,7 +40,7 @@ sidebar.onUpdateSnapinContent((contents) => {
 
     void nextTick(() => {
       if (snapinContentElement.value) {
-        cmk.utils.execute_javascript_by_object(snapinContentElement.value)
+        cmk.ts_function_dispatcher.init_callable_ts_functions(snapinContentElement.value)
       }
     })
   }

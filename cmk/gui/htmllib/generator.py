@@ -247,19 +247,11 @@ class HTMLWriter:
     def link(self, *, rel: str, href: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("link", rel=rel, href=href, close_tag=True, **attrs))
 
-    @staticmethod
-    def render_javascript(code: str, **attrs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_javascript(code, **attrs)
-
-    def javascript(self, code: str, **attrs: HTMLTagAttributeValue) -> None:
-        """Blocked by the strict CSP, use call_ts_function() instead"""
-        self.write_html(HTMLWriter.render_javascript(code, **attrs))
-
     def js_entrypoint(self, data: str, *, type_: str, **attrs: HTMLTagAttributeValue) -> None:
         """generic way to transport data from the backend to the frontend,
         without the need to directly invoke javascript code"""
         attrs_type: dict[str, HTMLTagAttributeValue] = {"type": type_}
-        self.write_html(HTMLWriter.render_javascript(data, **(attrs_type | attrs)))
+        self.write_html(HtmlBuilder.render_javascript(data, **(attrs_type | attrs)))
 
     def javascript_file(
         self, src: str, *, type_: str = "text/javascript", async_: bool = False

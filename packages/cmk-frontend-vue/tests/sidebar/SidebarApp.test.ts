@@ -19,7 +19,7 @@ useMswServer(
 
 beforeEach(() => {
   // the legacy global is only stubbed for the snapin content hook
-  vi.stubGlobal('cmk', { utils: { execute_javascript_by_object: () => {} } })
+  vi.stubGlobal('cmk', { ts_function_dispatcher: { init_callable_ts_functions: () => {} } })
 })
 
 async function renderSidebarWithQuicksearch(): Promise<{

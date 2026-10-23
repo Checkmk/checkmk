@@ -4,7 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { hide_msg, monitor, show_error } from './async_progress'
-import { execute_javascript_by_object, reload_whole_page } from './utils'
+import { init_callable_ts_functions } from './ts_function_dispatcher'
+import { reload_whole_page } from './utils'
 
 interface BackGroundJobStart {
   status_container_content: string
@@ -36,7 +37,7 @@ function update(_handler_data: any, response: BackGroundJobStart) {
   container.style.display = 'block'
   /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
   container.innerHTML = response.status_container_content
-  execute_javascript_by_object(container)
+  init_callable_ts_functions(container)
 
   // Restore the previous scrolling state
   const new_log = document.getElementById('progress_log')

@@ -36,31 +36,8 @@ export function update_contents(id: string, code: string) {
   if (obj) {
     /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     obj.innerHTML = code
-    execute_javascript_by_object(obj)
+    init_callable_ts_functions(obj)
   }
-}
-
-export let current_script: HTMLScriptElement | null = null
-
-export function execute_javascript_by_object(obj: HTMLElement) {
-  const aScripts = obj.getElementsByTagName('script')
-  for (let i = 0; i < aScripts.length; i++) {
-    if (aScripts[i].src && aScripts[i].src !== '') {
-      const oScr = document.createElement('script')
-      oScr.src = aScripts[i].src
-      document.getElementsByTagName('HEAD')[0].appendChild(oScr)
-    } else {
-      try {
-        current_script = aScripts[i]
-        /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
-        eval(aScripts[i].text)
-        current_script = null
-      } catch (e) {
-        console.error(aScripts[i].text + '\nError:' + (e as any).message)
-      }
-    }
-  }
-  init_callable_ts_functions(obj)
 }
 
 // Whether or not the current browser window/tab is visible to the user
@@ -604,7 +581,7 @@ function refresh_content_container(on_content_ready?: () => void, on_settled?: (
       on_content_ready?.()
       /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
       container.innerHTML = code
-      execute_javascript_by_object(container)
+      init_callable_ts_functions(container)
 
       // Update the header time
       update_header_timer()

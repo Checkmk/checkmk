@@ -5,10 +5,10 @@
  */
 import { call_ajax } from './ajax'
 import { hide_msg, monitor, show_error, show_message_by_type } from './async_progress'
+import { init_callable_ts_functions } from './ts_function_dispatcher'
 import {
   add_class,
   add_event_handler,
-  execute_javascript_by_object,
   has_class,
   is_in_viewport,
   main_content_scroll_element,
@@ -210,7 +210,7 @@ function update(handler_data: ServiceDiscoveryHandlerData, response: AjaxService
   const page_menu_bar = document.getElementById('page_menu_bar')!
   /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
   page_menu_bar.outerHTML = response.page_menu
-  execute_javascript_by_object(document.getElementById('page_menu_bar')!)
+  init_callable_ts_functions(document.getElementById('page_menu_bar')!)
 
   // Set saved values to old value
   document.getElementById('general_display_options')!.replaceWith(menu_display)
@@ -225,14 +225,14 @@ function update(handler_data: ServiceDiscoveryHandlerData, response: AjaxService
   fixall_container.style.display = response.fixall ? 'block' : 'none'
   /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
   fixall_container.innerHTML = response.fixall
-  execute_javascript_by_object(fixall_container)
+  init_callable_ts_functions(fixall_container)
 
   // Update the content table
   const container = document.getElementById('service_container')!
   container.style.display = 'block'
   /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
   container.innerHTML = response.body
-  execute_javascript_by_object(container)
+  init_callable_ts_functions(container)
 
   if (response.pending_changes_info) {
     update_pending_changes(response.pending_changes_info, response.pending_changes_tooltip)

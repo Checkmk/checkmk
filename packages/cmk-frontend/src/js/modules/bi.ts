@@ -7,14 +7,9 @@ import type { BaseType, EnterElement, Selection } from 'd3'
 import { json, select, selectAll } from 'd3'
 
 import { call_ajax } from './ajax'
+import { init_callable_ts_functions } from './ts_function_dispatcher'
 import type { CMKAjaxReponse } from './types'
-import {
-  change_class,
-  execute_javascript_by_object,
-  has_class,
-  replaceIcon,
-  toggle_folding
-} from './utils'
+import { change_class, has_class, replaceIcon, toggle_folding } from './utils'
 import { list_of_strings_extend } from './valuespecs'
 
 export function toggle_subtree(oImg: HTMLElement, lazy: boolean) {
@@ -69,7 +64,7 @@ function bi_update_tree(container: HTMLElement) {
 function bi_update_tree_response(bi_container: HTMLElement, code: string) {
   /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
   bi_container.innerHTML = code
-  execute_javascript_by_object(bi_container)
+  init_callable_ts_functions(bi_container)
 }
 
 export function toggle_box(container: HTMLElement, lazy: boolean) {

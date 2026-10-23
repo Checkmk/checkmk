@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { execute_javascript_by_object } from './utils'
+import { init_callable_ts_functions } from './ts_function_dispatcher'
 
 //#   +--------------------------------------------------------------------+
 //#   | Mouseover hover menu, used for performance graph popups            |
@@ -46,7 +46,7 @@ export function update_content(code: string, event_: MouseEvent) {
 
   /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
   g_hover_menu.innerHTML = code
-  execute_javascript_by_object(g_hover_menu)
+  init_callable_ts_functions(g_hover_menu)
   update_position(event_)
 }
 

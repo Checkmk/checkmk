@@ -24,7 +24,6 @@ import { init_callable_ts_functions } from './ts_function_dispatcher'
 import type { Nullable } from './utils'
 import {
   add_class,
-  execute_javascript_by_object,
   has_class,
   prevent_default_events,
   querySelectorID,
@@ -430,7 +429,7 @@ function show_cascading_sub_valuespec(
       /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
       container.innerHTML = response.result.html_code
 
-      execute_javascript_by_object(container)
+      init_callable_ts_functions(container)
       enable_dynamic_form_elements(container)
     },
     handler_data: {
@@ -472,7 +471,7 @@ export function listof_add(varprefix: string, magic: string, style: string | nul
   }
 
   container!.appendChild(new_child)
-  execute_javascript_by_object(new_child)
+  init_callable_ts_functions(new_child)
   enable_dynamic_form_elements(new_child)
 
   listof_update_indices(varprefix)
@@ -931,7 +930,7 @@ export function listofmultiple_add(
 
       tbody.insertBefore(new_row, tbody.firstChild)
       enable_dynamic_form_elements(new_row)
-      execute_javascript_by_object(new_row)
+      init_callable_ts_functions(new_row)
 
       // Add it to the list of active elements
       const active = document.getElementById(varprefix + '_active') as HTMLInputElement

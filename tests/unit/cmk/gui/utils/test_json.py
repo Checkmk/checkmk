@@ -11,6 +11,7 @@ import pytest
 
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.utils.json import CustomObjectJSONEncoder
+from cmk.web.htmllib.builder import HtmlBuilder
 from cmk.web.utils.speaklater import LazyString
 
 
@@ -30,7 +31,7 @@ def test_json_dumps_prevent_close_tag_attack_via_onclick_attribute() -> None:
 
 def test_json_dumps_prevent_close_tag_attack_via_script_tag() -> None:
     assert str(
-        HTMLWriter.render_javascript(
+        HtmlBuilder.render_javascript(
             f"js_func({json.dumps({'1': '</script><script>alert(1)</script>'})})",
         )
     ) == (

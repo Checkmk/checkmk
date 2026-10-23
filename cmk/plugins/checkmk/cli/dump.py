@@ -129,8 +129,9 @@ def _mode_dump_agent(
         )
 
         output = []
-        # Show errors of problematic data sources
-        has_errors = False
+        warnings = []
+        errors = []
+
         secrets = (
             AdHocSecrets(
                 path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
@@ -254,18 +255,23 @@ def _mode_dump_agent(
                 config_cache.summary_config(hostname, source_info.ident),
                 fetcher_type=source_info.fetcher_type,
             )
-            if any(r.state != 0 for r in source_results):
-                summaries = ", ".join(r.summary for r in source_results)
-                console.error(f"ERROR [{source_info.ident}]: {summaries}", file=sys.stderr)
-                has_errors = True
+            summaries = ", ".join(r.summary for r in source_results)
+            if any(r.state not in (0, 1) for r in source_results):
+                errors.append(f"ERROR [{source_info.ident}]: {summaries}")
+            elif any(r.state == 1 for r in source_results):
+                warnings.append(f"WARNING [{source_info.ident}]: {summaries}")
+
             if raw_data.is_ok():
                 assert raw_data.ok is not None
                 output.append(raw_data.ok)
 
         write_stdout(b"".join(output).decode(errors="surrogateescape"))
-        if has_errors:
-            return ExitCode.FAILURE
-        return ExitCode.SUCCESS
+        for warn in warnings:
+            console.warning(warn, file=sys.stderr)
+        for err in errors:
+            console.error(err, file=sys.stderr)
+
+        return ExitCode.FAILURE if errors else ExitCode.SUCCESS
 
 
 def _run_dump_agent(context: CommandContext, options: Options, args: Args) -> ExitCode:

@@ -4116,9 +4116,10 @@ def _automation_get_agent_output(
                     config=env.config_cache.summary_config(hostname, source_info.ident),
                     fetcher_type=source_info.fetcher_type,
                 )
+                if any(r.state not in (0, 1) for r in source_results):
+                    success = False
                 if any(r.state != 0 for r in source_results):
                     # Optionally show errors of problematic data sources
-                    success = False
                     output += (
                         f"[{source_info.ident}] {', '.join(r.summary for r in source_results)}\n"
                     )

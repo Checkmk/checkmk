@@ -30,7 +30,7 @@ from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.sources._sources import SNMPSource
 from cmk.cli.engine.call import call
 from cmk.cli.engine.commands import make_command
-from cmk.cli.internal import CommandContext, GlobalOptions, Options
+from cmk.cli.internal import CommandContext, ExitCode, GlobalOptions, Options
 from cmk.plugins.checkmk.cli import dump
 from cmk.plugins.checkmk.cli.dump import cli_command_dump_agent
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
@@ -40,21 +40,23 @@ from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
 
 class _MockFetcherTrigger(PlainFetcherTrigger):
-    def __init__(self, payload: bytes) -> None:
+    def __init__(self, fetched: bytes | Exception) -> None:
         super().__init__(omd_root=Path("/"))
-        self._payload = payload
+        self._fetched = fetched
 
     @override
     def _trigger(self, fetcher: Fetcher, mode: Mode, secret: FetcherSecrets) -> result.Result:
         if isinstance(fetcher, PiggybackFetcher):
             return result.OK(b"")
-        return result.OK(self._payload)
+        if isinstance(self._fetched, Exception):
+            return result.Error(self._fetched)
+        return result.OK(self._fetched)
 
 
 _OMD_ROOT: Final = Path("/omd/sites/mysite")
 
 
-def _patch_fetcher_trigger(monkeypatch: pytest.MonkeyPatch, raw_data: bytes) -> None:
+def _patch_fetcher_trigger(monkeypatch: pytest.MonkeyPatch, fetched: bytes | Exception) -> None:
     """Make the command build an application that fetches the given data.
 
     The command builds its own application, so the fake has to go in where it
@@ -71,7 +73,7 @@ def _patch_fetcher_trigger(monkeypatch: pytest.MonkeyPatch, raw_data: bytes) -> 
             edition=Edition.COMMUNITY,
             create_core=_not_called,
             licensing_handler_factory=_not_called,
-            make_fetcher_trigger=lambda *_a: _MockFetcherTrigger(raw_data),
+            make_fetcher_trigger=lambda *_a: _MockFetcherTrigger(fetched),
         ),
     )
 
@@ -166,6 +168,63 @@ class TestDumpAgent:
         )
 
         assert capsys.readouterr().out == raw_data.decode()
+
+    @pytest.mark.usefixtures("scenario")
+    @pytest.mark.usefixtures("patch_config_load")
+    def test_agent_warning_does_not_fail(
+        self,
+        hostname: HostName,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        _patch_fetcher_trigger(
+            monkeypatch,
+            b"<<<check_mk>>>\nraw data\n"
+            b"<<<<>>>>\n<<<cmk_agent_messages:sep(0)>>>\n"
+            b'{"level": "warning", "message": "Section foo denied"}\n',
+        )
+
+        exit_code = call(
+            CommandContext(
+                omd_root=_OMD_ROOT,
+                global_options=GlobalOptions(),
+                logger=logging.getLogger(__name__),
+            ),
+            make_command(cli_command_dump_agent),
+            hostname,
+            {},
+            [],
+            Context(),
+        )
+
+        assert exit_code == ExitCode.SUCCESS
+        assert capsys.readouterr().err == "WARNING [agent]: Success, Section foo denied\n"
+
+    @pytest.mark.usefixtures("scenario")
+    @pytest.mark.usefixtures("patch_config_load")
+    def test_unknown_fetch_failure_fails(
+        self,
+        hostname: HostName,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        _patch_fetcher_trigger(monkeypatch, Exception("Something broke"))
+
+        exit_code = call(
+            CommandContext(
+                omd_root=_OMD_ROOT,
+                global_options=GlobalOptions(),
+                logger=logging.getLogger(__name__),
+            ),
+            make_command(cli_command_dump_agent),
+            hostname,
+            {},
+            [],
+            Context(),
+        )
+
+        assert exit_code == ExitCode.FAILURE
+        assert capsys.readouterr().err == "ERROR [agent]: Something broke\n"
 
 
 class TestDumpAgentSnmpBackend:

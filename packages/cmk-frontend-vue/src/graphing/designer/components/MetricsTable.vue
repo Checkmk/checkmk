@@ -63,7 +63,8 @@ const {
   titleMacros,
   issuesByRow,
   resolvedTitles,
-  metricsBySource
+  metricsBySource,
+  isCompact = false
 } = defineProps<{
   store: GraphItemsStore
   thresholds: { warning: string; critical: string }
@@ -76,6 +77,8 @@ const {
   resolvedTitles: ReadonlyMap<ItemId, string>
   /** Fetched series per data-source row, for the per-row metrics preview. */
   metricsBySource: Map<ItemId, Metric[]>
+  /** Narrows the table to fit an embedding workflow. */
+  isCompact?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -387,7 +390,7 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
               <CmkInput
                 :model-value="row.title"
                 :aria-label="_t('Title')"
-                field-size="large"
+                :field-size="isCompact ? 'medium' : 'large'"
                 :external-errors="titleMessages(row)"
                 @update:model-value="onTitleChange(row, $event)"
               />

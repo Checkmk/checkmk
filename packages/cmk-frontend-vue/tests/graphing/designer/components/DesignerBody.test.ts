@@ -272,6 +272,7 @@ function renderBody(
     graph?: CustomGraphObject
     issuesByRow?: ReadonlyMap<ItemId, RowIssue[]>
     telemetryMetricsAvailable?: boolean
+    isEmbedded?: boolean
   } = {}
 ) {
   const { graph, ...rest } = overrides
@@ -657,6 +658,46 @@ test("states the response's own warnings over the preview it drew anyway", async
   const message = await screen.findByText('The query for A matched more than 100 time series.')
   expect(message.closest('.cmk-surface-notice')).toHaveClass('cmk-surface-notice--warning')
   expect(await screen.findByTestId('time-series-graph')).toBeInTheDocument()
+})
+
+function builtGraphResponse(): unknown {
+  const response = fetchDataResponse() as { data: Record<string, unknown> }
+  return { ...response, data: { ...response.data, internal: 'built-graph' } }
+}
+
+test('an embedded preview takes no input', async () => {
+  renderBody('edit', { isEmbedded: true })
+
+  expect((await screen.findByTestId('time-series-graph')).closest('[inert]')).not.toBeNull()
+})
+
+test('an embedded preview has no header above the graph', async () => {
+  renderBody('edit', { isEmbedded: true })
+  await screen.findByTestId('time-series-graph')
+
+  expect(screen.queryByText('My graph')).not.toBeInTheDocument()
+  expect(
+    screen.queryByRole('group', { name: 'Graph zoom controls and action menu' })
+  ).not.toBeInTheDocument()
+})
+
+test('an edit-mode preview shows its header above the graph', async () => {
+  renderBody('edit')
+  await screen.findByTestId('time-series-graph')
+
+  expect(screen.getByText('My graph')).toBeInTheDocument()
+  expect(
+    screen.getByRole('group', { name: 'Graph zoom controls and action menu' })
+  ).toBeInTheDocument()
+})
+
+test('an edit-mode preview shows no burger menu', async () => {
+  vi.spyOn(client, 'POST').mockResolvedValue(builtGraphResponse() as never)
+
+  renderBody('edit')
+
+  expect(await screen.findByTestId('time-series-graph')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Action menu' })).not.toBeInTheDocument()
 })
 
 test('states an empty custom graph over a drawn frame', async () => {

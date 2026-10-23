@@ -73,7 +73,8 @@ const {
   telemetryMetricsDefaultTitle,
   titleMacros,
   issuesByRow,
-  timeRange
+  timeRange,
+  isEmbedded = false
 } = defineProps<{
   store: GraphItemsStore
   graphOptions: CustomGraphOptions
@@ -89,6 +90,11 @@ const {
   issuesByRow: ReadonlyMap<ItemId, RowIssue[]>
   /** If provided, keeps the preview to this range instead of the page's time picker. */
   timeRange?: RequestedTimeRange | undefined
+  /**
+   * Embeds the designer in another workflow: the preview is for display only (no clicks, focus
+   * or keys) and has no header, and the metrics table is compact.
+   */
+  isEmbedded?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -342,7 +348,7 @@ const addTo = computed<AddTo | null>(() =>
       @update-settings="onSettingsUpdate"
     />
 
-    <div class="graphing-designer-body__preview-container">
+    <div class="graphing-designer-body__preview-container" :inert="isEmbedded">
       <GraphPanel
         v-model:hidden-metric-names="hiddenMetricNames"
         v-model:hidden-line-names="hiddenLineNames"
@@ -356,18 +362,18 @@ const addTo = computed<AddTo | null>(() =>
         :range-change="rangeChange"
         :y-axis="yAxis"
         :title="title"
-        show-title
-        show-timestamp
+        :show-title="!isEmbedded"
+        :show-timestamp="!isEmbedded"
         :figure-width="figureWidth"
         :figure-height="200"
         :show-legend="false"
         :interaction="{
           brush: mode === 'view' ? 'enabled' : 'disabled',
           burger: mode === 'view' ? 'enabled' : 'disabled',
-          hover: 'enabled',
-          panning: 'enabled',
-          zoom: 'enabled',
-          pin: 'enabled'
+          hover: isEmbedded ? 'disabled' : 'enabled',
+          panning: isEmbedded ? 'disabled' : 'enabled',
+          zoom: isEmbedded ? 'disabled' : 'enabled',
+          pin: isEmbedded ? 'disabled' : 'enabled'
         }"
         :brush-snapshot="drawnBrushSnapshot"
         :add-to="addTo"
@@ -461,6 +467,7 @@ const addTo = computed<AddTo | null>(() =>
                 :issues-by-row="issuesByRow"
                 :resolved-titles="data.resolvedTitles.value"
                 :metrics-by-source="data.metricsBySource.value"
+                :is-compact="isEmbedded"
                 @add-calculation="openCalculation(null)"
                 @edit-calculation="openCalculation($event)"
                 @hover-metrics="highlightedMetricNames = $event"

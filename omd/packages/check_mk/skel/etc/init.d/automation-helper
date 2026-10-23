@@ -41,12 +41,18 @@ await_helper_ready() {
     # The daemon detaches before it loads the configuration, so its exit code
     # says nothing about whether it can serve requests yet.
     deadline=$((SECONDS + "${1}"))
+    pid_file_deadline=$((SECONDS + 15))
     pid_file_seen=""
     while [ "${SECONDS}" -lt "${deadline}" ]; do
         THE_PID=$(cat "$PIDFILE" 2>/dev/null)
         [ -n "$THE_PID" ] && pid_file_seen="yes"
         # The daemon removes its PID file when it exits.
         if [ -n "$pid_file_seen" ] && ! process_is_running; then
+            return 1
+        fi
+        # The daemon writes its PID file right after detaching. If none has
+        # appeared by now, it has exited before it got there.
+        if [ -z "$pid_file_seen" ] && [ "${SECONDS}" -ge "${pid_file_deadline}" ]; then
             return 1
         fi
         helper_answers_health_check && return 0

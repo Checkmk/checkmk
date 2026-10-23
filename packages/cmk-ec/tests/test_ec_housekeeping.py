@@ -476,3 +476,30 @@ def test_autodeleting_rule_deletes_its_event_about_a_missing_message_despite_a_s
             event_server.do_housekeeping()
 
     assert event_status.events() == []
+
+
+@pytest.mark.parametrize(
+    "rewriting, field",
+    [
+        pytest.param({"set_host": r"missing-\0"}, "host", id="host name"),
+        pytest.param({"set_application": r"missing-\0"}, "application", id="application"),
+    ],
+)
+def test_merged_event_about_missing_messages_is_rewritten_like_a_new_one(
+    event_server: EventServer,
+    event_status: EventStatus,
+    rewriting: ec.Rule,
+    field: Literal["host", "application"],
+) -> None:
+    rule = _expecting_rule(count=1)
+    rule.update(rewriting)
+    use_rules(event_server, rule)
+    with time_machine.travel(START, tick=False) as traveller:
+        event_server.do_housekeeping()
+        traveller.shift(HOUR)
+        event_server.do_housekeeping()
+        traveller.shift(HOUR)
+
+        event_server.do_housekeeping()
+
+    assert [event[field] for event in event_status.events()] == ["missing-"]

@@ -1189,6 +1189,12 @@ class EventServer(ECServerThread):
             merge_event["text"] = text
             # Better rewrite (again). Rule might have changed. Also we have changed
             # the text and the user might have his own text added via set_text.
+            # Like for a new event, rewrite from an empty host name and application, so a
+            # reference to them doesn't insert what the previous rewriting produced.
+            if "set_host" in rule:
+                merge_event["host"] = HostName("")
+            if "set_application" in rule:
+                merge_event["application"] = ""
             self.rewrite_event(rule, merge_event, MatchGroups(), set_first=False)
             self._event_status.follow_hosts_of(merge_event)
             self._history.add(merge_event, "COUNTFAILED")

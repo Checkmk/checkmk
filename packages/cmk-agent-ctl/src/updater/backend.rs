@@ -10,12 +10,16 @@
 use super::connection;
 #[cfg(unix)]
 use super::install;
+#[cfg(windows)]
+use super::platform::parse_key_value;
 use super::verification;
 use crate::agent_receiver_api;
 use crate::config::{
     tmp_path_for_atomical_save, JSONLoader, JSONLoaderMissingSafe, Registry, TOMLLoader,
     UpdaterRegistration,
 };
+#[cfg(windows)]
+use crate::constants;
 use crate::environment::PathResolver;
 use crate::site_spec;
 use crate::types::AgentHash;
@@ -24,16 +28,12 @@ use log::{log, Level};
 use serde::{Deserialize, Serialize};
 use serde_with::DisplayFromStr;
 use std::fs;
+use std::fs::File;
 use std::io;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use x509_parser::certificate::X509Certificate;
-
-#[cfg(windows)]
-use super::platform::parse_key_value;
-#[cfg(windows)]
-use crate::constants;
 
 /// Fallback update interval, matching the default of the agent updater ruleset.
 const DEFAULT_INTERVAL: u64 = 3600;
@@ -549,67 +549,31 @@ enum OfferedUpdate<'a> {
     Due(&'a agent_receiver_api::TargetAgent),
 }
 
-/// The three updater artifacts of this host, loaded together.
+/// An [`Updater`] that holds `update.lock`, loaded after taking it.
 ///
-/// Fields are private: what is missing or broken is only observable through
-/// [`Updater::is_operational`] and [`Updater::summary`].
-pub struct Updater {
-    config: Option<UpdaterConfig>,
-    state: UpdateState,
-    agent_info: Option<AgentInfo>,
-    load_error: Option<Error>,
-
-    /// Where the state was read from, and where it is written back.
-    state_path: PathBuf,
-
-    /// Where a verified package is spooled for the privileged installer.
-    package_dir: PathBuf,
+/// Only a locked updater changes the update state, so no process writes the
+/// state back from a copy that another process changed in the meantime.
+/// Dropping it releases the lock.
+pub struct WritableUpdater {
+    updater: Updater,
+    _lock: File,
 }
 
-impl Updater {
-    pub fn new(paths: &PathResolver) -> Self {
-        let mut load_error = None;
-        let config = Self::load_or_log(
-            "updater configuration",
-            Level::Warn,
-            UpdaterConfig::load_if_configured(&paths.updater_config_path),
-            &mut load_error,
-        )
-        .flatten();
-        if !paths.updater_state_path.exists() {
-            log::info!(
-                "No updater state at {:?}, starting from the default state",
-                paths.updater_state_path
-            );
-        }
-        // Unparsable state means a broken controller: non-operational by design.
-        let state = Self::load_or_log(
-            "updater state",
-            Level::Warn,
-            UpdateState::load_missing_safe(&paths.updater_state_path).context(format!(
-                "Failed to load the updater state from {:?}",
-                paths.updater_state_path
-            )),
-            &mut load_error,
-        )
-        .unwrap_or_default();
-        let agent_info = Self::load_or_log(
-            "agent info",
-            Level::Info,
-            AgentInfo::load(&paths.agent_info_path),
-            &mut load_error,
-        );
+impl std::ops::Deref for WritableUpdater {
+    type Target = Updater;
 
-        Self {
-            config,
-            state,
-            agent_info,
-            load_error,
-            state_path: paths.updater_state_path.clone(),
-            package_dir: paths.updater_package_dir.clone(),
-        }
+    fn deref(&self) -> &Updater {
+        &self.updater
     }
+}
 
+impl std::ops::DerefMut for WritableUpdater {
+    fn deref_mut(&mut self) -> &mut Updater {
+        &mut self.updater
+    }
+}
+
+impl WritableUpdater {
     /// Record the connection a registration just created as the update source.
     ///
     /// `Keep` fills an empty slot or replaces a source whose connection is
@@ -678,6 +642,89 @@ impl Updater {
             source.uuid
         );
         self.state.save(&self.state_path)
+    }
+}
+
+/// The three updater artifacts of this host, loaded together.
+///
+/// Fields are private: what is missing or broken is only observable through
+/// [`Updater::is_operational`] and [`Updater::summary`].
+pub struct Updater {
+    config: Option<UpdaterConfig>,
+    state: UpdateState,
+    agent_info: Option<AgentInfo>,
+    load_error: Option<Error>,
+
+    /// Where the state was read from, and where it is written back.
+    state_path: PathBuf,
+
+    /// Where a verified package is spooled for the privileged installer.
+    package_dir: PathBuf,
+}
+
+impl Updater {
+    pub fn new(paths: &PathResolver) -> Self {
+        let mut load_error = None;
+        let config = Self::load_or_log(
+            "updater configuration",
+            Level::Warn,
+            UpdaterConfig::load_if_configured(&paths.updater_config_path),
+            &mut load_error,
+        )
+        .flatten();
+        if !paths.updater_state_path.exists() {
+            log::info!(
+                "No updater state at {:?}, starting from the default state",
+                paths.updater_state_path
+            );
+        }
+        // Unparsable state means a broken controller: non-operational by design.
+        let state = Self::load_or_log(
+            "updater state",
+            Level::Warn,
+            UpdateState::load_missing_safe(&paths.updater_state_path).context(format!(
+                "Failed to load the updater state from {:?}",
+                paths.updater_state_path
+            )),
+            &mut load_error,
+        )
+        .unwrap_or_default();
+        let agent_info = Self::load_or_log(
+            "agent info",
+            Level::Info,
+            AgentInfo::load(&paths.agent_info_path),
+            &mut load_error,
+        );
+
+        Self {
+            config,
+            state,
+            agent_info,
+            load_error,
+            state_path: paths.updater_state_path.clone(),
+            package_dir: paths.updater_package_dir.clone(),
+        }
+    }
+
+    /// Wait for `update.lock`, then load: the state is read only once no other
+    /// process can change it.
+    pub fn writable(paths: &PathResolver) -> AnyhowResult<WritableUpdater> {
+        let lock = Self::lock(paths)?;
+        Ok(WritableUpdater {
+            updater: Self::new(paths),
+            _lock: lock,
+        })
+    }
+
+    fn lock(paths: &PathResolver) -> AnyhowResult<File> {
+        fs::create_dir_all(&paths.updater_package_dir)?;
+        let file = File::options()
+            .create(true)
+            .write(true)
+            .truncate(false)
+            .open(paths.updater_package_dir.join("update.lock"))?;
+        file.lock()?;
+        Ok(file)
     }
 
     /// The site of the recorded update source, as the registry keys its
@@ -1346,7 +1393,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     fn test_register_update_source_into_a_state_without_one() {
         let dir = tempfile::TempDir::new().unwrap();
         let registry = registry_with_the_connections_of(&[(SOURCE_SITE, &some_source())]);
-        let mut updater = updater_in(&dir, UpdateState::default());
+        let mut updater = writable_in(&dir, UpdateState::default());
 
         updater
             .register_update_source(
@@ -1367,7 +1414,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             (SOURCE_SITE, &some_source()),
             (OTHER_SITE, &other_source()),
         ]);
-        let mut updater = updater_in(
+        let mut updater = writable_in(
             &dir,
             UpdateState {
                 source: Some(some_source()),
@@ -1392,7 +1439,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         // The registry holds the connection this registration created, which
         // replaced the recorded one at the same site.
         let registry = registry_with_the_connections_of(&[(SOURCE_SITE, &reregistered_source())]);
-        let mut updater = updater_in(
+        let mut updater = writable_in(
             &dir,
             UpdateState {
                 source: Some(some_source()),
@@ -1420,7 +1467,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             (SOURCE_SITE, &some_source()),
             (OTHER_SITE, &other_source()),
         ]);
-        let mut updater = updater_in(
+        let mut updater = writable_in(
             &dir,
             UpdateState {
                 source: Some(some_source()),
@@ -1449,7 +1496,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let dir = tempfile::TempDir::new().unwrap();
         // The deletion took the last connection, so the registry is empty.
         let registry = registry_with_the_connections_of(&[]);
-        let mut updater = updater_in(
+        let mut updater = writable_in(
             &dir,
             UpdateState {
                 source: Some(some_source()),
@@ -1473,7 +1520,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let dir = tempfile::TempDir::new().unwrap();
         // The site is registered again, with a connection of its own.
         let registry = registry_with_the_connections_of(&[(SOURCE_SITE, &reregistered_source())]);
-        let mut updater = updater_in(
+        let mut updater = writable_in(
             &dir,
             UpdateState {
                 source: Some(some_source()),
@@ -1492,7 +1539,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     fn test_forget_vanished_update_source_keeps_a_registered_one() {
         let dir = tempfile::TempDir::new().unwrap();
         let registry = registry_with_the_connections_of(&[(SOURCE_SITE, &some_source())]);
-        let mut updater = updater_in(
+        let mut updater = writable_in(
             &dir,
             UpdateState {
                 source: Some(some_source()),
@@ -1511,7 +1558,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     fn test_forget_vanished_update_source_without_a_recorded_one() {
         let dir = tempfile::TempDir::new().unwrap();
         let registry = registry_with_the_connections_of(&[]);
-        let mut updater = updater_in(&dir, UpdateState::default());
+        let mut updater = writable_in(&dir, UpdateState::default());
 
         updater
             .forget_vanished_update_source(&registry.registry)
@@ -1527,7 +1574,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             (SOURCE_SITE, &some_source()),
             (OTHER_SITE, &other_source()),
         ]);
-        let mut updater = updater_in(
+        let mut updater = writable_in(
             &dir,
             UpdateState {
                 source: Some(some_source()),
@@ -1768,6 +1815,24 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             .contains(&format!("{:?}", paths.updater_config_path)));
     }
 
+    /// The lock is real: no other handle can take it while the writable
+    /// updater lives, and one can once it is dropped. `artifact_paths` leaves
+    /// the download directory missing, so taking the lock has to create it.
+    #[test]
+    fn test_writable_holds_the_update_lock_until_dropped() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let paths = artifact_paths(&dir);
+        let lock_path = paths.updater_package_dir.join("update.lock");
+
+        let updater = Updater::writable(&paths).unwrap();
+
+        assert!(File::open(&lock_path).unwrap().try_lock().is_err());
+
+        drop(updater);
+
+        assert!(File::open(&lock_path).unwrap().try_lock().is_ok());
+    }
+
     #[test]
     fn test_summary_without_config_and_agent_info() {
         let summary = updater(None, None).summary();
@@ -1920,6 +1985,15 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             state,
             state_path: dir.path().join(STATE_FILE),
             ..updater(some_config(), some_agent_info())
+        }
+    }
+
+    /// [`updater_in`], allowed to write its state. The lock file is never
+    /// locked: nothing else runs against `dir`.
+    fn writable_in(dir: &tempfile::TempDir, state: UpdateState) -> WritableUpdater {
+        WritableUpdater {
+            updater: updater_in(dir, state),
+            _lock: File::create(dir.path().join("update.lock")).unwrap(),
         }
     }
 

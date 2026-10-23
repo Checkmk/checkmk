@@ -38,6 +38,7 @@ use modes::status::status;
 use modes::update::{check, update};
 pub use setup::init;
 
+use crate::updater::Updater;
 #[cfg(windows)]
 pub use misc::validate_elevation;
 
@@ -67,7 +68,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
     // Loaded for every mode: the updater is an integral part of the controller,
     // not a subsystem the individual modes opt into. It may be adjusted later, but
     // the updater is _always_ present and its state is _always_ relevant.
-    let mut updater = updater::Updater::new(&paths);
+    let updater = updater::Updater::new(&paths);
     // Kept at info although the default level is still warn: the default is to be
     // raised, and the summary is then wanted on every run.
     log::info!("Updater {}", updater.summary());
@@ -76,7 +77,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
             let config = config::RegisterExistingConfig::new(runtime_config, reg_opts)?;
             registration::register_existing(&config, &mut registry, detect_agent_updater())?;
             register_update_source(
-                &mut updater,
+                &mut Updater::writable(&paths)?,
                 &mut registry,
                 &config.connection_config.site_id,
                 &config.updater_registration,
@@ -97,7 +98,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
             )?;
             registration::register_new(&config, &mut registry, detect_agent_updater())?;
             register_update_source(
-                &mut updater,
+                &mut Updater::writable(&paths)?,
                 &mut registry,
                 &config.connection_config.site_id,
                 &config.updater_registration,
@@ -155,11 +156,11 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
         ),
         cli::Mode::Delete(delete_opts) => {
             delete(&mut registry, &delete_opts.connection)?;
-            updater.forget_vanished_update_source(&registry)
+            Updater::writable(&paths)?.forget_vanished_update_source(&registry)
         }
         cli::Mode::DeleteAll(delete_all_opts) => {
             delete_all(&mut registry, delete_all_opts.enable_insecure_connections)?;
-            updater.forget_vanished_update_source(&registry)
+            Updater::writable(&paths)?.forget_vanished_update_source(&registry)
         }
         cli::Mode::Update(update_opts) => {
             let client_config =
@@ -168,7 +169,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
                 check(&updater, &registry, &client_config)
             } else {
                 update(
-                    &updater,
+                    &mut Updater::writable(&paths)?,
                     &registry,
                     &client_config,
                     if update_opts.skip_signatures {
@@ -208,7 +209,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
 ///
 /// If the updater state cannot be written.
 fn register_update_source(
-    updater: &mut updater::Updater,
+    updater: &mut updater::WritableUpdater,
     registry: &mut config::Registry,
     site_id: &site_spec::SiteID,
     registration: &config::UpdaterRegistration,

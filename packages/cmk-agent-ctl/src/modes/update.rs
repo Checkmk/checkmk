@@ -9,12 +9,14 @@ use crate::agent_receiver_api;
 use crate::configuration::config::{ClientConfig, Registry};
 #[cfg(unix)]
 use crate::updater::InstallOutcome;
-use crate::updater::{CheckOutcome, FetchOutcome, SignatureCheck, Updater};
+use crate::updater::{CheckOutcome, FetchOutcome, SignatureCheck, Updater, WritableUpdater};
 use anyhow::Result as AnyhowResult;
 #[cfg(unix)]
 use std::path::Path;
 
 /// Ask the site which agent package it has for this host, and report it.
+///
+/// Reads only, so it needs no [`WritableUpdater`] and waits for no update.
 ///
 /// # Errors
 ///
@@ -48,7 +50,7 @@ pub fn check(
 /// the package fails verification or cannot be spooled, or if the installer
 /// cannot be reached.
 pub fn update(
-    updater: &Updater,
+    updater: &mut WritableUpdater,
     registry: &Registry,
     client_config: &ClientConfig,
     signature: SignatureCheck,

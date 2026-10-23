@@ -31,7 +31,7 @@ mod verification;
 pub use backend::InstallOutcome;
 pub use backend::{
     AgentInfo, CheckOutcome, FetchOutcome, SignatureCheck, UpdateSource, UpdateState, Updater,
-    UpdaterConfig,
+    UpdaterConfig, WritableUpdater,
 };
 pub use install::{InstallRequest, InstallResult, TrustAnchors};
 

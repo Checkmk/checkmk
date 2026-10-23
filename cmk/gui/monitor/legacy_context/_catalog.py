@@ -81,6 +81,23 @@ _STATIC_FILTERS: Mapping[FilterName, LegacyFilter | MultiFieldFilter] = {
         f"kubernetes_{obj}": label_value(f"kubernetes_{obj}", f"cmk/kubernetes/{obj}")
         for obj in ("cluster", "namespace", "node", "deployment", "daemonset", "statefulset")
     },
+    "serviceregex": text("service_regex"),
+    "service": exact_text("service"),
+    "output": text("service_output"),
+    "service_ctc": name_list("service_ctc", separator=None),
+    "service_ctc_regex": text("service_ctc_regex", negatable=False),
+    "optservice_contactgroup": name_list("optservice_contact_group"),
+    "servicegroups": name_list("servicegroups"),
+    "svcstate": state_choice(
+        {"st0": "OK", "st1": "WARN", "st2": "CRIT", "st3": "UNKNOWN", "stp": "PENDING"}
+    ),
+    "service_staleness": flag("is_service_staleness"),
+    "service_acknowledged": flag("is_service_acknowledged"),
+    "service_scheduled_downtime_depth": flag("is_service_scheduled_downtime_depth"),
+    "service_is_flapping": flag("is_service_is_flapping"),
+    "service_notifications_enabled": flag("is_service_notifications_enabled"),
+    "service_in_notification_period": flag("is_service_in_notification_period"),
+    "service_in_service_period": flag("is_service_in_service_period"),
 }
 
 

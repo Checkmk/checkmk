@@ -1,5 +1,5 @@
 {
-  "checksum": "4ed5701d43339e2ab95782763dfc88714d73093843e715b5f96e2f4e9cd1bb46",
+  "checksum": "8acbb4aa4906d03f7698819ae35d81d587629b620d69ea124627a09caf08091a",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -9184,7 +9184,7 @@
               "target": "tower_service"
             },
             {
-              "id": "webpki-roots 1.0.9",
+              "id": "webpki-roots 1.0.11",
               "target": "webpki_roots"
             }
           ],
@@ -19087,7 +19087,7 @@
               "target": "url"
             },
             {
-              "id": "webpki-roots 1.0.9",
+              "id": "webpki-roots 1.0.11",
               "target": "webpki_roots"
             }
           ],
@@ -26359,14 +26359,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "webpki-roots 1.0.9": {
+    "webpki-roots 1.0.11": {
       "name": "webpki-roots",
-      "version": "1.0.9",
+      "version": "1.0.11",
       "package_url": "https://github.com/rustls/webpki-roots",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/webpki-roots/1.0.9/download",
-          "sha256": "7dcd9d09a39985f5344844e66b0c530a33843579125f23e21e9f0f220850f22a"
+          "url": "https://static.crates.io/crates/webpki-roots/1.0.11/download",
+          "sha256": "f5f280bbb2b287bc8e7de7e3852945a0ff50d1bbcb5ed42b6c7a568c546df171"
         }
       },
       "targets": [
@@ -26399,7 +26399,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.0.9"
+        "version": "1.0.11"
       },
       "license": "CDLA-Permissive-2.0",
       "license_ids": [

@@ -251,6 +251,7 @@ py_library(
         "//packages/cmk-ccc:timeout",
         "//packages/cmk-check-engine/cmk/checkengine/parser",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-plugin-apis:server_side_programs",
     ],
 )
 

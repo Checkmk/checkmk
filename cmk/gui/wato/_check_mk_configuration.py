@@ -5964,6 +5964,19 @@ AgentEncryption = HostRulespec(
 def _common_check_mk_exit_status_elements() -> list[tuple[str, DropdownChoice[int]]]:
     return [
         (
+            "warnings",
+            MonitoringState(
+                default_value=1,
+                title=_("State in case the data source reports warnings"),
+                help=_(
+                    "Data sources can report problems that did not stop them from "
+                    "producing data, for example a single endpoint the configured "
+                    "account is not allowed to access. Warnings result in the state "
+                    "configured here. Informational messages are always OK."
+                ),
+            ),
+        ),
+        (
             "connection",
             MonitoringState(default_value=2, title=_("State in case of connection problems")),
         ),

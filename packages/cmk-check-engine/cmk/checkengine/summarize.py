@@ -10,7 +10,7 @@ import datetime
 import time
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Literal, Protocol
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import (
@@ -25,6 +25,7 @@ from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.piggyback.backend import Config as PiggybackConfig
 from cmk.piggyback.backend import PiggybackMetaData
+from cmk.server_side_programs.v1 import AgentMessages
 
 __all__ = ["summarize", "SummarizerFunction", "SummaryConfig"]
 
@@ -62,13 +63,50 @@ def summarize(
         )
 
     return host_sections.fold(
-        ok=lambda _: summarize_success(config.exit_spec),
+        ok=lambda host_sections: summarize_success(host_sections, config.exit_spec),
         error=lambda exc: summarize_failure(config.exit_spec, exc),
     )
 
 
-def summarize_success(exit_spec: ExitSpec) -> Sequence[ActiveCheckResult]:  # noqa: ARG001
-    return [ActiveCheckResult(state=0, summary="Success")]
+def summarize_success(
+    host_sections: HostSections[AgentRawDataSection],
+    exit_spec: ExitSpec,
+) -> Sequence[ActiveCheckResult]:
+    """Report the messages a special agent embedded in its output
+
+    Infos are always OK, warnings get the configured state.
+
+    Note that the messages section is subject to section selection like any other
+    section, so the messages are not shown if only specific sections are fetched.
+    """
+    warning_state = exit_spec.get("warnings", 1)
+    return [
+        # even if the fetcher messages start with a warning, indicate that we did not _fail_:
+        ActiveCheckResult(state=0, summary="Success"),
+        *(
+            _message_result(level, message, warning_state)
+            for level, message in AgentMessages.from_string_table(
+                host_sections.sections.get(SectionName(AgentMessages.SECTION_NAME), [])
+            )
+        ),
+    ]
+
+
+def _message_result(
+    level: Literal["info", "warning"], message: str, warning_state: int
+) -> ActiveCheckResult:
+    text = message or f"Unspecified {level}"
+    state = 3  # otherwise mypy complains
+    match level:
+        case "info":
+            state = 0
+        case "warning":
+            state = warning_state
+    return ActiveCheckResult(
+        state=state,
+        summary=text.partition("\n")[0],
+        details=text.splitlines() if "\n" in text else (),
+    )
 
 
 def summarize_failure(exit_spec: ExitSpec, exc: Exception) -> Sequence[ActiveCheckResult]:

@@ -16,6 +16,7 @@ from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
 from cmk.gui.wato._check_mk_configuration import (
     _migrate_log_levels,
     _migrate_piggybacked_host_files,
+    CheckMkExitStatus,
     ConfigVariableChooseSNMPBackend,
     ConfigVariableTableRowLimit,
     ConfigVariableTrustedCertificateAuthorities,
@@ -284,3 +285,22 @@ def test_trusted_cas_change_activates_the_core() -> None:
     domain_idents = [d.ident() for d in ConfigVariableTrustedCertificateAuthorities.all_domains()]
     assert domain_idents[0] == ConfigDomainCACertificates.ident()
     assert ConfigDomainCore.ident() in domain_idents
+
+
+def test_check_mk_exit_status_accepts_agent_warnings_for_special_agents() -> None:
+    value = {"individual": {"special": {"warnings": 2}}}
+    CheckMkExitStatus.valuespec.validate_datatype(value, "")
+    CheckMkExitStatus.valuespec.validate_value(value, "")
+
+
+def test_check_mk_exit_status_rejects_agent_warnings_for_other_sources() -> None:
+    with pytest.raises(MKUserError):
+        CheckMkExitStatus.valuespec.validate_datatype(
+            {"individual": {"agent": {"agent_warnings": 2}}}, ""
+        )
+
+
+def test_check_mk_exit_status_drops_legacy_empty_output_for_special_agents() -> None:
+    assert CheckMkExitStatus.valuespec.transform_value(
+        {"individual": {"special": {"empty_output": 1, "connection": 2}}}
+    ) == {"individual": {"special": {"connection": 2}}}

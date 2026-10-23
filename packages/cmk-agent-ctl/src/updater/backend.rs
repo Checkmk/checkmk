@@ -14,6 +14,7 @@ use super::install;
 use super::platform::parse_key_value;
 use super::verification;
 use crate::agent_receiver_api;
+use crate::agent_receiver_api::ApiError;
 use crate::config::{
     tmp_path_for_atomical_save, JSONLoader, JSONLoaderMissingSafe, Registry, TOMLLoader,
     UpdaterRegistration,
@@ -491,6 +492,9 @@ pub enum CheckOutcome {
         target: AgentHash,
         installed: AgentHash,
     },
+
+    /// The site of the update source serves no agent updates: likely the Community edition.
+    SourceUnavailable,
 }
 
 /// What a fetch did. Nothing is installed here: the package is spooled for the
@@ -518,6 +522,13 @@ pub enum FetchOutcome {
         /// The signatures the site delivered with the package.
         signatures: Vec<agent_receiver_api::AgentSignature>,
     },
+
+    /// The site of the update source serves no agent updates: it answered 501.
+    SourceUnavailable,
+
+    /// The site no longer has the package it offered: it answered 409 to the
+    /// download. The next status request names the package that replaced it.
+    Superseded,
 }
 
 /// What the hand-over of a spooled package to the privileged install step did.
@@ -547,6 +558,25 @@ enum OfferedUpdate<'a> {
 
     /// The site offers a package other than the installed one: fetch it.
     Due(&'a agent_receiver_api::TargetAgent),
+}
+
+/// What the site answered a status request with, short of an error.
+#[derive(Debug)]
+pub enum UpdateAvailabilityStatus {
+    Available(agent_receiver_api::UpdateStatusResponse),
+    Unavailable,
+}
+
+/// What the site answered a download with, short of an error.
+#[derive(Debug)]
+enum PackageDownload {
+    Downloaded(UpdatePackage),
+
+    /// The site serves no agent updates: it answered 501.
+    Unavailable,
+
+    /// The site no longer has the offered package: it answered 409.
+    Superseded,
 }
 
 /// An [`Updater`] that holds `update.lock`, loaded after taking it.
@@ -639,6 +669,22 @@ impl WritableUpdater {
         };
         log::info!(
             "Dropping the recorded update source: connection {} is not registered anymore",
+            source.uuid
+        );
+        self.state.save(&self.state_path)
+    }
+
+    /// The site of the source answered 501: no more requests go through it.
+    pub fn record_source_unavailable(&mut self) -> AnyhowResult<()> {
+        let Some(source) = self.state.source.as_mut() else {
+            return Ok(());
+        };
+        if !source.available {
+            return Ok(());
+        }
+        source.available = false;
+        log::warn!(
+            "The site of the update source serves no agent updates, connection {} gets no more update requests",
             source.uuid
         );
         self.state.save(&self.state_path)
@@ -884,7 +930,10 @@ impl Updater {
         let Some(selected) = self.find_update_connection(registry) else {
             return Ok(CheckOutcome::NotPossible);
         };
-        let status = self.request_update_status(api, &selected)?;
+        let status = match self.request_update_status(api, &selected)? {
+            UpdateAvailabilityStatus::Available(status) => status,
+            UpdateAvailabilityStatus::Unavailable => return Ok(CheckOutcome::SourceUnavailable),
+        };
         let Some(target) = status.target_agent.map(|offered| offered.aghash) else {
             return Ok(CheckOutcome::NoPackage);
         };
@@ -931,7 +980,10 @@ impl Updater {
         let Some(selected) = self.find_update_connection(registry) else {
             return Ok(FetchOutcome::NotPossible);
         };
-        let status = self.request_update_status(api, &selected)?;
+        let status = match self.request_update_status(api, &selected)? {
+            UpdateAvailabilityStatus::Available(status) => status,
+            UpdateAvailabilityStatus::Unavailable => return Ok(FetchOutcome::SourceUnavailable),
+        };
         let offered = match self.offered_update(&status)? {
             OfferedUpdate::NoPackage => return Ok(FetchOutcome::NoPackage),
             OfferedUpdate::UpToDate(installed) => return Ok(FetchOutcome::UpToDate(installed)),
@@ -944,7 +996,11 @@ impl Updater {
         if signature == SignatureCheck::Required {
             ensure_verifiable(offered, &local_certificates)?;
         }
-        let package = self.download_package(api, &selected, offered)?;
+        let package = match self.download_package(api, &selected, offered)? {
+            PackageDownload::Downloaded(package) => package,
+            PackageDownload::Unavailable => return Ok(FetchOutcome::SourceUnavailable),
+            PackageDownload::Superseded => return Ok(FetchOutcome::Superseded),
+        };
         let (hash, path) = match signature {
             SignatureCheck::Required => {
                 let package = package.verify(&offered.signatures, &local_certificates)?;
@@ -1043,6 +1099,11 @@ impl Updater {
             return None;
         };
 
+        if !source.available {
+            log::info!("No agent update is possible: the site of the update source serves no agent updates");
+            return None;
+        }
+
         let Some(selected) = connection::select(registry, source.uuid) else {
             log::info!(
 "No agent update is possible: the connection {} of the update source is not registered",
@@ -1060,6 +1121,11 @@ impl Updater {
     /// what the host reports. It is authenticated by the client certificate of
     /// the connection alone - see [`super::connection`].
     ///
+    /// # Returns
+    ///
+    /// [`UpdateAvailabilityStatus::Unavailable`] when the site answers 501: it
+    /// serves no agent updates.
+    ///
     /// # Errors
     ///
     /// If nothing is known about the installed agent, if the site address
@@ -1069,13 +1135,13 @@ impl Updater {
         &self,
         api: &impl agent_receiver_api::AgentUpdate,
         selected: &connection::UpdateConnection<'_>,
-    ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse> {
+    ) -> AnyhowResult<UpdateAvailabilityStatus> {
         let agent_info = self
             .agent_info
             .as_ref()
             .context("Cannot ask for an agent update without the info of the installed agent")?;
         let url = site_spec::make_site_url(selected.site_id, &selected.connection.receiver_port)?;
-        api.update_status(
+        match api.update_status(
             &url,
             &selected.connection.trust,
             &agent_receiver_api::UpdateStatusBody {
@@ -1083,11 +1149,17 @@ impl Updater {
                 installed_aghash: &agent_info.hash,
                 last_error: self.reported_last_error(),
             },
-        )
-        .context(format!(
-            "Agent update status request to {} failed",
-            selected.site_id
-        ))
+        ) {
+            Ok(status) => Ok(UpdateAvailabilityStatus::Available(status)),
+            Err(ApiError::Status {
+                status: http::StatusCode::NOT_IMPLEMENTED,
+                ..
+            }) => Ok(UpdateAvailabilityStatus::Unavailable),
+            Err(error) => Err(Error::new(error).context(format!(
+                "Agent update status request to {} failed",
+                selected.site_id
+            ))),
+        }
     }
 
     /// The package `status` offers, unless there is nothing to fetch.
@@ -1129,6 +1201,11 @@ impl Updater {
     /// The package is not verified here: it is held in memory until its
     /// signature has been checked, and only then written anywhere.
     ///
+    /// # Returns
+    ///
+    /// [`PackageDownload::Unavailable`] when the site answers 501, and
+    /// [`PackageDownload::Superseded`] when it answers 409.
+    ///
     /// # Errors
     ///
     /// If nothing is known about the installed agent, if the site address
@@ -1138,37 +1215,48 @@ impl Updater {
         api: &impl agent_receiver_api::AgentUpdate,
         selected: &connection::UpdateConnection<'_>,
         offered: &agent_receiver_api::TargetAgent,
-    ) -> AnyhowResult<UpdatePackage> {
+    ) -> AnyhowResult<PackageDownload> {
         let agent_info = self
             .agent_info
             .as_ref()
             .context("Cannot download an agent update without the info of the installed agent")?;
         let target = &offered.aghash;
         let url = site_spec::make_site_url(selected.site_id, &selected.connection.receiver_port)?;
-        let bytes = api
-            .download_agent(
-                &url,
-                &selected.connection.trust,
-                &agent_receiver_api::AgentDownloadBody {
-                    platform: &agent_info.platform,
-                    aghash: target,
-                },
-            )
-            .context(format!(
-                "Agent update download of {target} from {} failed",
-                selected.site_id
-            ))?;
+        let bytes = match api.download_agent(
+            &url,
+            &selected.connection.trust,
+            &agent_receiver_api::AgentDownloadBody {
+                platform: &agent_info.platform,
+                aghash: target,
+            },
+        ) {
+            Ok(bytes) => bytes,
+            Err(ApiError::Status {
+                status: http::StatusCode::NOT_IMPLEMENTED,
+                ..
+            }) => return Ok(PackageDownload::Unavailable),
+            Err(ApiError::Status {
+                status: http::StatusCode::CONFLICT,
+                ..
+            }) => return Ok(PackageDownload::Superseded),
+            Err(error) => {
+                return Err(Error::new(error).context(format!(
+                    "Agent update download of {target} from {} failed",
+                    selected.site_id
+                )))
+            }
+        };
         log::info!(
             "Downloaded the agent package {target} ({} bytes) from {}, installed is {}",
             bytes.len(),
             selected.site_id,
             agent_info.hash
         );
-        Ok(UpdatePackage {
+        Ok(PackageDownload::Downloaded(UpdatePackage {
             hash: target.clone(),
             platform: agent_info.platform.clone(),
             bytes,
-        })
+        }))
     }
 
     /// The last error in the form the site gets it.
@@ -1631,6 +1719,22 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             .unwrap();
 
         assert_eq!(saved_source(&updater), Some(some_source()));
+    }
+
+    #[test]
+    fn test_record_source_unavailable_marks_the_saved_source() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = writable_in(
+            &dir,
+            UpdateState {
+                source: Some(some_source()),
+                ..Default::default()
+            },
+        );
+
+        updater.record_source_unavailable().unwrap();
+
+        assert!(!saved_source(&updater).unwrap().available);
     }
 
     #[test]
@@ -2274,6 +2378,60 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         }
     }
 
+    /// A site that refuses one of the two requests with a status code, and
+    /// answers the other one as [`TestApi`] does for [`TARGET_HASH`].
+    struct RefusingApi {
+        status: Option<http::StatusCode>,
+        download: Option<http::StatusCode>,
+    }
+
+    impl RefusingApi {
+        fn status(code: http::StatusCode) -> Self {
+            Self {
+                status: Some(code),
+                download: None,
+            }
+        }
+
+        fn download(code: http::StatusCode) -> Self {
+            Self {
+                status: None,
+                download: Some(code),
+            }
+        }
+    }
+
+    fn refused(status: http::StatusCode) -> agent_receiver_api::ApiError {
+        agent_receiver_api::ApiError::Status { status, body: None }
+    }
+
+    impl agent_receiver_api::AgentUpdate for RefusingApi {
+        fn update_status(
+            &self,
+            _base_url: &reqwest::Url,
+            _connection: &TrustedConnection,
+            _body: &agent_receiver_api::UpdateStatusBody<'_>,
+        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse, agent_receiver_api::ApiError>
+        {
+            match self.status {
+                Some(code) => Err(refused(code)),
+                None => Ok(offered(Some(TARGET_HASH))),
+            }
+        }
+
+        fn download_agent(
+            &self,
+            _base_url: &reqwest::Url,
+            _connection: &TrustedConnection,
+            _body: &agent_receiver_api::AgentDownloadBody<'_>,
+        ) -> AnyhowResult<Vec<u8>, agent_receiver_api::ApiError> {
+            match self.download {
+                Some(code) => Err(refused(code)),
+                None => Ok(PACKAGE.to_vec()),
+            }
+        }
+    }
+
     /// The status of a site that has `target` for this host, signed with the
     /// certificate [`config_trusting_the_signer`] configures.
     fn offered(target: Option<&str>) -> UpdateStatusResponse {
@@ -2411,9 +2569,12 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let registry = registry_with_one_connection();
         let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
 
-        let status = updater_after(None)
+        let UpdateAvailabilityStatus::Available(status) = updater_after(None)
             .request_update_status(&TestApi::new(Some(TARGET_HASH)), &selected)
-            .unwrap();
+            .unwrap()
+        else {
+            panic!("expected the site to answer");
+        };
 
         assert_eq!(status.target_agent.unwrap().aghash.as_str(), TARGET_HASH);
     }
@@ -2423,9 +2584,12 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let registry = registry_with_one_connection();
         let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
 
-        let status = updater_after(None)
+        let UpdateAvailabilityStatus::Available(status) = updater_after(None)
             .request_update_status(&TestApi::new(None), &selected)
-            .unwrap();
+            .unwrap()
+        else {
+            panic!("expected the site to answer");
+        };
 
         assert!(status.target_agent.is_none());
     }
@@ -2525,6 +2689,28 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(api.request.borrow().is_none());
     }
 
+    /// Once the site answered 501, the source gets no more requests.
+    #[test]
+    fn test_check_with_an_unavailable_source_asks_nobody() {
+        let registry = registry_with_one_connection();
+        let api = TestApi::new(Some(TARGET_HASH));
+        let updater = Updater {
+            state: UpdateState {
+                source: Some(UpdateSource {
+                    available: false,
+                    ..some_source()
+                }),
+                ..Default::default()
+            },
+            ..updater(some_config(), some_agent_info())
+        };
+
+        let outcome = updater.check(&registry.registry, &api).unwrap();
+
+        assert_eq!(outcome, CheckOutcome::NotPossible);
+        assert!(api.request.borrow().is_none());
+    }
+
     /// Another registered connection does not stand in for a source whose own
     /// connection is gone.
     #[test]
@@ -2538,6 +2724,20 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         assert_eq!(outcome, CheckOutcome::NotPossible);
         assert!(api.request.borrow().is_none());
+    }
+
+    #[test]
+    fn test_check_reports_a_site_without_agent_updates() {
+        let registry = registry_with_one_connection();
+
+        let outcome = updater_after(None)
+            .check(
+                &registry.registry,
+                &RefusingApi::status(http::StatusCode::NOT_IMPLEMENTED),
+            )
+            .unwrap();
+
+        assert_eq!(outcome, CheckOutcome::SourceUnavailable);
     }
 
     /// A host that may not update itself can still be asked what it would
@@ -2640,9 +2840,12 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let api = TestApi::new(None);
         let status = offered(Some(TARGET_HASH));
 
-        let package = updater_after(None)
+        let PackageDownload::Downloaded(package) = updater_after(None)
             .download_package(&api, &selected, target_agent(&status))
-            .unwrap();
+            .unwrap()
+        else {
+            panic!("expected the site to deliver the package");
+        };
 
         assert_eq!(package.hash.as_str(), TARGET_HASH);
         assert_eq!(package.platform, "linux_deb");
@@ -3022,6 +3225,79 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             .fetch_update(
                 &registry.registry,
                 &UnreachableApi,
+                SignatureCheck::Required,
+            )
+            .unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "Agent update status request to server/site failed"
+        );
+    }
+
+    #[test]
+    fn test_fetch_update_reports_a_site_without_agent_updates() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+
+        let outcome = updater_spooling_into(&dir)
+            .fetch_update(
+                &registry.registry,
+                &RefusingApi::status(http::StatusCode::NOT_IMPLEMENTED),
+                SignatureCheck::Required,
+            )
+            .unwrap();
+
+        assert_eq!(outcome, FetchOutcome::SourceUnavailable);
+    }
+
+    /// The site may stop serving agent updates between the status request and
+    /// the download.
+    #[test]
+    fn test_fetch_update_reports_a_site_that_stopped_serving_the_download() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+
+        let outcome = updater_spooling_into(&dir)
+            .fetch_update(
+                &registry.registry,
+                &RefusingApi::download(http::StatusCode::NOT_IMPLEMENTED),
+                SignatureCheck::Required,
+            )
+            .unwrap();
+
+        assert_eq!(outcome, FetchOutcome::SourceUnavailable);
+    }
+
+    /// A 409 is no failure: the site baked a newer package in between, and the
+    /// next status request names it.
+    #[test]
+    fn test_fetch_update_reports_a_package_the_site_replaced() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+
+        let outcome = updater_spooling_into(&dir)
+            .fetch_update(
+                &registry.registry,
+                &RefusingApi::download(http::StatusCode::CONFLICT),
+                SignatureCheck::Required,
+            )
+            .unwrap();
+
+        assert_eq!(outcome, FetchOutcome::Superseded);
+        assert!(!dir.path().join(PACKAGE_DIR).exists());
+    }
+
+    /// A 404 may be temporary, so it is an error like any other.
+    #[test]
+    fn test_fetch_update_fails_on_a_404() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+
+        let error = updater_spooling_into(&dir)
+            .fetch_update(
+                &registry.registry,
+                &RefusingApi::status(http::StatusCode::NOT_FOUND),
                 SignatureCheck::Required,
             )
             .unwrap_err();

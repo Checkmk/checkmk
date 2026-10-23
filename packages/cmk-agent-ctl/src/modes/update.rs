@@ -66,8 +66,15 @@ pub fn update(
     let api = agent_receiver_api::Api {
         use_proxy: client_config.use_proxy,
     };
+
     let fetched = updater.fetch_update(registry, &api, signature)?;
+
     println!("{}", report_fetch(&fetched));
+
+    if fetched == FetchOutcome::SourceUnavailable {
+        updater.record_source_unavailable()?;
+    }
+
     #[cfg(unix)]
     if let FetchOutcome::Spooled {
         path, signatures, ..
@@ -94,6 +101,9 @@ fn report(outcome: CheckOutcome) -> String {
         CheckOutcome::UpdateAvailable { target, installed } => {
             format!("Agent update available: {target} (installed: {installed})")
         }
+        CheckOutcome::SourceUnavailable => {
+            String::from("The site of the update source serves no agent updates")
+        }
     }
 }
 
@@ -115,6 +125,12 @@ fn report_fetch(outcome: &FetchOutcome) -> String {
         }
         FetchOutcome::NoPackage => String::from("No agent package available for this host"),
         FetchOutcome::UpToDate(hash) => format!("Agent is up to date: {hash}"),
+        FetchOutcome::SourceUnavailable => {
+            String::from("The site of the update source serves no agent updates")
+        }
+        FetchOutcome::Superseded => String::from(
+            "The site replaced the offered agent package, the next update gets the new one",
+        ),
         FetchOutcome::Spooled {
             hash,
             path,

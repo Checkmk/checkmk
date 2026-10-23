@@ -28,30 +28,23 @@ interface Dashlet {
 }
 
 /*
- * information about DashboardProperties type
- * we got the data from cmk/gui/dashboard.py
- * since cmk.dashboard.set_dashboard_properties(%s) is being called there.
- * refresh_Dashlets[2] it was tricky a bit since it could be
- * none or string (url) or function the responsible function
- * is get_refresh_action() in cmk/gui/plugins/dashboard/utils.py:
+ * refresh_dashlets holds [dashlet number, refresh interval, URL to fetch the
+ * dashlet contents from]. JavaScript code strings are not supported: they
+ * would have to be evaluated, which the content security policy forbids.
  * */
-interface DashboardProperties<T> {
+interface DashboardProperties {
   MAX: number
   GROW: number
   grid_size: number
   dashlet_padding: [number, number, number, number, number]
   dashlet_min_size: [number, number]
-  refresh_dashlets: [number, number, T][]
-  on_resize_dashlets: Record<number, T | undefined>
+  refresh_dashlets: [number, number, string][]
   dashboard_name: string
   dashboard_owner: string
   dashboard_mtime: number
   dashlets: Dashlet[]
   slim_editor_thresholds: Thresholds
 }
-
-type DashboardPropertiesAPI = DashboardProperties<string>
-type DashboardPropertiesGlobal = DashboardProperties<string | (() => void)>
 
 interface GDrag {
   m_x: number
@@ -68,35 +61,10 @@ interface Thresholds {
 }
 
 const reload_on_resize: Record<number, any> = {}
-export let dashboard_properties = {} as DashboardPropertiesGlobal
+export let dashboard_properties = {} as DashboardProperties
 
-//the python side returns a json which includes javascript code.
-// this javascript code is encoded as string, so we need to eval
-// this string in order to make it executable on the javascript side.
-// but there is more: it could also be possible that the value is not
-// a javascript function, but a literal string. in this case the value
-// is encoded twice: "\"litera_string\"".
-export function set_dashboard_properties(properties: DashboardPropertiesAPI) {
+export function set_dashboard_properties(properties: DashboardProperties) {
   dashboard_properties = properties
-  const { refresh_dashlets, on_resize_dashlets, ...others } = properties
-  // HACK: We JSON-encode refresh/resize actions twice, so undo one layer here...
-
-  const tmp_refresh_dashlets = refresh_dashlets.map<
-    [number, number, string | (() => void)]
-    /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
-  >((elem) => [elem[0], elem[1], eval(elem[2])])
-
-  const tmp_on_resize_dashlets: Record<number, string | undefined | (() => void)> = {}
-  for (const key in on_resize_dashlets) {
-    /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
-    tmp_on_resize_dashlets[key] = eval(on_resize_dashlets[key]!)
-  }
-
-  dashboard_properties = {
-    refresh_dashlets: tmp_refresh_dashlets,
-    on_resize_dashlets: tmp_on_resize_dashlets,
-    ...others
-  }
 }
 
 function size_dashlets() {
@@ -428,16 +396,12 @@ export function execute_dashboard_scheduler(initial: number) {
       (initial && document.getElementById('dashlet_inner_' + nr)?.innerHTML == '') ||
       (refresh > 0 && timestamp % refresh == 0)
     ) {
-      if (typeof url === 'string') {
-        if (url.indexOf('?') !== -1) url += '&mtime=' + dashboard_properties.dashboard_mtime
-        else url += '?mtime=' + dashboard_properties.dashboard_mtime
-        call_ajax(url, {
-          response_handler: dashboard_update_contents,
-          handler_data: 'dashlet_inner_' + nr
-        })
-      } else {
-        url() // Execute "on_refresh" javascript function
-      }
+      if (url.indexOf('?') !== -1) url += '&mtime=' + dashboard_properties.dashboard_mtime
+      else url += '?mtime=' + dashboard_properties.dashboard_mtime
+      call_ajax(url, {
+        response_handler: dashboard_update_contents,
+        handler_data: 'dashlet_inner_' + nr
+      })
     }
   }
 
@@ -1137,11 +1101,6 @@ function dashlet_resized(nr: number, dashlet_obj: HTMLElement) {
     const iframe = document.getElementById('dashlet_iframe_' + nr) as HTMLFrameElement
     iframe.src =
       base_url + '&width=' + dashlet_obj.clientWidth + '&height=' + dashlet_obj.clientHeight
-  }
-  const on_resize: undefined | (() => void) | string = dashboard_properties.on_resize_dashlets[nr]
-
-  if (typeof on_resize !== 'undefined' && typeof on_resize !== 'string') {
-    on_resize()
   }
 }
 

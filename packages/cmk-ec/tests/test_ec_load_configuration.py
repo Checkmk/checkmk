@@ -819,3 +819,32 @@ def test_held_back_termination_takes_precedence_over_a_reload(
             signal_handler(signum, None)
 
     assert excinfo.value.signum == signal.SIGTERM
+
+
+def test_failing_task_is_retried_only_after_its_interval(
+    monkeypatch: pytest.MonkeyPatch,
+    settings: ec.Settings,
+    config: Config,
+    slave_status: SlaveStatus,
+    run_main_loop: _RunMainLoop,
+    terminate_main_event: threading.Event,
+) -> None:
+    # Without debug mode, the main loop logs an exception and retries a second later. Don't wait.
+    monkeypatch.setattr(time, "sleep", lambda _seconds: None)
+    # Replicating fails after contacting the master, as the EC can't save its replication status:
+    # A directory is in place of its file.
+    settings.paths.slave_status_file.value.mkdir()
+    slave_status["mode"] = "sync"
+    housekeepings: list[None] = []
+
+    def housekeeping() -> None:
+        # The EC terminates after its third housekeeping, which is always due.
+        housekeepings.append(None)
+        if len(housekeepings) == 3:
+            terminate_main_event.set()
+
+    contacted_masters = run_main_loop(
+        settings, config | {"replication": _REPLICATION}, housekeeping
+    )
+
+    assert contacted_masters == [_REPLICATION]

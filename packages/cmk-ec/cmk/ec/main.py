@@ -2723,21 +2723,24 @@ def run_eventd(
                     continue  # reload before running any task
                 now = time.time()
 
+                # Each task counts as run even if it fails, so a failing one doesn't keep failing
+                # every second, keeping the tasks after it from running.
                 if now > last_housekeeping + config["housekeeping_interval"]:
-                    event_server.do_housekeeping()
                     last_housekeeping = now
+                    event_server.do_housekeeping()
 
                 if now > last_retention + config["retention_interval"]:
+                    last_retention = now
                     with event_status.lock:
                         event_status.save_status()
-                    last_retention = now
 
                 if now > last_statistics + config["statistics_interval"]:
-                    perfcounters.do_statistics()
                     last_statistics = now
+                    perfcounters.do_statistics()
 
                 next_replication = _next_replication(config, last_replication)
                 if next_replication is not None and now > next_replication:
+                    last_replication = now
                     replication_pull(
                         settings,
                         config,
@@ -2749,7 +2752,6 @@ def run_eventd(
                         logger,
                         fetch_master_state=fetch_master_state,
                     )
-                    last_replication = now
             except MKSignalException as e:
                 raise e
             except Exception:

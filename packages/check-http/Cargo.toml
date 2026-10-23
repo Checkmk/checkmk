@@ -17,7 +17,7 @@ clap = { version = "<4.5", features = ["derive"] }          # needs rustc >= 1.7
 # We need either rustls-tls or native-tls-alpn to establish HTTP/2 connections. Only native-tls
 # supports TLS1.0/TLS1.1, while setting TLS1.3 as minimum version is only supported by rustls. Since
 # we only know that at runtime we need to pull in both TLS backends.
-reqwest = { version = "0.11.25", features = [
+reqwest = { version = "0.12.28", features = [
     "json",
     "rustls-tls-webpki-roots", # CCADB store (https://www.ccadb.org/) - Updated on (re)compilation
     "rustls-tls-native-roots", # Additionally listen to SSL_CERT_FILE

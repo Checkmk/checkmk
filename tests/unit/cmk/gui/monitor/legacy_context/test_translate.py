@@ -4,8 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 from pydantic import TypeAdapter
 
 from cmk.gui.monitor.legacy_context import (
@@ -18,6 +21,12 @@ from cmk.gui.type_defs import FilterHTTPVariables, FilterName, VisualContext
 from .testlib import ANY_PAGE, label_group_variables
 
 type _JSON = dict[str, object]
+
+# While the clock is set, time_machine also makes this timezone the local one of the process, whatever
+# the environment of the test run is. The dates of the server are in it.
+_SERVER_TIMEZONE = ZoneInfo("Europe/Berlin")
+_NOW = datetime(2026, 1, 1, 12, 0, tzinfo=_SERVER_TIMEZONE)
+_NOW_TS = int(_NOW.timestamp())
 
 type _Fields = dict[FilterName, str | Mapping[str, str]]
 
@@ -34,6 +43,8 @@ _FIELDS: _Fields = {
     "address_families": "tags",
     "host_auxtags": "tags",
     "host_labels": "labels",
+    "host_last_check": "last_check",
+    "host_last_state_change": "last_state_change",
     "kubernetes_cluster": "labels",
     "kubernetes_node": "labels",
     "opthostgroup": "groups",
@@ -511,6 +522,19 @@ def test_legacy_filter_translates_to_condition_on_its_field(
         ),
         pytest.param({"kubernetes_cluster": {"kubernetes_cluster": ""}}, id="no Kubernetes object"),
         pytest.param({"host_labels": {}}, id="no label variables"),
+        pytest.param({"host_last_check": {}}, id="no time bounds"),
+        pytest.param(
+            {"host_last_check": {"host_last_check_from": "2"}}, id="time bound without its range"
+        ),
+        pytest.param(
+            {
+                "host_last_check": {
+                    "host_last_check_until": "",
+                    "host_last_check_until_range": "abs",
+                }
+            },
+            id="time bound that was not set",
+        ),
         pytest.param({"host_labels": {"host_labels_count": "0"}}, id="no label group"),
         pytest.param(
             {"host_labels": label_group_variables([("and", [("and", "")])])},
@@ -586,6 +610,115 @@ def test_inactive_context_translates_to_no_filter(context: VisualContext) -> Non
         ),
         pytest.param({"host_labels": {"host_labels_count": "many"}}, id="label count not a number"),
         pytest.param(
+            {
+                "host_last_check": {
+                    "host_last_check_from": "soon",
+                    "host_last_check_from_range": "60",
+                }
+            },
+            id="time ago not a number",
+        ),
+        pytest.param(
+            {
+                "host_last_check": {
+                    "host_last_check_from": "1.5",
+                    "host_last_check_from_range": "60",
+                }
+            },
+            id="time ago not a whole number",
+        ),
+        pytest.param(
+            {
+                "host_last_check": {
+                    "host_last_check_until": "1",
+                    "host_last_check_until_range": "weeks",
+                }
+            },
+            id="unit of time ago not a number of seconds",
+        ),
+        pytest.param(
+            {
+                "host_last_check": {
+                    "host_last_check_from": "2026-13-45",
+                    "host_last_check_from_range": "abs",
+                }
+            },
+            id="date that does not exist",
+        ),
+        pytest.param(
+            {
+                "host_last_check": {
+                    "host_last_check_from": "2026-01-02",
+                    "host_last_check_from_range": "ts",
+                }
+            },
+            id="timestamp without a time",
+        ),
+        pytest.param(
+            {
+                "host_last_check": {
+                    "host_last_check_from": "noon",
+                    "host_last_check_from_range": "unix",
+                }
+            },
+            id="Unix timestamp not a number",
+        ),
+        pytest.param(
+            {
+                "host_last_check": {
+                    "host_last_check_from": "99999999999999999999999",
+                    "host_last_check_from_range": "unix",
+                }
+            },
+            id="Unix timestamp out of range",
+        ),
+        # Livestatus reads the bound of a time column as a 32 bit integer.
+        pytest.param(
+            {
+                "host_last_check": {
+                    "host_last_check_from": str(2**31),
+                    "host_last_check_from_range": "unix",
+                }
+            },
+            id="Unix timestamp just above 32 bits",
+        ),
+        pytest.param(
+            {
+                "host_last_check": {
+                    "host_last_check_until": str(-(2**31) - 1),
+                    "host_last_check_until_range": "unix",
+                }
+            },
+            id="Unix timestamp just below 32 bits",
+        ),
+        pytest.param(
+            {
+                "host_last_check": {
+                    "host_last_check_until": "2040-01-01",
+                    "host_last_check_until_range": "abs",
+                }
+            },
+            id="date after 2038",
+        ),
+        pytest.param(
+            {
+                "host_last_check": {
+                    "host_last_check_from": "1900-01-01 00:00:00",
+                    "host_last_check_from_range": "ts",
+                }
+            },
+            id="date and time before 1901",
+        ),
+        pytest.param(
+            {
+                "host_last_check": {
+                    "host_last_check_until": "9999999999999999999",
+                    "host_last_check_until_range": "1",
+                }
+            },
+            id="time ago out of range",
+        ),
+        pytest.param(
             {"host_labels": label_group_variables([("xor", [("and", "a:1")])])},
             id="unknown group operator",
         ),
@@ -626,6 +759,109 @@ def test_filter_without_equivalent_is_reported(context: VisualContext) -> None:
 
 
 @pytest.mark.parametrize(
+    "name, value, expected",
+    [
+        pytest.param(
+            "host_last_check",
+            {"host_last_check_from": "2", "host_last_check_from_range": "3600"},
+            _condition("last_check", "gte", _NOW_TS - 2 * 3600),
+            id="hours ago",
+        ),
+        pytest.param(
+            "host_last_check",
+            {"host_last_check_until": "10", "host_last_check_until_range": "60"},
+            _condition("last_check", "lte", _NOW_TS - 10 * 60),
+            id="minutes ago",
+        ),
+        pytest.param(
+            "host_last_check",
+            {"host_last_check_from": "1", "host_last_check_from_range": "86400"},
+            _condition("last_check", "gte", _NOW_TS - 86400),
+            id="days ago",
+        ),
+        pytest.param(
+            "host_last_check",
+            {"host_last_check_from": "30", "host_last_check_from_range": "1"},
+            _condition("last_check", "gte", _NOW_TS - 30),
+            id="seconds ago",
+        ),
+        pytest.param(
+            "host_last_check",
+            {"host_last_check_from": "3", "host_last_check_from_range": "7"},
+            _condition("last_check", "gte", _NOW_TS - 21),
+            id="unit that is some other number of seconds",
+        ),
+        pytest.param(
+            "host_last_check",
+            {"host_last_check_from": "1700000000", "host_last_check_from_range": "unix"},
+            _condition("last_check", "gte", 1700000000),
+            id="Unix timestamp",
+        ),
+        pytest.param(
+            "host_last_check",
+            {"host_last_check_from": str(2**31 - 1), "host_last_check_from_range": "unix"},
+            _condition("last_check", "gte", 2**31 - 1),
+            id="latest Unix timestamp of 32 bits",
+        ),
+        pytest.param(
+            "host_last_check",
+            {"host_last_check_until": str(-(2**31)), "host_last_check_until_range": "unix"},
+            _condition("last_check", "lte", -(2**31)),
+            id="earliest Unix timestamp of 32 bits",
+        ),
+        pytest.param(
+            "host_last_check",
+            {"host_last_check_until": "2026-01-02", "host_last_check_until_range": "abs"},
+            _condition(
+                "last_check", "lte", int(datetime(2026, 1, 2, tzinfo=_SERVER_TIMEZONE).timestamp())
+            ),
+            id="date of the server",
+        ),
+        pytest.param(
+            "host_last_check",
+            {"host_last_check_from": "2026-01-02 03:04:05", "host_last_check_from_range": "ts"},
+            _condition(
+                "last_check",
+                "gte",
+                int(datetime(2026, 1, 2, 3, 4, 5, tzinfo=_SERVER_TIMEZONE).timestamp()),
+            ),
+            id="date and time of the server",
+        ),
+        pytest.param(
+            "host_last_check",
+            {
+                "host_last_check_from": "2",
+                "host_last_check_from_range": "3600",
+                "host_last_check_until": "1",
+                "host_last_check_until_range": "3600",
+            },
+            {
+                "type": "and",
+                "children": [
+                    _condition("last_check", "gte", _NOW_TS - 2 * 3600),
+                    _condition("last_check", "lte", _NOW_TS - 3600),
+                ],
+            },
+            id="both bounds",
+        ),
+        pytest.param(
+            "host_last_state_change",
+            {"host_last_state_change_from": "5", "host_last_state_change_from_range": "60"},
+            _condition("last_state_change", "gte", _NOW_TS - 5 * 60),
+            id="last state change",
+        ),
+    ],
+)
+def test_time_range_filter_translates_to_bounds_on_timestamps(
+    name: FilterName, value: FilterHTTPVariables, expected: _JSON
+) -> None:
+    with time_machine.travel(_NOW, tick=False):
+        translation = _translate({name: value})
+
+    assert translation == ContextFilterTranslation(filter=expected, unapplied=[])
+
+
+@pytest.mark.parametrize(
     "name, value, restricts",
     [
         pytest.param("hostregex", {"host_regex": "-1"}, True, id="reads like an ignored flag"),
@@ -652,6 +888,13 @@ def test_filter_without_equivalent_is_reported(context: VisualContext) -> None:
             id="label group",
         ),
         pytest.param("host_labels", {"host_labels_count": "0"}, False, id="no label group"),
+        pytest.param(
+            "host_last_check",
+            {"host_last_check_from": "1", "host_last_check_from_range": "60"},
+            True,
+            id="time bound",
+        ),
+        pytest.param("host_last_check", {"host_last_check_from": "1"}, False, id="no time range"),
     ],
 )
 def test_filter_the_page_does_not_map_is_reported_only_if_it_restricts_anything(

@@ -4,14 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 """The translation of the host label filter repeats the logic with which the legacy filter encodes
-its labels. This test keeps the two from drifting apart: for every combination of operators, the
-translated filter selects a host if and only if the legacy filter does."""
+its labels. The tests keep the two from drifting apart: for every combination of operators, the
+translated filter selects a host if and only if the legacy filter does.
+
+The same goes for the bounds of a time range, which the translation reads from the variables the
+way the legacy filter does."""
 
 import re
 from collections.abc import Iterator
+from datetime import datetime
 from itertools import chain, combinations, product
+from zoneinfo import ZoneInfo
+
+import pytest
+import time_machine
 
 from cmk.gui.monitor.legacy_context import translate_context
+from cmk.gui.query_filters import TimeQuery
 from cmk.gui.type_defs import FilterHTTPVariables
 from cmk.gui.utils.labels import (
     encode_label_groups_for_livestatus,
@@ -110,3 +119,82 @@ def test_host_label_filter_agrees_with_legacy_filter_for_all_operators() -> None
             mismatches.append((groups, translated ^ legacy))
 
     assert mismatches == []
+
+
+# While the clock is set, time_machine also makes this timezone the local one of the process. The
+# dates of the server, which both filters read, are in it.
+_NOW = datetime(2026, 1, 1, 12, 0, tzinfo=ZoneInfo("Europe/Berlin"))
+
+_LEGACY_OPERATORS = {">=": "gte", "<=": "lte"}
+
+
+def _bounds_of_legacy_filter(variables: FilterHTTPVariables) -> list[tuple[str, int]]:
+    query = TimeQuery(ident="host_last_check", column="last_check")
+    return [
+        (_LEGACY_OPERATORS[match[1]], int(match[2]))
+        for line in query.filter(variables).splitlines()
+        if (match := re.fullmatch(r"Filter: last_check (>=|<=) (-?\d+)", line))
+    ]
+
+
+def _bounds_of_translation(variables: FilterHTTPVariables) -> list[tuple[str, int]]:
+    translation = translate_context(
+        {"host_last_check": variables}, {"host_last_check": "last_check"}, ANY_PAGE
+    )
+    assert translation.unapplied == []
+    match translation.filter:
+        case None:
+            return []
+        case {"type": "and", "children": list(children)}:
+            conditions = children
+        case condition:
+            conditions = [condition]
+    return [(condition["op"], condition["value"]) for condition in conditions]
+
+
+@pytest.mark.parametrize(
+    "variables",
+    [
+        pytest.param(
+            {"host_last_check_from": "2", "host_last_check_from_range": "3600"}, id="hours ago"
+        ),
+        pytest.param(
+            {"host_last_check_until": "10", "host_last_check_until_range": "60"}, id="minutes ago"
+        ),
+        pytest.param(
+            {"host_last_check_from": "3", "host_last_check_from_range": "7"}, id="other unit"
+        ),
+        pytest.param(
+            {"host_last_check_from": "1700000000", "host_last_check_from_range": "unix"},
+            id="Unix timestamp",
+        ),
+        pytest.param(
+            {"host_last_check_until": "2026-01-02", "host_last_check_until_range": "abs"},
+            id="date",
+        ),
+        pytest.param(
+            {"host_last_check_from": "2026-01-02 03:04:05", "host_last_check_from_range": "ts"},
+            id="date and time",
+        ),
+        pytest.param(
+            {
+                "host_last_check_from": "2025-12-30",
+                "host_last_check_from_range": "abs",
+                "host_last_check_until": "1",
+                "host_last_check_until_range": "3600",
+            },
+            id="both bounds of different kinds",
+        ),
+        pytest.param({"host_last_check_from": "1"}, id="bound without range"),
+        pytest.param(
+            {"host_last_check_from": "", "host_last_check_from_range": "60"},
+            id="empty time ago",
+        ),
+        pytest.param({}, id="no bounds"),
+    ],
+)
+def test_time_range_filter_agrees_with_legacy_filter(variables: FilterHTTPVariables) -> None:
+    with time_machine.travel(_NOW, tick=False):
+        legacy, translated = _bounds_of_legacy_filter(variables), _bounds_of_translation(variables)
+
+    assert translated == legacy

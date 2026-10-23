@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime, UTC
+
 import pytest
+import time_machine
 
 from cmk.ccc.site import SiteId
 from cmk.gui.monitor.hosts._api._filters import (
@@ -18,6 +21,7 @@ from cmk.gui.monitor.hosts._api._filters import (
     SiteScopedFilter,
     StateChoiceCondition,
     StringCondition,
+    TimestampCondition,
 )
 from cmk.gui.monitor.hosts.context_filters import translate_filters
 from cmk.gui.type_defs import VisualContext
@@ -288,6 +292,46 @@ def test_a_dashboard_filter_that_selects_everything_adds_no_condition(
     translation = translate_filters(context)
 
     assert (translation.filter, translation.unapplied) == (None, [])
+
+
+def test_a_dashboard_time_filter_becomes_timestamp_bounds_from_the_time_of_the_translation() -> None:
+    now = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
+
+    with time_machine.travel(now, tick=False):
+        translation = translate_filters(
+            {
+                "host_last_check": {
+                    "host_last_check_from": "2",
+                    "host_last_check_from_range": "3600",
+                },
+                "host_last_state_change": {
+                    "host_last_state_change_until": "1",
+                    "host_last_state_change_until_range": "86400",
+                },
+            }
+        )
+
+    assert translation.filter == SiteScopedFilter(
+        node=AndNode(
+            type="and",
+            children=[
+                TimestampCondition(
+                    type="condition",
+                    field="last_check",
+                    op="gte",
+                    value=int(now.timestamp()) - 2 * 3600,
+                ),
+                TimestampCondition(
+                    type="condition",
+                    field="last_state_change",
+                    op="lte",
+                    value=int(now.timestamp()) - 86400,
+                ),
+            ],
+        ),
+        sites=None,
+        exclude_sites=False,
+    )
 
 
 def test_several_dashboard_filters_must_all_match() -> None:

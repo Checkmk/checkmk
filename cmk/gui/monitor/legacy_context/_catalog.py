@@ -30,6 +30,7 @@ from ._filters import (
     SiteIds,
     state_choice,
     text,
+    time_range,
 )
 
 # Like the legacy views, only the first of the site filters that restricts the sites applies; the
@@ -71,6 +72,8 @@ LEGACY_FILTERS: Mapping[FilterName, LegacyFilter | MultiFieldFilter] = {
     "host_in_service_period": flag("is_host_in_service_period"),
     "host_scheduled_downtime_depth": flag("is_host_scheduled_downtime_depth"),
     "host_num_services": number_range("host_num_services"),
+    "host_last_check": time_range("host_last_check"),
+    "host_last_state_change": time_range("host_last_state_change"),
     "host_auxtags": aux_tags("host_auxtags"),
     "host_labels": label_groups("host_labels"),
     **{

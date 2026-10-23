@@ -11,6 +11,7 @@ a legacy filter.
 """
 
 import re
+import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
@@ -186,6 +187,25 @@ def number_range(ident: str) -> LegacyFilter:
     return translate_number_range
 
 
+def time_range(ident: str) -> LegacyFilter:
+    """A legacy time range filter with "_from" and "_until" bounds, each optional. A "_range"
+    variable tells what a bound is: a time ago, in the unit that many seconds long, "abs" for a
+    date, "ts" for a date and time, or "unix" for a Unix timestamp. Dates and times are the ones
+    of the server, and a time ago is counted from the time of the translation."""
+
+    def translate_time_range(value: FilterHTTPVariables, field: str) -> FilterJSON | None:
+        now = int(time.time())
+        return all_of(
+            [
+                _condition(field, op, bound)
+                for op, suffix in (("gte", "_from"), ("lte", "_until"))
+                if (bound := _time_bound(value, f"{ident}{suffix}", now)) is not None
+            ]
+        )
+
+    return translate_time_range
+
+
 def address_family(var: str) -> LegacyFilter:
     """The legacy filter for hosts configured with an IPv4-only ("4") or IPv6-only ("6") address
     family. Dual-stack hosts match neither. Any other value, "both" among them, means no filter."""
@@ -328,6 +348,32 @@ def _bound(number: str) -> int | None:
         return int(number)
     except ValueError as exc:
         raise UntranslatableFilterError from exc
+
+
+def _time_bound(value: FilterHTTPVariables, var: str, now: int) -> int | None:
+    text, range_name = value.get(var, ""), value.get(f"{var}_range")
+    # Like the legacy filter, a bound without its range is none. The legacy filter would fail on
+    # an empty date, which is what the form sends for a bound that was not set.
+    if not text or range_name is None:
+        return None
+    try:
+        match range_name:
+            case "ts":
+                bound = int(time.mktime(time.strptime(text, "%Y-%m-%d %H:%M:%S")))
+            case "abs":
+                bound = int(time.mktime(time.strptime(text, "%Y-%m-%d")))
+            case "unix":
+                bound = int(text)
+            case _:
+                # A time ago: the number of units, each as many seconds long as the range says.
+                bound = now - int(text) * int(range_name)
+    except (ValueError, OverflowError) as exc:
+        raise UntranslatableFilterError from exc
+    # Livestatus reads the bound of a time column as a 32 bit integer (atoi into an int32_t) and
+    # wraps what does not fit, so the filter would match something else than what was asked for.
+    if not -(2**31) <= bound < 2**31:
+        raise UntranslatableFilterError
+    return bound
 
 
 def _negated(var: str, value: FilterHTTPVariables) -> bool:

@@ -30,7 +30,7 @@ type _HostField = (
     | BooleanField
     | NumericField
     | LabelField
-    | Literal["site_id", "state"]
+    | Literal["site_id", "state", "last_check", "last_state_change"]
 )
 
 _PAGE = PageFilterModel(tree=FILTER_NODE, check=scope_filter_by_site)
@@ -62,6 +62,8 @@ _FIELDS: Mapping[FilterName, _HostField | Mapping[str, _HostField]] = {
     "host_in_service_period": "in_service_period",
     "host_scheduled_downtime_depth": "in_downtime",
     "host_num_services": "num_services",
+    "host_last_check": "last_check",
+    "host_last_state_change": "last_state_change",
     "address_family": "tags",
     "address_families": "tags",
     "host_auxtags": "tags",

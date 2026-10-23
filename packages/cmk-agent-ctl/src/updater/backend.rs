@@ -1037,10 +1037,16 @@ impl Updater {
             log::info!("No agent update is possible: the updater is not operational");
             return None;
         }
-        let Some(selected) = connection::select(registry) else {
+
+        let Some(source) = &self.state.source else {
+            log::info!("No agent update is possible: no update source is recorded");
+            return None;
+        };
+
+        let Some(selected) = connection::select(registry, source.uuid) else {
             log::info!(
-                "No agent update is possible: none of the registered connections carries a \
-                 site address (imported connections cannot serve updates)"
+"No agent update is possible: the connection {} of the update source is not registered",
+    source.uuid
             );
             return None;
         };
@@ -2013,6 +2019,21 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         }
     }
 
+    /// An updater whose registration recorded the connection of
+    /// [`registry_with_one_connection`] as its update source.
+    fn updater_with_source(
+        config: Option<UpdaterConfig>,
+        agent_info: Option<AgentInfo>,
+    ) -> Updater {
+        Updater {
+            state: UpdateState {
+                source: Some(some_source()),
+                ..Default::default()
+            },
+            ..updater(config, agent_info)
+        }
+    }
+
     /// An updater that writes its state into `dir`.
     fn updater_in(dir: &tempfile::TempDir, state: UpdateState) -> Updater {
         Updater {
@@ -2036,7 +2057,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     fn updater_spooling_into(dir: &tempfile::TempDir) -> Updater {
         Updater {
             package_dir: dir.path().join(PACKAGE_DIR),
-            ..updater(config_trusting_the_signer(), some_agent_info())
+            ..updater_with_source(config_trusting_the_signer(), some_agent_info())
         }
     }
 
@@ -2091,14 +2112,16 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     fn test_maybe_update_agent_selects_a_connection() {
         let registry = registry_with_one_connection();
 
-        assert!(updater(some_config(), some_agent_info()).handle_update_cycle(&registry.registry));
+        assert!(updater_with_source(some_config(), some_agent_info())
+            .handle_update_cycle(&registry.registry));
     }
 
     #[test]
     fn test_maybe_update_agent_without_a_reachable_site() {
         let registry = TestRegistry::new();
 
-        assert!(!updater(some_config(), some_agent_info()).handle_update_cycle(&registry.registry));
+        assert!(!updater_with_source(some_config(), some_agent_info())
+            .handle_update_cycle(&registry.registry));
     }
 
     #[test]
@@ -2310,6 +2333,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     fn updater_after(last_error: Option<&str>) -> Updater {
         Updater {
             state: UpdateState {
+                source: Some(some_source()),
                 last_error: last_error.map(String::from),
                 ..Default::default()
             },
@@ -2320,7 +2344,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_request_update_status_reports_the_installed_hash_and_the_last_error() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
         let api = TestApi::new(Some(TARGET_HASH));
 
         updater_after(Some("boom"))
@@ -2338,7 +2362,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_request_update_status_after_a_successful_cycle_reports_no_error() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
         let api = TestApi::new(None);
 
         updater_after(None)
@@ -2353,7 +2377,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_request_update_status_truncates_a_long_last_error() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
         let api = TestApi::new(None);
         // Two bytes per character: truncating by byte would split one.
         let last_error = "ä".repeat(LAST_ERROR_MAX_LEN + 10);
@@ -2371,7 +2395,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_request_update_status_keeps_a_short_last_error_whole() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
         let api = TestApi::new(None);
         let last_error = "e".repeat(LAST_ERROR_MAX_LEN);
 
@@ -2385,7 +2409,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_request_update_status_parses_the_offered_package() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
 
         let status = updater_after(None)
             .request_update_status(&TestApi::new(Some(TARGET_HASH)), &selected)
@@ -2397,7 +2421,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_request_update_status_parses_a_site_without_a_package() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
 
         let status = updater_after(None)
             .request_update_status(&TestApi::new(None), &selected)
@@ -2409,7 +2433,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_request_update_status_without_agent_info() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
 
         let error = updater(some_config(), None)
             .request_update_status(&TestApi::new(None), &selected)
@@ -2421,7 +2445,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_request_update_status_names_the_site_that_did_not_answer() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
 
         let error = updater_after(None)
             .request_update_status(&UnreachableApi, &selected)
@@ -2488,6 +2512,34 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(api.request.borrow().is_none());
     }
 
+    #[test]
+    fn test_check_without_a_recorded_source_asks_nobody() {
+        let registry = registry_with_one_connection();
+        let api = TestApi::new(Some(TARGET_HASH));
+
+        let outcome = updater(some_config(), some_agent_info())
+            .check(&registry.registry, &api)
+            .unwrap();
+
+        assert_eq!(outcome, CheckOutcome::NotPossible);
+        assert!(api.request.borrow().is_none());
+    }
+
+    /// Another registered connection does not stand in for a source whose own
+    /// connection is gone.
+    #[test]
+    fn test_check_whose_source_connection_is_gone_asks_nobody() {
+        let registry = registry_with_the_connections_of(&[(OTHER_SITE, &other_source())]);
+        let api = TestApi::new(Some(TARGET_HASH));
+
+        let outcome = updater_with_source(some_config(), some_agent_info())
+            .check(&registry.registry, &api)
+            .unwrap();
+
+        assert_eq!(outcome, CheckOutcome::NotPossible);
+        assert!(api.request.borrow().is_none());
+    }
+
     /// A host that may not update itself can still be asked what it would
     /// update to: an admin wants to see that before activating anything.
     #[test]
@@ -2498,7 +2550,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             ..some_config().unwrap()
         };
 
-        let outcome = updater(Some(config), some_agent_info())
+        let outcome = updater_with_source(Some(config), some_agent_info())
             .check(&registry.registry, &TestApi::new(Some(TARGET_HASH)))
             .unwrap();
 
@@ -2584,7 +2636,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_download_package_fetches_the_offered_package() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
         let api = TestApi::new(None);
         let status = offered(Some(TARGET_HASH));
 
@@ -2605,7 +2657,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_download_package_without_agent_info() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
         let status = offered(Some(TARGET_HASH));
 
         let error = updater(some_config(), None)
@@ -2618,7 +2670,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_download_package_names_the_package_and_the_site_that_failed() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
         let status = offered(Some(TARGET_HASH));
 
         let error = updater_after(None)
@@ -2889,7 +2941,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let registry = registry_with_one_connection();
         let updater = Updater {
             package_dir: dir.path().join(PACKAGE_DIR),
-            ..updater(some_config(), some_agent_info())
+            ..updater_with_source(some_config(), some_agent_info())
         };
 
         let outcome = updater
@@ -2966,7 +3018,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     fn test_fetch_update_names_the_site_that_did_not_answer() {
         let registry = registry_with_one_connection();
 
-        let error = updater(some_config(), some_agent_info())
+        let error = updater_with_source(some_config(), some_agent_info())
             .fetch_update(
                 &registry.registry,
                 &UnreachableApi,

@@ -38,40 +38,17 @@ pub(super) fn candidates(registry: &Registry) -> impl Iterator<Item = UpdateConn
     push.chain(pull)
 }
 
-// TODO(sk): API(function signature) will be changed in the future, for now it is simplified
-/// Select the connection to use for agent updates.
+/// The registered connection that carries `uuid`, the UUID of the update source.
 ///
-/// A host may be registered at several sites while only one of them bakes its
-/// agent, and nothing in the registry says which. The choice is therefore
-/// arbitrary - but it must not be *random*: the registry keeps its connections
-/// in hash maps, whose iteration order is seeded per process and differs
-/// between runs of the same binary on the same host. Ranking the candidates by
-/// mode and site makes consecutive runs agree on one site, which is what turns
-/// a silent coin flip into something an operator can observe and correct.
-///
-/// A pull connection outranks a push one. That order is a convention rather
-/// than a constraint - the receiver serves both alike - but it has to be
-/// written down somewhere to be reproducible.
+/// The registration recorded which connection serves the updates, so there is
+/// nothing to choose: the source's UUID names it.
 ///
 /// # Returns
 ///
-/// `None` if the host has no connection that can reach a site, in which case no
-/// update is possible.
-pub fn select(registry: &Registry) -> Option<UpdateConnection<'_>> {
-    candidates(registry).min_by(|left, right| order_key(left).cmp(&order_key(right)))
-}
-
-/// Rank of a candidate: pull before push, then by site.
-fn order_key<'a>(candidate: &UpdateConnection<'a>) -> (u8, &'a str, &'a str) {
-    let mode_rank = match &candidate.mode {
-        ConnectionMode::Pull => 0,
-        ConnectionMode::Push => 1,
-    };
-    (
-        mode_rank,
-        &candidate.site_id.server,
-        &candidate.site_id.site,
-    )
+/// `None` if no registered connection carries `uuid` anymore, for example after
+/// the connection was deleted or replaced by a new registration.
+pub fn select(registry: &Registry, uuid: uuid::Uuid) -> Option<UpdateConnection<'_>> {
+    candidates(registry).find(|candidate| candidate.connection.trust.uuid == uuid)
 }
 
 #[cfg(test)]
@@ -85,14 +62,14 @@ mod tests {
 
     #[test]
     fn test_select_without_connections() {
-        assert!(select(&TestRegistry::new().registry).is_none());
+        assert!(select(&TestRegistry::new().registry, uuid_of(UUID_ALPHA)).is_none());
     }
 
     #[test]
     fn test_select_skips_imported_connections() {
         let registry = TestRegistry::new().add_imported_connection(UUID_IMPORTED);
 
-        assert!(select(&registry.registry).is_none());
+        assert!(select(&registry.registry, uuid_of(UUID_IMPORTED)).is_none());
     }
 
     #[test]
@@ -100,7 +77,7 @@ mod tests {
         let registry =
             TestRegistry::new().add_connection(&ConnectionMode::Push, "server/site", UUID_ALPHA);
 
-        let selected = select(&registry.registry).unwrap();
+        let selected = select(&registry.registry, uuid_of(UUID_ALPHA)).unwrap();
 
         assert_eq!(selected.mode, ConnectionMode::Push);
         assert_eq!(selected.site_id.to_string(), "server/site");
@@ -112,58 +89,31 @@ mod tests {
         let registry =
             TestRegistry::new().add_connection(&ConnectionMode::Pull, "server/site", UUID_ALPHA);
 
-        let selected = select(&registry.registry).unwrap();
+        let selected = select(&registry.registry, uuid_of(UUID_ALPHA)).unwrap();
 
         assert_eq!(selected.mode, ConnectionMode::Pull);
         assert_eq!(selected.site_id.to_string(), "server/site");
     }
 
-    /// A pull connection is taken even when a push connection points at a site
-    /// that sorts first: the mode outranks the site.
+    /// The source decides, not a ranking: its push connection is taken although
+    /// a pull connection is registered as well.
     #[test]
-    fn test_select_prefers_pull_over_push() {
+    fn test_select_takes_the_connection_of_the_source() {
         let registry = TestRegistry::new()
             .add_connection(&ConnectionMode::Push, "server-a/site", UUID_ALPHA)
             .add_connection(&ConnectionMode::Pull, "server-b/site", UUID_BETA);
 
-        let selected = select(&registry.registry).unwrap();
+        let selected = select(&registry.registry, uuid_of(UUID_ALPHA)).unwrap();
 
-        assert_eq!(selected.mode, ConnectionMode::Pull);
-        assert_eq!(selected.site_id.to_string(), "server-b/site");
+        assert_eq!(selected.site_id.to_string(), "server-a/site");
     }
 
-    /// The same set of sites has to yield the same choice regardless of the
-    /// order the connections were registered in.
     #[test]
-    fn test_select_is_independent_of_registration_order() {
-        let first = TestRegistry::new()
-            .add_connection(&ConnectionMode::Pull, "server-b/site", UUID_ALPHA)
-            .add_connection(&ConnectionMode::Pull, "server-a/site", UUID_BETA);
-        let second = TestRegistry::new()
-            .add_connection(&ConnectionMode::Pull, "server-a/site", UUID_BETA)
-            .add_connection(&ConnectionMode::Pull, "server-b/site", UUID_ALPHA);
+    fn test_select_without_the_connection_of_the_source() {
+        let registry =
+            TestRegistry::new().add_connection(&ConnectionMode::Pull, "server/site", UUID_BETA);
 
-        assert_eq!(
-            select(&first.registry).unwrap().site_id.to_string(),
-            "server-a/site"
-        );
-        assert_eq!(
-            select(&second.registry).unwrap().site_id.to_string(),
-            "server-a/site"
-        );
-    }
-
-    /// Sites on one server are told apart by the site name.
-    #[test]
-    fn test_select_orders_by_site_name_within_a_server() {
-        let registry = TestRegistry::new()
-            .add_connection(&ConnectionMode::Push, "server/site-b", UUID_ALPHA)
-            .add_connection(&ConnectionMode::Push, "server/site-a", UUID_BETA);
-
-        assert_eq!(
-            select(&registry.registry).unwrap().site_id.to_string(),
-            "server/site-a"
-        );
+        assert!(select(&registry.registry, uuid_of(UUID_ALPHA)).is_none());
     }
 
     #[test]
@@ -174,5 +124,9 @@ mod tests {
             .add_imported_connection(UUID_IMPORTED);
 
         assert_eq!(candidates(&registry.registry).count(), 2);
+    }
+
+    fn uuid_of(uuid: &str) -> uuid::Uuid {
+        uuid::Uuid::parse_str(uuid).unwrap()
     }
 }

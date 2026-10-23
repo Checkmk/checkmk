@@ -13,6 +13,7 @@ from pydantic import TypeAdapter
 
 from cmk.gui.monitor.legacy_context import (
     ContextFilterTranslation,
+    NestedField,
     PageFilterModel,
     translate_context,
 )
@@ -559,6 +560,28 @@ def test_legacy_filter_translates_to_condition_on_its_field(
     name: FilterName, value: FilterHTTPVariables, expected: _JSON
 ) -> None:
     assert _translate({name: value}) == ContextFilterTranslation(filter=expected, unapplied=[])
+
+
+def test_nested_field_wraps_the_condition_in_its_node() -> None:
+    translation = translate_context(
+        {
+            "serviceregex": {"service_regex": "CPU"},
+            "hostregex": {"host_regex": "web", "neg_host_regex": "on"},
+        },
+        {"serviceregex": "name", "hostregex": NestedField("host", "name")},
+        ANY_PAGE,
+    )
+
+    assert translation == ContextFilterTranslation(
+        filter={
+            "type": "and",
+            "children": [
+                _condition("name", "contains", "CPU"),
+                {"type": "host", "child": _not(_condition("name", "contains", "web"))},
+            ],
+        },
+        unapplied=[],
+    )
 
 
 @pytest.mark.parametrize(

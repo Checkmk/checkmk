@@ -41,6 +41,20 @@ class ContextFilterTranslation[F]:
 
 
 @dataclass(frozen=True)
+class NestedField[T: str, F: PageField]:
+    """A field of a node that scopes the condition to a related object, e.g. the host of a
+    service: the condition on ``field`` becomes the child of a node of ``node_type``. A page types
+    both with its own literals, e.g. ``NestedField[Literal["host"], HostField]``, so that a node
+    type or field it does not have is a type error."""
+
+    node_type: T
+    field: F
+
+    def wrap(self, node: FilterJSON) -> FilterJSON:
+        return {"type": self.node_type, "child": node}
+
+
+@dataclass(frozen=True)
 class PageFilterModel[N, F]:
     """The filter model of a page: the tree it accepts, and ``check``, which turns the tree into
     the filter the page queries with and raises a ``ValueError`` for a tree the page cannot use,
@@ -59,24 +73,25 @@ class PageFilterModel[N, F]:
 
 def translate_context[N, F](
     context: VisualContext,
-    fields: Mapping[FilterName, PageField],
+    fields: Mapping[FilterName, PageField | NestedField[str, PageField]],
     page: PageFilterModel[N, F],
     *,
     tag_groups: Set[str] = frozenset(),
 ) -> ContextFilterTranslation[F]:
     """Translate the legacy filters in ``fields`` to conditions on the page field each is mapped
-    to, in the order of ``fields``: where the page cannot take two filters together, the one
-    listed first is applied. A filter that spans several fields is mapped to the field of each of
-    its roles. Raises a ``ValueError`` for a filter missing from the catalog, or mapped to fields
-    that do not fit it. ``tag_groups`` are the IDs of the configured tag groups, which the filter
-    for tags needs."""
+    to, wrapped in the node of a ``NestedField``, in the order of ``fields``: where the page cannot
+    take two filters together, the one listed first is applied. A filter that spans several fields
+    is mapped to the field of each of its roles. Raises a ``ValueError`` for a filter missing from
+    the catalog, or mapped to fields that do not fit it. ``tag_groups`` are the IDs of the
+    configured tag groups, which the filter for tags needs."""
     catalog = legacy_filters(tag_groups=tag_groups)
     if unknown := fields.keys() - catalog.keys():
         raise ValueError(f"Not in the catalog of legacy filters: {sorted(unknown)}")
-    for name, field in fields.items():
+    targets = {name: _target(field) for name, field in fields.items()}
+    for name, (target, _wrap) in targets.items():
         # Fields that do not fit their filter raise, whether or not the context sets it. A filter
         # that is not set restricts nothing, so this does not translate anything.
-        _translate_filter(catalog[name], {}, field)
+        _translate_filter(catalog[name], {}, target)
     nodes: list[FilterJSON] = []
     page_filter: F | None = None
     # Like the legacy views, only the first site filter that restricts the sites applies. If the
@@ -91,14 +106,14 @@ def translate_context[N, F](
     }
     if applied_site_filter is not None and applied_site_filter not in fields:
         unapplied.add(applied_site_filter)
-    for name, field in fields.items():
+    for name, (target, wrap) in targets.items():
         if name in SITE_FILTERS and name != applied_site_filter:
             continue
         try:
-            node = _translate_filter(catalog[name], context.get(name, {}), field)
+            node = _translate_filter(catalog[name], context.get(name, {}), target)
             if node is None:
                 continue
-            candidate = [*nodes, node]
+            candidate = [*nodes, wrap(node)]
             tree = all_of(candidate)
             assert tree is not None
             candidate_filter = page.validate(tree)
@@ -124,6 +139,19 @@ def translate_context[N, F](
         filter=page_filter,
         unapplied=[name for name in context if name in unapplied],
     )
+
+
+def _target(
+    field: PageField | NestedField[str, PageField],
+) -> tuple[PageField, Callable[[FilterJSON], FilterJSON]]:
+    """The page field a filter translates to, and how its condition is placed in the tree."""
+    if isinstance(field, NestedField):
+        return field.field, field.wrap
+    return field, _as_is
+
+
+def _as_is(node: FilterJSON) -> FilterJSON:
+    return node
 
 
 def _site_filters(context: VisualContext) -> dict[FilterName, frozenset[str] | None]:

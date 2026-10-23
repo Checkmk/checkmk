@@ -127,6 +127,7 @@ rust_test(
         "test_cli",
         "test_pull",
         "test_status",
+        "test_update",
     ]
 ]
 
@@ -140,6 +141,7 @@ rust_wine_test(
         ":test_cli-windows",
         ":test_pull-windows",
         ":test_status-windows",
+        ":test_update-windows",
     ],
     data = [":cmk-agent-ctl-windows"],
     prepare = "wine-prepare.sh",
@@ -180,6 +182,7 @@ rust_test_suite(
         "tests/test_cli.rs",
         "tests/test_pull.rs",
         "tests/test_status.rs",
+        "tests/test_update.rs",
     ],
     crate_features = ["build_system_bazel"],
     env = {

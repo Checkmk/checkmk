@@ -524,6 +524,10 @@ mod tests {
 
         impl Host {
             fn new() -> Self {
+                Self::with_config("activated = true\ninterval = 60\n")
+            }
+
+            fn with_config(updater_config: &str) -> Self {
                 let dir = tempfile::TempDir::new().unwrap();
                 let paths = PathResolver::new(SetupMode::SingleDir, dir.path());
                 for path in [
@@ -533,11 +537,7 @@ mod tests {
                 ] {
                     fs::create_dir_all(path.parent().unwrap()).unwrap();
                 }
-                fs::write(
-                    &paths.updater_config_path,
-                    "activated = true\ninterval = 60\n",
-                )
-                .unwrap();
+                fs::write(&paths.updater_config_path, updater_config).unwrap();
                 fs::write(
                     &paths.agent_info_path,
                     format!(r#"{{"hash": "{INSTALLED_HASH}", "platform": "linux_deb"}}"#),
@@ -600,6 +600,18 @@ mod tests {
             fn state(&self) -> UpdateState {
                 UpdateState::load(&self.paths.updater_state_path).unwrap()
             }
+        }
+
+        /// `activated` gates the daemon only: `update` runs its cycle regardless.
+        #[test]
+        fn test_update_runs_while_updates_are_deactivated() {
+            let host = Host::with_config("activated = false\ninterval = 60\n");
+            let site = ScriptedApi::new(vec![no_package()]);
+
+            let cycle = host.cycle(&site);
+
+            assert!(cycle.is_ok(), "{cycle:?}");
+            assert_eq!(site.reported_errors().len(), 1);
         }
 
         /// TC-AU-006: a site that does not answer at all

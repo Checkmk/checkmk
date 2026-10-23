@@ -3445,6 +3445,19 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     }
 
     #[test]
+    fn test_check_sends_no_request_without_an_update_configuration() {
+        let registry = registry_with_one_connection();
+        let api = TestApi::new(Some(TARGET_HASH));
+
+        let outcome = updater_with_source(None, some_agent_info())
+            .check(&registry.registry, &api)
+            .unwrap();
+
+        assert_eq!(outcome, CheckOutcome::NotPossible);
+        assert!(api.request.borrow().is_none());
+    }
+
+    #[test]
     fn test_check_names_the_site_that_did_not_answer() {
         let registry = registry_with_one_connection();
 
@@ -3762,6 +3775,20 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             .unwrap();
 
         assert_eq!(outcome, FetchOutcome::NotPossible);
+    }
+
+    /// `check` and the update cycle both ask through `ask_update_source`.
+    #[test]
+    fn test_no_request_is_sent_without_an_update_configuration() {
+        let registry = registry_with_one_connection();
+        let api = TestApi::new(Some(TARGET_HASH));
+
+        let answer = updater_with_source(None, some_agent_info())
+            .ask_update_source(&registry.registry, &api)
+            .unwrap();
+
+        assert!(matches!(answer, SourceAnswer::NotPossible));
+        assert!(api.request.borrow().is_none());
     }
 
     /// The pre-check refuses before the transfer, so the site is never asked

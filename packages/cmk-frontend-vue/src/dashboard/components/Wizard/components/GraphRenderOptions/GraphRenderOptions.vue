@@ -96,6 +96,8 @@ const displayPresentation = computed(() => presentation.value !== undefined)
       </FieldComponent>
     </TableFormRow>
 
+    <slot name="after-axis" />
+
     <TableFormRow>
       <FieldDescription>{{ _t('Graph styling') }}</FieldDescription>
       <FieldComponent>

@@ -26,7 +26,8 @@ const {
   dataSources = []
 } = defineProps<{
   title: string
-  timeRange: RequestedTimeRange
+  /** Undefined follows the dashboard's time range. */
+  timeRange?: RequestedTimeRange | undefined
   /** The sources the editor starts from, read once; re-key the editor to start over. */
   dataSources?: readonly ApiDataSourceInput[]
 }>()
@@ -100,6 +101,7 @@ function submit(): EmbeddedGraphDefinition | null {
     :title-macros="config.title_macros"
     :issues-by-row="issuesByRow"
     :time-range="timeRange"
+    :is-embedded="true"
     @update-graph-options="(options) => (graphOptions = options)"
   >
     <template #alerts>

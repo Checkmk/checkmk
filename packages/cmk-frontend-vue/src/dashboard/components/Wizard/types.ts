@@ -11,6 +11,7 @@ import type { Ref } from 'vue'
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type {
   EffectiveWidgetFilterContext,
+  EmbeddedCustomGraphContent,
   SidebarElementContent,
   StaticTextContent,
   WidgetGeneralSettings
@@ -85,6 +86,7 @@ export type WidgetContentType =
   | PerformanceGraphContent
   | EventStatsContent
   | CustomGraphContent
+  | EmbeddedCustomGraphContent
   | AlertOverviewContent
   | AlertTimelineContent
   | NotificationTimelineContent

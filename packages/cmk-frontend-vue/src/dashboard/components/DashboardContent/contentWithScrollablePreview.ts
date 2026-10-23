@@ -15,6 +15,7 @@ export const isContentWithScrollablePreview = (widgetType: WidgetContentType): b
     'average_scatterplot',
     'combined_graph',
     'custom_graph',
+    'embedded_custom_graph',
     'performance_graph',
     'problem_graph',
     'single_timeseries'

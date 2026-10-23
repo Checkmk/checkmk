@@ -187,8 +187,9 @@ def parse_hp_proliant_da_cntlr(string_table: StringTable) -> ParsedSection:
 
 
 def discovery_hp_proliant_da_cntlr(section: ParsedSection) -> DiscoveryResult:
-    if section:
-        yield from (Service(item=item) for item in section)
+    # Skip phantom placeholder rows (all-zero cells, parsed to ``None``): they
+    # are not real controllers and would produce a permanently UNKNOWN service.
+    yield from (Service(item=item) for item, data in section.items() if data is not None)
 
 
 def check_hp_proliant_da_cntlr(item: ControllerID, section: ParsedSection) -> CheckResult:

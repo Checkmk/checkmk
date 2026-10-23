@@ -61,6 +61,7 @@ DomainType = Literal[
     "license_response",
     "license_usage",
     "license_request",
+    "livestatus_query",
     "metric",
     "metric_backend",
     "notification_rule",

@@ -27,6 +27,7 @@ import type {
   TransformedData
 } from './figure_types'
 import type { Scheduler } from './multi_data_fetcher'
+import { unit_render_function } from './unit_render'
 
 /**
  * Draw an individual shape
@@ -303,10 +304,6 @@ export function getIn(object: any, ...args: any[]) {
   return args.reduce((obj, level) => obj && obj[level], object)
 }
 
-function get_function(render_string: string) {
-  return new Function(`"use strict"; return ${render_string}`)()
-}
-
 type FormatterConstructor = new (
   symbol: string,
   precision: AutoPrecision | StrictPrecision
@@ -332,12 +329,8 @@ export function plot_render_function(plot: any): (v: number) => string {
     const formatter = new FormatterClass(unit.symbol, precision)
     return (v: number) => formatter.render(v)
   }
-  // Fallback for legacy js_render (e.g. ntop dashlets)
-  const js_render = getIn(plot, 'metric', 'unit', 'js_render')
-  if (js_render) return get_function(js_render)
-  return get_function(
-    'function(v) { return cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 2, true); }'
-  )
+  // Units without a formatter (e.g. of ntop dashlets) may name their renderer
+  return unit_render_function(unit?.render)
 }
 
 export function svc_status_css(paint: string, params: any) {

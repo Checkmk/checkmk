@@ -9,6 +9,7 @@ import { select } from 'd3'
 
 import { FigureBase, figure_registry } from './cmk_figures'
 import type { FigureData } from './figure_types'
+import type { NamedUnitRender } from './unit_render'
 
 interface Cell<Config = PieChartData | NtopTalkerData> {
   id?: string
@@ -27,7 +28,7 @@ export interface NtopTalkerDataPlotDefinition {
   plot_type: string
   metric: {
     unit: {
-      js_render: string
+      render: NamedUnitRender
     }
   }
   label: string

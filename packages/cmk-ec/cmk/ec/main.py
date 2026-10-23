@@ -1186,6 +1186,7 @@ class EventServer(ECServerThread):
             # Better rewrite (again). Rule might have changed. Also we have changed
             # the text and the user might have his own text added via set_text.
             self.rewrite_event(rule, merge_event, MatchGroups(), set_first=False)
+            self._event_status.follow_hosts_of(merge_event)
             self._history.add(merge_event, "COUNTFAILED")
         else:
             # Create artificial event from scratch. Make sure that all important
@@ -2973,11 +2974,15 @@ class EventStatus:
         self.num_existing_events_by_host: dict[tuple[str, HostName | None], int] = {}
         self.num_existing_events_by_rule: dict[Any, int] = {}
         self._num_overflow_events: dict[tuple[LimitKind, _LimitKey], int] = {}
+        # The host names each open event is counted for by the host limit, by the identity of the
+        # event, which unlike its fields never changes
+        self._counted_host_keys: dict[int, tuple[str, HostName | None]] = {}
         for event in self._events:
             self._count_event_add(event)
 
     def _count_event_add(self, event: Event) -> None:
         host_key = self._host_key(event)
+        self._counted_host_keys[id(event)] = host_key
         if host_key not in self.num_existing_events_by_host:
             self.num_existing_events_by_host[host_key] = 1
         else:
@@ -2994,7 +2999,8 @@ class EventStatus:
             )
 
     def _count_event_remove(self, event: Event) -> None:
-        host_key = self._host_key(event)
+        # Even if the host names of the event changed unnoticed, take back exactly what was counted.
+        host_key = self._counted_host_keys.pop(id(event))
 
         self.num_existing_events -= 1
         self.num_existing_events_by_host[host_key] -= 1
@@ -3099,6 +3105,18 @@ class EventStatus:
     def _host_key(event: Event) -> tuple[str, HostName | None]:
         """Returns the combination of both host names, which the host limit counts separately"""
         return event["host"], event["core_host"]
+
+    # protected by self.lock
+    def follow_hosts_of(self, event: Event) -> None:
+        """Lets the host limit count an open event for the host names it has now"""
+        host_key = self._host_key(event)
+        previous_host_key = self._counted_host_keys[id(event)]
+        if host_key != previous_host_key:
+            self.num_existing_events_by_host[previous_host_key] -= 1
+            self.num_existing_events_by_host[host_key] = (
+                self.num_existing_events_by_host.get(host_key, 0) + 1
+            )
+            self._counted_host_keys[id(event)] = host_key
 
     def cancel_events(
         self,
@@ -3279,6 +3297,7 @@ class EventStatus:
             self._rule_stats.setdefault(rule_id, 0)
             self._rule_stats[rule_id] += 1
 
+    # protected by self.lock
     def count_event_up(self, found: Event, event: Event) -> None:
         """
         Update event with new information from new occurrence,
@@ -3295,12 +3314,16 @@ class EventStatus:
                 preserve["contact"] = found["contact"]
         found.update(event)
         found.update(preserve)
+        # The event got the host names of the new occurrence, e.g. when counting several hosts.
+        self.follow_hosts_of(found)
 
     def count_expected_event(self, event_server: EventServer, event: Event) -> None:
-        for ev in self._events:
-            if self.creating_rule_id(ev) == event["rule_id"] and ev["phase"] == "counting":
-                self.count_event_up(ev, event)
-                return
+        # Holding the lock, nothing else removes the event before it is counted up.
+        with self.lock:
+            for ev in self._events:
+                if self.creating_rule_id(ev) == event["rule_id"] and ev["phase"] == "counting":
+                    self.count_event_up(ev, event)
+                    return
 
         # None found, create one
         event["count"] = 1
@@ -3315,8 +3338,13 @@ class EventStatus:
         since the event has been created because the count was too
         low in the specified period of time.
         """
-        for ev in self._events:
-            if self.creating_rule_id(ev) == event["rule_id"]:
+        found: Event | None = None
+        # Holding the lock, nothing else removes the event before it is counted up.
+        with self.lock:
+            for ev in self._events:
+                if self.creating_rule_id(ev) != event["rule_id"]:
+                    continue  # e.g. the overflow event about the rule's limit
+
                 if ev["phase"] == "ack" and not count["count_ack"]:
                     continue  # skip acknowledged events
 
@@ -3340,7 +3368,8 @@ class EventStatus:
                 found = ev
                 self.count_event_up(found, event)
                 break
-        else:
+
+        if found is None:
             event["count"] = 1
             event["phase"] = "counting"
             if not event_server.new_event_respecting_limits(event):

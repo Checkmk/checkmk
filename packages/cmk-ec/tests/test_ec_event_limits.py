@@ -8,18 +8,22 @@ import pytest
 import time_machine
 
 import cmk.ec.export as ec
+from cmk.ccc.hostaddress import HostName
 from cmk.ec.config import Config
 from cmk.ec.event import LimitKind
-from cmk.ec.main import EventServer, EventStatus
+from cmk.ec.main import EventServer, EventStatus, StatusServer
 
 from .helpers import (
     FakeConnection,
+    HOUR,
     new_count,
     new_event,
     new_host,
     new_rule,
     process_message,
+    query_status_server,
     RecordingHistory,
+    START,
 )
 
 
@@ -461,3 +465,79 @@ def test_status_shows_the_reached_limits(
         "status_event_limit_active_rules": ["disk"],
         "status_event_limit_active_overall": True,
     }.items() <= _status(event_server).items()
+
+
+def test_host_limit_stays_consistent_when_the_host_of_an_event_changes_unnoticed(
+    event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
+) -> None:
+    one_event = _only_limit("by_host", ec.EventLimit(action="stop", limit=1))
+    _configure(event_server, config, history, one_event)
+    _process_messages(event_server, "disk full")
+    [event] = event_status.events()
+    # Like a code path changing the host without telling the host limit
+    event["host"] = HostName("nas")
+
+    event_status.remove_event(event, "DELETE")
+
+    assert _status(event_server)["status_event_limit_active_hosts"] == []
+
+
+def test_host_limit_counts_a_counted_event_for_the_host_of_its_last_message(
+    event_server: EventServer, config: Config, history: RecordingHistory
+) -> None:
+    # The messages of all hosts count up the same event, which gets the host of the last one.
+    rule = new_rule({"count": new_count(3, period=HOUR)})
+    one_event = _only_limit("by_host", ec.EventLimit(action="stop", limit=1))
+    _configure(event_server, config, history, one_event, rule)
+    process_message(event_server, ec.Event(host=HostName("fileserver"), text="disk full"))
+
+    process_message(event_server, ec.Event(host=HostName("nas"), text="disk full"))
+
+    assert _status(event_server)["status_event_limit_active_hosts"] == ["nas"]
+
+
+def test_event_counted_for_several_hosts_can_be_deleted(
+    event_server: EventServer,
+    event_status: EventStatus,
+    status_server: StatusServer,
+    config: Config,
+    history: RecordingHistory,
+) -> None:
+    _configure(event_server, config, history, _NO_LIMITS, new_rule({"count": new_count(3, HOUR)}))
+    process_message(event_server, ec.Event(host=HostName("fileserver"), text="disk full"))
+    process_message(event_server, ec.Event(host=HostName("nas"), text="disk full"))
+
+    query_status_server(status_server, "COMMAND DELETE;1;harry")
+
+    assert event_status.events() == []
+
+
+def test_host_limit_counts_a_merged_event_about_missing_messages_for_its_rewritten_host(
+    event_server: EventServer, config: Config, history: RecordingHistory
+) -> None:
+    expect = ec.Expect(interval=HOUR, count=1, merge="open")
+    one_event = _only_limit("by_host", ec.EventLimit(action="stop", limit=1))
+    _configure(
+        event_server,
+        config,
+        history,
+        one_event,
+        new_rule({"expect": expect, "set_host": "backup-server"}),
+    )
+    with time_machine.travel(START, tick=False) as traveller:
+        event_server.do_housekeeping()
+        traveller.shift(HOUR)
+        event_server.do_housekeeping()
+        # The rule changes after opening an event about the missing message.
+        _configure(
+            event_server,
+            config,
+            history,
+            one_event,
+            new_rule({"expect": expect, "set_host": "backup-host"}),
+        )
+        traveller.shift(HOUR)
+
+        event_server.do_housekeeping()
+
+    assert _status(event_server)["status_event_limit_active_hosts"] == ["backup-host"]

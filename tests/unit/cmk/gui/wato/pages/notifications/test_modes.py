@@ -37,6 +37,7 @@ from cmk.gui import userdb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
+from cmk.gui.logged_in import save_user_file
 from cmk.gui.wato.pages.notifications.modes import (
     get_disabled_notifications_infos,
     get_total_sent_notifications,
@@ -204,8 +205,12 @@ def test_sent_notifications_exclude_the_internal_notify_command(
 
 
 def test_overview_shows_the_notification_figures(
-    live: MockLiveStatusConnection, load_config: Config, test_edition: Edition
+    live: MockLiveStatusConnection,
+    load_config: Config,
+    test_edition: Edition,
+    with_admin_login: UserId,
 ) -> None:
+    save_user_file("acknowledged_notifications", int(time.time()) - 60, with_admin_login)
     live.expect_query(["GET status", "Columns: enable_notifications"], match_type="loose")
     live.expect_query(["GET log", "Stats: class = 3"], match_type="loose")
     live.expect_query(["GET log", "Stats: log_state != 0"], match_type="loose")

@@ -2,18 +2,21 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-//! The `update` mode: the agent update of this host, driven from the command
-//! line instead of by the controller itself.
+//! The update cycle of this host, run once by the `update` mode and at the
+//! configured interval by the update thread of the daemon.
 
-use crate::agent_receiver_api;
 use crate::configuration::config::{ClientConfig, Registry};
+use crate::environment::PathResolver;
 #[cfg(unix)]
 use crate::updater::InstallOutcome;
 use crate::updater::{CheckOutcome, FetchOutcome, SignatureCheck, Updater, WritableUpdater};
+use crate::{agent_receiver_api, misc};
 use anyhow::Result as AnyhowResult;
 use log::warn;
 #[cfg(unix)]
 use std::path::Path;
+use std::thread;
+use std::time::Instant;
 
 /// Ask the site which agent package it has for this host, and report it.
 ///
@@ -213,6 +216,46 @@ fn report_fetch(outcome: &FetchOutcome) -> String {
             signature.package_name(hash),
             path.display()
         ),
+    }
+}
+
+/// The update thread of the daemon: one cycle per interval, while automatic
+/// updates are activated, after a random delay at start.
+///
+/// The lock is taken only for a cycle that runs, so a host without automatic
+/// updates never touches the download directory. A failed cycle, a lock that
+/// cannot be taken included, is logged and retried at the next interval: only
+/// a registry that cannot be reloaded ends the thread, as in the other threads.
+pub fn fn_thread(
+    paths: PathResolver,
+    mut registry: Registry,
+    client_config: ClientConfig,
+) -> AnyhowResult<()> {
+    misc::sleep_randomly();
+
+    loop {
+        let begin = Instant::now();
+        registry.refresh()?;
+        let updater = Updater::new(&paths);
+        let interval = updater.interval();
+
+        if updater.handle_update_cycle(&registry) {
+            match Updater::writable(&paths) {
+                Ok(mut updater) => {
+                    if let Err(result) = update(
+                        &mut updater,
+                        &registry,
+                        &client_config,
+                        SignatureCheck::Required,
+                    ) {
+                        warn!("Could not update. {result:#}");
+                    }
+                }
+                Err(error) => warn!("Could not lock the updater: {error:#}"),
+            }
+        }
+
+        thread::sleep(interval.saturating_sub(begin.elapsed()));
     }
 }
 

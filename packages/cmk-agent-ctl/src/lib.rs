@@ -124,8 +124,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
                 .clone()
                 .unwrap_or_default();
             daemon(
-                &paths.pre_configured_connections_path,
-                &paths.trusted_cas_path,
+                paths,
                 registry.clone(),
                 config::PullConfig::new(runtime_config.clone(), daemon_opts.pull_opts, registry)?,
                 config::ClientConfig::new(

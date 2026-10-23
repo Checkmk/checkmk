@@ -34,11 +34,15 @@ use std::io;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use x509_parser::certificate::X509Certificate;
 
 /// Fallback update interval, matching the default of the agent updater ruleset.
 const DEFAULT_INTERVAL: u64 = 3600;
+
+/// Shortest interval the daemon runs its cycle at: the finest step the ruleset
+/// offers. Only a configuration edited by hand can ask for less.
+const MIN_INTERVAL: Duration = Duration::from_secs(60);
 
 /// Permissions of the state file: owner only, as for the connection registry.
 /// The state carries the last error, which quotes paths and the site address.
@@ -982,6 +986,16 @@ impl Updater {
     /// False when no updater configuration is deployed at all.
     fn is_activated(&self) -> bool {
         self.loaded_config().is_some_and(|config| config.activated)
+    }
+
+    /// Time between two cycles of the daemon, the default without a loaded
+    /// configuration, and never less than [`MIN_INTERVAL`].
+    pub fn interval(&self) -> Duration {
+        Duration::from_secs(
+            self.loaded_config()
+                .map_or(DEFAULT_INTERVAL, |config| config.interval),
+        )
+        .max(MIN_INTERVAL)
     }
 
     /// Integrated updater main action.
@@ -2315,6 +2329,41 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert_eq!(handed_over, updater.package_dir.join("check_mk_agent.msi"));
         assert_eq!(fs::read(&handed_over).unwrap(), PACKAGE);
         assert!(!package.exists());
+    }
+
+    #[test]
+    fn test_interval_of_the_loaded_configuration() {
+        let config = UpdaterConfig {
+            interval: 900,
+            ..some_config().unwrap()
+        };
+
+        assert_eq!(
+            updater(Some(config), some_agent_info()).interval(),
+            Duration::from_secs(900)
+        );
+    }
+
+    #[test]
+    fn test_interval_without_a_configuration_falls_back_to_the_default() {
+        assert_eq!(
+            updater(None, some_agent_info()).interval(),
+            Duration::from_secs(DEFAULT_INTERVAL)
+        );
+    }
+
+    /// An interval of 0 would make the daemon ask the site in a tight loop.
+    #[test]
+    fn test_interval_never_drops_below_the_minimum() {
+        let config = UpdaterConfig {
+            interval: 0,
+            ..some_config().unwrap()
+        };
+
+        assert_eq!(
+            updater(Some(config), some_agent_info()).interval(),
+            MIN_INTERVAL
+        );
     }
 
     #[test]

@@ -105,3 +105,12 @@ test('asks for a template before looking anything up', () => {
   expect(screen.getByText(/Enter a host name template/)).toBeTruthy()
   expect(screen.getByRole('button', { name: 'Refresh' })).toBeDisabled()
 })
+
+test('a refused template shows the reason', () => {
+  renderMatches({
+    status: 'refused',
+    error: 'Host name template uses attributes the grouping drops'
+  })
+
+  expect(screen.getByText('Host name template uses attributes the grouping drops')).toBeTruthy()
+})

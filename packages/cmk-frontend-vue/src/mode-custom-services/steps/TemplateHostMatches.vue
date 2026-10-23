@@ -51,7 +51,7 @@ const emit = defineEmits<{
       :text="_t('Looking up the matching hosts…')"
     />
     <CmkAlert
-      v-else-if="preview.status === 'failed'"
+      v-else-if="preview.status === 'failed' || preview.status === 'refused'"
       size="small"
       variant="error"
       :text="untranslated(preview.error)"

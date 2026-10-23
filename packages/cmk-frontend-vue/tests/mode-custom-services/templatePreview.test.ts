@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, delay, http } from 'msw'
 import { afterEach, expect, test, vi } from 'vitest'
@@ -75,8 +76,38 @@ test('resolves the template of the metric', async () => {
   await vi.waitFor(() => expect(preview.value.status).toBe('resolved'))
   expect(preview.value).toEqual({ status: 'resolved', resolution: RESOLUTION })
   expect(requests).toEqual([
-    { metric_name: 'k8s.pod.cpu.usage', host_name_template: 'pod-$RESOURCE_ATTR.k8s.pod.name$' }
+    {
+      metric_name: 'k8s.pod.cpu.usage',
+      host_name_template: 'pod-$RESOURCE_ATTR.k8s.pod.name$',
+      consolidation: { type: 'gauge', function: 'gauge_last', lookback_seconds: 120 }
+    }
   ])
+})
+
+const GROUPED_BY_POD: Aggregator = {
+  stages: [
+    {
+      aggregate_by: [{ kind: 'resource', name: 'k8s.pod.name' }],
+      aggregation_fn: { type: 'scalar', name: 'avg' }
+    }
+  ]
+}
+
+test('sends the grouping of the metric step', async () => {
+  mount({ ...templateService('$RESOURCE_ATTR.k8s.pod.name$'), aggregator: GROUPED_BY_POD })
+
+  await vi.waitFor(() => expect(requests).toHaveLength(1))
+  expect(requests[0]).toMatchObject({ aggregator: GROUPED_BY_POD })
+})
+
+test('a changed grouping looks the template up again', async () => {
+  const { model, preview } = mount(templateService('$RESOURCE_ATTR.k8s.pod.name$'))
+  await vi.waitFor(() => expect(preview.value.status).toBe('resolved'))
+
+  model.value = { ...templateService('$RESOURCE_ATTR.k8s.pod.name$'), aggregator: GROUPED_BY_POD }
+
+  await vi.waitFor(() => expect(requests).toHaveLength(2))
+  expect(requests[1]).toMatchObject({ aggregator: GROUPED_BY_POD })
 })
 
 test('sends the attribute filter of the metric step', async () => {
@@ -213,11 +244,50 @@ test('a refused template is reported with the reason only', async () => {
   )
   const { preview } = mount(templateService('.pod'))
 
-  await vi.waitFor(() => expect(preview.value.status).toBe('failed'))
+  await vi.waitFor(() => expect(preview.value.status).toBe('refused'))
   expect(preview.value).toEqual({
-    status: 'failed',
+    status: 'refused',
     error: "The host name template must not start with '.'."
   })
+})
+
+test('a template the grouping cannot serve is refused', async () => {
+  server.use(
+    http.post(RESOLVE_URL, () =>
+      HttpResponse.json(
+        {
+          status: 400,
+          title: 'Host name template uses attributes the grouping drops',
+          detail:
+            'The configuration does not group the series by resource attribute "k8s.pod.name".'
+        },
+        { status: 400 }
+      )
+    )
+  )
+  const { preview } = mount(templateService('$RESOURCE_ATTR.k8s.pod.name$'))
+
+  await vi.waitFor(() => expect(preview.value.status).toBe('refused'))
+  expect(preview.value).toEqual({
+    status: 'refused',
+    error:
+      'Host name template uses attributes the grouping drops: The configuration does not group the series by resource attribute "k8s.pod.name".'
+  })
+})
+
+test('a lookup the user may not do is a failure, not a refusal', async () => {
+  server.use(
+    http.post(RESOLVE_URL, () =>
+      HttpResponse.json(
+        { status: 403, title: 'Forbidden', detail: 'You are not allowed to do this.' },
+        { status: 403 }
+      )
+    )
+  )
+  const { preview } = mount(templateService('pod-$RESOURCE_ATTR.k8s.pod.name$'))
+
+  await vi.waitFor(() => expect(preview.value.status).toBe('failed'))
+  expect(templatePreviewBlocksSave(preview.value)).toBe(false)
 })
 
 test('a lookup that takes too long is reported', async () => {
@@ -237,6 +307,7 @@ test.each<[string, TemplatePreview, boolean]>([
   ['nothing to look up', { status: 'idle' }, false],
   ['a pending lookup', { status: 'loading' }, true],
   ['a failed lookup', { status: 'failed', error: 'down' }, false],
+  ['a refused template', { status: 'refused', error: 'grouping drops it' }, true],
   ['matching hosts', { status: 'resolved', resolution: RESOLUTION }, false],
   [
     'no matching host',

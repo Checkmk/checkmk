@@ -16,6 +16,14 @@ import type {
   TemplateAttributesRequest
 } from './definition'
 
+/**
+ * A refusal is the server's verdict on the template, always a 400: saving the same template would
+ * be refused too. Any other error says nothing about the template.
+ */
+export type ResolveResult =
+  | { ok: true; resolution: HostNameTemplateResolution }
+  | { ok: false; refusal: string }
+
 export interface SaveResult {
   ok: boolean
   error?: string
@@ -140,17 +148,20 @@ export async function fetchTemplateAttributes(
 export async function resolveHostNameTemplate(
   request: HostNameTemplateResolutionRequest,
   signal: AbortSignal
-): Promise<HostNameTemplateResolution> {
+): Promise<ResolveResult> {
   try {
-    return unwrap(
+    const resolution = unwrap(
       await client.POST('/domain-types/custom_service/actions/resolve_host_name_template/invoke', {
         params: { header: { 'Content-Type': 'application/json' } },
         body: request,
         signal
       })
     )
+    return { ok: true, resolution }
   } catch (error) {
-    const templateError = isClientError(error) ? templateErrorOf(error.body) : undefined
-    throw templateError === undefined ? error : new CmkSimpleError(templateError)
+    if (error instanceof CmkApiError && error.statusCode === 400) {
+      return { ok: false, refusal: templateErrorOf(error.body) ?? error.message }
+    }
+    throw error
   }
 }

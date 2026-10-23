@@ -19,6 +19,7 @@ export type TemplatePreview =
   | { status: 'idle' }
   | { status: 'loading' }
   | { status: 'resolved'; resolution: HostNameTemplateResolution }
+  | { status: 'refused'; error: string }
   | { status: 'failed'; error: string }
 
 export interface HostNameTemplatePreview {
@@ -33,6 +34,7 @@ export interface HostNameTemplatePreview {
 export function templatePreviewBlocksSave(preview: TemplatePreview): boolean {
   switch (preview.status) {
     case 'loading':
+    case 'refused':
       return true
     case 'resolved': {
       const { resolution } = preview
@@ -51,14 +53,16 @@ function requestOf(model: ServiceModel | null): HostNameTemplateResolutionReques
   if (model === null) {
     return null
   }
-  const { metricName, attributeFilter, hostNameTemplate } = model
+  const { metricName, attributeFilter, consolidation, aggregator, hostNameTemplate } = model
   if (metricName === null || hostNameTemplate === null || hostNameTemplate.trim() === '') {
     return null
   }
   return {
     metric_name: metricName,
     host_name_template: hostNameTemplate,
-    ...(attributeFilter === undefined ? {} : { attribute_filter: attributeFilter })
+    ...(attributeFilter === undefined ? {} : { attribute_filter: attributeFilter }),
+    consolidation,
+    ...(aggregator === undefined ? {} : { aggregator })
   }
 }
 
@@ -106,9 +110,11 @@ export function useHostNameTemplatePreview(
       controller.abort()
     }, timeoutMs)
     try {
-      const resolution = await resolveHostNameTemplate(body, controller.signal)
+      const result = await resolveHostNameTemplate(body, controller.signal)
       if (inFlight === controller) {
-        preview.value = { status: 'resolved', resolution }
+        preview.value = result.ok
+          ? { status: 'resolved', resolution: result.resolution }
+          : { status: 'refused', error: result.refusal }
       }
     } catch (error) {
       if (inFlight !== controller) {

@@ -25,6 +25,8 @@ from cmk.ccc.translations import translate, TranslationOptions
 #   {open} => ack
 EventPhase = Literal["open", "delayed", "counting", "ack", "closed"]
 
+LimitKind = Literal["overall", "by_rule", "by_host"]
+
 
 # This is far from perfect, but at least we see all possible keys.
 class Event(TypedDict, total=False):
@@ -56,6 +58,7 @@ class Event(TypedDict, total=False):
     match_groups: Iterable[str]
     match_groups_syslog_application: Iterable[str]
     orig_host: HostName
+    overflowed_limit: LimitKind  # only for the events about reaching an event limit
     owner: str
     phase: EventPhase
     rule_id: str | None

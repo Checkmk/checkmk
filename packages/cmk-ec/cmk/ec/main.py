@@ -60,7 +60,13 @@ from .config import (
     Rule,
 )
 from .core_queries import Connection, HostInfo, query_hosts_scheduled_downtime_depth
-from .event import create_events_from_syslog_messages, Event, scrub_string, translate_event_host
+from .event import (
+    create_events_from_syslog_messages,
+    Event,
+    LimitKind,
+    scrub_string,
+    translate_event_host,
+)
 from .helpers import ECLock, parse_bytes_into_syslog_messages
 from .history import ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab, TimedHistory
 from .history_file import FileHistory
@@ -136,9 +142,11 @@ class SlaveStatus(TypedDict):
 
 FileDescr = int  # mypy calls this FileDescriptor, but this clashes with our definition
 
-Response = Iterable[Sequence[object]] | Mapping[str, object] | None
+# What all events counting towards the same event limit of some kind share: nothing for the
+# overall limit, the rule ID for a rule limit and both host names for a host limit
+_LimitKey = str | tuple[str, HostName | None] | None
 
-LimitKind = Literal["overall", "by_rule", "by_host"]
+Response = Iterable[Sequence[object]] | Mapping[str, object] | None
 
 
 # .
@@ -1680,12 +1688,16 @@ class EventServer(ECServerThread):
             self._perfcounters.count("overflows")
             return True  # Prevent creation and prevent one time actions (below)
 
-        self._logger.info("  The %(type)s limit has been reached", {"type": ty})
-
         # This is the event which reached the limit, allow creation of it. Further
         # events will be stopped.
 
-        # Perform one time actions
+        # Perform one time actions, but not again as long as their overflow event is still open.
+        if self._event_status.has_overflow_event(ty, event):
+            self._logger.info(
+                "  The %(type)s limit has been reached, overflow event still open", {"type": ty}
+            )
+            return False
+        self._logger.info("  The %(type)s limit has been reached", {"type": ty})
         overflow_event = self._create_overflow_event(ty, event, limit)
 
         if "overflow" in action:
@@ -1767,6 +1779,7 @@ class EventServer(ECServerThread):
             sl=event["sl"],
             core_host=None,
             host_in_downtime=False,
+            overflowed_limit=ty,
         )
         self._add_rule_contact_groups_to_event(Rule(), new_event)
 
@@ -1781,7 +1794,10 @@ class EventServer(ECServerThread):
             case "by_host":
                 new_event.update(
                     {
+                        # Like the event reaching the limit, so it counts towards the same one.
                         "host": event["host"],
+                        "core_host": event["core_host"],
+                        "host_in_downtime": event["host_in_downtime"],
                         "ipaddress": event["ipaddress"],
                         "text": (
                             f'The host event limit of {limit} open events has been reached for host "{event["host"]}". '
@@ -1790,10 +1806,6 @@ class EventServer(ECServerThread):
                         ),
                     }
                 )
-
-                # Lookup the monitoring core hosts and add the core host
-                # name to the event when one can be matched
-                self._add_core_host_to_new_event(new_event)
 
             case "by_rule":
                 new_event.update(
@@ -2826,11 +2838,12 @@ class EventStatus:
 
         self.num_existing_events_by_host: dict[tuple[str, HostName | None], int] = {}
         self.num_existing_events_by_rule: dict[Any, int] = {}
+        self._num_overflow_events: dict[tuple[LimitKind, _LimitKey], int] = {}
         for event in self._events:
             self._count_event_add(event)
 
     def _count_event_add(self, event: Event) -> None:
-        host_key = (event["host"], event["core_host"])
+        host_key = self._host_key(event)
         if host_key not in self.num_existing_events_by_host:
             self.num_existing_events_by_host[host_key] = 1
         else:
@@ -2841,12 +2854,19 @@ class EventStatus:
         else:
             self.num_existing_events_by_rule[event["rule_id"]] += 1
 
+        if (overflow_key := self._overflow_key(event)) is not None:
+            self._num_overflow_events[overflow_key] = (
+                self._num_overflow_events.get(overflow_key, 0) + 1
+            )
+
     def _count_event_remove(self, event: Event) -> None:
-        host_key = (event["host"], event["core_host"])
+        host_key = self._host_key(event)
 
         self.num_existing_events -= 1
         self.num_existing_events_by_host[host_key] -= 1
         self.num_existing_events_by_rule[event["rule_id"]] -= 1
+        if (overflow_key := self._overflow_key(event)) is not None:
+            self._num_overflow_events[overflow_key] -= 1
 
     def new_event(self, event: Event) -> None:
         self._perfcounters.count("events")
@@ -2919,9 +2939,39 @@ class EventStatus:
             case "by_rule":
                 return self.num_existing_events_by_rule.get(event["rule_id"], 0)
             case "by_host":
-                return self.num_existing_events_by_host.get((event["host"], event["core_host"]), 0)
+                return self.num_existing_events_by_host.get(self._host_key(event), 0)
             case _ as unreachable:
                 assert_never(unreachable)
+
+    # protected by self.lock
+    def has_overflow_event(self, ty: LimitKind, event: Event) -> bool:
+        """Whether the overflow event about the limit of the given kind for the event is open"""
+        return self._num_overflow_events.get((ty, self._limit_key(ty, event)), 0) > 0
+
+    @classmethod
+    def _overflow_key(cls, event: Event) -> tuple[LimitKind, _LimitKey] | None:
+        """Returns which limit an overflow event is about, None for any other event"""
+        if (ty := event.get("overflowed_limit")) is None:
+            return None
+        return ty, cls._limit_key(ty, event)
+
+    @classmethod
+    def _limit_key(cls, ty: LimitKind, event: Event) -> _LimitKey:
+        """Returns what all events counting towards the same limit of the given kind share"""
+        match ty:
+            case "overall":
+                return None
+            case "by_rule":
+                return event["rule_id"]
+            case "by_host":
+                return cls._host_key(event)
+            case _ as unreachable:
+                assert_never(unreachable)
+
+    @staticmethod
+    def _host_key(event: Event) -> tuple[str, HostName | None]:
+        """Returns the combination of both host names, which the host limit counts separately"""
+        return event["host"], event["core_host"]
 
     def cancel_events(
         self,

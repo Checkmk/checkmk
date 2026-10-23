@@ -121,9 +121,9 @@ def admin_setup_commands(site_name: str) -> str:
     )
 
 
-def _admin_recovery(site_name: str) -> str:
+def _manual_setup_recovery(site_name: str) -> str:
     indented = "\n".join(f"    {line}" for line in admin_setup_commands(site_name).splitlines())
-    return f"Ask an administrator to run:\n{indented}"
+    return f"To set up the sudoers rule manually, run:\n{indented}"
 
 
 def bootstrap(site_name: str) -> None:
@@ -146,7 +146,7 @@ def bootstrap(site_name: str) -> None:
         raise SudoersError(
             f"No sudoers rule allows running commands as site user '{site_name}', "
             "and there is no interactive terminal to set one up.",
-            recovery=_admin_recovery(site_name),
+            recovery=_manual_setup_recovery(site_name),
         )
 
     output.info("The clone backend runs site commands via a per-site sudoers rule.")
@@ -195,7 +195,7 @@ def ensure_site_access(site_name: str) -> None:
         raise SudoersError(
             f"No sudoers rule allows running commands as site user '{site_name}', "
             "and there is no interactive terminal to ask for your sudo password.",
-            recovery=_admin_recovery(site_name),
+            recovery=_manual_setup_recovery(site_name),
         )
     output.info(f"No sudoers rule for site user '{site_name}' -- using a one-off sudo session.")
     _start_one_off_session(
@@ -208,7 +208,7 @@ def _start_one_off_session(site_name: str, *, failure: str) -> None:
     """Cache the sudo timestamp, which carries this run's ``sudo -n`` calls."""
     _authenticate_sudo()
     if not probe(site_name):
-        raise SudoersError(failure, recovery=_admin_recovery(site_name))
+        raise SudoersError(failure, recovery=_manual_setup_recovery(site_name))
 
 
 def _install_rule(rule: str, path: Path, site_name: str) -> None:
@@ -222,7 +222,7 @@ def _install_rule(rule: str, path: Path, site_name: str) -> None:
             raise SudoersError(
                 "Generated sudoers rule failed visudo validation: "
                 f"{check.stderr.strip() or check.stdout.strip()}",
-                recovery=_admin_recovery(site_name),
+                recovery=_manual_setup_recovery(site_name),
             )
         result = _run_root(
             ["install", "-m", "0440", "-o", "root", "-g", "root", tmp.name, str(path)]
@@ -230,7 +230,7 @@ def _install_rule(rule: str, path: Path, site_name: str) -> None:
         if result.returncode != 0:
             raise SudoersError(
                 f"Failed to install sudoers drop-in {path}: {result.stderr.strip()}",
-                recovery=_admin_recovery(site_name),
+                recovery=_manual_setup_recovery(site_name),
             )
 
 
@@ -250,7 +250,7 @@ def ensure_dev_versions_dir() -> None:
         return
     user = get_real_user()
     recovery = (
-        f"Ask an administrator to run:\n    sudo install -d -m 0755 -o {user} {DEV_VERSIONS_DIR}"
+        f"To create it manually, run:\n    sudo install -d -m 0755 -o {user} {DEV_VERSIONS_DIR}"
     )
     output.info(f"Creating {DEV_VERSIONS_DIR} (owned by {user}) requires sudo")
     _authenticate_sudo(recovery=recovery)

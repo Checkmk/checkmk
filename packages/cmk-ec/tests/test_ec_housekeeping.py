@@ -339,3 +339,18 @@ def test_all_events_created_in_downtime_are_removed_when_the_downtime_ends(
     event_server.do_housekeeping()
 
     assert event_status.events() == []
+
+
+def test_missing_expected_message_is_merged_into_an_event_from_before_the_rule_expected_it(
+    event_server: EventServer, event_status: EventStatus
+) -> None:
+    use_rules(event_server, new_rule({}))
+    process_message(event_server)
+    use_rules(event_server, _expecting_rule(count=1))
+    with time_machine.travel(START, tick=False) as traveller:
+        event_server.do_housekeeping()
+        traveller.shift(HOUR)
+
+        event_server.do_housekeeping()
+
+    assert [event.get("count", 1) for event in event_status.events()] == [2]

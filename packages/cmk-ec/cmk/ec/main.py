@@ -1171,7 +1171,9 @@ class EventServer(ECServerThread):
 
         if merge_event:
             merge_event["last"] = now
-            merge_event["count"] += 1
+            # Like counting up an event, cope with events which have never been counted, e.g. from
+            # before the rule expected messages.
+            merge_event["count"] = merge_event.get("count", 1) + 1
 
             # This was resetting the state back to "open", even in case an
             # "ack" event is being merged. This was made configurable in

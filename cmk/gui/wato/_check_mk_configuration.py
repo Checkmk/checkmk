@@ -5991,25 +5991,34 @@ def _common_check_mk_exit_status_elements() -> list[tuple[str, DropdownChoice[in
     ]
 
 
-def _factory_default_check_mk_exit_status() -> dict[str, int]:
+def _factory_default_check_mk_exit_status() -> dict[str, dict[str, int]]:
     return {
-        "connection": 2,
-        "wrong_version": 1,
-        "exception": 3,
-        "missing_sections": 1,
+        "overall": {
+            "warnings": 1,
+            "connection": 2,
+            "timeout": 2,
+            "exception": 3,
+            "missing_sections": 1,
+        },
     }
 
 
-def _drop_empty_output(params: dict[str, int]) -> dict[str, int]:
-    return {k: v for k, v in params.items() if k != "empty_output"}
+# The keys became mandatory in 3.0.0, fill in the former defaults.
+def _migrate_individual(params: Mapping[str, object]) -> dict[str, object]:
+    return {"warnings": 1, "connection": 2, "timeout": 2, "exception": 3, **params}
+
+
+def _migrate_overall(params: Mapping[str, object]) -> dict[str, object]:
+    return {"missing_sections": 1, **_migrate_individual(params)}
 
 
 def _individual_spec(title: str) -> Migrate:
     return Migrate(
-        migrate=_drop_empty_output,
+        migrate=_migrate_individual,
         valuespec=Dictionary(
             title=title,
             elements=_common_check_mk_exit_status_elements(),
+            required_keys=["warnings", "connection", "timeout", "exception"],
         ),
     )
 
@@ -6022,7 +6031,12 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
             "<i>Check_MK Discovery</i> and <i>Check_MK HW/SW inventory</i> in case of various "
             "error situations. One use case is the monitoring of hosts that are not always up. "
             "You can have Checkmk in an OK status here if the host is not reachable. Note: the "
-            "<i>Timeout</i> setting only works when using the Checkmk Micro Core."
+            "<i>Timeout</i> setting only works when using the Checkmk Micro Core. "
+            "While the state is not OK, the automatic service discovery skips the host, as the "
+            "data is probably incomplete. If you set a state to OK, the discovery only uses the "
+            "data of the remaining data sources, so the services of the failing data source may "
+            "be considered vanished. A special agent that exits with an error is treated as a "
+            "connection problem."
         ),
         elements=[
             (
@@ -6064,8 +6078,15 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
                                 ),
                             ),
                         ],
+                        required_keys=[
+                            "warnings",
+                            "connection",
+                            "timeout",
+                            "exception",
+                            "missing_sections",
+                        ],
                     ),
-                    migrate=_drop_empty_output,
+                    migrate=_migrate_overall,
                 ),
             ),
             (

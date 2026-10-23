@@ -288,19 +288,29 @@ def test_trusted_cas_change_activates_the_core() -> None:
 
 
 def test_check_mk_exit_status_accepts_agent_warnings_for_special_agents() -> None:
-    value = {"individual": {"special": {"warnings": 2}}}
+    value = CheckMkExitStatus.valuespec.transform_value(
+        {"individual": {"special": {"warnings": 2}}}
+    )
     CheckMkExitStatus.valuespec.validate_datatype(value, "")
     CheckMkExitStatus.valuespec.validate_value(value, "")
 
 
-def test_check_mk_exit_status_rejects_agent_warnings_for_other_sources() -> None:
-    with pytest.raises(MKUserError):
-        CheckMkExitStatus.valuespec.validate_datatype(
-            {"individual": {"agent": {"agent_warnings": 2}}}, ""
-        )
-
-
-def test_check_mk_exit_status_drops_legacy_empty_output_for_special_agents() -> None:
+def test_check_mk_exit_status_migration_fills_in_former_defaults() -> None:
     assert CheckMkExitStatus.valuespec.transform_value(
-        {"individual": {"special": {"empty_output": 1, "connection": 2}}}
-    ) == {"individual": {"special": {"connection": 2}}}
+        {"overall": {}, "individual": {"snmp": {"timeout": 0}}}
+    ) == {
+        "overall": {
+            "warnings": 1,
+            "connection": 2,
+            "timeout": 2,
+            "exception": 3,
+            "missing_sections": 1,
+        },
+        "individual": {"snmp": {"warnings": 1, "connection": 2, "timeout": 0, "exception": 3}},
+    }
+
+
+def test_check_mk_exit_status_factory_default_is_valid() -> None:
+    value = CheckMkExitStatus.factory_default
+    CheckMkExitStatus.valuespec.validate_datatype(value, "")
+    CheckMkExitStatus.valuespec.validate_value(value, "")

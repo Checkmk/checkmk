@@ -761,6 +761,20 @@ impl WritableUpdater {
         self.state.save(&self.state_path)
     }
 
+    /// Keep `err` with its causes for the next status request to report.
+    pub fn record_error(&mut self, err: &Error) -> AnyhowResult<()> {
+        self.state.last_error = Some(format!("{err:#}"));
+        self.state.save(&self.state_path)
+    }
+
+    /// The cycle ended with nothing left to do, so there is no error to report.
+    pub fn clear_last_error(&mut self) -> AnyhowResult<()> {
+        if self.state.last_error.take().is_none() {
+            return Ok(());
+        }
+        self.state.save(&self.state_path)
+    }
+
     /// The hand-over did not happen, so nothing waits for installation.
     pub fn clear_pending_hash(&mut self) -> AnyhowResult<()> {
         self.state.pending_hash = None;
@@ -1936,6 +1950,44 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         updater.settle_pending_install().unwrap();
 
         assert_eq!(updater.state, state);
+    }
+
+    /// The site quotes the error back to the administrator, so the cause must
+    /// survive the context the cycle wraps it in.
+    #[test]
+    fn test_record_error_keeps_the_cause() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = writable_in(&dir, UpdateState::default());
+        let error = Error::msg("connection refused").context("Agent update status request failed");
+
+        updater.record_error(&error).unwrap();
+
+        assert_eq!(
+            UpdateState::load(&updater.state_path)
+                .unwrap()
+                .last_error
+                .unwrap(),
+            "Agent update status request failed: connection refused"
+        );
+    }
+
+    #[test]
+    fn test_clear_last_error_removes_the_recorded_error() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = writable_in(
+            &dir,
+            UpdateState {
+                last_error: Some(String::from("boom")),
+                ..Default::default()
+            },
+        );
+
+        updater.clear_last_error().unwrap();
+
+        assert_eq!(
+            UpdateState::load(&updater.state_path).unwrap().last_error,
+            None
+        );
     }
 
     #[test]

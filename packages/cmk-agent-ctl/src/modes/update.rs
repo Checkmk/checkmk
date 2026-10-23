@@ -11,6 +11,7 @@ use crate::configuration::config::{ClientConfig, Registry};
 use crate::updater::InstallOutcome;
 use crate::updater::{CheckOutcome, FetchOutcome, SignatureCheck, Updater, WritableUpdater};
 use anyhow::Result as AnyhowResult;
+use log::warn;
 #[cfg(unix)]
 use std::path::Path;
 
@@ -51,6 +52,9 @@ pub fn check(
 /// A package handed over in an earlier run is settled first: the installed
 /// hash says whether its installation took effect.
 ///
+/// An error of the update goes to the update state, where the next status
+/// request reports it to the site.
+///
 /// # Errors
 ///
 /// If the site cannot be asked, does not deliver the package it offered, if
@@ -70,14 +74,33 @@ pub fn update(
         use_proxy: client_config.use_proxy,
     };
 
+    let result = run_cycle(updater, registry, &api, signature);
+    if let Err(error) = &result {
+        if let Err(save_error) = updater.record_error(error) {
+            warn!("Could not record the error in the update state: {save_error:#}");
+        }
+    }
+    result
+}
+
+/// Settle the pending installation, then fetch and hand over what the site
+/// offers.
+fn run_cycle(
+    updater: &mut WritableUpdater,
+    registry: &Registry,
+    api: &agent_receiver_api::Api,
+    signature: SignatureCheck,
+) -> AnyhowResult<()> {
     updater.settle_pending_install()?;
 
-    let fetched = updater.fetch_update(registry, &api, signature)?;
+    let fetched = updater.fetch_update(registry, api, signature)?;
 
     println!("{}", report_fetch(&fetched));
 
-    if fetched == FetchOutcome::SourceUnavailable {
-        updater.record_source_unavailable()?;
+    match fetched {
+        FetchOutcome::UpToDate(_) | FetchOutcome::NoPackage => updater.clear_last_error()?,
+        FetchOutcome::SourceUnavailable => updater.record_source_unavailable()?,
+        _ => {}
     }
 
     #[cfg(unix)]

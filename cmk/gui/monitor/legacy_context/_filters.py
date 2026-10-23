@@ -13,6 +13,7 @@ a legacy filter.
 import re
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from typing import Literal
 
 from cmk.gui.type_defs import FilterHTTPVariables
 
@@ -23,6 +24,9 @@ _WILDCARD = "*"
 _LABEL_SEPARATOR = ":"
 
 type FilterJSON = dict[str, object]
+
+# How a label or a group of labels is joined to the ones before it.
+type _Operator = Literal["and", "or", "not"]
 
 
 class UntranslatableFilterError(Exception):
@@ -250,6 +254,30 @@ def label_value(var: str, key: str) -> LegacyFilter:
     return translate_label_value
 
 
+def label_groups(prefix: str) -> LegacyFilter:
+    """The legacy filter for labels: groups of labels, in which each label is joined to the ones
+    before it by "and", "or" or "not", and each group is joined to the ones before it the same
+    way. Empty labels and groups are skipped, like in the legacy filter."""
+
+    def translate_label_groups(value: FilterHTTPVariables, field: str) -> FilterJSON | None:
+        groups: list[tuple[_Operator, FilterJSON]] = []
+        for group_number in range(1, _count(f"{prefix}_count", value) + 1):
+            group_prefix = f"{prefix}_{group_number}"
+            label_count = _count(f"{group_prefix}_vs_count", value)
+            group_operator = _operator(f"{group_prefix}_bool", value)
+            labels: list[tuple[_Operator, FilterJSON]] = []
+            for label_number in range(1, label_count + 1):
+                label_prefix = f"{group_prefix}_vs_{label_number}"
+                operator = _operator(f"{label_prefix}_bool", value)
+                if label := value.get(f"{label_prefix}_vs"):
+                    labels.append((operator, _label_condition(field, label)))
+            if (group := _combine(labels)) is not None:
+                groups.append((group_operator, group))
+        return _combine(groups)
+
+    return translate_label_groups
+
+
 def any_text(var: str, *, roles: Sequence[str]) -> MultiFieldFilter:
     """A legacy regular expression filter that matches if the text is in any of the fields of the
     ``roles``, e.g. a host's name or alias. It cannot be negated."""
@@ -314,6 +342,42 @@ def _names(raw: str, separator: str | None) -> list[str]:
 
 def _condition(field: str, op: str, value: object) -> FilterJSON:
     return {"type": "condition", "field": field, "op": op, "value": value}
+
+
+def _count(var: str, value: FilterHTTPVariables) -> int:
+    try:
+        return int(value.get(var) or "0")
+    except ValueError as exc:
+        raise UntranslatableFilterError from exc
+
+
+def _operator(var: str, value: FilterHTTPVariables) -> _Operator:
+    match value.get(var, "and"):
+        case "and" | "or" | "not" as operator:
+            return operator
+        case _:
+            raise UntranslatableFilterError
+
+
+def _combine(operands: Sequence[tuple[_Operator, FilterJSON]]) -> FilterJSON | None:
+    """Join operands by the operator each comes with, as the legacy label filter does: "or"
+    starts a new alternative, "and" and "not" (meaning "and not") extend the current one. The
+    operator of the first operand only counts if it is "not"."""
+    alternatives: list[list[FilterJSON]] = []
+    for position, (operator, node) in enumerate(operands):
+        term = _negate_if(node, operator == "not")
+        if position == 0 or operator == "or":
+            alternatives.append([term])
+        else:
+            alternatives[-1].append(term)
+    return any_of([alternative for terms in alternatives if (alternative := all_of(terms))])
+
+
+def _label_condition(field: str, label: str) -> FilterJSON:
+    key, separator, value = label.partition(_LABEL_SEPARATOR)
+    if not separator:
+        raise UntranslatableFilterError
+    return _condition(field, "all_of", [_label_pair(key, value)])
 
 
 def _label_pair(key: str, value: str) -> str:

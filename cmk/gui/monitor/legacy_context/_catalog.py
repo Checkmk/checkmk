@@ -19,6 +19,7 @@ from ._filters import (
     aux_tags,
     exact_text,
     flag,
+    label_groups,
     label_value,
     LegacyFilter,
     MultiFieldFilter,
@@ -71,6 +72,7 @@ LEGACY_FILTERS: Mapping[FilterName, LegacyFilter | MultiFieldFilter] = {
     "host_scheduled_downtime_depth": flag("is_host_scheduled_downtime_depth"),
     "host_num_services": number_range("host_num_services"),
     "host_auxtags": aux_tags("host_auxtags"),
+    "host_labels": label_groups("host_labels"),
     **{
         f"kubernetes_{obj}": label_value(f"kubernetes_{obj}", f"cmk/kubernetes/{obj}")
         for obj in ("cluster", "namespace", "node", "deployment", "daemonset", "statefulset")

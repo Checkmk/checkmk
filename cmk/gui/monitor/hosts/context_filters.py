@@ -65,6 +65,7 @@ _FIELDS: Mapping[FilterName, _HostField | Mapping[str, _HostField]] = {
     "address_family": "tags",
     "address_families": "tags",
     "host_auxtags": "tags",
+    "host_labels": "labels",
     "kubernetes_cluster": "labels",
     "kubernetes_namespace": "labels",
     "kubernetes_node": "labels",

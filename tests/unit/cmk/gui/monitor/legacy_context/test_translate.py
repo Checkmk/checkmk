@@ -15,10 +15,9 @@ from cmk.gui.monitor.legacy_context import (
 )
 from cmk.gui.type_defs import FilterHTTPVariables, FilterName, VisualContext
 
-type _JSON = dict[str, object]
+from .testlib import ANY_PAGE, label_group_variables
 
-# A page that accepts any tree, so that these tests see the translation unchanged.
-_ANY_PAGE = PageFilterModel(tree=TypeAdapter(dict[str, object]), check=lambda tree: tree)
+type _JSON = dict[str, object]
 
 type _Fields = dict[FilterName, str | Mapping[str, str]]
 
@@ -34,6 +33,7 @@ _FIELDS: _Fields = {
     "address_family": "tags",
     "address_families": "tags",
     "host_auxtags": "tags",
+    "host_labels": "labels",
     "kubernetes_cluster": "labels",
     "kubernetes_node": "labels",
     "opthostgroup": "groups",
@@ -60,8 +60,12 @@ def _not(child: _JSON) -> _JSON:
     return {"type": "not", "child": child}
 
 
+def _label(label: str) -> _JSON:
+    return _condition("labels", "all_of", [label])
+
+
 def _translate(context: VisualContext) -> ContextFilterTranslation[_JSON]:
-    return translate_context(context, _FIELDS, _ANY_PAGE)
+    return translate_context(context, _FIELDS, ANY_PAGE)
 
 
 @pytest.mark.parametrize(
@@ -198,6 +202,158 @@ def _translate(context: VisualContext) -> ContextFilterTranslation[_JSON]:
             {"host_auxtags_0": "snmp", "host_auxtags_2": "tcp"},
             _condition("tags", "all_of", ["snmp:snmp"]),
             id="auxiliary tags end at the first number missing",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables([("and", [("and", "cmk/os_family:linux")])]),
+            _label("cmk/os_family:linux"),
+            id="label",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables([("and", [("and", "a:b:c")])]),
+            _label("a:b:c"),
+            id="label with a colon in its value",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables([("and", [("and", "a:1"), ("and", "b:2")])]),
+            {"type": "and", "children": [_label("a:1"), _label("b:2")]},
+            id="labels joined by and",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables([("and", [("and", "a:1"), ("or", "b:2")])]),
+            {"type": "or", "children": [_label("a:1"), _label("b:2")]},
+            id="labels joined by or",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables([("and", [("and", "a:1"), ("not", "b:2")])]),
+            {"type": "and", "children": [_label("a:1"), _not(_label("b:2"))]},
+            id="label joined by not",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables([("and", [("and", "a:1"), ("or", "b:2"), ("and", "c:3")])]),
+            {
+                "type": "or",
+                "children": [
+                    _label("a:1"),
+                    {"type": "and", "children": [_label("b:2"), _label("c:3")]},
+                ],
+            },
+            id="and binds tighter than or, as in the legacy filter",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables([("and", [("and", "a:1"), ("and", "b:2"), ("or", "c:3")])]),
+            {
+                "type": "or",
+                "children": [
+                    {"type": "and", "children": [_label("a:1"), _label("b:2")]},
+                    _label("c:3"),
+                ],
+            },
+            id="or after labels joined by and",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables([("and", [("and", "a:1"), ("or", "b:2"), ("not", "c:3")])]),
+            {
+                "type": "or",
+                "children": [
+                    _label("a:1"),
+                    {"type": "and", "children": [_label("b:2"), _not(_label("c:3"))]},
+                ],
+            },
+            id="not after or extends the alternative",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables([("and", [("not", "a:1"), ("and", "b:2")])]),
+            {"type": "and", "children": [_not(_label("a:1")), _label("b:2")]},
+            id="first label joined by not",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables([("and", [("or", "a:1"), ("and", "b:2")])]),
+            {"type": "and", "children": [_label("a:1"), _label("b:2")]},
+            id="operator of the first label is ignored unless it is not",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables([("and", [("and", ""), ("not", "a:1")])]),
+            _not(_label("a:1")),
+            id="empty label is skipped, so the next one is the first",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables([("and", [("and", "a:1")]), ("or", [("and", "b:2")])]),
+            {"type": "or", "children": [_label("a:1"), _label("b:2")]},
+            id="groups joined by or",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables([("and", [("and", "a:1")]), ("not", [("and", "b:2")])]),
+            {"type": "and", "children": [_label("a:1"), _not(_label("b:2"))]},
+            id="group joined by not",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables(
+                [
+                    ("and", [("not", "a:1")]),
+                    ("or", [("and", "b:2")]),
+                    ("not", [("and", "c:3")]),
+                ]
+            ),
+            {
+                "type": "or",
+                "children": [
+                    _not(_label("a:1")),
+                    {"type": "and", "children": [_label("b:2"), _not(_label("c:3"))]},
+                ],
+            },
+            id="groups of the legacy filter's own examples",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables(
+                [("not", [("and", "a:1"), ("and", "b:2")]), ("and", [("and", "c:3")])]
+            ),
+            {
+                "type": "and",
+                "children": [
+                    _not({"type": "and", "children": [_label("a:1"), _label("b:2")]}),
+                    _label("c:3"),
+                ],
+            },
+            id="first group joined by not",
+        ),
+        pytest.param(
+            "host_labels",
+            label_group_variables(
+                [
+                    ("and", [("and", "a:1"), ("and", "b:2")]),
+                    ("or", [("and", "c:3"), ("or", "d:4")]),
+                    ("and", [("and", "e:5")]),
+                ]
+            ),
+            {
+                "type": "or",
+                "children": [
+                    {"type": "and", "children": [_label("a:1"), _label("b:2")]},
+                    {
+                        "type": "and",
+                        "children": [
+                            {"type": "or", "children": [_label("c:3"), _label("d:4")]},
+                            _label("e:5"),
+                        ],
+                    },
+                ],
+            },
+            id="groups with several labels, joined by and and or",
         ),
         pytest.param(
             "siteopt",
@@ -354,6 +510,12 @@ def test_legacy_filter_translates_to_condition_on_its_field(
             id="auxiliary tags ending before the first",
         ),
         pytest.param({"kubernetes_cluster": {"kubernetes_cluster": ""}}, id="no Kubernetes object"),
+        pytest.param({"host_labels": {}}, id="no label variables"),
+        pytest.param({"host_labels": {"host_labels_count": "0"}}, id="no label group"),
+        pytest.param(
+            {"host_labels": label_group_variables([("and", [("and", "")])])},
+            id="group of an empty label",
+        ),
         pytest.param(
             {"hosts_having_service_problems": {"hosts_having_services_warn": ""}},
             id="no service problem to count",
@@ -422,6 +584,36 @@ def test_inactive_context_translates_to_no_filter(context: VisualContext) -> Non
             {"kubernetes_cluster": {"kubernetes_cluster": "prod*"}},
             id="Kubernetes object the page would read as a prefix",
         ),
+        pytest.param({"host_labels": {"host_labels_count": "many"}}, id="label count not a number"),
+        pytest.param(
+            {"host_labels": label_group_variables([("xor", [("and", "a:1")])])},
+            id="unknown group operator",
+        ),
+        pytest.param(
+            {"host_labels": label_group_variables([("and", [("xor", "a:1")])])},
+            id="unknown label operator",
+        ),
+        pytest.param(
+            {"host_labels": label_group_variables([("and", [("and", "a")])])},
+            id="label without value",
+        ),
+        pytest.param(
+            {"host_labels": label_group_variables([("and", [("and", "a:")])])},
+            id="label with empty value",
+        ),
+        pytest.param(
+            {"host_labels": label_group_variables([("and", [("and", "a:1*")])])},
+            id="label the page would read as a prefix",
+        ),
+        pytest.param(
+            {"host_labels": label_group_variables([("and", [("and", ":1")])])},
+            id="label with empty key",
+        ),
+        # The legacy filter checks every operator, also the one of a label that is skipped.
+        pytest.param(
+            {"host_labels": label_group_variables([("and", [("xor", ""), ("and", "a:1")])])},
+            id="unknown operator of an empty label",
+        ),
         pytest.param(
             {"host_num_services": {"host_num_services_from": "1.5"}}, id="bound not a number"
         ),
@@ -453,12 +645,19 @@ def test_filter_without_equivalent_is_reported(context: VisualContext) -> None:
         pytest.param("host_auxtags", {"host_auxtags_0": "snmp"}, True, id="auxiliary tag"),
         pytest.param("host_auxtags", {"host_auxtags_0": ""}, False, id="empty auxiliary tag"),
         pytest.param("kubernetes_node", {"kubernetes_node": "n1"}, True, id="Kubernetes node"),
+        pytest.param(
+            "host_labels",
+            label_group_variables([("and", [("and", "a:1")])]),
+            True,
+            id="label group",
+        ),
+        pytest.param("host_labels", {"host_labels_count": "0"}, False, id="no label group"),
     ],
 )
 def test_filter_the_page_does_not_map_is_reported_only_if_it_restricts_anything(
     name: FilterName, value: FilterHTTPVariables, restricts: bool
 ) -> None:
-    translation = translate_context({name: value}, _fields_without(name), _ANY_PAGE)
+    translation = translate_context({name: value}, _fields_without(name), ANY_PAGE)
 
     assert translation == ContextFilterTranslation(
         filter=None, unapplied=[name] if restricts else []
@@ -467,7 +666,7 @@ def test_filter_the_page_does_not_map_is_reported_only_if_it_restricts_anything(
 
 def test_page_mapping_a_filter_outside_the_catalog_is_rejected() -> None:
     with pytest.raises(ValueError, match="hostgroups"):
-        translate_context({}, {"hostgroups": "groups"}, _ANY_PAGE)
+        translate_context({}, {"hostgroups": "groups"}, ANY_PAGE)
 
 
 @pytest.mark.parametrize(
@@ -485,7 +684,7 @@ def test_page_mapping_a_filter_outside_the_catalog_is_rejected() -> None:
 )
 def test_page_mapping_a_filter_to_fields_that_do_not_fit_it_is_rejected(fields: _Fields) -> None:
     with pytest.raises(ValueError, match="Expected"):
-        translate_context({}, fields, _ANY_PAGE)
+        translate_context({}, fields, ANY_PAGE)
 
 
 def test_unapplied_filters_are_reported_in_context_order() -> None:
@@ -573,7 +772,7 @@ def test_only_the_first_site_filter_applies_and_the_others_are_reported_if_they_
     expected_sites: list[str],
     expected_unapplied: list[FilterName],
 ) -> None:
-    assert translate_context(context, fields, _ANY_PAGE) == ContextFilterTranslation(
+    assert translate_context(context, fields, ANY_PAGE) == ContextFilterTranslation(
         filter=_condition("site_id", "one_of", expected_sites), unapplied=expected_unapplied
     )
 
@@ -601,7 +800,7 @@ def test_only_the_first_site_filter_applies_and_the_others_are_reported_if_they_
 def test_first_site_filter_that_cannot_apply_is_reported_and_keeps_the_others_from_applying(
     context: VisualContext, fields: _Fields
 ) -> None:
-    assert translate_context(context, fields, _ANY_PAGE) == ContextFilterTranslation(
+    assert translate_context(context, fields, ANY_PAGE) == ContextFilterTranslation(
         filter=None, unapplied=list(context)
     )
 

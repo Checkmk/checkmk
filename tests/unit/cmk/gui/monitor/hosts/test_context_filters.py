@@ -76,6 +76,24 @@ from cmk.gui.type_defs import VisualContext
             id="auxiliary tag",
         ),
         pytest.param(
+            {
+                "host_labels": {
+                    "host_labels_count": "1",
+                    "host_labels_1_vs_count": "2",
+                    "host_labels_1_bool": "and",
+                    "host_labels_1_vs_1_bool": "and",
+                    "host_labels_1_vs_1_vs": "cmk/os_family:linux",
+                    "host_labels_1_vs_2_bool": "or",
+                    "host_labels_1_vs_2_vs": "cmk/os_family:windows",
+                }
+            },
+            OrNode(type="or", children=[
+                LabelChoiceCondition(type="condition", field="labels", op="all_of", value=["cmk/os_family:linux"]),
+                LabelChoiceCondition(type="condition", field="labels", op="all_of", value=["cmk/os_family:windows"]),
+            ]),
+            id="host labels",
+        ),
+        pytest.param(
             {"kubernetes_cluster": {"kubernetes_cluster": "prod:1"}},
             LabelChoiceCondition(type="condition", field="labels", op="all_of", value=["cmk/kubernetes/cluster:prod:1"]),
             id="Kubernetes cluster",
@@ -312,6 +330,16 @@ def test_several_dashboard_filters_must_all_match() -> None:
         pytest.param({"host_ctc": {"host_ctc": "adm\nGET status"}}, id="line break in a contact"),
         pytest.param({"hostregex": {"host_regex": "web["}}, id="invalid regex"),
         pytest.param({"hostalias": {"hostalias": "(Web"}}, id="invalid alias regex"),
+        pytest.param(
+            {
+                "host_labels": {
+                    "host_labels_count": "1",
+                    "host_labels_1_vs_count": "1",
+                    "host_labels_1_vs_1_vs": "a:1\nGET status",
+                }
+            },
+            id="line break in a label",
+        ),
         pytest.param(
             {
                 "host_num_services": {

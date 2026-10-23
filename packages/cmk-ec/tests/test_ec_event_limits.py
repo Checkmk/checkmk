@@ -11,7 +11,7 @@ from cmk.ec.config import Config
 from cmk.ec.event import LimitKind
 from cmk.ec.main import EventServer, EventStatus
 
-from .helpers import new_rule, process_message, RecordingHistory
+from .helpers import new_event, new_rule, process_message, RecordingHistory
 
 
 @pytest.fixture(name="history")
@@ -95,6 +95,80 @@ def test_reached_limit_deletes_the_oldest_events(
     _process_messages(event_server, "1st", "2nd", "3rd", "4th")
 
     assert _texts_of_events(event_status) == ["3rd", "4th"]
+
+
+def test_limit_does_not_delete_events_for_an_event_which_a_further_limit_drops(
+    event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
+) -> None:
+    event_status.new_event(new_event(ec.Event(text="of another rule")))
+    event_limits = ec.EventLimits(
+        overall=ec.EventLimit(action="delete_oldest", limit=2),
+        by_host=ec.EventLimit(action="stop", limit=1000),
+        by_rule=ec.EventLimit(action="stop", limit=1),
+    )
+    _configure(event_server, config, history, event_limits)
+    _process_messages(event_server, "1st")
+
+    # The overall limit would delete the oldest event, but the rule limit drops the message.
+    _process_messages(event_server, "2nd")
+
+    assert _texts_of_events(event_status) == ["of another rule", "1st"]
+
+
+def test_deleting_events_for_one_limit_can_keep_the_event_from_reaching_another_one(
+    event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
+) -> None:
+    event_status.new_event(new_event(ec.Event(text="of another rule")))
+    # The rule keeps only its newest event.
+    rule = new_rule({"event_limit": ec.EventLimit(action="delete_oldest", limit=1)})
+    event_server.reload_configuration(
+        config
+        | {
+            "event_limit": _only_limit("overall", ec.EventLimit(action="stop_overflow", limit=3)),
+            "rule_packs": [ec.default_rule_pack([rule])],
+        },
+        history,
+    )
+    _process_messages(event_server, "1st")
+
+    # The overall limit would be reached, but the rule limit deletes the 1st event first.
+    _process_messages(event_server, "2nd")
+
+    assert _texts_of_events(event_status) == ["of another rule", "2nd"]
+
+
+def test_limit_deleting_the_oldest_events_makes_room_for_overflow_events_of_other_limits(
+    event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
+) -> None:
+    event_status.new_event(new_event(ec.Event(text="of another rule")))
+    event_limits = ec.EventLimits(
+        overall=ec.EventLimit(action="delete_oldest", limit=3),
+        by_host=ec.EventLimit(action="stop", limit=1000),
+        by_rule=ec.EventLimit(action="stop_overflow", limit=2),
+    )
+    _configure(event_server, config, history, event_limits)
+    _process_messages(event_server, "1st")
+
+    # The rule limit creates an overflow event, which counts towards the overall limit, too.
+    _process_messages(event_server, "2nd")
+
+    assert _texts_of_events(event_status) == ["1st", "<overflow>", "2nd"]
+
+
+def test_limit_deleting_the_oldest_events_does_not_delete_an_overflow_event_just_created(
+    event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
+) -> None:
+    event_limits = ec.EventLimits(
+        overall=ec.EventLimit(action="delete_oldest", limit=1),
+        by_host=ec.EventLimit(action="stop", limit=1000),
+        by_rule=ec.EventLimit(action="stop_overflow", limit=1),
+    )
+    _configure(event_server, config, history, event_limits)
+
+    # The rule limit creates an overflow event, for which the overall limit can't make room.
+    _process_messages(event_server, "1st")
+
+    assert _texts_of_events(event_status) == ["<overflow>", "1st"]
 
 
 def test_deleting_the_oldest_events_keeps_the_newest_one_even_with_a_zero_limit(
@@ -198,3 +272,20 @@ def test_message_cannot_pose_as_an_open_overflow_event(
     _process_messages(event_server, "2nd")
 
     assert _texts_of_events(event_status) == ["1st", "<overflow>", "2nd"]
+
+
+def test_limit_does_not_act_on_an_event_which_a_further_limit_drops(
+    event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
+) -> None:
+    event_limits = ec.EventLimits(
+        overall=ec.EventLimit(action="stop_overflow", limit=2),
+        by_host=ec.EventLimit(action="stop", limit=1),
+        by_rule=ec.EventLimit(action="stop", limit=1000),
+    )
+    _configure(event_server, config, history, event_limits)
+    _process_messages(event_server, "1st")
+
+    # The overall limit would be reached, but the host limit drops the message.
+    _process_messages(event_server, "2nd")
+
+    assert _texts_of_events(event_status) == ["1st"]

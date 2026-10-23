@@ -148,6 +148,9 @@ _LimitKey = str | tuple[str, HostName | None] | None
 
 Response = Iterable[Sequence[object]] | Mapping[str, object] | None
 
+# The order in which the event limits are checked
+_LIMIT_KINDS: tuple[LimitKind, ...] = ("overall", "by_host", "by_rule")
+
 
 # .
 #   .--Helper functions----------------------------------------------------.
@@ -1633,15 +1636,36 @@ class EventServer(ECServerThread):
         core_host = event["core_host"]
         host_config = self.host_config.get_config_for_host(core_host) if core_host else None
         with self._event_status.lock:
-            if self._handle_event_limit("overall", event, host_config):
-                return False
-
-            if self._handle_event_limit("by_host", event, host_config):
-                return False
-
-            if self._handle_event_limit("by_rule", event, host_config):
-                return False
-
+            limits: list[tuple[LimitKind, int, str]] = []
+            for ty in _LIMIT_KINDS:
+                limit, action = self._get_event_limit(ty, event, host_config)
+                if self._drops_event(ty, event, limit, action):
+                    return False
+                limits.append((ty, limit, action))
+            # Only now that no limit drops the event, make room for it and act on the limits which
+            # it reaches. Otherwise, a limit would delete events for an event which is dropped
+            # anyway, and while a further limit drops the events, each of them would reach the
+            # limit again. Make room for all limits first, as deleting events for one limit can
+            # keep the event from reaching another one.
+            for ty, limit, action in limits:
+                if action == "delete_oldest":
+                    self._delete_oldest_events(ty, event, limit)
+            reached_limits = [
+                (ty, limit, action)
+                for ty, limit, action in limits
+                if self._reaches_limit(ty, event, limit, action)
+            ]
+            num_open_before = {
+                ty: self._event_status.get_num_existing_events_by(ty, event) for ty in _LIMIT_KINDS
+            }
+            for ty, limit, action in reached_limits:
+                self._act_on_reached_limit(ty, event, limit, action)
+            # Overflow events created meanwhile count towards the limits, too, so the limits
+            # deleting the oldest events make room once more, but only by deleting the events open
+            # before: Deleting an overflow event right away would hide that its limit is reached.
+            for ty, limit, action in limits:
+                if action == "delete_oldest":
+                    self._delete_oldest_events(ty, event, limit, at_most=num_open_before[ty])
             self._event_status.new_event(event)
             return True
 
@@ -1652,49 +1676,66 @@ class EventServer(ECServerThread):
     # delete_oldest        Delete oldest event, create new event
     # protected by self._event_status.lock
 
-    def _handle_event_limit(
-        self, ty: LimitKind, event: Event, host_config: HostInfo | None
-    ) -> bool:
-        """Returns False if the event has been created and actions should be performed on that event."""
-        num_already_open = self._event_status.get_num_existing_events_by(ty, event)
+    def _drops_event(self, ty: LimitKind, event: Event, limit: int, action: str) -> bool:
+        """Tells whether the limit of the given kind drops the new event, as it's reached already
 
-        limit, action = self._get_event_limit(ty, event, host_config)
+        Only the events open before any of them is deleted count, so deleting the oldest events for
+        another limit never makes room for the new event.
+        """
+        num_already_open = self._event_status.get_num_existing_events_by(ty, event)
         self._logger.log(
             VERBOSE,
             "  Type: %(type)s, already open events: %(num_open)d, Limit: %(limit)d",
             {"type": ty, "num_open": num_already_open, "limit": limit},
         )
 
-        num_open = num_already_open + 1  # after adding this event
-
-        # Limit not reached even then: we are fine
-        if num_open < limit:
-            return False
-
-        # Delete oldest messages if that is the configure method of keeping the limit
-        if action == "delete_oldest":
-            while num_open > limit:
-                self._perfcounters.count("overflows")
-                self._event_status.remove_oldest_event(ty, event)
-                num_open -= 1
+        # Even with this event, the limit isn't exceeded, or deleting the oldest events keeps it
+        if num_already_open + 1 <= limit or action == "delete_oldest":
             return False
 
         # Limit reached already in the past: Simply drop silently
-        if num_open > limit:
-            # Just log in verbose mode! Otherwise log file will be flooded
-            self._logger.log(VERBOSE, "  Skip processing because limit is already in effect")
-            self._perfcounters.count("overflows")
-            return True  # Prevent creation and prevent one time actions (below)
+        # Just log in verbose mode! Otherwise log file will be flooded
+        self._logger.log(VERBOSE, "  Skip processing because limit is already in effect")
+        self._perfcounters.count("overflows")
+        return True
 
+    # protected by self._event_status.lock
+    def _delete_oldest_events(
+        self, ty: LimitKind, event: Event, limit: int, *, at_most: int | None = None
+    ) -> None:
+        """Deletes the oldest events counting towards the limit of the given kind, making room for
+        the new event, which no limit drops, but at most the given number of events"""
+        num_open = self._event_status.get_num_existing_events_by(ty, event) + 1  # after adding it
+        num_deleted = 0
+        while num_open > limit and (at_most is None or num_deleted < at_most):
+            self._perfcounters.count("overflows")
+            self._event_status.remove_oldest_event(ty, event)
+            num_open -= 1
+            num_deleted += 1
+
+    # protected by self._event_status.lock
+    def _reaches_limit(self, ty: LimitKind, event: Event, limit: int, action: str) -> bool:
+        """Tells whether the new event, for which the limits made room, reaches the limit of the
+        given kind
+
+        A limit deleting the oldest events is never reached, it keeps the limit instead.
+        """
         # This is the event which reached the limit, allow creation of it. Further
         # events will be stopped.
+        return (
+            action != "delete_oldest"
+            and self._event_status.get_num_existing_events_by(ty, event) + 1 == limit
+        )
 
-        # Perform one time actions, but not again as long as their overflow event is still open.
+    # protected by self._event_status.lock
+    def _act_on_reached_limit(self, ty: LimitKind, event: Event, limit: int, action: str) -> None:
+        """Performs the one time actions for the event which reaches the limit of the given kind"""
+        # Not again as long as their overflow event is still open, though.
         if self._event_status.has_overflow_event(ty, event):
             self._logger.info(
                 "  The %(type)s limit has been reached, overflow event still open", {"type": ty}
             )
-            return False
+            return
         self._logger.info("  The %(type)s limit has been reached", {"type": ty})
         overflow_event = self._create_overflow_event(ty, event, limit)
 
@@ -1705,8 +1746,6 @@ class EventServer(ECServerThread):
         if "notify" in action:
             self._logger.info("  Creating overflow notification")
             do_notify(self.host_config, self._logger, self._connection, overflow_event)
-
-        return False
 
     # protected by self._event_status.lock
     def _get_event_limit(

@@ -31,6 +31,11 @@ _FIELDS: _Fields = {
     "hostalias": "alias",
     "hostnameoralias": {"name": "name", "alias": "alias"},
     "host_address": "address",
+    "address_family": "tags",
+    "address_families": "tags",
+    "host_auxtags": "tags",
+    "kubernetes_cluster": "labels",
+    "kubernetes_node": "labels",
     "opthostgroup": "groups",
     "host_ctc": "contacts",
     "host_ctc_regex": "contacts",
@@ -109,6 +114,90 @@ def _translate(context: VisualContext) -> ContextFilterTranslation[_JSON]:
             {"host_address": "10.0.", "host_address_prefix": "yes"},
             _condition("address", "matches", r"^10\.0\."),
             id="address prefix",
+        ),
+        pytest.param(
+            "address_family",
+            {"address_family": "4"},
+            _condition("tags", "all_of", ["address_family:ip-v4-only"]),
+            id="address family IPv4",
+        ),
+        pytest.param(
+            "address_family",
+            {"address_family": "6"},
+            _condition("tags", "all_of", ["address_family:ip-v6-only"]),
+            id="address family IPv6",
+        ),
+        pytest.param(
+            "address_families",
+            {"address_families": "4"},
+            _condition("tags", "all_of", ["ip-v4:ip-v4"]),
+            id="address families with IPv4",
+        ),
+        pytest.param(
+            "address_families",
+            {"address_families": "6"},
+            _condition("tags", "all_of", ["ip-v6:ip-v6"]),
+            id="address families with IPv6",
+        ),
+        pytest.param(
+            "address_families",
+            {"address_families": "both"},
+            _condition("tags", "one_of", ["ip-v4:ip-v4", "ip-v6:ip-v6"]),
+            id="address families with either",
+        ),
+        pytest.param(
+            "address_families",
+            {"address_families": "4_only"},
+            {
+                "type": "and",
+                "children": [
+                    _condition("tags", "all_of", ["ip-v4:ip-v4"]),
+                    _not(_condition("tags", "all_of", ["ip-v6:ip-v6"])),
+                ],
+            },
+            id="address families with IPv4 only",
+        ),
+        pytest.param(
+            "address_families",
+            {"address_families": "6_only"},
+            {
+                "type": "and",
+                "children": [
+                    _condition("tags", "all_of", ["ip-v6:ip-v6"]),
+                    _not(_condition("tags", "all_of", ["ip-v4:ip-v4"])),
+                ],
+            },
+            id="address families with IPv6 only",
+        ),
+        pytest.param(
+            "host_auxtags",
+            {"host_auxtags_0": "snmp"},
+            _condition("tags", "all_of", ["snmp:snmp"]),
+            id="auxiliary tag",
+        ),
+        pytest.param(
+            "host_auxtags",
+            {"host_auxtags_0": "snmp", "host_auxtags_1": "tcp", "host_auxtags_1_neg": "on"},
+            {
+                "type": "and",
+                "children": [
+                    _condition("tags", "all_of", ["snmp:snmp"]),
+                    _not(_condition("tags", "all_of", ["tcp:tcp"])),
+                ],
+            },
+            id="auxiliary tags, one negated",
+        ),
+        pytest.param(
+            "host_auxtags",
+            {"host_auxtags_0": "", "host_auxtags_1": "snmp"},
+            _condition("tags", "all_of", ["snmp:snmp"]),
+            id="empty auxiliary tag is skipped",
+        ),
+        pytest.param(
+            "host_auxtags",
+            {"host_auxtags_0": "snmp", "host_auxtags_2": "tcp"},
+            _condition("tags", "all_of", ["snmp:snmp"]),
+            id="auxiliary tags end at the first number missing",
         ),
         pytest.param(
             "siteopt",
@@ -253,6 +342,18 @@ def test_legacy_filter_translates_to_condition_on_its_field(
             {"host_ctc_regex": {"neg_host_ctc_regex": "on"}}, id="negation without a pattern"
         ),
         pytest.param({"hostnameoralias": {"hostnameoralias": ""}}, id="no text in either field"),
+        pytest.param({"address_family": {"address_family": "both"}}, id="either address family"),
+        pytest.param({"address_family": {"address_family": "7"}}, id="unknown address family"),
+        pytest.param({"address_families": {"address_families": ""}}, id="ignored address families"),
+        pytest.param(
+            {"address_families": {"address_families": "7"}}, id="unknown address families"
+        ),
+        pytest.param({"host_auxtags": {"host_auxtags_0": ""}}, id="no auxiliary tag"),
+        pytest.param(
+            {"host_auxtags": {"host_auxtags_0_neg": "on", "host_auxtags_1": "snmp"}},
+            id="auxiliary tags ending before the first",
+        ),
+        pytest.param({"kubernetes_cluster": {"kubernetes_cluster": ""}}, id="no Kubernetes object"),
         pytest.param(
             {"hosts_having_service_problems": {"hosts_having_services_warn": ""}},
             id="no service problem to count",
@@ -312,6 +413,15 @@ def test_inactive_context_translates_to_no_filter(context: VisualContext) -> Non
         pytest.param(
             {"hostnameoralias": {"hostnameoralias": "web["}}, id="invalid name or alias regex"
         ),
+        pytest.param({"host_auxtags": {"host_auxtags_0": "a:b"}}, id="auxiliary tag with a colon"),
+        pytest.param(
+            {"host_auxtags": {"host_auxtags_0": "snmp", "host_auxtags_1": "tc*"}},
+            id="auxiliary tag the page would read as a prefix",
+        ),
+        pytest.param(
+            {"kubernetes_cluster": {"kubernetes_cluster": "prod*"}},
+            id="Kubernetes object the page would read as a prefix",
+        ),
         pytest.param(
             {"host_num_services": {"host_num_services_from": "1.5"}}, id="bound not a number"
         ),
@@ -338,6 +448,11 @@ def test_filter_without_equivalent_is_reported(context: VisualContext) -> None:
             id="service problem to count",
         ),
         pytest.param("hosts_having_service_problems", {}, False, id="no service problem"),
+        pytest.param("address_families", {"address_families": "both"}, True, id="address families"),
+        pytest.param("address_families", {"address_families": ""}, False, id="ignored families"),
+        pytest.param("host_auxtags", {"host_auxtags_0": "snmp"}, True, id="auxiliary tag"),
+        pytest.param("host_auxtags", {"host_auxtags_0": ""}, False, id="empty auxiliary tag"),
+        pytest.param("kubernetes_node", {"kubernetes_node": "n1"}, True, id="Kubernetes node"),
     ],
 )
 def test_filter_the_page_does_not_map_is_reported_only_if_it_restricts_anything(

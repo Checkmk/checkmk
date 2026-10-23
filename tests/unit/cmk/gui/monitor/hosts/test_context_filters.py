@@ -10,6 +10,7 @@ from cmk.gui.monitor.hosts._api._filters import (
     AndNode,
     BooleanCondition,
     FilterNode,
+    LabelChoiceCondition,
     NameChoiceCondition,
     NotNode,
     NumericCondition,
@@ -55,6 +56,29 @@ from cmk.gui.type_defs import VisualContext
             {"hostalias": {"hostalias": "Web"}},
             StringCondition(type="condition", field="alias", op="contains", value="Web"),
             id="host alias",
+        ),
+        pytest.param(
+            {"address_family": {"address_family": "4"}},
+            LabelChoiceCondition(type="condition", field="tags", op="all_of", value=["address_family:ip-v4-only"]),
+            id="address family",
+        ),
+        pytest.param(
+            {"address_families": {"address_families": "4_only"}},
+            AndNode(type="and", children=[
+                LabelChoiceCondition(type="condition", field="tags", op="all_of", value=["ip-v4:ip-v4"]),
+                NotNode(type="not", child=LabelChoiceCondition(type="condition", field="tags", op="all_of", value=["ip-v6:ip-v6"])),
+            ]),
+            id="address families with IPv4 only",
+        ),
+        pytest.param(
+            {"host_auxtags": {"host_auxtags_0": "snmp"}},
+            LabelChoiceCondition(type="condition", field="tags", op="all_of", value=["snmp:snmp"]),
+            id="auxiliary tag",
+        ),
+        pytest.param(
+            {"kubernetes_cluster": {"kubernetes_cluster": "prod:1"}},
+            LabelChoiceCondition(type="condition", field="labels", op="all_of", value=["cmk/kubernetes/cluster:prod:1"]),
+            id="Kubernetes cluster",
         ),
         pytest.param(
             {"hostnameoralias": {"hostnameoralias": "web"}},
@@ -187,6 +211,23 @@ def test_a_dashboard_service_problem_filter_counts_the_services_in_that_state(
     translation = translate_filters({"hosts_having_service_problems": {variable: "on"}})
 
     assert translation.filter == SiteScopedFilter(node=expected, sites=None, exclude_sites=False)
+
+
+@pytest.mark.parametrize(
+    "obj", ["cluster", "namespace", "node", "deployment", "daemonset", "statefulset"]
+)
+def test_a_dashboard_kubernetes_filter_becomes_a_condition_on_the_label_of_its_object(
+    obj: str,
+) -> None:
+    translation = translate_filters({f"kubernetes_{obj}": {f"kubernetes_{obj}": "prod"}})
+
+    assert translation.filter == SiteScopedFilter(
+        node=LabelChoiceCondition(
+            type="condition", field="labels", op="all_of", value=[f"cmk/kubernetes/{obj}:prod"]
+        ),
+        sites=None,
+        exclude_sites=False,
+    )
 
 
 @pytest.mark.parametrize(

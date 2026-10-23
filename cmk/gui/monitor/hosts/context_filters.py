@@ -16,6 +16,7 @@ from cmk.gui.type_defs import FilterName, VisualContext
 from ._api._filters import (
     BooleanField,
     FILTER_NODE,
+    LabelField,
     NameListField,
     NumericField,
     scope_filter_by_site,
@@ -24,7 +25,12 @@ from ._api._filters import (
 )
 
 type _HostField = (
-    StringField | NameListField | BooleanField | NumericField | Literal["site_id", "state"]
+    StringField
+    | NameListField
+    | BooleanField
+    | NumericField
+    | LabelField
+    | Literal["site_id", "state"]
 )
 
 _PAGE = PageFilterModel(tree=FILTER_NODE, check=scope_filter_by_site)
@@ -56,6 +62,15 @@ _FIELDS: Mapping[FilterName, _HostField | Mapping[str, _HostField]] = {
     "host_in_service_period": "in_service_period",
     "host_scheduled_downtime_depth": "in_downtime",
     "host_num_services": "num_services",
+    "address_family": "tags",
+    "address_families": "tags",
+    "host_auxtags": "tags",
+    "kubernetes_cluster": "labels",
+    "kubernetes_namespace": "labels",
+    "kubernetes_node": "labels",
+    "kubernetes_deployment": "labels",
+    "kubernetes_daemonset": "labels",
+    "kubernetes_statefulset": "labels",
 }
 
 

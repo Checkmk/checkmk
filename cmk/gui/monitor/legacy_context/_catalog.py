@@ -12,10 +12,14 @@ from cmk.gui.type_defs import FilterName
 
 from ._filters import (
     address,
+    address_families,
+    address_family,
     any_count_above_zero,
     any_text,
+    aux_tags,
     exact_text,
     flag,
+    label_value,
     LegacyFilter,
     MultiFieldFilter,
     name_list,
@@ -42,6 +46,8 @@ LEGACY_FILTERS: Mapping[FilterName, LegacyFilter | MultiFieldFilter] = {
     "hostalias": text("hostalias"),
     "hostnameoralias": any_text("hostnameoralias", roles=("name", "alias")),
     "host_address": address("host_address"),
+    "address_family": address_family("address_family"),
+    "address_families": address_families("address_families"),
     "opthostgroup": name_list("opthost_group"),
     "host_ctc": name_list("host_ctc", separator=None),
     "host_ctc_regex": text("host_ctc_regex", negatable=False),
@@ -64,4 +70,9 @@ LEGACY_FILTERS: Mapping[FilterName, LegacyFilter | MultiFieldFilter] = {
     "host_in_service_period": flag("is_host_in_service_period"),
     "host_scheduled_downtime_depth": flag("is_host_scheduled_downtime_depth"),
     "host_num_services": number_range("host_num_services"),
+    "host_auxtags": aux_tags("host_auxtags"),
+    **{
+        f"kubernetes_{obj}": label_value(f"kubernetes_{obj}", f"cmk/kubernetes/{obj}")
+        for obj in ("cluster", "namespace", "node", "deployment", "daemonset", "statefulset")
+    },
 }

@@ -20,6 +20,7 @@ IGNORED_TRISTATE = "-1"
 
 # The pages treat a trailing "*" as a prefix match, the legacy filters match it literally.
 _WILDCARD = "*"
+_LABEL_SEPARATOR = ":"
 
 type FilterJSON = dict[str, object]
 
@@ -181,6 +182,74 @@ def number_range(ident: str) -> LegacyFilter:
     return translate_number_range
 
 
+def address_family(var: str) -> LegacyFilter:
+    """The legacy filter for hosts configured with an IPv4-only ("4") or IPv6-only ("6") address
+    family. Dual-stack hosts match neither. Any other value, "both" among them, means no filter."""
+
+    def translate_address_family(value: FilterHTTPVariables, field: str) -> FilterJSON | None:
+        if (family := value.get(var, "")) not in ("4", "6"):
+            return None
+        return _condition(field, "all_of", [_label_pair("address_family", f"ip-v{family}-only")])
+
+    return translate_address_family
+
+
+def address_families(var: str) -> LegacyFilter:
+    """The legacy filter for the IP versions a host has an address of: "4" or "6" for those with
+    at least that one, "both" for those with either, "4_only" or "6_only" for those with just that
+    one. Any other value, "" among them, means no filter."""
+
+    def translate_address_families(value: FilterHTTPVariables, field: str) -> FilterJSON | None:
+        def has(tag: str) -> FilterJSON:
+            return _condition(field, "all_of", [tag])
+
+        match value.get(var, ""):
+            case "4":
+                return has(_IP_V4_TAG)
+            case "6":
+                return has(_IP_V6_TAG)
+            case "both":
+                return _condition(field, "one_of", [_IP_V4_TAG, _IP_V6_TAG])
+            case "4_only":
+                return all_of([has(_IP_V4_TAG), _not(has(_IP_V6_TAG))])
+            case "6_only":
+                return all_of([has(_IP_V6_TAG), _not(has(_IP_V4_TAG))])
+            case _:
+                return None
+
+    return translate_address_families
+
+
+def aux_tags(prefix: str) -> LegacyFilter:
+    """The legacy filter for auxiliary tags: a numbered variable for each tag a host has to have,
+    negated by a "_neg" variable of its own. Like in the legacy filter, an empty number is skipped
+    and the first number that is missing ends the list. An auxiliary tag is a tag of its own
+    group."""
+
+    def translate_aux_tags(value: FilterHTTPVariables, field: str) -> FilterJSON | None:
+        nodes: list[FilterJSON] = []
+        num = 0
+        while (tag := value.get(f"{prefix}_{num}")) is not None:
+            if tag:
+                node = _condition(field, "all_of", [_label_pair(tag, tag)])
+                nodes.append(_negate_if(node, bool(value.get(f"{prefix}_{num}_neg"))))
+            num += 1
+        return all_of(nodes)
+
+    return translate_aux_tags
+
+
+def label_value(var: str, key: str) -> LegacyFilter:
+    """A legacy filter for the value of the label ``key``: the hosts that have it."""
+
+    def translate_label_value(value: FilterHTTPVariables, field: str) -> FilterJSON | None:
+        if not (label := value.get(var, "")):
+            return None
+        return _condition(field, "all_of", [_label_pair(key, label)])
+
+    return translate_label_value
+
+
 def any_text(var: str, *, roles: Sequence[str]) -> MultiFieldFilter:
     """A legacy regular expression filter that matches if the text is in any of the fields of the
     ``roles``, e.g. a host's name or alias. It cannot be negated."""
@@ -247,11 +316,27 @@ def _condition(field: str, op: str, value: object) -> FilterJSON:
     return {"type": "condition", "field": field, "op": op, "value": value}
 
 
+def _label_pair(key: str, value: str) -> str:
+    """A label or tag as the pages write it. A page ends the key at the first colon and reads a
+    trailing "*" as a prefix match, where the legacy filters are exact."""
+    if not key or not value or _LABEL_SEPARATOR in key or value.endswith(_WILDCARD):
+        raise UntranslatableFilterError
+    return f"{key}{_LABEL_SEPARATOR}{value}"
+
+
+_IP_V4_TAG = _label_pair("ip-v4", "ip-v4")
+_IP_V6_TAG = _label_pair("ip-v6", "ip-v6")
+
+
 def _literal(names: Sequence[str]) -> list[str]:
     if any(name.endswith(_WILDCARD) for name in names):
         raise UntranslatableFilterError
     return list(names)
 
 
+def _not(node: FilterJSON) -> FilterJSON:
+    return {"type": "not", "child": node}
+
+
 def _negate_if(node: FilterJSON, negate: bool) -> FilterJSON:
-    return {"type": "not", "child": node} if negate else node
+    return _not(node) if negate else node

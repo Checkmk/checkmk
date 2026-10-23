@@ -1826,8 +1826,14 @@ class ACTestAutomationUserSecret(ACTest):
     @override
     def help(self) -> str:
         return _(
-            "With 2.4.0 (Werk #17344) it was made optional to store the secret of an automation user. "
-            "We do not recommend to store the secret for automation users with high privileges."
+            "Since 2.4.0 (Werk #17344), the secret of an automation user is only stored in "
+            "cleartext if <i>Store the secret in cleartext</i> is enabled. A stored secret can be "
+            "read by anyone with access to the site files or backups. Together with permissions "
+            "that allow running arbitrary code, this gives full control over the site.<br>"
+            "External tools and scripts do not need a stored secret, they keep the secret "
+            "themselves. Only Checkmk features that read the secret from the site need it, e.g. "
+            "the agent auto-registration rule or the special agent for BI aggregations. These "
+            "users only need the permissions of that feature, not the role administrator."
         )
 
     @staticmethod
@@ -1869,7 +1875,10 @@ class ACTestAutomationUserSecret(ACTest):
             yield ACSingleResult(
                 state=ACResultState.WARN,
                 text=_(
-                    "Automation user %(user_id)s has stored secret with %(count)d dangerous permission(s): %(permissions)s"
+                    "Automation user %(user_id)s has a stored secret and %(count)d dangerous "
+                    "permission(s): %(permissions)s. If no Checkmk feature reads the secret, "
+                    "disable 'Store the secret in cleartext' and generate a new secret. "
+                    "Otherwise, assign a role without these permissions."
                 )
                 % {
                     "user_id": user_id,

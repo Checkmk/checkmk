@@ -399,10 +399,10 @@ def _map_admin_states_exact_name(
 
     admin_states_dict = {}
     for val in admin_states:
-        if len(val) == 3:  # backwards compatibility
-            _, if_name, admin_state = val
+        if len(val) == 4:  # backwards compatibility
+            _, if_name, admin_state, _oper_state = val
         else:
-            if_name, admin_state = val
+            if_name, admin_state, _oper_state = val
         for sensor_id, descr in descriptions.items():
             if descr.startswith(if_name):
                 admin_states_dict[sensor_id] = _CISCO_TEMPERATURE_ADMIN_STATE_MAP.get(admin_state)

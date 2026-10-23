@@ -3136,7 +3136,7 @@ class EventStatus:
         with self.lock:
             to_delete = []
             for event in self._events:
-                if event["rule_id"] == rule["id"] and self.cancelling_match(
+                if self.creating_rule_id(event) == rule["id"] and self.cancelling_match(
                     match_groups, new_event, event, rule
                 ):
                     # Fill a few fields of the cancelled event with data from

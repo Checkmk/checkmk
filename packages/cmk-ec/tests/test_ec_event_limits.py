@@ -380,6 +380,28 @@ def test_missing_expected_messages_are_not_merged_into_the_overflow_event_of_the
     assert [event["count"] for event in event_status.events()] == [1, 1]
 
 
+def test_cancelling_message_does_not_cancel_the_overflow_event_of_its_rule(
+    event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
+) -> None:
+    # The overflow event has neither a host name nor match groups, and the rule doesn't compare the
+    # application when cancelling, so only the rule ID tells the overflow event apart.
+    rule = new_rule(
+        {
+            "match": "disk failed",
+            "match_ok": "disk ok",
+            "match_application": "smartd",
+            "cancel_application": "smartd",
+        }
+    )
+    event_limits = _only_limit("by_rule", ec.EventLimit(action="stop_overflow", limit=1))
+    _configure(event_server, config, history, event_limits, rule)
+    process_message(event_server, ec.Event(text="disk failed", application="smartd"))
+
+    process_message(event_server, ec.Event(text="disk ok", host=HostName(""), application="smartd"))
+
+    assert _texts_of_events(event_status) == ["<overflow>", "disk failed"]
+
+
 def test_messages_are_not_counted_into_an_overflow_event_of_an_older_version(
     event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
 ) -> None:

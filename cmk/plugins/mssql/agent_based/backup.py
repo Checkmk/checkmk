@@ -165,6 +165,7 @@ def check_mssql_backup(
     section_mssql_backup: SectionBackup | None,
     section_mssql_databases: SectionDatabases | None,
 ) -> CheckResult:
+    del(section_mssql_databases)
     data = section_mssql_backup.get(item)
     if data is None:
         # Assume general connection problem to the database, which is reported

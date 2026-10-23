@@ -52,7 +52,7 @@ def test_discovery_default() -> None:
     )
     assert not list(
         msb.discover_mssql_backup_per_type(
-            {"mode": "summary"}, _get_section(STRING_TABLE), STRING_TABLE_DATABASES
+            {"mode": "summary"}, _get_section(STRING_TABLE)
         )
     )
 
@@ -65,7 +65,7 @@ def test_discovery_single() -> None:
     )
     assert sorted(
         msb.discover_mssql_backup_per_type(
-            {"mode": "per_type"}, _get_section(STRING_TABLE), STRING_TABLE_DATABASES
+            {"mode": "per_type"}, _get_section(STRING_TABLE)
         )
     ) == sorted(
         [

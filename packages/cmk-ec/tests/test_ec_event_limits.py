@@ -61,6 +61,59 @@ def _texts_of_events(event_status: EventStatus) -> list[str]:
 
 
 @pytest.mark.parametrize("kind", _LIMIT_KINDS)
+def test_reached_limit_stops_creating_events(
+    event_server: EventServer,
+    event_status: EventStatus,
+    config: Config,
+    history: RecordingHistory,
+    kind: LimitKind,
+) -> None:
+    _configure(
+        event_server, config, history, _only_limit(kind, ec.EventLimit(action="stop", limit=2))
+    )
+
+    _process_messages(event_server, "1st", "2nd", "3rd", "4th")
+
+    assert _texts_of_events(event_status) == ["1st", "2nd"]
+
+
+@pytest.mark.parametrize("kind", _LIMIT_KINDS)
+def test_reached_limit_deletes_the_oldest_events(
+    event_server: EventServer,
+    event_status: EventStatus,
+    config: Config,
+    history: RecordingHistory,
+    kind: LimitKind,
+) -> None:
+    _configure(
+        event_server,
+        config,
+        history,
+        _only_limit(kind, ec.EventLimit(action="delete_oldest", limit=2)),
+    )
+
+    _process_messages(event_server, "1st", "2nd", "3rd", "4th")
+
+    assert _texts_of_events(event_status) == ["3rd", "4th"]
+
+
+def test_deleting_the_oldest_events_keeps_the_newest_one_even_with_a_zero_limit(
+    event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
+) -> None:
+    # Nobody validates settings written by hand.
+    _configure(
+        event_server,
+        config,
+        history,
+        _only_limit("overall", ec.EventLimit(action="delete_oldest", limit=0)),
+    )
+
+    _process_messages(event_server, "1st", "2nd")
+
+    assert _texts_of_events(event_status) == ["2nd"]
+
+
+@pytest.mark.parametrize("kind", _LIMIT_KINDS)
 def test_reached_limit_creates_an_overflow_event(
     event_server: EventServer,
     event_status: EventStatus,
@@ -101,6 +154,29 @@ def test_reaching_the_limit_again_creates_no_further_overflow_event_while_one_is
     _process_messages(event_server, "3rd")
 
     assert _texts_of_events(event_status) == ["<overflow>", "3rd"]
+
+
+@pytest.mark.parametrize("kind", _LIMIT_KINDS)
+def test_archiving_only_the_overflow_event_keeps_dropping_messages(
+    event_server: EventServer,
+    event_status: EventStatus,
+    config: Config,
+    history: RecordingHistory,
+    kind: LimitKind,
+) -> None:
+    _configure(
+        event_server,
+        config,
+        history,
+        _only_limit(kind, ec.EventLimit(action="stop_overflow", limit=2)),
+    )
+    _process_messages(event_server, "1st", "2nd")
+    [overflow_event] = [event for event in event_status.events() if "overflowed_limit" in event]
+    event_status.remove_event(overflow_event, "DELETE")
+
+    _process_messages(event_server, "3rd")
+
+    assert _texts_of_events(event_status) == ["1st", "2nd"]
 
 
 def test_message_cannot_pose_as_an_open_overflow_event(

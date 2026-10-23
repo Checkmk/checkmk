@@ -1665,24 +1665,22 @@ class EventServer(ECServerThread):
             {"type": ty, "num_open": num_already_open, "limit": limit},
         )
 
-        # Limit not reached: add new event
-        if num_already_open < limit:
-            num_already_open += 1  # after adding this event
+        num_open = num_already_open + 1  # after adding this event
 
-        # Limit even then still not reached: we are fine
-        if num_already_open < limit:
+        # Limit not reached even then: we are fine
+        if num_open < limit:
             return False
 
         # Delete oldest messages if that is the configure method of keeping the limit
         if action == "delete_oldest":
-            while num_already_open > limit:
+            while num_open > limit:
                 self._perfcounters.count("overflows")
                 self._event_status.remove_oldest_event(ty, event)
-                num_already_open -= 1
+                num_open -= 1
             return False
 
         # Limit reached already in the past: Simply drop silently
-        if num_already_open > limit:
+        if num_open > limit:
             # Just log in verbose mode! Otherwise log file will be flooded
             self._logger.log(VERBOSE, "  Skip processing because limit is already in effect")
             self._perfcounters.count("overflows")
@@ -2898,9 +2896,9 @@ class EventStatus:
     def remove_oldest_event(self, ty: LimitKind, event: Event) -> None:
         match ty:
             case "overall":
-                self._logger.log(VERBOSE, "  Removing oldest event")
-                oldest_event = self._events[0]
-                self.remove_event(oldest_event, "AUTODELETE")
+                if self._events:
+                    self._logger.log(VERBOSE, "  Removing oldest event")
+                    self.remove_event(self._events[0], "AUTODELETE")
             case "by_rule":
                 if event["rule_id"] is not None:
                     self._logger.log(

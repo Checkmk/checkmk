@@ -71,9 +71,9 @@ def _execute_cmd_and_validate_return_code(
 
 
 def _get_ec_rule_packs(
-    rule_id: str, title: str, state: State, match: str, limit: int = 0
+    rule_id: str, title: str, state: State, match: str, limit: int | None = None
 ) -> list[ECRulePackSpec]:
-    """EC rule to inject in the test-site"""
+    """EC rule to inject in the test-site, which stops creating events at the limit, if given"""
     rule = Rule(
         id=rule_id,
         description="",
@@ -87,10 +87,11 @@ def _get_ec_rule_packs(
         cancel_actions=[],
         cancel_action_phases="always",
         autodelete=False,
-        event_limit=EventLimit(action="None", limit=limit),
         match=match,
         invert_matching=False,
     )
+    if limit is not None:
+        rule["event_limit"] = EventLimit(action="stop", limit=limit)
     return [
         ECRulePackSpec(
             id=rule_id,

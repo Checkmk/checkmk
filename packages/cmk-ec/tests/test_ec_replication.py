@@ -283,6 +283,29 @@ def test_replication_slave_starts_despite_a_broken_saved_master_configuration(
     assert slave_status == takeover_status
 
 
+@pytest.mark.parametrize(
+    "saved_master_config",
+    [
+        pytest.param(None, id="missing"),
+        pytest.param("", id="empty, e.g. after an interrupted save"),
+    ],
+)
+def test_replication_slave_without_a_saved_master_configuration_logs_no_error(
+    settings: ec.Settings,
+    slave_status: SlaveStatus,
+    caplog: pytest.LogCaptureFixture,
+    saved_master_config: str | None,
+) -> None:
+    replication = ec.Replication(connect_timeout=10, interval=60, master=MASTER)
+    activate_config(settings, f"replication = {replication!r}\n")
+    if saved_master_config is not None:
+        settings.paths.master_config_file.value.write_text(saved_master_config)
+
+    load_configuration(settings, logging.getLogger("test_ec_replication"), slave_status)
+
+    assert [r.getMessage() for r in caplog.records if r.levelno >= logging.ERROR] == []
+
+
 def test_master_replicates_its_events(
     event_status: EventStatus, status_server: StatusServer
 ) -> None:

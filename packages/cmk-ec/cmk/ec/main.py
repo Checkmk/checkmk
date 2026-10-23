@@ -3594,21 +3594,15 @@ def replication_update_state(
 def save_master_config(
     settings: Settings, master: tuple[str, int], new_state: Mapping[str, object]
 ) -> None:
-    path = settings.paths.master_config_file.value
-    path_new = path.parent / (path.name + ".new")
-    path_new.write_text(
-        repr(
-            {
-                "master": master,
-                "rules": new_state["rules"],
-                "rule_packs": new_state["rule_packs"],
-                "actions": new_state["actions"],
-            }
-        )
-        + "\n",
-        encoding="utf-8",
+    cmk.ccc.store.save_object_to_file(
+        settings.paths.master_config_file.value,
+        {
+            "master": master,
+            "rules": new_state["rules"],
+            "rule_packs": new_state["rule_packs"],
+            "actions": new_state["actions"],
+        },
     )
-    path_new.rename(path)
 
 
 def _with_master_config(config: ConfigFromWATO, master_config: Mapping[str, Any]) -> ConfigFromWATO:
@@ -3628,7 +3622,10 @@ def load_master_config(settings: Settings, config: ConfigFromWATO, logger: Logge
     """
     path = settings.paths.master_config_file.value
     try:
-        master_config = ast.literal_eval(path.read_text(encoding="utf-8"))
+        # Like a missing file, an empty one left behind by an interrupted save yields None.
+        if (master_config := cmk.ccc.store.load_object_from_file(path, default=None)) is None:
+            logger.info("Replication: no previously saved master state available")
+            return False
         if _is_from_other_master(master_config, config):
             logger.info(
                 "Replication: ignoring the saved configuration of the previous master %(master)r",
@@ -3723,8 +3720,13 @@ def update_slave_status(
     path = settings.paths.slave_status_file.value
     if is_replication_slave(config):
         try:
-            slave_status.update(ast.literal_eval(path.read_text(encoding="utf-8")))
-        except Exception:
+            # Like a missing file, an empty one left behind by an interrupted save yields None.
+            saved_status = cmk.ccc.store.load_object_from_file(path, default=None)
+            if saved_status is not None:
+                slave_status.update(saved_status)
+        except Exception:  # e.g. a file edited by hand
+            saved_status = None
+        if saved_status is None:
             # A new slave starts syncing, but e.g. a slave which took over keeps doing so.
             if slave_status["mode"] == "master":
                 slave_status.update(default_slave_status_sync())

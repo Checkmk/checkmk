@@ -816,6 +816,11 @@ def test_split_syslog_structured_data_and_message_exception(sd_and_message: str)
             ),
             id="checkmk structured data without parameters",
         ),
+        pytest.param(
+            '[Checkmk@18662 sl="10" phase="delayed" live_until="tomorrow"]',
+            ({"sl": "10"}, ""),
+            id="only fields which checkmk sets itself",
+        ),
     ],
 )
 def test_parse_syslog_message_structured_data(

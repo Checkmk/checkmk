@@ -454,6 +454,13 @@ def _split_syslog_nonnil_sd_and_message(sd_and_message: str) -> tuple[str, str]:
     raise ValueError("Invalid RFC 5424 syslog message: structured data has the wrong format")
 
 
+# The fields of an event which Checkmk itself sets via structured data, see
+# cmk.ec.syslog.SyslogMessage. Any other field, e.g. the lifetime of the event, could break the EC.
+_CHECKMK_STRUCTURED_DATA_FIELDS = frozenset(
+    {"host", "application", "pid", "msg_id", "ipaddress", "sl"}
+)
+
+
 def parse_syslog_message_structured_data(structured_data: str) -> tuple[dict[str, str], str]:
     """Checks if the structured data contains Checkmk-specific data and extracts it if found."""
     checkmk_id = "Checkmk@18662"
@@ -466,7 +473,8 @@ def parse_syslog_message_structured_data(structured_data: str) -> tuple[dict[str
     event_update = {}
     for sd_param in findall(r' .*?=".*?(?<!\\)"', checkmk_elements[0]):
         name, value = sd_param[1:].split("=", 1)
-        event_update[name] = value[1:-1]
+        if name in _CHECKMK_STRUCTURED_DATA_FIELDS:
+            event_update[name] = value[1:-1]
     return _unescape_parsed_struc(event_update), structured_data.replace(checkmk_elements[0], "")
 
 

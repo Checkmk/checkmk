@@ -221,6 +221,21 @@ def test_a_host_name_which_cannot_be_translated_is_empty(
     assert [event["host"] for event in event_status.events()] == [""]
 
 
+def test_message_cannot_break_the_housekeeping_by_setting_the_lifetime_of_its_event(
+    event_server: EventServer, event_status: EventStatus, settings: ec.Settings, config: Config
+) -> None:
+    _reload_configuration(event_server, settings, config, [_rule_pack("pack", _rule("matching"))])
+    message = (
+        b"<134>1 2026-10-23T10:00:00Z fileserver smartd - - "
+        b'[Checkmk@18662 live_until="tomorrow"] disk full'
+    )
+    event_server.process_syslog_messages([message], None)
+
+    event_server.do_housekeeping()
+
+    assert [event["phase"] for event in event_status.events()] == ["open"]
+
+
 _RULE_OPTIMIZER = [
     pytest.param(True, id="with rule optimizer"),
     pytest.param(False, id="without rule optimizer"),

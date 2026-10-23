@@ -5,7 +5,7 @@
 
 import re
 from collections.abc import Callable, Mapping
-from typing import Annotated, Final, Literal
+from typing import Annotated, assert_never, Final, Literal
 
 from annotated_types import MinLen
 from pydantic import AfterValidator, PlainValidator, StringConstraints, TypeAdapter
@@ -277,6 +277,33 @@ class NotNode:
 type FilterNode = AndNode | OrNode | NotNode | ConditionNode
 
 FILTER_NODE: Final = TypeAdapter[FilterNode](FilterNode)
+
+
+def validate_host_columns_only(node: FilterNode) -> FilterNode:
+    """Accept only the conditions that map 1:1 onto host columns, so that a new condition has to
+    be added here before another table's filter tree takes it. 'site_id' restricts which sites are
+    queried, and 'folder' is matched against Setup's folder titles."""
+    match node:
+        case (
+            StringCondition()
+            | StateChoiceCondition()
+            | NumericCondition()
+            | TimestampCondition()
+            | BooleanCondition()
+            | LabelChoiceCondition()
+            | NameChoiceCondition()
+        ):
+            pass
+        case SiteChoiceCondition() | FolderCondition():
+            raise ValueError(f"A {node.field!r} condition is not supported here.")
+        case AndNode() | OrNode():
+            for child in node.children:
+                validate_host_columns_only(child)
+        case NotNode():
+            validate_host_columns_only(node.child)
+        case _:
+            assert_never(node)
+    return node
 
 
 def _no_folders() -> Mapping[str, str]:

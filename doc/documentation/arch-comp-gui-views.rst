@@ -162,3 +162,7 @@ Risks and technical debts
 * The filter vocabulary of the monitoring pages is defined in the API, the
   Livestatus translation and the frontend. A change has to touch all three.
   The instant report of All hosts reuses the API's model for it.
+* The services filter tree embeds the hosts filter tree, which lives in
+  ``cmk.gui.monitor.shared``, to filter services by their host, so a change to
+  the host filters also reaches the services listing. A new host condition is
+  only accepted there once ``validate_host_columns_only`` lets it in.

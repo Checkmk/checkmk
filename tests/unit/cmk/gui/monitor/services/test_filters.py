@@ -15,6 +15,7 @@ from cmk.gui.monitor.services._api._filters import (
     ServiceAndNode,
     ServiceBooleanCondition,
     ServiceFilterNode,
+    ServiceHostNode,
     ServiceLabelChoiceCondition,
     ServiceNameChoiceCondition,
     ServiceNotNode,
@@ -26,6 +27,16 @@ from cmk.gui.monitor.services._api._filters import (
     ServiceTimestampCondition,
     ServiceTimestampOp,
 )
+from cmk.gui.monitor.shared import (
+    BooleanCondition,
+    FolderCondition,
+    LabelChoiceCondition,
+    NameChoiceCondition,
+    NotNode,
+    SiteChoiceCondition,
+    StateChoiceCondition,
+)
+from cmk.gui.monitor.shared import FilterNode as HostFilterNode
 from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
@@ -608,3 +619,88 @@ def test_site_condition_accepts_a_site_that_is_not_configured() -> None:
     assert node == ServiceSiteChoiceCondition(
         type="condition", field="site_id", op="one_of", value=[SiteId("gone")]
     )
+
+
+@pytest.mark.parametrize(
+    "host_node, expected",
+    [
+        pytest.param(
+            StateChoiceCondition(type="condition", field="state", op="one_of", value=["DOWN"]),
+            "Filter: host_state = 1\nFilter: host_has_been_checked = 1\nAnd: 2",
+            id="host state",
+        ),
+        pytest.param(
+            BooleanCondition(type="condition", field="in_downtime", op="eq", value=True),
+            "Filter: host_scheduled_downtime_depth > 0",
+            id="host in downtime",
+        ),
+        pytest.param(
+            BooleanCondition(type="condition", field="active_checks_disabled", op="eq", value=True),
+            "Filter: host_modified_attributes_list >= active_checks_enabled\n"
+            "Filter: host_active_checks_enabled = 0\nAnd: 2",
+            id="host active checks disabled",
+        ),
+        pytest.param(
+            LabelChoiceCondition(
+                type="condition", field="labels", op="all_of", value=["env:prod", "os*"]
+            ),
+            "Filter: host_labels = 'env' 'prod'\nFilter: host_label_names ~ ^os\nAnd: 2",
+            id="host labels",
+        ),
+        pytest.param(
+            NameChoiceCondition(type="condition", field="groups", op="one_of", value=["linux"]),
+            "Filter: host_groups >= linux",
+            id="host groups",
+        ),
+        pytest.param(
+            NotNode(
+                type="not",
+                child=BooleanCondition(type="condition", field="acknowledged", op="eq", value=True),
+            ),
+            "Filter: host_acknowledged = 1\nNegate:",
+            id="negated host condition",
+        ),
+    ],
+)
+def test_query_builder_host_node_filters_the_host_columns(
+    host_node: HostFilterNode, expected: str
+) -> None:
+    condition = ServiceHostNode(type="host", child=host_node)
+    assert parse_as_livestatus_filter(condition) == expected
+
+
+@pytest.mark.usefixtures("request_context")
+def test_query_builder_host_node_stale_uses_the_host_staleness(set_config: SetConfig) -> None:
+    condition = ServiceHostNode(
+        type="host",
+        child=BooleanCondition(type="condition", field="stale", op="eq", value=True),
+    )
+    with set_config(staleness_threshold=3.5):
+        assert parse_as_livestatus_filter(condition) == "Filter: host_staleness >= 3.5"
+
+
+@pytest.mark.parametrize(
+    "host_node",
+    [
+        pytest.param(
+            SiteChoiceCondition(
+                type="condition", field="site_id", op="one_of", value=[SiteId("local")]
+            ),
+            id="site",
+        ),
+        pytest.param(
+            NotNode(
+                type="not",
+                child=FolderCondition(
+                    type="condition", field="folder", op="contains", value="Munich"
+                ),
+            ),
+            id="folder inside not",
+        ),
+    ],
+)
+def test_host_node_rejects_conditions_beyond_the_host_columns(host_node: object) -> None:
+    with pytest.raises(ValidationError):
+        TypeAdapter(ServiceFilterNode).validate_python(  # astrein: disable=pydantic-type-adapter
+            {"type": "host", "child": host_node}
+        )

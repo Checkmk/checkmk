@@ -12,6 +12,8 @@ from pydantic import AfterValidator, PlainValidator, StringConstraints, TypeAdap
 
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
+from cmk.gui.monitor.shared import FilterNode as HostFilterNode
+from cmk.gui.monitor.shared import livestatus_filter_lines, validate_host_columns_only
 from cmk.gui.monitor.site_scope import SiteScopedFilter, SiteScopeExtractor
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label
@@ -228,7 +230,23 @@ class ServiceNotNode:
     child: ServiceFilterNode = api_field(description="Child filter node")
 
 
-type ServiceFilterNode = ServiceAndNode | ServiceOrNode | ServiceNotNode | ServiceConditionNode
+@api_model(slots=False)
+class ServiceHostNode:
+    type: Literal["host"] = api_field(
+        description="Host scope: the host of the service must match the child", example="host"
+    )
+    child: Annotated[HostFilterNode, AfterValidator(validate_host_columns_only)] = api_field(
+        description=(
+            "Filter node on the host of the service, as the hosts listing takes it, except for "
+            "'site_id' and 'folder' conditions"
+        ),
+        example={"type": "condition", "field": "labels", "op": "all_of", "value": ["env:prod"]},
+    )
+
+
+type ServiceFilterNode = (
+    ServiceAndNode | ServiceOrNode | ServiceNotNode | ServiceHostNode | ServiceConditionNode
+)
 
 SERVICE_FILTER_NODE: Final = TypeAdapter[ServiceFilterNode](ServiceFilterNode)
 
@@ -404,6 +422,10 @@ def _accumulate_filters(node: ServiceFilterNode, filters: list[str]) -> None:
         case ServiceNotNode():
             _accumulate_filters(node.child, filters)
             filters.append("Negate:")
+
+        case ServiceHostNode():
+            # The services table carries every column of the host, named with a "host_" prefix.
+            filters.extend(livestatus_filter_lines(node.child, column_prefix="host_"))
 
 
 def _state_choice_clause(field: str, value: ServiceStateLabel) -> list[str]:

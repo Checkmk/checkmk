@@ -31,6 +31,7 @@ from ._host_filters import (
     StringOp,
     TimestampCondition,
     TimestampOp,
+    validate_host_columns_only,
 )
 from ._host_folders import folder_files_matching, folder_matching_filters
 from ._host_state import HostState, HostStateLabel
@@ -65,6 +66,7 @@ __all__ = [
     "StringOp",
     "TimestampCondition",
     "TimestampOp",
+    "validate_host_columns_only",
     "validate_label_pairs",
     "validate_uniqueness",
     "validate_unix_timestamp",

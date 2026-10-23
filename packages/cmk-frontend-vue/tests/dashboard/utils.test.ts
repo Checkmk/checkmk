@@ -116,4 +116,39 @@ describe('urlHandler', () => {
       expect(shareableLink).toBe(expected.toString())
     })
   })
+
+  describe('clone result', () => {
+    const clonedDashboardUrl = new URL(
+      'https://example.com/site/check_mk/dashboard.py?name=my_clone&owner=admin'
+    )
+
+    it.each(['cloned', 'cloned_as_responsive'] as const)(
+      'reads back the %s result a URL was marked with',
+      (cloneResult) => {
+        const markedUrl = urlHandler.withCloneResult(clonedDashboardUrl, cloneResult)
+
+        const readResult = urlHandler.readCloneResult(markedUrl)
+
+        expect(readResult).toBe(cloneResult)
+      }
+    )
+
+    it('reads no clone result once the mark is removed', () => {
+      const markedUrl = urlHandler.withCloneResult(clonedDashboardUrl, 'cloned_as_responsive')
+
+      const cleanUrl = urlHandler.withoutCloneResult(markedUrl)
+
+      expect(urlHandler.readCloneResult(cleanUrl)).toBeNull()
+    })
+  })
+
+  it('removes the dropped filters but keeps the carried ones', () => {
+    const url = new URL(
+      'https://example.com/site/check_mk/dashboard.py?name=main&host=web01&_dropped_filters=host_labels:no_such_key'
+    )
+
+    const cleanUrl = urlHandler.withoutDroppedFilters(url)
+
+    expect(cleanUrl.search).toBe('?name=main&host=web01')
+  })
 })

@@ -12,8 +12,8 @@ from typing import Final, override
 from cmk.gui.config import active_config
 from cmk.gui.role_types import UserRoleBase
 from cmk.gui.userdb import UserRolesConfigFile
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 from cmk.utils.log import VERBOSE
 
 _RENAMED_PERMISSIONS: Final[Mapping[str, str]] = {

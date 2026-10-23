@@ -43,7 +43,7 @@ metric_bazel_num_files = Metric(
 )
 metric_bazel_num_goroutines = Metric(
     name=f"{name_prefix_bazel_cache_status}num_goroutines",
-    title=Title("Number of Go routines"),
+    title=Title("Number of Go routines (cache status)"),
     unit=COUNT_UNIT,
     color=Color.PURPLE,
 )
@@ -185,7 +185,7 @@ metric_go_gc_duration_seconds_count = Metric(
 )
 metric_go_goroutines = Metric(
     name=f"{name_prefix_bazel_cache_go}go_goroutines",
-    title=Title("Number of Go routines"),
+    title=Title("Number of Go routines (Go runtime)"),
     unit=COUNT_UNIT,
     color=Color.PURPLE,
 )

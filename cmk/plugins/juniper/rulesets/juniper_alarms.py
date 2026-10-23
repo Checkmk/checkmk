@@ -35,7 +35,7 @@ def _parameter_formspec_juniper_alarms() -> Dictionary:
         elements={
             key: DictElement(
                 parameter_form=ServiceState(
-                    title=Title(value[1].title()),  # astrein: disable=localization-checker
+                    title=Title(value[1].title()),  # astrein: disable=localization
                     prefill=DefaultValue(value[0]),
                 )
             )

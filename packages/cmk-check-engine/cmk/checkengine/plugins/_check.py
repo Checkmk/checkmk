@@ -15,7 +15,7 @@ from cmk.discover_plugins import PluginLocation
 from cmk.ruleset_matcher.ruleset_name import RuleSetName
 from cmk.utils.servicename import Item
 
-from ._common import LegacyPluginLocation, RuleSetTypeName
+from ._common import RuleSetTypeName
 from ._sections import ParsedSectionName
 
 type FinalCheckResult = Iterable[IgnoreResults | Metric | Result | MetricV3Unstable]
@@ -53,7 +53,7 @@ class CheckPlugin(NamedTuple):
     check_default_parameters: Mapping[str, object] | None
     check_ruleset_name: RuleSetName | None
     cluster_check_function: FinalCheckFunction | None
-    location: PluginLocation | LegacyPluginLocation
+    location: PluginLocation
 
 
 class ServiceID(NamedTuple):

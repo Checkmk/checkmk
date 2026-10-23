@@ -1,7 +1,7 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 exports_files(["skel.permissions"])
 
@@ -11,6 +11,13 @@ py_binary(
     srcs = ["apache_pidof.py"],
     main = "apache_pidof.py",
     deps = [requirement("psutil")],
+)
+
+pkg_files(
+    name = "monitor_apache_bin",
+    srcs = ["cmk-monitor-apache"],
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "bin",
 )
 
 pkg_files(
@@ -25,6 +32,7 @@ pkg_files(
     # See also `//omd/packages/omd:hooks`.
     name = "omd_hooks",
     srcs = [
+        "APACHE_FORWARDED_HEADERS",
         "APACHE_TCP_ADDR",
         "APACHE_TCP_PORT",
     ],
@@ -150,6 +158,7 @@ pkg_tar(
         ":apache_pidof_bin",
         ":apache_skel_dirs",
         ":bin_htpasswd",
+        ":monitor_apache_bin",
         ":omd_hooks",
         ":share_omd",
     ] + select({
@@ -171,4 +180,9 @@ pkg_tar(
     }),
     stamp = 1,
     visibility = ["//omd:__subpackages__"],
+)
+
+sh_library(
+    name = "helpers",
+    srcs = ["cmk-monitor-apache"],
 )

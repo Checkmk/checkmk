@@ -22,8 +22,8 @@ from typing import Any, NotRequired, TypedDict
 
 import requests
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import (
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1 import (
     HostnameValidationAdapter,
     report_agent_crashes,
     vcrtrace,
@@ -116,6 +116,12 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     )
     parser_add_secret_option(
         parser, long=f"--{PASSWORD_OPTION}", required=True, help="password for that account"
+    )
+    parser.add_argument(
+        "--api-version",
+        choices=("v4", "legacy"),
+        default="legacy",
+        help="Nutanix API to query: v4 (Prism Central only) or legacy v1/v2 (default=legacy)",
     )
     cert_args = parser.add_mutually_exclusive_group()
     cert_args.add_argument(
@@ -231,6 +237,10 @@ def output_entities(entities: dict[str, Any], target_name: str) -> None:
 def agent_prism_main(args: argparse.Namespace) -> int:
     """Establish a connection to a Prism server and process containers, alerts, clusters and
     storage_pools"""
+    if args.api_version == "v4":
+        sys.stderr.write("Nutanix API v4 is not implemented yet\n")
+        return 1
+
     try:
         gateway_objs = fetch_from_gateway(
             server=args.server,

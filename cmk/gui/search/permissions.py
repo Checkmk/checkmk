@@ -33,3 +33,18 @@ class SearchPermissionsHandlerRegistry(Registry[SearchPermissionsHandlerFactory]
 
 
 search_permissions_handler_registry = SearchPermissionsHandlerRegistry()
+
+
+@dataclass(frozen=True)
+class CategoryPermissionsHandlerFactory:
+    category: str
+    build: Callable[[PageContext], SearchPermissionsHandler]
+
+
+class CategoryPermissionsHandlerRegistry(Registry[CategoryPermissionsHandlerFactory]):
+    @override
+    def plugin_name(self, instance: CategoryPermissionsHandlerFactory) -> str:
+        return instance.category
+
+
+category_permissions_handler_registry = CategoryPermissionsHandlerRegistry()

@@ -18,10 +18,9 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.ddn_s2a.lib import parse_ddn_s2a_api_response
 
 Section = Mapping[str, str]
@@ -29,10 +28,6 @@ Section = Mapping[str, str]
 
 def parse_ddn_s2a_uptime(string_table: StringTable) -> Section:
     return {key: value[0] for key, value in parse_ddn_s2a_api_response(string_table).items()}
-
-
-def discover_ddn_s2a_uptime(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_ddn_s2a_uptime(params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -66,7 +61,7 @@ check_plugin_ddn_s2a_uptime = CheckPlugin(
     # We don't use "Uptime" as a service name here, because this value is
     # different from the uptime value supplied via SNMP.
     service_name="DDN S2A Power-On Time",
-    discovery_function=discover_ddn_s2a_uptime,
+    discovery_function=discover_one_service,
     check_function=check_ddn_s2a_uptime,
     check_ruleset_name="uptime",
     check_default_parameters={},

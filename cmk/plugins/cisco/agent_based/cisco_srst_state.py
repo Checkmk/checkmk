@@ -15,22 +15,17 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     contains,
-    DiscoveryResult,
     equals,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 # .1.3.6.1.4.1.9.9.441.1.3.1 CISCO-SRST-MIB::csrstState (1: active, 2: inactive)
 # .1.3.6.1.4.1.9.9.441.1.3.4 CISCO-SRST-MIB::csrstTotalUpTime
-
-
-def discover_cisco_srst_state(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_cisco_srst_state(section: StringTable) -> CheckResult:
@@ -73,6 +68,6 @@ snmp_section_cisco_srst_state = SimpleSNMPSection(
 check_plugin_cisco_srst_state = CheckPlugin(
     name="cisco_srst_state",
     service_name="SRST State",
-    discovery_function=discover_cisco_srst_state,
+    discovery_function=discover_one_service,
     check_function=check_cisco_srst_state,
 )

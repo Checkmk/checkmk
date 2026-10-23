@@ -1,9 +1,10 @@
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@cmk_requirements//:requirements.bzl", "all_whl_requirements", "requirement")
 load("@gazelle//:def.bzl", "gazelle")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@npm//:defs.bzl", "npm_link_all_packages")
@@ -34,6 +35,8 @@ exports_files(
         "defines.make",
         "host.Cargo.lock.bazel",
         "module_layers.toml",
+        "mypy-gpl.toml",
+        "package_versions.bzl",
         "pnpm-lock.yaml",
         "pyproject.toml",
         "requirements.txt",
@@ -70,6 +73,12 @@ filegroup(
     name = "buildifier_config",
     srcs = [".buildifier.json"],
     visibility = ["//visibility:public"],
+)
+
+# For editors and plain `prettier` runs only; Bazel uses bazel/tools/prettier.config.cjs.
+filegroup(
+    name = "prettier_config",
+    srcs = ["prettier.config.cjs"],
 )
 
 npm_link_all_packages(name = "node_modules")
@@ -117,6 +126,61 @@ config_setting(
     visibility = ["//visibility:public"],
 )
 
+# Mirrors the Jenkins DISABLE_CMK_DISTRO_PACKAGE_SIGNING job parameter: the
+# check-mk-agent .rpm bundled in //agents:agents is only signed if
+# --//bazel/rules:signing_key_file is set (see agents/BUILD). Release packages
+# refuse to build without a key, unless signing is disabled with
+# --//:disable_agent_package_signing=true or artifacts are faked.
+bool_flag(
+    name = "disable_agent_package_signing",
+    build_setting_default = False,
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "agent_package_signing_disabled",
+    flag_values = {":disable_agent_package_signing": "True"},
+    visibility = ["//visibility:public"],
+)
+
+# //agents:agents bundles the unsigned .rpm if signing is disabled, artifacts
+# are faked, or no signing key is configured. The latter keeps everything
+# that merely analyses or tests the agent packages (SBOM, license checks,
+# ...) usable without a key. Release packages are guarded separately, see
+# :agent_package_signing_missing.
+selects.config_setting_group(
+    name = "agent_package_signing_effectively_disabled",
+    match_any = [
+        ":agent_package_signing_disabled",
+        ":use_fake_artifacts_enabled",
+        "//bazel/rules:signing_key_file_unset",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Neither is signing disabled nor are artifacts faked.
+config_setting(
+    name = "agent_package_signing_required",
+    flag_values = {
+        ":disable_agent_package_signing": "False",
+        ":use_faked_artifacts": "False",
+    },
+)
+
+# The unsigned agent .rpm is used although signing is required, e.g. because
+# no signing key is configured. Release packages are incompatible then, so
+# they never silently ship an unsigned .rpm. Derived from
+# :agent_package_signing_effectively_disabled, so any further reason to fall
+# back to the unsigned .rpm refuses release packages, too.
+selects.config_setting_group(
+    name = "agent_package_signing_missing",
+    match_all = [
+        ":agent_package_signing_effectively_disabled",
+        ":agent_package_signing_required",
+    ],
+    visibility = ["//visibility:public"],
+)
+
 config_setting(
     name = "gpl_repo",
     flag_values = {":repo_license": "gpl"},
@@ -153,6 +217,8 @@ refresh_compile_commands(
     ],
     targets = {
         # target: build-flags
+        "//agents/wnx:check_mk_service-windows": "--platforms=//bazel/platforms:x86_64-windows-msvc",
+        "//agents/wnx:watest-windows": "--platforms=//bazel/platforms:x86_64-windows-msvc",
         "//non-free/packages/cmc:all": "",
         "//packages/livestatus:all": "",
         "//packages/neb:all": "",
@@ -164,7 +230,7 @@ write_file(
     name = "bazel-requirements-constraints",
     out = "bazel-requirements-constraints.txt",
     content = [
-        "ruff==0.16.7",  # keep in sync with the multitool hub % RUFF_VERSION,
+        "ruff==0.17.1",  # keep in sync with the multitool hub % RUFF_VERSION,
         "protobuf==%s" % PROTOBUF_PYTHON_VERSION,
     ],
 )
@@ -252,6 +318,7 @@ multirun(
         ":requirements",
         ":community_requirements",
         ":runtime_requirements",
+        "//agents/modules/windows:requirements_windows",
     ] + select({
         "@//:gpl+nonfree_repo": ["//omd/non-free/relay:requirements"],
         "@//:gpl_repo": [],
@@ -267,12 +334,16 @@ test_suite(
         ":community_requirements_test",
         ":requirements_test",
         ":runtime_requirements_test",
+        "//agents/modules/windows:requirements_windows_test",
     ],
 )
 
 test_suite(
     name = "py_requirements_test_gpl",
-    tests = [":community_requirements_test"],
+    tests = [
+        ":community_requirements_test",
+        "//agents/modules/windows:requirements_windows_test",
+    ],
 )
 
 write_file(
@@ -316,11 +387,22 @@ create_venv(
     # https://github.com/bazel-contrib/rules_uv/issues/163
     # We use gcc for compiling c extensions though
     env = {"CC": "gcc"},
+    # Install only the wheels Bazel already fetched for @cmk_requirements (through the
+    # bazel-registry mirror and the repository cache), so building the venv never
+    # reaches pypi.org, whose outages from CI would otherwise fail the venv.
+    find_links = all_whl_requirements,
     requirements_txt = select({
         "@//:gpl+nonfree_repo": ":requirements.txt",
         "@//:gpl_repo": ":community-requirements.txt",
     }),
     site_packages_extra_files = [":sitecustomize.py"],
+    uv_args = [
+        "--no-index",
+        # The lock pins sdist hashes for the few sdist-only packages, which the wheels
+        # rules_python built from them cannot match. Bazel already verified every
+        # download against the lock.
+        "--no-verify-hashes",
+    ],
     whls = [
         "@rrdtool//:rrdtool_python_wheel",
         "//packages/cmk-shared-typing:wheel",
@@ -457,6 +539,7 @@ js_library(
         # fs.readdirSync, which means we need to make this dependency explicit for the sandbox
         "//packages/cmk-frontend:eslintrc",
         "//packages/cmk-frontend-vue:eslintrc",
+        "//packages/cmk-profiling:eslintrc",
         "//packages/cmk-ui-library:eslintrc",
     ],
 )
@@ -497,6 +580,7 @@ deploy_python(
 
 deploy_python_drift_test(
     name = "deploy-python-drift-test",
-    product = "//omd:deps_packages",
+    product = "//omd:deps_packages_base",
+    tags = ["no-remote-cache"],
     whls = EDITION_WHEELS,
 )

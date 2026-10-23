@@ -8,12 +8,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.schemata.section import PodLifeCycle
 
 
@@ -32,10 +31,6 @@ agent_section_kube_pod_lifecycle_v1 = AgentSection(
 )
 
 
-def discovery_kube_pod_phase(section: PodLifeCycle) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_kube_pod_phase(section: PodLifeCycle) -> CheckResult:
     yield Result(state=State.OK, summary=section.phase.title())
 
@@ -44,6 +39,6 @@ check_plugin_kube_pod_phase = CheckPlugin(
     name="kube_pod_phase",
     service_name="Phase",
     sections=["kube_pod_lifecycle"],
-    discovery_function=discovery_kube_pod_phase,
+    discovery_function=discover_one_service,
     check_function=check_kube_pod_phase,
 )

@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { getLocalTimeZone } from '@internationalized/date'
 import type { IconNames } from 'cmk-shared-typing/typescript/icon'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
@@ -24,7 +25,7 @@ export const addToContainer = async (
   specification: Record<string, unknown>,
   internal: string
 ) => {
-  unwrap(
+  const { redirect_url: redirectUrl } = unwrap(
     await client.POST(_ADD_TO_CONTAINER_URL, {
       params: {
         header: {
@@ -39,6 +40,7 @@ export const addToContainer = async (
       }
     })
   )
+  window.location.href = redirectUrl
 }
 
 export const addToVisual = async (
@@ -46,7 +48,7 @@ export const addToVisual = async (
   visualName: string,
   specification: Record<string, unknown>
 ) => {
-  unwrap(
+  const { redirect_url: redirectUrl } = unwrap(
     await client.POST(_ADD_TO_VISUAL_URL, {
       params: {
         header: {
@@ -60,6 +62,7 @@ export const addToVisual = async (
       }
     })
   )
+  window.location.href = redirectUrl
 }
 
 export const graphExport = async (
@@ -79,7 +82,14 @@ export const graphExport = async (
         target: page,
         consolidation_function: displayed.consolidationFunction,
         time_start: displayed.timeStart,
-        time_end: displayed.timeEnd
+        time_end: displayed.timeEnd,
+        // The zone the graph's time axis is labelled in, so an exported image reads the same.
+        time_zone: getLocalTimeZone(),
+        // y_range_min/y_range_max are omittable, not nullable: an absent range must be a missing
+        // key, never an explicit `null`.
+        ...(displayed.valueRange
+          ? { y_range_min: displayed.valueRange.min, y_range_max: displayed.valueRange.max }
+          : {})
       }
     })
   )

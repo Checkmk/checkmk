@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import html
+from collections.abc import Mapping
 
 import lxml.html
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from .error import WerkError
 from .markup import markdown_to_html
-from .models import WerkV2, WerkV3
 from .parse import WerkV2ParseResult, WerkV3ParseResult
 
 VALID_TAGS = {
@@ -42,33 +42,22 @@ VALID_TAGS = {
 }
 
 
-def load_werk_v3(parsed: WerkV3ParseResult) -> WerkV3:
-    # TODO: c&p from v2
+def _werk_data(parsed: WerkV2ParseResult | WerkV3ParseResult) -> Mapping[str, object]:
     description = markdown_to_html(parsed.description)
     _check_html(description)
-    werk = {**parsed.metadata, "__version__": "3", "description": description}
+    return {**parsed.metadata, "description": description}
 
+
+def load_werk_model[WerkModel: BaseModel](
+    model: type[WerkModel], parsed: WerkV2ParseResult | WerkV3ParseResult
+) -> WerkModel:
+    data = _werk_data(parsed)
     try:
-        result = WerkV3.model_validate(werk)
-        result.title = _format_title(result.title)
+        if isinstance(title := data.get("title"), str):
+            data = {**data, "title": _format_title(title)}
+        return model.model_validate(data)
     except (ValidationError, WerkError) as e:
-        raise WerkError(f"Error validating werk:\n{werk}\nerror:\n{e}") from e
-
-    return result
-
-
-def load_werk_v2(parsed: WerkV2ParseResult) -> WerkV2:
-    description = markdown_to_html(parsed.description)
-    _check_html(description)
-    werk = {**parsed.metadata, "__version__": "2", "description": description}
-
-    try:
-        result = WerkV2.model_validate(werk)
-        result.title = _format_title(result.title)
-    except (ValidationError, WerkError) as e:
-        raise WerkError(f"Error validating werk:\n{werk}\nerror:\n{e}") from e
-
-    return result
+        raise WerkError(f"Error validating werk:\n{data}\nerror:\n{e}") from e
 
 
 def _format_title(string: str) -> str:

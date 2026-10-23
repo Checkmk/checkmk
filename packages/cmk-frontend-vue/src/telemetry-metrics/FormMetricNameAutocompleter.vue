@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import {
   ErrorResponse,
@@ -12,28 +13,18 @@ import {
   WarningResponse,
   flattenSuggestions
 } from 'cmk-ui-library/components/CmkSuggestions'
-import { fetchRestAPIDeprecated } from 'cmk-ui-library/lib/cmkFetch'
 import type { CmkError } from 'cmk-ui-library/lib/error'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import DropdownClearButton from './DropdownClearButton.vue'
 
 const { _t } = usei18n()
 
-const METRIC_NAMES_API =
-  'api/internal/domain-types/telemetry_metrics/actions/names_with_types/invoke'
-
-interface MetricNameChoice {
-  name: string
-  types: string[]
-}
-
-interface MetricNamesResponse {
-  choices: MetricNameChoice[]
-  warning?: string | null
-}
+type MetricNameChoice = components['schemas']['_MetricNameChoice']
+type MetricNamesResponse = components['schemas']['_MetricNamesResponse']
 
 defineProps<{
   placeholder: TranslatedString
@@ -85,9 +76,12 @@ async function fetchMetricNames(
 ): Promise<Response | WarningResponse | ErrorResponse> {
   let result: MetricNamesResponse
   try {
-    const response = await fetchRestAPIDeprecated(METRIC_NAMES_API, 'POST', { value: query })
-    await response.raiseForStatus()
-    result = (await response.json()) as MetricNamesResponse
+    result = unwrap(
+      await client.POST('/domain-types/telemetry_metrics/actions/names_with_types/invoke', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body: { value: query }
+      })
+    )
   } catch (e: unknown) {
     return new ErrorResponse((e as CmkError)?.message || _t('Unknown error'))
   }

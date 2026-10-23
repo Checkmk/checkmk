@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 class AddAlert(CmkPage):
     """Represent the page `Setup -> Events -> Alerts -> Add alert`.
 
-    Hosts the creation wizard. Only its first step, naming the alert and selecting the
-    custom services it applies to, is implemented; the threshold step is a placeholder.
+    Hosts the creation wizard: naming the alert, selecting the custom services it
+    applies to, then defining its thresholds.
     """
 
     page_title = "Add alert"
@@ -58,13 +58,17 @@ class AddAlert(CmkPage):
         )
 
     @property
+    def active_step(self) -> Locator:
+        return self.main_area.locator("ol.cmk-wizard").locator('li[aria-current="step"]')
+
+    @property
     def next_step_button(self) -> Locator:
-        return self.main_area.locator().get_by_role("button", name="Next step")
+        return self.active_step.get_by_role("button", name="Next step")
 
     @property
     def threshold_step_content(self) -> Locator:
         return self.main_area.locator().get_by_text(
-            re.compile("Defining the threshold and saving the alert")
+            "Set the default levels of the selected custom services."
         )
 
     @property
@@ -74,6 +78,14 @@ class AddAlert(CmkPage):
         The dropdown teleports it to the document body, which `main_area` covers.
         """
         return self.main_area.locator().get_by_role("listbox")
+
+    def complete_name_step(self, name: str) -> None:
+        logger.info("Name the alert '%s'", name)
+        self.alert_name_input.fill(name)
+        self.next_step_button.click()
+        expect(
+            self.service_name_select, message="The wizard did not move on to the service step"
+        ).to_be_visible()
 
     def select_service_name(self, name: str) -> None:
         """Choose a discovered service name, or commit `name` as typed if none matches."""

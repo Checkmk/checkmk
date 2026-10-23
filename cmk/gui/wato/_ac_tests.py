@@ -7,7 +7,7 @@ import abc
 import multiprocessing
 import os
 import subprocess
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import override
 
@@ -18,13 +18,13 @@ import cmk.utils.paths
 import cmk.utils.render
 from cmk.backup.gui.handler import BackupConfig
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import get_omd_config, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
-from cmk.gui.i18n import _
-from cmk.gui.permissions import permission_registry
+from cmk.gui.i18n import _, ungettext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.site_config import (
     distributed_setup_remote_sites,
     has_distributed_setup_remote_sites,
@@ -44,7 +44,7 @@ from cmk.gui.watolib.analyze_configuration import (
 from cmk.gui.watolib.check_mk_automations import find_unknown_check_parameter_rule_sets
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, SingleRulesetRecursively
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.livestatus_client import LocalConnection, SiteConfiguration, SiteConfigurations
@@ -53,6 +53,7 @@ from cmk.utils.paths import (
     local_gui_plugins_dir,
     local_pnp_templates_dir,
     local_web_dir,
+    web_dir,
 )
 
 # Disable python warnings in background job output or logs like "Unverified
@@ -68,6 +69,7 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestLivestatusSecured)
     ac_test_registry.register(ACTestNumberOfUsers)
     ac_test_registry.register(ACTestHTTPSecured)
+    ac_test_registry.register(ACTestApacheForwardedHeaders)
     ac_test_registry.register(ACTestBackupConfigured)
     ac_test_registry.register(ACTestBackupNotEncryptedConfigured)
     ac_test_registry.register(ACTestEscapeHTMLDisabled)
@@ -91,6 +93,7 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestUnexpectedAllowedIPRanges)
     ac_test_registry.register(ACTestCheckMKCheckerNumber)
     ac_test_registry.register(ACTestAutomationUserSecret)
+    ac_test_registry.register(ACTestShadowedWebFiles)
 
 
 class ACTestPersistentConnections(ACTest):
@@ -117,16 +120,11 @@ class ACTestPersistentConnections(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        # This check is only executed on the central instance of multisite setups
-        return len(active_config.sites) > 1
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        yield from (
-            self._check_site(site_id, active_config.sites[site_id])
-            for site_id in active_config.sites
-        )
+        # This check is only executed on the central instance of multisite setups
+        if len(config.sites) <= 1:
+            return
+        yield from (self._check_site(site_id, config.sites[site_id]) for site_id in config.sites)
 
     def _check_site(self, site_id: SiteId, site_config: SiteConfiguration) -> ACSingleResult:
         persist = site_config.get("persist", False)
@@ -180,15 +178,11 @@ class ACTestLiveproxyd(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        # This check is only executed on the central instance of multisite setups
-        return len(active_config.sites) > 1
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        yield from (
-            self._check_site(site_id, active_config.sites) for site_id in active_config.sites
-        )
+        # This check is only executed on the central instance of multisite setups
+        if len(config.sites) <= 1:
+            return
+        yield from (self._check_site(site_id, config.sites) for site_id in config.sites)
 
     def _check_site(self, site_id: SiteId, site_configs: SiteConfigurations) -> ACSingleResult:
         if _site_is_using_livestatus_proxy(site_id):
@@ -239,10 +233,6 @@ class ACTestLivestatusUsage(ACTest):
             "Consider increasing the number of parallel Livestatus connections or track down "
             "the clients to check whether or not you can reduce the usage somehow.</p>"
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -312,10 +302,6 @@ class ACTestTmpfs(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if self._tmpfs_mounted(site_id):
             yield ACSingleResult(
@@ -366,25 +352,15 @@ class ACTestLivestatusSecured(ACTest):
             "gathered in one site to the central site. Since Checkmk 1.6, it is natively "
             "possible and highly recommended to encrypt this Livestatus traffic.</p> "
             "<p>This can be enabled using the global setting "
-            '<a href="wato.py?mode=edit_configvar&varname=site_livestatus_tcp">Access to Livestatus via TCP</a>. Before enabling this, you should ensure that all your Livestatus clients '
+            '<a href="global_settings.py?varname=site_livestatus_tcp">Access to Livestatus via TCP</a>. Before enabling this, you should ensure that all your Livestatus clients '
             "are able to handle the SSL encrypted Livestatus communication. Have a look at "
             '<a href="werk.py?werk=7017">Werk #7017</a> for further information.</p>'
         )
 
     @override
-    def is_relevant(self) -> bool:
-        cfg = ConfigDomainOMD().default_globals()
-        return bool(cfg["site_livestatus_tcp"])
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         cfg = ConfigDomainOMD().default_globals()
         if not cfg["site_livestatus_tcp"]:
-            yield ACSingleResult(
-                state=ACResultState.OK,
-                text=_("Livestatus network traffic is encrypted"),
-                site_id=site_id,
-            )
             return
 
         if not cfg["site_livestatus_tcp"]["tls"]:
@@ -413,10 +389,6 @@ class ACTestNumberOfUsers(ACTest):
             "Please review the filter configuration of the LDAP sync. Maybe you can "
             "decrease the sync scope to get a smaller number of users.</p>"
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -463,14 +435,11 @@ class ACTestHTTPSecured(ACTest):
             )
             + " "
             + _(
-                'Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "https"</tt> in '
-                "your system Apache configuration to tell the Checkmk GUI about the SSL setup."
+                "If your system Apache terminates TLS itself, or sits behind a proxy or load "
+                "balancer that does, the 'Apache X-Forwarded-Proto/-Ssl headers' test covers "
+                "whether the Checkmk GUI is correctly told about it."
             )
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -484,6 +453,110 @@ class ACTestHTTPSecured(ACTest):
             yield ACSingleResult(
                 state=ACResultState.WARN,
                 text=_("Site is using plain HTTP. Consider enabling HTTPS."),
+                site_id=site_id,
+            )
+
+
+_APACHE_FORWARDED_HEADERS_SEARCH_DIRS = (
+    Path("/etc/apache2"),
+    Path("/etc/httpd"),
+)
+
+
+def _manual_forwarded_headers_files(search_dirs: Iterable[Path]) -> list[Path]:
+    """Best-effort scan of well-known system Apache config locations for a manually configured
+    RequestHeader for X-Forwarded-Proto/X-Forwarded-Ssl. An admin who put it somewhere else, or
+    behind a variable/include Apache can't be statically resolved, won't be caught."""
+    found = []
+    for root in search_dirs:
+        if not root.is_dir():
+            continue
+        for candidate in root.rglob("*.conf"):
+            try:
+                content = candidate.read_text()
+            except OSError:
+                continue
+            if "X-Forwarded-Proto" in content or "X-Forwarded-Ssl" in content:
+                found.append(candidate)
+    return found
+
+
+class ACTestApacheForwardedHeaders(ACTest):
+    def __init__(
+        self,
+        omd_root: Path | None = None,
+        search_dirs: Iterable[Path] | None = None,
+    ) -> None:
+        self._omd_root = omd_root or cmk.utils.paths.omd_root
+        self._search_dirs = (
+            _APACHE_FORWARDED_HEADERS_SEARCH_DIRS if search_dirs is None else list(search_dirs)
+        )
+
+    @override
+    def category(self) -> str:
+        return ACTestCategories.security
+
+    @override
+    def title(self) -> str:
+        return _("Apache X-Forwarded-Proto/-Ssl headers")
+
+    @override
+    def help(self) -> str:
+        return (
+            _(
+                "Checkmk's OAuth and MCP endpoints need to know whether the original client "
+                "request arrived via HTTP or HTTPS. By default (<tt>APACHE_FORWARDED_HEADERS "
+                "auto</tt>), the system Apache sets the X-Forwarded-Proto and X-Forwarded-Ssl "
+                "headers for the site itself, based on what it sees on its own connection."
+            )
+            + " "
+            + _(
+                "If your system Apache sits behind another proxy or load balancer that "
+                "terminates TLS and forwards plain HTTP to it, that automatic value would be "
+                "wrong. Run <tt>omd config set APACHE_FORWARDED_HEADERS manual</tt> for the "
+                "site and set the headers yourself in the system Apache configuration instead, "
+                'e.g. <tt>RequestHeader set X-Forwarded-Proto "https"</tt>.'
+            )
+        )
+
+    @override
+    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        mode = get_omd_config(self._omd_root)["CONFIG_APACHE_FORWARDED_HEADERS"]
+        manual_files = _manual_forwarded_headers_files(self._search_dirs)
+
+        if mode == "auto":
+            if manual_files:
+                yield ACSingleResult(
+                    state=ACResultState.WARN,
+                    text=_(
+                        "Found a RequestHeader for X-Forwarded-Proto/X-Forwarded-Ssl in "
+                        "%(files)s. Checkmk already sets this header itself; remove the manual "
+                        "entry to avoid duplicate or conflicting configuration, or set "
+                        "APACHE_FORWARDED_HEADERS to 'manual' if this Apache needs it."
+                    )
+                    % {"files": ", ".join(str(path) for path in manual_files)},
+                    site_id=site_id,
+                )
+            else:
+                yield ACSingleResult(
+                    state=ACResultState.OK,
+                    text=_("X-Forwarded-Proto/-Ssl are set automatically"),
+                    site_id=site_id,
+                )
+        elif manual_files:
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_("X-Forwarded-Proto/-Ssl are configured manually, as configured"),
+                site_id=site_id,
+            )
+        else:
+            yield ACSingleResult(
+                state=ACResultState.WARN,
+                text=_(
+                    "APACHE_FORWARDED_HEADERS is set to 'manual', but no matching "
+                    "RequestHeader configuration was found in the usual system Apache "
+                    "locations. Is this intentional?"
+                ),
                 site_id=site_id,
             )
 
@@ -509,10 +582,6 @@ class ACTestBackupConfigured(ACTest):
             "Similarly, third-party backup solutions may fail to capture a "
             "consistent state."
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -549,10 +618,6 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
             "already be secure enough without extra backup encryption. But in "
             "some cases it may be a good idea to store the backup encrypted."
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -596,10 +661,6 @@ class ACTestEscapeHTMLDisabled(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if not self._get_effective_global_setting(site_id, config, "escape_plugin_output"):
             yield ACSingleResult(
@@ -613,7 +674,7 @@ class ACTestEscapeHTMLDisabled(ACTest):
                 % {
                     "service_url": "wato.py?mode=edit_ruleset&varname=extra_service_conf:_ESCAPE_PLUGIN_OUTPUT",
                     "host_url": "wato.py?mode=edit_ruleset&varname=extra_host_conf:_ESCAPE_PLUGIN_OUTPUT",
-                    "global_url": "wato.py?mode=edit_configvar&varname=escape_plugin_output",
+                    "global_url": "global_settings.py?varname=escape_plugin_output",
                 },
                 site_id=site_id,
             )
@@ -621,7 +682,7 @@ class ACTestEscapeHTMLDisabled(ACTest):
             yield ACSingleResult(
                 state=ACResultState.OK,
                 text=_('Escaping is <a href="%(url)s">enabled globally</a>')
-                % {"url": "wato.py?mode=edit_configvar&varname=escape_plugin_output"},
+                % {"url": "global_settings.py?varname=escape_plugin_output"},
                 site_id=site_id,
             )
 
@@ -676,7 +737,7 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
             "<p>Please note that this value is only a rough estimation, because the memory "
             "usage of the Apache processes may vary with the requests being processed.</p>"
             "<p>Possible actions:<ul>"
-            '<li>Change the <a href="wato.py?mode=edit_configvar&varname=apache_process_tuning">number of Apache processes</a></li>'
+            '<li>Change the <a href="global_settings.py?varname=apache_process_tuning">number of Apache processes</a></li>'
             "</ul>"
             "</p>"
             "<p>Once you have verified your settings, you can acknowledge this test. The "
@@ -684,10 +745,6 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
             "the required memory needed by the Apache processes."
             "</p>"
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -778,10 +835,6 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         total_slots = self._get_maximum_number_of_processes()
         open_slots = self._get_number_of_idle_processes()
@@ -829,7 +882,7 @@ class ACTestCheckMKHelperUsage(ACTest):
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
             '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
-            '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_fetcher_helpers">number of Checkmk helpers</a></li>'
+            '<li>Increase the <a href="global_settings.py?varname=cmc_fetcher_helpers">number of Checkmk helpers</a></li>'
             "</ul>"
             "</p>"
             "<p>But you need to be careful that you don't configure too many Checkmk "
@@ -841,11 +894,9 @@ class ACTestCheckMKHelperUsage(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not self._uses_microcore():
+            return
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_checker average_latency_checker\n"
@@ -897,7 +948,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
             '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
-            '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_fetcher_helpers">number of Checkmk fetchers</a></li>'
+            '<li>Increase the <a href="global_settings.py?varname=cmc_fetcher_helpers">number of Checkmk fetchers</a></li>'
             "</ul>"
             "</p>"
             "<p>But you need to be careful that you don't configure too many Checkmk "
@@ -908,11 +959,9 @@ class ACTestCheckMKFetcherUsage(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not self._uses_microcore():
+            return
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_fetcher average_latency_fetcher\n"
@@ -978,7 +1027,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
             '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
-            '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_checker_helpers">number of Checkmk checkers</a></li>'
+            '<li>Increase the <a href="global_settings.py?varname=cmc_checker_helpers">number of Checkmk checkers</a></li>'
             "</ul>"
             "</p>"
             "<p>But you need to be careful that you don't configure too many Checkmk "
@@ -990,11 +1039,9 @@ class ACTestCheckMKCheckerUsage(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not self._uses_microcore():
+            return
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_checker average_latency_fetcher\n"
@@ -1059,17 +1106,15 @@ class ACTestGenericCheckHelperUsage(ACTest):
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
             '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
-            '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_check_helpers">number of check helpers</a></li>'
+            '<li>Increase the <a href="global_settings.py?varname=cmc_check_helpers">number of check helpers</a></li>'
             "</ul>"
             "</p>"
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not self._uses_microcore():
+            return
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_generic average_latency_generic\n"
@@ -1123,12 +1168,6 @@ class ACTestSizeOfExtensions(ACTest):
             "all the extensions.</p>"
         )
 
-    @override
-    def is_relevant(self) -> bool:
-        return has_distributed_setup_remote_sites(active_config.sites) and self._replicates_mkps(
-            active_config.sites
-        )
-
     def _replicates_mkps(self, site_configs: SiteConfigurations) -> bool:
         return any(
             site.get("replicate_mkps")
@@ -1137,6 +1176,10 @@ class ACTestSizeOfExtensions(ACTest):
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not has_distributed_setup_remote_sites(config.sites) or not self._replicates_mkps(
+            config.sites
+        ):
+            return
         size = self._size_of_extensions()
         state = ACResultState.CRIT if size > 100 * 1024 * 1024 else ACResultState.OK
 
@@ -1169,10 +1212,6 @@ class ACTestBrokenGUIExtension(ACTest):
             "Instead of this, the errors are logged in <tt>var/log/web.log</tt>. In addition to this, "
             "the errors are displayed here."
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -1215,10 +1254,6 @@ class ACTestDeprecatedRuleSets(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         unknown_check_parameter_rule_sets = [
             f"{RuleGroupType.CHECKGROUP_PARAMETERS.value}:{r}"
@@ -1226,7 +1261,7 @@ class ACTestDeprecatedRuleSets(ACTest):
         ]
         if deprecated_rule_sets := [
             r
-            for r in AllRulesets.load_all_rulesets(folder_tree()).get_rulesets().values()
+            for r in AllRulesets.load_all_rulesets(make_folder_tree(config)).get_rulesets().values()
             if r.is_deprecated()
             and r.num_rules()
             and r.name not in unknown_check_parameter_rule_sets
@@ -1272,10 +1307,6 @@ class ACTestUnknownCheckParameterRuleSets(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if rule_sets := find_unknown_check_parameter_rule_sets(debug=active_config.debug).result:
             for rule_set in rule_sets:
@@ -1295,6 +1326,84 @@ class ACTestUnknownCheckParameterRuleSets(ACTest):
             state=ACResultState.OK,
             text=_("No unknown check parameter rule sets found."),
             site_id=site_id,
+        )
+
+
+class ACTestShadowedWebFiles(ACTest):
+    _MAX_LISTED = 10
+    _CHECKED_SUFFIXES = frozenset({".css", ".js"})
+
+    def __init__(
+        self,
+        local_htdocs: Path = local_web_dir / "htdocs",
+        shipped_htdocs: Path = web_dir / "htdocs",
+    ) -> None:
+        self._local_htdocs = local_htdocs
+        self._shipped_htdocs = shipped_htdocs
+
+    @override
+    def category(self) -> str:
+        return ACTestCategories.reliability
+
+    @override
+    def title(self) -> str:
+        return _("Local files overriding shipped style sheets or scripts")
+
+    @override
+    def help(self) -> str:
+        return _(
+            "<p>A style sheet or script below <tt>%(local_dir)s</tt> is served instead of the"
+            " shipped file with the same path. Such copies are not updated together with"
+            " Checkmk: after an update, an outdated style sheet or script of an older version"
+            " is still delivered and may break the user interface. Other local files, e.g."
+            " replaced logos, are not reported.</p>"
+            "<p>Remove the copies you do not need. To customize the look of the user"
+            " interface, use a theme of your own below <tt>%(themes_dir)s</tt> instead of"
+            " overriding the shipped themes.</p>"
+        ) % {
+            "local_dir": self._local_htdocs,
+            "themes_dir": self._local_htdocs / "themes",
+        }
+
+    @override
+    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not (shadowing := self._shadowing_files()):
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_("No local files override shipped style sheets or scripts"),
+                site_id=site_id,
+            )
+            return
+
+        listed = ", ".join(str(p) for p in shadowing[: self._MAX_LISTED])
+        if (unlisted := len(shadowing) - self._MAX_LISTED) > 0:
+            listed = _("%(files)s and %(count)d more") % {"files": listed, "count": unlisted}
+        yield ACSingleResult(
+            state=ACResultState.WARN,
+            text=ungettext(
+                "%(count)d local file below %(local_dir)s overrides a shipped style sheet or"
+                " script and may be outdated: %(files)s",
+                "%(count)d local files below %(local_dir)s override shipped style sheets or"
+                " scripts and may be outdated: %(files)s",
+                len(shadowing),
+            )
+            % {
+                "count": len(shadowing),
+                "local_dir": try_relative_site_path(site_id, self._local_htdocs),
+                "files": listed,
+            },
+            site_id=site_id,
+        )
+
+    def _shadowing_files(self) -> Sequence[Path]:
+        return sorted(
+            rel_path
+            for path in self._local_htdocs.rglob("*")
+            if path.suffix in self._CHECKED_SUFFIXES
+            and path.is_file()
+            and (
+                self._shipped_htdocs / (rel_path := path.relative_to(self._local_htdocs))
+            ).is_file()
         )
 
 
@@ -1327,10 +1436,6 @@ class ACTestDeprecatedGUIExtensions(ACTest):
             return list(_walk(local_gui_plugins_dir))
         except FileNotFoundError:
             return []
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -1383,10 +1488,6 @@ class ACTestDeprecatedLegacyGUIExtensions(ACTest):
             return list(_walk(local_web_dir))
         except FileNotFoundError:
             return []
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -1444,10 +1545,6 @@ class ACTestDeprecatedPNPTemplates(ACTest):
             return list(local_pnp_templates_dir.iterdir())
         except FileNotFoundError:
             return []
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -1629,20 +1726,8 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return bool(self._get_rules())
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        rules = self._get_rules()
-        if not rules:
-            yield ACSingleResult(
-                state=ACResultState.OK,
-                text=_(
-                    "No rule set <b>State in case of restricted address mismatch</b> is configured"
-                ),
-                site_id=site_id,
-            )
+        if not (rules := self._get_rules(make_folder_tree(config))):
             return
 
         for folder_title, rule_state in rules:
@@ -1652,9 +1737,9 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
                 site_id=site_id,
             )
 
-    def _get_rules(self) -> list[tuple[str, str]]:
+    def _get_rules(self, tree: FolderTree) -> list[tuple[str, str]]:
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(
-            folder_tree(), RuleGroup.CheckgroupParameters("agent_update")
+            tree, RuleGroup.CheckgroupParameters("agent_update")
         ).get(RuleGroup.CheckgroupParameters("agent_update"))
         state_map = {0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKNOWN"}
         return [
@@ -1684,11 +1769,9 @@ class ACTestCheckMKCheckerNumber(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not self._uses_microcore():
+            return
         try:
             num_cpu = multiprocessing.cpu_count()
         except NotImplementedError:
@@ -1747,10 +1830,6 @@ class ACTestAutomationUserSecret(ACTest):
             "We do not recommend to store the secret for automation users with high privileges."
         )
 
-    @override
-    def is_relevant(self) -> bool:
-        return not is_distributed_setup_remote_site(active_config.sites)
-
     @staticmethod
     def get_flagged_users(
         user_permissions: UserPermissions, user_db: Users
@@ -1768,8 +1847,10 @@ class ACTestAutomationUserSecret(ACTest):
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if is_distributed_setup_remote_site(config.sites):
+            return
         flagged_users = self.get_flagged_users(
-            UserPermissions.from_config(config, permission_registry),
+            UserPermissions.from_config(config, all_permissions()),
             userdb.load_users(),
         )
 
@@ -1783,6 +1864,7 @@ class ACTestAutomationUserSecret(ACTest):
             )
             return
 
+        permissions = all_permissions()
         for user_id, dangerous_perms in flagged_users.items():
             yield ACSingleResult(
                 state=ACResultState.WARN,
@@ -1793,8 +1875,7 @@ class ACTestAutomationUserSecret(ACTest):
                     "user_id": user_id,
                     "count": len(dangerous_perms),
                     "permissions": ", ".join(
-                        (perm.title if (perm := permission_registry.get(p)) else p)
-                        for p in dangerous_perms
+                        (perm.title if (perm := permissions.get(p)) else p) for p in dangerous_perms
                     ),
                 },
                 site_id=site_id,

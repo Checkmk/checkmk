@@ -6,14 +6,13 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.infoblox.lib import DETECT_INFOBLOX
 
 # .1.3.6.1.4.1.7779.3.1.1.2.1.15.0 X.X.X.X --> IB-PLATFORMONE-MIB::ibGridMasterVIP.0
@@ -35,10 +34,6 @@ snmp_section_infoblox_grid_status = SimpleSNMPSection(
 )
 
 
-def discover_infoblox_grid_status(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_infoblox_grid_status(section: StringTable) -> CheckResult:
     master_vip, status = section[0]
     status_readable = status.lower()
@@ -52,6 +47,6 @@ def check_infoblox_grid_status(section: StringTable) -> CheckResult:
 check_plugin_infoblox_grid_status = CheckPlugin(
     name="infoblox_grid_status",
     service_name="Grid replication",
-    discovery_function=discover_infoblox_grid_status,
+    discovery_function=discover_one_service,
     check_function=check_infoblox_grid_status,
 )

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   ScheduleDowntimeApi,
@@ -27,10 +27,6 @@ describe('ScheduleDowntimeApi.scheduleDowntime', () => {
 
   beforeEach(() => {
     postSpy = vi.spyOn(client, 'POST')
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
   })
 
   function mockNoContent(): void {
@@ -93,10 +89,6 @@ describe('ScheduleDowntimeApi.resolveChildHosts', () => {
 
   beforeEach(() => {
     postSpy = vi.spyOn(client, 'POST')
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
   })
 
   function mockHosts(names: string[]): void {

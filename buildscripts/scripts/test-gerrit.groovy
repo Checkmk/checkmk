@@ -154,6 +154,35 @@ void main() {
                                 CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
                             ];
                             break;
+                        case "System tests for mk-oracle":
+                            relative_job_name = "${branch_base_folder}/heavy/test-system-mk-oracle";
+                            build_params = [
+                                CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
+                                // mk-oracle is edition-independent; this suite runs against a
+                                // Docker Oracle Free container and never builds a site, so
+                                // EDITION/DISTRO are only here because the job declares them
+                                // required.
+                                EDITION: "ultimatemt",
+                                DISTRO: "ubuntu-24.04",
+                                VERSION: "daily",
+                            ];
+                            break;
+                        case "Windows on-VM component tests for mk-oracle":
+                            relative_job_name = "${branch_base_folder}/heavy/winagt-test-mk-oracle";
+                            build_params = [
+                                CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
+                            ];
+                            break;
+                        case "Linux/Solaris/AIX on-VM component tests for mk-oracle":
+                            relative_job_name = "${branch_base_folder}/builders/test-component-mk-oracle";
+                            build_params = [
+                                CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
+                                // mk-oracle is edition-independent; ultimatemt matches
+                                // the nightly chain's choice (one edition saves resources)
+                                EDITION: "ultimatemt",
+                                VERSION: "daily",
+                            ];
+                            break;
                         case "GitHub actions":
                             relative_job_name = "${branch_base_folder}/cv/test-github-actions";
                             build_params = [
@@ -205,6 +234,8 @@ void main() {
                             status: result_str,
                             triggered_build_url: url_str,
                             test_result_path: item.JENKINS_TEST_RESULT_PATH,
+                            // a job other than test-gerrit-single publishes its own test report
+                            own_test_report: !relative_job_name.endsWith("/cv/test-gerrit-single"),
                         ];
                     }
                     update_result_table(current_description, analyse_mapping);
@@ -386,7 +417,8 @@ String job_result_row(Map args) {
         issue_link = "<a href='${currentBuild.absoluteUrl}/${args.unique_parser_name}'>issues</a>";
     }
     if (args.test_result_path && args.triggered_build_url) {
-        test_result_link = "<a href='${currentBuild.absoluteUrl}/${args.test_result_path}'>test report</a>";
+        def report_build_url = args.own_test_report ? args.triggered_build_url : currentBuild.absoluteUrl;
+        test_result_link = "<a href='${report_build_url}/${args.test_result_path}'>test report</a>";
     }
 
     def totalSeconds = args.duration.days * 86400 + args.duration.hours * 3600 + args.duration.minutes * 60 + args.duration.seconds;

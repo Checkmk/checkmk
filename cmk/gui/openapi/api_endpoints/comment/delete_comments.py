@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated, assert_never
 
 from pydantic import Discriminator
@@ -70,7 +71,7 @@ def delete_comments_v1(
             assert_never(body)
 
     comment_cmds.delete_comments(sites.live(), query_expr, site_id)
-    return ApiResponse(body=None, status_code=204)
+    return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT)
 
 
 ENDPOINT_DELETE_COMMENTS = VersionedEndpoint(

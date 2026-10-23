@@ -13,7 +13,8 @@ from cmk.gui import pagetypes, sites, visuals
 from cmk.gui.bi._compiler import is_part_of_aggregation
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource
-from cmk.gui.http import request
+from cmk.gui.display_options import display_options
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -25,7 +26,11 @@ from cmk.gui.page_menu import (
     PageMenuLink,
     PageMenuTopic,
 )
-from cmk.gui.permissions import permission_registry
+from cmk.gui.painter import PainterConfig, PainterContext
+from cmk.gui.painter.helpers import RenderLink
+from cmk.gui.painter_options import PainterOptions
+from cmk.gui.permissions import all_permissions
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import InfoName, Rows, SingleInfos, Visual
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
@@ -39,6 +44,7 @@ from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables import Hosts
 from cmk.utils import paths
 from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 
@@ -68,9 +74,7 @@ def get_context_page_menu_dropdowns(
 
     topics = {
         p.name(): p
-        for p in pagetypes.PagetypeTopics.load(user_permissions).permitted_instances_sorted(
-            user_permissions
-        )
+        for p in pagetypes.PagetypeTopics.load().permitted_instances_sorted(user_permissions)
     }
 
     # First gather a flat list of all visuals to be linked to
@@ -390,11 +394,15 @@ def _get_combined_graphs_entry(
                 [
                     ("single_infos", ",".join(view.spec["single_infos"])),
                     ("datasource", view.datasource.ident),
-                    ("view_title", view_title(view.spec, view.context)),
+                    (
+                        "view_title",
+                        view_title(view.spec, view.context, request_cache=view.request_cache),
+                    ),
                     *visuals.context_to_uri_vars(
                         visuals.active_context_from_request(
                             view.datasource.infos,
                             view.context,
+                            view.request_cache,
                         )
                     ),
                 ],
@@ -708,12 +716,20 @@ class LegacyHostMenus:
         if (view_spec := get_permitted_views().get(_HOST_VIEW_NAME)) is None:
             return []
 
-        user_permissions = UserPermissions.from_config(active_config, permission_registry)
+        user_permissions = UserPermissions.from_config(active_config, all_permissions())
         view = View(
             _HOST_VIEW_NAME,
             view_spec,
             {"host": {"host": hostname}},
-            user_permissions,
+            PainterContext(
+                config=PainterConfig.from_config(active_config),
+                request=request,
+                painter_options=PainterOptions.get_instance(),
+                theme=theme,
+                url_renderer=RenderLink(request, response, display_options),
+                user_permissions=user_permissions,
+            ),
+            RequestCache(active_config),
         )
 
         dropdowns = get_context_page_menu_dropdowns(

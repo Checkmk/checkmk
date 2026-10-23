@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import Self
 
@@ -13,49 +13,54 @@ from cmk.graphing_engine import (
     ConsolidationFunction,
     EvaluatedGraph,
     Graph,
+    MetricName,
+    RequestedGraph,
+    RequestedMetric,
     TimeRange,
 )
 from cmk.gui.graphing import (
-    CommonGraphOptions,
     evaluate_built_graphs,
     EvaluatedGraphs,
+    EvaluationOptions,
     FetchDiagnostics,
     graph_dispatcher_registry,
     GraphDispatcher,
     QueryLimitReached,
 )
-from cmk.gui.graphing._graph_codec import community_graph_codec
-from cmk.gui.graphing._graph_dispatch import evaluate_graphs, serialize_graphs
+from cmk.gui.graphing._graph_codec import COMMUNITY_GRAPH_CODEC
+from cmk.gui.graphing._graph_dispatch import evaluate_graphs, graph_request_of, serialize_graphs
 
 _KIND = "dispatch_test"
 
-_OPTIONS: Mapping[str, object] = {
-    "consolidation_function": ConsolidationFunction.MAX,
-    "time_range": TimeRange(start=0, end=60, step=10),
-}
+_OPTIONS = EvaluationOptions(
+    consolidation_function=ConsolidationFunction.MAX,
+    time_range=TimeRange(start=0, end=60, step=10),
+    destination=None,
+)
 
 
 @dataclass
 class _RecordingEvaluate:
     # Stands in for a graph kind's evaluation: it reports the graph it was handed back as the
     # evaluated result and as a diagnostic, so a test can tell what reached it.
-    options: CommonGraphOptions
+    time_range: TimeRange
     diagnostics: FetchDiagnostics = field(default_factory=FetchDiagnostics)
 
     @classmethod
-    def make(cls, options: Mapping[str, object]) -> Self:
-        return cls(CommonGraphOptions.from_request_options(options))
+    def make(cls, options: EvaluationOptions) -> Self:
+        return cls(options.time_range)
 
     def __call__(self, graph: Graph) -> EvaluatedGraphs:
-        self.diagnostics.errors.append(f"{graph.name} at step {self.options.time_range.step}")
+        self.diagnostics.errors.append(f"{graph.name} at step {self.time_range.step}")
         self.diagnostics.limits_reached.append(
-            QueryLimitReached(metric_name=graph.name, max_series=1, num_series=2)
+            QueryLimitReached(metric_name=graph.name, max_series=1)
         )
         return EvaluatedGraphs(
             graphs=[
                 EvaluatedGraph(
                     name=graph.name,
                     title=graph.title,
+                    time_range=self.time_range,
                     vertical_range=None,
                     stacks=[],
                     lines=[],
@@ -70,7 +75,7 @@ def _dispatched_kind() -> Iterator[None]:
     graph_dispatcher_registry.register(
         GraphDispatcher(
             kind=_KIND,
-            codec=community_graph_codec(),
+            codec=COMMUNITY_GRAPH_CODEC,
             make_evaluate=_RecordingEvaluate.make,
         )
     )
@@ -117,10 +122,11 @@ def test_the_diagnostics_of_every_graph_are_collected() -> None:
 def test_every_graph_is_evaluated_under_the_requested_options() -> None:
     evaluated = evaluate_built_graphs(
         [_graph("a"), _graph("b")],
-        {
-            "consolidation_function": ConsolidationFunction.MAX,
-            "time_range": TimeRange(start=0, end=120, step=30),
-        },
+        EvaluationOptions(
+            consolidation_function=ConsolidationFunction.MAX,
+            time_range=TimeRange(start=0, end=120, step=30),
+            destination=None,
+        ),
     )
 
     assert evaluated.diagnostics.errors == ["a at step 30", "b at step 30"]
@@ -130,3 +136,11 @@ def test_every_graph_is_evaluated_under_the_requested_options() -> None:
 def test_a_graph_of_an_unregistered_kind_is_refused() -> None:
     with pytest.raises(KeyError):
         evaluate_built_graphs([Graph(name="a", title="t", kind="not_registered")], _OPTIONS)
+
+
+def test_a_metric_graph_id_requests_the_metric() -> None:
+    assert graph_request_of("METRIC_mem_used") == RequestedMetric(MetricName("mem_used"))
+
+
+def test_a_plain_graph_id_requests_the_graph() -> None:
+    assert graph_request_of("mem_used") == RequestedGraph("mem_used")

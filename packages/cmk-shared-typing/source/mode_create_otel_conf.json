@@ -11,6 +11,14 @@
     "data_backend_allowed": { "type": "boolean" },
     "may_create_password": { "type": "boolean" },
     "activate_changes_url": { "type": "string" },
+    "grpc_default_port": {
+      "description": "The port the collector's gRPC receiver listens on unless configured otherwise.",
+      "type": "integer"
+    },
+    "http_default_port": {
+      "description": "The port the collector's HTTP receiver listens on unless configured otherwise.",
+      "type": "integer"
+    },
     "grpc_receiver_endpoint_override": { "type": ["string", "null"] },
     "http_receiver_endpoint_override": { "type": ["string", "null"] }
   },
@@ -22,6 +30,8 @@
     "collector_activation_allowed",
     "data_backend_allowed",
     "may_create_password",
-    "activate_changes_url"
+    "activate_changes_url",
+    "grpc_default_port",
+    "http_default_port"
   ]
 }

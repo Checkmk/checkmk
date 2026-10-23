@@ -3,26 +3,52 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import FileGenerator, OS, password_store, Plugin, PluginConfig, register
+from cmk.utils.password_store import extract_formspec_password, FormSpecPassword
 
-_UserAndPwd = tuple[str, password_store.PasswordId]
+from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
 
 
-class _Conf(BaseModel):
-    credentials: _UserAndPwd | str | list[tuple[str, str, str, _UserAndPwd | str]]
-    credentials_sap_connect: _UserAndPwd | None = None
+class _UserAndPassword(BaseModel):
+    user: str
+    password: FormSpecPassword
+
+
+_SingleCredentials = (
+    tuple[Literal["user_password"], _UserAndPassword] | tuple[Literal["userstorekey"], str]
+)
+
+
+class _Database(BaseModel):
+    sid: str
+    instance: str
+    database: str
+    credentials: _SingleCredentials
+
+
+class _Config(BaseModel):
+    deployment: tuple[Literal["do_not_deploy", "sync"], None]
+    credentials: _SingleCredentials | tuple[Literal["databases"], Sequence[_Database]] | None = None
+    credentials_sap_connect: (
+        tuple[Literal["none"], None] | tuple[Literal["credentials"], _UserAndPassword]
+    ) = ("none", None)
     runas: Literal["instance", "agent"] | None = None
 
 
 def get_mk_sap_hana_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Conf.model_validate(conf)
-    yield Plugin(base_os=OS.LINUX, source=Path("mk_sap_hana"))
+    config = _Config.model_validate(conf)
+    if config.deployment[0] == "do_not_deploy":
+        return
+
+    yield Plugin(
+        base_os=OS.LINUX,
+        source=Path("mk_sap_hana"),
+    )
 
     yield PluginConfig(
         base_os=OS.LINUX,
@@ -32,60 +58,58 @@ def get_mk_sap_hana_files(conf: Mapping[str, object]) -> FileGenerator:
     )
 
 
-def _get_mk_sap_hana_config(config: _Conf) -> Iterator[str]:
-    """
-    >>> list(
-    ...    _get_mk_sap_hana_config({"credentials": ("peter", ("password", "abc123"))})
-    ... )  # doctest: +SKIP
-    ['USER=peter', 'PASSWORD=abc123']
-    >>> list(
-    ...    _get_mk_sap_hana_config({"credentials": "storekey", "runas": "agent"})
-    ... )  # doctest: +SKIP
-    ['USERSTOREKEY=storekey', 'RUNAS=agent']
-    >>> list(_get_mk_sap_hana_config({
-    ...    "credentials": [
-    ...        ("sid1", "inst1", "db1", ("usr1", ("password", "pw1"))),
-    ...        ("sid2", "inst2", "db2", "storekey2"),
-    ...    ],
-    ...    "credentials_sap_connect": ("peter", ("password", "abc123"))
-    ... }))  # doctest: +SKIP
-    ['DBS=(sid1,inst1,db1,usr1,pw1, sid2,inst2,db2,,,storekey2)', 'USER_CONNECT=peter', 'PASSWORD_CONNECT=abc123']
-    """
+def _get_mk_sap_hana_config(config: _Config) -> Iterator[str]:
     match config.credentials:
-        case list() as credentials:
-            yield _get_sap_hana_databases(credentials)
-        case str(credentials):
-            yield f"USERSTOREKEY={credentials}"
-        case credentials:
+        case ("databases", databases):
+            yield _get_sap_hana_databases(databases)
+        case ("userstorekey", key):
+            yield f"USERSTOREKEY={key}"
+        case ("user_password", credentials):
             yield from _user_and_pwd_lines(credentials)
+        case None:
+            pass
 
-    if (csc := config.credentials_sap_connect) is not None:
-        yield from _user_and_pwd_lines(csc, suffix="_CONNECT")
+    match config.credentials_sap_connect:
+        case ("credentials", csc):
+            yield from _user_and_pwd_lines(csc, suffix="_CONNECT")
+        case ("none", _):
+            pass
 
-    if config.runas:
+    if config.runas is not None:
         yield f"RUNAS={config.runas}"
 
 
 def _user_and_pwd_lines(
-    credentials: _UserAndPwd,
+    credentials: _UserAndPassword,
     *,
     suffix: Literal["", "_CONNECT"] = "",
 ) -> tuple[str, str]:
-    user, indiv_or_stored_pwd = credentials
-    pwd = password_store.extract(indiv_or_stored_pwd)
-    return (f"USER{suffix}={user}", f"PASSWORD{suffix}={pwd}")
+    return (
+        f"USER{suffix}={credentials.user}",
+        f"PASSWORD{suffix}={extract_formspec_password(credentials.password)}",
+    )
 
 
-def _get_sap_hana_databases(db_conf: Iterable[tuple[str, str, str, _UserAndPwd | str]]) -> str:
-    databases = []
-    for sid, instance, db_name, credentials in db_conf:
-        user = credentials[0] if isinstance(credentials, tuple) else ""
-        password = password_store.extract(credentials[1]) if isinstance(credentials, tuple) else ""
-        userstorekey = "" if isinstance(credentials, tuple) else credentials
-        databases.append(f"{sid},{instance},{db_name},{user},{password},{userstorekey}")
+def _database_credential_fields(credentials: _SingleCredentials) -> tuple[str, str, str]:
+    """Return (user, password, userstorekey)"""
+    match credentials:
+        case ("user_password", user_and_password):
+            return (
+                user_and_password.user,
+                extract_formspec_password(user_and_password.password),
+                "",
+            )
+        case ("userstorekey", key):
+            return "", "", key
 
-    db_list = " ".join(databases)
-    return f"DBS=({db_list})"
+
+def _get_sap_hana_databases(databases: Sequence[_Database]) -> str:
+    entries = []
+    for db in databases:
+        user, password, userstorekey = _database_credential_fields(db.credentials)
+        entries.append(f"{db.sid},{db.instance},{db.database},{user},{password},{userstorekey}")
+
+    return "DBS=({})".format(" ".join(entries))
 
 
 register.bakery_plugin(

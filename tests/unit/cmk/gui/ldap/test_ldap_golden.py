@@ -15,6 +15,7 @@ import datetime
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
+from http import HTTPStatus
 from time import time
 from typing import Literal, override
 from unittest import mock
@@ -60,7 +61,7 @@ from cmk.gui.userdb.user_attributes import (
     TemperatureUnitUserAttribute,
 )
 from cmk.gui.utils.security_log_events import UserManagementEvent
-from tests.testlib.gui.web_test_app import SetConfig, WebTestAppForCMK
+from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
 
 
 @pytest.fixture(name="mock_ldap")
@@ -364,7 +365,7 @@ def test_login_of_an_unknown_ldap_user_syncs_it(
     wsgi_app.get(
         "/NO_SITE/check_mk/api/1.0/version",
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
     )
 
     assert UserId("carol") in load_users()

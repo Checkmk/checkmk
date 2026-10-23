@@ -7,11 +7,28 @@ python.single_version_platform_override(
         "https://github.com/astral-sh/python-build-standalone/releases/download/20260807/cpython-3.14.7+20260807-x86_64-unknown-linux-gnu-install_only.tar.gz",
     ],
 )
+
+# Needed by the Windows agent's python-3.cab wheel closure (see
+# //agents/modules/windows:wheels).  MODULE.bazel cannot load()
+# PYTHON_VERSION_WINDOWS, so the version is spelled out; only its major.minor
+# must agree -- guarded by //tests/code_quality/requirements:requirements_files.
+python.single_version_platform_override(
+    platform = "x86_64-pc-windows-msvc",
+    python_version = "3.14.7",
+    sha256 = "b06367695ce177e4abb2e02a8ff00fa60903c29fb381e40affaee2f51ef6115a",
+    urls = [
+        "https://github.com/astral-sh/python-build-standalone/releases/download/20260807/cpython-3.14.7+20260807-x86_64-pc-windows-msvc-install_only.tar.gz",
+    ],
+)
 python.defaults(python_version = "3.14")
 python.toolchain(
     configure_coverage_tool = True,
     python_version = "3.14",
 )
+
+# rules_uv py3_runtime for //agents/modules/windows:requirements_windows; the
+# version infix must track PYTHON_VERSION_WINDOWS's major.minor (same guard).
+use_repo(python, "python_3_14_x86_64-unknown-linux-gnu")
 
 py3mod = use_extension("//bazel/extensions:create_python_requirements.bzl", "create_python_requirements")
 py3mod.requirements(

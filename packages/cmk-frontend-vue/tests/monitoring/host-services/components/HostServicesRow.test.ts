@@ -7,12 +7,25 @@ import type { Row } from '@tanstack/vue-table'
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { defineComponent, h } from 'vue'
 
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
+import type { DisplayOptions } from '@/monitoring/shared/types'
 
-const ZERO_WIDTH_SPACE = String.fromCharCode(0x200b)
+// 'abs' keeps assertions comparable to plain `renderDateAndTime`, independent of how old
+// a fixture's timestamp happens to be relative to the real clock the test runs under.
+const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
+
+function reschedulesItself(name: string) {
+  return {
+    label: 'Reschedule check',
+    tooltip: 'Reschedule check',
+    icon_name: 'reload',
+    target: name
+  }
+}
 
 function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntry {
   return {
@@ -45,7 +58,11 @@ function mountRow(
       components: { HostServicesRow },
       render() {
         return h('table', [
-          h('tbody', [h('tr', [h(HostServicesRow, { row, tableRow, ...extraProps })])])
+          h('tbody', [
+            h('tr', [
+              h(HostServicesRow, { row, tableRow, displayOptions: DISPLAY_OPTIONS, ...extraProps })
+            ])
+          ])
         ])
       }
     })
@@ -56,16 +73,32 @@ test('renders service name and summary in their cells', () => {
   mountRow(makeService())
 
   expect(screen.getByTitle('CPU load')).toBeInTheDocument()
-  expect(screen.getByTitle('OK - 15 min load: 0.5')).toBeInTheDocument()
+  expect(screen.getByText('OK - 15 min load: 0.5')).toBeInTheDocument()
 })
 
 test('renders one cell per column', () => {
   const { container } = mountRow(makeService())
 
-  // select, state, modes, name, summary, last_check, last_state_change, labels, tags, contacts,
-  // contact_groups, perfometer
+  // select, state, modes, name, summary, last_state_change, last_check, labels, tags, contacts,
+  // contact_groups, groups, perfometer
   const tds = Array.from(container.querySelectorAll('td'))
-  expect(tds).toHaveLength(12)
+  expect(tds).toHaveLength(13)
+})
+
+test('renders last state change before last check, matching the legacy view', () => {
+  const service = makeService()
+  const { container } = mountRow(service)
+
+  const tds = Array.from(container.querySelectorAll('td'))
+  const lastStateChangeIndex = tds.findIndex(
+    (td) => td.querySelector(`[title="${renderDateAndTime(service.last_state_change!)}"]`) !== null
+  )
+  const lastCheckIndex = tds.findIndex(
+    (td) => td.querySelector(`[title="${renderDateAndTime(service.last_check!)}"]`) !== null
+  )
+
+  expect(lastStateChangeIndex).toBeGreaterThanOrEqual(0)
+  expect(lastCheckIndex).toBeGreaterThan(lastStateChangeIndex)
 })
 
 test('renders the state markers of the summary as badges', () => {
@@ -75,11 +108,28 @@ test('renders the state markers of the summary as badges', () => {
   expect(container.querySelector('.cmk-state-tag--critical')).toHaveTextContent('CR')
 })
 
-test('keeps the whole summary readable on hover, markers and all', () => {
-  const summary = 'load: 3.1(!), temp: 90(!!)'
-  mountRow(makeService({ summary }))
+function summaryText(container: Element): Element {
+  return container.querySelector('[data-column-id="summary"] .monitoring-string-cell__text')!
+}
 
-  expect(screen.getByTitle(summary)).toBeInTheDocument()
+test('keeps a cut summary readable on hover, with the markers spelled out', async () => {
+  const { container } = mountRow(makeService({ summary: 'load: 3.1(!), temp: 90(!!)' }))
+  const text = summaryText(container)
+  Object.defineProperty(text, 'scrollHeight', { configurable: true, value: 90 })
+  Object.defineProperty(text, 'clientHeight', { configurable: true, value: 60 })
+
+  await fireEvent.mouseEnter(text)
+
+  expect(text).toHaveAttribute('title', 'load: 3.1(WARN), temp: 90(CRIT)')
+})
+
+test('repeats no summary on hover that fits the cell', async () => {
+  const { container } = mountRow(makeService({ summary: 'load: 3.1(!), temp: 90(!!)' }))
+  const text = summaryText(container)
+
+  await fireEvent.mouseEnter(text)
+
+  expect(text).not.toHaveAttribute('title')
 })
 
 test('renders the flapping icon next to the state badge for a flapping service', () => {
@@ -123,7 +173,7 @@ test('renders no action cell for a page that offers no menu', () => {
   const { container } = mountRow(makeService())
 
   expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
-  expect(Array.from(container.querySelectorAll('td'))).toHaveLength(12)
+  expect(Array.from(container.querySelectorAll('td'))).toHaveLength(13)
 })
 
 test('adds the action cell once a page offers the menu', () => {
@@ -132,7 +182,7 @@ test('adds the action cell once a page offers the menu', () => {
   })
 
   expect(screen.getByRole('button', { name: 'More actions' })).toBeInTheDocument()
-  expect(Array.from(container.querySelectorAll('td'))).toHaveLength(13)
+  expect(Array.from(container.querySelectorAll('td'))).toHaveLength(14)
 })
 
 test('loads the menu of its own service, and only once it is opened', async () => {
@@ -162,6 +212,7 @@ test('emits a picked command with the service it acts on', async () => {
               h(HostServicesRow, {
                 row: makeService({ name: 'Memory' }),
                 tableRow: makeTableRow(),
+                displayOptions: DISPLAY_OPTIONS,
                 loadActionMenu: async () => [command],
                 onCommand
               })
@@ -178,11 +229,34 @@ test('emits a picked command with the service it acts on', async () => {
   expect(onCommand).toHaveBeenCalledWith({ id: 'reschedule', target: 'Memory' })
 })
 
+test('offers no AI explanation by default', () => {
+  mountRow(makeService(), makeTableRow(), { loadActionMenu: async () => [] })
+
+  expect(screen.queryByRole('button', { name: 'Explain with AI' })).not.toBeInTheDocument()
+})
+
+test('asks for the AI explanation of its own service', async () => {
+  const onExplain = vi.fn()
+  const service = makeService({ name: 'Memory' })
+  mountRow(service, makeTableRow(), { aiExplain: true, onExplain })
+
+  await userEvent.click(screen.getByRole('button', { name: 'Explain with AI' }))
+
+  expect(onExplain).toHaveBeenCalledWith(service)
+})
+
 test('renders the contact groups of a service, sorted alphabetically', () => {
   const { container } = mountRow(makeService({ contact_groups: ['linux', 'all'] }))
 
   const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
   expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['all', 'linux'])
+})
+
+test('renders the service groups of a service, sorted alphabetically', () => {
+  const { container } = mountRow(makeService({ groups: ['web', 'databases'] }))
+
+  const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
+  expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['databases', 'web'])
 })
 
 test('renders the contacts of a service, sorted alphabetically', () => {
@@ -223,10 +297,13 @@ test('renders the perfometer of a service that has one', () => {
   mountRow(
     makeService({
       perfometer: {
-        value: 42,
-        value_range: { min: 0, max: 100 },
-        formatted: '42%',
-        color: '#ff0000'
+        bars: [
+          [
+            { share: 42, color: '#ff0000' },
+            { share: 58, color: null }
+          ]
+        ],
+        formatted: '42%'
       }
     })
   )
@@ -234,6 +311,32 @@ test('renders the perfometer of a service that has one', () => {
   const perfometer = screen.getByRole('progressbar', { name: 'Perf-O-Meter' })
   expect(perfometer).toHaveAttribute('aria-valuenow', '42')
   expect(perfometer).toHaveTextContent('42%')
+})
+
+test('the perfometer asks for the graphs of its service', async () => {
+  const openGraphs = vi.fn()
+  const service = makeService({
+    perfometer: {
+      bars: [
+        [
+          { share: 42, color: '#ff0000' },
+          { share: 58, color: null }
+        ]
+      ],
+      formatted: '42%'
+    }
+  })
+  const { container } = mountRow(service, makeTableRow(), { onOpenGraphs: openGraphs })
+
+  await userEvent.click(container.querySelector('td[data-column-id="perfometer"] button')!)
+
+  expect(openGraphs).toHaveBeenCalledWith(service)
+})
+
+test('a service without a perfometer leaves its cell unclickable', () => {
+  const { container } = mountRow(makeService())
+
+  expect(container.querySelector('td[data-column-id="perfometer"] button')).toBeNull()
 })
 
 test('leaves the perfometer cell empty for a service without performance data', () => {
@@ -245,20 +348,26 @@ test('leaves the perfometer cell empty for a service without performance data', 
 test('renders the two timestamps as formatted date-time strings', () => {
   const { container } = mountRow(makeService())
 
-  const cellText = (td: Element): string =>
-    (td.textContent ?? '').split(ZERO_WIDTH_SPACE).join('').trim()
+  const cellText = (td: Element): string => (td.textContent ?? '').trim()
   const tds = Array.from(container.querySelectorAll('td'))
   expect(cellText(tds[5]!)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
   expect(cellText(tds[6]!)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
 })
 
+test('dashes out the state age of a service that has never been checked', () => {
+  const { container } = mountRow(makeService({ last_state_change: null }))
+
+  const cellText = (td: Element): string => (td.textContent ?? '').trim()
+  const tds = Array.from(container.querySelectorAll('td'))
+  expect(cellText(tds[5]!)).toBe('–')
+})
+
 test('dashes out the last check of a service that has never been checked', () => {
   const { container } = mountRow(makeService({ last_check: null }))
 
-  const cellText = (td: Element): string =>
-    (td.textContent ?? '').split(ZERO_WIDTH_SPACE).join('').trim()
+  const cellText = (td: Element): string => (td.textContent ?? '').trim()
   const tds = Array.from(container.querySelectorAll('td'))
-  expect(cellText(tds[5]!)).toBe('–')
+  expect(cellText(tds[6]!)).toBe('–')
 })
 
 test('renders the state badge with success color for state OK', () => {
@@ -324,4 +433,97 @@ test('checkbox calls toggleSelected on tableRow when clicked', async () => {
   await fireEvent.click(checkbox)
 
   expect(toggleSelected).toHaveBeenCalledWith(true)
+})
+
+test('offers the reschedule the backend decided on, ahead of the menu links', async () => {
+  mountRow(
+    makeService({ name: 'Memory', reschedule: reschedulesItself('Memory') }),
+    makeTableRow(),
+    {
+      mayReschedule: true,
+      loadActionMenu: async () => [
+        {
+          id: 'graphs',
+          label: 'Graphs' as TranslatedString,
+          icon: 'graph' as const,
+          url: 'view.py'
+        }
+      ]
+    }
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+
+  const items = await screen.findAllByRole('menuitem')
+  expect(items.map((item) => item.textContent?.trim())).toEqual(['Reschedule check', 'Graphs'])
+})
+
+test('reschedules the Check_MK service for a service that is a byproduct of it', async () => {
+  const onCommand = vi.fn()
+  mountRow(
+    makeService({
+      name: 'Check_MK Agent',
+      reschedule: {
+        label: "Reschedule 'Check_MK' service",
+        tooltip: "Reschedule 'Check_MK' service",
+        icon_name: 'reload-cmk',
+        target: 'Check_MK'
+      }
+    }),
+    makeTableRow(),
+    { mayReschedule: true, onCommand }
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+  await userEvent.click(await screen.findByRole('menuitem', { name: /Reschedule 'Check_MK'/ }))
+
+  expect(onCommand).toHaveBeenCalledWith({ id: 'reschedule', target: 'Check_MK' })
+})
+
+test('shows a reschedule that cannot be run greyed out, with the reason on hover', async () => {
+  const onCommand = vi.fn()
+  mountRow(
+    makeService({
+      name: 'CPU load',
+      reschedule: {
+        label: 'Reschedule check',
+        tooltip: 'This service is based on cached agent data and cannot be rescheduled.',
+        icon_name: 'cannot-reschedule'
+      }
+    }),
+    makeTableRow(),
+    { mayReschedule: true, onCommand }
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+  const item = await screen.findByRole('menuitem', { name: /Reschedule check/ })
+
+  expect(item).toHaveAttribute(
+    'title',
+    'This service is based on cached agent data and cannot be rescheduled.'
+  )
+  await userEvent.click(item)
+  expect(onCommand).not.toHaveBeenCalled()
+})
+
+test('leaves the reschedule out for a service the backend offers none for', async () => {
+  mountRow(makeService({ name: 'CPU load' }), makeTableRow(), {
+    mayReschedule: true,
+    loadActionMenu: async () => [
+      { id: 'graphs', label: 'Graphs' as TranslatedString, icon: 'graph' as const, url: 'view.py' }
+    ]
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+
+  expect(await screen.findByRole('menuitem', { name: 'Graphs' })).toBeInTheDocument()
+  expect(screen.queryByRole('menuitem', { name: /Reschedule/ })).not.toBeInTheDocument()
+})
+
+test('leaves the reschedule out for a user who may not reschedule', () => {
+  mountRow(makeService({ reschedule: reschedulesItself('CPU load') }), makeTableRow(), {
+    mayReschedule: false
+  })
+
+  expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
 })

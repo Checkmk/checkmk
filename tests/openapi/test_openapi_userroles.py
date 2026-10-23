@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.gui.config import builtin_role_ids
-from tests.testlib.rest_api_client import ClientRegistry
+from cmk.gui.userdb import UserRolesConfigFile
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def test_get_userrole_endpoint(clients: ClientRegistry) -> None:
@@ -69,7 +72,7 @@ def test_delete_non_existing_userrole_endpoint(clients: ClientRegistry) -> None:
 
 def test_delete_builtin_userrole(clients: ClientRegistry) -> None:
     resp = clients.UserRole.delete(role_id="admin", expect_ok=False)
-    resp.assert_status_code(404)
+    resp.assert_status_code(HTTPStatus.NOT_FOUND)
     assert (
         "The role should be a custom role but it's not: 'admin'"
         in resp.json["fields"]["path.role_id"]["msg"]
@@ -126,7 +129,7 @@ def test_userrole_invalid_permission_value(clients: ClientRegistry) -> None:
         role_id="admin",
         body={"new_permissions": {"general.server_side_requests": "abc"}},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_userrole_invalid_permission_name(clients: ClientRegistry) -> None:
@@ -134,7 +137,7 @@ def test_userrole_invalid_permission_name(clients: ClientRegistry) -> None:
         role_id="admin",
         body={"new_permissions": {"new_permissions": {"general.made_up_permission": "yes"}}},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_edit_cloned_userrole_invalid_roleid(clients: ClientRegistry) -> None:
@@ -143,7 +146,7 @@ def test_edit_cloned_userrole_invalid_roleid(clients: ClientRegistry) -> None:
         role_id="adminx",
         body={"new_role_id": "admin"},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_edit_cloned_userrole_invalid_basedon(clients: ClientRegistry) -> None:
@@ -152,7 +155,7 @@ def test_edit_cloned_userrole_invalid_basedon(clients: ClientRegistry) -> None:
         role_id="adminx",
         body={"new_basedon": "sam"},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_edit_cloned_userrole_invalid_alias(clients: ClientRegistry) -> None:
@@ -161,7 +164,7 @@ def test_edit_cloned_userrole_invalid_alias(clients: ClientRegistry) -> None:
         role_id="adminx",
         body={"new_alias": "Administrator"},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_edit_cloned_userrole_invalid_permissions(clients: ClientRegistry) -> None:
@@ -170,7 +173,7 @@ def test_edit_cloned_userrole_invalid_permissions(clients: ClientRegistry) -> No
         role_id="adminx",
         body={"new_permissions": {"permission_a": "default", "permission_b": "yes"}},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_edit_builtin_role_id(clients: ClientRegistry) -> None:
@@ -178,7 +181,7 @@ def test_edit_builtin_role_id(clients: ClientRegistry) -> None:
         role_id="admin",
         body={"new_role_id": "edited_admin"},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_edit_builtin_basedon(clients: ClientRegistry) -> None:
@@ -186,7 +189,7 @@ def test_edit_builtin_basedon(clients: ClientRegistry) -> None:
         role_id="admin",
         body={"new_basedon": "something_else"},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_edit_builtin_alias(clients: ClientRegistry) -> None:
@@ -219,3 +222,16 @@ def test_permission_change_when_builtin_changes(clients: ClientRegistry) -> None
         body={"new_basedon": "user"},
     )
     assert set(resp.json["extensions"]["permissions"]) == set(user_permissions)
+
+
+def test_role_granting_removed_agent_pairing_permission_loads(clients: ClientRegistry) -> None:
+    """CMK-40813: a user role that still grants general.agent_pairing loads without an error."""
+    clients.UserRole.clone(body={"role_id": "admin"})
+    roles_file = UserRolesConfigFile()
+    roles = roles_file.load_for_modification()
+    roles["adminx"]["permissions"]["general.agent_pairing"] = True
+    roles_file.save(roles, pprint_value=False)
+
+    resp = clients.UserRole.get(role_id="adminx")
+
+    assert "general.agent_pairing" not in resp.json["extensions"]["permissions"]

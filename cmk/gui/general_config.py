@@ -31,7 +31,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
 from cmk.gui.utils.temperature_unit import TemperatureUnit
-from cmk.inventory.config import InvCleanupParams
+from cmk.inventory.cleanup import InvCleanupParams
 from cmk.livestatus_client import (
     AuthenticationConnectionEntry,
     BrokerConnections,
@@ -167,6 +167,7 @@ class GeneralConfig:
             "cmk.web.ui-job-scheduler": 20,
             "cmk.web.slow-views": 30,
             "cmk.web.agent_registration": 30,
+            "cmk.web.host_relations": 30,
         }
     )
 
@@ -459,7 +460,8 @@ class GeneralConfig:
 
     default_user_profile: UserSpec = field(default_factory=make_default_user_profile)
     log_logon_failures: bool = True
-    lock_on_logon_failures: int | None = 10
+    lock_on_logon_failures: int | None = None
+    time_based_lock_out_enabled: bool = True
     # Retention period (in seconds) before a quarantined LDAP user is deleted.
     # None disables quarantine: vanished LDAP users are deleted immediately.
     ldap_quarantine_period: int | None = 2592000

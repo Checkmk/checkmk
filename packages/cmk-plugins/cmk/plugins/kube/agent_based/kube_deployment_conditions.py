@@ -11,13 +11,12 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.kube import (
     condition_detailed_description,
     condition_short_description,
@@ -43,10 +42,6 @@ agent_section_kube_deployment_conditions_v1 = AgentSection(
     parsed_section_name="kube_deployment_conditions",
     parse_function=parse,
 )
-
-
-def discovery(section: DeploymentConditions) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def condition_levels(params: Mapping[str, VSResultAge], condition: str) -> tuple[int, int] | None:
@@ -109,7 +104,7 @@ def check(params: Mapping[str, VSResultAge], section: DeploymentConditions) -> C
 check_plugin_kube_deployment_conditions = CheckPlugin(
     name="kube_deployment_conditions",
     service_name="Condition",
-    discovery_function=discovery,
+    discovery_function=discover_one_service,
     check_function=check,
     check_default_parameters={
         "available": "no_levels",

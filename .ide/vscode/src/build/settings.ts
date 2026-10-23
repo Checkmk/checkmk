@@ -13,34 +13,24 @@ import {
   getExtensionIds,
   resolveVariables
 } from '../core/config'
-import { waitForHttp } from '../core/http'
-import { log, warn } from '../core/log'
+import { log } from '../core/log'
 import { runCommand, waitForTask } from '../core/tasks'
 import * as profileManager from '../profiles/profileManager'
 import { devBrowser } from './devBrowser'
 
-// Poll a dev-server URL after launching its command and, once it answers, open
-// it in the built-in Simple Browser or the system default browser. Gated by
-// cmk.devServer.openBrowserOnStart; cmk.devServer.browser picks the target.
-function openBrowserWhenReady(name: string, url: string, execution?: vscode.TaskExecution): void {
+async function openBrowser(name: string, url: string): Promise<boolean> {
   const cfg = vscode.workspace.getConfiguration('cmk')
   if (!cfg.get<boolean>('devServer.openBrowserOnStart', true)) {
-    return
+    return false
   }
-  const external = cfg.get<string>('devServer.browser', 'builtin') === 'external'
-  void waitForHttp(url).then((up) => {
-    if (!up) {
-      warn(`${name}: ${url} did not respond; not opening browser`)
-      return
-    }
-    if (external) {
-      log(`${name}: server ready, opening ${url} in the default browser`)
-      vscode.env.openExternal(vscode.Uri.parse(url))
-    } else {
-      log(`${name}: server ready, opening ${url} in Simple Browser`)
-      void devBrowser.show(url, execution)
-    }
-  })
+  if (cfg.get<string>('devServer.browser', 'builtin') === 'external') {
+    log(`${name}: opening ${url} in the default browser`)
+    await vscode.env.openExternal(vscode.Uri.parse(url))
+    return false
+  }
+  log(`${name}: opening ${url} in Simple Browser`)
+  await devBrowser.show(url)
+  return true
 }
 
 async function promptReload(message: string): Promise<void> {
@@ -399,11 +389,15 @@ export function registerBuildCommands(
   for (const [id, entry] of Object.entries(commands)) {
     context.subscriptions.push(
       vscode.commands.registerCommand(id, async () => {
+        const builtinBrowser = entry.openBrowser
+          ? await openBrowser(entry.name, entry.openBrowser)
+          : false
+
         const execution = await runCommand(entry.name, entry.command, { force: entry.force })
         if (!execution) return
 
-        if (entry.openBrowser) {
-          openBrowserWhenReady(entry.name, entry.openBrowser, execution)
+        if (entry.openBrowser && builtinBrowser) {
+          await devBrowser.show(entry.openBrowser, execution)
         }
 
         if (entry.postAction) {

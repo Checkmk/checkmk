@@ -6,7 +6,6 @@
 from typing import Literal
 
 from cmk.gui.openapi.framework import (
-    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
@@ -17,8 +16,8 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
     LinkModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.sidebar._openapi.endpoint_family import SIDEBAR_ELEMENT_FAMILY
@@ -27,7 +26,7 @@ from cmk.web.utils import permission_verification as permissions
 
 
 @api_model
-class SidebarElementModel(DomainObjectModel):
+class SidebarElementModel(TitledDomainObjectModel):
     domainType: Literal["constant"] = api_field(description="The domain type of the object.")
 
 
@@ -41,11 +40,11 @@ class SidebarElementModelCollectionModel(DomainObjectCollectionModel):
     )
 
 
-def list_sidebar_element_v1(api_context: ApiContext) -> SidebarElementModelCollectionModel:
+def list_sidebar_element_v1() -> SidebarElementModelCollectionModel:
     """List all sidebar elements from snapins"""
 
     sidebar_elements = []
-    snapins = all_snapins(api_context.config.user_permissions())
+    snapins = all_snapins()
     for key, snapin in snapins.items():
         title = snapin.title()
         model = SidebarElementModel(

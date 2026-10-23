@@ -4,14 +4,12 @@
   "title": "Welcome page",
   "properties": {
     "cards": {
-      "type": "object",
       "$ref": "#/$defs/welcome_cards"
     },
     "is_start_url": {
       "type": "boolean"
     },
     "stage_information": {
-      "type": "object",
       "$ref": "#/$defs/stage_information"
     }
   },

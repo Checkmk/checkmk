@@ -7,6 +7,7 @@ import dataclasses
 from typing import Final
 
 from cmk.agent_receiver.lib import certs as certslib
+from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.relay.lib.shared_types import CertificateCNError, RelayID
 from cmk.crypto.certificate import CertificateSigningRequest
 
@@ -36,6 +37,7 @@ def _sign_csr(csr: CertificateSigningRequest) -> str:
             csr=csr,
             lifetime_in_months=_VALIDITY_IN_MONTHS,
             keypair=certslib.relay_root_ca(),
+            cert_log=get_config().relays_issued_certificates_path,
         )
     )
 

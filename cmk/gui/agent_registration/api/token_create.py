@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.gui.agent_registration.token_util import (
     issue_agent_registration_token,
     reject_if_cluster_host,
@@ -23,11 +25,13 @@ from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.site_config import site_is_local
 from cmk.gui.token_auth import get_token_store
+from cmk.gui.watolib import bakery
 from cmk.gui.watolib.agent_token_automations import (
     AgentRegistrationTokenCreateRequest,
     forward_token_create,
 )
 from cmk.utils.agent_registration import connection_mode_from_host_config
+from cmk.web.utils import permission_verification as permissions
 
 from .family import AGENT_REGISTRATION_FAMILY
 from .model.token import (
@@ -45,12 +49,15 @@ def create_agent_registration_token_v1(
     verify_permissions(body.host)
     reject_if_cluster_host(body.host)
     connection_mode = connection_mode_from_host_config(body.host.effective_attributes())
+    agent_updates_permitted = bakery.may_register_for_agent_updates(
+        user, is_contact=body.host.is_contact(user)
+    )
 
     if body.site_id is not None:
         site_config = api_context.config.sites.get(body.site_id)
         if site_config is None:
             raise ProblemException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Unknown site",
                 detail=_('No site with ID "%(site_id)s" is configured.')
                 % {"site_id": body.site_id},
@@ -66,6 +73,7 @@ def create_agent_registration_token_v1(
                     connection_mode=connection_mode,
                     expires_at=body.expires_at,
                     comment=body.comment,
+                    agent_updates_permitted=agent_updates_permitted,
                 ),
                 debug=api_context.config.debug,
             )
@@ -81,7 +89,7 @@ def create_agent_registration_token_v1(
                     ),
                     links=[],
                 ),
-                status_code=201,
+                status_code=HTTPStatus.CREATED,
             )
 
     token = issue_agent_registration_token(
@@ -90,6 +98,7 @@ def create_agent_registration_token_v1(
         comment=body.comment,
         token_store=get_token_store(),
         connection_mode=connection_mode,
+        agent_updates_permitted=agent_updates_permitted,
     )
 
     return ApiResponse(
@@ -99,7 +108,7 @@ def create_agent_registration_token_v1(
             extensions=AgentRegistrationTokenMetadata.from_internal(token),
             links=[],
         ),
-        status_code=201,
+        status_code=HTTPStatus.CREATED,
     )
 
 
@@ -109,7 +118,11 @@ ENDPOINT_CREATE_AGENT_REGISTRATION_TOKEN = VersionedEndpoint(
         link_relation="cmk/create_agent_registration_token",
         method="post",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS_REGISTER_HOST),
+    permissions=EndpointPermissions(
+        required=permissions.AllPerm(
+            [PERMISSIONS_REGISTER_HOST, bakery.PERMISSIONS_MAY_REGISTER_FOR_AGENT_UPDATES]
+        )
+    ),
     doc=EndpointDoc(family=AGENT_REGISTRATION_FAMILY.name),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=create_agent_registration_token_v1)},
 )

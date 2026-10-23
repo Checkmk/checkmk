@@ -33,7 +33,7 @@ export class Api {
 
   public async option(url: string, options: ApiOptions = {}): Promise<ApiResponseBody<unknown>> {
     const params = this.prepareOptions(options, {
-      method: 'OPTION'
+      method: 'OPTIONS'
     })
 
     return this.fetch(url, params, options.exceptOnNonZeroResultCode)
@@ -68,7 +68,7 @@ export class Api {
     options: ApiOptions = {}
   ): Promise<ApiResponseBody<unknown>> {
     const opts: RequestInit = {
-      method: 'POST'
+      method: 'PUT'
     }
     if (body !== null) {
       opts.body = JSON.stringify(body)
@@ -116,7 +116,7 @@ export class Api {
       url = this.baseUrl + url
     }
 
-    const res = await fetch(url, options)
+    const res = await cmkFetch(url, options)
 
     const json = await res.json()
     if (!('result' in json)) {
@@ -136,12 +136,6 @@ export class Api {
     }
 
     const res = await cmkFetch(url, params)
-
-    if (res.response.redirected) {
-      if (res.response.url.indexOf('login.py') >= 0) {
-        throw new Error('Stale session. Please login.')
-      }
-    }
 
     await res.raiseForStatus()
 

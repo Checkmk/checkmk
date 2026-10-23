@@ -21,7 +21,8 @@ flowchart LR
 ```
 
 - **Unit** — `bazel test //packages/mk-oracle:mk-oracle-lib-test-internal`; pure Rust, no database.
-- **Component** — this directory's `test_ora_no_db.rs` / `test_ora_discovery.rs` / `test_ora_with_db.rs` / `test_mk_oracle_bin.rs`; the DB-dependent ones run against a real Oracle DB (see [`docs/test-systems.md`](docs/test-systems.md) for which one).
+- **Component** — this directory's `test_ora_no_db.rs` / `test_ora_discovery.rs` / `test_ora_with_db.rs` (`mk-oracle-lib-test-external`, tagged `component`); the DB-dependent ones run against a real Oracle DB (see [`docs/test-systems.md`](docs/test-systems.md) for which one).
+- **Binary** — `test_mk_oracle_bin.rs` (`bazel test //packages/mk-oracle:mk-oracle-bin-test`) drives the built binary without a database, so CI runs it with the unit tests.
 - **System** — `tests/system/mk_oracle/` at the repo root: Dockerised Oracle Free, exercises the built plugin end-to-end including the legacy-vs-new comparison harness.
 - **Perf / regression** — semi-automated local tiers under `perf/` and `regression/`.
 
@@ -52,6 +53,7 @@ How the target databases are selected is described in [`docs/endpoints.md`](docs
 
 ```bash
 bazel test //packages/mk-oracle:mk-oracle-lib-test-internal   # unit tests, no DB
+bazel test //packages/mk-oracle:mk-oracle-bin-test           # binary CLI + migration tests, no DB
 bazel test //packages/mk-oracle:mk-oracle-lib-test-external   # component tests, needs a DB + OCI client
 ```
 

@@ -3,45 +3,90 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
-from typing import override
 
-from cmk.gui.display_options import display_options
-from cmk.gui.graphing import perfometers_from_api, registered_metrics
+from cmk.gui.graphing import get_temperature_unit, perfometers_from_api, registered_metrics
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.http import response
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter.v0 import Cell, Painter
-from cmk.gui.painter.v0.helpers import RenderLink
-from cmk.gui.painter.v1.helpers import is_stale
-from cmk.gui.type_defs import ColumnName, Row
-from cmk.gui.view_utils import CellSpec
+from cmk.gui.painter import Cell, InternalPainter, PainterContext
+from cmk.gui.painter.helpers import is_stale
+from cmk.gui.type_defs import Row
+from cmk.gui.view_utils import CellSpec, get_themed_perfometer_bg_color
 from cmk.gui.views.graph import cmk_graph_url
 from cmk.web.utils import escaping
 
 from .base import Perfometer
 
 
-class PainterPerfometer(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "perfometer"
+def _compute_data_perfometer(row: Row, acting_user: LoggedInUser, context: PainterContext) -> str:
+    try:
+        title, _h = Perfometer(
+            row, registered_metrics(), perfometers_from_api, debug=context.config.debug
+        ).render(
+            get_temperature_unit(acting_user, context.config.default_temperature_unit),
+            get_themed_perfometer_bg_color(context.theme),
+        )
+    except Exception:
+        logger.exception("error rendering perfometer")
+        if context.config.debug:
+            raise
+        return ""
+    return title or ""
 
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Service Perf-O-Meter")
 
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return _("Perf-O-Meter")
+def _render_perfometer(
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    classes = ["perfometer"]
+    if is_stale(row, context.config.staleness_threshold):
+        classes.append("stale")
 
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return [
+    try:
+        title, h = Perfometer(
+            row, registered_metrics(), perfometers_from_api, debug=context.config.debug
+        ).render(
+            get_temperature_unit(acting_user, context.config.default_temperature_unit),
+            get_themed_perfometer_bg_color(context.theme),
+        )
+        if title is None and h is None:
+            return "", ""
+    except Exception as e:
+        logger.exception("error rendering perfometer")
+        if context.config.debug:
+            raise
+        return " ".join(classes), _("Exception: %(e)s") % {"e": e}
+
+    assert h is not None
+    content = (
+        HTMLWriter.render_div(h, class_=["content"])
+        + HTMLWriter.render_div(title, class_=["title"])
+        + HTMLWriter.render_div("", class_=["glass"])
+    )
+
+    # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
+    display_options = context.url_renderer.display_options
+    if display_options.enabled(display_options.X) and row["service_pnpgraph_present"] != 0:
+        url = cmk_graph_url(row, "service", request=context.request)
+        disabled = False
+    else:
+        url = "javascript:void(0)"
+        disabled = True
+
+    return " ".join(classes), context.url_renderer.link_direct(
+        url,
+        html_text=content,
+        title=escaping.strip_tags(title),
+        class_=["disabled"] if disabled else [],
+    )
+
+
+def make_perfometer_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="perfometer",
+        title=_l("Service Perf-O-Meter"),
+        short_title=_l("Perf-O-Meter"),
+        columns=[
             "host_name",
             "service_description",
             "service_staleness",
@@ -50,64 +95,8 @@ class PainterPerfometer(Painter):
             "service_check_command",
             "service_pnpgraph_present",
             "service_plugin_output",
-        ]
-
-    @property
-    @override
-    def printable(self) -> bool | str:
-        return "perfometer"
-
-    @override
-    def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> str:
-        """Used for CSV/JSON/Python exports."""
-        try:
-            title, _h = Perfometer(row, registered_metrics(), perfometers_from_api).render()
-        except Exception:
-            logger.exception("error rendering perfometer")
-            if self.config.debug:
-                raise
-            return ""
-        return title or ""
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        classes = ["perfometer"]
-        if is_stale(row, self.config.staleness_threshold):
-            classes.append("stale")
-
-        try:
-            title, h = Perfometer(
-                row,
-                registered_metrics(),
-                perfometers_from_api,
-            ).render()
-            if title is None and h is None:
-                return "", ""
-        except Exception as e:
-            logger.exception("error rendering perfometer")
-            if self.config.debug:
-                raise
-            return " ".join(classes), _("Exception: %(e)s") % {"e": e}
-
-        assert h is not None
-        content = (
-            HTMLWriter.render_div(h, class_=["content"])
-            + HTMLWriter.render_div(title, class_=["title"])
-            + HTMLWriter.render_div("", class_=["glass"])
-        )
-
-        # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
-        if display_options.enabled(display_options.X) and row["service_pnpgraph_present"] != 0:
-            url = cmk_graph_url(row, "service", request=self.request)
-            disabled = False
-        else:
-            url = "javascript:void(0)"
-            disabled = True
-
-        renderer = RenderLink(self.request, response, display_options)
-        return " ".join(classes), renderer.link_direct(
-            url,
-            html_text=content,
-            title=escaping.strip_tags(title),
-            class_=["disabled"] if disabled else [],
-        )
+        ],
+        printable="perfometer",
+        render=_render_perfometer,
+        compute_data=_compute_data_perfometer,
+    )

@@ -7,13 +7,8 @@
 from cmk.agent_based.v2 import Result, State
 from cmk.plugins.apc.agent_based.apc_inrow_system_events import (
     check_apc_inrow_system_events,
-    discover_apc_inrow_system_events,
     parse_apc_inrow_system_events,
 )
-
-
-def test_no_events_disover() -> None:
-    assert list(discover_apc_inrow_system_events(parse_apc_inrow_system_events([])))
 
 
 def test_no_events_are_ok() -> None:

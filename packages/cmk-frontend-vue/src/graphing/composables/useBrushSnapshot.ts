@@ -43,8 +43,6 @@ function fitsWithin(window: TimeInterval, domain: TimeInterval): boolean {
   return window.start >= domain.start && window.end <= domain.end
 }
 
-// Snapping both ends onto a step wider than the extent itself collapses it, and every mark would
-// then be placed by a division by zero.
 function drawableExtent(drawn: TimeInterval, fallback: TimeInterval): TimeInterval {
   return drawn.end > drawn.start ? drawn : fallback
 }

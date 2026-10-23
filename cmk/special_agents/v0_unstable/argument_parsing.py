@@ -13,7 +13,7 @@ Current responsibilities include:
 
 import argparse
 
-from cmk.server_side_programs.v1_unstable import vcrtrace
+from cmk.server_side_programs.v1 import vcrtrace
 
 Args = argparse.Namespace
 

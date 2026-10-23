@@ -16,7 +16,7 @@ from typing import Any, NamedTuple, ReadOnly, TypedDict
 import requests
 import urllib3
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -86,7 +86,7 @@ class Section(NamedTuple):
     handler: Callable[[Any], None]  # type: ignore[explicit-any]
 
 
-def main(argv: None | Sequence[str] = None) -> None | int:
+def main(argv: None | Sequence[str] = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
     # Sections to query
@@ -127,15 +127,15 @@ def main(argv: None | Sequence[str] = None) -> None | int:
     args = parse_arguments(argv)
 
     try:
-        handle_request(args, sections)
+        return handle_request(args, sections)
     except Exception as e:
-        sys.stderr.write("Unhandled exception: %s\n" % e)
         if args.debug:
-            return 1
-    return None
+            raise
+        sys.stderr.write("Unhandled exception: %s\n" % e)
+        return 1
 
 
-def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> object:  # type: ignore[explicit-any]
+def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> int:  # type: ignore[explicit-any]
     url_base = "%s://%s:%d" % (args.proto, args.hostname, args.port)
     password = resolve_secret_option(args, PASSWORD_OPTION)
 
@@ -166,7 +166,7 @@ def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> obj
 
             sys.stdout.write("<<<splunk_%s>>>\n" % section.name)
             section.handler(value)
-    return None
+    return 0
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:

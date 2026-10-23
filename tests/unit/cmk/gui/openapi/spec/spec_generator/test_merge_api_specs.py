@@ -81,51 +81,6 @@ def test_divergent_schema_raises() -> None:
         )
 
 
-def test_divergent_path_of_tagged_edition_is_dropped() -> None:
-    merged = merge_specs(
-        {
-            "cloud": _spec(paths={"/otel": {"get": _operation("cloud_variant")}}),
-            "ultimatemt": _spec(paths={"/otel": {"get": _operation("ultimatemt_variant")}}),
-        },
-        divergent_paths={("cloud", "get", "/otel")},
-    )
-
-    assert merged["paths"] == {"/otel": {"get": _operation("ultimatemt_variant")}}
-
-
-def test_divergent_path_only_defined_by_tagged_edition_vanishes() -> None:
-    merged = merge_specs(
-        {"cloud": _spec(paths={"/otel": {"get": _operation("cloud_variant")}})},
-        divergent_paths={("cloud", "get", "/otel")},
-    )
-
-    assert merged["paths"] == {}
-
-
-def test_divergent_component_of_tagged_edition_is_dropped() -> None:
-    merged = merge_specs(
-        {
-            "cloud": _spec(schemas={"OTelConfig": {"type": "string"}}),
-            "ultimatemt": _spec(schemas={"OTelConfig": {"type": "object"}}),
-        },
-        divergent_components={("cloud", "schemas", "OTelConfig")},
-    )
-
-    assert merged["components"] == {"schemas": {"OTelConfig": {"type": "object"}}}
-
-
-def test_divergence_of_other_edition_still_raises() -> None:
-    with pytest.raises(MergeConflictError, match="paths//otel/get"):
-        merge_specs(
-            {
-                "cloud": _spec(paths={"/otel": {"get": _operation("cloud_variant")}}),
-                "ultimate": _spec(paths={"/otel": {"get": _operation("ultimate_variant")}}),
-                "ultimatemt": _spec(paths={"/otel": {"get": _operation("ultimatemt_variant")}}),
-            },
-            divergent_paths={("cloud", "get", "/otel")},
-        )
-
-
 @pytest.mark.parametrize(
     "editions",
     [
@@ -164,29 +119,6 @@ def test_divergence_beyond_description_still_raises() -> None:
                 ),
             }
         )
-
-
-def test_unencountered_divergence_raises() -> None:
-    with pytest.raises(ValueError, match="clean up the divergence entries"):
-        merge_specs(
-            {"cloud": _spec(), "ultimatemt": _spec()},
-            divergent_paths={("cloud", "get", "/otel")},
-        )
-
-
-def test_divergence_of_absent_edition_is_ignored() -> None:
-    merged = merge_specs(
-        {"community": _spec(), "pro": _spec()},
-        divergent_paths={("cloud", "get", "/otel")},
-        divergent_components={("cloud", "schemas", "OTelConfig")},
-    )
-
-    assert merged["paths"] == {}
-
-
-def test_unknown_edition_in_divergence_entries_raises() -> None:
-    with pytest.raises(ValueError, match="divergence entries.*managed"):
-        merge_specs({"community": _spec()}, divergent_paths={("managed", "get", "/otel")})
 
 
 def test_divergent_metadata_raises() -> None:

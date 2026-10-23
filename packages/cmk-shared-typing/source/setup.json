@@ -4,7 +4,6 @@
   "title": "Dialog with Slidein Type Defs",
   "properties": {
     "agent_download": {
-      "type": "object",
       "$ref": "#/$defs/agent_download"
     }
   },

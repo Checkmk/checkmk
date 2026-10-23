@@ -17,12 +17,11 @@ from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kentix.lib import DETECT_KENTIX
 
 
@@ -35,10 +34,6 @@ def parse_kentix_co(string_table: StringTable) -> int | None:
         except ValueError:
             pass
     return None
-
-
-def discover_kentix_co(section: int) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_kentix_co(params: Mapping[str, Any], section: int) -> CheckResult:
@@ -65,7 +60,7 @@ snmp_section_kentix_co = SimpleSNMPSection(
 check_plugin_kentix_co = CheckPlugin(
     name="kentix_co",
     service_name="Carbon Monoxide",
-    discovery_function=discover_kentix_co,
+    discovery_function=discover_one_service,
     check_function=check_kentix_co,
     check_ruleset_name="carbon_monoxide",
     check_default_parameters={

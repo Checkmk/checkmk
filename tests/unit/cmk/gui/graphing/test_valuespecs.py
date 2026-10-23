@@ -3,24 +3,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
 
+import json
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
 import pytest
 
+from cmk.gui.config import Config
 from cmk.gui.graphing import (
     migrate_graph_render_options_title_format,
-    migrate_graph_render_options_title_format_from_disk,
     vs_graph_render_option_elements,
 )
 from cmk.gui.graphing._valuespecs import (
     _value_with_unit_vs,
     _vs_show_title,
     migrate_graph_render_options,
+    PageVsAutocomplete,
 )
 from cmk.gui.http import request
+from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Age,
     DropdownChoice,
@@ -74,7 +80,7 @@ def test_migrate_graph_render_options_title_format(
 
 def test_migrate_graph_render_options_title_format_rejects_unknown_entries() -> None:
     with pytest.raises(ValueError):
-        migrate_graph_render_options_title_format_from_disk(["plain", "bogus"])
+        migrate_graph_render_options_title_format(["plain", "bogus"])
 
 
 @pytest.mark.parametrize(
@@ -168,3 +174,21 @@ def test_every_render_flag_takes_its_default_from_the_caller(key: str) -> None:
 def test_the_font_size_takes_its_default_from_the_caller() -> None:
     elements = dict(vs_graph_render_option_elements({"font_size": 11.0}))
     assert elements["font_size"].default_value() == 11.0
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_unit_autocompleter_without_metric_uses_fallback_unit(load_config: Config) -> None:
+    # Crash group 3678: the AJAX request carried no "metric" key at all
+    def unit_choice(api_request: dict[str, object]) -> object:
+        request.set_var("request", json.dumps(api_request))
+        return PageVsAutocomplete().page(
+            PageContext(
+                config=load_config,
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(load_config, all_permissions()),
+            )
+        )
+
+    assert unit_choice({}) == unit_choice({"metric": ""})

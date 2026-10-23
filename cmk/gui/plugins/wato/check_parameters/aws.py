@@ -6,26 +6,26 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Iterable, Mapping
 from typing import Any
 
 from cmk.gui.form_specs.generators.age import Age
 from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
-from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended
-from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
-    CascadingSingleChoiceElementExtended,
-    CascadingSingleChoiceLayout,
-)
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,
 )
 from cmk.gui.form_specs.unstable.legacy_converter.generators import TupleLevels
-from cmk.plugins.aws.constants import (  # astrein: disable=cmk-module-layer-violation
+from cmk.plugins.aws_deprecated.constants import (  # astrein: disable=module-layers
     AWS_EC2_INST_FAMILIES,
     AWS_EC2_INST_TYPES,
     AWS_EC2_LIMITS_DEFAULT,
     AWS_EC2_LIMITS_SPECIAL,
+)
+from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceElementExtended,
+    CascadingSingleChoiceExtended,
+    CascadingSingleChoiceLayout,
 )
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -228,18 +228,27 @@ def _fs_cpu_credits_balance() -> Mapping[str, DictElement]:
     }
 
 
+_NO_TITLE_SUFFIXES: Mapping[str, Title] = {}
+
+
+def _http_errors_levels_title(http_err_code: str, title_suffixes: Mapping[str, Title]) -> Title:
+    title = Title(  # astrein: disable=localization
+        f"Upper percentual levels for HTTP {http_err_code.upper()} errors"
+    )
+    if (suffix := title_suffixes.get(http_err_code)) is None:
+        return title
+    return title + suffix
+
+
 def _fs_elements_http_errors(
     http_err_codes: Iterable[str],
-    title_add: Callable[[str], Title] = lambda http_err_code: Title(""),  # noqa: ARG005
+    title_suffixes: Mapping[str, Title] = _NO_TITLE_SUFFIXES,
 ) -> Mapping[str, DictElement]:
     return {
         "levels_http_%s_perc" % http_err_code: DictElement(
             parameter_form=TupleLevels(
-                title=Title(  # astrein: disable=localization-checker
-                    f"Upper percentual levels for HTTP {http_err_code.upper()} errors"
-                )
-                + title_add(http_err_code),
-                help_text=Help(  # astrein: disable=localization-checker
+                title=_http_errors_levels_title(http_err_code, title_suffixes),
+                help_text=Help(  # astrein: disable=localization
                     f"Specify levels for HTTP {http_err_code.upper()} errors in percent "
                     "which refer to the total number of requests."
                 ),
@@ -381,9 +390,27 @@ rule_spec_aws_glacier_vault_archives = CheckParameters(
 )
 
 
+rule_spec_aws_v2_glacier_vault_archives = CheckParameters(
+    name="aws_v2_glacier_vault_archives",
+    title=Title("AWS v2/Glacier vault objects"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_glacier_vaults,
+    condition=HostAndItemCondition(item_title=Title("Vault name")),
+)
+
+
 rule_spec_aws_glacier_vaults = CheckParameters(
     name="aws_glacier_vaults",
     title=Title("AWS/Glacier vaults"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_glacier_vaults,
+    condition=HostCondition(),
+)
+
+
+rule_spec_aws_v2_glacier_vaults = CheckParameters(
+    name="aws_v2_glacier_vaults",
+    title=Title("AWS v2/Glacier vaults"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_glacier_vaults,
     condition=HostCondition(),
@@ -410,6 +437,17 @@ rule_spec_aws_glacier_limits = CheckParameters(
     ),
 )
 
+
+rule_spec_aws_v2_glacier_limits = CheckParameters(
+    name="aws_v2_glacier_limits",
+    title=Title("AWS v2/Glacier limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_glacier_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_limits_generic()
+    ),
+)
+
 #   .--S3------------------------------------------------------------------.
 
 
@@ -426,9 +464,27 @@ rule_spec_aws_s3_buckets_objects = CheckParameters(
 )
 
 
+rule_spec_aws_v2_s3_buckets_objects = CheckParameters(
+    name="aws_v2_s3_buckets_objects",
+    title=Title("AWS v2/S3 bucket objects"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_s3_buckets,
+    condition=HostAndItemCondition(item_title=Title("Bucket name")),
+)
+
+
 rule_spec_aws_s3_buckets = CheckParameters(
     name="aws_s3_buckets",
     title=Title("AWS/S3 buckets"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_s3_buckets,
+    condition=HostCondition(),
+)
+
+
+rule_spec_aws_v2_s3_buckets = CheckParameters(
+    name="aws_v2_s3_buckets",
+    title=Title("AWS v2/S3 buckets"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_s3_buckets,
     condition=HostCondition(),
@@ -668,6 +724,15 @@ rule_spec_aws_s3_requests = CheckParameters(
 )
 
 
+rule_spec_aws_v2_s3_requests = CheckParameters(
+    name="aws_v2_s3_requests",
+    title=Title("AWS v2/S3 bucket requests"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_s3_requests,
+    condition=HostAndItemCondition(item_title=Title("Bucket name")),
+)
+
+
 def _parameter_form_spec_aws_s3_latency() -> Dictionary:
     return Dictionary(
         title=Title("Levels on latency"),
@@ -688,6 +753,15 @@ def _parameter_form_spec_aws_s3_latency() -> Dictionary:
 rule_spec_aws_s3_latency = CheckParameters(
     name="aws_s3_latency",
     title=Title("AWS/S3 latency"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_s3_latency,
+    condition=HostAndItemCondition(item_title=Title("Bucket name")),
+)
+
+
+rule_spec_aws_v2_s3_latency = CheckParameters(
+    name="aws_v2_s3_latency",
+    title=Title("AWS v2/S3 latency"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_s3_latency,
     condition=HostAndItemCondition(item_title=Title("Bucket name")),
@@ -717,6 +791,17 @@ rule_spec_aws_s3_limits = CheckParameters(
 )
 
 
+rule_spec_aws_v2_s3_limits = CheckParameters(
+    name="aws_v2_s3_limits",
+    title=Title("AWS v2/S3 limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_s3_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_limits_generic()
+    ),
+)
+
+
 def _parameter_form_spec_aws_s3_http_errors() -> Dictionary:
     return Dictionary(
         title=Title("Upper levels for HTTP errors"),
@@ -727,6 +812,15 @@ def _parameter_form_spec_aws_s3_http_errors() -> Dictionary:
 rule_spec_aws_s3_http_errors = CheckParameters(
     name="aws_s3_http_errors",
     title=Title("AWS/S3 HTTP errors"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_s3_http_errors,
+    condition=HostAndItemCondition(item_title=Title("Bucket name")),
+)
+
+
+rule_spec_aws_v2_s3_http_errors = CheckParameters(
+    name="aws_v2_s3_http_errors",
+    title=Title("AWS v2/S3 HTTP errors"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_s3_http_errors,
     condition=HostAndItemCondition(item_title=Title("Bucket name")),
@@ -756,6 +850,15 @@ rule_spec_aws_ec2_cpu_credits = CheckParameters(
 )
 
 
+rule_spec_aws_v2_ec2_cpu_credits = CheckParameters(
+    name="aws_v2_ec2_cpu_credits",
+    title=Title("AWS v2/EC2 CPU credits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_ec2_cpu_credits,
+    condition=HostCondition(),
+)
+
+
 def _vs_limits_inst_types() -> List:
     return List(
         element_template=CascadingSingleChoiceExtended(
@@ -763,7 +866,7 @@ def _vs_limits_inst_types() -> List:
             elements=[
                 CascadingSingleChoiceElementExtended(
                     name=inst_type,
-                    title=Title(inst_type),  # astrein: disable=localization-checker
+                    title=Title(inst_type),  # astrein: disable=localization
                     parameter_form=fs_aws_limits(
                         Title("%(inst_type)s instances") % {"inst_type": inst_type},
                         AWS_EC2_LIMITS_SPECIAL.get(inst_type, AWS_EC2_LIMITS_DEFAULT)[0],
@@ -851,6 +954,17 @@ rule_spec_aws_ec2_limits = CheckParameters(
     ),
 )
 
+
+rule_spec_aws_v2_ec2_limits = CheckParameters(
+    name="aws_v2_ec2_limits",
+    title=Title("AWS v2/EC2 limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_ec2_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_limits_generic()
+    ),
+)
+
 # .
 #   .--CE------------------------------------------------------------------.
 #   |                              ____ _____                              |
@@ -887,6 +1001,15 @@ rule_spec_aws_costs_and_usage = CheckParameters(
 )
 
 
+rule_spec_aws_v2_costs_and_usage = CheckParameters(
+    name="aws_v2_costs_and_usage",
+    title=Title("AWS v2/CE costs and usage"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_costs_and_usage,
+    condition=HostAndItemCondition(item_title=Title("Service name")),
+)
+
+
 def _parameter_form_spec_aws_reservation_utilization() -> Dictionary:
     return Dictionary(
         elements={
@@ -906,6 +1029,15 @@ def _parameter_form_spec_aws_reservation_utilization() -> Dictionary:
 rule_spec_aws_reservation_utilization = CheckParameters(
     name="aws_reservation_utilization",
     title=Title("AWS/CE total reservation utilization"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_reservation_utilization,
+    condition=HostCondition(),
+)
+
+
+rule_spec_aws_v2_reservation_utilization = CheckParameters(
+    name="aws_v2_reservation_utilization",
+    title=Title("AWS v2/CE total reservation utilization"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_reservation_utilization,
     condition=HostCondition(),
@@ -964,6 +1096,15 @@ rule_spec_aws_elb_statistics = CheckParameters(
 )
 
 
+rule_spec_aws_v2_elb_statistics = CheckParameters(
+    name="aws_v2_elb_statistics",
+    title=Title("AWS v2/ELB statistics"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elb_statistics,
+    condition=HostCondition(),
+)
+
+
 def _parameter_form_spec_aws_elb_latency() -> Dictionary:
     return Dictionary(elements=_fs_latency())
 
@@ -971,6 +1112,15 @@ def _parameter_form_spec_aws_elb_latency() -> Dictionary:
 rule_spec_aws_elb_latency = CheckParameters(
     name="aws_elb_latency",
     title=Title("AWS/ELB latency"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elb_latency,
+    condition=HostCondition(),
+)
+
+
+rule_spec_aws_v2_elb_latency = CheckParameters(
+    name="aws_v2_elb_latency",
+    title=Title("AWS v2/ELB latency"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_elb_latency,
     condition=HostCondition(),
@@ -986,11 +1136,10 @@ def _parameter_form_spec_aws_elb_http() -> Dictionary:
                     title=Title("Upper levels for Load Balancers"),
                     elements=_fs_elements_http_errors(
                         ["3xx", "4xx", "5xx", "500", "502", "503", "504"],
-                        title_add=lambda http_err_code: (
-                            Title("")
-                            if http_err_code in ["4xx", "5xx"]
-                            else Title(" (application load balancers only)")
-                        ),
+                        title_suffixes={
+                            http_err_code: Title(" (application load balancers only)")
+                            for http_err_code in ["3xx", "500", "502", "503", "504"]
+                        },
                     ),
                 ),
             ),
@@ -1007,6 +1156,15 @@ def _parameter_form_spec_aws_elb_http() -> Dictionary:
 rule_spec_aws_elb_http = CheckParameters(
     name="aws_elb_http",
     title=Title("AWS/ELB HTTP errors"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elb_http,
+    condition=HostCondition(),
+)
+
+
+rule_spec_aws_v2_elb_http = CheckParameters(
+    name="aws_v2_elb_http",
+    title=Title("AWS v2/ELB HTTP errors"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_elb_http,
     condition=HostCondition(),
@@ -1043,6 +1201,15 @@ rule_spec_aws_elb_healthy_hosts = CheckParameters(
 )
 
 
+rule_spec_aws_v2_elb_healthy_hosts = CheckParameters(
+    name="aws_v2_elb_healthy_hosts",
+    title=Title("AWS v2/ELB healthy hosts"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elb_healthy_hosts,
+    condition=HostCondition(),
+)
+
+
 def _parameter_form_spec_aws_elb_backend_connection_errors() -> Dictionary:
     return Dictionary(
         elements={
@@ -1068,6 +1235,15 @@ rule_spec_aws_elb_backend_connection_errors = CheckParameters(
 )
 
 
+rule_spec_aws_v2_elb_backend_connection_errors = CheckParameters(
+    name="aws_v2_elb_backend_connection_errors",
+    title=Title("AWS v2/ELB backend connection errors"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elb_backend_connection_errors,
+    condition=HostCondition(),
+)
+
+
 def _parameter_form_spec_aws_elb_limits() -> Dictionary:
     return Dictionary(
         elements={
@@ -1087,6 +1263,17 @@ def _parameter_form_spec_aws_elb_limits() -> Dictionary:
 rule_spec_aws_elb_limits = CheckParameters(
     name="aws_elb_limits",
     title=Title("AWS/ELB limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elb_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_limits_generic()
+    ),
+)
+
+
+rule_spec_aws_v2_elb_limits = CheckParameters(
+    name="aws_v2_elb_limits",
+    title=Title("AWS v2/ELB limits"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_elb_limits,
     condition=HostAndItemCondition(
@@ -1152,6 +1339,17 @@ rule_spec_aws_elbv2_limits = CheckParameters(
 )
 
 
+rule_spec_aws_v2_elbv2_limits = CheckParameters(
+    name="aws_v2_elbv2_limits",
+    title=Title("AWS v2/ELBv2 Limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elbv2_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_limits_generic()
+    ),
+)
+
+
 def _parameter_form_spec_aws_elbv2_lcu() -> Dictionary:
     return Dictionary(
         elements={
@@ -1168,6 +1366,15 @@ def _parameter_form_spec_aws_elbv2_lcu() -> Dictionary:
 rule_spec_aws_elbv2_lcu = CheckParameters(
     name="aws_elbv2_lcu",
     title=Title("AWS/ELBv2 LCU"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elbv2_lcu,
+    condition=HostCondition(),
+)
+
+
+rule_spec_aws_v2_elbv2_lcu = CheckParameters(
+    name="aws_v2_elbv2_lcu",
+    title=Title("AWS v2/ELBv2 LCU"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_elbv2_lcu,
     condition=HostCondition(),
@@ -1209,6 +1416,15 @@ rule_spec_aws_elbv2_target_errors = CheckParameters(
     condition=HostAndItemCondition(item_title=Title("Target group name")),
 )
 
+
+rule_spec_aws_v2_elbv2_target_errors = CheckParameters(
+    name="aws_v2_elbv2_target_errors",
+    title=Title("AWS v2/ELB application target errors"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elbv2_application_target_errors,
+    condition=HostAndItemCondition(item_title=Title("Target group name")),
+)
+
 # .
 #   .--EBS-----------------------------------------------------------------.
 #   |                          _____ ____ ____                             |
@@ -1227,6 +1443,15 @@ def _parameter_form_spec_burst_balance() -> Dictionary:
 rule_spec_aws_ebs_burst_balance = CheckParameters(
     name="aws_ebs_burst_balance",
     title=Title("AWS/EBS burst balance"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_burst_balance,
+    condition=HostAndItemCondition(item_title=Title("Block storage name")),
+)
+
+
+rule_spec_aws_v2_ebs_burst_balance = CheckParameters(
+    name="aws_v2_ebs_burst_balance",
+    title=Title("AWS v2/EBS burst balance"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_burst_balance,
     condition=HostAndItemCondition(item_title=Title("Block storage name")),
@@ -1308,6 +1533,17 @@ rule_spec_aws_ebs_limits = CheckParameters(
     ),
 )
 
+
+rule_spec_aws_v2_ebs_limits = CheckParameters(
+    name="aws_v2_ebs_limits",
+    title=Title("AWS v2/EBS limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_ebs_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_limits_generic()
+    ),
+)
+
 # .
 #   .--RDS-----------------------------------------------------------------.
 #   |                          ____  ____  ____                            |
@@ -1332,6 +1568,19 @@ def _item_spec_aws_rds() -> String:
 rule_spec_aws_rds_cpu_credits = CheckParameters(
     name="aws_rds_cpu_credits",
     title=Title("AWS/RDS CPU credits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=lambda: Dictionary(
+        elements={**_fs_cpu_credits_balance(), **_fs_burst_balance()}
+    ),
+    condition=HostAndItemCondition(
+        item_title=Title("Instance identifier & region"), item_form=_item_spec_aws_rds()
+    ),
+)
+
+
+rule_spec_aws_v2_rds_cpu_credits = CheckParameters(
+    name="aws_v2_rds_cpu_credits",
+    title=Title("AWS v2/RDS CPU credits"),
     topic=Topic.APPLICATIONS,
     parameter_form=lambda: Dictionary(
         elements={**_fs_cpu_credits_balance(), **_fs_burst_balance()}
@@ -1391,6 +1640,17 @@ rule_spec_aws_rds_disk_usage = CheckParameters(
 )
 
 
+rule_spec_aws_v2_rds_disk_usage = CheckParameters(
+    name="aws_v2_rds_disk_usage",
+    title=Title("AWS v2/RDS disk usage"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_rds_disk_usage,
+    condition=HostAndItemCondition(
+        item_title=Title("Instance identifier & region"), item_form=_item_spec_aws_rds()
+    ),
+)
+
+
 def _parameter_form_spec_aws_rds_connections() -> Dictionary:
     return Dictionary(
         elements={
@@ -1432,6 +1692,17 @@ def _parameter_form_spec_aws_rds_connections() -> Dictionary:
 rule_spec_aws_rds_connections = CheckParameters(
     name="aws_rds_connections",
     title=Title("AWS/RDS connections"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_rds_connections,
+    condition=HostAndItemCondition(
+        item_title=Title("Instance identifier & region"), item_form=_item_spec_aws_rds()
+    ),
+)
+
+
+rule_spec_aws_v2_rds_connections = CheckParameters(
+    name="aws_v2_rds_connections",
+    title=Title("AWS v2/RDS connections"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_rds_connections,
     condition=HostAndItemCondition(
@@ -1486,6 +1757,17 @@ def _parameter_form_spec_aws_rds_replica_lag() -> Dictionary:
 rule_spec_aws_rds_replica_lag = CheckParameters(
     name="aws_rds_replica_lag",
     title=Title("AWS/RDS replica lag"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_rds_replica_lag,
+    condition=HostAndItemCondition(
+        item_title=Title("Instance identifier & region"), item_form=_item_spec_aws_rds()
+    ),
+)
+
+
+rule_spec_aws_v2_rds_replica_lag = CheckParameters(
+    name="aws_v2_rds_replica_lag",
+    title=Title("AWS v2/RDS replica lag"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_rds_replica_lag,
     condition=HostAndItemCondition(
@@ -1559,6 +1841,17 @@ rule_spec_aws_rds_limits = CheckParameters(
     ),
 )
 
+
+rule_spec_aws_v2_rds_limits = CheckParameters(
+    name="aws_v2_rds_limits",
+    title=Title("AWS v2/RDS limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_rds_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_limits_generic()
+    ),
+)
+
 # .
 #   .--Cloudwatch----------------------------------------------------------.
 #   |         ____ _                 _               _       _             |
@@ -1583,6 +1876,17 @@ def _parameter_form_spec_aws_cloudwatch_alarms_limits() -> Dictionary:
 rule_spec_aws_cloudwatch_alarms_limits = CheckParameters(
     name="aws_cloudwatch_alarms_limits",
     title=Title("AWS/CloudWatch alarms limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_cloudwatch_alarms_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_limits_generic()
+    ),
+)
+
+
+rule_spec_aws_v2_cloudwatch_alarms_limits = CheckParameters(
+    name="aws_v2_cloudwatch_alarms_limits",
+    title=Title("AWS v2/CloudWatch alarms limits"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_cloudwatch_alarms_limits,
     condition=HostAndItemCondition(
@@ -1698,6 +2002,15 @@ rule_spec_aws_dynamodb_capacity = CheckParameters(
 )
 
 
+rule_spec_aws_v2_dynamodb_capacity = CheckParameters(
+    name="aws_v2_dynamodb_capacity",
+    title=Title("AWS v2/DynamoDB read/write capacity"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_dynamodb_capacity,
+    condition=HostCondition(),
+)
+
+
 def _parameter_form_spec_aws_dynamodb_latency() -> Dictionary:
     return Dictionary(
         title=Title("Levels on latency"),
@@ -1723,6 +2036,15 @@ def _parameter_form_spec_aws_dynamodb_latency() -> Dictionary:
 rule_spec_aws_dynamodb_latency = CheckParameters(
     name="aws_dynamodb_latency",
     title=Title("AWS/DynamoDB latency"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_dynamodb_latency,
+    condition=HostCondition(),
+)
+
+
+rule_spec_aws_v2_dynamodb_latency = CheckParameters(
+    name="aws_v2_dynamodb_latency",
+    title=Title("AWS v2/DynamoDB latency"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_dynamodb_latency,
     condition=HostCondition(),
@@ -1795,6 +2117,17 @@ rule_spec_aws_wafv2_limits = CheckParameters(
 )
 
 
+rule_spec_aws_v2_wafv2_limits = CheckParameters(
+    name="aws_v2_wafv2_limits",
+    title=Title("AWS v2/WAFV2 limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_wafv2_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_wafv2_limits()
+    ),
+)
+
+
 def _parameter_form_spec_aws_wafv2_web_acl() -> Dictionary:
     return Dictionary(
         title=Title("Levels on Web ACL requests"),
@@ -1817,6 +2150,15 @@ def _parameter_form_spec_aws_wafv2_web_acl() -> Dictionary:
 rule_spec_aws_wafv2_web_acl = CheckParameters(
     name="aws_wafv2_web_acl",
     title=Title("AWS/WAFV2 web ACL requests"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_wafv2_web_acl,
+    condition=HostCondition(),
+)
+
+
+rule_spec_aws_v2_wafv2_web_acl = CheckParameters(
+    name="aws_v2_wafv2_web_acl",
+    title=Title("AWS v2/WAFV2 web ACL requests"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_wafv2_web_acl,
     condition=HostCondition(),

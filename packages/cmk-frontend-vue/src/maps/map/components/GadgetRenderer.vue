@@ -1,0 +1,388 @@
+<!--
+Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+<script setup lang="ts">
+import { computed } from 'vue'
+
+import { perfometerCaptionLines } from '@/maps/map/composables/usePerfometer'
+import type { MetricUnitMap, ObjectState, PerfometerResult } from '@/maps/types/api'
+import { renderMetricValue } from '@/maps/utils/metricFormat'
+import { getMetric, hasFillScale, parsePerfData, utilColor, utilPercent } from '@/maps/utils/perf'
+import { stateColorVar } from '@/maps/utils/stateColors'
+
+const props = defineProps<{
+  type: string // 'gauge' | 'bar' | 'trafficlight' | 'value'
+  metric?: string | null
+  state: ObjectState | undefined
+  size: number
+  // CMK perfometer for the bound service: the reading while `metric` is unset,
+  // the fill where the raw perf_data carries no scale (no max/crit, no % unit),
+  // and the caption.
+  perfometer?: PerfometerResult | null
+  // Registered display units per raw perfdata label (CMK metric registry) —
+  // the readout then matches the Checkmk GUI exactly.
+  metricUnits?: MetricUnitMap | null
+}>()
+
+const metrics = computed(() => parsePerfData(props.state?.perf_data ?? ''))
+const m = computed(() => getMetric(metrics.value, props.metric))
+// Unconfigured, a gadget shows what Checkmk's Perf-O-Meter shows. The first
+// perfdata label would be arbitrary (CPU load lists load15 before load1), and
+// a multi-segment Perf-O-Meter reads the sum of its metrics, not any one of
+// them. A two-sided one (in/out, upper/lower) shows the side it fills; the
+// caption names both.
+const perfometerReading = computed(() =>
+  props.metric ? null : (props.perfometer?.sides.find((s) => s !== null) ?? null)
+)
+const pct = computed(() => (m.value ? utilPercent(m.value) : 0))
+// Fill is proportional (NagVis scales to crit when there's no max). Metrics
+// without any client-side scale fall back to the CMK perfometer percentage,
+// which is computed from the plugin's focus_range.
+const fillPct = computed(() => {
+  if (perfometerReading.value) {
+    return perfometerReading.value.pct
+  }
+  if (m.value && !hasFillScale(m.value)) {
+    return props.perfometer?.sides[0]?.pct ?? 0
+  }
+  return pct.value
+})
+// Colour by utilisation whenever there's a real scale (own max/crit/% unit or a
+// CMK perfometer); otherwise fall back to the monitoring state colour.
+const hasScale = computed(() => (m.value ? hasFillScale(m.value) : false) || !!props.perfometer)
+const color = computed(() =>
+  hasScale.value ? utilColor(fillPct.value) : stateColorVar(props.state?.state)
+)
+
+const valueLabel = computed(() => {
+  if (perfometerReading.value) {
+    return perfometerReading.value.label
+  }
+  return m.value
+    ? renderMetricValue(m.value.value, props.metricUnits?.[m.value.label], m.value.unit)
+    : '—'
+})
+
+// Primary readout inside the gauge/bar, formatted as Checkmk formats it: the
+// Perf-O-Meter's label, or a configured metric through the registry unit. A
+// percent shows only when the unit genuinely is % — never faked from a bare
+// `max` such as CPU load's core count. The caption carries the titled context.
+const readout = computed(() => valueLabel.value)
+// The caption's value line goes where the readout already says the same.
+const caption = computed(() => {
+  if (!props.perfometer) {
+    return null
+  }
+  const { title, value } = perfometerCaptionLines(props.perfometer)
+  const shownValue = value === readout.value ? '' : value
+  return title || shownValue ? { title, value: shownValue } : null
+})
+
+// The raw-value gadget scales on its own label since it never shows a percentage.
+const rawScale = computed(() => {
+  const n = valueLabel.value.length
+  if (n <= 4) {
+    return 1
+  }
+  if (n <= 6) {
+    return 0.85
+  }
+  if (n <= 8) {
+    return 0.7
+  }
+  return 0.55
+})
+
+// Shrink the readout font for long absolute values so e.g. "512 MB" still fits.
+const readoutScale = computed(() => {
+  const n = readout.value.length
+  if (n <= 3) {
+    return 1
+  }
+  if (n <= 5) {
+    return 0.78
+  }
+  if (n <= 7) {
+    return 0.62
+  }
+  return 0.5
+})
+
+const monState = computed(() => props.state?.state ?? 'PENDING')
+const isRed = computed(() => ['DOWN', 'CRITICAL'].includes(monState.value))
+const isAmber = computed(() => ['WARNING', 'UNKNOWN', 'UNREACHABLE'].includes(monState.value))
+const isGreen = computed(() => ['UP', 'OK'].includes(monState.value))
+
+// Bulb style: lit = solid colored glow; unlit = slightly lighter than the dark housing + colored ring
+// The bulbs always sit inside the dark housing (rgba(0,0,0,0.55)), so contrast against
+// the housing — not the map background — is what matters here.
+function bulbStyle(active: boolean, state: string): Record<string, string> {
+  const color = stateColorVar(state)
+  if (active) {
+    return {
+      background: color,
+      boxShadow: `0 0 10px 2px color-mix(in srgb, ${color} 70%, transparent)`
+    }
+  }
+  return {
+    background: 'rgba(255,255,255,0.07)',
+    boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, ${color} 55%, transparent), inset 0 0 6px color-mix(in srgb, ${color} 20%, transparent)`
+  }
+}
+
+// Gauge arc helpers (180° sweep from left to right)
+const R = computed(() => props.size * 0.4)
+const cx = computed(() => props.size / 2)
+const cy = computed(() => props.size * 0.55)
+
+function polarX(angle: number) {
+  return cx.value + R.value * Math.cos((angle * Math.PI) / 180)
+}
+function polarY(angle: number) {
+  return cy.value + R.value * Math.sin((angle * Math.PI) / 180)
+}
+
+const START = 180
+const SWEEP = 180
+
+const bgArc = computed(() => {
+  const ex = polarX(START + SWEEP),
+    ey = polarY(START + SWEEP)
+  return `M ${polarX(START)} ${polarY(START)} A ${R.value} ${R.value} 0 0 1 ${ex} ${ey}`
+})
+
+const valArc = computed(() => {
+  const sweep = (fillPct.value / 100) * SWEEP
+  if (sweep < 1) {
+    return ''
+  }
+  const ex = polarX(START + sweep),
+    ey = polarY(START + sweep)
+  return `M ${polarX(START)} ${polarY(START)} A ${R.value} ${R.value} 0 0 1 ${ex} ${ey}`
+})
+</script>
+
+<template>
+  <div
+    v-if="type === 'trafficlight'"
+    class="maps-gadget-renderer__traffic"
+    style="
+      background: var(--maps-map-view-gadget-bg);
+      border-color: var(--maps-map-view-gadget-ring);
+    "
+    :style="{ gap: `${Math.max(2, size * 0.08)}px`, padding: `${Math.max(4, size * 0.12)}px` }"
+  >
+    <div
+      class="maps-gadget-renderer__bulb"
+      :style="{
+        ...bulbStyle(isRed, 'CRITICAL'),
+        width: `${size * 0.55}px`,
+        height: `${size * 0.55}px`
+      }"
+    />
+    <div
+      class="maps-gadget-renderer__bulb"
+      :style="{
+        ...bulbStyle(isAmber, 'WARNING'),
+        width: `${size * 0.55}px`,
+        height: `${size * 0.55}px`
+      }"
+    />
+    <div
+      class="maps-gadget-renderer__bulb"
+      :style="{
+        ...bulbStyle(isGreen, 'OK'),
+        width: `${size * 0.55}px`,
+        height: `${size * 0.55}px`
+      }"
+    />
+  </div>
+
+  <div
+    v-else-if="type === 'bar'"
+    class="maps-gadget-renderer__stack"
+    :style="{ width: `${size}px`, gap: `${Math.max(2, size * 0.05)}px` }"
+  >
+    <div
+      class="maps-gadget-renderer__track"
+      style="background: var(--maps-map-view-gadget-bar-bg)"
+      :style="{
+        height: `${Math.max(10, Math.round(size * 0.22))}px`,
+        boxShadow: 'inset 0 0 0 1px var(--maps-map-view-gadget-ring)'
+      }"
+    >
+      <div
+        class="maps-gadget-renderer__fill"
+        :style="{ width: `${fillPct}%`, background: color }"
+      />
+      <span
+        class="maps-gadget-renderer__pct"
+        :style="{ fontSize: `${Math.max(8, Math.round(size * 0.13 * readoutScale))}px` }"
+        >{{ readout }}</span
+      >
+    </div>
+    <div
+      v-if="caption"
+      class="maps-gadget-renderer__value maps-gadget-renderer__value--bar"
+      :style="{ fontSize: `${Math.max(8, Math.round(size * 0.13))}px` }"
+    >
+      <span v-if="caption.title" class="maps-gadget-renderer__caption-line">{{
+        caption.title
+      }}</span>
+      <span v-if="caption.value" class="maps-gadget-renderer__caption-line">{{
+        caption.value
+      }}</span>
+    </div>
+  </div>
+
+  <!-- Raw value (NagVis rawNumbers): the metric reading as bare state-coloured text -->
+  <div v-else-if="type === 'value'" class="maps-gadget-renderer__stack">
+    <span
+      class="maps-gadget-renderer__raw"
+      :style="{
+        color: stateColorVar(state?.state),
+        fontSize: `${Math.max(11, Math.round(size * 0.32 * rawScale))}px`
+      }"
+      >{{ valueLabel }}</span
+    >
+  </div>
+
+  <div v-else class="maps-gadget-renderer__stack">
+    <svg :width="size" :height="size * 0.65" :viewBox="`0 0 ${size} ${size * 0.65}`">
+      <path
+        class="maps-gadget-renderer__gauge-track"
+        :d="bgArc"
+        fill="none"
+        stroke-width="8"
+        stroke-linecap="round"
+      />
+      <path
+        :d="valArc"
+        fill="none"
+        :stroke="color"
+        stroke-width="8"
+        stroke-linecap="round"
+        class="maps-gadget-renderer__arc"
+      />
+      <text
+        :x="size / 2"
+        :y="size * 0.55"
+        text-anchor="middle"
+        font-weight="700"
+        :style="{
+          fill: 'var(--maps-map-view-gadget-ink)',
+          fontSize: `${size * 0.18 * readoutScale}px`
+        }"
+        stroke="rgb(0 0 0 / 0.9)"
+        :stroke-width="size * 0.05"
+        stroke-linejoin="round"
+        paint-order="stroke"
+      >
+        {{ readout }}
+      </text>
+    </svg>
+    <div v-if="caption" class="maps-gadget-renderer__value" :style="{ maxWidth: `${size}px` }">
+      <span v-if="caption.title" class="maps-gadget-renderer__caption-line">{{
+        caption.title
+      }}</span>
+      <span v-if="caption.value" class="maps-gadget-renderer__caption-line">{{
+        caption.value
+      }}</span>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.maps-gadget-renderer__gauge-track {
+  stroke: var(--maps-map-view-gauge-track);
+}
+
+.maps-gadget-renderer__traffic {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: var(--border-radius);
+  box-shadow: 0 0 0 1px currentcolor;
+}
+
+.maps-gadget-renderer__bulb {
+  border-radius: 9999px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.maps-gadget-renderer__stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.maps-gadget-renderer__track {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  border-radius: 9999px;
+}
+
+.maps-gadget-renderer__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 9999px;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.maps-gadget-renderer__pct {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-bold);
+  color: var(--maps-map-view-gadget-ink);
+  text-shadow: var(--maps-map-view-text-halo);
+}
+
+.maps-gadget-renderer__raw {
+  font-weight: var(--font-weight-bold);
+  line-height: 1.1;
+  white-space: nowrap;
+  text-shadow: var(--maps-map-view-text-halo);
+}
+
+/* On the label plate, so the light ink reads on a light map too. */
+.maps-gadget-renderer__value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 0 var(--dimension-2);
+  font-size: var(--font-size-small);
+  line-height: 1.2;
+  background: var(--maps-map-view-label-bg);
+  border-radius: var(--border-radius-half);
+}
+
+/* A gadget is narrower than its caption ("RAM usage 48.91 %"); on lines of
+   their own the title can be shortened and the value still shows. Colour and
+   halo sit on each line because the theme resets text-shadow everywhere. */
+.maps-gadget-renderer__caption-line {
+  overflow: hidden;
+  color: var(--maps-map-view-gadget-ink-dim);
+  text-shadow: var(--maps-map-view-text-halo);
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.maps-gadget-renderer__value--bar {
+  width: 100%;
+}
+
+.maps-gadget-renderer__arc {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+</style>

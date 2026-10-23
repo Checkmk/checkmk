@@ -10,16 +10,30 @@ from collections.abc import Mapping, Sequence
 from functools import partial
 from typing import Literal
 
-from cmk.gui.config import Config
+from cmk.graphing_engine import MetricName
+from cmk.gui.config import Config, RequestCacheConfig
+from cmk.gui.graphing import (
+    evaluated_metrics,
+    EvaluatedMetric,
+    registered_metrics,
+    registered_translations,
+)
+from cmk.gui.hooks import request_memoize
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
-from cmk.gui.painter.v0.helpers import get_tag_groups
-from cmk.gui.painter.v0.painters import _get_docker_container_status_outputs
-from cmk.gui.painter.v1.helpers import get_perfdata_nth_value
+from cmk.gui.log import logger
+from cmk.gui.painter.helpers import get_perfdata_nth_value, get_tag_groups
+from cmk.gui.painter.painters import (
+    add_docker_nodes,
+    get_docker_node,
+    metric_choices,
+)
 from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.misc import savefloat
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import Dictionary, DropdownChoice
 from cmk.gui.view_utils import cmp_service_name_equiv, get_labels
+from cmk.web.utils.request_cache import RequestCache
 
 from .base import ParameterizedSorter, Sorter
 from .helpers import (
@@ -55,6 +69,8 @@ def register_sorters(registry: SorterRegistry) -> None:
     registry.register(SorterSvcPerfVal09)
     registry.register(SorterSvcPerfVal10)
     registry.register(SorterCustomHostVariable)
+    registry.register(SorterServiceSpecificMetric)
+    registry.register(SorterHostSpecificMetric)
     registry.register(SorterHostIpv4Address)
     registry.register(SorterHostIpv6Address)
     registry.register(SorterHostIpAddresses)
@@ -284,6 +300,7 @@ def _sort_service_state(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return (cmp_state_equiv(r1) > cmp_state_equiv(r2)) - (cmp_state_equiv(r1) < cmp_state_equiv(r2))
 
@@ -303,6 +320,7 @@ def _sort_host_state(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return (cmp_host_state_equiv(r1) > cmp_host_state_equiv(r2)) - (
         cmp_host_state_equiv(r1) < cmp_host_state_equiv(r2)
@@ -324,6 +342,7 @@ def _sort_site_host(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return (r1["site"] > r2["site"]) - (r1["site"] < r2["site"]) or cmp_num_split(
         "host_name", r1, r2
@@ -345,6 +364,7 @@ def _sort_host_name(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_num_split("host_name", r1, r2)
 
@@ -364,6 +384,7 @@ def _sort_site_alias(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return (config.sites[r1["site"]]["alias"] > config.sites[r2["site"]]["alias"]) - (
         config.sites[r1["site"]]["alias"] < config.sites[r2["site"]]["alias"]
@@ -385,6 +406,7 @@ def _sort_tags(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
     object_type: str,
 ) -> int:
     tag_groups_1 = sorted(get_tag_groups(r1, object_type).items())
@@ -414,6 +436,7 @@ def _sort_labels(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
     object_type: str,
 ) -> int:
     labels_1 = sorted(get_labels(r1, object_type).items())
@@ -450,6 +473,7 @@ def _sort_service_perf_val(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
     num: int,
 ) -> int:
     v1 = savefloat(get_perfdata_nth_value(r1, num - 1, True))
@@ -537,6 +561,7 @@ def _sort_host_custom_variable(
     parameters: Mapping[str, object] | None,
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     assert parameters is not None
     variable_name = str(parameters["ident"]).upper()
@@ -583,6 +608,96 @@ SorterCustomHostVariable = ParameterizedSorter(
 )
 
 
+def _missing_first_sort_key(metric: EvaluatedMetric | None) -> tuple[bool, float]:
+    if metric is None or (value := metric.performance_data.value) is None:
+        return (False, 0.0)
+    return (True, value)
+
+
+@request_memoize(maxsize=None)
+def _specific_metric_sort_key(
+    perf_data: str, check_command: str, metric_name: MetricName, debug: bool
+) -> tuple[bool, float]:
+    return _missing_first_sort_key(
+        evaluated_metrics(
+            perf_data,
+            check_command,
+            registered_metrics=registered_metrics(),
+            registered_translations=registered_translations(),
+            temperature_unit=TemperatureUnit.CELSIUS,
+            debug=debug,
+        ).get(metric_name)
+    )
+
+
+def _sort_specific_metric(
+    perf_data_column: str,
+    check_command_column: str,
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, object] | None,
+    config: Config,
+    request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
+) -> int:
+    assert parameters is not None
+    metric_name = MetricName(str(parameters["metric"]))
+
+    def _sort_key(row: Row) -> tuple[bool, float]:
+        return _specific_metric_sort_key(
+            row.get(perf_data_column, ""),
+            row.get(check_command_column, ""),
+            metric_name,
+            config.debug,
+        )
+
+    try:
+        k1, k2 = _sort_key(r1), _sort_key(r2)
+        return (k1 > k2) - (k1 < k2)
+    except Exception:
+        logger.exception("error sorting specific metric values")
+        if config.debug:
+            raise
+        return 0
+
+
+def _sort_specific_metric_parameter_valuespec(
+    config: Config,  # noqa: ARG001
+    painters: Sequence[ColumnSpec],  # noqa: ARG001
+) -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "metric",
+                DropdownChoice(
+                    title=_("Metric"),
+                    choices=metric_choices(),
+                ),
+            ),
+        ],
+        title=_("Options"),
+        optional_keys=[],
+    )
+
+
+SorterServiceSpecificMetric = ParameterizedSorter(
+    ident="service_specific_metric",
+    title=_l("Service metric"),
+    columns=["service_perf_data", "service_check_command"],
+    sort_function=partial(_sort_specific_metric, "service_perf_data", "service_check_command"),
+    parameter_valuespec=_sort_specific_metric_parameter_valuespec,
+)
+
+SorterHostSpecificMetric = ParameterizedSorter(
+    ident="host_specific_metric",
+    title=_l("Host metric"),
+    columns=["host_perf_data", "host_check_command"],
+    sort_function=partial(_sort_specific_metric, "host_perf_data", "host_check_command"),
+    parameter_valuespec=_sort_specific_metric_parameter_valuespec,
+)
+
+
 def _sort_host_ip_addresses(
     ip_versions: Sequence[Literal["ipv4", "ipv6"]],
     r1: Row,
@@ -591,6 +706,7 @@ def _sort_host_ip_addresses(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     def get_address(row: Row, ipv: Literal["ipv4", "ipv6"]) -> str:
         custom_vars = dict(
@@ -637,6 +753,7 @@ def _sort_num_problems(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,  # noqa: ARG001
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return (
         r1["host_num_services"] - r1["host_num_services_ok"] - r1["host_num_services_pending"]
@@ -682,22 +799,10 @@ def cmp_date(column: str, r1: Row, r2: Row) -> int:
     return (r2_date > r1_date) - (r2_date < r1_date)
 
 
-def _get_docker_nodes(row: Row) -> str:
-    if row.get("host_labels", {}).get("cmk/docker_object") != "container":
-        return ""
-
-    docker_nodes = _get_docker_container_status_outputs()
-    output = docker_nodes.get(row["host_name"])
-    # Output with node: "Container running on node mynode2"
-    # Output without node: "Container running"
-    if output is None or "node" not in output:
-        return ""
-
-    return output.split()[-1]
-
-
 def cmp_docker_nodes(column: str, r1: Row, r2: Row) -> int:  # noqa: ARG001
-    return _sort_docker_nodes_(r1, r2, parameters=None, config=None, request=None)
+    return _sort_docker_nodes_(
+        r1, r2, parameters=None, config=None, request=None, request_cache=None
+    )
 
 
 def _sort_docker_nodes_(
@@ -707,15 +812,15 @@ def _sort_docker_nodes_(
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config | None,  # noqa: ARG001
     request: Request | None,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig] | None,  # noqa: ARG001
 ) -> int:
-    val1 = _get_docker_nodes(row=r1)
-    val2 = _get_docker_nodes(row=r2)
-    return cmp_insensitive_string(val1, val2)
+    return cmp_insensitive_string(get_docker_node(r1), get_docker_node(r2))
 
 
 SorterHostDockerNode = Sorter(
     ident="host_docker_node",
     title=_l("Node name"),
-    columns=["host_labels", "host_label_sources"],
+    columns=["host_name", "host_labels", "host_label_sources"],
     sort_function=_sort_docker_nodes_,
+    row_extender=add_docker_nodes,
 )

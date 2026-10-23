@@ -9,7 +9,7 @@
 |                                                         |
 | The extend of the Check API is well documented, and the |
 | result of careful negotiation. It should not be changed |
-| light heartedly!                                        |
+| light heartedly and MUST NOT BE CHANGED ONCE RELEASED!  |
 +---------------------------------------------------------+
 """
 

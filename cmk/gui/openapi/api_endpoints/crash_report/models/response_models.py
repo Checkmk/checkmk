@@ -6,7 +6,7 @@
 from typing import Literal
 
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
+from cmk.gui.openapi.framework.model.base_models import TitledDomainObjectModel
 
 
 @api_model
@@ -22,7 +22,7 @@ class JavascriptCrashReportExtensions:
 
 
 @api_model
-class JavascriptCrashReportObjectModel(DomainObjectModel):
+class JavascriptCrashReportObjectModel(TitledDomainObjectModel):
     domainType: Literal["javascript_crash_report"] = api_field(
         description="The domain type of the object.",
         example="javascript_crash_report",

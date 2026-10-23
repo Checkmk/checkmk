@@ -14,13 +14,12 @@ which then has to be dumped into the checkmk.yaml file.
 
 """
 
-import contextlib
 import functools
-import http.client
 import json
 import logging
 import warnings
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
+from http import HTTPStatus
 from typing import Any, Final, override, TypeVar
 
 from marshmallow import Schema, ValidationError
@@ -29,16 +28,12 @@ from werkzeug.http import parse_options_header
 from cmk import trace
 from cmk.ccc import store
 from cmk.ccc.version import Edition
-from cmk.gui import hooks
 from cmk.gui import http as cmk_http
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUnauthenticatedException
 from cmk.gui.http import HTTPMethod, request
 from cmk.gui.openapi.framework.api_config import APIVersion
-from cmk.gui.openapi.permission_tracking import (
-    enable_permission_tracking,
-    is_permission_tracking_enabled,
-)
+from cmk.gui.openapi.permission_tracking import track_permissions
 from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.restful_objects.parameters import CONTENT_TYPE
 from cmk.gui.openapi.restful_objects.params import to_schema
@@ -77,6 +72,7 @@ from cmk.gui.watolib.activate_changes import (
     update_config_generation as activate_changes_update_config_generation,
 )
 from cmk.gui.watolib.git import do_git_commit
+from cmk.gui.watolib.openapi_fields import request_schema_context
 from cmk.licensing.basics.options import OptionName
 from cmk.utils.paths import configuration_lockfile
 from cmk.web.utils import permission_verification as permissions
@@ -315,7 +311,6 @@ class Endpoint:
         self.wrapped: Callable[[Mapping[str, Any]], cmk_http.Response]
 
         self.permissions_required = permissions_required
-        self._used_permissions: set[str] = set()
 
         # TODO: should maintain set functionality
         self._expected_status_codes = list(
@@ -372,25 +367,14 @@ class Endpoint:
         schema: type[ApiError] = self.error_schemas.get(status_code, ApiError)
         return schema()
 
-    @contextlib.contextmanager
-    def register_permission_tracking(self) -> Iterator[None]:
-        hooks.register_builtin("permission-checked", self._on_permission_checked)
-        try:
-            with enable_permission_tracking():
-                yield
-        finally:
-            hooks.unregister("permission-checked", self._on_permission_checked)
-
-    def _on_permission_checked(self, pname: str) -> None:
+    def _on_permission_checked(self, used_permissions: set[str], pname: str) -> None:
         """Collect all checked permissions during execution
 
         We need to remember this, in oder to later check if the set of required permissions
-        actually fits the declared permission schema.
+        actually fits the declared permission schema. The permissions are collected per request,
+        because the requests to an endpoint may run concurrently.
         """
-        if not is_permission_tracking_enabled():
-            return
-
-        self.remember_checked_permission(pname)
+        used_permissions.add(pname)
         permission_not_declared = (
             self.permissions_required is not None and pname not in self.permissions_required
         )
@@ -405,16 +389,9 @@ class Endpoint:
                     title=f"Required permissions ({pname}) not declared for this endpoint.",
                     detail=f"Endpoint: {self}\n"
                     f"Permission: {pname}\n"
-                    f"Used permission: {self._used_permissions}\n"
+                    f"Used permission: {used_permissions}\n"
                     f"Declared: {self.permissions_required}\n",
                 )
-
-    def remember_checked_permission(self, permission: str) -> None:
-        """Remember that a permission has been required (used)
-
-        The endpoint acts as a storage for triggered permissions under the current run. Once
-        the request has been done, everything is forgotten again."""
-        self._used_permissions.add(permission)
 
     @override
     def __repr__(self) -> str:
@@ -497,7 +474,12 @@ class Endpoint:
             method=self.method,
         )
 
-    def _path_validation(self, path_schema: type[Schema] | None, _params: dict[str, Any]) -> None:
+    def _path_validation(
+        self,
+        path_schema: type[Schema] | None,
+        _params: dict[str, Any],
+        schema_context: Mapping[str, object],
+    ) -> None:
         if path_schema is None:
             return
 
@@ -505,11 +487,15 @@ class Endpoint:
             validated_path_params = PathParamsValidator.validate_marshmallow_schema(
                 path_schema,
                 _params,
+                schema_context,
             )
             _params.update(validated_path_params)
 
     def _query_param_validation(
-        self, query_schema: type[Schema] | None, _params: dict[str, Any]
+        self,
+        query_schema: type[Schema] | None,
+        _params: dict[str, Any],
+        schema_context: Mapping[str, object],
     ) -> None:
         if query_schema is None:
             return
@@ -518,6 +504,7 @@ class Endpoint:
             validated_query_params = QueryParamsValidator.validate_marshmallow_schema(
                 query_schema,
                 request.args,
+                schema_context,
             )
             _params.update(validated_query_params)
 
@@ -535,7 +522,10 @@ class Endpoint:
         HeaderValidator.validate_accept_header(self.content_type, request.accept_mimetypes)
 
     def _request_data_validation(
-        self, request_schema: type[Schema] | None, _params: dict[str, Any]
+        self,
+        request_schema: type[Schema] | None,
+        _params: dict[str, Any],
+        schema_context: Mapping[str, object],
     ) -> None:
         # request.content_type was previously validated and is accepted by the endpoint or is None.
         # If there is content_type, then we try to decode the payload
@@ -547,21 +537,25 @@ class Endpoint:
                     content_type=content_type,
                     request_obj=request,
                     request_schema=request_schema,
+                    context=schema_context,
                 )
                 if body is not None:
                     _params["body"] = body
                     _params["content_type"] = content_type
 
     def _validate_response(
-        self, response_schema: type[Schema] | None, _params: dict[str, Any]
+        self,
+        response_schema: type[Schema] | None,
+        _params: dict[str, Any],
+        used_permissions: set[str],
     ) -> cmk_http.Response:
         with tracer.span("endpoint-body-call"):
             try:
                 response = self.func(_params)
             except ValidationError as exc:
                 response = problem(
-                    status=400,
-                    title=http.client.responses[400],
+                    status=HTTPStatus.BAD_REQUEST,
+                    title=HTTPStatus.BAD_REQUEST.phrase,
                     detail=f"These fields have problems: {self._format_fields(exc.messages)}",
                     fields=FIELDS(
                         exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
@@ -582,7 +576,7 @@ class Endpoint:
                 # handle_endpoint_request(). Raised (not turned into `response` directly) so it
                 # bypasses this endpoint's declared status codes, like RestAPIWatoDisabledException.
                 raise RestAPIForbiddenException(
-                    title=http.client.responses[403],
+                    title=HTTPStatus.FORBIDDEN.phrase,
                     detail=str(exc),
                 ) from exc
 
@@ -595,7 +589,7 @@ class Endpoint:
                 endpoint=str(self),
                 params=_params,
                 permissions_required=self.permissions_required,
-                used_permissions=self._used_permissions,
+                used_permissions=used_permissions,
                 is_testing=is_testing_context,
             )
 
@@ -637,7 +631,7 @@ class Endpoint:
 
         response.freeze()
         # response code 204 does not have headers.
-        if response.status_code == 204:
+        if response.status_code == HTTPStatus.NO_CONTENT:
             for key in ["Content-Type", "Etag"]:
                 del response.headers[key]
         return response
@@ -676,18 +670,28 @@ class Endpoint:
 
         @functools.wraps(self.func)
         def _validating_wrapper(param: Mapping[str, Any]) -> cmk_http.Response:  # type: ignore[misc]
-            # TODO: Better error messages, pointing to the location where variables are missing
+            used_permissions: set[str] = set()
+            with track_permissions(
+                functools.partial(self._on_permission_checked, used_permissions)
+            ):
+                return _validate_and_call(param, used_permissions)
 
-            self._used_permissions = set()
+        def _validate_and_call(
+            param: Mapping[str, Any], used_permissions: set[str]
+        ) -> cmk_http.Response:
+            # TODO: Better error messages, pointing to the location where variables are missing
 
             _params = dict(param)
             del param
 
+            # The fields looking up hosts and folders share the tree of this request.
+            schema_context = request_schema_context(active_config)
+
             self._content_type_validation()
-            self._path_validation(path_schema, _params)
-            self._query_param_validation(query_schema, _params)
+            self._path_validation(path_schema, _params, schema_context)
+            self._query_param_validation(query_schema, _params, schema_context)
             self._header_validation(header_schema, _params)
-            self._request_data_validation(request_schema, _params)
+            self._request_data_validation(request_schema, _params, schema_context)
 
             # make pylint happy
             assert callable(self.func)
@@ -705,7 +709,7 @@ class Endpoint:
             #     # Intentionally generate a crash report.
             #     raise PermissionError(f"Permissions need to be specified for {self}")
 
-            return self._validate_response(response_schema, _params)
+            return self._validate_response(response_schema, _params, used_permissions)
 
         def _wrap_with_wato_lock(func: WrappedFunc) -> WrappedFunc:
             # We need to lock the whole of the validation process, not just the function itself.
@@ -732,7 +736,15 @@ class Endpoint:
     @property
     def does_redirects(self) -> bool:
         # created, moved permanently, found, see other
-        return any(code in self._expected_status_codes for code in [201, 301, 302, 303])
+        return any(
+            code in self._expected_status_codes
+            for code in [
+                HTTPStatus.CREATED,
+                HTTPStatus.MOVED_PERMANENTLY,
+                HTTPStatus.FOUND,
+                HTTPStatus.SEE_OTHER,
+            ]
+        )
 
     @property
     def ident(self) -> str:

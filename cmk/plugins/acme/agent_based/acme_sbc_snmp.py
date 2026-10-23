@@ -12,15 +12,14 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     LevelsT,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.acme.agent_based.lib import DETECT_ACME
 
 # comNET GmbH, Fabian Binder
@@ -41,10 +40,8 @@ class Section:
 
 def parse_acme_sbc_snmp(string_table: StringTable) -> Section | None:
     if string_table:
-        return Section(
-            score=string_table[0][1],
-            status=string_table[1][1],
-        )
+        score, status = string_table[0]
+        return Section(score=score, status=status)
     return None
 
 
@@ -57,10 +54,6 @@ snmp_section_acme_sbc_snmp = SimpleSNMPSection(
     ),
     parse_function=parse_acme_sbc_snmp,
 )
-
-
-def discover_acme_sbc_snmp(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_acme_sbc_snmp(params: ParamsT, section: Section) -> CheckResult:
@@ -92,7 +85,7 @@ def check_acme_sbc_snmp(params: ParamsT, section: Section) -> CheckResult:
 check_plugin_acme_sbc_snmp = CheckPlugin(
     name="acme_sbc_snmp",
     service_name="ACME SBC health",
-    discovery_function=discover_acme_sbc_snmp,
+    discovery_function=discover_one_service,
     check_function=check_acme_sbc_snmp,
     check_ruleset_name="acme_sbc_snmp",
     check_default_parameters=ParamsT(lower_levels=("fixed", (75, 50))),

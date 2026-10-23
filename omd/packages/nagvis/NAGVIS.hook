@@ -1,0 +1,5 @@
+# Alias: Enable NagVis
+# Menu: Web GUI
+# Description:
+#  This option makes the Apache of this site serve the NagVis web
+#  interface. NagVis is deprecated, use Checkmk Maps instead.

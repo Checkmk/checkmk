@@ -88,7 +88,7 @@ def create_validation_error_for_mk_user_error[ModelT](
         try:
             wrapped_function(value)
         except MKUserError as e:
-            raise ValidationError(message=Message(str(e)))  # astrein: disable=localization-checker
+            raise ValidationError(message=Message(str(e)))  # astrein: disable=localization
 
     return wrapped
 

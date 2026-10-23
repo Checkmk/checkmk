@@ -8,7 +8,7 @@ UNIT_PERCENT = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_queue_utilization = metrics.Metric(
     name="cisco_sma_queue_utilization",
-    title=Title("Utilization"),
+    title=Title("Message queue utilization"),
     unit=UNIT_PERCENT,
     color=metrics.Color.DARK_BLUE,
 )

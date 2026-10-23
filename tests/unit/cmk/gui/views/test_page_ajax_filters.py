@@ -11,6 +11,10 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.views.page_ajax_filters import AjaxInitialViewFilters
 
 
@@ -51,7 +55,13 @@ def test_page_reports_a_malformed_filter_request(
 ) -> None:
     # A well formed request for an existing view, but with no filter infos to render
     page_request = _RequestReturning(api_request)
-    ctx = PageContext(config=load_config, request=cast(Request, page_request))
+    ctx = PageContext(
+        config=load_config,
+        request=cast(Request, page_request),
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(load_config, all_permissions()),
+    )
 
     with pytest.raises(MKUserError) as excinfo:
         AjaxInitialViewFilters().page(ctx)

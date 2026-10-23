@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { useDebounceRef } from 'cmk-ui-library/lib/useDebounce'
@@ -26,6 +27,8 @@ import Stage2Header from '../../../components/Stage2Header.vue'
 const { _t } = usei18n()
 
 interface Stage2Props {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   filters: ConfiguredFilters
   editWidgetSpec?: WidgetSpec | null
@@ -103,6 +106,8 @@ const gotoNextStage = () => {
   <DashboardPreviewContent
     widget_id="event-stats-preview"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
     :general_settings="widgetProps.general_settings"
     :content="widgetProps.content"
     :effective-title="widgetProps.effectiveTitle"

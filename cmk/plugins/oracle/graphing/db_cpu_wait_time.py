@@ -33,7 +33,7 @@ perfometer_oracle_db_cpu_wait_time = perfometers.Perfometer(
         perfometers.Closed(0),
         perfometers.Closed(
             metrics.Constant(
-                Title(""),
+                Title("Upper focus range limit"),
                 UNIT_COUNTER,
                 metrics.Color.BLUE,
                 50.0,

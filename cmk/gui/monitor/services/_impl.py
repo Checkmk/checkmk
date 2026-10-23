@@ -28,6 +28,7 @@ from cmk.livestatus_client.types import Column
 
 from ._exceptions import ServiceNotFoundError
 from ._models import (
+    CheckType,
     HostState,
     RescheduleTarget,
     Service,
@@ -89,6 +90,9 @@ class LiveStatusHostServicesRepository:
                 Services.last_state_change,
                 Services.perf_data,
                 Services.check_command,
+                Services.check_type,
+                Services.cached_at,
+                Services.cache_interval,
                 *(
                     column
                     for field, columns in _OPTIONAL_COLUMNS.items()
@@ -114,7 +118,9 @@ class LiveStatusHostServicesRepository:
                         in_downtime=row["scheduled_downtime_depth"] > 0,
                         notifications_enabled=bool(row["notifications_enabled"]),
                         num_comments=len(row["comments"]),
-                        active_checks_disabled=_manually_disabled(row, "active_checks_enabled"),
+                        active_checks_manually_disabled=_manually_disabled(
+                            row, "active_checks_enabled"
+                        ),
                         passive_checks_disabled=_manually_disabled(
                             row, "passive_checks_enabled", column="accept_passive_checks"
                         ),
@@ -125,9 +131,13 @@ class LiveStatusHostServicesRepository:
                         stale=row["staleness"] >= active_config.staleness_threshold,
                         summary=row["plugin_output"],
                         last_check=int(row["last_check"]) or None,
-                        last_state_change=int(row["last_state_change"]),
+                        last_state_change=int(row["last_state_change"]) or None,
                         perf_data=row["perf_data"],
                         check_command=row["check_command"],
+                        active_checks_enabled=bool(row["active_checks_enabled"]),
+                        check_type=CheckType(row["check_type"]),
+                        cached_at=int(row["cached_at"]) or None,
+                        cache_interval=int(row["cache_interval"]),
                         labels=(
                             ServiceLabelValue.by_label(row["labels"], row["label_sources"])
                             if "labels" in row
@@ -138,6 +148,7 @@ class LiveStatusHostServicesRepository:
                         contact_groups=(
                             list(row["contact_groups"]) if "contact_groups" in row else None
                         ),
+                        groups=list(row["groups"]) if "groups" in row else None,
                     )
                     for row in q.iterate(conn)
                 ],
@@ -182,6 +193,9 @@ class LiveStatusHostServicesRepository:
                 Services.label_sources,
                 Services.perf_data,
                 Services.check_command,
+                Services.check_type,
+                Services.cached_at,
+                Services.cache_interval,
             ],
             And(Services.host_name == hostname, Services.description == service_name),
         )
@@ -201,15 +215,19 @@ class LiveStatusHostServicesRepository:
             ),
             summary=row["plugin_output"],
             last_check=int(row["last_check"]) or None,
-            last_state_change=int(row["last_state_change"]),
+            last_state_change=int(row["last_state_change"]) or None,
             perf_data=row["perf_data"],
             check_command=row["check_command"],
+            active_checks_enabled=bool(row["active_checks_enabled"]),
+            check_type=CheckType(row["check_type"]),
+            cached_at=int(row["cached_at"]) or None,
+            cache_interval=int(row["cache_interval"]),
             labels=ServiceLabelValue.by_label(row["labels"], row["label_sources"]),
             acknowledged=bool(row["acknowledged"]),
             in_downtime=row["scheduled_downtime_depth"] > 0,
             notifications_enabled=bool(row["notifications_enabled"]),
             num_comments=len(row["comments"]),
-            active_checks_disabled=_manually_disabled(row, "active_checks_enabled"),
+            active_checks_manually_disabled=_manually_disabled(row, "active_checks_enabled"),
             passive_checks_disabled=_manually_disabled(
                 row, "passive_checks_enabled", column="accept_passive_checks"
             ),
@@ -227,7 +245,8 @@ class LiveStatusHostServicesRepository:
             host_acknowledged=bool(row["host_acknowledged"]),
             host_in_downtime=row["host_scheduled_downtime_depth"] > 0,
             contact_groups=list(row["contact_groups"]),
-            long_output=row["long_plugin_output"],
+            groups=None,
+            long_output=_unescape_livestatus_newlines(row["long_plugin_output"]),
             current_attempt=row["current_attempt"],
             max_check_attempts=row["max_check_attempts"],
             next_check=int(row["next_check"]) or None,
@@ -278,6 +297,7 @@ _OPTIONAL_COLUMNS: Mapping[ServiceOptionalField, tuple[Column, ...]] = {
     ServiceOptionalField.TAGS: (Services.tags,),
     ServiceOptionalField.CONTACTS: (Services.contacts,),
     ServiceOptionalField.CONTACT_GROUPS: (Services.contact_groups,),
+    ServiceOptionalField.GROUPS: (Services.groups,),
 }
 
 
@@ -335,6 +355,10 @@ def _in_check_period(row: Mapping[str, object]) -> bool:
     return bool(row["in_check_period"]) and bool(row["in_passive_check_period"])
 
 
+def _unescape_livestatus_newlines(text: str) -> str:
+    return text.replace("\\n", "\n")
+
+
 def _manually_disabled(
     row: Mapping[str, object], attribute: str, *, column: str | None = None
 ) -> bool:
@@ -373,6 +397,7 @@ _SEARCHED_FIELDS: Mapping[ServiceOptionalField, Callable[[str], QueryExpression]
     ServiceOptionalField.CONTACT_GROUPS: lambda query: Services.contact_groups.contains(
         query, ignore_case=True
     ),
+    ServiceOptionalField.GROUPS: lambda query: Services.groups.contains(query, ignore_case=True),
 }
 
 

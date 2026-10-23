@@ -296,7 +296,7 @@ def custom_snapin_classes(
     return snapins
 
 
-def all_snapins(user_permissions: UserPermissions) -> dict[str, type[SidebarSnapin]]:
+def all_snapins() -> dict[str, type[SidebarSnapin]]:
     return dict(snapin_registry.items()) | custom_snapin_classes(
-        CustomSnapins.load(user_permissions).instances_sorted()
+        CustomSnapins.load().instances_sorted()
     )

@@ -12,6 +12,7 @@ REST-API.
 """
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any
 
 import cmk.product_usage.collectors.grafana as grafana_collector
@@ -25,6 +26,7 @@ from cmk.gui.graphing import (
     build_template_graphs,
     evaluate_built_graphs,
     evaluated_to_graph_spec,
+    EvaluationOptions,
     get_graph_plugin_from_id,
     graphs_from_api,
     MKGraphNotFound,
@@ -104,45 +106,41 @@ def get_graph(params: Mapping[str, Any]) -> Response:
         )
         if (requested := next(iter(built_graphs), None)) is None:
             return problem(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Bad Request",
                 detail="The requested graph does not exist",
             )
         evaluated = evaluate_built_graphs(
             [requested.graph],
-            {
-                "consolidation_function": ConsolidationFunction(body["reduce"]),
-                "time_range": time_range,
-                "destination": None,
-            },
+            EvaluationOptions(
+                consolidation_function=ConsolidationFunction(body["reduce"]),
+                time_range=time_range,
+                destination=None,
+            ),
         )
 
     except MKUserError as e:
         return problem(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Bad Request",
             detail=e.message,
         )
 
     except (MKGraphNotFound, MKMissingDataError, MKLivestatusNotFoundError) as e:
         return problem(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Bad Request",
             detail=str(e),
         )
 
     if (evaluated_graph := next(iter(evaluated.graphs), None)) is None:
         return problem(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Bad Request",
             detail="The requested graph does not exist",
         )
 
-    return serve_json(
-        reorganize_response(
-            evaluated_to_graph_spec(evaluated_graph, fallback_time_range=time_range)
-        )
-    )
+    return serve_json(reorganize_response(evaluated_to_graph_spec(evaluated_graph)))
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:

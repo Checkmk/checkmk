@@ -8,12 +8,13 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def test_hooks(site: Site) -> None:
     hooks = [
         "ADMIN_MAIL",
+        "APACHE_FORWARDED_HEADERS",
         "APACHE_MODE",
         "APACHE_TCP_ADDR",
         "APACHE_TCP_PORT",
@@ -44,11 +45,11 @@ def test_hooks(site: Site) -> None:
         "RABBITMQ_MANAGEMENT_PORT",
         "RABBITMQ_DIST_PORT",
         "AUTOMATION_HELPER",
+        "MAPS",
     ]
 
     if not site.edition.is_community_edition():
         hooks += [
-            "AI_CONTROL_PLANE",
             "LIVEPROXYD",
             "MCP_SERVER",
             "MCP_TRACE_FORWARD",
@@ -56,6 +57,7 @@ def test_hooks(site: Site) -> None:
 
     if not site.edition.is_cloud_edition():
         hooks += [
+            "NAGVIS",
             "TRACE_RECEIVE",
             "TRACE_RECEIVE_ADDRESS",
             "TRACE_RECEIVE_PORT",

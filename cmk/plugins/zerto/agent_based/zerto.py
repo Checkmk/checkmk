@@ -8,12 +8,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 @dataclass
@@ -33,10 +32,6 @@ def parse(string_table: StringTable) -> Section:
 agent_section_zerto_agent = AgentSection(name="zerto_agent", parse_function=parse)
 
 
-def discovery(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check(section: Section) -> CheckResult:
     if section.has_errors:
         yield Result(
@@ -51,6 +46,6 @@ def check(section: Section) -> CheckResult:
 check_plugin_zerto_agent = CheckPlugin(
     name="zerto_agent",
     service_name="Zerto Agent Status",
-    discovery_function=discovery,
+    discovery_function=discover_one_service,
     check_function=check,
 )

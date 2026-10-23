@@ -35,11 +35,10 @@ import omdlib
 import omdlib.backup
 from omdlib.args_site_user import args_to_command_line, Copy, Create, Move, Restore
 from omdlib.buffer import BufferWithCopy
-from omdlib.config_api import Config, ConfigHookChoices, Error, PortHook
+from omdlib.config_api import Config, ConfigHookChoices, Error, join_errors, PortHook
 from omdlib.config_hooks import (
     config_set_all,
     config_set_value,
-    ConfigHook,
     ConfigHooks,
     create_config_environment,
     get_hook,
@@ -63,7 +62,7 @@ from omdlib.dialog import (
 )
 from omdlib.finalize import CommandType, finalize_site_as_user, FinalizeOutcome
 from omdlib.global_options import GlobalOptions
-from omdlib.init_scripts import call_init_scripts, check_status
+from omdlib.init_scripts import all_stopped, call_init_scripts, check_status, daemon_states
 from omdlib.options import (
     Arguments,
     Command,
@@ -124,9 +123,7 @@ from omdlib.user_processes import (
 )
 from omdlib.users_and_groups import (
     find_processes_of_user,
-    group_exists,
     group_id,
-    groupdel,
     popen_as_site_user,
     run_as_site_user,
     user_id,
@@ -1426,11 +1423,15 @@ def config_change(
         validate_config_change_commands(config_hooks, settings)
 
         changed: list[str] = []
+        errors: list[Error] = []
         for key, value in settings:
-            config_set_value(site.name, config, key, value, save=False)
+            if (error := config_set_value(site.name, config, key, value, save=False)) is not None:
+                errors.append(error)
             changed.append(key)
 
         save_site_conf(site_home, config)
+        if (error := join_errors(*errors)) is not None:
+            sys.exit(error)
         return changed
     finally:
         if site_was_stopped:
@@ -1471,31 +1472,44 @@ def config_set(
     config: Config,
     config_hooks: ConfigHooks,
     args: Arguments,
-    verbose: bool,
-) -> list[str]:
+) -> Error | list[str]:
     if len(args) != 2:
-        sys.stderr.write("Please specify variable name and value\n")
         config_usage()
-        return []
+        return Error("Please specify variable name and value")
 
-    if not site.is_stopped(verbose):
-        sys.stderr.write("Cannot change config variables while site is running.\n")
-        return []
+    site_home = SitePaths.from_site_name(site.name).home
+    daemons = daemon_states(site_home)
+    if not all_stopped([state for _daemon, state in daemons]):
+        return _site_not_stopped_error(site_home, daemons)
 
     hook_name = args[0]
     value = args[1]
     hook = config_hooks.get(hook_name)
     if not hook:
-        sys.stderr.write("No such variable '%s'\n" % hook_name)
-        return []
+        return Error("No such variable '%s'" % hook_name)
 
     error_from_config_choice = _error_from_config_choice(get_hook(hook_name).choices, value)
     if error_from_config_choice is not None:
-        sys.stderr.write(f"Invalid value for '{value}'. {error_from_config_choice}\n")
-        return []
+        return Error(f"Invalid value for '{value}'. {error_from_config_choice}")
 
-    config_set_value(site.name, config, hook_name, value, save=True)
+    if (error := config_set_value(site.name, config, hook_name, value, save=True)) is not None:
+        return error
     return [hook_name]
+
+
+def _site_not_stopped_error(site_home: str, states: Sequence[tuple[str, int]]) -> Error:
+    """Name the init scripts that keep the site from being considered stopped."""
+    if running := [daemon for daemon, state in states if state == 0]:
+        return Error(
+            "Cannot change config variables while site is running. Running daemons: %s."
+            % ", ".join(running)
+        )
+    if states:
+        return Error(
+            "Cannot change config variables: No daemon is running, but all init scripts "
+            "report to be unused: %s." % ", ".join(daemon for daemon, _state in states)
+        )
+    return Error(f"Cannot change config variables: No init scripts found in {site_home}/etc/rc.d.")
 
 
 def _error_from_config_choice(choices: ConfigHookChoices, value: str) -> None | Error:
@@ -1527,13 +1541,12 @@ omd config change        - change multiple at once. Provide newline separated
     )
 
 
-def config_show(config: Config, config_hooks: ConfigHooks, args: Arguments) -> None:
+def config_show(config: Config, config_hooks: ConfigHooks, args: Arguments) -> Error | None:
     active_map = load_hook_dependencies(config, config_hooks)
-    hook: ConfigHook | None
+    errors: list[Error] = []
     if len(args) == 0:
         hook_names = sorted(config_hooks.keys())
         for hook_name in hook_names:
-            hook = config_hooks[hook_name]
             if active_map[hook_name]:
                 sys.stdout.write(f"{hook_name}: {config[hook_name]}\n")
     else:
@@ -1541,12 +1554,13 @@ def config_show(config: Config, config_hooks: ConfigHooks, args: Arguments) -> N
         for hook_name in args:
             hook = config_hooks.get(hook_name)
             if not hook:
-                sys.stderr.write("No such variable %s\n" % hook_name)
+                errors.append(Error(f"No such variable {hook_name}"))
             else:
                 output.append(config[hook_name])
 
         sys.stdout.write(" ".join(output))
         sys.stdout.write("\n")
+    return join_errors(*errors)
 
 
 def config_configure(
@@ -1970,6 +1984,7 @@ def init_site(
         site.name,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
+        config["APACHE_FORWARDED_HEADERS"],
         apache_reload,
         verbose=global_opts.verbose,
     )
@@ -1992,8 +2007,8 @@ def main_rm(
             "- Stop all processes of the site\n"
             "- Unmount tmpfs of the site\n"
             "- Remove tmpfs of the site from fstab\n"
-            "- Remove the system user <SITENAME>\n"
-            "- Remove the system group <SITENAME>\n"
+            f"- Remove the system user {site_name}\n"
+            f"- Remove the system group {site_name}\n"
             "- Remove the site home directory\n"
             "- Restart the system wide apache daemon\n"
             " [yes/NO]:"
@@ -2131,6 +2146,7 @@ def main_enable(
         site_name,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
+        config["APACHE_FORWARDED_HEADERS"],
         False,
         verbose=global_opts.verbose,
     )
@@ -2152,6 +2168,7 @@ def main_update_apache_config(
             site_name,
             config["APACHE_TCP_ADDR"],
             config["APACHE_TCP_PORT"],
+            config["APACHE_FORWARDED_HEADERS"],
             True,
             verbose=global_opts.verbose,
         )
@@ -2312,6 +2329,7 @@ def main_mv_or_cp(
         new_site.name,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
+        config["APACHE_FORWARDED_HEADERS"],
         "apache-reload" in options,
         verbose=global_opts.verbose,
     )
@@ -2871,6 +2889,7 @@ def main_config(
 
     config_hooks = load_config_hooks(site.hook_dir)
     set_hooks: list[str] = []
+    error: Error | None = None
     config = read_site_config(site_home)
     if len(args) == 0:
         set_hooks = list(config_configure(site, config, config_hooks, global_opts.verbose))
@@ -2878,16 +2897,23 @@ def main_config(
         command = args[0]
         args = args[1:]
         if command == "show":
-            config_show(config, config_hooks, args)
+            error = config_show(config, config_hooks, args)
         elif command == "set":
-            set_hooks = config_set(site, config, config_hooks, args, global_opts.verbose)
+            match config_set(site, config, config_hooks, args):
+                case Error() as config_error:
+                    error = config_error
+                case hook_names:
+                    set_hooks = hook_names
         elif command == "change":
             set_hooks = config_change(site, config, config_hooks, global_opts.verbose)
         else:
             config_usage()
+            error = Error(f"No such command '{command}'")
 
     if (
-        set(set_hooks).intersection({"APACHE_TCP_ADDR", "APACHE_TCP_PORT", "APACHE_MODE"})
+        set(set_hooks).intersection(
+            {"APACHE_TCP_ADDR", "APACHE_TCP_PORT", "APACHE_MODE", "APACHE_FORWARDED_HEADERS"}
+        )
         and not is_containerized()
     ):
         sys.stdout.write(
@@ -2899,6 +2925,9 @@ def main_config(
 
     if need_start:
         start_site(site, config)
+
+    if error is not None:
+        sys.exit(error)
 
 
 def main_su(
@@ -3054,6 +3083,7 @@ def _restore_backup_from_tar_root(
         site.name,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
+        config["APACHE_FORWARDED_HEADERS"],
         "apache-reload" in options,
         verbose=global_opts.verbose,
     )
@@ -3222,28 +3252,6 @@ def main_cleanup(
         version_path: str = os.path.join("/omd/versions", version)
         if os.path.exists(version_path):
             shutil.rmtree(version_path)
-
-    # In case the last version has been removed ensure some things created globally
-    # are removed.
-    if not omd_versions(versions_path):
-        _cleanup_global_files(version_info)
-
-
-def _cleanup_global_files(version_info: VersionInfo) -> None:
-    sys.stdout.write("No version left. Cleaning up global files.\n")
-    shutil.rmtree(version_info.OMD_PHYSICAL_BASE, ignore_errors=True)
-
-    for path in [
-        "/omd",
-        version_info.APACHE_CONF_DIR + "/zzz_omd.conf",
-        "/etc/init.d/omd",
-        "/usr/bin/omd",
-    ]:
-        with contextlib.suppress(FileNotFoundError):
-            os.unlink(path)
-
-    if group_exists("omd"):
-        groupdel("omd")
 
 
 # .

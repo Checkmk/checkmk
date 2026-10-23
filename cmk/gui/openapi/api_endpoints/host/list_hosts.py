@@ -76,6 +76,6 @@ ENDPOINT_LIST_HOSTS = VersionedEndpoint(
         family=HOST_STATUS_FAMILY.name,
         exclude_in_targets={"swagger-ui"},
     ),
-    behavior=EndpointBehavior(skip_locking=True),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.V1: EndpointHandler(handler=list_hosts_v1)},
 )

@@ -6,7 +6,6 @@
 import abc
 import collections
 import contextlib
-import json
 import re
 from collections.abc import Callable, Iterator, Sequence
 from typing import Final, override
@@ -127,6 +126,7 @@ def show_filter_form(view: View, show_filters: list[Filter]) -> None:
         context={f.ident: context.get(f.ident, {}) for f in show_filters if f.available()},
         page_name=view.name,
         reset_ajax_page="ajax_initial_view_filters",
+        request_cache=view.request_cache,
     )
 
 
@@ -218,14 +218,17 @@ class GUIViewRenderer(ABCViewRenderer):
         # html_head, opens <body>, the nav + sidebar, and the #content_area
         # wrapper that ``html.footer`` later closes via ``body_end``.
         if display_options.enabled(display_options.H):
-            MainNavigation.render(active_config, view_title(view_spec, self.view.context))
+            MainNavigation.render(
+                active_config,
+                view_title(view_spec, self.view.context, request_cache=self.view.request_cache),
+            )
 
         if display_options.enabled(display_options.T):
             breadcrumb = view_breadcrumb(self.view)
             top_heading(
                 html,
                 request,
-                view_title(view_spec, self.view.context),
+                view_title(view_spec, self.view.context, request_cache=self.view.request_cache),
                 breadcrumb,
                 page_menu=self._page_menu(rows, show_filters, user_permissions),
                 browser_reload=html.browser_reload,
@@ -244,15 +247,18 @@ class GUIViewRenderer(ABCViewRenderer):
         # enable_commands = painter_options.painter_option_form_enabled()
         # enable_checkboxes = view.layout.can_display_checkboxes and not checkboxes_enforced
         # selection_enabled = enable_checkboxes if enable_commands else checkboxes_enforced
-        html.javascript(
-            "cmk.selection.set_selection_enabled(%s);" % json.dumps(self.view.checkboxes_displayed)
+        html.call_ts_function(
+            function_name="set_selection_enabled",
+            arguments={"enabled": self.view.checkboxes_displayed},
         )
 
         layout = self.view.layout
 
         # Display the filter form on page rendering in some cases
         if self._should_show_filter_form():
-            html.final_javascript("cmk.page_menu.open_popup('popup_filters');")
+            html.call_ts_function(
+                function_name="open_popup", arguments={"popup_id": "popup_filters"}
+            )
 
         # Actions
         if command_form:
@@ -381,7 +387,7 @@ class GUIViewRenderer(ABCViewRenderer):
                     ),
                 )
                 row_info = "%d/%s" % (len(selected), row_info)
-            html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
+            html.call_ts_function(function_name="update_row_info", arguments={"text": row_info})
 
             # The number of rows might have changed to enable/disable actions and checkboxes
             if self._show_buttons:

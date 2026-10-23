@@ -36,6 +36,17 @@ def check_proxmox_ve_node_cpu_allocation(
     if section.node_total_cpu is None or section.allocated_cpu is None:
         return
 
+    if section.status == "offline" or section.node_total_cpu == 0:
+        yield Result(
+            state=State.OK,
+            summary=(
+                f"Node status: {section.status}, "
+                f"total CPUs: {int(section.node_total_cpu)}, "
+                "cannot calculate CPU allocation ratio"
+            ),
+        )
+        return
+
     yield from check_levels(
         value=(section.allocated_cpu / section.node_total_cpu) * 100,
         levels_upper=params["cpu_allocation_ratio"],

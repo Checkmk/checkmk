@@ -2,10 +2,13 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.openapi.api_endpoints.models.host_attribute_models import HostAttributeRequestModel
+from cmk.gui.openapi.api_endpoints.models.host_attribute_models import (
+    HostConfigAttributeRequestModel,
+)
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -19,12 +22,15 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedFolder
-from cmk.gui.openapi.framework.model.converter import HostConverter, TypedPlainValidator
+from cmk.gui.openapi.framework.model.converter import (
+    folder_tree_of_request,
+    HostConverter,
+    TypedPlainValidator,
+)
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.framework.model.restrict_features import RestrictFeatures
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.watolib import bakery
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.licensing.basics.options import OptionName
 
 from ._family import HOST_CONFIG_FAMILY
@@ -32,6 +38,7 @@ from ._utils import (
     host_etag,
     make_pending_changes,
     PERMISSIONS_CREATE,
+    reject_deprecated_attributes,
     serialize_host,
 )
 from .models.response_models import HostConfigModel
@@ -46,8 +53,8 @@ class CreateClusterHostModel:
         description="The path name of the folder.",
         example="/folder/subfolder",
     )
-    attributes: HostAttributeRequestModel = api_field(
-        default_factory=lambda: HostAttributeRequestModel(dynamic_fields={}),
+    attributes: HostConfigAttributeRequestModel = api_field(
+        default_factory=lambda: HostConfigAttributeRequestModel(dynamic_fields={}),
         description="Attributes to set on the newly created host. You can specify custom attributes and tag groups in addition to the built-in ones listed below.",
         example={"ipaddress": "192.168.0.123"},
     )
@@ -82,9 +89,11 @@ def create_cluster_host_v1(
     All the services of the individual nodes will be collated on the cluster host."""
     api_context.user.need_permission("wato.edit")
     host_name = body.host_name
+    attributes = body.attributes.to_internal()
+    reject_deprecated_attributes({}, attributes)
 
     body.folder.create_hosts(
-        [(host_name, body.attributes.to_internal(), body.nodes)],
+        [(host_name, attributes, body.nodes)],
         pprint_value=api_context.config.wato_pprint_config,
         pending_changes=make_pending_changes(api_context),
         acting_user=api_context.user,
@@ -92,12 +101,12 @@ def create_cluster_host_v1(
     if not isinstance(bake_agent, ApiOmitted) and bake_agent:
         bakery.try_bake_agents_for_hosts([host_name], debug=api_context.config.debug)
 
-    host = make_folder_tree(api_context.config).load_host(host_name)
+    host = folder_tree_of_request(api_context).load_host(host_name)
     return ApiResponse(
         serialize_host(
             host, api_context=api_context, compute_effective_attributes=False, compute_links=True
         ),
-        status_code=200,
+        status_code=HTTPStatus.OK,
         etag=host_etag(host),
     )
 

@@ -443,8 +443,23 @@ TEST(FileInfoTest, WindowsResources) {
     fs::path win_res_path = R"(c:\windows\Resources\)";
     auto files = details::FindFilesByMask(
         (win_res_path / "**" / "aero" / "aero*.*").wstring());
-    EXPECT_TRUE(files.size() == 2)
-        << "Normal OS HAVE TO HAVE only 2 aero msstyles files in windows/resources";
+    // Desktop Experience ships aero.msstyles and aerolite.msstyles, Server
+    // Core only aerolite.msstyles: expect exactly the ones this edition has,
+    // listed in sorted order to compare with the sorted glob result.
+    const auto aero_dir = win_res_path / "Themes" / "aero";
+    ASSERT_TRUE(fs::exists(aero_dir / "aerolite.msstyles"));
+    std::vector<std::wstring> expected;
+    for (const auto *name : {L"aero.msstyles", L"aerolite.msstyles"}) {
+        if (fs::exists(aero_dir / name)) {
+            expected.emplace_back(name);
+        }
+    }
+    std::vector<std::wstring> found;
+    for (const auto &f : files) {
+        found.emplace_back(tools::ToLower(f.filename().wstring()));
+    }
+    rs::sort(found);
+    EXPECT_EQ(found, expected);
 }
 
 TEST(FileInfoTest, Unicode) {

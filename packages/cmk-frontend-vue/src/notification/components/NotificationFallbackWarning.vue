@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { NotificationFallbackWarning } from 'cmk-shared-typing/typescript/notifications'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { useDismissDialog } from 'cmk-ui-library/lib/useDismissDialog'
 
@@ -23,7 +23,7 @@ function openInSameTab(url: string) {
 </script>
 
 <template>
-  <CmkAlertBox
+  <CmkAlert
     v-if="dismissalShown"
     :heading="untranslated(props.properties['i18n']['title'])"
     :main-button="{
@@ -35,7 +35,6 @@ function openInSameTab(url: string) {
       icon: 'cancel',
       onclick: dismissAlert
     }"
-  >
-    {{ untranslated(props.properties['i18n']['message']) }}
-  </CmkAlertBox>
+    :text="untranslated(props.properties['i18n']['message'])"
+  />
 </template>

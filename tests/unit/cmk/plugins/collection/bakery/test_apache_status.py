@@ -6,7 +6,7 @@
 from pathlib import Path
 from pprint import pformat
 
-from cmk.bakery.v2_unstable import OS, Plugin, PluginConfig
+from cmk.bakery.v2 import OS, Plugin, PluginConfig
 from cmk.plugins.collection.bakery.apache_status import bakery_plugin_apache_status
 
 

@@ -13,7 +13,7 @@ from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,
     all_host_attributes,
 )
-from tests.testlib.unit.gui.host_attributes_test_helper import (
+from tests.unit.cmk.gui.helpers.host_attributes_test_helper import (
     assert_cases_cover_form_spec_attributes,
     assert_form_spec_attribute_lifecycle,
     assert_form_spec_attribute_rejects,
@@ -143,10 +143,12 @@ def test_form_spec_value_behavior(
 def test_form_spec_accepted_value_survives_edit_page(
     form_spec_attribute: dict[str, ABCHostAttributeFormSpec],
     attr_name: str,
-    case: Case,
+    case: CasePass,
 ) -> None:
     """Render -> submit -> parse: an accepted value comes back off the page unchanged."""
-    assert_form_spec_attribute_lifecycle(form_spec_attribute[attr_name], case.value)
+    assert_form_spec_attribute_lifecycle(
+        form_spec_attribute[attr_name], case.value, case.submitted_value
+    )
 
 
 @pytest.mark.usefixtures("request_context")

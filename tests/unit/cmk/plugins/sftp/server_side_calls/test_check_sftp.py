@@ -64,3 +64,26 @@ def test_check_sftp_argument_parsing(
             command_arguments=expected_args,
         )
     ]
+
+
+def test_check_sftp_replaces_host_macros() -> None:
+    host_config = HostConfig(name="hostname", macros={"$HOSTNAME$": "ubuntu.home.arpa"})
+    params = {
+        "host": "$HOSTNAME$",
+        "user": "bar",
+        "secret": Secret(0),
+        "description": "SFTP on $HOSTNAME$",
+    }
+    assert list(active_check_sftp(params, host_config)) == [
+        ActiveCheckCommand(
+            service_description="SFTP on ubuntu.home.arpa",
+            command_arguments=(
+                "--host",
+                "ubuntu.home.arpa",
+                "--user",
+                "bar",
+                "--secret-reference",
+                Secret(0),
+            ),
+        )
+    ]

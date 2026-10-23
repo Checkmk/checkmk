@@ -30,7 +30,7 @@ def recompose(form_spec: FormSpec[Any]) -> SingleChoiceExtended[Any]:
         elements=[
             SingleChoiceElementExtended(
                 name=timePeriodName,
-                title=Title(  # astrein: disable=localization-checker
+                title=Title(  # astrein: disable=localization
                     f"{timePeriodName} - {timePeriodSpec['alias']}"
                 ),
             )

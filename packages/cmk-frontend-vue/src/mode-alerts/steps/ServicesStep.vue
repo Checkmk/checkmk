@@ -1,0 +1,362 @@
+<!--
+Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+<script setup lang="ts">
+import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
+import CmkButton from 'cmk-ui-library/components/CmkButton'
+import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
+import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
+import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
+import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
+import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
+import type { CmkWizardStepProps } from 'cmk-ui-library/components/CmkWizard'
+import { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
+import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
+import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
+import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
+import { CmkApiError } from 'cmk-ui-library/lib/error'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import useId from 'cmk-ui-library/lib/useId'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
+
+import { FormEdit, type ValidationMessages } from '@/form'
+
+import CustomServiceSelect from '@/mode-alerts/CustomServiceSelect.vue'
+import { formSpecErrors } from '@/mode-alerts/conditions-validation'
+import {
+  MAX_MATCHES,
+  type ServiceMatches,
+  searchCustomServices
+} from '@/mode-alerts/service-client'
+import {
+  type AlertModel,
+  type FolderPaths,
+  alertConditions,
+  hasUnparsableRegex,
+  servicePattern
+} from '@/mode-alerts/types'
+
+const SEARCH_DEBOUNCE_MS = 200
+const PREVIEW_LIMIT = 5
+
+const { _t } = usei18n()
+
+const { conditionsSpec, folderPaths } = defineProps<
+  CmkWizardStepProps & { conditionsSpec: FormSpec; folderPaths: FolderPaths }
+>()
+
+const model = defineModel<AlertModel>({ required: true })
+
+const patternFieldId = useId()
+
+const matchTypeOptions = computed(() => ({
+  type: 'fixed' as const,
+  suggestions: [
+    { name: 'exact', title: _t('Exact match') },
+    { name: 'regex', title: _t('Regular expression') }
+  ]
+}))
+
+const selectedMatchType = computed<string | null>({
+  get: () => model.value.matchType,
+  set: (value) => {
+    model.value.matchType = value === 'regex' ? 'regex' : 'exact'
+  }
+})
+
+// CmkDropdown models an empty selection as null, the alert model as an empty string.
+const selectedServiceName = computed({
+  get: () => (model.value.servicePattern === '' ? null : model.value.servicePattern),
+  set: (value) => {
+    model.value.servicePattern = value ?? ''
+  }
+})
+
+const matches = ref<ServiceMatches | null>(null)
+const searching = ref(false)
+const searchError = ref<string | null>(null)
+const displayErrors = ref(false)
+const conditionsValidation = ref<ValidationMessages>([])
+const showAllMatches = ref(false)
+
+// Discards the result of a search whose pattern has since been replaced, so two searches
+// resolving out of order cannot leave the older one on screen.
+let searchToken = 0
+let debounceTimer: ReturnType<typeof setTimeout> | undefined
+
+function getPatternErrors(): string[] {
+  if (servicePattern(model.value) === '') {
+    return [_t('A service name is required')]
+  }
+  if (hasUnparsableRegex(model.value)) {
+    return [_t('This is not a valid regular expression')]
+  }
+  return []
+}
+
+const patternErrors = computed(() => (displayErrors.value ? getPatternErrors() : []))
+
+const noMatches = computed(() => matches.value !== null && matches.value.services.length === 0)
+
+const visibleMatches = computed(() =>
+  showAllMatches.value
+    ? (matches.value?.services ?? [])
+    : (matches.value?.services ?? []).slice(0, PREVIEW_LIMIT)
+)
+
+async function search(): Promise<void> {
+  if (getPatternErrors().length > 0) {
+    return
+  }
+  const token = ++searchToken
+  searching.value = true
+  searchError.value = null
+  try {
+    const result = await searchCustomServices(
+      model.value.matchType,
+      servicePattern(model.value),
+      alertConditions(model.value, folderPaths)
+    )
+    if (token !== searchToken) {
+      return
+    }
+    matches.value = result
+    showAllMatches.value = false
+  } catch (error) {
+    if (token !== searchToken) {
+      return
+    }
+    matches.value = null
+    searchError.value =
+      error instanceof CmkApiError && error.statusCode < 500
+        ? error.message
+        : _t('Failed to search for custom services.')
+  } finally {
+    if (token === searchToken) {
+      searching.value = false
+    }
+  }
+}
+
+function cancelPendingSearch(): void {
+  if (debounceTimer !== undefined) {
+    clearTimeout(debounceTimer)
+    debounceTimer = undefined
+  }
+}
+
+// A result list left over from an earlier pattern would be misleading. The token is
+// invalidated here, not in `search()`, which a cleared or unparsable pattern never reaches.
+watch(
+  [
+    () => model.value.servicePattern,
+    () => model.value.matchType,
+    () => JSON.stringify(alertConditions(model.value, folderPaths))
+  ],
+  () => {
+    searchToken++
+    matches.value = null
+    searching.value = false
+    searchError.value = null
+    cancelPendingSearch()
+    debounceTimer = setTimeout(() => void search(), SEARCH_DEBOUNCE_MS)
+  }
+)
+
+onBeforeUnmount(cancelPendingSearch)
+
+async function validate(): Promise<boolean> {
+  displayErrors.value = true
+  cancelPendingSearch()
+  conditionsValidation.value = formSpecErrors(conditionsSpec, model.value.conditions)
+  if (getPatternErrors().length > 0 || conditionsValidation.value.length > 0) {
+    return false
+  }
+  if (matches.value === null) {
+    await search()
+  }
+  return searchError.value === null && (matches.value?.services.length ?? 0) > 0
+}
+</script>
+
+<template>
+  <CmkWizardStep :index="index" :is-completed="isCompleted">
+    <template #header>
+      <CmkHeading type="h3">{{ _t('Select services') }}</CmkHeading>
+    </template>
+
+    <template #content>
+      <div class="mode-alerts-services-step">
+        <CmkParagraph>
+          {{ _t('Select the custom services the alert applies to by their service name.') }}
+        </CmkParagraph>
+
+        <div class="mode-alerts-services-step__field">
+          <CmkLabel :for="patternFieldId">
+            {{ _t('Service name') }}
+            <CmkLabelRequired />
+            <CmkHelpText
+              :aria-label="_t('How are service names matched?')"
+              :help="
+                _t(
+                  'Exact matching needs the complete service name. A regular expression matches from the start of the service name, so begin it with .* to match anywhere in it.'
+                )
+              "
+            />
+          </CmkLabel>
+          <div class="mode-alerts-services-step__service-row">
+            <CmkDropdown
+              v-model="selectedMatchType"
+              :options="matchTypeOptions"
+              :label="_t('Match service name by')"
+            />
+            <CustomServiceSelect
+              :id="patternFieldId"
+              v-model="selectedServiceName"
+              :match-type="model.matchType"
+              :has-error="patternErrors.length > 0"
+            />
+          </div>
+          <CmkAlert
+            v-for="error in patternErrors"
+            :key="error"
+            variant="error"
+            size="small"
+            :text="untranslated(error)"
+          />
+        </div>
+
+        <div class="mode-alerts-services-step__field">
+          <CmkHeading type="h4">{{ _t('Conditions') }}</CmkHeading>
+          <FormEdit
+            v-model:data="model.conditions"
+            :spec="conditionsSpec"
+            :backend-validation="conditionsValidation"
+          />
+        </div>
+
+        <CmkAlert
+          v-if="searchError"
+          variant="error"
+          size="small"
+          :text="untranslated(searchError)"
+        />
+
+        <CmkLoading v-if="searching" />
+
+        <CmkAlert
+          v-else-if="noMatches"
+          :variant="displayErrors ? 'error' : 'warning'"
+          size="small"
+          :text="_t('No matching services. Only discovered services can be selected.')"
+        />
+
+        <div v-else-if="matches" class="mode-alerts-services-step__results">
+          <div class="mode-alerts-services-step__results-header">
+            <CmkLabel variant="subtitle">
+              {{ _t('Matching services') }} ({{ matches.services.length
+              }}{{ matches.truncated ? '+' : '' }})
+            </CmkLabel>
+            <CmkButton
+              v-if="matches.services.length > PREVIEW_LIMIT"
+              variant="text"
+              size="small"
+              @click="showAllMatches = !showAllMatches"
+            >
+              {{ showAllMatches ? _t('show preview') : _t('show all') }}
+            </CmkButton>
+          </div>
+          <CmkAlert
+            v-if="matches.truncated"
+            variant="warning"
+            size="small"
+            :text="
+              _t(
+                'Only the first %{count} matches are shown. Refine the service name to narrow them down.',
+                { count: MAX_MATCHES }
+              )
+            "
+          />
+          <CmkScrollContainer max-height="240px">
+            <ul class="mode-alerts-services-step__list">
+              <li
+                v-for="service in visibleMatches"
+                :key="`${service.hostName}:${service.serviceName}`"
+              >
+                <span>{{ service.serviceName }}</span>
+                <span class="mode-alerts-services-step__host">{{ service.hostName }}</span>
+              </li>
+            </ul>
+          </CmkScrollContainer>
+        </div>
+      </div>
+    </template>
+
+    <template #actions>
+      <CmkWizardButton type="next" :validation-cb="validate" />
+      <CmkWizardButton type="previous" />
+    </template>
+  </CmkWizardStep>
+</template>
+
+<style scoped>
+.mode-alerts-services-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-5);
+  max-width: 620px;
+}
+
+.mode-alerts-services-step__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-2);
+}
+
+.mode-alerts-services-step__service-row {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-4);
+}
+
+.mode-alerts-services-step__service-row > :last-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.mode-alerts-services-step__results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-2);
+  padding-top: var(--dimension-3);
+  border-top: 1px solid var(--ux-theme-6);
+}
+
+.mode-alerts-services-step__results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dimension-4);
+}
+
+.mode-alerts-services-step__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-small);
+}
+
+.mode-alerts-services-step__list li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--dimension-4);
+  padding: var(--dimension-2) 0;
+}
+
+.mode-alerts-services-step__host {
+  color: var(--font-color-dimmed);
+}
+</style>

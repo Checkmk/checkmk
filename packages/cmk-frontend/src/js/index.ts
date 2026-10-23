@@ -10,10 +10,12 @@ import * as d3 from 'd3'
 import * as d3Sankey from 'd3-sankey'
 import $ from 'jquery'
 
-import * as callable_functions from '@/modules/callable_functions'
+import '@/modules/callable_functions'
 import * as click_actions from '@/modules/click_actions'
+import * as ts_function_dispatcher from '@/modules/ts_function_dispatcher'
 
 import * as activation from './modules/activation'
+import * as ai_assistant from './modules/ai_assistant'
 import * as ajax from './modules/ajax'
 import * as async_progress from './modules/async_progress'
 import * as availability from './modules/availability'
@@ -59,15 +61,21 @@ import * as wato from './modules/wato'
 
 register()
 
+ai_assistant.reserve_panel_space_before_first_paint()
+
 $(() => {
   utils.update_header_timer()
+  const browser_reload = document.querySelector<HTMLMetaElement>('meta[name="cmk-browser-reload"]')
+  if (browser_reload) {
+    utils.set_reload(parseFloat(browser_reload.content))
+  }
   forms.enable_dynamic_form_elements()
   visibility_detection.initialize()
   // TODO: only register when needed?
   element_dragging.register_event_handlers()
 
   // add a confirmation popup for each for that has a valid confirmation text
-  callable_functions.init_callable_ts_functions(document)
+  ts_function_dispatcher.init_callable_ts_functions(document)
 
   // CSP-compatible replacement for inline onclick handlers
   click_actions.init_click_action_dispatcher()
@@ -124,6 +132,7 @@ export const cmk_export = {
     sites: sites,
     sla: sla,
     transfer: transfer,
+    ts_function_dispatcher: ts_function_dispatcher,
     utils: utils,
     valuespecs: valuespecs,
     views: views,

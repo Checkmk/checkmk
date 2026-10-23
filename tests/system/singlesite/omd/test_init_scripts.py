@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def test_init_scripts(site: Site) -> None:
@@ -16,6 +15,7 @@ def test_init_scripts(site: Site) -> None:
         "ui-job-scheduler",
         "core",
         "crontab",
+        "maps",
         "mkeventd",
         "nagios",
         "npcd",
@@ -40,9 +40,6 @@ def test_init_scripts(site: Site) -> None:
         }
     if site.edition.is_ultimate_edition() or site.edition.is_ultimatemt_edition():
         scripts |= {"otel-collector"}
-        # cmk-network-flow only ship on Ubuntu 24.04 for now.
-        if os.environ.get("DISTRO") == "ubuntu-24.04":
-            scripts |= {"network-flow"}
     if not site.edition.is_cloud_edition():
         scripts |= {"jaeger"}
 

@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ColumnDef, VisibilityState } from '@tanstack/vue-table'
+import type { ColumnDef, SortingState, VisibilityState } from '@tanstack/vue-table'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
@@ -28,6 +28,9 @@ export function columnId<T>(column: ColumnDef<T>): string | undefined {
 }
 
 function columnLabel<T>(column: ColumnDef<T>, id: string): string {
+  if (column.meta?.pickerLabel !== undefined) {
+    return column.meta.pickerLabel.toString()
+  }
   if (typeof column.header === 'string' && column.header !== '') {
     return column.header
   }
@@ -83,6 +86,8 @@ export interface BuildTableStateSchemaOptions<T> {
   columns: ColumnDef<T>[]
   limitTiers: number[]
   mayRemoveLimit: boolean
+  /** See {@link TableStateSchema.defaultSort}; defaults to none. */
+  defaultSort?: SortingState
 }
 
 /**
@@ -95,7 +100,8 @@ export interface BuildTableStateSchemaOptions<T> {
 export function buildTableStateSchema<T>({
   columns,
   limitTiers,
-  mayRemoveLimit
+  mayRemoveLimit,
+  defaultSort = []
 }: BuildTableStateSchemaOptions<T>): TableStateSchema {
   const sortable = new Set<string>()
   for (const column of columns) {
@@ -111,6 +117,7 @@ export function buildTableStateSchema<T>({
   return {
     hideable: buildToggleableColumns(columns).map(({ id }) => id),
     sortable,
+    defaultSort,
     defaultVisibility: computeDefaultVisibility(columns),
     offeredLimits: buildOfferedLimits(limitTiers, mayRemoveLimit)
   }

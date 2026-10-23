@@ -574,9 +574,19 @@ URL_PREFIX_FOR_LINKS_TO_CHECKMK_RESPONSE = fields.Nested(
 )
 
 
+class HttpProxyPassword(ExplicitOrStoreOptions):
+    store_id = PasswordStoreIDField()
+    password = fields.String(example="password")
+
+
+class HttpProxyAuth(BaseSchema):
+    user = fields.String(example="proxy_user")
+    password = fields.Nested(HttpProxyPassword)
+
+
 class HttpProxy(BaseSchema):
     option = fields.String(
-        enum=["no_proxy", "environment", "url", "global"],
+        enum=["no_proxy", "environment", "url", "global", "manual"],
         example="no_proxy",
     )
     url = fields.String(
@@ -585,6 +595,14 @@ class HttpProxy(BaseSchema):
     global_proxy_id = GlobalHTTPProxyField(
         presence="should_exist",
     )
+    scheme = fields.String(example="http")
+    proxy_server_name = fields.String(example="proxy.example.com")
+    port = fields.Integer(
+        example=3128,
+        description="The port of the proxy server. 0 means that the proxy URL this proxy was "
+        "converted from had no valid port, and the proxy has to be fixed.",
+    )
+    auth = fields.Nested(HttpProxyAuth)
 
 
 class HttpProxyValue(CheckboxOutput):

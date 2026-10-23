@@ -6,23 +6,20 @@
 
 from typing import assert_never, Literal
 
+from cmk.graphing_engine import DrawnLineType
+
 LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
-type DrawnLineType = Literal["line", "area", "stack"]
 
 
-def line_type_mirror(line_type: LineType) -> LineType:
+def line_type_with_mirroring(line_type: DrawnLineType, mirrored: bool) -> LineType:
+    if not mirrored:
+        return line_type
     match line_type:
         case "line":
             return "-line"
-        case "-line":
-            return "line"
         case "area":
             return "-area"
-        case "-area":
-            return "area"
         case "stack":
             return "-stack"
-        case "-stack":
-            return "stack"
         case other:
             assert_never(other)

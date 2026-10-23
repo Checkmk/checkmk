@@ -7,8 +7,11 @@ py_library(
     imports = ["../../.."],
     visibility = ["//visibility:public"],
     deps = [
+        "//cmk/utils:security_event",
+        "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:regex",
         "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:user",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web:context",
         requirement("flask"),

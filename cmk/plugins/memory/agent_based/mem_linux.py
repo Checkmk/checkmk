@@ -16,6 +16,7 @@ from cmk.agent_based.v2 import (
     Metric,
     Result,
     Service,
+    State,
 )
 from cmk.plugins.lib import memory
 from cmk.plugins.lib.memory import check_element
@@ -142,7 +143,7 @@ def _check_memory_dict(
     if "MemAvailable" in meminfo and "MemTotal" in meminfo:
         results["available"] = list(
             check_element(
-                "RAM available",
+                "Available RAM (kernel estimate)",
                 meminfo["MemTotal"] - meminfo["MemAvailable"],
                 meminfo["MemTotal"],
                 params.get("levels_available"),
@@ -192,6 +193,13 @@ def check_mem_linux(params: Mapping[str, Any], section: memory.SectionMem) -> Ch
     if not section:
         return
 
+    if missing := sorted(memory.LINUX_REQUIRED_KEYS - section.keys()):
+        yield Result(
+            state=State.UNKNOWN,
+            summary=f"Memory information is missing: {', '.join(missing)}",
+        )
+        return
+
     augmented = dict(section)
 
     # TODO: Currently some of these values are just set to generate the metrics later
@@ -218,7 +226,6 @@ def check_mem_linux(params: Mapping[str, Any], section: memory.SectionMem) -> Ch
         augmented["Dirty"]
         + augmented.get("Writeback", 0)
         + augmented.get("NFS_Unstable", 0)
-        + augmented.get("Bounce", 0)
         + augmented.get("WritebackTmp", 0)
     )
 

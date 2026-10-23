@@ -16,8 +16,13 @@ defineProps<{
 <template>
   <div class="global-settings-row">
     <div class="global-settings-row__label">
-      <CmkLabel :help="help" dots grow>
-        <slot name="label">{{ label }}</slot>
+      <CmkLabel :help="help" cursor="inherit" dots grow>
+        <span class="global-settings-row__label-content">
+          <span class="global-settings-row__label-text">
+            <slot name="label">{{ label }}</slot>
+          </span>
+          <slot name="label-end" />
+        </span>
       </CmkLabel>
     </div>
     <div class="global-settings-row__value">
@@ -29,9 +34,10 @@ defineProps<{
 <style scoped>
 .global-settings-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
-  gap: 8px;
-  padding: 4px 0;
+  gap: var(--dimension-4);
+  padding: var(--dimension-3) 0;
 }
 
 .global-settings-row__label {
@@ -40,10 +46,24 @@ defineProps<{
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
+  contain: inline-size;
+}
+
+.global-settings-row__label-content {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dimension-3);
+  max-width: 100%;
+}
+
+.global-settings-row__label-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .global-settings-row__value {
   flex: 1 1 0;
-  min-width: 0;
+  min-width: min-content;
 }
 </style>

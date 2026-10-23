@@ -10,7 +10,6 @@ import sys
 from contextlib import suppress
 
 import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
 import cmk.utils.log
 import cmk.utils.password_store
 from cmk.base import config
@@ -37,7 +36,6 @@ CONFIG = HostCheckConfig(
     dst="",
     verify_site_python=False,
     locations=[PluginLocation("dummy.callsite.of.plugin.location", "dummy_name")],
-    checks_to_load=[],
     disabled_service_ids=[ServiceID(CheckPluginName("dummy_plugin"), None)],
     ipaddresses={HostName("somehost"): HostAddress("::")},
     ipv6addresses={},
@@ -96,10 +94,9 @@ def main() -> int:
         # serials while running checks.
         active_config_path = detect_latest_config_path(omd_root)
 
-        _errors, sections, checks = config.load_and_convert_legacy_checks(CONFIG.checks_to_load)
-        plugins = load_selected_plugins(CONFIG.locations, sections, checks, validate=debug)
+        plugins = load_selected_plugins(CONFIG.locations, validate=debug)
 
-        app = make_app(cmk_version.edition(omd_root))
+        app = make_app(omd_root)
         raw_config = {
             **load_packed_config(active_config_path),
             # The precompiled host check resolves the addresses dynamically at
@@ -134,7 +131,7 @@ def main() -> int:
             loading_result.config_cache.label_manager,
             plugins,
             loading_result.config_cache,
-            config.make_hosts_config(loading_result.loaded_config),
+            loading_result.hosts_config,
             loading_result.host_tags,
             # NOTE: At the time of writing we do respect the "monitoring_core" setting even in
             # the raw edition (which will fail if it is set to "cmc").

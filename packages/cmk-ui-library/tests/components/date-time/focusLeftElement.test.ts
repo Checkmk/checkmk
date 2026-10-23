@@ -4,11 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { focusLeftElement } from 'cmk-ui-library/components/date-time/focusLeftElement'
-import { afterEach, describe, expect, test, vi } from 'vitest'
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
+import { describe, expect, test, vi } from 'vitest'
 
 function dispatchFocusOut(current: HTMLElement, relatedTarget: EventTarget | null): boolean {
   let left = false

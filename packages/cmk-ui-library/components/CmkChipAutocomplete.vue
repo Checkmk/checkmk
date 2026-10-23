@@ -18,6 +18,7 @@ import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 const SUGGEST_DEBOUNCE_MS = 200
@@ -56,6 +57,12 @@ const props = defineProps<{
 const model = defineModel<string[]>({ default: () => [] })
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Autocomplete'), [
+  { combo: ['ArrowDown'], description: _t('Move through suggestions') },
+  { combo: ['ArrowUp'], description: _t('Move through suggestions') },
+  { combo: ['Backspace'], description: _t('Remove last selected value') },
+  { combo: ['Escape'], description: _t('Clear input') }
+])
 
 const query = ref('')
 const suggestions = ref<string[]>([])
@@ -94,11 +101,24 @@ const matchingKeys = computed<string[]>(() => {
 
 const wildcardEntry = computed<string[]>(() => {
   const typed = query.value.trim()
-  if (!props.wildcardOption || typed === '' || typed.endsWith(WILDCARD)) {
+  if (
+    !props.wildcardOption ||
+    typed === '' ||
+    typed.endsWith(WILDCARD) ||
+    !isPrefixOfAPair(typed)
+  ) {
     return []
   }
   return [`${typed}${WILDCARD}`]
 })
+
+function isPrefixOfAPair(typed: string): boolean {
+  if (!props.keyValue) {
+    return true
+  }
+  const separator = typed.indexOf(KEY_VALUE_SEPARATOR)
+  return separator !== 0 && separator !== typed.length - 1
+}
 
 const matchedEntries = computed<string[]>(() => {
   const seen = new Set<string>()
@@ -260,8 +280,8 @@ defineExpose({ focus })
       :placeholder="placeholder ?? _t('Search')"
       :aria-label="ariaLabel ?? _t('Search')"
       @focusin="onFocus"
-      @keydown.down.prevent="onArrowDown"
-      @keydown.up.prevent="onArrowUp"
+      @keydown.down.prevent.stop="onArrowDown"
+      @keydown.up.prevent.stop="onArrowUp"
       @keydown.backspace="onBackspace"
       @keydown.escape="onEscape"
     />
@@ -278,8 +298,8 @@ defineExpose({ focus })
           class="cmk-chip-autocomplete__suggestion"
           :disabled="isFull"
           @click="select(suggestion)"
-          @keydown.down.prevent="moveFocus(1)"
-          @keydown.up.prevent="moveFocus(-1)"
+          @keydown.down.prevent.stop="moveFocus(1)"
+          @keydown.up.prevent.stop="moveFocus(-1)"
         >
           {{ suggestion }}
         </button>
@@ -298,7 +318,7 @@ defineExpose({ focus })
             <CmkIconButton
               class="cmk-chip-autocomplete__remove"
               name="close"
-              size="xxsmall"
+              size="xsmall"
               :title="_t('Remove %{value}', { value })"
               @click="remove(value)"
             />
@@ -376,8 +396,8 @@ defineExpose({ focus })
 .cmk-chip-autocomplete__remove {
   align-items: center;
   justify-content: center;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   margin-left: var(--dimension-2);
 }
 

@@ -24,21 +24,16 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def parse_filehandler(string_table: StringTable) -> StringTable:
     return string_table
-
-
-def discover_filehandler(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_filehandler(params: Mapping[str, Any], section: StringTable) -> CheckResult:
@@ -65,7 +60,7 @@ agent_section_filehandler = AgentSection(
 check_plugin_filehandler = CheckPlugin(
     name="filehandler",
     service_name="Filehandler",
-    discovery_function=discover_filehandler,
+    discovery_function=discover_one_service,
     check_function=check_filehandler,
     check_ruleset_name="filehandler",
     check_default_parameters={"levels": (80.0, 90.0)},

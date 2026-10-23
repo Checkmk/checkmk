@@ -17,9 +17,14 @@ from cmk.utils import paths
 
 
 class SupportsUserPermissionConfig(Protocol):
-    roles: dict[str, BuiltInUserRole | CustomUserRole]
-    multisite_users: dict[str, UserSpec]
-    default_user_profile: UserSpec
+    @property
+    def roles(self) -> Mapping[str, BuiltInUserRole | CustomUserRole]: ...
+
+    @property
+    def multisite_users(self) -> Mapping[str, UserSpec]: ...
+
+    @property
+    def default_user_profile(self) -> UserSpec: ...
 
 
 @dataclass(frozen=True)
@@ -113,6 +118,9 @@ class UserPermissions:
         if user_id is not None and is_automation_user(user_id):
             return ["guest"]  # unknown user with automation account
         return existing_role_ids(self._default_user_profile_roles)
+
+    def permission_exists(self, permission_name: str) -> bool:
+        return permission_name in self._permissions
 
     def user_may(self, user_id: UserId | None, permission_name: str) -> bool:
         key = (user_id, permission_name)

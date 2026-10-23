@@ -32,6 +32,7 @@ import type { SelectedDashboard } from './types'
 interface Props {
   selectedDashboard: SelectedDashboard | null
   canEditDashboard: boolean
+  canCloneAsResponsive: boolean
   linkUserGuide: string
   isEditMode: boolean
   publicToken: DashboardTokenModel | null
@@ -50,6 +51,7 @@ const emit = defineEmits<{
   'open-filter-settings': []
   'open-settings': []
   'open-clone-workflow': []
+  'open-responsive-clone-workflow': []
   'open-share-workflow': []
   'open-widget-workflow': []
   save: []
@@ -162,10 +164,13 @@ const copyInternalDashboardLink = async (): Promise<void> => {
           variant="condensed"
         >
           <template #trailing>
-            <MenuButton :disabled="isInteractionDisabled" @click="emit('open-runtime-filter')">
-              <CmkIcon name="filter" size="large" />
-              <span>{{ _t('Filter') }}</span>
-            </MenuButton>
+            <div class="db-menu-header__filter">
+              <div class="db-menu-header__separator" />
+              <MenuButton :disabled="isInteractionDisabled" @click="emit('open-runtime-filter')">
+                <CmkIcon name="filter" size="large" />
+                <span>{{ _t('Filter') }}</span>
+              </MenuButton>
+            </div>
           </template>
         </GlobalTimePicker>
       </template>
@@ -179,9 +184,12 @@ const copyInternalDashboardLink = async (): Promise<void> => {
           @open-sharing-settings="emit('open-share-workflow')"
         />
 
+        <!-- vue-tsc reads a kebab-case `aria-label` as an HTML attribute rather than the
+             `ariaLabel` prop, so it could not check that the icon-only dropdowns have a name. -->
+        <!-- eslint-disable vue/attribute-hyphenation -->
         <DropdownMenu
-          :icon="{ name: 'share', primaryColor: '--db-dashboard-menu-header-share-icon-color' }"
-          :label="_t('Share')"
+          :icon="{ name: 'share', primaryColor: '--interactive-accent-strong' }"
+          :ariaLabel="_t('Share')"
           :disabled="isInteractionDisabled"
           :options="[
             { label: _t('Copy internal link'), action: copyInternalDashboardLink },
@@ -209,7 +217,7 @@ const copyInternalDashboardLink = async (): Promise<void> => {
 
         <DropdownMenu
           icon="global-settings"
-          :label="_t('Settings')"
+          :ariaLabel="_t('Settings')"
           :right="!(isBuiltInDashboard || canEditDashboard)"
           :disabled="isInteractionDisabled"
           :options="[
@@ -225,6 +233,11 @@ const copyInternalDashboardLink = async (): Promise<void> => {
             },
             { label: _t('Clone dashboard'), action: () => emit('open-clone-workflow') },
             {
+              label: _t('Clone as responsive dashboard'),
+              action: () => emit('open-responsive-clone-workflow'),
+              hidden: !canCloneAsResponsive
+            },
+            {
               label: _t('Dashboard user guide'),
               url: linkUserGuide,
               target: '_blank',
@@ -238,6 +251,7 @@ const copyInternalDashboardLink = async (): Promise<void> => {
             }
           ]"
         />
+        <!-- eslint-enable vue/attribute-hyphenation -->
 
         <MenuButton
           v-if="isBuiltInDashboard"
@@ -285,17 +299,17 @@ const copyInternalDashboardLink = async (): Promise<void> => {
   display: flex;
   flex-flow: row nowrap;
   align-items: stretch;
-  gap: var(--dimension-4);
-  padding: 0 var(--dimension-4);
+  gap: var(--dimension-10);
   background-color: transparent;
 }
 
 .db-menu-header__left {
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   align-items: flex-start;
   gap: var(--dimension-4);
-  padding-top: var(--dimension-4);
+  padding-bottom: var(--dimension-7);
   flex: 0 0 auto;
 }
 
@@ -313,19 +327,24 @@ const copyInternalDashboardLink = async (): Promise<void> => {
   padding-top: var(--dimension-8);
   gap: var(--dimension-3);
   flex: 0 0 auto;
-
-  body[data-theme='modern-dark'] & {
-    --db-dashboard-menu-header-share-icon-color: var(--color-corporate-green-50);
-  }
-
-  body[data-theme='facelift'] & {
-    --db-dashboard-menu-header-share-icon-color: var(--color-corporate-green-70);
-  }
 }
 
 .db-menu-header__time-picker {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.db-menu-header__filter {
+  display: flex;
+  align-items: center;
+}
+
+.db-menu-header__separator {
+  align-self: stretch;
+  width: var(--dimension-1);
+  padding: 0 var(--dimension-5) 0 var(--dimension-4);
+  background-color: var(--color-mid-grey-60);
+  background-clip: content-box;
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

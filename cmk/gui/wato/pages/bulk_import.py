@@ -46,8 +46,8 @@ from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, CustomHostAttrSpec
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.selection_id import SelectionId
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Checkbox,
@@ -65,8 +65,8 @@ from cmk.gui.watolib.host_attributes import ABCHostAttribute, all_host_attribute
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
-    folder_tree,
     FolderTree,
+    make_folder_tree,
     strip_hostname_whitespace_chars,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -77,7 +77,8 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.ruleset_matcher.tags import TagGroup
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.icons import IconNames, StaticIcon
@@ -116,7 +117,7 @@ def _prevent_reused_attr_names(attr_names: Sequence[str | None]) -> None:
 def _attribute_choices(
     tag_groups: Sequence[TagGroup],
     custom_host_attrs: Sequence[CustomHostAttrSpec],
-) -> Choices:
+) -> list[Choice]:
     attributes = [
         (None, _("(please select)")),
         ("-", _("Don't import")),
@@ -140,9 +141,9 @@ def _attribute_choices(
     return attributes
 
 
-def _detect_attribute(attributes: Choices, header: str) -> str:
+def _detect_attribute(attributes: Sequence[Choice], header: str) -> str:
     """
-    Given a 'Choices' of possible host attributes, and assuming there is a
+    Given the possible host attributes as choices, and assuming there is a
     title line in the CSV, try to match the given title (for a particular
     column) with the attribute key most likely related to it.
     """
@@ -168,6 +169,7 @@ def _detect_attribute(attributes: Choices, header: str) -> str:
 def _host_rows_to_bulk(
     iterator: typing.Iterator[dict[str, str]],
     host_attributes: Mapping[str, ABCHostAttribute],
+    validation_config: Config,
 ) -> typing.Generator[ImportTuple]:
     """Here we transform each row into a tuple of HostName and HostAttributes and None.
 
@@ -208,7 +210,7 @@ def _host_rows_to_bulk(
                         % {"attr_name": attr_name},
                     )
                 try:
-                    host_attribute_inst.validate_input(attr_value, "")
+                    host_attribute_inst.validate_input(attr_value, "", validation_config)
                 except MKUserError as exc:
                     raise MKUserError(
                         None,
@@ -449,7 +451,7 @@ class ModeBulkImport(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if transactions.transaction_valid(request):
             if request.has_var("_do_upload"):
@@ -461,11 +463,12 @@ class ModeBulkImport(WatoMode):
 
             if request.var("_do_import"):
                 return self._import(
-                    folder_tree(),
+                    make_folder_tree(config),
                     csv_bulk_import,
                     host_attributes=all_host_attributes(
                         config.wato_host_attrs, config.tags.get_tag_groups_by_topic()
                     ),
+                    validation_config=config,
                     debug=config.debug,
                     pprint_value=config.wato_pprint_config,
                     pending_changes=PendingChanges(
@@ -545,6 +548,7 @@ class ModeBulkImport(WatoMode):
         csv_bulk_import: CSVBulkImport,
         host_attributes: Mapping[str, ABCHostAttribute],
         *,
+        validation_config: Config,
         debug: bool,
         pprint_value: bool,
         pending_changes: PendingChanges,
@@ -560,7 +564,7 @@ class ModeBulkImport(WatoMode):
         ]
         raw_rows = csv_bulk_import.rows_as_dict(attr_names)
         host_attribute_tuples: typing.Iterator[ImportTuple] = _host_rows_to_bulk(
-            raw_rows, host_attributes
+            raw_rows, host_attributes, validation_config
         )
 
         folder = folder_from_request(tree, request.var("folder"), request.get_ascii_input("host"))

@@ -12,49 +12,49 @@ UNIT_TIME = metrics.Unit(metrics.TimeNotation())
 
 metric_kube_memory_request_utilization = metrics.Metric(
     name="kube_memory_request_utilization",
-    title=Title("Requests utilization"),
+    title=Title("Memory requests utilization"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.DARK_BLUE,
 )
 metric_kube_memory_limit_utilization = metrics.Metric(
     name="kube_memory_limit_utilization",
-    title=Title("Limits utilization"),
+    title=Title("Memory limits utilization"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.DARK_PINK,
 )
 metric_kube_memory_cluster_allocatable_utilization = metrics.Metric(
     name="kube_memory_cluster_allocatable_utilization",
-    title=Title("Cluster utilization"),
+    title=Title("Memory cluster utilization"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.PURPLE,
 )
 metric_kube_memory_node_allocatable_utilization = metrics.Metric(
     name="kube_memory_node_allocatable_utilization",
-    title=Title("Node utilization"),
+    title=Title("Memory node utilization"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.PURPLE,
 )
 metric_kube_cpu_request_utilization = metrics.Metric(
     name="kube_cpu_request_utilization",
-    title=Title("Requests utilization"),
+    title=Title("CPU requests utilization"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.DARK_BLUE,
 )
 metric_kube_cpu_limit_utilization = metrics.Metric(
     name="kube_cpu_limit_utilization",
-    title=Title("Limits utilization"),
+    title=Title("CPU limits utilization"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.DARK_PINK,
 )
 metric_kube_cpu_cluster_allocatable_utilization = metrics.Metric(
     name="kube_cpu_cluster_allocatable_utilization",
-    title=Title("Cluster utilization"),
+    title=Title("CPU cluster utilization"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.PURPLE,
 )
 metric_kube_cpu_node_allocatable_utilization = metrics.Metric(
     name="kube_cpu_node_allocatable_utilization",
-    title=Title("Node utilization"),
+    title=Title("CPU node utilization"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.PURPLE,
 )

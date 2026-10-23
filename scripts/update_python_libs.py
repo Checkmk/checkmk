@@ -145,11 +145,6 @@ def _main() -> None:
 
     subprocess.check_call(["bazel", "mod", "deps", "--lockfile_mode=update"])
     after = RequriementsTxtParser.parse(requirements_txt_path)
-    # there is also a omd/requirements_lock.txt file, it looks like it will vanish soon
-    # I'm not sure how we would want to update that anyways. Special commit or all in one?
-    # Therefore let's keep it simple for now.
-    # Relocking would work like this:
-    # echo > omd/requirements_lock.txt; bazel run //omd:requirements_lock
     with open(".git-commit-msg", "w") as f:
         if args.packages:
             f.write(f"Update Python libraries: {', '.join(args.packages)}\n\n")

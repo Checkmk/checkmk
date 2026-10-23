@@ -12,7 +12,11 @@ def register_pages(
     page_registry: PageRegistry,
     command_registry: MonitorCommands,
     recurrences: DowntimeRecurrences,
+    teleport_target: str | None,
 ) -> None:
     page_registry.register(
-        PageEndpoint("monitor_all_hosts", MonitorAllHostsPage(command_registry, recurrences))
+        PageEndpoint(
+            "monitor_all_hosts",
+            MonitorAllHostsPage(command_registry, recurrences, teleport_target),
+        )
     )

@@ -21,23 +21,33 @@ Each chain has independently testable parts:
   central site" option.
 """
 
+from collections.abc import Mapping
 from typing import Any, cast
 
 import pytest
 
+import cmk.gui.watolib.sites
 from cmk.ccc.site import omd_site, SiteId
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
 from cmk.gui.user_connection_config_types import LDAPUserConnectionConfig
+from cmk.gui.watolib.config_domains import ConfigDomainOMD
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
+from cmk.gui.watolib.pending_changes import ChangeEvent, NoopPendingChangesStore, PendingChanges
 from cmk.gui.watolib.sites import (
     _auth_connections_from_disk,
     _auth_connections_to_disk,
     _user_attribute_sync_from_disk,
     _user_attribute_sync_to_disk,
+    PingResult,
+    ReplicationStatus,
+    ReplicationStatusFetcher,
     SiteManagement,
+    SitesConfigFile,
 )
 from cmk.livestatus_client import (
     NetworkSocketDetails,
@@ -45,7 +55,8 @@ from cmk.livestatus_client import (
     SiteConfiguration,
     SiteConfigurations,
 )
-from tests.testlib.gui.web_test_app import SetConfig
+from cmk.utils.automation_config import RemoteAutomationConfig
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
 def _local_site_config() -> SiteConfiguration:
@@ -477,3 +488,105 @@ def test_validate_configuration_accepts_invalid_site_id_of_existing_connection()
             {SiteId("central"): _local_site_config(), site_id: _remote_site_config()}
         ),
     )
+
+
+def _ping_remote_sites(
+    monkeypatch: pytest.MonkeyPatch, responses: Mapping[SiteId, object]
+) -> Mapping[SiteId, ReplicationStatus]:
+    def do_remote_automation(
+        automation_config: RemoteAutomationConfig, *_args: object, **_kwargs: object
+    ) -> object:
+        response = responses[automation_config.site_id]
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+    monkeypatch.setattr(cmk.gui.watolib.sites, "do_remote_automation", do_remote_automation)
+    return ReplicationStatusFetcher().fetch(
+        [
+            (
+                site_id,
+                RemoteAutomationConfig(
+                    site_id=site_id,
+                    base_url=f"http://{site_id}/{site_id}/check_mk/",
+                    secret="secret",
+                    insecure=False,
+                ),
+            )
+            for site_id in responses
+        ],
+        debug=False,
+    )
+
+
+def test_replication_status_is_fetched_from_all_sites(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    error = MKUserError(None, "Site is not running")
+
+    statuses = _ping_remote_sites(
+        monkeypatch,
+        {
+            SiteId("remote_1"): {
+                "version": "3.0.0",
+                "edition": "pro",
+                "license_state": "",
+                "omd_status": {"apache": 0},
+            },
+            SiteId("remote_2"): error,
+        },
+    )
+
+    assert statuses[SiteId("remote_1")].success
+    assert statuses[SiteId("remote_1")].response == PingResult(
+        version="3.0.0", edition="pro", omd_status={"apache": 0}, license_state=None
+    )
+    assert statuses[SiteId("remote_2")] == ReplicationStatus(
+        site_id=SiteId("remote_2"), success=False, response=error
+    )
+
+
+def test_malformed_ping_response_fails_only_the_affected_site(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    statuses = _ping_remote_sites(
+        monkeypatch,
+        {
+            SiteId("remote_1"): {"version": "3.0.0"},
+            SiteId("remote_2"): {
+                "version": "3.0.0",
+                "edition": "pro",
+                "license_state": "",
+                "omd_status": {"apache": 0},
+            },
+        },
+    )
+
+    assert not statuses[SiteId("remote_1")].success
+    assert isinstance(statuses[SiteId("remote_1")].response, KeyError)
+    assert statuses[SiteId("remote_2")].success
+
+
+@pytest.mark.usefixtures("request_context")
+def test_deleting_a_site_activates_the_domains_its_connection_affects() -> None:
+    sites = _distributed_site_configs(_local_site_config())
+    SitesConfigFile().save(sites, pprint_value=False)
+    events: list[ChangeEvent] = []
+
+    SiteManagement(connection_config_domains=[ConfigDomainOMD()]).delete_site(
+        make_folder_tree(Config()),
+        SiteId("remote"),
+        pprint_value=False,
+        pending_changes=PendingChanges(
+            activation_sites=sites,
+            local_site=omd_site(),
+            acting_user=None,
+            store=NoopPendingChangesStore(),
+            hooks=[events.append],
+        ),
+        liveproxyd_enabled=False,
+        use_git=False,
+        acting_user_id=None,
+    )
+
+    assert [event.request.domains for event in events] == [["multisite", ConfigDomainOMD.ident()]]

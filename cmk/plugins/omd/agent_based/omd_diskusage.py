@@ -50,7 +50,7 @@ SPECS: Final = {
     ),
     "/var/check_mk/crashes": Spec(metric_name="omd_crashes_size", label="Crashes"),
     "/var/check_mk/otel_collector": Spec(metric_name="omd_otel_collector_size", label="OTel"),
-    "/var/clickhouse-server": Spec(metric_name="omd_data_backend_size", label="Metric backend"),
+    "/var/clickhouse-server": Spec(metric_name="omd_data_backend_size", label="Data backend"),
 }
 
 

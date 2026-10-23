@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.type_defs import Users, UserSpec
+from cmk.gui.utils.graph_refresh import GRAPH_REFRESH_INTERVALS_SECONDS
 
 from ._check_credentials import (
     check_credentials,
@@ -100,7 +101,6 @@ from .store import (
     write_contacts_and_users_file,
 )
 from .user_attributes import (
-    GRAPH_REFRESH_INTERVALS_SECONDS,
     show_mode_choices,
     validate_start_url,
 )

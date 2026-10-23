@@ -34,33 +34,26 @@ from cmk.gui.views.inventory._display_hints import (
 from cmk.gui.views.inventory._paint_functions import (
     inv_paint_generic,
 )
-from cmk.inventory.structured_data import (
-    InventoryPath,
-    parse_internal_raw_path,
-    SDKey,
-    SDNodeName,
-    SDPath,
-    SDValue,
-    TreeSource,
-)
-from cmk.inventory_ui.v1_unstable import AgeNotation as AgeNotationFromAPI
-from cmk.inventory_ui.v1_unstable import Alignment as AlignmentFromAPI
-from cmk.inventory_ui.v1_unstable import BackgroundColor as BackgroundColorFromAPI
-from cmk.inventory_ui.v1_unstable import BoolField as BoolFieldFromAPI
-from cmk.inventory_ui.v1_unstable import ChoiceField as ChoiceFieldFromAPI
-from cmk.inventory_ui.v1_unstable import DecimalNotation as DecimalNotationFromAPI
-from cmk.inventory_ui.v1_unstable import IECNotation as IECNotationFromAPI
-from cmk.inventory_ui.v1_unstable import Label as LabelFromAPI
-from cmk.inventory_ui.v1_unstable import LabelColor as LabelColorFromAPI
-from cmk.inventory_ui.v1_unstable import NumberField as NumberFieldFromAPI
-from cmk.inventory_ui.v1_unstable import SINotation as SINotationFromAPI
-from cmk.inventory_ui.v1_unstable import (
+from cmk.inventory.raw_paths import InventoryPath, parse_internal_raw_path, TreeSource
+from cmk.inventory.trees import SDKey, SDNodeName, SDPath, SDValue
+from cmk.inventory_ui.v1 import AgeNotation as AgeNotationFromAPI
+from cmk.inventory_ui.v1 import Alignment as AlignmentFromAPI
+from cmk.inventory_ui.v1 import BackgroundColor as BackgroundColorFromAPI
+from cmk.inventory_ui.v1 import BoolField as BoolFieldFromAPI
+from cmk.inventory_ui.v1 import ChoiceField as ChoiceFieldFromAPI
+from cmk.inventory_ui.v1 import DecimalNotation as DecimalNotationFromAPI
+from cmk.inventory_ui.v1 import IECNotation as IECNotationFromAPI
+from cmk.inventory_ui.v1 import Label as LabelFromAPI
+from cmk.inventory_ui.v1 import LabelColor as LabelColorFromAPI
+from cmk.inventory_ui.v1 import NumberField as NumberFieldFromAPI
+from cmk.inventory_ui.v1 import SINotation as SINotationFromAPI
+from cmk.inventory_ui.v1 import (
     StandardScientificNotation as StandardScientificNotationFromAPI,
 )
-from cmk.inventory_ui.v1_unstable import TextField as TextFieldFromAPI
-from cmk.inventory_ui.v1_unstable import TimeNotation as TimeNotationFromAPI
-from cmk.inventory_ui.v1_unstable import Title as TitleFromAPI
-from cmk.inventory_ui.v1_unstable import Unit as UnitFromAPI
+from cmk.inventory_ui.v1 import TextField as TextFieldFromAPI
+from cmk.inventory_ui.v1 import TimeNotation as TimeNotationFromAPI
+from cmk.inventory_ui.v1 import Title as TitleFromAPI
+from cmk.inventory_ui.v1 import Unit as UnitFromAPI
 
 
 @pytest.mark.parametrize(
@@ -593,6 +586,53 @@ def test_render_choice() -> None:
             prevent_line_break=False,
         ),
         "<2> (No such value)",
+    )
+
+
+def _styled_choice_field() -> ChoiceFieldFromAPI[int]:
+    return ChoiceFieldFromAPI(
+        TitleFromAPI("A title"),
+        mapping={1: LabelFromAPI("One")},
+        style=lambda _: [LabelColorFromAPI.PINK, BackgroundColorFromAPI.BLUE],
+    )
+
+
+def test_render_choice_styles_a_mapped_value() -> None:
+    assert _PaintChoice(_styled_choice_field())(123, 1) == (
+        TDStyles(
+            css_class="",
+            text_align="center",
+            background_color="#28a2f3",
+            color="#ec48b6",
+            prevent_line_break=False,
+        ),
+        "One",
+    )
+
+
+def test_render_choice_does_not_style_an_unmapped_value() -> None:
+    assert _PaintChoice(_styled_choice_field())(123, 2) == (
+        TDStyles(
+            css_class="",
+            text_align="center",
+            background_color="",
+            color="",
+            prevent_line_break=False,
+        ),
+        "<2> (No such value)",
+    )
+
+
+def test_render_choice_does_not_style_a_value_of_another_type() -> None:
+    assert _PaintChoice(_styled_choice_field())(123, "1") == (
+        TDStyles(
+            css_class="",
+            text_align="center",
+            background_color="",
+            color="",
+            prevent_line_break=False,
+        ),
+        "<1> (No such value)",
     )
 
 

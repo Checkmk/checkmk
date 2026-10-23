@@ -10,21 +10,11 @@
 
 from unittest.mock import patch
 
-from cmk.agent_based.v2 import Result, Service
+from cmk.agent_based.v2 import Result
 from cmk.plugins.fireeye.agent_based.fireeye_content import (
     check_fireeye_content,
-    discover_fireeye_content,
     parse_fireeye_content,
 )
-
-
-def test_fireeye_content_discovery() -> None:
-    """Test discovery of FireEye content status."""
-    # SNMP data: [version, status, timestamp]
-    parsed = parse_fireeye_content([["456.180", "1", "2016/02/26 15:42:06"]])
-    assert parsed is not None
-
-    assert list(discover_fireeye_content(parsed)) == [Service()]
 
 
 def test_fireeye_content_check_ok() -> None:

@@ -5,6 +5,7 @@
 
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -13,6 +14,8 @@ from unittest import mock
 from git.repo import Repo
 
 from cmk.werks.tool.cli.stash import Stash
+
+from ._werk_files import werk_text
 
 
 def initialize_werks_project(
@@ -33,6 +36,7 @@ def initialize_werks_project(
         extra_options.append(f'werk_ids_server_url = "{werk_ids_server_url}"')
     extra_config = "\n".join(extra_options)
     (werks / "config").write_text(f"""
+flavor = "cmk"
 editions = [("community", "COMMUNITY")]
 components = [("ccc", "CCC")]
 edition_components = {"{}"}
@@ -88,6 +92,12 @@ def write_secret(home: Path, mode: int = 0o600) -> Path:
     return secret
 
 
+def read_log(home: Path) -> list[str]:
+    # every line is "<CMKFormatter timestamp, logger and level> <the entry itself>"
+    log_file = home / ".local/state/cmk-werks/werk-ids.log"
+    return [line.split("[INFO] ", 1)[1] for line in log_file.read_text().splitlines()]
+
+
 def write_stash(home: Path, ids: list[int]) -> Path:
     stash_file = home / ".local/state/cmk-werks/reserved-ids"
     stash_file.parent.mkdir(parents=True, exist_ok=True)
@@ -105,6 +115,18 @@ def latest_commit_subject(repo_path: Path) -> str:
     return message.split("\n")[0]
 
 
+def _create_werk(home: Path, repo_path: Path, title: bytes = b"some_title") -> None:
+    with mock.patch.dict(os.environ, {"HOME": str(home), "EDITOR": "true"}):
+        os.chdir(repo_path)
+        p = subprocess.Popen(
+            [sys.executable, "-m", "cmk.werks.tool", "new"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        p.communicate(input=title + b"\nf\nc\nc\n1\nc\nk\n", timeout=30)
+
+
 def test_create_werk_consumes_a_reserved_id(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()
@@ -114,20 +136,93 @@ def test_create_werk_consumes_a_reserved_id(tmp_path: Path) -> None:
     repo_path = tmp_path / "repo"
     initialize_werks_project(repo_path, first_free=11_111)
 
-    with mock.patch.dict(os.environ, {"HOME": str(home), "EDITOR": "true"}):
-        os.chdir(repo_path)
-        p = subprocess.Popen(
-            [sys.executable, "-m", "cmk.werks.tool", "new"],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        p.communicate(input=b"some_title\nf\nc\nc\n1\nc\nk\n", timeout=30)
+    _create_werk(home, repo_path)
 
     assert latest_commit_subject(repo_path) == "11111 some_title"
     assert "some_title" in (repo_path / ".werks/11111.md").read_text()
     remaining = json.loads(stash_file.read_text())["ids"]
     assert remaining == [11112, 11113]
+
+
+def test_create_werk_sets_the_current_version(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    write_secret(home)
+    write_stash(home, [11111])
+
+    repo_path = tmp_path / "repo"
+    initialize_werks_project(repo_path, first_free=11_111)
+
+    _create_werk(home, repo_path)
+
+    werk_file = (repo_path / ".werks/11111.md").read_text()
+    assert re.search(r"^version +\| 0\.1\.0$", werk_file, re.MULTILINE)
+
+
+def test_create_werk_logs_the_consumed_id(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    write_secret(home)
+    write_stash(home, [11111, 11112])
+
+    repo_path = tmp_path / "repo"
+    initialize_werks_project(repo_path, first_free=11_111)
+
+    _create_werk(home, repo_path)
+
+    werk_file = (repo_path / ".werks/11111.md").resolve()
+    assert read_log(home)[-1] == f"launcher:bazel, action:new, werk ID:11111, werk file:{werk_file}"
+
+
+def test_delete_werk_logs_the_returned_id(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    write_secret(home)
+    stash_file = write_stash(home, [11111, 11112])
+
+    repo_path = tmp_path / "repo"
+    initialize_werks_project(repo_path, first_free=11_111)
+    _create_werk(home, repo_path)
+
+    returncode, _output = call_output("delete", "11111", home=home, cwd=repo_path)
+
+    assert returncode == 0
+    assert json.loads(stash_file.read_text())["ids"] == [11111, 11112]
+    assert read_log(home)[-1] == "launcher:bazel, action:delete, werk ID:11111"
+
+
+def test_blame_without_an_id_blames_the_last_werk(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    write_secret(home)
+    write_stash(home, [11111, 11112])
+
+    repo_path = tmp_path / "repo"
+    initialize_werks_project(repo_path, first_free=11_111)
+    _create_werk(home, repo_path)
+
+    _returncode, output = call_output("blame", home=home, cwd=repo_path)
+
+    assert "some_title" in output
+
+
+def test_pick_without_commit_names_the_commit_to_reuse(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    write_secret(home)
+    write_stash(home, [11111, 11112])
+
+    repo_path = tmp_path / "repo"
+    repo = initialize_werks_project(repo_path, first_free=11_111)
+    _create_werk(home, repo_path)
+    base = repo.head.commit.hexsha
+    _create_werk(home, repo_path, title=b"picked_title")
+    picked = repo.head.commit.hexsha
+    repo.git.checkout("-b", "stable", base)
+
+    _returncode, output = call_output("pick", "--no-commit", picked, home=home, cwd=repo_path)
+
+    assert f"git commit -C '{picked}'" in output
 
 
 def test_commit_config(tmp_path: Path) -> None:
@@ -141,15 +236,7 @@ def test_commit_config(tmp_path: Path) -> None:
     write_secret(home)
     write_stash(home, [1111111, 1111112])
 
-    with mock.patch.dict(os.environ, {"HOME": str(home), "EDITOR": "true"}):
-        os.chdir(repo_path)
-        p = subprocess.Popen(
-            [sys.executable, "-m", "cmk.werks.tool", "new"],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        p.communicate(input=b"some_cloud_title\nf\nc\nc\n1\nc\nk\n", timeout=30)
+    _create_werk(home, repo_path, title=b"some_cloud_title")
 
     assert latest_commit_subject(repo_path) == "initial commit"
     assert "some_cloud_title" in (repo_path / ".werks/1111111.md").read_text()
@@ -171,6 +258,17 @@ def test_status_reports_a_missing_secret(tmp_path: Path) -> None:
     # the output is meant to be pasted into tickets and chats
     assert str(home) not in output
     assert "$HOME/.config/cmk-werks/secret" in output
+
+
+def test_status_shows_where_the_log_is(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    repo_path = tmp_path / "repo_cmk"
+    initialize_werks_project(repo_path, first_free=11_111)
+
+    _returncode, output = call_output("status", home=home, cwd=repo_path)
+
+    assert "$HOME/.local/state/cmk-werks/werk-ids.log" in output
 
 
 def test_ids_runs_status(tmp_path: Path) -> None:
@@ -283,6 +381,7 @@ def test_status_json_is_machine_readable(tmp_path: Path) -> None:
     assert returncode == 0
     assert document["schema_version"] == 1
     assert document["setup"] == {"state": "server", "active_stash": "reserved_ids"}
+    assert document["log"]["path"] == "$HOME/.local/state/cmk-werks/werk-ids.log"
     assert document["server"]["status"] == "unreachable"
     assert document["reserved_ids"]["count"] == 1
     assert document["reserved_ids"]["next_id"] == 11_111
@@ -311,3 +410,22 @@ def test_status_json_reports_problems_and_exits_non_zero(tmp_path: Path) -> None
     # every problem points at a key of the document itself
     for item in items:
         assert item in document
+
+
+def test_list_marks_the_werks_staged_in_the_checkout(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    repo_path = tmp_path / "repo"
+    repo = initialize_werks_project(repo_path, first_free=11_111)
+    (repo_path / ".werks/11111.md").write_text(werk_text(title="Committed"), encoding="utf-8")
+    repo.index.add([".werks/11111.md"])
+    repo.index.commit("werk 11111")
+    (repo_path / ".werks/11112.md").write_text(werk_text(title="Staged"), encoding="utf-8")
+    repo.index.add([".werks/11112.md"])
+
+    _returncode, output = call_output("list", home=home, cwd=repo_path)
+
+    assert {line.rsplit(" ", 1)[-1]: "(*)" in line for line in output.splitlines()} == {
+        "Committed": False,
+        "Staged": True,
+    }

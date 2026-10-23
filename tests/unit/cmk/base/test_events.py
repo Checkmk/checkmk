@@ -582,6 +582,31 @@ def test_match_host_tags(
             },
             id="Explicit proxy",
         ),
+        pytest.param(
+            {
+                "proxy_url": (
+                    "cmk_postprocessed",
+                    "explicit_proxy",
+                    {
+                        "scheme": "http",
+                        "proxy_server_name": "www.myproxy.com",
+                        "port": 3128,
+                        "auth": {
+                            "user": "user",
+                            "password": (
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                ("uuid1", "s3crit"),
+                            ),
+                        },
+                    },
+                )
+            },
+            {
+                "PARAMETER_PROXY_URL": "http://user:s3crit@www.myproxy.com:3128",
+            },
+            id="Structured explicit proxy is only exposed as URL",
+        ),
     ],
 )
 def test_add_to_event_context_proxy(

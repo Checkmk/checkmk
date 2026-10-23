@@ -9,7 +9,7 @@ import contextlib
 import os
 import subprocess
 import sys
-from collections.abc import Iterable, Reversible
+from collections.abc import Iterable, Reversible, Sequence
 from typing import Literal, NamedTuple
 
 from cmk.ccc import tty
@@ -85,6 +85,14 @@ def check_status(
     return _check_scripts_status(scripts, verbose=verbose, display=display, bare=bare)
 
 
+def daemon_states(site_dir: str) -> list[tuple[str, int]]:
+    """Query the status of all init scripts of a site in a single pass."""
+    return [
+        (script.daemon, _check_script_status(script, verbose=False, display=False, bare=False))
+        for script in _init_scripts(site_dir)
+    ]
+
+
 def _check_scripts_status(
     scripts: list[_InitScript],
     *,
@@ -141,22 +149,36 @@ def _check_script_status(
     return state
 
 
-def _summarize_status(states: list[int], *, display: bool, bare: bool) -> int:
+def _overall_state(states: Sequence[int]) -> int:
+    """Return the state of a site as a whole, given the states of its init scripts.
+
+    An init script reports 0 when its daemon is running, 5 when it is unused (disabled by
+    the site configuration) and anything else when it is stopped. The site as a whole is
+    0 (running or unused), 1 (stopped) or 2 (partially running).
+    """
     num_running = sum(1 for state in states if state == 0)
     num_stopped = sum(1 for state in states if state not in (0, 5))
 
-    if num_stopped > 0 and num_running == 0:
-        exit_code = 1
+    if num_stopped == 0:
+        return 0
+    return 1 if num_running == 0 else 2
+
+
+def all_stopped(states: Sequence[int]) -> bool:
+    """Whether a site with these init script states is considered completely stopped."""
+    return _overall_state(states) == 1
+
+
+def _summarize_status(states: list[int], *, display: bool, bare: bool) -> int:
+    exit_code = _overall_state(states)
+    if exit_code == 1:
         ovstate = tty.red + "stopped"
-    elif num_running > 0 and num_stopped == 0:
-        exit_code = 0
-        ovstate = tty.green + "running"
-    elif num_running == 0 and num_stopped == 0:
-        exit_code = 0
-        ovstate = tty.blue + "unused"
-    else:
-        exit_code = 2
+    elif exit_code == 2:
         ovstate = tty.yellow + "partially running"
+    elif any(state == 0 for state in states):
+        ovstate = tty.green + "running"
+    else:
+        ovstate = tty.blue + "unused"
     if display:
         if bare:
             sys.stdout.write("OVERALL %d\n" % exit_code)

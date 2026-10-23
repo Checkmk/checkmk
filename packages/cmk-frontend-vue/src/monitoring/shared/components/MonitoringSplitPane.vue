@@ -5,7 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts" generic="T, Target">
 import type { ColumnDef, ColumnPinningState, RowSelectionState } from '@tanstack/vue-table'
+import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
+import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkSplitPane from 'cmk-ui-library/components/CmkSplitPane.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref } from 'vue'
 
@@ -22,6 +25,7 @@ import MonitoringActionBar from '@/monitoring/shared/components/action/Monitorin
 import MonitoringActionPane from '@/monitoring/shared/components/action/MonitoringActionPane.vue'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import { ACTION_PANE_MIN_WIDTH } from '@/monitoring/shared/constants'
 import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 import { useMonitoringActions } from '@/monitoring/shared/services/useMonitoringActions'
 
@@ -31,7 +35,7 @@ const props = withDefaults(
     actions: MonitoringActionRegistry<Target>
     /** Entries offered by the action bar, acting on the current row selection. */
     bulkActions?: CellAction[]
-    /** Names the rows the actions act on, e.g. "3 hosts selected". */
+    /** Names the rows the actions act on, e.g. "Selected hosts: 3". */
     selectionLabel: (count: number) => TranslatedString
     /** Names the action bar for screen readers, e.g. "Actions for selected hosts". */
     actionsLabel: TranslatedString
@@ -42,6 +46,11 @@ const props = withDefaults(
     getRowKey: (row: T) => string
     /** Maps a row to the reference the actions act on. */
     getActionTarget: (row: T) => Target
+    /**
+     * Maps the selected rows to what a given action acts on, for pages where that is not simply
+     * one target per row. Defaults to `getActionTarget` on each row.
+     */
+    getActionTargets?: ((rows: T[], actionId: string) => Target[]) | undefined
     /**
      * Actions that skip the form and run straight away on a single selected row,
      * because their default values need no input.
@@ -55,8 +64,11 @@ const emit = defineEmits<{
   (event: 'performed', result: ActionFeedbackResult): void
 }>()
 
+const { _t } = usei18n()
+
 const rowSelection = ref<RowSelectionState>({})
 const runningActionId = ref<string | null>(null)
+const displayOptionsOpen = ref(false)
 
 const selectableKeys = computed<string[]>(() =>
   props.service.items.value.map((row) => props.getRowKey(row))
@@ -72,11 +84,12 @@ const {
   applyFeedback
 } = useMonitoringActions(rowSelection, selectableKeys)
 
-const selectedTargets = computed<Target[]>(() =>
-  props.service.items.value
-    .filter((row) => rowSelection.value[props.getRowKey(row)])
-    .map((row) => props.getActionTarget(row))
-)
+function targetsFor(actionId: string): Target[] {
+  const rows = props.service.items.value.filter((row) => rowSelection.value[props.getRowKey(row)])
+  return props.getActionTargets
+    ? props.getActionTargets(rows, actionId)
+    : rows.map((row) => props.getActionTarget(row))
+}
 
 const isNarrowed = computed(
   () =>
@@ -90,19 +103,37 @@ function onFeedback(result: ActionFeedbackResult): void {
 
 async function onBulkAction(action: CellAction): Promise<void> {
   const registered = props.actions[action.id]
-  if (!registered || selectedTargets.value.length === 0) {
+  if (!registered || selectedCount.value === 0) {
     return
   }
-  if (props.immediateActionIds.includes(action.id) && selectedTargets.value.length === 1) {
+  const targets = targetsFor(action.id)
+  if (targets.length === 0) {
+    applyFeedback({
+      variant: 'error',
+      message: _t('This action cannot be performed on any of the selected rows.')
+    })
+    return
+  }
+  if (props.immediateActionIds.includes(action.id) && selectedCount.value === 1) {
     runningActionId.value = action.id
     try {
-      onFeedback(await registered.perform(selectedTargets.value, registered.defaultValues()))
+      onFeedback(await registered.perform(targets, registered.defaultValues()))
     } finally {
       runningActionId.value = null
     }
     return
   }
+  displayOptionsOpen.value = false
   openAction(action.id)
+}
+
+function toggleDisplayOptions(): void {
+  if (displayOptionsOpen.value) {
+    displayOptionsOpen.value = false
+    return
+  }
+  closeAction()
+  displayOptionsOpen.value = true
 }
 
 async function onRowCommand(payload: { id: string; target: Target }): Promise<void> {
@@ -118,15 +149,17 @@ async function onRowCommand(payload: { id: string; target: Target }): Promise<vo
 function onRightPaneCollapse(collapsed: boolean): void {
   if (collapsed) {
     closeAction()
+    displayOptionsOpen.value = false
   }
 }
 </script>
 
 <template>
   <CmkSplitPane
-    :collapsed="!activeAction"
+    :collapsed="!activeAction && !displayOptionsOpen"
     :right-min-size="30"
     :right-max-size="50"
+    :right-min-width="ACTION_PANE_MIN_WIDTH"
     :collapsible-on-resize="false"
     class="monitoring-split-pane"
     @update:collapsed="onRightPaneCollapse($event as boolean)"
@@ -156,9 +189,27 @@ function onRightPaneCollapse(collapsed: boolean): void {
             @action="onBulkAction"
           />
           <div class="monitoring-split-pane__table-toolbar-end">
-            <MonitoringTotalCount :total="service.total.value" />
-            <MonitoringLimitSelector />
-            <ColumnPicker />
+            <div class="monitoring-split-pane__table-toolbar-stats">
+              <MonitoringTotalCount :total="service.total.value" />
+              <MonitoringLimitSelector />
+            </div>
+            <div class="monitoring-split-pane__table-toolbar-controls">
+              <ColumnPicker />
+              <CmkButton
+                variant="optional"
+                size="iconOnly"
+                :title="_t('Modify display options')"
+                :aria-label="_t('Modify display options')"
+                @click="toggleDisplayOptions"
+              >
+                <CmkMultitoneIcon
+                  name="display-options"
+                  primary-color="font"
+                  :secondary-color="{ custom: 'var(--font-color-dimmed)' }"
+                  size="small"
+                />
+              </CmkButton>
+            </div>
           </div>
         </div>
         <MonitoringTable
@@ -193,29 +244,44 @@ function onRightPaneCollapse(collapsed: boolean): void {
         v-if="activeAction"
         :action-id="activeAction"
         :actions="actions"
-        :targets="selectedTargets"
+        :targets="targetsFor(activeAction)"
         :show-close="true"
         :counts-label="countsLabel"
         @feedback="onFeedback"
         @cancel="closeAction"
       />
+      <slot
+        v-else-if="displayOptionsOpen"
+        name="display-options"
+        :close="() => (displayOptionsOpen = false)"
+      />
     </template>
   </CmkSplitPane>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+@use '@/assets/breakpoints' as bp;
+@use './monitoringLayout' as layout;
+
 .monitoring-split-pane {
   flex: 1 1 auto;
   min-height: 0;
 }
 
 .monitoring-split-pane__left-pane {
+  /* Below this content width the toolbar can no longer keep the action bar and the total/limit
+     controls apart, so the pane stops shrinking and the panel scrolls horizontally instead. */
   box-sizing: border-box;
+  min-width: layout.$min-content-width;
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  padding: 0 var(--dimension-5);
+  padding: 0 var(--spacing) 0 0;
+
+  /* The panel is resized by dragging the split handle or opening the right pane, so the
+     responsive layout of the toolbar below must follow this element, not the viewport. */
+  container-type: inline-size;
 }
 
 .monitoring-split-pane__results-count {
@@ -236,20 +302,66 @@ function onRightPaneCollapse(collapsed: boolean): void {
   margin-bottom: var(--spacing);
 }
 
+/* The action bar and the end group always share one line: the bar gives way (its buttons wrap
+   and collapse to icons), the end group keeps its size. */
 .monitoring-split-pane__action-bar {
   flex: 0 1 auto;
+  min-width: 0;
 }
 
 .monitoring-split-pane__table-toolbar-end {
+  --table-toolbar-separator-gap: var(--dimension-4);
+
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: var(--spacing);
+  gap: calc(var(--table-toolbar-separator-gap) * 2);
   margin-left: auto;
 }
 
-.monitoring-split-pane__table-toolbar-end > :not(:first-child) {
+.monitoring-split-pane__table-toolbar-stats,
+.monitoring-split-pane__table-toolbar-controls {
+  display: flex;
+  align-items: center;
+}
+
+.monitoring-split-pane__table-toolbar-stats {
+  gap: calc(var(--table-toolbar-separator-gap) * 2);
+}
+
+.monitoring-split-pane__table-toolbar-controls {
+  gap: var(--dimension-3);
+}
+
+/* Separators between the total count, the row limit and the controls. */
+.monitoring-split-pane__table-toolbar-stats > :not(:first-child),
+.monitoring-split-pane__table-toolbar-controls > :first-child {
+  position: relative;
+}
+
+.monitoring-split-pane__table-toolbar-stats > :not(:first-child)::before,
+.monitoring-split-pane__table-toolbar-controls > :first-child::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: calc(var(--table-toolbar-separator-gap) * -1);
+  height: var(--dimension-7);
+  transform: translateY(-50%);
   border-left: 1px solid var(--font-color-dimmed);
-  padding-left: var(--spacing);
+}
+
+/* M and smaller: the column picker and the display options button break onto their own row below
+   the total count and the row limit, and the group only takes the width of its widest row. */
+@include bp.container-below(l) {
+  .monitoring-split-pane__table-toolbar-end {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--spacing);
+  }
+
+  /* The picker now starts a row, so it needs no separator. */
+  .monitoring-split-pane__table-toolbar-controls > :first-child::before {
+    display: none;
+  }
 }
 </style>

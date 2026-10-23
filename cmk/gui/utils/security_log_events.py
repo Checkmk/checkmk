@@ -162,6 +162,37 @@ class OAuthTokenFailureEvent(SecurityEvent):
 
 
 @dataclass
+class OAuthTokenIssuedEvent(SecurityEvent):
+    """Indicates an issued OAuth access token"""
+
+    def __init__(self, *, user_id: UserId, client_id: str) -> None:
+        super().__init__(
+            "oauth token issued",
+            {
+                "user": str(user_id),
+                "client_id": client_id,
+            },
+            SecurityEvent.Domain.auth,
+        )
+
+
+@dataclass
+class GUISessionRejectedEvent(SecurityEvent):
+    """Indicates a GUI session that a site service asked about and that was refused"""
+
+    def __init__(self, *, reason: str, user_id: UserId | None, endpoint: str) -> None:
+        super().__init__(
+            "gui session rejected",
+            {
+                "reason": reason,
+                "user": str(user_id or "Unknown user"),
+                "endpoint": endpoint,
+            },
+            SecurityEvent.Domain.auth,
+        )
+
+
+@dataclass
 class UserManagementEvent(SecurityEvent):
     """Indicates a user creation, modification or deletion"""
 

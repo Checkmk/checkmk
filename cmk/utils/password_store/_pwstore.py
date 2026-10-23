@@ -3,17 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import hashlib
+import re
 import secrets
 from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import Literal, NotRequired, TypedDict
+from typing import Final, Literal, NotRequired, TypedDict
 from uuid import uuid4
 
 import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.password_store.v1_unstable import PasswordStore, Secret
+from cmk.password_store.v1 import PasswordStore, Secret
 from cmk.utils.global_ident_type import GlobalIdent
 
 PasswordLookupType = Literal["password", "store"]
@@ -133,10 +134,23 @@ def ad_hoc_password_id() -> str:
     return f"{_PASSWORD_ID_PREFIX}{uuid4()}"
 
 
-def extract_formspec_password(
-    password: tuple[Literal["cmk_postprocessed"], Literal["stored_password"], tuple[str, str]]
-    | tuple[Literal["cmk_postprocessed"], Literal["explicit_password"], tuple[str, str]],
-) -> str:
+_AD_HOC_PASSWORD_ID: Final = re.compile(
+    rf"{_PASSWORD_ID_PREFIX}[0-9a-f]{{8}}-[0-9a-f]{{4}}-4[0-9a-f]{{3}}-[89ab][0-9a-f]{{3}}-[0-9a-f]{{12}}"
+)
+
+
+def is_ad_hoc_password_id(password_id: str) -> bool:
+    """Whether the ID has the format of the IDs made by ad_hoc_password_id()"""
+    return _AD_HOC_PASSWORD_ID.fullmatch(password_id) is not None
+
+
+FormSpecPassword = (
+    tuple[Literal["cmk_postprocessed"], Literal["explicit_password"], tuple[str, str]]
+    | tuple[Literal["cmk_postprocessed"], Literal["stored_password"], tuple[str, str]]
+)
+
+
+def extract_formspec_password(password: FormSpecPassword) -> str:
     match password:
         case ("cmk_postprocessed", "explicit_password", (password_id, password_value)):
             # This is a password that was entered in the GUI, so we can return it directly.
@@ -221,14 +235,3 @@ def lookup(pw_file: Path, pw_id: str) -> str:
         # the fact that this is a dict is an implementation detail.
         # Let's make it a ValueError.
         raise ValueError(f"Password '{pw_id}' not found in {pw_file}")
-
-
-def lookup_for_bakery(pw_id: str) -> str:
-    return lookup(
-        active_secrets_path_site(
-            # Duplicated from cmk.base.core.active_config_layout.
-            # But this function is depricated anyway.
-            Path("stored_passwords"),
-        ),
-        pw_id,
-    )

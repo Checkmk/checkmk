@@ -1298,6 +1298,29 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
             id="job age of exactly zero",
         ),
         pytest.param(
+            # A job that steps the system clock back (e.g. "chronyc makestep")
+            # finishes before it started, as far as the wall clock is concerned.
+            "clock-step",
+            job.check_plugin_job.check_default_parameters,
+            [
+                ["==>", "clock-step", "<=="],
+                ["start_time", str(TIME - 60)],
+                ["exit_code", "0"],
+                ["real_time", "0:-1.99"],
+            ],
+            [
+                Result(state=State.OK, summary="Latest exit code: 0"),
+                Result(
+                    state=State.WARN,
+                    summary="Real time: got negative value -1.99 (check your system time)",
+                ),
+                Result(state=State.OK, notice="Latest job started at 2020-07-09 15:16:00"),
+                Result(state=State.OK, summary="Job age: 1 minute 0 seconds"),
+                Metric("job_age", 60.0, boundaries=(0.0, None)),
+            ],
+            id="negative real time",
+        ),
+        pytest.param(
             "future",
             job.check_plugin_job.check_default_parameters,
             [["==>", "future", "<=="], ["start_time", str(TIME + 3600)], ["exit_code", "0"]],

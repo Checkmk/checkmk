@@ -118,6 +118,26 @@ def test_service_sorter_timestamp_columns() -> None:
     assert value == expected
 
 
+def test_service_sorter_sorts_services_without_state_change_first() -> None:
+    services = [
+        ServiceFactory.build(last_state_change=1767312000),
+        ServiceFactory.build(last_state_change=None),
+        ServiceFactory.build(last_state_change=1767225600),
+    ]
+    sorters = [
+        ServiceSort(column=ServiceSortColumn.LAST_STATE_CHANGE, direction=ServiceSortDirection.ASC)
+    ]
+
+    value = [service.last_state_change for service in sorted(services, key=service_sorter(sorters))]
+    expected = [
+        None,
+        1767225600,
+        1767312000,
+    ]
+
+    assert value == expected
+
+
 def test_service_sorter_sorts_never_checked_services_first() -> None:
     services = [
         ServiceFactory.build(last_check=1767312000),

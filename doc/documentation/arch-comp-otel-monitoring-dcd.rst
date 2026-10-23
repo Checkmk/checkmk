@@ -5,9 +5,9 @@ DCD-based monitoring of OpenTelemetry metrics
 Introduction and goals
 ======================
 
-The DCD-based monitoring is one the two main channels for monitoring OpenTelemetry (OTel) metrics ingested into the :doc:`metric backend <arch-comp-metric-backend>`.
+The DCD-based monitoring is one the two main channels for monitoring OpenTelemetry (OTel) metrics ingested into the :doc:`data backend <arch-comp-data-backend>`.
 The goal is to offer application monitoring with Checkmk.
-The DCD-based monitoring supports this goal by enabling users to automatically create hosts and services based on OTel metrics stored in the metric backend.
+The DCD-based monitoring supports this goal by enabling users to automatically create hosts and services based on OTel metrics stored in the data backend.
 
 Architecture
 ============
@@ -16,11 +16,11 @@ Architecture
   The OTel-specific configuration parameters are the resource attribute to use for host names (e.g., "service.name") and optional attribute filters (key-value pairs).
   For each distinct value of the specified resource attribute, a host is created.
 
-* The created hosts have a dedicated host attribute set that associates the host with data in the metric backend.
+* The created hosts have a dedicated host attribute set that associates the host with data in the data backend.
   This enables us to fetch OTel metrics related to the host.
 
 * A special agent is used to create monitoring data for the created hosts.
-  The special agent queries the metric backend for OTel metrics related to the host (based on the dedicated host attribute).
+  The special agent queries the data backend for OTel metrics related to the host (based on the dedicated host attribute).
   For each retrieved metric, a service is created.
 
 .. uml:: arch-comp-otel-monitoring-dcd.puml

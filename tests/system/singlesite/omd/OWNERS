@@ -1,0 +1,36 @@
+per-file test_apache.py=file:/component_owners/site_management_omd/OWNERS_DEFINITION
+per-file test_apache.py=set noparent
+per-file test_erlang.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_erlang.py=set noparent
+per-file test_init_scripts.py=file:/component_owners/site_management_omd/OWNERS_DEFINITION
+per-file test_init_scripts.py=set noparent
+per-file test_jaeger.py=file:/component_owners/tracing_framework/OWNERS_DEFINITION
+per-file test_jaeger.py=set noparent
+per-file test_linked_libraries.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_linked_libraries.py=set noparent
+per-file test_net_snmp.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_net_snmp.py=set noparent
+per-file test_omd.py=file:/component_owners/site_management_omd/OWNERS_DEFINITION
+per-file test_omd.py=set noparent
+per-file test_openssl_using_cmds.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_openssl_using_cmds.py=set noparent
+per-file test_perl.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_perl.py=set noparent
+per-file test_python.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_python.py=set noparent
+per-file test_python_protobuf.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_python_protobuf.py=set noparent
+per-file test_rabbitmq.py=file:/component_owners/messaging/OWNERS_DEFINITION
+per-file test_rabbitmq.py=set noparent
+per-file test_redis_client.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_redis_client.py=set noparent
+per-file test_rrdtool.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file test_rrdtool.py=set noparent
+
+# Please
+#  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
+#  - consider a `per-file <PATH>=set noparent` line for each `per-file` rule
+#
+# Find information about code-owners (+ find-owners syntax) here:
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax

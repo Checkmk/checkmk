@@ -3,18 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from functools import partial
 from typing import override
 
 from cmk.gui import query_filters
-from cmk.gui.config import active_config
-from cmk.gui.http import request
+from cmk.gui.config import active_config, RequestCacheConfig
 from cmk.gui.i18n import _l
-from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
+from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row
 from cmk.gui.visuals.filter import (
     AjaxDropdownFilter,
     CheckboxRowFilter,
+    drilldowns,
     Filter,
     FilterGroup,
     FilterGroupCombo,
@@ -27,6 +27,7 @@ from cmk.gui.visuals.filter import (
 )
 from cmk.gui.visuals.filter.components import Dropdown, FilterComponent
 from cmk.web.utils.autocompleter_config import AutocompleterConfig, GroupAutocompleterConfig
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.speaklater import LazyString
 
 from .defines import action_whats, phase_names, syslog_priorities
@@ -39,6 +40,7 @@ def register(filter_registry: FilterRegistry) -> None:
             sort_index=200,
             info="event",
             query_filter=query_filters.TextQuery(ident="event_id", op="="),
+            drilldown=drilldowns.text("event_id", "event_id"),
         )
     )
 
@@ -48,6 +50,7 @@ def register(filter_registry: FilterRegistry) -> None:
             sort_index=200,
             info="event",
             query_filter=query_filters.TextQuery(ident="event_rule_id", op="="),
+            drilldown=drilldowns.text("event_rule_id", "event_rule_id"),
         )
     )
 
@@ -56,7 +59,11 @@ def register(filter_registry: FilterRegistry) -> None:
             title=_l("Message/Text of event (regex)"),
             sort_index=201,
             info="event",
-            query_filter=query_filters.TextQuery(ident="event_text", op="~~"),
+            query_filter=query_filters.TextQuery(
+                ident="event_text",
+                op="~~",
+                negateable=True,
+            ),
         )
     )
 
@@ -68,6 +75,7 @@ def register(filter_registry: FilterRegistry) -> None:
             query_filter=query_filters.TextQuery(
                 ident="event_application",
                 op="~~",
+                negateable=True,
             ),
         )
     )
@@ -77,7 +85,11 @@ def register(filter_registry: FilterRegistry) -> None:
             title=_l("Contact person (regex)"),
             sort_index=201,
             info="event",
-            query_filter=query_filters.TextQuery(ident="event_contact", op="~~"),
+            query_filter=query_filters.TextQuery(
+                ident="event_contact",
+                op="~~",
+                negateable=True,
+            ),
         )
     )
 
@@ -86,7 +98,11 @@ def register(filter_registry: FilterRegistry) -> None:
             title=_l("Comment to the event (regex)"),
             sort_index=201,
             info="event",
-            query_filter=query_filters.TextQuery(ident="event_comment", op="~~"),
+            query_filter=query_filters.TextQuery(
+                ident="event_comment",
+                op="~~",
+                negateable=True,
+            ),
         )
     )
 
@@ -96,7 +112,10 @@ def register(filter_registry: FilterRegistry) -> None:
             sort_index=201,
             info="event",
             query_filter=query_filters.TextQuery(
-                ident="event_host_regex", op="~~", column="event_host"
+                ident="event_host_regex",
+                op="~~",
+                column="event_host",
+                negateable=True,
             ),
         )
     )
@@ -107,6 +126,7 @@ def register(filter_registry: FilterRegistry) -> None:
             sort_index=201,
             info="event",
             query_filter=query_filters.EventHostQuery(),
+            drilldown=drilldowns.text("event_host", "event_host"),
         )
     )
 
@@ -115,7 +135,11 @@ def register(filter_registry: FilterRegistry) -> None:
             title=_l("Original IP address of event (regex)"),
             sort_index=201,
             info="event",
-            query_filter=query_filters.TextQuery(ident="event_ipaddress", op="~~"),
+            query_filter=query_filters.TextQuery(
+                ident="event_ipaddress",
+                op="~~",
+                negateable=True,
+            ),
         )
     )
 
@@ -124,7 +148,11 @@ def register(filter_registry: FilterRegistry) -> None:
             title=_l("Owner of event (regex)"),
             sort_index=201,
             info="event",
-            query_filter=query_filters.TextQuery(ident="event_owner", op="~~"),
+            query_filter=query_filters.TextQuery(
+                ident="event_owner",
+                op="~~",
+                negateable=True,
+            ),
         )
     )
 
@@ -133,7 +161,11 @@ def register(filter_registry: FilterRegistry) -> None:
             title=_l("User that performed action (regex)"),
             sort_index=221,
             info="history",
-            query_filter=query_filters.TextQuery(ident="history_who", op="~~"),
+            query_filter=query_filters.TextQuery(
+                ident="history_who",
+                op="~~",
+                negateable=True,
+            ),
         )
     )
 
@@ -156,6 +188,9 @@ def register(filter_registry: FilterRegistry) -> None:
                 filter_code=query_filters.column_flag("event_host_in_downtime"),
             ),
             is_show_more=False,
+            drilldown=drilldowns.Drilldown(
+                columns=["event_host_in_downtime"], variables=_event_host_in_downtime
+            ),
         )
     )
 
@@ -178,6 +213,7 @@ def register(filter_registry: FilterRegistry) -> None:
                 options=query_filters.svc_state_min_options("event_state_"),
                 livestatus_query=partial(query_filters.options_toggled_filter, "event_state"),
             ),
+            drilldown=drilldowns.checked_option("event_state_", "event_state"),
         )
     )
 
@@ -191,6 +227,7 @@ def register(filter_registry: FilterRegistry) -> None:
                 options=[("event_phase_" + var, title) for var, title in phase_names.items()],
                 livestatus_query=partial(query_filters.options_toggled_filter, "event_phase"),
             ),
+            drilldown=drilldowns.checked_option("event_phase_", "event_phase"),
         )
     )
 
@@ -204,6 +241,7 @@ def register(filter_registry: FilterRegistry) -> None:
                 options=[("event_priority_%d" % e[0], e[1]) for e in syslog_priorities],
                 livestatus_query=partial(query_filters.options_toggled_filter, "event_priority"),
             ),
+            drilldown=drilldowns.checked_option("event_priority_", "event_priority"),
         )
     )
 
@@ -217,6 +255,7 @@ def register(filter_registry: FilterRegistry) -> None:
                 options=[("history_what_%s" % k, k) for k in action_whats],
                 livestatus_query=partial(query_filters.options_toggled_filter, "history_what"),
             ),
+            drilldown=drilldowns.checked_option("history_what_", "history_what"),
         )
     )
 
@@ -256,6 +295,7 @@ def register(filter_registry: FilterRegistry) -> None:
             info="event",
             autocompleter=AutocompleterConfig(ident="syslog_facilities", strict=True),
             query_filter=query_filters.TextQuery(ident="event_facility", op="="),
+            drilldown=drilldowns.text("event_facility", "event_facility"),
         )
     )
 
@@ -299,6 +339,42 @@ def register(filter_registry: FilterRegistry) -> None:
     )
 
 
+def _event_host_in_downtime(
+    row: drilldowns.RowValues, _keys: Sequence[str]
+) -> FilterHTTPVariables | None:
+    match row.get("event_host_in_downtime"):
+        case int(in_downtime):
+            return {"is_event_host_in_downtime": "1" if in_downtime else "0"}
+        case _:
+            return None
+
+
+def _event_contact_group(
+    row: drilldowns.RowValues, _keys: Sequence[str]
+) -> FilterHTTPVariables | None:
+    column = (
+        "event_contact_groups"
+        if row.get("event_contact_groups_precedence") == "rule"
+        else "host_contact_groups"
+    )
+    match row.get(column):
+        case [str(group)]:
+            return {"optevent_effective_contact_group": group}
+        case _:
+            return None
+
+
+def _service_level(ident: str, info: str) -> drilldowns.Drilldown:
+    column = f"{info}_custom_variables"
+
+    def variables(row: drilldowns.RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
+        if (level := drilldowns.mapping_value(row, column, "EC_SL")) is None:
+            return None
+        return {f"{ident}_lower": level, f"{ident}_upper": level}
+
+    return drilldowns.Drilldown(columns=[column], variables=variables)
+
+
 # TODO: Cleanup as a dropdown visual Filter later on
 class _FilterOptEventEffectiveContactgroup(FilterGroupCombo):
     def __init__(self) -> None:
@@ -308,6 +384,14 @@ class _FilterOptEventEffectiveContactgroup(FilterGroupCombo):
             group_type="event_effective_contact",
             autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="contact"),
             query_filter=query_filters.OptEventEffectiveContactgroupQuery(),
+            drilldown=drilldowns.Drilldown(
+                columns=[
+                    "event_contact_groups",
+                    "event_contact_groups_precedence",
+                    "host_contact_groups",
+                ],
+                variables=_event_contact_group,
+            ),
         )
 
     @override
@@ -334,6 +418,7 @@ class FilterECServiceLevelRange(Filter):
             link_columns=[],
             is_show_more=True,
             group=group,
+            drilldown=_service_level(ident, info),
         )
 
     @staticmethod
@@ -342,7 +427,9 @@ class FilterECServiceLevelRange(Filter):
         return [("", "")] + [(str(x[0]), f"{x[0]} - {x[1]}") for x in choices]
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         choices = dict(self._options())
         yield Dropdown(
             id=self.lower_bound_varname,
@@ -355,46 +442,35 @@ class FilterECServiceLevelRange(Filter):
             label="To",
         )
 
-    @override
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        # NOTE: We need this special case only because our construction of the
-        # disjunction is broken. We should really have a Livestatus Query DSL...
-        bounds: FilterHTTPVariables = context.get(self.ident, {})
-        if not any(v for _k, v in bounds.items()):
-            return rows
-
-        lower_bound: str | None = bounds.get(self.lower_bound_varname)
-        upper_bound: str | None = bounds.get(self.upper_bound_varname)
-
-        # If user only chooses "From" or "To", use same value from the choosen
-        # field for the empty field and update filter form with that value
-        if not lower_bound:
-            lower_bound = upper_bound
-            assert upper_bound is not None
-            request.set_var(self.lower_bound_varname, upper_bound)
-        if not upper_bound:
-            upper_bound = lower_bound
-            assert lower_bound is not None
-            request.set_var(self.upper_bound_varname, lower_bound)
-
-        filtered_rows: Rows = []
-        assert lower_bound is not None
-        assert upper_bound is not None
-        for row in rows:
-            service_level = int(row["%s_custom_variables" % self.info]["EC_SL"])
-            if int(lower_bound) <= service_level <= int(upper_bound):
-                filtered_rows.append(row)
-
-        return filtered_rows
+    def _parse_bounds(self, value: FilterHTTPVariables) -> tuple[int, int] | None:
+        """A single given bound stands for exactly that level; invalid input disables the filter."""
+        raw_lower = value.get(self.lower_bound_varname, "")
+        raw_upper = value.get(self.upper_bound_varname, "")
+        if not raw_lower and not raw_upper:
+            return None
+        try:
+            return int(raw_lower or raw_upper), int(raw_upper or raw_lower)
+        except ValueError:
+            return None
 
     @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        if not value.get(self.lower_bound_varname) and not value.get(self.upper_bound_varname):
+        bounds = self._parse_bounds(value)
+        if bounds is None:
             return ""
+        lower_bound, upper_bound = bounds
 
-        return "Filter: %s_custom_variable_names >= EC_SL\n" % self.info
+        # Custom variable values are compared as strings by Livestatus, so a numeric range
+        # cannot be expressed directly. The bounds are chosen from the configured service
+        # levels, so we match each configured level within the range exactly instead.
+        levels_in_range = [
+            str(level)
+            for level, _name in active_config.mkeventd_service_levels
+            if lower_bound <= level <= upper_bound
+        ]
+        if not levels_in_range:
+            return "Or: 0\n"
 
-    @override
-    def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
-        if self.ident in context:
-            yield "%s_custom_variables" % self.info
+        return query_filters.lq_logic(
+            f"Filter: {self.info}_custom_variables = EC_SL", levels_in_range, "Or"
+        )

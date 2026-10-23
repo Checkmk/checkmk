@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import http.client as http_client
-from collections.abc import Callable
 from typing import override
 
 from pydantic import ValidationError
@@ -33,9 +32,7 @@ class OAuthClientRegistrationPage(Page):
     """RFC 7591 dynamic client registration endpoint for this site.
 
     Accessed unauthenticated, referenced via the "registration_endpoint" field
-    of the RFC 8414 authorization server metadata document. Returns 404 while
-    no OAuth-consuming feature is enabled for the site (the enabled predicate
-    is injected at registration).
+    of the RFC 8414 authorization server metadata document.
 
     Validates the shape of the submitted client metadata (see
     OAuthClientRegistrationRequest) and persists it via
@@ -46,15 +43,8 @@ class OAuthClientRegistrationPage(Page):
     (JSON error/error_description body), not just a bare status code.
     """
 
-    def __init__(self, enabled: Callable[[], bool]) -> None:
-        self._enabled = enabled
-
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        if not self._enabled():
-            response.status_code = http_client.NOT_FOUND
-            return None
-
         if request.request_method != "POST":
             response.status_code = http_client.METHOD_NOT_ALLOWED
             return None

@@ -7,6 +7,7 @@ import Swal from 'sweetalert2'
 
 import { call_ajax } from './ajax'
 import { get_selection_id, is_selection_enabled } from './selection'
+import { init_callable_ts_functions } from './ts_function_dispatcher'
 
 export type Nullable<T> = null | T
 
@@ -59,6 +60,7 @@ export function execute_javascript_by_object(obj: HTMLElement) {
       }
     }
   }
+  init_callable_ts_functions(obj)
 }
 
 // Whether or not the current browser window/tab is visible to the user
@@ -397,6 +399,19 @@ export function acknowledge_user_message(msg_id: string) {
   })
 }
 
+export function fade_out_element(element_id: string, delay_ms: number, selector?: string) {
+  setTimeout(() => {
+    const element = document.getElementById(element_id)
+    if (!element) return
+    const target = selector ? element.querySelector<HTMLElement>(selector) : element
+    if (target) {
+      target.style.transition = 'opacity 1s ease-in'
+      target.style.opacity = '0'
+    }
+    setTimeout(() => element.remove(), 1000)
+  }, delay_ms)
+}
+
 export function update_time(target: string, time: string) {
   const container = document.getElementById(target) as HTMLInputElement
   if (container) {
@@ -712,6 +727,13 @@ export function main_content_scroll_element(): HTMLElement | null {
   return document.getElementById('main_page_content')
 }
 
+export function show_element_on_click(trigger_id: string, target_id: string) {
+  document.getElementById(trigger_id)?.addEventListener('click', () => {
+    const target = document.getElementById(target_id)
+    if (target) target.style.display = 'block'
+  })
+}
+
 export function setButtonLoadingState(event: Event) {
   const target = event.target as HTMLInputElement
   target.classList.add('shimmer-input-button')
@@ -866,11 +888,26 @@ function getContentBody(): HTMLElement | null {
   return document.getElementById('content_area') ?? document.body
 }
 
+function opensElsewhere(event: Event | undefined): boolean {
+  if (!(event instanceof MouseEvent)) {
+    return false
+  }
+  if (event.ctrlKey || event.metaKey || event.shiftKey || event.button !== 0) {
+    return true
+  }
+  const target = event.target instanceof Element ? event.target.closest('a')?.target : undefined
+  return !!target && target !== '_self'
+}
+
 export function makeLoadingTransition(
   template: string | null,
   delay: number,
-  title?: string
+  title?: string,
+  event?: Event
 ): void {
+  if (opensElsewhere(event)) {
+    return
+  }
   const contentBody = getContentBody()
   if (!contentBody) {
     return

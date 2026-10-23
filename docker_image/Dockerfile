@@ -79,28 +79,25 @@ ARG CMK_EDITION
 # Distro codename is used to find the corresponding .deb package
 ARG DISTRO_CODENAME="jammy"
 
-# Optionally copy an existing Checkmk debian package to the container. In case the file is
-# available that is later used by the build procedure the file will not be downloaded.
-COPY check-mk-${CMK_EDITION}-${CMK_VERSION}_0.${DISTRO_CODENAME}*.deb Check_MK-pubkey.gpg /
-
-# Now install the Checkmk version specific things
+# Now install the Checkmk version specific things. The Checkmk package and the signing key
+# are read from the bind-mounted build context, so they never end up in an image layer.
 # hadolint ignore=DL3003,DL3008,DL4006
-RUN set -e \
+RUN --mount=type=bind,target=/build-context \
+    set -e \
     && mkdir -p /usr/share/man/man8 \
     && echo "exit 101" > /usr/sbin/policy-rc.d \
     && chmod +x /usr/sbin/policy-rc.d \
     && export DEBIAN_FRONTEND=noninteractive \
     && PKG_NAME="check-mk-${CMK_EDITION}-${CMK_VERSION}" \
     && PKG_FILE="${PKG_NAME}_0.${DISTRO_CODENAME}_$(dpkg --print-architecture).deb" \
-    && if [ ! -e "/${PKG_FILE}" ]; then \
+    && if [ ! -e "/build-context/${PKG_FILE}" ]; then \
         echo "ERROR: Please provide ${PKG_FILE} by downloading it from https://download.checkmk.com/checkmk" \
         && return 1 ; \
        fi \
-    && gpg -q --import "/Check_MK-pubkey.gpg" \
-    && gpg --verify "${PKG_FILE}" \
-    && dpkg -i "${PKG_FILE}" \
+    && gpg -q --import "/build-context/Check_MK-pubkey.gpg" \
+    && gpg --verify "/build-context/${PKG_FILE}" \
+    && dpkg -i "/build-context/${PKG_FILE}" \
     && dpkg -i "$(ls /omd/versions/default/share/check_mk/agents/check-mk-agent_*-1_all.deb)" \
-    && rm -f -- *.deb *.gpg \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \
     && rm -rf /var/lib/apt/lists/*

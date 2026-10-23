@@ -19,19 +19,14 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.barracuda.lib import DETECT_BARRACUDA
-
-
-def discover_barracuda_mailqueues(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_barracuda_mailqueues(params: Mapping[str, Any], section: StringTable) -> CheckResult:
@@ -74,7 +69,7 @@ snmp_section_barracuda_mailqueues = SimpleSNMPSection(
 check_plugin_barracuda_mailqueues = CheckPlugin(
     name="barracuda_mailqueues",
     service_name="Mail Queue",
-    discovery_function=discover_barracuda_mailqueues,
+    discovery_function=discover_one_service,
     check_function=check_barracuda_mailqueues,
     check_ruleset_name="mail_queue_length_single",
     check_default_parameters={

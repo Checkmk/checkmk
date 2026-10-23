@@ -4,14 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
+import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, ref } from 'vue'
 
 import MetricAttributesTable from '../MetricAttributesTable.vue'
-import type { HorizontalLine, Metric, ShadedRegion } from '../TimeSeriesGraph'
+import type { HorizontalLine, Metric, ShadedRegion, UnitFormat } from '../TimeSeriesGraph'
 import {
   CONSOLIDATION_FUNCTIONS,
   type ConsolidationFn,
@@ -43,6 +43,9 @@ const props = withDefaults(
     hiddenMetricNames?: string[]
     hiddenLineNames?: string[]
     fillHeight?: boolean
+    valueResolution?: number | null
+    /** The unit the graph labels its value axis in; null leaves each metric in its own unit. */
+    axisUnit?: UnitFormat | null
   }>(),
   {
     horizontalLines: () => [],
@@ -50,7 +53,9 @@ const props = withDefaults(
     consolidationFn: DEFAULT_CONSOLIDATION_FN,
     hiddenMetricNames: () => [],
     hiddenLineNames: () => [],
-    fillHeight: false
+    fillHeight: false,
+    valueResolution: null,
+    axisUnit: null
   }
 )
 
@@ -73,9 +78,14 @@ const visibilityLabel = computed(() =>
 // Counts threshold lines too: 5 metrics plus 2 thresholds scrolls where 7 metrics would.
 const VISIBLE_ITEM_BUDGET = 7
 const ROW_HEIGHT_PX = 24
-const HEADER_ROW_HEIGHT_PX = 40
+// The space on either side of the divider under the header and the one above the footer.
+const DIVIDER_GAP_PX = 12
+const HEADER_ROW_HEIGHT_PX = 40 + DIVIDER_GAP_PX
 const rowHeight = `${ROW_HEIGHT_PX}px`
 const headerRowHeight = `${HEADER_ROW_HEIGHT_PX}px`
+const dividerGap = `${DIVIDER_GAP_PX}px`
+
+const hasFooter = computed(() => props.horizontalLines.length > 0 || props.shadedRegions.length > 0)
 
 const scrollMaxHeight = computed(() => {
   if (props.fillHeight) {
@@ -83,18 +93,17 @@ const scrollMaxHeight = computed(() => {
   }
   const rowsForMetrics = Math.max(1, VISIBLE_ITEM_BUDGET - props.horizontalLines.length)
   const visibleRows = rowsForMetrics + props.horizontalLines.length
-  return `${HEADER_ROW_HEIGHT_PX + visibleRows * ROW_HEIGHT_PX}px`
+  const footerDividerHeight = hasFooter.value ? 2 * DIVIDER_GAP_PX : 0
+  return `${HEADER_ROW_HEIGHT_PX + visibleRows * ROW_HEIGHT_PX + footerDividerHeight}px`
 })
 
 const displayMetrics = computed(() => orderMetricsTopToBottom(props.metrics))
-const allHidden = computed(
-  () =>
-    props.metrics.length > 0 &&
-    props.metrics.every((m) => props.hiddenMetricNames.includes(m.metadata.name))
+const anyMetricHidden = computed(() =>
+  props.metrics.some((m) => props.hiddenMetricNames.includes(m.metadata.name))
 )
 
 function toggleAll() {
-  if (allHidden.value) {
+  if (anyMetricHidden.value) {
     emit('update:hiddenMetricNames', [])
   } else {
     emit(
@@ -107,7 +116,7 @@ function toggleAll() {
 const metricStats = computed((): Map<string, MetricStats> => {
   const map = new Map<string, MetricStats>()
   for (const m of props.metrics) {
-    map.set(m.metadata.name, computeMetricStats(m))
+    map.set(m.metadata.name, computeMetricStats(m, props.valueResolution, props.axisUnit))
   }
   return map
 })
@@ -140,7 +149,11 @@ function toggleLine(name: string) {
   <div
     class="graphing-graph-legend"
     :class="{ 'graphing-graph-legend--fill': fillHeight }"
-    :style="{ '--legend-row-height': rowHeight, '--legend-header-height': headerRowHeight }"
+    :style="{
+      '--legend-row-height': rowHeight,
+      '--legend-header-height': headerRowHeight,
+      '--legend-divider-gap': dividerGap
+    }"
   >
     <CmkScrollContainer
       class="graphing-graph-legend__scroll"
@@ -152,8 +165,8 @@ function toggleLine(name: string) {
           <tr class="graphing-graph-legend__header-row">
             <th class="graphing-graph-legend__header--eye">
               <GraphLegendEyeButton
-                :hidden="allHidden"
-                :title="allHidden ? _t('Show all') : _t('Hide all')"
+                :hidden="anyMetricHidden"
+                :title="anyMetricHidden ? _t('Show all') : _t('Hide all')"
                 @toggle="toggleAll"
               />
             </th>
@@ -161,7 +174,7 @@ function toggleLine(name: string) {
               <div class="graphing-graph-legend__header-meta">
                 <button
                   class="graphing-graph-legend__metric-count-btn"
-                  :title="allHidden ? _t('Show all metrics') : _t('Hide all metrics')"
+                  :title="anyMetricHidden ? _t('Show all metrics') : _t('Hide all metrics')"
                   @click="toggleAll"
                 >
                   {{ visibilityLabel }}
@@ -206,17 +219,20 @@ function toggleLine(name: string) {
                   <span class="graphing-graph-legend__title" :title="m.metadata.title">
                     {{ m.metadata.title }}
                   </span>
-                  <CmkIconButton
+                  <button
                     v-if="hasAttributes(m)"
+                    type="button"
                     class="graphing-graph-legend__attributes-toggle"
-                    :name="showsAttributes(m) ? 'chevron-up' : 'chevron-down'"
-                    primary-color="font"
-                    size="small"
+                    :class="{
+                      'graphing-graph-legend__attributes-toggle--expanded': showsAttributes(m)
+                    }"
                     :aria-expanded="showsAttributes(m)"
                     :aria-controls="attributesId(index)"
                     :aria-label="_t('Toggle attributes of %{metric}', { metric: m.metadata.title })"
                     @click="toggleAttributes(m.metadata.name)"
-                  />
+                  >
+                    <ArrowDown />
+                  </button>
                 </div>
               </td>
               <td class="graphing-graph-legend__stat">
@@ -239,7 +255,7 @@ function toggleLine(name: string) {
             </tr>
           </template>
         </tbody>
-        <tfoot v-if="horizontalLines.length > 0 || shadedRegions.length > 0">
+        <tfoot v-if="hasFooter">
           <tr
             v-for="line in horizontalLines"
             :key="line.name"
@@ -267,7 +283,7 @@ function toggleLine(name: string) {
             <td></td>
             <td></td>
             <td class="graphing-graph-legend__stat">
-              {{ horizontalLineValue(line) }}
+              {{ horizontalLineValue(line, valueResolution, axisUnit) }}
             </td>
           </tr>
           <tr
@@ -303,6 +319,7 @@ function toggleLine(name: string) {
   box-sizing: border-box;
   padding: var(--dimension-5);
   background: var(--ux-theme-2);
+  border-radius: var(--border-radius);
   font-size: var(--font-size-normal);
   color: var(--font-color);
   width: 100%;
@@ -339,12 +356,15 @@ function toggleLine(name: string) {
     top: 0;
     z-index: 1;
     padding-top: var(--dimension-3);
-    padding-bottom: var(--dimension-5);
+    padding-bottom: calc(2 * var(--legend-divider-gap));
     text-align: right;
     font-weight: normal;
     white-space: nowrap;
+    color: var(--font-color);
     background: var(--ux-theme-2);
-    box-shadow: inset 0 -1px 0 var(--ux-theme-6);
+    box-shadow:
+      inset 0 calc(-1 * var(--legend-divider-gap)) 0 var(--ux-theme-2),
+      inset 0 calc(-1 * var(--legend-divider-gap) - 1px) 0 var(--ux-theme-6);
   }
 }
 
@@ -355,13 +375,12 @@ function toggleLine(name: string) {
 }
 
 .graphing-graph-legend__metric-count-btn {
-  font-weight: var(--font-weight-bold);
+  font-weight: inherit;
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
   color: var(--font-color);
-  text-decoration: underline;
   font-size: inherit;
 
   &:hover {
@@ -373,23 +392,28 @@ function toggleLine(name: string) {
   height: var(--legend-row-height);
 
   &:hover td {
-    background: var(--graphing-legend-row-hover);
+    background: var(--background-row-hover);
   }
 
   &--hidden .graphing-graph-legend__name,
   &--hidden .graphing-graph-legend__stat {
-    color: var(--graphing-legend-hidden-color);
+    color: var(--font-color-secondary);
   }
 }
 
 .graphing-graph-legend__line-row td {
   position: sticky;
   bottom: 0;
-  background: var(--ux-theme-3);
+  background: var(--ux-theme-2);
 }
 
+/* Background-coloured shadows keep the row hover off the gaps around the divider. */
 .graphing-graph-legend__line-row:first-child td {
-  box-shadow: inset 0 1px 0 var(--ux-theme-6);
+  padding-top: calc(2 * var(--legend-divider-gap) + 2px);
+  box-shadow:
+    inset 0 var(--legend-divider-gap) 0 var(--ux-theme-2),
+    inset 0 calc(var(--legend-divider-gap) + 1px) 0 var(--ux-theme-6),
+    inset 0 calc(2 * var(--legend-divider-gap)) 0 var(--ux-theme-2);
 }
 
 /* The eye button fills its column exactly, so with no cell padding the name cell's own
@@ -436,6 +460,19 @@ function toggleLine(name: string) {
 
 .graphing-graph-legend__attributes-toggle {
   flex: 0 0 auto;
+  display: flex;
+  width: var(--dimension-4);
+  height: var(--dimension-3);
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.graphing-graph-legend__attributes-toggle--expanded {
+  transform: rotate(180deg);
 }
 
 .graphing-graph-legend td.graphing-graph-legend__attributes {
@@ -454,13 +491,8 @@ function toggleLine(name: string) {
   font-variant-numeric: tabular-nums;
 }
 
-body[data-theme='facelift'] .graphing-graph-legend {
-  --graphing-legend-hidden-color: var(--color-conference-grey-70);
-  --graphing-legend-row-hover: var(--ux-theme-4);
-}
-
-body[data-theme='modern-dark'] .graphing-graph-legend {
-  --graphing-legend-hidden-color: var(--color-white-70);
-  --graphing-legend-row-hover: var(--color-white-10);
+/* Unqualified, so the hidden row's colour still wins. */
+.graphing-graph-legend__stat {
+  color: var(--font-color-strong);
 }
 </style>

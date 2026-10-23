@@ -3,18 +3,16 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fetchRestAPIDeprecated } from 'cmk-ui-library/lib/cmkFetch'
+import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { computed } from 'vue'
 
 import type { DataSourceCollectionModel, DataSourceModel } from '@/dashboard/types/api'
 
 import { useAPILoader } from './useAPILoader'
 
-const API = 'api/internal/objects/constant/data_source/collections/all'
-
 export function useDataSourcesCollection() {
   const loader = useAPILoader<DataSourceCollectionModel>({
-    fetcher: () => fetchRestAPIDeprecated<DataSourceCollectionModel>(API, 'GET')
+    fetcher: async () => unwrap(await client.GET('/objects/constant/data_source/collections/all'))
   })
 
   const list = computed<DataSourceModel[]>(() => loader.state.value?.value ?? [])

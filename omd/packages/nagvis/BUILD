@@ -1,6 +1,6 @@
-load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "pkg_mkdirs", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "strip_prefix")
 load("@rules_python//python:defs.bzl", "py_binary")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 exports_files(["skel.permissions"])
 
@@ -37,6 +37,15 @@ pkg_files(
         "@nagvis//:NagVisCompressed_js",
     ],
     prefix = "share/nagvis/htdocs/frontend/nagvis-js/js",
+    tags = ["manual"],
+)
+
+pkg_files(
+    name = "locale_de_mo",
+    srcs = ["@nagvis//:nagvis_de_DE_mo"],
+    renames = {
+        "@nagvis//:nagvis_de_DE_mo": "share/nagvis/htdocs/frontend/nagvis-js/locale/de_DE/LC_MESSAGES/nagvis.mo",
+    },
     tags = ["manual"],
 )
 
@@ -82,7 +91,6 @@ pkg_files(
 pkg_files(
     name = "skel_etc",
     srcs = [
-        "skel/etc/apache/conf.d/nagvis.conf",
         "skel/etc/nagvis/apache.conf",
         "skel/etc/nagvis/conf.d/omd.ini.php",
         "@nagvis//:etc/conf.d/demo.ini.php",
@@ -94,6 +102,14 @@ pkg_files(
     },
     strip_prefix = strip_prefix.from_pkg(""),
     tags = ["manual"],
+)
+
+pkg_files(
+    name = "omd_hook",
+    srcs = ["NAGVIS.hook"],
+    attributes = pkg_attributes(mode = "0644"),
+    prefix = "lib/omd/hooks",
+    renames = {"NAGVIS.hook": "NAGVIS"},
 )
 
 pkg_mkdirs(
@@ -170,7 +186,9 @@ pkg_tar(
         "doc_en",
         "doc_general",
         "general",
+        "locale_de_mo",
         "nagvis_ini_skel",
+        "omd_hook",
         "share",
         "skel_etc",
         "skel_etc_dirs",

@@ -14,6 +14,7 @@ from collections.abc import Callable, Iterator, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from http import HTTPStatus
 from os import environ
 from pathlib import Path
 from typing import NamedTuple, Self
@@ -89,7 +90,7 @@ class Registry:
             headers = {"Accept": "application/vnd.docker.distribution.manifest.v2+json"}
             print(f"Get digest of tag '{tag}' from '{url}'")
             response = requests.get(url, auth=docker_auth, headers=headers, timeout=30)
-            if response.status_code != 200:
+            if response.status_code != HTTPStatus.OK:
                 raise RuntimeError(
                     f"Could not get digest of tag {tag} for image {image_name} with {url}: {response.status_code}"
                 )
@@ -114,17 +115,17 @@ class Registry:
         """
         Check if the given image is also known by a `latest` tag.
 
-        This checks if the image is known as either the `latest` or has a
-        version-specific tag (e.g. `1.2.3-latest` or `4.5.6-daily`) applied to it.
-        If it is known as a latest version `True` will be returned.
+        This checks if the image has a version-specific latest tag (e.g. `1.2.3-latest`
+        or `4.5.6-daily`) applied to it. If it is known as a latest version `True` will
+        be returned.
+
+        The tags come back from docker fully qualified (`checkmk/check-mk-pro:2.3.0-latest`),
+        so a bare `latest` cannot be matched here. It does not have to be: `latest` is only
+        ever applied together with a `<branch>-latest` tag.
         """
         assert image.tag, f"Expected image to have a tag, it has {image.tag!r}"
 
         for applied_tag in self.get_all_image_tags(image):
-            if applied_tag == "latest":
-                sys.stderr.write(f"The image {image.full_name()} is tagged as 'latest'.\n")
-                return True
-
             if applied_tag.endswith(("-latest", "-daily")):
                 sys.stderr.write(
                     f"The image {image.full_name()} is a latest of a specific version: {applied_tag}\n"
@@ -239,12 +240,11 @@ class Registry:
                 case int():
                     return DockerImage(
                         image.image_name,
-                        f"{current_version}{current_version.release.release_type.name}{suffix}",
+                        f"{current_version.base}{current_version.release.release_type.name}{suffix}",
                     )
                 case date():
                     return DockerImage(
-                        image.image_name,
-                        f"{current_version}-{suffix.year}.{suffix.month}.{suffix.day}",
+                        image.image_name, f"{current_version.base}-{suffix:%Y.%m.%d}"
                     )
 
         def decrease_value(tag: int | date) -> int | date:

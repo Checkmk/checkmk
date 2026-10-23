@@ -72,10 +72,11 @@ std::optional<int32_t> OringFilter::greatestLowerBoundFor(
     std::chrono::seconds timezone_offset) const {
     std::optional<int32_t> result;
     for (const auto &filter : _subfilters) {
-        if (auto glb =
-                filter->greatestLowerBoundFor(column_name, timezone_offset)) {
-            result = result ? std::min(*result, *glb) : glb;
+        auto glb = filter->greatestLowerBoundFor(column_name, timezone_offset);
+        if (!glb) {
+            return std::nullopt;  // No bound for subfilter? Give up.
         }
+        result = result ? std::min(*result, *glb) : glb;
     }
     return result;
 }
@@ -85,10 +86,11 @@ std::optional<int32_t> OringFilter::leastUpperBoundFor(
     std::chrono::seconds timezone_offset) const {
     std::optional<int32_t> result;
     for (const auto &filter : _subfilters) {
-        if (auto lub =
-                filter->leastUpperBoundFor(column_name, timezone_offset)) {
-            result = result ? std::max(*result, *lub) : lub;
+        auto lub = filter->leastUpperBoundFor(column_name, timezone_offset);
+        if (!lub) {
+            return std::nullopt;  // No bound for subfilter? Give up.
         }
+        result = result ? std::max(*result, *lub) : lub;
     }
     return result;
 }
@@ -98,10 +100,12 @@ std::optional<std::bitset<32>> OringFilter::valueSetLeastUpperBoundFor(
     std::chrono::seconds timezone_offset) const {
     std::optional<std::bitset<32>> result;
     for (const auto &filter : _subfilters) {
-        if (auto lub = filter->valueSetLeastUpperBoundFor(column_name,
-                                                          timezone_offset)) {
-            result = result ? (*result | *lub) : lub;
+        auto lub =
+            filter->valueSetLeastUpperBoundFor(column_name, timezone_offset);
+        if (!lub) {
+            return std::nullopt;  // No bound for subfilter? Give up.
         }
+        result = result ? (*result | *lub) : lub;
     }
     return result;
 }

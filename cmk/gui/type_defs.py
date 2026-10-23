@@ -14,6 +14,7 @@ from enum import Enum
 from typing import (
     Annotated,
     Any,
+    Final,
     Literal,
     NamedTuple,
     NewType,
@@ -32,10 +33,10 @@ from cmk.crypto.password_hashing import PasswordHash
 from cmk.crypto.secrets import Secret
 from cmk.events.notify_types import DisabledNotificationsOptions, EventRule
 from cmk.gui.exceptions import FinalizeRequest
-from cmk.inventory.structured_data import SDPath
+from cmk.inventory.trees import SDPath
 from cmk.ruleset_matcher.labels import Labels
 from cmk.utils.password_store import PasswordId
-from cmk.web.utils.choices import Choices, ChoiceText
+from cmk.web.utils.choices import Choice, ChoiceText
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName
 from cmk.web.utils.speaklater import LazyString
 
@@ -58,7 +59,7 @@ class TrustedCertificateAuthorities(TypedDict):
 
 class ChoiceGroup(NamedTuple):
     title: str
-    choices: Choices
+    choices: list[Choice]
 
 
 GroupedChoices = list[ChoiceGroup]
@@ -105,6 +106,9 @@ AuthType = Literal[
     "web_server",
 ]
 
+# Also declared as `dismissal.key` in packages/cmk-shared-typing/source/dialog.json,
+# which the frontend uses. Nothing generates one list from the other, so add a
+# warning to both. tests/unit/cmk/gui/test_type_defs.py guards against drift.
 DismissableWarning = Literal[
     "notification_fallback",
     "immediate_slideout_change",
@@ -367,6 +371,17 @@ FilterHTTPVariables = Mapping[str, str]
 VisualName = str
 VisualTypeName = Literal["dashboards", "views", "reports"]
 VisualContext = Mapping[FilterName, FilterHTTPVariables]
+
+# Every graph type that has a storable form, i.e. the kinds that offer an add-to action at all.
+# One list because every add-to gate has to agree on it. An individual target may still refuse
+# one - see CustomGraphPage.may_contain.
+ADD_TO_GRAPH_TYPES: Final = (
+    "pnpgraph",
+    "custom_graph",
+    "combined_graph",
+    "single_timeseries",
+    "problem_percentage",
+)
 VisualPublic = bool | tuple[Literal["contact_groups", "sites"], Sequence[str]]
 InfoName = str
 SingleInfos = Sequence[InfoName]
@@ -646,6 +661,31 @@ class ViewSpec(Visual):
     modified_at: NotRequired[str]  # timestamp in ISO format
 
 
+type ContextualLinkTargetType = Literal["views", "dashboards"]
+
+
+# Without an owner, the name resolves for each viewer, as on the target page.
+type ContextualLinkLocationConfig = (
+    tuple[ContextualLinkTargetType, VisualName]
+    | tuple[ContextualLinkTargetType, VisualName, UserId]
+)
+
+
+class ContextFilterConfig(TypedDict):
+    filter_id: FilterName
+    # The label key, tag group or auxiliary tag of a filter that needs one.
+    key: NotRequired[str]
+
+
+class ContextualLinkEntryConfig(TypedDict):
+    title: str
+    location: ContextualLinkLocationConfig
+    filters: list[ContextFilterConfig]
+    include_context: bool
+    include_time_range: bool
+    show_filter_form: bool
+
+
 # NOTE: keep in sync with `ViewSpec`
 # Trimmed down version of `ViewSpec` for embedded views in dashboards
 class DashboardEmbeddedViewSpec(TypedDict):
@@ -671,6 +711,8 @@ class DashboardEmbeddedViewSpec(TypedDict):
     play_sounds: NotRequired[bool]
     inventory_join_macros: NotRequired[InventoryJoinMacrosSpec]
     modified_at: NotRequired[str]  # timestamp in ISO format
+    # Keyed by the index into `painters`; an entry without filters is an inherited drill-down.
+    column_links: NotRequired[dict[int, ContextualLinkEntryConfig]]
 
 
 AllViewSpecs = dict[tuple[UserId, ViewName], ViewSpec]
@@ -763,14 +805,13 @@ class RowShading(TypedDict):
 
 
 GraphTitleFormatVS = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
+GraphLegendStyle = Literal["compact", "extended"]
 
 
 class GraphRenderOptionsVS(TypedDict, total=False):
-    border_width: SizeMM
-    color_gradient: float
     fixed_timerange: bool
     font_size: SizePT
-    preview: bool
+    legend_style: GraphLegendStyle
     resizable: bool
     show_controls: bool
     show_graph_time: bool

@@ -23,20 +23,6 @@ If you own one of these migrations, please keep its section up to date and remov
 If you come across this document and find it outdated or incomplete, feel free to take action.
 If in doubt, reach out to Moritz Kiemer.
 
-Check plugin API: legacy checks to ``agent_based.v2``
-=====================================================
-
-:Phase: mostly done
-:Owner: Respective plugin components / Lead: General "Plugins" component
-:Old: dict-based legacy check plugins in ``cmk/legacy_checks/``
-:New: ``cmk.agent_based.v2`` plugins in ``cmk/plugins/<family>/agent_based/``
-:References: ``doc/treasures/migration_helpers/legacy_checks/instruction.md`` (migration recipe and tooling)
-
-The legacy check API is untyped and predates the structured ``Service``/``Result``/``Metric`` model, making plugins hard to test and validate.
-A few hundred legacy checks remain; they are converted with a semi-automated two-commit process.
-
-This migration is meant to be finished by the end of Q3/2026.
-
 Bakery plugin API: ``bakery_api.v1`` to ``cmk.bakery``
 ======================================================
 
@@ -48,7 +34,7 @@ Bakery plugin API: ``bakery_api.v1`` to ``cmk.bakery``
 
 The old bakery API lives in the ``cmk.base`` tree and is tied to the monolith, and its import location no longer matches the current edition naming.
 The current API is a proper plugin-API package, and bakery plugins move next to the family that owns them (around 30 families are already there).
-The old API is being replaced by ``cmk.bakery.v2_unstable`` and is intended to be removed with Checkmk 2.7 (see Werk #18600).
+The old API is being replaced by ``cmk.bakery.v2`` and is intended to be removed with Checkmk 2.7 (see Werk #18600).
 
 This migration is meant to be finished before the 3.0 release.
 
@@ -103,19 +89,6 @@ Server-side HTML generation with inline JavaScript is hard to type check, test a
 New UI is built as Vue components against a shared typed contract.
 Current focus areas are FormSpec rendering and the new monitoring pages ("mon-pages").
 
-View painters: v0 to v1
-=======================
-
-:Phase: stale
-:Owner: Component "UI Monitoring"
-:Old: ``cmk.gui.painter.v0`` painters (``abc.ABC`` subclasses that emit HTML directly)
-:New: ``cmk.gui.painter.v1`` painters (frozen, generic dataclasses with separate HTML/CSV/JSON formatters)
-:References: ``cmk/gui/painter/v1/painter_lib.py`` and the ``PainterAdapter`` bridge in ``cmk/gui/painter/v0/base.py``
-
-The v0 painter base class couples data lookup and HTML rendering and is untyped over the row data it formats.
-The v1 painters are declarative dataclasses parametrized over their data type, with dedicated formatters per output format, so the same painter can render HTML, CSV and JSON without ad-hoc string handling.
-v1 painters are wrapped by ``PainterAdapter`` in ``cmk/gui/painter/v0/base.py`` so they run in code that still expects the v0 interface.
-
 GUI: global proxies to explicit dependencies
 ============================================
 
@@ -131,18 +104,6 @@ The migration replaces this implicit global state with explicit dependency passi
 * Eliminate use of the global proxies as much as possible (``git grep request_local_attr``).
 * Pass everything a mode or page needs into it explicitly, as the REST API v1 endpoints already do via ``ApiContext``.
 * Eliminate ``active_config`` in particular (around 200 call sites under ``cmk/gui``): thread through only the parts of the configuration actually needed — derived, narrowly typed objects rather than the whole ``Config``.
-
-GUI: centralize the ``FolderTree`` computation
-==============================================
-
-:Phase: in progress
-:Owner: Lars Michelsen
-:Old: ``folder_tree()`` builds a ``FolderTree`` from ``active_config`` on first use and memoizes it on the request-global ``g.folder_tree``
-:New: the ``FolderTree`` is computed once, high up in the call stack, and passed down explicitly as a parameter
-:References: ``cmk/gui/watolib/hosts_and_folders.py`` (``folder_tree()``, ``make_folder_tree``, ``FolderTree``)
-
-``folder_tree()`` is a request-global accessor (around 170 call sites) that hides both a dependency on ``active_config`` and shared mutable state on ``g``, which is exactly the implicit-global-state pattern the proxy migration above is removing.
-Computing the ``FolderTree`` once at a well-defined point and passing it down as an argument lets ``folder_tree()`` and ``g.folder_tree`` be removed, and makes the folder data a mode or page depends on explicit and testable.
 
 GUI: ``WatoMode`` lifecycle as an explicit sequence of calls
 ============================================================
@@ -174,17 +135,6 @@ The target layout classifies every test by scope and groups system level tests b
 
 All system level suites now live under ``tests/system/`` (for example ``tests/system/redfish/``, moved out of ``tests/integration_redfish/``, ``tests/system/singlesite/``, the former ``tests/integration/``, and ``tests/system/multisite/``, the former ``tests/composition/``).
 What is still outstanding is the grouping *within* ``tests/system/``: ``singlesite``, ``multisite``, ``gui``, ``gui_crawl``, ``update`` and ``plugins`` are transitional, fixture-named buckets to be dissolved into feature directories.
-
-Centralized ``bin/BUILD`` to self-contained CLI entry points
-============================================================
-
-:Phase: in progress
-:Owner: Moritz Kiemer.
-:Old: shipped ``bin/`` entry points aggregated centrally in ``bin/BUILD`` via ``//bin:pkg_tar``, even when the source lives under ``cmk/``
-:New: ``bin/`` in the repo does not exist. Each package declares its shipped own entry points via the ``entry_points`` argument to the ``py_wheel`` rule.
-:References: 35b24d32b5e4559a999e3dfba489e289477d94d5
-
-Next step here is migrate the remaining elements in ``bin/``.
 
 Monolith decomposition: dissolve global ``BaseConfig`` and ``ConfigCache``
 ==========================================================================

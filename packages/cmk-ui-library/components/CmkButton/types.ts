@@ -58,6 +58,7 @@ export interface ButtonProps {
   title?: string | undefined
   href?: string | undefined
   target?: string | undefined
+  download?: string | undefined
   icon?: ButtonIcon | undefined
   /** Pulses the button while the action it triggers is still running. */
   running?: boolean | undefined

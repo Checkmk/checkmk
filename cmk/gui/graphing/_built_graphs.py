@@ -7,8 +7,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from cmk.graphing_engine import FixedRange, Graph
-from cmk.shared_typing.cmk_time_series_graph import UnitFormat
+from cmk.graphing_engine import drawn_curves, FixedRange, Graph, NonConvertibleUnit, Unit
 
 from ._graph_specification import GraphSpecification
 
@@ -21,7 +20,18 @@ class BuiltGraph:
     # replay.
     graph: Graph
     specification: GraphSpecification | None
-    y_axis_unit: UnitFormat | None = None
+    y_axis_unit: Unit | NonConvertibleUnit | None = None
+
+    def resolved_y_axis_unit(self) -> Unit | NonConvertibleUnit | None:
+        if self.y_axis_unit is not None:
+            return self.y_axis_unit
+        return next(
+            (
+                drawn.curve.attributes.unit
+                for drawn in drawn_curves(self.graph.stacks, self.graph.lines)
+            ),
+            None,
+        )
 
     def y_axis_bounds(self) -> tuple[float, float] | None:
         """The edges the value axis is pinned to; None to scale it to the values that are drawn."""

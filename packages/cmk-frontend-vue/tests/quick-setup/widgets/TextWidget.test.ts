@@ -16,3 +16,14 @@ test('TextWidget renders value', async () => {
 
   expect(screen.queryByText('Hello World')).toBeTruthy()
 })
+
+test('formatted deployment help retains headings and inline filenames', () => {
+  render(TextWidget, {
+    props: {
+      text: '<h2>Deploy with Helm</h2><p>Keep <tt>cmk-signed-push-cert</tt>.</p>'
+    }
+  })
+
+  expect(screen.getByRole('heading', { name: 'Deploy with Helm', level: 2 })).toBeVisible()
+  expect(screen.getByText('cmk-signed-push-cert')).toBeVisible()
+})

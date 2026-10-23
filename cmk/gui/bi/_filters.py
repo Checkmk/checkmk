@@ -10,11 +10,12 @@ from typing import override
 
 from cmk.ccc.regex import RegexFutureWarning
 from cmk.gui import query_filters
+from cmk.gui.config import RequestCacheConfig
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.visuals.filter import Filter, FilterOption, FilterRegistry
+from cmk.gui.visuals.filter import drilldowns, Filter, FilterOption, FilterRegistry
 from cmk.gui.visuals.filter.components import (
     Checkbox,
     Dropdown,
@@ -23,6 +24,7 @@ from cmk.gui.visuals.filter.components import (
     HorizontalGroup,
     TextInput,
 )
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.speaklater import LazyString
 
 from ._compiler import is_part_of_aggregation
@@ -51,6 +53,7 @@ def register(filter_registry: FilterRegistry) -> None:
             sort_index=120,
             what="name",
             how="exact",
+            drilldown=drilldowns.text("aggr_name", "aggr_name"),
         )
     )
 
@@ -122,6 +125,8 @@ class _FilterAggrGroup(Filter):
             info=self.column,
             htmlvars=[self.column],
             link_columns=[self.column],
+            # Not the group tree filter, which matches paths only: a row's group may be a name.
+            drilldown=drilldowns.text(self.column, self.column),
         )
 
     @override
@@ -129,7 +134,9 @@ class _FilterAggrGroup(Filter):
         return {self.htmlvars[0]: row[self.column]}
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         choices = {
             "": "",
         }
@@ -148,7 +155,9 @@ class _FilterAggrGroup(Filter):
         return rows
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         return value.get(self.htmlvars[0])
 
 
@@ -169,14 +178,18 @@ class _FilterAggrGroupTree(Filter):
         return {self.htmlvars[0]: row[self.column]}
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield Dropdown(
             id=self.htmlvars[0],
             choices=self._options(),
         )
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         return value.get(self.htmlvars[0])
 
     @staticmethod
@@ -216,16 +229,22 @@ class _BIFrozenAggregations(Filter):
         return ""
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
-        yield Checkbox(
-            id=self.htmlvars[0],
-            label=_("Show frozen"),
-            default_value=True,
-        )
-        yield Checkbox(
-            id=self.htmlvars[1],
-            label=_("Show dynamic"),
-            default_value=True,
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
+        yield HorizontalGroup(
+            components=[
+                Checkbox(
+                    id=self.htmlvars[0],
+                    label=_("Show frozen"),
+                    default_value=True,
+                ),
+                Checkbox(
+                    id=self.htmlvars[1],
+                    label=_("Show dynamic"),
+                    default_value=True,
+                ),
+            ]
         )
 
     @override
@@ -264,6 +283,7 @@ class BITextFilter(Filter):
         what: str,
         how: str = "regex",
         suffix: str = "",
+        drilldown: drilldowns.Drilldown | None = None,
     ) -> None:
         self.how = how
         self.column = "aggr_" + what
@@ -274,6 +294,7 @@ class BITextFilter(Filter):
             info="aggr",
             htmlvars=[self.column + suffix],
             link_columns=[self.column],
+            drilldown=drilldown,
         )
 
     @override
@@ -281,11 +302,15 @@ class BITextFilter(Filter):
         return {self.htmlvars[0]: row[self.column]}
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield TextInput(id=self.htmlvars[0])
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         return value.get(self.htmlvars[0])
 
     @override
@@ -330,11 +355,15 @@ class _FilterAggrHosts(Filter):
         )
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield TextInput(id=self.htmlvars[1])
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         return value.get(self.htmlvars[1])
 
     def find_host(self, host: str, hostlist: Sequence[tuple[str, str]]) -> bool:
@@ -373,12 +402,16 @@ class _FilterAggrService(Filter):
         )
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield TextInput(id=self.htmlvars[1], label=_("Host") + ": ")
         yield TextInput(id=self.htmlvars[2], label=_("Service") + ": ")
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         return value.get(self.htmlvars[1], "") + " / " + value.get(self.htmlvars[2], "")
 
     @override
@@ -388,6 +421,22 @@ class _FilterAggrService(Filter):
             "host": row["host_name"],
             "service": row["service_description"],
         }
+
+
+def _bi_state(prefix: str, column: str) -> drilldowns.Drilldown:
+    def variables(row: drilldowns.RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
+        if column not in row:
+            return None
+        match row[column]:
+            case {"state": int(state)}:
+                return {f"{prefix}_filled": "1", f"{prefix}{state}": "on"}
+            # Only the assumed-state filter has an option for an unset state.
+            case None if prefix == "bias":
+                return {f"{prefix}_filled": "1", f"{prefix}n": "on"}
+            case _:
+                return None
+
+    return drilldowns.Drilldown(columns=[column], variables=variables)
 
 
 class BIStatusFilter(Filter):
@@ -409,6 +458,7 @@ class BIStatusFilter(Filter):
             info="aggr",
             htmlvars=vars_,
             link_columns=[],
+            drilldown=_bi_state(self.prefix, self.column),
         )
 
     @override
@@ -419,7 +469,9 @@ class BIStatusFilter(Filter):
         return value.get(self.prefix + "_filled", "")
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield Hidden(id=self.prefix + "_filled", value="1")
         yield HorizontalGroup(
             components=[

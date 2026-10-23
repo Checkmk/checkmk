@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.password_store.v1_unstable import resolve_secret_option
+from cmk.password_store.v1 import resolve_secret_option
 from cmk.plugins.extremecloud_iq.special_agent import agent_extremecloud_iq
 
 

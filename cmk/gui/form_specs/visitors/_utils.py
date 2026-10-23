@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 
 import hashlib
@@ -37,14 +36,13 @@ def get_title_and_help_with_optional_macro_support[ModelT](
     if not macro_support:
         return title_text, help_text
 
-    macros_help_text = (
+    localized_macros_text = ruleset_api_v1.Help(
         "This field supports the use of macros. "
         "The corresponding plug-in replaces the macros with the actual values. "
-        "The most common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$."
-    )
-    localized_macros_text = ruleset_api_v1.Help(macros_help_text).localize(
-        translate_to_current_language
-    )
+        "The most common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$. "
+        "To use a custom host attribute, prefix its name with 'HOST_', "
+        "e.g. an attribute named 'OWNER' is referenced as $HOST_OWNER$."
+    ).localize(translate_to_current_language)
     combined_help = f"{help_text} {localized_macros_text}" if help_text else localized_macros_text
 
     return title_text, combined_help
@@ -58,7 +56,7 @@ def localize(localizable: SupportsLocalize | None) -> str:
     return "" if localizable is None else localizable.localize(translate_to_current_language)
 
 
-def optional_validation[ModelT](
+def run_validators[ModelT](
     validators: Sequence[Callable[[ModelT], object]], raw_value: Any
 ) -> list[str]:
     validation_errors = []
@@ -89,10 +87,9 @@ def compute_validation_errors[ModelT](
 ) -> list[shared_type_defs.ValidationMessage]:
     return [
         shared_type_defs.ValidationMessage(
-            location=[], message=x, replacement_value=replacement_value()
+            location=[], message=msg, replacement_value=replacement_value()
         )
-        for x in optional_validation(validators, raw_value)
-        if x is not None  # type: ignore[redundant-expr]
+        for msg in run_validators(validators, raw_value)
     ]
 
 

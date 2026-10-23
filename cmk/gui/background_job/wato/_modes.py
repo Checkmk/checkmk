@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-import json
 import traceback
 from collections.abc import Collection, Iterator
 from typing import override
@@ -185,9 +184,9 @@ class ModeBackgroundJobDetails(WatoMode):
         if job.is_active():
             html.div(html.render_message(_("Loading...")), id_="async_progress_msg")
             html.div("", id_="status_container")
-            html.javascript(
-                "cmk.background_job.start('ajax_background_job_details.py', %s)"
-                % json.dumps(job_id)
+            html.call_ts_function(
+                function_name="background_job_start",
+                arguments={"update_url": "ajax_background_job_details.py", "job_id": job_id},
             )
         else:
             job_snapshot: BackgroundStatusSnapshot | None = _get_job_snaphot(job)

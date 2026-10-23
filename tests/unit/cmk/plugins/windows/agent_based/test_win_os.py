@@ -47,3 +47,17 @@ def test_inventorize_win_os(section: win_os.Section) -> None:
             },
         ),
     ]
+
+
+def test_parse_win_os_duplicate_row() -> None:
+    # Crash group 4510: the agent reported the operating system row twice
+    row = [
+        "HOST1",
+        "Microsoft Windows Server 2016 Datacenter",
+        "10.0.14393",
+        "64-bit",
+        "0",
+        "0",
+        "20190318141906.000000+060",
+    ]
+    assert win_os.parse_win_os([row, row]) == win_os.parse_win_os([row])

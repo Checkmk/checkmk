@@ -29,7 +29,6 @@ from pydantic import BaseModel
 
 from cmk import trace
 from cmk.automations.results import (
-    SerializedResult,
     ServiceDiscoveryPreviewResult,
     SetAutochecksInput,
     SourceResult,
@@ -50,7 +49,7 @@ from cmk.gui.background_job.job import (
 )
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
 from cmk.gui.watolib.automations import (
@@ -69,7 +68,7 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_domain_name import (
     generate_hosts_to_update_settings,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import FolderTree, Host
 from cmk.gui.watolib.pending_changes import (
     Change,
     ChangeScope,
@@ -564,20 +563,23 @@ class Discovery:
         ):
             if entry.check_source == DiscoveryState.VANISHED:
                 return DiscoveryState.REMOVED
-            if entry.check_source == DiscoveryState.IGNORED:
-                return DiscoveryState.IGNORED
+            if entry.check_source in (DiscoveryState.IGNORED, DiscoveryState.CLUSTERED_IGNORED):
+                return entry.check_source
             # entry.check_source in [DiscoveryState.MONITORED, DiscoveryState.UNDECIDED]
             return DiscoveryState.MONITORED
 
-        if self._action == DiscoveryAction.UPDATE_SERVICE_LABELS and self._update_target:
-            if entry.check_source == DiscoveryState.IGNORED:
-                return DiscoveryState.IGNORED
-            return self._update_target
-
-        if self._action == DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS and self._update_target:
-            if entry.check_source == DiscoveryState.IGNORED:
-                return DiscoveryState.IGNORED
-            return self._update_target
+        if self._action in (
+            DiscoveryAction.UPDATE_SERVICE_LABELS,
+            DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS,
+        ):
+            # Refresh the discovered values of services that are already monitored
+            # (CMK-38599). `clustered_old` is included because when the action targets
+            # a cluster, the node autochecks are rebuilt from the node tables processed
+            # alongside the cluster table, so the node row must be retargeted or the
+            # refresh never reaches the node's file.
+            if entry.check_source in (DiscoveryState.CHANGED, DiscoveryState.CLUSTERED_OLD):
+                return DiscoveryState.MONITORED
+            return entry.check_source
 
         if not self._update_target:
             return entry.check_source
@@ -676,6 +678,7 @@ def perform_fix_all(
         tracer.span("perform_fix_all", attributes={"cmk.host_name": str(host.name())}),
     ):
         _perform_update_host_labels(
+            host.folder().tree,
             discovery_result.labels_by_host,
             automation_config=automation_config,
             debug=debug,
@@ -725,6 +728,7 @@ def perform_host_label_discovery(
     """Handle update host labels discovery action"""
     with _service_discovery_context(host, pprint_value=pprint_value):
         _perform_update_host_labels(
+            host.folder().tree,
             discovery_result.labels_by_host,
             automation_config=automation_config,
             debug=debug,
@@ -883,6 +887,7 @@ def initial_discovery_result(
 
 
 def _perform_update_host_labels(
+    tree: FolderTree,
     labels_by_nodes: Mapping[HostName, Sequence[HostLabel]],
     *,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
@@ -890,7 +895,7 @@ def _perform_update_host_labels(
     pending_changes: PendingChanges,
 ) -> None:
     for host_name, host_labels in labels_by_nodes.items():
-        if (host := folder_tree().host(host_name)) is None:
+        if (host := tree.host(host_name)) is None:
             raise ValueError(f"no such host: {host_name!r}")
 
         message = _("Updated discovered host labels of '%(host_name)s' with %(count)d labels") % {
@@ -1117,7 +1122,8 @@ def _case_clustered(
     # We just display the clustered service state (OLD, NEW, VANISHED).
     # But if the user wants to disable the service on the host, this is what we do.
     # Ideally, there would be no service discovery on the cluster hosts at all.
-    if table_target != DiscoveryState.IGNORED:
+    # Disabled clustered services are not written either, like disabled services (CMK-33299).
+    if table_target not in (DiscoveryState.IGNORED, DiscoveryState.CLUSTERED_IGNORED):
         autochecks_to_save[key] = value
         saved_services.add(descr)
 
@@ -1229,7 +1235,7 @@ def get_check_table(
             debug=debug,
         )
 
-    sync_changes_before_remote_automation(host.site_id(), debug)
+    sync_changes_before_remote_automation(host.folder().tree, host.site_id(), debug)
 
     return DiscoveryResult.deserialize(
         str(
@@ -1269,7 +1275,10 @@ def discovery_job_entry_point(
 ) -> None:
     job = ServiceDiscoveryBackgroundJob(args.host_name)
     with job_interface.gui_context(
-        UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
+        UserPermissions.from_serialized_config(
+            args.user_permission_config,
+            all_permissions(),
+        )
     ):
         job.discover(args.action, raise_errors=args.raise_errors, debug=args.debug)
 
@@ -1360,15 +1369,13 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         )
 
     def _store_last_preview(self, result: ServiceDiscoveryPreviewResult) -> None:
-        self._preview_store.write_obj(result.serialize(Version.from_str(__version__)))
+        self._preview_store.write_obj(result.serialize(__version__))
 
     def _load_last_preview(self) -> tuple[int, ServiceDiscoveryPreviewResult] | None:
         try:
             return (
                 int(self._preview_store.path.stat().st_mtime),
-                ServiceDiscoveryPreviewResult.deserialize(
-                    SerializedResult(self._preview_store.read_obj(default=""))
-                ),
+                ServiceDiscoveryPreviewResult.deserialize(self._preview_store.read_obj(default="")),
             )
         except FileNotFoundError, ValueError:
             return None

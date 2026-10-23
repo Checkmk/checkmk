@@ -6,6 +6,7 @@
 import base64
 import hashlib
 import urllib.parse
+from http import HTTPStatus
 
 import pytest
 from flask import Flask
@@ -19,7 +20,11 @@ from cmk.gui.oauth.store._auth_code_store import AuthCodeRecord, AuthCodeStore
 from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.scopes import format_scopes
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.utils.redis import disable_redis
 
 _FORM_CONTENT_TYPE = "application/x-www-form-urlencoded"
@@ -75,9 +80,17 @@ class TestOAuthTokenPage:
         AuthCodeStore().store(_VALID_FORM["code"], _stored_record())
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             assert isinstance(response.json, dict)
             assert response.json["token_type"] == "Bearer"
             access_token = response.json["access_token"]
@@ -94,7 +107,15 @@ class TestOAuthTokenPage:
         )
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
             assert isinstance(response.json, dict)
             assert response.json["scope"] == "read write"
@@ -116,7 +137,15 @@ class TestOAuthTokenPage:
             method="POST", data={**_VALID_FORM, "scope": "read write"}
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
             assert isinstance(response.json, dict)
             assert response.json["scope"] == "read"
@@ -138,9 +167,17 @@ class TestOAuthTokenPage:
             method="POST", data={**_VALID_FORM, "client_id": registered.ok.client_id}
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -151,7 +188,15 @@ class TestOAuthTokenPage:
             method="POST", data={**_VALID_FORM, "code": "first-code"}
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
             assert isinstance(response.json, dict)
             first_access_token = response.json["access_token"]
 
@@ -159,25 +204,34 @@ class TestOAuthTokenPage:
             method="POST", data={**_VALID_FORM, "code": "second-code"}
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
             assert isinstance(response.json, dict)
             second_access_token = response.json["access_token"]
 
         assert first_access_token != second_access_token
 
-    def test_returns_404_when_disabled(self, flask_app: Flask) -> None:
-        with flask_app.test_request_context(method="POST", data=_VALID_FORM):
-            flask_app.preprocess_request()
-            OAuthTokenPage(lambda: False).handle_page(PageContext(config=Config(), request=request))
-
-            assert response.status_code == 404
-
     def test_returns_405_when_method_is_not_post(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(method="GET"):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 405
+            assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
 
     def test_rejects_a_non_form_content_type(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(
@@ -186,9 +240,17 @@ class TestOAuthTokenPage:
             content_type="application/json",
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -200,9 +262,17 @@ class TestOAuthTokenPage:
             content_type="application/x-www-form-urlencoded; charset=UTF-8",
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
 
     def test_ignores_a_grant_type_in_the_query_string(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(
@@ -211,34 +281,66 @@ class TestOAuthTokenPage:
             content_type=_FORM_CONTENT_TYPE,
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     def test_rejects_a_missing_grant_type(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(method="POST", content_type=_FORM_CONTENT_TYPE):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     def test_treats_an_empty_grant_type_as_missing(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(method="POST", data={"grant_type": ""}):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     @pytest.mark.parametrize("grant_type", ["refresh_token", "client_credentials", "no-such-grant"])
     def test_rejects_unsupported_grant_types(self, flask_app: Flask, grant_type: str) -> None:
         with flask_app.test_request_context(method="POST", data={"grant_type": grant_type}):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "unsupported_grant_type"}
 
     @pytest.mark.parametrize("param", ["code", "client_id", "code_verifier"])
@@ -246,9 +348,17 @@ class TestOAuthTokenPage:
         form = {name: value for name, value in _VALID_FORM.items() if name != param}
         with flask_app.test_request_context(method="POST", data=form):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     @pytest.mark.parametrize("param", ["code", "client_id", "code_verifier"])
@@ -257,9 +367,17 @@ class TestOAuthTokenPage:
     ) -> None:
         with flask_app.test_request_context(method="POST", data={**_VALID_FORM, param: ""}):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     @pytest.mark.parametrize(
@@ -274,9 +392,17 @@ class TestOAuthTokenPage:
             method="POST", data=body, content_type=_FORM_CONTENT_TYPE
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     @pytest.mark.parametrize(
@@ -293,9 +419,17 @@ class TestOAuthTokenPage:
             method="POST", data={**_VALID_FORM, "code_verifier": code_verifier}
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -310,9 +444,17 @@ class TestOAuthTokenPage:
             method="POST", data={**_VALID_FORM, "code_verifier": code_verifier}
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
 
     @pytest.mark.usefixtures("clean_redis")
     def test_rejects_a_wrong_code_verifier(self, flask_app: Flask) -> None:
@@ -321,9 +463,17 @@ class TestOAuthTokenPage:
             method="POST", data={**_VALID_FORM, "code_verifier": "b" * 43}
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -333,9 +483,17 @@ class TestOAuthTokenPage:
         AuthCodeStore().store(_VALID_FORM["code"], _stored_record(code_challenge="ü" * 43))
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -347,15 +505,31 @@ class TestOAuthTokenPage:
             method="POST", data={**_VALID_FORM, "code_verifier": "b" * 43}
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
-            assert response.status_code == 400
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -365,9 +539,17 @@ class TestOAuthTokenPage:
             method="POST", data={**_VALID_FORM, "client_id": "other-client"}
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -379,9 +561,17 @@ class TestOAuthTokenPage:
             method="POST", data={**_VALID_FORM, "redirect_uri": "https://evil.example/callback"}
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -394,9 +584,17 @@ class TestOAuthTokenPage:
             data={**_VALID_FORM, "redirect_uri": "https://client.example/callback"},
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
 
     @pytest.mark.usefixtures("clean_redis")
     def test_rejects_a_resource_that_does_not_match_the_stored_one(self, flask_app: Flask) -> None:
@@ -406,9 +604,17 @@ class TestOAuthTokenPage:
             data={**_VALID_FORM, "resource": "https://host/othersite/check_mk/mcp"},
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -419,9 +625,17 @@ class TestOAuthTokenPage:
             data={**_VALID_FORM, "resource": "https://host/mysite/check_mk/mcp"},
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
 
     @pytest.mark.usefixtures("clean_redis")
     def test_rejects_a_resource_when_none_was_bound(self, flask_app: Flask) -> None:
@@ -431,9 +645,17 @@ class TestOAuthTokenPage:
             data={**_VALID_FORM, "resource": "https://host/mysite/check_mk/mcp"},
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -444,9 +666,17 @@ class TestOAuthTokenPage:
         AuthCodeStore().store(_VALID_FORM["code"], _stored_record())
         with flask_app.test_request_context(method="POST", data={**_VALID_FORM, param: ""}):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
 
     @pytest.mark.usefixtures("clean_redis")
     def test_ignores_a_scope_parameter(self, flask_app: Flask) -> None:
@@ -457,17 +687,33 @@ class TestOAuthTokenPage:
             method="POST", data={**_VALID_FORM, "scope": "admin everything"}
         ):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
 
     @pytest.mark.usefixtures("clean_redis")
     def test_rejects_an_unknown_code(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -475,14 +721,30 @@ class TestOAuthTokenPage:
         AuthCodeStore().store(_VALID_FORM["code"], _stored_record())
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
-            assert response.status_code == 200
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
+            assert response.status_code == HTTPStatus.OK
 
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_grant"}
 
     @pytest.mark.usefixtures("clean_redis")
@@ -490,11 +752,17 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
             with disable_redis():
-                OAuthTokenPage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthTokenPage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
-            assert response.status_code == 500
+            assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
             assert b"access_token" not in response.get_data()
 
     @pytest.mark.usefixtures("clean_redis")
@@ -505,8 +773,14 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
             with disable_redis():
-                OAuthTokenPage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthTokenPage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
         mock_log.assert_called_once()
@@ -521,9 +795,17 @@ class TestOAuthTokenPage:
         mock_log = mocker.patch("cmk.gui.oauth.pages._token.log_security_event")
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
-            assert response.status_code == 500
+            assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
 
         mock_log.assert_called_once()
 
@@ -537,8 +819,14 @@ class TestOAuthTokenPage:
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
             with disable_redis():
-                OAuthTokenPage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthTokenPage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
         mock_logger.exception.assert_called_once()
@@ -548,13 +836,29 @@ class TestOAuthTokenPage:
         AuthCodeStore().store(_VALID_FORM["code"], _stored_record())
         with flask_app.test_request_context(method="POST", data=_VALID_FORM):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
             assert response.headers.get("Cache-Control") == "no-store"
 
     def test_error_response_is_not_cacheable(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(method="POST", data={"grant_type": "refresh_token"}):
             flask_app.preprocess_request()
-            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+            OAuthTokenPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
+            )
 
             assert response.headers.get("Cache-Control") == "no-store"

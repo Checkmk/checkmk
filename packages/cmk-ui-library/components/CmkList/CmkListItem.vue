@@ -27,10 +27,11 @@ const listItemVariants = cva('', {
 })
 type ListItemVariants = VariantProps<typeof listItemVariants>
 
-const { buttonPadding = '16px' } = defineProps<{
+const { buttonPadding = '16px', buttonAlignment = 'top' } = defineProps<{
   removeElement: () => void
   variant?: ListItemVariants['variant']
   buttonPadding?: '16px' | '8px'
+  buttonAlignment?: 'top' | 'center'
   dragCallbacks?: {
     dragStart: (event: DragEvent) => void
     dragEnd: (event: DragEvent) => void
@@ -40,7 +41,13 @@ const { buttonPadding = '16px' } = defineProps<{
 </script>
 
 <template>
-  <div class="cmk-list-item" :class="listItemVariants({ variant })">
+  <div
+    class="cmk-list-item"
+    :class="[
+      listItemVariants({ variant }),
+      { 'cmk-list-item--buttons-centered': buttonAlignment === 'center' }
+    ]"
+  >
     <div class="cmk-list-item__button-container">
       <div class="cmk-list-item__buttons">
         <template v-if="dragCallbacks!!">
@@ -123,6 +130,22 @@ const { buttonPadding = '16px' } = defineProps<{
       padding-top: 0;
       padding-bottom: 0;
     }
+  }
+
+  /* The buttons get the padding of the content, so that they center on the content itself. */
+  &.cmk-list-item--buttons-centered > .cmk-list-item__button-container {
+    display: flex;
+    justify-content: center;
+    padding-top: calc(var(--spacing) - var(--button-padding-top));
+  }
+
+  &.cmk-list-item--buttons-centered.cmk-list-item--first > .cmk-list-item__button-container {
+    padding-top: 0;
+  }
+
+  &.cmk-list-item--buttons-centered.cmk-list-item--only > .cmk-list-item__button-container {
+    padding-top: 0;
+    padding-bottom: 0;
   }
 
   .cmk-list-item__drag-button {

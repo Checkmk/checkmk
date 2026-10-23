@@ -8,6 +8,7 @@
 import contextlib
 import datetime
 import os
+import re
 import time
 from collections.abc import Iterable, Mapping, Sequence
 from logging import Logger
@@ -97,7 +98,7 @@ class MongoDBHistory(History):
         # open('/tmp/ec_history_debug.log', 'a').write(
         #    pprint.pformat(filters) + '\n' + pprint.pformat(result.explain()) + '\n')
 
-        if query.limit:
+        if query.limit is not None:
             result = result.limit(query.limit + 1)
 
         # now convert the MongoDB data structure to the eventd internal one
@@ -134,32 +135,65 @@ class MongoDBHistory(History):
 
 def filters_to_mongo_query(
     filters: Iterable[QueryFilter],
-) -> dict[str, str | dict[str, str]]:
+) -> dict[str, object]:
     """Construct the mongodb filtering specification."""
-    mongo_query = {}
+    mongo_query: dict[str, object] = {}
+    further_conditions: list[dict[str, object]] = []
     for f in filters:
-        mongo_filter: str | dict[str, str] = {
-            "=": f.argument,
-            ">": {"$gt": f.argument},
-            "<": {"$lt": f.argument},
-            ">=": {"$gte": f.argument},
-            "<=": {"$lte": f.argument},
-            "~": {"$regex": f.argument, "$options": ""},
-            "=~": {"$regex": f.argument, "$options": "mi"},
-            "~~": {"$regex": f.argument, "$options": "i"},
-            "in": {"$in": f.argument},
-        }[f.operator_name]
-
         if f.column_name[:6] == "event_":
-            mongo_query["event." + f.column_name[6:]] = mongo_filter
+            key = "event." + f.column_name[6:]
         elif f.column_name[:8] == "history_":
             key = f.column_name[8:]
             if key == "line":
                 key = "_id"
-            mongo_query[key] = mongo_filter
         else:
             raise Exception(f"Filter {f.column_name} not implemented for MongoDB")
+        mongo_filter = query_filter_to_mongo_filter(f)
+        # A key can occur only once in a query document, so further conditions
+        # for the same key need an explicit $and.
+        if key in mongo_query:
+            further_conditions.append({key: mongo_filter})
+        else:
+            mongo_query[key] = mongo_filter
+    if further_conditions:
+        mongo_query["$and"] = further_conditions
     return mongo_query
+
+
+def query_filter_to_mongo_filter(f: QueryFilter) -> str | dict[str, object]:
+    match f.operator_name:
+        case "=":
+            argument: str = f.argument
+            return argument
+        case "!=":
+            return {"$ne": f.argument}
+        case "~":
+            return {"$regex": f.argument, "$options": ""}
+        case "!~":
+            return {"$not": re.compile(f.argument)}
+        case "=~":
+            return {"$regex": _case_insensitive_equality(f.argument)}
+        case "!=~":
+            return {"$not": _case_insensitive_equality(f.argument)}
+        case "~~":
+            return {"$regex": f.argument, "$options": "i"}
+        case "!~~":
+            return {"$not": re.compile(f.argument, re.IGNORECASE)}
+        case "<":
+            return {"$lt": f.argument}
+        case ">=":
+            return {"$gte": f.argument}
+        case ">":
+            return {"$gt": f.argument}
+        case "<=":
+            return {"$lte": f.argument}
+        case "in":
+            return {"$in": f.argument}
+
+
+def _case_insensitive_equality(argument: str) -> re.Pattern[str]:
+    # \z instead of $, which would match before a trailing newline, too
+    return re.compile(rf"\A{re.escape(argument)}\z", re.IGNORECASE)
 
 
 try:

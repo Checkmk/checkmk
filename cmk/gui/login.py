@@ -33,7 +33,7 @@ from cmk.gui.logged_in import (
     user,
 )
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.saml2_login import show_saml2_login
 from cmk.gui.session import session
 from cmk.gui.session_context import UserContext
@@ -124,7 +124,10 @@ class LoginPage(Page):
     def page(self, ctx: PageContext) -> None:
         # Initialize the cmk.gui.i18n for the login dialog. This might be
         # overridden later after user login
-        localize(ctx.request.var("lang", ctx.config.default_language))
+        localize(
+            ctx.request.var("lang", ctx.config.default_language),
+            ctx.config.user_localizations,
+        )
 
         self._do_login(ctx.request, ctx.config)
 
@@ -166,7 +169,7 @@ class LoginPage(Page):
                 )
 
             try:
-                # astrein: disable=use-request-getvalidatedinputtype
+                # astrein: disable=request-input
                 username = UserId(username_var.rstrip())
                 password = Password(password_var)
             except ValueError:
@@ -189,6 +192,7 @@ class LoginPage(Page):
                 config.user_connections,
                 (now := datetime.now()),
                 config.default_user_profile,
+                time_based_lock_out_enabled=config.time_based_lock_out_enabled,
                 pprint_value=config.wato_pprint_config,
                 debug=config.debug,
             ):
@@ -206,7 +210,7 @@ class LoginPage(Page):
                 # c) Redirect to really requested page
                 session_state = session.login(
                     username,
-                    UserPermissions.from_config(config, permission_registry),
+                    UserPermissions.from_config(config, all_permissions()),
                     request.is_secure,
                 )
 
@@ -252,9 +256,17 @@ class LoginPage(Page):
                 config.user_connections,
                 now=now,
                 lock_on_logon_failures=config.lock_on_logon_failures,
+                time_based_lock_out_enabled=config.time_based_lock_out_enabled,
                 log_logon_failures=config.log_logon_failures,
                 pprint_value=config.wato_pprint_config,
             )
+            if config.time_based_lock_out_enabled and userdb.LoginTimeoutStore().timeout_status(
+                username, request.remote_ip, now
+            ):
+                raise MKUserError(self._password_varname, _("User is timed out"))
+            user_spec = userdb.load_user(username)
+            if user_spec and userdb.user_locked(username, user_spec):
+                raise MKUserError(self._password_varname, _("User is locked"))
             raise MKUserError(self._password_varname, self._default_login_error_msg)
 
         except MKUserError as e:

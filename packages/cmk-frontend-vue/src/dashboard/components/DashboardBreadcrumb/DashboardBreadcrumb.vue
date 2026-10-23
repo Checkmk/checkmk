@@ -40,13 +40,5 @@ const activeBreadcrumb = computed<BreadcrumbItem[]>(() => {
 </script>
 
 <template>
-  <div class="db-breadcrumb">
-    <CmkBreadcrumb :items="activeBreadcrumb" />
-  </div>
+  <CmkBreadcrumb :items="activeBreadcrumb" />
 </template>
-
-<style scoped>
-.db-breadcrumb {
-  padding: var(--dimension-4) var(--dimension-4) 0;
-}
-</style>

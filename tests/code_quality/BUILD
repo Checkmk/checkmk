@@ -19,13 +19,12 @@ py_library(
     srcs = [
         "__init__.py",
         "conftest.py",
-        "test_no_nargs_in_agents.py",
         "test_package_json.py",
         "utils.py",
     ],
     imports = ["../.."],
     deps = [
-        "//tests/testlib/common:repo",
+        "//tests/testlib/common",
         requirement("pydantic"),
         requirement("pytest"),
         requirement("isort"),

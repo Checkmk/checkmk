@@ -27,6 +27,7 @@ export interface FilterContext {
     }
   }
   application_mode: 'overwrite' | 'merge'
+  dropped_filters_warning: string | null
 }
 
 export interface LoadedDashboardProperties {
@@ -39,6 +40,7 @@ export interface DashboardPermissions {
   publish_to_contact_groups: boolean
   publish_to_foreign_contact_groups: boolean
   publish_to_sites: boolean
+  edit_custom_graph: boolean
 }
 
 export interface DashboardPageProperties {
@@ -54,7 +56,6 @@ export interface DashboardPageProperties {
   available_features: {
     dashboard_features: DashboardFeatures
     ntop_active: boolean
-    network_flow_active: boolean
   }
   permissions: DashboardPermissions
   logged_in_user: string
@@ -83,4 +84,5 @@ export interface SharedDashboardPageProperties {
   dashboard_constants: DashboardConstants
   url_params: FilterHTTPVars
   token_value: string
+  default_time_range: number
 }

@@ -23,7 +23,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Self
+from typing import NoReturn, Self
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel
@@ -102,14 +102,13 @@ def _callback_pong(
     channel.acknowledge(delivery_tag)
 
 
-def _command_pong() -> int:
+def _command_pong() -> NoReturn:
     write("Establishing connection to local broker\n")
     with Connection(APP_NAME, _omd_root(), omd_site()) as conn:
         channel = conn.channel(TestMessage)
         channel.queue_declare(queue=QUEUE_PING)
         write("Waiting for messages\n")
         channel.consume(QUEUE_PING, _callback_pong)
-    return 42  # type: ignore[unreachable] # can't happen
 
 
 def _make_callback_ping(
@@ -138,7 +137,7 @@ def _make_callback_ping(
     return _callback_ping
 
 
-def _command_ping(site_id: str) -> int:
+def _command_ping(site_id: str) -> NoReturn:
     write("Establishing connection to local broker\n")
     with Connection(APP_NAME, _omd_root(), omd_site()) as conn:
         channel = conn.channel(TestMessage)
@@ -155,8 +154,6 @@ def _command_ping(site_id: str) -> int:
 
         write("Waiting for response\n")
         channel.consume(QUEUE_PONG, _make_callback_ping(message))
-
-    return 23  # type: ignore[unreachable]  # can't happen
 
 
 def main() -> int:

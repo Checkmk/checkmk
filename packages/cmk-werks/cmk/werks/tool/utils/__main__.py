@@ -8,16 +8,10 @@ import argparse
 from collections.abc import Sequence
 from pathlib import Path
 
-from cmk.ccc.version import Version
-from cmk.werks.tool.config import RuntimeConfiguration
-from cmk.werks.tool.models import EditionV2, EditionV3, WerkV3
-from cmk.werks.tool.utils import (
-    load_raw_files,
-    resolve_version,
-    write_precompiled_werks,
-)
+from cmk.werks.flavor.cmk.precompile import EDITION_FILTERS, precompile
+from cmk.werks.tool.collect import main as collect
+from cmk.werks.tool.flavor_registry import FLAVOR_NAMES, get_flavor
 from cmk.werks.tool.utils.burn import main as burn
-from cmk.werks.tool.utils.collect import main as collect
 
 
 def path_dir(value: str) -> Path:
@@ -29,44 +23,15 @@ def path_dir(value: str) -> Path:
     return result
 
 
-def _get_filter(filter_by_edition: str | None) -> EditionV3 | None:
-    if filter_by_edition is None:
-        return None
-    return EditionV3(filter_by_edition)
-
-
 def main_precompile(args: argparse.Namespace) -> None:
-    werks_list = load_raw_files(args.werk_dir)
-
-    rtc = RuntimeConfiguration(args.werk_dir.parent)
-
-    filter_by_edition = _get_filter(args.filter_by_edition)
-
-    current_version = Version.from_str(rtc.get_defines_make_version())
-
-    def _set_version(werk: WerkV3) -> WerkV3:
-        if werk.version is None:
-            return werk.model_copy(update={"version": rtc.get_defines_make_version()})
-        return werk
-
-    def _filter(werk: WerkV3) -> bool:
-        edition = werk.edition
-
-        # include only werks matching the edition filter (if any) and this major version
-        return (filter_by_edition is None or edition == filter_by_edition) and (
-            Version.from_str(resolve_version(rtc, werk.version)).base == current_version.base
-        )
-
-    werks = {werk.id: _set_version(werk) for werk in werks_list if _filter(werk)}
-
-    write_precompiled_werks(args.destination, werks)
+    precompile(args.werk_dir, args.destination, args.filter_by_edition)
 
 
 def main_collect(args: argparse.Namespace) -> None:
     branches = {}
     if args.substitute_branches:
         branches = dict(r.split(":", 1) for r in args.substitute_branches)
-    collect(args.flavor, args.path, branches)
+    collect(get_flavor(args.flavor), args.path, branches)
 
 
 def main_burn(args: argparse.Namespace) -> None:
@@ -86,7 +51,7 @@ def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser_precompile.add_argument(
         "--filter-by-edition",
         default=None,
-        choices=[*(x.value for x in [*EditionV2, *EditionV3])],
+        choices=EDITION_FILTERS,
     )
     parser_precompile.set_defaults(func=main_precompile)
 
@@ -95,7 +60,7 @@ def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
     # if you want to compile the complete database of all werks, you have to go
     # through all branches and look at all .werks folders there.
-    parser_collect.add_argument("flavor", choices=["cma", "cmk", "checkmk_kube_agent", "cloudmk"])
+    parser_collect.add_argument("flavor", choices=FLAVOR_NAMES)
     parser_collect.add_argument("path", help="path to git repo to read werks from", type=path_dir)
     parser_collect.add_argument(
         "--substitute-branches",

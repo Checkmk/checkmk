@@ -4,13 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import type { CmkMultitoneIconNames, SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
+import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 import ButtonDropdownMenu from './ButtonDropdownMenu.vue'
+import type { MenuButtonName } from './types'
 
 interface DropdownMenuItemBase {
   label: TranslatedString
@@ -30,9 +31,8 @@ interface DropdownMenuCallbackOption extends DropdownMenuItemBase {
 
 type DropdownMenuOption = DropdownMenuLinkOption | DropdownMenuCallbackOption
 
-interface DropdownMenuProps {
+type DropdownMenuProps = MenuButtonName & {
   icon?: SimpleIcons | { name: CmkMultitoneIconNames; primaryColor: string }
-  label: TranslatedString
   options: DropdownMenuOption[]
   right?: boolean
   disabled?: boolean
@@ -40,13 +40,22 @@ interface DropdownMenuProps {
 
 const props = defineProps<DropdownMenuProps>()
 
+const buttonName = computed((): MenuButtonName => {
+  if (props.label === undefined) {
+    return { ariaLabel: props.ariaLabel }
+  }
+  return props.ariaLabel === undefined
+    ? { label: props.label }
+    : { label: props.label, ariaLabel: props.ariaLabel }
+})
+
 const visibleOptions = computed((): DropdownMenuOption[] => {
   return props.options.filter((option) => !option.hidden)
 })
 </script>
 
 <template>
-  <ButtonDropdownMenu :label="label" :right="!!right" :disabled="props.disabled">
+  <ButtonDropdownMenu v-bind="buttonName" :right="!!right" :disabled="props.disabled">
     <template #button>
       <CmkMultitoneIcon
         v-if="icon instanceof Object"
@@ -56,7 +65,7 @@ const visibleOptions = computed((): DropdownMenuOption[] => {
         size="large"
       />
       <CmkIcon v-else-if="icon" :name="icon" size="large" />
-      <span>{{ label }}</span>
+      <span v-if="label">{{ label }}</span>
     </template>
     <template #menu="{ hideMenu }">
       <div v-for="(option, index) in visibleOptions" :key="index" class="db-dropdown-menu__items">

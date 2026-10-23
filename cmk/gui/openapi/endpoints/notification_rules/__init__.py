@@ -20,6 +20,7 @@ all notification rules configured.
 """
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any
 
 from cmk import fields
@@ -89,7 +90,7 @@ def show_rule(params: Mapping[str, Any]) -> Response:
                 _serialize_notification_rule(NotificationRule.from_mk_file_format(rule), index)
             )
     raise ProblemException(
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
         title=_("The requested notification rule was not found"),
         detail=_("The rule_id %(rule_id)s does not exist.") % {"rule_id": params["rule_id"]},
     )
@@ -151,7 +152,7 @@ def post_rule(params: Mapping[str, Any]) -> Response:
         )
     except BulkNotAllowedException as exc:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title=_("Building bulks is not allowed"),
             detail=str(exc),
         )
@@ -206,7 +207,7 @@ def put_rule(params: Mapping[str, Any]) -> Response:
                 )
             except BulkNotAllowedException as exc:
                 raise ProblemException(
-                    status=400,
+                    status=HTTPStatus.BAD_REQUEST,
                     title=_("Building bulks is not allowed"),
                     detail=str(exc),
                 )
@@ -227,7 +228,7 @@ def put_rule(params: Mapping[str, Any]) -> Response:
             return serve_json(data=_serialize_notification_rule(rule_from_request, n))
 
     raise ProblemException(
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
         title=_("Not found"),
         detail=_("The rule_id %(rule_id)s does not exist.") % {"rule_id": rule_id},
     )
@@ -270,7 +271,7 @@ def delete_rule(params: Mapping[str, Any]) -> Response:
                 user_id=user.id,
             ),
         )
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 def _serialize_notification_rule(rule: NotificationRule, rule_index: int) -> DomainObject:

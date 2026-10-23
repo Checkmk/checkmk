@@ -17,8 +17,13 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.oracle.agent_based import oracle_instance_check
 from cmk.plugins.oracle.agent_based.libinstance import GeneralError, Instance, InvalidData
+from cmk.plugins.oracle.agent_based.oracle_asm_diskgroup import parse_oracle_asm_diskgroup
+from cmk.plugins.oracle.agent_based.oracle_dataguard_stats import parse_oracle_dataguard_stats
 from cmk.plugins.oracle.agent_based.oracle_instance_inventory import inventorize_oracle_instance
 from cmk.plugins.oracle.agent_based.oracle_instance_section import parse_oracle_instance
+from cmk.plugins.oracle.agent_based.oracle_jobs import parse_oracle_jobs
+from cmk.plugins.oracle.agent_based.oracle_rman import parse_oracle_rman
+from cmk.plugins.oracle.agent_based.oracle_tablespaces import parse_oracle_tablespaces
 from tests.unit.cmk.plugins.oracle.agent_based.utils_inventory import sort_inventory_result
 
 
@@ -364,7 +369,7 @@ def test_check_oracle_instance(
                     "archivelog": 0,
                     "forcelogging": 0,
                 },
-                section=parse_oracle_instance([agent_line]),
+                section_oracle_instance=parse_oracle_instance([agent_line]),
             )
         )
         == expected_result
@@ -383,7 +388,7 @@ def test_check_oracle_instance_empty_section() -> None:
                 "archivelog": 0,
                 "forcelogging": 0,
             },
-            section={},
+            section_oracle_instance={},
         )
     ) == [
         Result(
@@ -852,3 +857,170 @@ def test_login() -> None:
         Result(state=State.OK, summary="PDB size: 10.3 GiB"),
         Metric("oracle_pdb_total_size", 11111111111.0),
     ]
+
+
+def test_check_reports_a_failed_dataguard_query_on_the_instance() -> None:
+    dataguard = parse_oracle_dataguard_stats(
+        [["IC731", "FAILURE", "ORA-00942: table or view does not exist"]]
+    )
+    results = list(
+        oracle_instance_check.check_oracle_instance(
+            "IC731",
+            {
+                "logins": 2,
+                "noforcelogging": 1,
+                "noarchivelog": 1,
+                "primarynotopen": 2,
+                "archivelog": 0,
+                "forcelogging": 0,
+            },
+            {},
+            section_oracle_dataguard_stats=dataguard,
+        )
+    )
+    assert results[-1] == Result(
+        state=State.UNKNOWN,
+        summary="Data Guard query failed: ORA-00942: table or view does not exist",
+    )
+
+
+def test_check_reports_a_failed_diskgroup_query_on_the_asm_instance() -> None:
+    diskgroups = parse_oracle_asm_diskgroup(
+        [["+ASM", "FAILURE", "ORA-15032: not all alterations performed"]]
+    )
+    results = list(
+        oracle_instance_check.check_oracle_instance(
+            "+ASM",
+            {
+                "logins": 2,
+                "noforcelogging": 1,
+                "noarchivelog": 1,
+                "primarynotopen": 2,
+                "archivelog": 0,
+                "forcelogging": 0,
+            },
+            {},
+            section_oracle_asm_diskgroup=diskgroups,
+        )
+    )
+    assert results[-1] == Result(
+        state=State.UNKNOWN,
+        summary="ASM diskgroup query failed: ORA-15032: not all alterations performed",
+    )
+
+
+def test_check_ignores_dataguard_data_rows() -> None:
+    dataguard = parse_oracle_dataguard_stats(
+        [["IC731", "IC731U", "PRIMARY", "transport lag", "+00 00:00:00", "TO STANDBY"]]
+    )
+    results = list(
+        oracle_instance_check.check_oracle_instance(
+            "IC731",
+            {
+                "logins": 2,
+                "noforcelogging": 1,
+                "noarchivelog": 1,
+                "primarynotopen": 2,
+                "archivelog": 0,
+                "forcelogging": 0,
+            },
+            {},
+            section_oracle_dataguard_stats=dataguard,
+        )
+    )
+    assert all("query failed" not in r.summary for r in results if isinstance(r, Result))
+
+
+def test_check_reports_a_failed_jobs_query_on_the_instance() -> None:
+    jobs = parse_oracle_jobs([["IC731", "FAILURE", "ORA-00942: table or view does not exist"]])
+    results = list(
+        oracle_instance_check.check_oracle_instance(
+            "IC731",
+            {
+                "logins": 2,
+                "noforcelogging": 1,
+                "noarchivelog": 1,
+                "primarynotopen": 2,
+                "archivelog": 0,
+                "forcelogging": 0,
+            },
+            {},
+            section_oracle_jobs=jobs,
+        )
+    )
+    assert results[-1] == Result(
+        state=State.UNKNOWN, summary="Jobs query failed: ORA-00942: table or view does not exist"
+    )
+
+
+def test_check_reports_a_failed_tablespaces_query_on_the_instance() -> None:
+    tablespaces = parse_oracle_tablespaces(
+        [["IC731", "FAILURE", "ORA-00942: table or view does not exist"]]
+    )
+    results = list(
+        oracle_instance_check.check_oracle_instance(
+            "IC731",
+            {
+                "logins": 2,
+                "noforcelogging": 1,
+                "noarchivelog": 1,
+                "primarynotopen": 2,
+                "archivelog": 0,
+                "forcelogging": 0,
+            },
+            {},
+            section_oracle_tablespaces=tablespaces,
+        )
+    )
+    assert results[-1] == Result(
+        state=State.UNKNOWN,
+        summary="Tablespaces query failed: ORA-00942: table or view does not exist",
+    )
+
+
+def test_check_without_instance_section_reports_only_the_failed_queries() -> None:
+    tablespaces = parse_oracle_tablespaces(
+        [["IC731", "FAILURE", "ORA-00942: table or view does not exist"]]
+    )
+    assert list(
+        oracle_instance_check.check_oracle_instance(
+            "IC731",
+            {
+                "logins": 2,
+                "noforcelogging": 1,
+                "noarchivelog": 1,
+                "primarynotopen": 2,
+                "archivelog": 0,
+                "forcelogging": 0,
+            },
+            None,
+            section_oracle_tablespaces=tablespaces,
+        )
+    ) == [
+        Result(
+            state=State.UNKNOWN,
+            summary="Tablespaces query failed: ORA-00942: table or view does not exist",
+        )
+    ]
+
+
+def test_check_reports_a_failed_rman_query_on_the_instance() -> None:
+    rman = parse_oracle_rman([["IC731", "FAILURE", "ORA-00942: table or view does not exist"]])
+    results = list(
+        oracle_instance_check.check_oracle_instance(
+            "IC731",
+            {
+                "logins": 2,
+                "noforcelogging": 1,
+                "noarchivelog": 1,
+                "primarynotopen": 2,
+                "archivelog": 0,
+                "forcelogging": 0,
+            },
+            {},
+            section_oracle_rman=rman,
+        )
+    )
+    assert results[-1] == Result(
+        state=State.UNKNOWN, summary="RMAN query failed: ORA-00942: table or view does not exist"
+    )

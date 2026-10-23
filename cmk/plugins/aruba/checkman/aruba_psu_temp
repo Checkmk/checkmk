@@ -1,4 +1,4 @@
-title: Aruba 2930M: Power Supply Temperature
+title: Aruba Switch: 2930M Power Supply Temperature
 agents: snmp
 catalog: hw/network/aruba
 license: GPLv2

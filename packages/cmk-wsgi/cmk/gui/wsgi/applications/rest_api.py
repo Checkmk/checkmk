@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 
@@ -11,11 +10,13 @@
 import http.client
 import json
 import logging
+import threading
 import traceback
 import urllib.parse
 from collections.abc import Callable, Mapping
 from datetime import datetime, UTC
 from hashlib import sha256
+from http import HTTPStatus
 from pathlib import Path
 from typing import Any, Literal, NotRequired, override, TYPE_CHECKING, TypedDict
 from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
@@ -40,9 +41,14 @@ from cmk.crash import (
 from cmk.crypto import MKCryptoException
 from cmk.gui import session
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
+from cmk.gui.exceptions import (
+    MKAuthException,
+    MKHTTPException,
+    MKUnauthenticatedException,
+    MKUserError,
+)
 from cmk.gui.http import request, Response
-from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, user
+from cmk.gui.logged_in import LoggedInNobody, LoggedInRemoteSite, LoggedInSuperUser, user
 from cmk.gui.openapi.framework import ApiContext, RawRequestData
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.handler import handle_endpoint_request
@@ -60,13 +66,19 @@ from cmk.gui.openapi.utils import (
     GeneralRestAPIException,
     problem,
     ProblemException,
+    RestAPIForbiddenException,
     RestAPIPermissionException,
     RestAPIRequestGeneralException,
     RestAPIResponseGeneralException,
 )
 from cmk.gui.openapi.versioned_endpoint_map import discover_endpoints
 from cmk.gui.site_config import enabled_sites
-from cmk.gui.token_auth import AuthToken, parse_token_and_validate
+from cmk.gui.token_auth import (
+    AuthToken,
+    MKTokenExpiredOrRevokedException,
+    MKUnknownTokenException,
+    parse_token_and_validate,
+)
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.wsgi.applications.utils import AbstractWSGIApp
@@ -97,7 +109,7 @@ ARGS_KEY = "CHECK_MK_REST_API_ARGS"
 logger = logging.getLogger("cmk.gui.wsgi.rest_api")
 
 EXCEPTION_STATUS: dict[type[Exception], int] = {
-    MKUserError: 400,
+    MKUserError: HTTPStatus.BAD_REQUEST,
 }
 
 PathArgs = Mapping[str, Any]
@@ -191,7 +203,7 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
         )
 
     return problem(
-        status=500,
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
         title="Internal Server Error",
         detail=f"{crash.crash_info['exc_type']}: {crash_msg}. Crash report generated. Please submit.",
         ext=ext_info,
@@ -313,8 +325,7 @@ class LegacyEndpointAdapter(AbstractWSGIApp):
         path_args = environ[ARGS_KEY]
 
         # Create the response
-        with self.endpoint.register_permission_tracking():
-            wsgi_app: Response = self.endpoint.wrapped(ParameterDict(path_args))
+        wsgi_app: Response = self.endpoint.wrapped(ParameterDict(path_args))
 
         _add_checkmk_headers(wsgi_app)
 
@@ -386,7 +397,7 @@ def _serve_spec(
         case "json":
             content_type = "application/json"
 
-    response = Response(status=200)
+    response = Response(status=HTTPStatus.OK)
     response.data = _serialize_spec_cached(target, url, extension, version)
     response.content_type = content_type  # type: ignore[possibly-undefined]
     response.freeze()
@@ -416,7 +427,7 @@ def _serialize_spec_cached(
         pass
 
     serialized = _serialize_spec(target, url, extension, version)
-    cache_file.write_text(serialized)
+    store.RealIo(cache_file).write(serialized.encode("utf-8"))
     return serialized
 
 
@@ -535,14 +546,15 @@ class ServeSwaggerUI(AbstractWSGIApp):
 
 def _ensure_authenticated() -> None:
     session.session.persistent = False
-    if session.session.user is None or isinstance(session.session.user, LoggedInNobody):  # type: ignore[redundant-expr]
+    if isinstance(session.session.user, LoggedInNobody):
         # As a user we want the most specific error messages. Due to the errors being
         # generated at the start of the request, where it isn't clear if Checkmk or RESTAPI
         # will take the request, we need to store them and emit them to the user afterwards.
         if session.session.exc:
             raise session.session.exc
         raise MKAuthException("You need to be logged in to access this resource.")
-    if isinstance(session.session.user, LoggedInSuperUser):
+    if isinstance(session.session.user, LoggedInSuperUser | LoggedInRemoteSite):
+        # A pseudo user has no session state to check: no second factor, no password.
         return
 
     # Not defined in the case as this allows us to understand if a user go direct to 'logged_in'
@@ -567,21 +579,32 @@ type RulesByVersion = dict[APIVersion, list[Rule]]
 type MapByVersion = dict[APIVersion, Map]
 
 
-def _get_cmk_token(environ: WSGIEnvironment) -> AuthToken | None:
+def _get_cmk_token(environ: WSGIEnvironment, token_failure_detail: str | None) -> AuthToken | None:
     if not (
         (auth_header := environ.get("HTTP_AUTHORIZATION", ""))
         and auth_header.startswith("CMK-TOKEN ")
     ):
         return None
-    return parse_token_and_validate(
-        auth_header.removeprefix("CMK-TOKEN ").strip(),
-        request.remote_addr,
-        datetime.now(tz=UTC),
-    )
+    try:
+        return parse_token_and_validate(
+            auth_header.removeprefix("CMK-TOKEN ").strip(),
+            request.remote_addr,
+            datetime.now(tz=UTC),
+        )
+    except (MKUnknownTokenException, MKTokenExpiredOrRevokedException) as exc:
+        if token_failure_detail is None:
+            raise
+        raise MKUnauthenticatedException(token_failure_detail) from exc
 
 
 class CheckmkRESTAPI(AbstractWSGIApp):
-    __slots__ = ("_versioned_url_map", "_versioned_endpoints", "_versioned_rules", "testing")
+    __slots__ = (
+        "_url_map_lock",
+        "_versioned_url_map",
+        "_versioned_endpoints",
+        "_versioned_rules",
+        "testing",
+    )
 
     def __init__(self, debug: bool = False, testing: bool = False) -> None:
         super().__init__(debug)
@@ -591,6 +614,9 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         self._versioned_url_map: MapByVersion = {}
         self._versioned_endpoints: AdaptedEndpointMapByVersion = {}
         self._versioned_rules: RulesByVersion = {}
+        # The map of a version is built by the first request to it. Concurrent requests run in
+        # threads, and building the map resets the data of the version first.
+        self._url_map_lock = threading.Lock()
 
         self.testing = testing
 
@@ -725,10 +751,12 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             raise NotFound
 
         if self._versioned_url_map.get(requested_version) is None:
-            with tracer.span(f"Building url map for version {requested_version}"):
-                self._versioned_url_map[requested_version] = self._build_versioned_url_map(
-                    requested_version
-                )
+            with self._url_map_lock:
+                if self._versioned_url_map.get(requested_version) is None:
+                    with tracer.span(f"Building url map for version {requested_version}"):
+                        self._versioned_url_map[requested_version] = self._build_versioned_url_map(
+                            requested_version
+                        )
 
         with tracer.span("Bind to environment and parse URL"):
             urls = self._versioned_url_map[requested_version].bind_to_environ(environ)
@@ -759,8 +787,13 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             # function at setup-time.
             environ[ARGS_KEY] = path_args
 
+            token_failure_detail = (
+                wsgi_endpoint.endpoint.token_failure_detail
+                if isinstance(wsgi_endpoint, VersionedEndpointAdapter)
+                else None
+            )
             if (
-                (token := _get_cmk_token(environ))
+                (token := _get_cmk_token(environ, token_failure_detail))
                 and isinstance(wsgi_endpoint, VersionedEndpointAdapter)
                 and token.details.type_ in wsgi_endpoint.endpoint.allowed_tokens
             ):
@@ -772,13 +805,37 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             # the header methods.
             _ensure_authenticated()
 
-            # A Checmk Reserved endpoint can only be accessed with the site secret
+            # A Checmk Reserved endpoint can only be accessed with the site secret. The caller is
+            # authenticated at this point and merely lacks the rights for this endpoint, so this
+            # is forbidden (403), not unauthorized (401).
             if (
                 isinstance(wsgi_endpoint, LegacyEndpointAdapter)
                 and wsgi_endpoint.endpoint.internal_user_only
                 and not isinstance(session.session.user, LoggedInSuperUser)
             ):
-                raise MKAuthException("This endpoint is reserved for Checkmk.")
+                raise RestAPIForbiddenException(
+                    title=HTTPStatus.FORBIDDEN.phrase,
+                    detail="This endpoint is reserved for Checkmk.",
+                )
+
+            # A remote site reaches the endpoints that declare themselves for it, and no others.
+            # Denying by default matters: the distributed setup secret authenticates against every
+            # site, so without this an endpoint that requires no permission would accept it.
+            remote_site_only = (
+                isinstance(wsgi_endpoint, VersionedEndpointAdapter)
+                and wsgi_endpoint.endpoint.remote_site_only
+            )
+            caller_is_remote_site = isinstance(session.session.user, LoggedInRemoteSite)
+            if remote_site_only and not caller_is_remote_site:
+                raise RestAPIForbiddenException(
+                    title=HTTPStatus.FORBIDDEN.phrase,
+                    detail="This endpoint is reserved for remote sites.",
+                )
+            if caller_is_remote_site and not remote_site_only:
+                raise RestAPIForbiddenException(
+                    title=HTTPStatus.FORBIDDEN.phrase,
+                    detail="This endpoint is not available to a remote site.",
+                )
 
             return wsgi_endpoint(environ, start_response)
 
@@ -815,7 +872,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             if self.debug and not self.testing:
                 raise
             response = problem(
-                status=EXCEPTION_STATUS.get(type(exc), 500),
+                status=EXCEPTION_STATUS.get(type(exc), HTTPStatus.INTERNAL_SERVER_ERROR),
                 title="An exception occurred.",
                 detail=str(exc),
             )

@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""CLI to migrate legacy agent_config:mk_oracle bakery rules to agent_config:mk_oracle_unified."""
+
+import argparse
+import logging
+import sys
+from collections.abc import Sequence
+
+from cmk.ccc.log import CMKFormatter
+from cmk.ccc.version import edition
+from cmk.gui import main_modules
+from cmk.gui.config import active_config
+from cmk.gui.site_config import is_distributed_setup_remote_site
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
+from cmk.gui.watolib.rulesets import AllRulesets, Rule
+from cmk.gui.wsgi.app import gui_context
+from cmk.update_config.plugins.lib.mk_oracle_migration import (
+    disable_migrated_legacy_rules,
+    migrate_ruleset,
+    MigrationResult,
+)
+from cmk.utils import paths
+
+logger = logging.getLogger(__name__)
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
+    parser = argparse.ArgumentParser(
+        description="Migrate legacy agent_config:mk_oracle rules to agent_config:mk_oracle_unified."
+    )
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument(
+        "--apply",
+        action="store_true",
+        help="Actually create the migrated rules.",
+    )
+    mode.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Only print the migration report, without writing any rules.",
+    )
+    parser.add_argument(
+        "--enable-migrated-rules",
+        action="store_true",
+        help="Create migrated rules as enabled, and disable legacy rules. By default, migrated rules are created disabled and legacy rules are left as is.",
+    )
+    if not argv:
+        parser.print_help()
+        return 0
+    args = parser.parse_args(argv)
+
+    logger.addHandler(handler := logging.StreamHandler(stream=sys.stdout))
+    handler.setFormatter(CMKFormatter(message_only=True))
+    logger.setLevel(logging.INFO)
+    main_modules.register(edition(paths.omd_root))
+
+    with gui_context():
+        if is_distributed_setup_remote_site(active_config.sites):
+            logger.info(
+                "This is a remote site. Oracle rules are managed on a central site. Run this tool there instead."
+            )
+            return 0
+
+        all_rulesets = AllRulesets.load_all_rulesets(make_folder_tree(active_config))
+        legacy_ruleset = all_rulesets.get("agent_config:mk_oracle")
+        unified_ruleset = all_rulesets.get("agent_config:mk_oracle_unified")
+
+        results, skipped = migrate_ruleset(
+            legacy_ruleset, unified_ruleset, disabled=not args.enable_migrated_rules
+        )
+
+        disabled_legacy_rules: list[Rule] = []
+        if args.apply:
+            for result in results:
+                unified_ruleset.append_rule(result.new_rule.folder, result.new_rule)
+
+            if args.enable_migrated_rules:
+                disabled_legacy_rules = disable_migrated_legacy_rules(
+                    legacy_ruleset, unified_ruleset
+                )
+
+            all_rulesets.save(pprint_value=True, debug=False)
+
+        _print_report(results, skipped, disabled_legacy_rules)
+
+        if not args.apply:
+            logger.info(
+                "\nDry run only — no rules were written. Re-run with --apply to create them."
+            )
+
+    return 0
+
+
+def _print_report(
+    results: Sequence[MigrationResult], skipped: int, disabled_legacy_rules: list[Rule]
+) -> None:
+    for result in results:
+        legacy_rule = result.legacy_rule
+        name = legacy_rule.description() if legacy_rule.description() else legacy_rule.id
+        logger.info(
+            "Rule '%(name)s' (folder: %(folder)s)",
+            {"name": name, "folder": legacy_rule.folder.path() or "/"},
+        )
+        for w in result.warnings:
+            logger.info("  - %(warning)s", {"warning": w})
+        if not result.warnings:
+            logger.info("  - no warnings")
+        logger.info("")
+
+    total = len(results)
+    with_warnings = sum(len(result.warnings) for result in results if result.warnings)
+
+    if disabled_legacy_rules:
+        logger.info(
+            "%(total)d rule(s) processed, %(with_warnings)d total warning(s), %(disabled_count)d legacy rule(s) disabled.",
+            {
+                "total": total,
+                "with_warnings": with_warnings,
+                "disabled_count": len(disabled_legacy_rules),
+            },
+        )
+    else:
+        logger.info(
+            "%(total)d rule(s) processed, %(with_warnings)d total warning(s).",
+            {"total": total, "with_warnings": with_warnings},
+        )
+    if skipped:
+        logger.info("%(skipped)d rule(s) already migrated — skipped.", {"skipped": skipped})
+
+
+if __name__ == "__main__":
+    sys.exit(main())

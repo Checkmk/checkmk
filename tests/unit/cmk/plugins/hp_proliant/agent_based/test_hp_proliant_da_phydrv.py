@@ -1088,3 +1088,10 @@ def test_inventorize_hp_proliant_da_phydrv(
     assert list(
         inventorize_hp_proliant_da_phydrv(parse_hp_proliant_da_phydrv(string_table))
     ) == list(expected_result)
+
+
+def test_discover_hp_proliant_da_phydrv_ignores_empty_row() -> None:
+    # Crash group 4913: the device returned an extra SNMP row with all
+    # columns empty next to the real drives.
+    section = parse_hp_proliant_da_phydrv([_AGENT_OUTPUT[0], [""] * 13])
+    assert list(discover_hp_proliant_da_phydrv(section)) == [Service(item="3/8")]

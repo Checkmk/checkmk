@@ -9,7 +9,13 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.docker.lib import cleanup_oci_error_message, MemorySection, parse, parse_multiline
+from cmk.plugins.docker.lib import (
+    cleanup_oci_error_message,
+    get_short_id,
+    MemorySection,
+    parse,
+    parse_multiline,
+)
 
 
 def test_parse_strict() -> None:
@@ -122,3 +128,17 @@ def test_parse_remove_error_message(data_in: StringTable, data_out: StringTable)
 )
 def test_to_mem_used(memory_section: MemorySection, result: dict[str, int]) -> None:
     assert memory_section.to_mem_used() == result
+
+
+@pytest.mark.parametrize(
+    "indata,expected",
+    [
+        (
+            "docker-pullable://nginx@sha256:e3456c851a152494c3e4ff5fcc26f240206abac0c9d794affb40e0714846c451",
+            "e3456c851a15",
+        ),
+    ],
+)
+def test_parse_short_id(indata: str, expected: str) -> None:
+    actual = get_short_id(indata)
+    assert actual == expected

@@ -16,6 +16,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any, assert_never, Literal
 
 from cmk.agent_based.v2 import Attributes, InventoryPlugin, InventoryResult, TableRow
+from cmk.plugins.lib.livestatus_status import LivestatusStatusSection
 
 _Edition = Literal["community", "pro", "ultimate", "ultimatemt", "cloud"]
 
@@ -80,7 +81,7 @@ def _make_edition_specific_services(edition: _Edition) -> Sequence[str]:
 
 
 def merge_sections(
-    section_livestatus_status: Mapping[str, Mapping[str, str]],
+    section_livestatus_status: LivestatusStatusSection,
     section_omd_status: Mapping[str, Mapping],
     section_omd_info: Mapping[str, Mapping[str, Mapping]],
 ) -> dict[str, dict]:
@@ -89,7 +90,7 @@ def merge_sections(
     # SECTION: livestatus_status
     for site, status in section_livestatus_status.items():
         if status is None:
-            continue  # type: ignore[unreachable]
+            continue
 
         try:
             helper_usage_fetcher = float(status["helper_usage_fetcher"] or "0") * 100
@@ -194,7 +195,7 @@ def generate_inventory(merged_sections: dict[str, Any]) -> InventoryResult:
 
 
 def inventorize_checkmk(
-    section_livestatus_status: dict[str, dict[str, str]] | None,
+    section_livestatus_status: LivestatusStatusSection | None,
     section_omd_status: dict[str, dict] | None,
     section_omd_info: dict[str, dict[str, dict]] | None,
 ) -> InventoryResult:

@@ -5,7 +5,7 @@
  */
 import { CalendarDate } from '@internationalized/date'
 import { useDateTimeDraft } from 'cmk-ui-library/components/date-time/useDateTimeDraft'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { type Ref, nextTick, ref, shallowRef } from 'vue'
 
 type DateValue = CalendarDate | null
@@ -58,10 +58,6 @@ const setup = (options?: {
   })
   return { open, model, commit, draft, pendingSave, confirm, onTriggerFocusOut }
 }
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 describe('useDateTimeDraft — staging', () => {
   test('init clones source', () => {

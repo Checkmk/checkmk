@@ -7,19 +7,20 @@
 
 import json
 from collections.abc import Callable, Sequence
+from http import HTTPStatus
 
 import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.graphing_engine import Graph
+from cmk.graphing_engine import AutoPrecision, DecimalNotation, Graph, Unit
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing import _graph_templates as template_graphs_module
 from cmk.gui.graphing import BuiltGraph, RRDFetchMetricNames, TemplateGraphSpecification
+from cmk.gui.graphing._graph_templates import MKGraphMixedUnitsError
 from cmk.livestatus_client import MKLivestatusSocketError
-from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def _fake_build(graphs: Sequence[Graph]) -> Callable[..., Sequence[BuiltGraph]]:
@@ -76,9 +77,7 @@ def test_discover_template_graphs_labels_the_axis_in_the_users_temperature_unit(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch, set_config: SetConfig
 ) -> None:
     # Without this the axis would contradict the Fahrenheit values the fetch serves.
-    celsius = UnitFormat(
-        notation="decimal", symbol="°C", precision=Precision(type="auto", digits=2)
-    )
+    celsius = Unit(notation=DecimalNotation("°C"), precision=AutoPrecision(2))
 
     def _build(
         _specification: TemplateGraphSpecification, **_kwargs: object
@@ -265,8 +264,37 @@ def test_discover_template_graphs_livestatus_failure_is_503(
     resp = clients.Graph.discover_template_graphs(
         hostname="my-host", service_description="CPU load", expect_ok=False
     )
-    assert resp.status_code == 503
+    assert resp.status_code == HTTPStatus.SERVICE_UNAVAILABLE
     assert "connection refused" in resp.json["detail"]
+
+
+def test_discover_template_graphs_mixed_units_is_422(
+    clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def _raise(*_args: object, **_kwargs: object) -> Sequence[Graph]:
+        raise MKGraphMixedUnitsError("Cannot create graph with metrics of different units")
+
+    monkeypatch.setattr(template_graphs_module, "build_template_graphs", _raise)
+    resp = clients.Graph.discover_template_graphs(
+        hostname="my-host", service_description="CPU load", expect_ok=False
+    )
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert resp.json["title"] == "Graph cannot be built"
+    assert resp.json["detail"] == "Cannot create graph with metrics of different units"
+
+
+def test_discover_template_graphs_crash_is_500(
+    clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def _raise(*_args: object, **_kwargs: object) -> Sequence[Graph]:
+        raise KeyError("unit")
+
+    monkeypatch.setattr(template_graphs_module, "build_template_graphs", _raise)
+    resp = clients.Graph.discover_template_graphs(
+        hostname="my-host", service_description="CPU load", expect_ok=False
+    )
+    assert resp.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.json["title"] == "Graph discovery failed"
 
 
 def test_discover_template_graphs_invalid_hostname_is_400(clients: ClientRegistry) -> None:
@@ -275,4 +303,4 @@ def test_discover_template_graphs_invalid_hostname_is_400(clients: ClientRegistr
         service_description="CPU load",
         expect_ok=False,
     )
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST

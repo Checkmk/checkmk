@@ -6,11 +6,121 @@
 
 /* Stylesheets for graphs */
 
-/* stylelint-disable-next-line selector-id-pattern */
-div#hover_menu div.cmk_graph_hover {
-  width: max-content;
-  max-width: 90vw;
+/* stylelint-disable selector-id-pattern */
+#content_area:has(> cmk-global-time-picker) {
+  table.data.single > tbody > tr.data > td:has(> cmk-graph-group) {
+    --graphing-graph-header-inline-padding: 0;
+    --graphing-graph-group-panel-padding: var(--dimension-7);
+    --graphing-graph-group-panel-background: #{$even-tr-bg-color};
+    --graphing-graph-group-panel-border-radius: var(--dimension-3);
+
+    padding-block: var(--dimension-7);
+  }
 }
+
+#content_area:has(> cmk-global-time-picker):has(table.boxlayout.graph) {
+  $graph-page-content-padding: $spacing-double;
+
+  padding-left: 0;
+
+  > div#top_heading,
+  > cmk-global-time-picker {
+    display: block;
+    box-sizing: border-box;
+    background-color: $graph-page-header-bg-color;
+  }
+
+  > div#top_heading {
+    padding: 0 $spacing-double;
+  }
+
+  > cmk-global-time-picker {
+    --graphing-global-time-picker-padding-bottom: var(--dimension-6);
+
+    padding-left: $titlebar-spacing-horizontal;
+    border-bottom: 1px solid $graph-page-header-border-color;
+  }
+
+  div#top_heading div.titlebar,
+  div#top_heading table.menubar,
+  div#top_heading tr#suggestions {
+    background-color: transparent;
+  }
+
+  div#top_heading table.menubar {
+    padding-bottom: 0;
+
+    td.menues,
+    td.menues div.menucontainer,
+    td.inpage_search,
+    td.shortcuts,
+    td.icon_container {
+      background-color: $graph-page-menu-bar-bg-color;
+    }
+
+    td.menues div.menucontainer,
+    td.inpage_search {
+      border-bottom-color: $graph-page-menu-bar-bg-color;
+    }
+
+    td.menues {
+      padding-left: var(--dimension-5);
+    }
+
+    td.shortcuts {
+      padding-right: var(--dimension-5);
+    }
+  }
+
+  > div#main_page_content {
+    padding: $graph-page-content-padding;
+  }
+
+  div#data_container > div#row_info:first-child {
+    height: $graph-page-content-padding;
+    margin-top: -$graph-page-content-padding;
+    padding: 0;
+    line-height: $graph-page-content-padding;
+  }
+
+  table.boxlayout.graph td.boxcolumn {
+    > table.groupheader {
+      top: -$graph-page-content-padding;
+      padding-bottom: 0;
+      padding-left: $spacing-double;
+      margin-bottom: var(--dimension-7);
+      background-color: $bg-color;
+    }
+
+    > table.data + table.groupheader {
+      margin-top: $spacing-double;
+    }
+
+    > table.data > tbody > tr.data {
+      background-color: transparent;
+
+      > td {
+        --graphing-graph-header-inline-padding: 0;
+        --graphing-graph-group-panel-padding: var(--dimension-7);
+        --graphing-graph-group-panel-background: #{$even-tr-bg-color};
+        --graphing-graph-group-panel-border-radius: var(--dimension-3);
+
+        padding: 0;
+        background-color: $bg-color;
+      }
+    }
+  }
+
+  div#top_heading tr#suggestions td {
+    padding-bottom: 0;
+
+    div.suggestion {
+      margin-bottom: 0;
+    }
+  }
+}
+
+/* stylelint-enable selector-id-pattern */
 
 /* The error placeholder from render_graph_error_html is the only server-rendered
    "graph" box left; it used to take its frame from the legacy div.graph rule. */

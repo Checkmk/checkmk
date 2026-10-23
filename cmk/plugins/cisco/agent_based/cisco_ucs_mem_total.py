@@ -6,23 +6,18 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.cisco.lib_ucs import DETECT
 
 # comNET GmbH, Fabian Binder - 2018-05-30
 
 # .1.3.6.1.4.1.9.9.719.1.9.35.1.9   cucsComputeRackUnitAvailableMemory
-
-
-def discover_cisco_ucs_mem_total(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_cisco_ucs_mem_total(section: StringTable) -> CheckResult:
@@ -48,6 +43,6 @@ snmp_section_cisco_ucs_mem_total = SimpleSNMPSection(
 check_plugin_cisco_ucs_mem_total = CheckPlugin(
     name="cisco_ucs_mem_total",
     service_name="Memory total",
-    discovery_function=discover_cisco_ucs_mem_total,
+    discovery_function=discover_one_service,
     check_function=check_cisco_ucs_mem_total,
 )

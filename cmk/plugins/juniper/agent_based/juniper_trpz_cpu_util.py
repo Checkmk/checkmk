@@ -9,12 +9,11 @@ from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.juniper.lib import DETECT_JUNIPER_TRPZ
 
 
@@ -33,10 +32,6 @@ def saveint(value: str) -> int:
         return int(value)
     except ValueError:
         return 0
-
-
-def discovery_juniper_trpz_cpu_util(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_juniper_trpz_cpu_util(params: Params, section: Section) -> CheckResult:
@@ -79,7 +74,7 @@ snmp_section_juniper_trpz_cpu_util = SimpleSNMPSection(
 check_plugin_juniper_trpz_cpu_util = CheckPlugin(
     name="juniper_trpz_cpu_util",
     service_name="CPU utilization",
-    discovery_function=discovery_juniper_trpz_cpu_util,
+    discovery_function=discover_one_service,
     check_function=check_juniper_trpz_cpu_util,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},

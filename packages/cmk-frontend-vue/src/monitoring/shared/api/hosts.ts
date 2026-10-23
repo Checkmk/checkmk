@@ -31,9 +31,10 @@ export class HostApi extends MonitoringApi {
     params: HostQueryParams = {},
     signal?: AbortSignal
   ): Promise<HostsResponse> {
+    const filter = this.resolveFilter(params.filter)
     const body: HostsRequestBody = {
       ...this.buildRequestBody(params),
-      ...(params.filter && { filter: params.filter as NonNullable<HostsRequestBody['filter']> }),
+      ...(filter && { filter: filter as NonNullable<HostsRequestBody['filter']> }),
       ...(params.fields !== undefined && { fields: params.fields })
     }
     return unwrap(
@@ -45,7 +46,11 @@ export class HostApi extends MonitoringApi {
     )
   }
 
-  public async fetchHost(host: HostRef, signal?: AbortSignal): Promise<HostEntry | null> {
+  public async fetchHost(
+    host: HostRef,
+    signal?: AbortSignal,
+    fields?: readonly HostOptionalField[]
+  ): Promise<HostEntry | null> {
     const response = await this.fetchHosts(
       {
         filter: {
@@ -55,7 +60,8 @@ export class HostApi extends MonitoringApi {
             { type: 'condition', field: 'site_id', op: 'one_of', value: [host.site_id] }
           ]
         },
-        limit: 1
+        limit: 1,
+        ...(fields !== undefined && { fields: [...fields] })
       },
       signal
     )

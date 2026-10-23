@@ -10,7 +10,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.type_defs import LinkFromSpec, Rows, SingleInfos, Visual
 from cmk.gui.views.visual_type import _compute_link_from_result
-from cmk.inventory.structured_data import SDNodeName, SDPath
+from cmk.inventory.trees import SDNodeName, SDPath
 from cmk.web.utils.urls import HTTPVariable
 
 

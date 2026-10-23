@@ -9,10 +9,11 @@ import dataclasses
 import inspect
 import json
 from collections.abc import Callable
+from http import HTTPStatus
 from typing import Annotated
 
 import pytest
-from pydantic import AfterValidator, ValidationError
+from pydantic import AfterValidator, ValidationError, ValidationInfo
 from werkzeug.datastructures import ETags, Headers
 
 from cmk.gui.config import Config
@@ -34,8 +35,13 @@ from cmk.gui.openapi.framework.endpoint_model import (
     SignatureParametersProcessor,
 )
 from cmk.gui.openapi.framework.model import ApiOmitted
+from cmk.gui.openapi.framework.model.converter import TypedPlainValidator
 from cmk.gui.openapi.framework.model.response import TypedResponse
-from cmk.gui.openapi.utils import RestAPIRequestDataValidationException
+from cmk.gui.openapi.framework.model.validation_context import RequestValidationContext
+from cmk.gui.openapi.utils import (
+    RestAPIRequestDataValidationException,
+    RestAPIRequestGeneralException,
+)
 
 
 @dataclasses.dataclass
@@ -47,6 +53,11 @@ class _TestBody:
 @dataclasses.dataclass
 class _TestGenericBody[T]:
     value: T
+
+
+@dataclasses.dataclass
+class _TypedValidatorBody:
+    name: Annotated[str, TypedPlainValidator(str, str.upper)]
 
 
 _PATH_PARAM = PathParam(description="Path parameter", example="example")
@@ -353,7 +364,7 @@ def test_input_model_undecodable_body() -> None:
             api_context=_api_context(),
         )
 
-    assert exc_info.value.status == 400
+    assert exc_info.value.status == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.parametrize(
@@ -542,6 +553,30 @@ class TestAnnotatedValidators:
         assert isinstance(bound.arguments["_arg"], ApiOmitted)
 
 
+def test_validators_see_the_api_context_of_the_request() -> None:
+    seen: list[ApiContext] = []
+
+    def _remember_api_context(value: str, info: ValidationInfo[object]) -> str:
+        assert isinstance(info.context, RequestValidationContext)
+        seen.append(info.context.api_context)
+        return value
+
+    def handler(
+        _arg: Annotated[
+            Annotated[str, TypedPlainValidator(str, _remember_api_context)],
+            QueryParam(description="...", example="..."),
+        ],
+    ) -> None:
+        return None
+
+    api_context = _api_context()
+    EndpointModel.build(handler)._validate_request_parameters(  # noqa: SLF001
+        _request_data(query={"_arg": ["one"]}), None, api_context
+    )
+
+    assert seen == [api_context]
+
+
 def test_query_parameter_list() -> None:
     model = EndpointModel.build(_query_list_endpoint_handler)
     request_data = _request_data(
@@ -628,3 +663,31 @@ def test_generic_body_forbids_extra_fields() -> None:
             content_type="application/json",
             api_context=_api_context(),
         )
+
+
+def _typed_validator_endpoint_handler(body: _TypedValidatorBody) -> None:
+    raise NotImplementedError
+
+
+def test_typed_plain_validator_accepts_the_declared_input_type() -> None:
+    model = EndpointModel.build(_typed_validator_endpoint_handler)
+    bound = model.validate_request_and_identify_args(
+        request_data=_request_data(body={"name": "site"}),
+        content_type="application/json",
+        api_context=_api_context(),
+    )
+    assert bound.arguments["body"] == _TypedValidatorBody(name="SITE")
+
+
+def test_typed_plain_validator_rejects_a_wrong_json_type_with_400() -> None:
+    """A wrong JSON type used to raise TypeError past pydantic, answered with a crash report."""
+    model = EndpointModel.build(_typed_validator_endpoint_handler)
+    with pytest.raises(RestAPIRequestGeneralException) as exc_info:
+        model.validate_request_and_identify_args(
+            request_data=_request_data(body={"name": 5}),
+            content_type="application/json",
+            api_context=_api_context(),
+        )
+
+    assert exc_info.value.code == HTTPStatus.BAD_REQUEST
+    assert "name" in exc_info.value.detail

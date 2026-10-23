@@ -90,7 +90,7 @@ def _parameter_valuespec_memory_linux() -> Dictionary:
             (
                 "levels_available",
                 LowerMemoryLevels(
-                    _("Estimated RAM for new processes"),
+                    _("Available RAM (kernel estimate)"),
                     (20.0, 10.0),
                     _("RAM"),
                     _(

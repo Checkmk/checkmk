@@ -8,10 +8,6 @@
 from collections.abc import Iterable
 from typing import get_args, Literal
 
-from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended
-from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
-    CascadingSingleChoiceElementExtended,
-)
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -25,7 +21,12 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.password_store import postprocessable_ios_password
-from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, SingleChoiceExtended
+from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceElementExtended,
+    CascadingSingleChoiceExtended,
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+)
 from cmk.rulesets.v1 import form_specs as fs
 from cmk.rulesets.v1 import Help, Label, Title
 
@@ -94,7 +95,7 @@ def http_proxy_reference_form_spec() -> CascadingSingleChoiceExtended:
         return [
             SingleChoiceElementExtended[str](
                 name=str(proxy["ident"]),
-                title=Title(str(proxy["title"])),  # astrein: disable=localization-checker
+                title=Title(str(proxy["title"])),  # astrein: disable=localization
             )
             for proxy in sorted(
                 settings.get("http_proxies", {}).values(), key=lambda proxy: str(proxy["title"])

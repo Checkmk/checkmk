@@ -24,7 +24,7 @@ from cmk.gui.userdb.session import (
     save_session_infos,
 )
 from cmk.gui.userdb.store import save_custom_attr, save_two_factor_credentials
-from tests.testlib.gui.web_test_app import SetConfig
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
 @pytest.mark.parametrize(

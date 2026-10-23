@@ -63,17 +63,18 @@ class BaseSchema(Schema):
         partial: bool | types.StrSequenceOrSet | None = None,
         unknown: str | None = None,
     ) -> None:
+        # marshmallow 3 warns about a context handed to its constructor, and marshmallow 4 drops
+        # the parameter. The schema keeps the context itself.
         super().__init__(
             only=only,
             exclude=exclude,
             many=many,
-            context=context,
             load_only=load_only,
             dump_only=dump_only,
             partial=partial,
             unknown=unknown,
         )
-        self.context = context or {}  # TODO: why???
+        self.context = context or {}
 
     @post_load(pass_many=True)
     @post_dump(pass_many=True)

@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from urllib.parse import urlparse
 
 from cmk.gui.http import request
@@ -35,7 +36,7 @@ def wait_for_rename_completion_v1(api_context: ApiContext) -> ApiResponse[None]:
     job_exists, job_is_active = RenameHostsBackgroundJob.status_checks()
     if not job_exists:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Not found",
             detail="No running renaming job was found",
         )
@@ -43,10 +44,10 @@ def wait_for_rename_completion_v1(api_context: ApiContext) -> ApiResponse[None]:
     if job_is_active:
         return ApiResponse(
             body=None,
-            status_code=302,
+            status_code=HTTPStatus.FOUND,
             headers={"Location": urlparse(request.url).path},
         )
-    return ApiResponse(body=None, status_code=204)
+    return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT)
 
 
 ENDPOINT_WAIT_FOR_RENAME_COMPLETION = VersionedEndpoint(
@@ -61,14 +62,14 @@ ENDPOINT_WAIT_FOR_RENAME_COMPLETION = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=wait_for_rename_completion_v1,
-            additional_status_codes=[302, 404],
+            additional_status_codes=[HTTPStatus.FOUND, HTTPStatus.NOT_FOUND],
             status_descriptions={
-                204: "The renaming job has been completed.",
-                302: (
+                HTTPStatus.NO_CONTENT: "The renaming job has been completed.",
+                HTTPStatus.FOUND: (
                     "The renaming job is still running. Redirecting to the 'Wait for completion' "
                     "endpoint."
                 ),
-                404: "There is no running renaming job",
+                HTTPStatus.NOT_FOUND: "There is no running renaming job",
             },
         )
     },

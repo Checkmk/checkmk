@@ -24,6 +24,12 @@ filegroup(
     visibility = ["//packages/cmk-plugins:__pkg__"],
 )
 
+# Referenced by name from agents/wnx/install/Product.wxs.
+exports_files(
+    ["agents/tsm_checks.bat"],
+    visibility = ["//agents/windows/plugins:__pkg__"],
+)
+
 sh_library(
     name = "agents_sh",
     srcs = [

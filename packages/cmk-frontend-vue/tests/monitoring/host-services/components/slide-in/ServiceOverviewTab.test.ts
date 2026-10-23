@@ -9,6 +9,9 @@ import { describe, expect, it } from 'vitest'
 
 import ServiceOverviewTab from '@/monitoring/host-services/components/slide-in/ServiceOverviewTab.vue'
 import type { ServiceOverview } from '@/monitoring/shared/api/types'
+import type { DisplayOptions } from '@/monitoring/shared/types'
+
+const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
 const HOST_LINK = 'view.py?view_name=hoststatus&site=local&host=web-server-01'
 const SERVICE_LINK = 'view.py?view_name=service&site=local&host=web-server-01&service=CPU+load'
@@ -22,6 +25,8 @@ function makeOverview(overrides: Partial<ServiceOverview> = {}): ServiceOverview
     host_name: 'web-server-01',
     site_id: 'local',
     state: 'OK',
+    is_flapping: false,
+    stale: false,
     modes: [],
     host_alias: 'Web Server',
     host_state: 'UP',
@@ -29,6 +34,7 @@ function makeOverview(overrides: Partial<ServiceOverview> = {}): ServiceOverview
     legacy_host_status_link: HOST_LINK,
     legacy_service_status_link: SERVICE_LINK,
     legacy_service_parameters_link: PARAMETERS_LINK,
+    legacy_service_discovery_link: null,
     legacy_service_graphs_link: GRAPHS_LINK,
     contact_groups: ['all'],
     summary: 'OK - load average: 0.10, 0.05, 0.01',
@@ -46,7 +52,7 @@ function makeOverview(overrides: Partial<ServiceOverview> = {}): ServiceOverview
 
 describe('ServiceOverviewTab', () => {
   it('names the host the service belongs to, with its alias and state', () => {
-    render(ServiceOverviewTab, { props: { data: makeOverview() } })
+    render(ServiceOverviewTab, { props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview() } })
 
     expect(screen.getByText('web-server-01')).toBeInTheDocument()
     expect(screen.getByText('Web Server')).toBeInTheDocument()
@@ -55,7 +61,10 @@ describe('ServiceOverviewTab', () => {
 
   it('shows the contact groups responsible for the service', () => {
     render(ServiceOverviewTab, {
-      props: { data: makeOverview({ contact_groups: ['linux-admins', 'on-call'] }) }
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        data: makeOverview({ contact_groups: ['linux-admins', 'on-call'] })
+      }
     })
 
     expect(screen.getByText('linux-admins')).toBeInTheDocument()
@@ -63,7 +72,7 @@ describe('ServiceOverviewTab', () => {
   })
 
   it('shows what the check reported and when', () => {
-    render(ServiceOverviewTab, { props: { data: makeOverview() } })
+    render(ServiceOverviewTab, { props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview() } })
 
     expect(screen.getByText('OK - load average: 0.10, 0.05, 0.01')).toBeInTheDocument()
     expect(screen.getByText('1/3')).toBeInTheDocument()
@@ -71,7 +80,10 @@ describe('ServiceOverviewTab', () => {
 
   it('shows the state markers of the summary as badges', () => {
     const { container } = render(ServiceOverviewTab, {
-      props: { data: makeOverview({ summary: 'load: 3.1(!), temp: 90(!!)' }) }
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        data: makeOverview({ summary: 'load: 3.1(!), temp: 90(!!)' })
+      }
     })
 
     expect(container.querySelector('.cmk-state-tag--warning')).toHaveTextContent('WA')
@@ -79,40 +91,87 @@ describe('ServiceOverviewTab', () => {
     expect(container.textContent).toContain('load: 3.1')
   })
 
+  it('names the timestamps as ages even when they show a point in time', () => {
+    render(ServiceOverviewTab, { props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview() } })
+
+    expect(screen.getByText('Check age:')).toHaveAttribute('title', 'Age of the check')
+    expect(screen.getByText('State age:')).toHaveAttribute('title', 'Age of the state')
+  })
+
   it('dashes out the next check of a passive service', () => {
-    render(ServiceOverviewTab, { props: { data: makeOverview({ next_check: null }) } })
+    render(ServiceOverviewTab, {
+      props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview({ next_check: null }) }
+    })
+
+    expect(screen.getByText('–')).toBeInTheDocument()
+  })
+
+  it('dashes out the state age of a service that has never been checked', () => {
+    render(ServiceOverviewTab, {
+      props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview({ last_state_change: null }) }
+    })
 
     expect(screen.getByText('–')).toBeInTheDocument()
   })
 
   it('dashes out the last check of a service that has never been checked', () => {
-    render(ServiceOverviewTab, { props: { data: makeOverview({ last_check: null }) } })
+    render(ServiceOverviewTab, {
+      props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview({ last_check: null }) }
+    })
 
     expect(screen.getByText('–')).toBeInTheDocument()
   })
 
-  it('keeps the long output collapsed until the panel is opened', async () => {
+  it('shows the long output without the panel having to be opened', () => {
     render(ServiceOverviewTab, {
-      props: { data: makeOverview({ long_output: '15 min load: 0.01 (per core: 0.01)' }) }
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        data: makeOverview({ long_output: '15 min load: 0.01 (per core: 0.01)' })
+      }
     })
-    expect(screen.getByText('15 min load: 0.01 (per core: 0.01)')).not.toBeVisible()
-
-    await userEvent.click(screen.getByRole('button', { name: /Toggle Service details/ }))
 
     expect(screen.getByText('15 min load: 0.01 (per core: 0.01)')).toBeVisible()
   })
 
-  it('keeps the details panel when the plugin produced no output', async () => {
-    render(ServiceOverviewTab, { props: { data: makeOverview({ long_output: '' }) } })
+  it('collapses the long output when the panel is closed', async () => {
+    render(ServiceOverviewTab, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        data: makeOverview({ long_output: '15 min load: 0.01 (per core: 0.01)' })
+      }
+    })
 
     await userEvent.click(screen.getByRole('button', { name: /Toggle Service details/ }))
+
+    expect(screen.getByText('15 min load: 0.01 (per core: 0.01)')).not.toBeVisible()
+  })
+
+  it('shows the state markers of the long output as badges', () => {
+    const { container } = render(ServiceOverviewTab, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        data: makeOverview({ long_output: 'Inodes used: 97%(!!)' })
+      }
+    })
+
+    const details = container.querySelector('.monitoring-service-overview-tab__details-text')
+    expect(details?.querySelector('.cmk-state-tag--critical')).toHaveTextContent('CR')
+  })
+
+  it('keeps the details panel when the plugin produced no output', () => {
+    render(ServiceOverviewTab, {
+      props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview({ long_output: '' }) }
+    })
 
     expect(screen.getByText('This check plugin reports no further details.')).toBeVisible()
   })
 
   it('shows the service tags, ordered the way the table orders them', () => {
     const { container } = render(ServiceOverviewTab, {
-      props: { data: makeOverview({ tags: { networking: 'lan', criticality: 'prod' } }) }
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        data: makeOverview({ tags: { networking: 'lan', criticality: 'prod' } })
+      }
     })
 
     expect(screen.getByText('criticality: prod')).toBeInTheDocument()
@@ -127,36 +186,39 @@ describe('ServiceOverviewTab', () => {
   it('shows the service labels with their value', () => {
     render(ServiceOverviewTab, {
       props: {
+        displayOptions: DISPLAY_OPTIONS,
         data: makeOverview({
           labels: { 'cmk/check_plugin': { value: 'cpu_load', source: 'discovered' } }
         })
       }
     })
 
-    expect(screen.getByText('cmk/check_plugin: cpu_load')).toBeInTheDocument()
+    expect(screen.getByText(/cmk\/check_plugin:/)).toHaveTextContent('cmk/check_plugin: cpu_load')
   })
 
   it('keeps the tag and label rows when the service has neither', () => {
-    render(ServiceOverviewTab, { props: { data: makeOverview({ tags: {}, labels: {} }) } })
+    render(ServiceOverviewTab, {
+      props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview({ tags: {}, labels: {} }) }
+    })
 
     expect(screen.getByText('Tags:')).toBeInTheDocument()
     expect(screen.getByText('Labels:')).toBeInTheDocument()
   })
 
   it('links to the host details from the host row', () => {
-    render(ServiceOverviewTab, { props: { data: makeOverview() } })
+    render(ServiceOverviewTab, { props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview() } })
 
-    expect(
-      screen.getByRole('link', { name: 'Show details of host web-server-01' })
-    ).toHaveAttribute('href', HOST_LINK)
+    expect(screen.getByRole('link', { name: 'Show host state' })).toHaveAttribute('href', HOST_LINK)
   })
 
   it('shows the modes of the host next to its state', () => {
     render(ServiceOverviewTab, {
       props: {
+        displayOptions: DISPLAY_OPTIONS,
         data: makeOverview({
           host_modes: [
             {
+              id: 'downtime',
               icon_name: 'downtime',
               link: 'view.py?view_name=downtimes_of_host&site=local&host=web-server-01',
               title: 'Host is in scheduled downtime'

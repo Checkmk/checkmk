@@ -8,7 +8,7 @@
 
 import time
 import uuid
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from typing import Any, cast, NotRequired
 
 import cmk.ccc.version as cmk_version
@@ -19,10 +19,17 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec
+from cmk.gui.permissions import all_permissions, Permission
+from cmk.gui.type_defs import (
+    ColumnSpec,
+    DashboardEmbeddedViewSpec,
+    SorterSpec,
+    ViewName,
+    ViewSpec,
+)
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.views.store import internal_view_to_runtime_view
+from cmk.gui.valuespec import TimerangeValue
+from cmk.gui.views.store import get_all_views, internal_view_to_runtime_view
 from cmk.gui.watolib.profile_replication import start_profile_replication_job
 from cmk.utils import paths
 
@@ -31,12 +38,19 @@ from .builtin_dashboards import (
     builtin_dashboards,
 )
 from .dashlet.registry import dashlet_registry
+from .event_bar_chart_window import clamp_event_bar_chart_window, EVENT_BAR_CHART_TYPES
+from .legacy_visual_link import contextual_link_from_legacy_target, contextual_link_from_legacy_view
 from .metadata import dashboard_uses_relative_grid
 from .type_defs import (
+    ContextualLinkConfig,
     DashboardConfig,
     DashboardName,
     DashletConfig,
     EmbeddedViewDashletConfig,
+    FixedWindow,
+    MetricCurrentValue,
+    MetricFixedWindow,
+    MetricTimeRange,
     ViewDashletConfig,
     WidgetId,
 )
@@ -51,13 +65,14 @@ class DashboardStore:
         return cls()
 
     def __init__(self) -> None:
-        user_permissions = UserPermissions.from_config(active_config, permission_registry)
-        self.all = self._load_all()
+        user_permissions = UserPermissions.from_config(active_config, all_permissions())
+        self.all = self.load_all()
         self.permitted = self._load_permitted(self.all, user_permissions)
         self.permitted_by_owner = self._load_permitted_by_owner(self.all, user_permissions)
         self.permitted_to_edit = self._load_permitted_to_edit(self.all, user_permissions)
 
-    def _load_all(self) -> dict[tuple[UserId, DashboardName], DashboardConfig]:
+    @staticmethod
+    def load_all() -> dict[tuple[UserId, DashboardName], DashboardConfig]:
         """Loads all definitions from disk and returns them"""
         dashboards = visuals.load(
             "dashboards",
@@ -183,6 +198,11 @@ def get_all_dashboards() -> dict[tuple[UserId, DashboardName], DashboardConfig]:
     return DashboardStore.get_instance().all
 
 
+def dashboard_permissions() -> Iterator[Permission]:
+    """The permissions of the published custom and the packaged dashboards"""
+    return visuals.visual_permissions("dashboards", _internal_dashboard_to_runtime_dashboard)
+
+
 def get_permitted_dashboards() -> dict[DashboardName, DashboardConfig]:
     return DashboardStore.get_instance().permitted
 
@@ -238,6 +258,19 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
                 f"{dashboard['name']}-{idx}": dashlet for idx, dashlet in enumerate(raw_dashlets)
             }
 
+    dashboard["widgets"] = {
+        widget_id: _clamp_timeline_window(
+            _migrate_timeline_time_range(
+                _migrate_alert_overview_time_range(
+                    _migrate_inventory_link(
+                        _migrate_metric_time_range(widget), dashboard.get("owner")
+                    )
+                )
+            )
+        )
+        for widget_id, widget in dashboard["widgets"].items()
+    }
+
     # responsive dashboard already uses the new dashlet format
     if dashboard_uses_relative_grid(dashboard):
         widgets, embedded_views = _migrate_widgets(dashboard)
@@ -245,6 +278,86 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
         dashboard["embedded_views"] = embedded_views
 
     return dashboard
+
+
+_METRIC_TIME_RANGE_TYPES = frozenset({"gauge", "single_metric"})
+
+
+def _migrate_metric_time_range(widget: DashletConfig) -> DashletConfig:
+    if widget["type"] not in _METRIC_TIME_RANGE_TYPES:
+        return widget
+    match cast(dict[str, object], widget).get("time_range"):
+        case "current":
+            time_range: MetricTimeRange = MetricCurrentValue(type="current")
+        case ("range", dict() as parameters):
+            time_range = cast(MetricFixedWindow, {"type": "range", **parameters})
+        case _:
+            return widget
+    return cast(DashletConfig, {**widget, "time_range": time_range})
+
+
+def _migrate_alert_overview_time_range(widget: DashletConfig) -> DashletConfig:
+    if widget["type"] != "alert_overview":
+        return widget
+    raw = cast(dict[str, object], widget)
+    if "time_range" not in raw or isinstance(raw["time_range"], dict):
+        return widget
+    time_range = cast(FixedWindow, {"type": "range", "window": raw["time_range"]})
+    return cast(DashletConfig, {**widget, "time_range": time_range})
+
+
+def _migrate_timeline_time_range(widget: DashletConfig) -> DashletConfig:
+    if widget["type"] not in EVENT_BAR_CHART_TYPES:
+        return widget
+    match cast(dict[str, object], widget).get("render_mode"):
+        case (str() as mode, dict() as parameters) if not isinstance(
+            parameters.get("time_range"), dict
+        ):
+            time_range = FixedWindow(type="range", window=parameters["time_range"])
+            render_mode = (mode, {**parameters, "time_range": time_range})
+        case _:
+            return widget
+    return cast(DashletConfig, {**widget, "render_mode": render_mode})
+
+
+def _clamp_timeline_window(widget: DashletConfig) -> DashletConfig:
+    if widget["type"] not in EVENT_BAR_CHART_TYPES:
+        return widget
+    match cast(dict[str, object], widget).get("render_mode"):
+        case (str() as mode, {"time_range": {"type": "range", "window": window}} as parameters):
+            time_range = FixedWindow(
+                type="range", window=clamp_event_bar_chart_window(cast(TimerangeValue, window))
+            )
+            render_mode = (mode, {**cast(dict[str, object], parameters), "time_range": time_range})
+        case _:
+            return widget
+    return cast(DashletConfig, {**widget, "render_mode": render_mode})
+
+
+def _migrate_inventory_link(widget: DashletConfig, owner: UserId | None) -> DashletConfig:
+    if widget["type"] != "inventory":
+        return widget
+    link: ContextualLinkConfig
+    match cast(dict[str, object], widget).get("link_spec"):
+        case ("views", str() as view_name) if (view := _view_copy(view_name, owner)) is not None:
+            link = contextual_link_from_legacy_view(view)
+        # A target dashboard can't be read while the dashboards load, nor can a deleted view.
+        case (("views" | "dashboards") as target_type, str() as target_name):
+            link = contextual_link_from_legacy_target((target_type, target_name))
+        case _:
+            return widget
+    migrated = {key: value for key, value in widget.items() if key != "link_spec"}
+    return cast(DashletConfig, {**migrated, "contextual_link": link})
+
+
+def _view_copy(name: ViewName, owner: UserId | None) -> ViewSpec | None:
+    """The dashboard owner's copy of that view, else the built-in one, as the legacy link opened
+    it for the owner. Not another user's: the link would show its title to everyone who sees the
+    dashboard."""
+    views = get_all_views()
+    if owner is not None and (view := views.get((owner, name))) is not None:
+        return view
+    return views.get((UserId.builtin(), name))
 
 
 def _migrate_widgets(

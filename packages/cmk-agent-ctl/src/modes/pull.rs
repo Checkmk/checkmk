@@ -81,7 +81,12 @@ impl std::convert::TryFrom<config::PullConfig> for PullState {
 
 impl PullState {
     fn refresh(&mut self) -> AnyhowResult<()> {
-        if self.config.refresh()? {
+        // The connection mode also depends on the legacy pull marker, which lives outside
+        // the registry and is therefore invisible to `config.refresh()`. The Windows agent
+        // writes it only after it has spawned the controller, so an inactive state has to be
+        // re-evaluated unconditionally. Without this, a fresh installation stays inactive for
+        // the whole lifetime of the process and never opens the pull port.
+        if self.config.refresh()? || matches!(self.connection_mode, ConnectionMode::Inactive) {
             self.connection_mode = ConnectionMode::try_from(&self.config)?;
         };
         Ok(())
@@ -524,6 +529,7 @@ mod tests {
     use std::str::FromStr;
 
     use super::*;
+    use crate::cli;
     use crate::types::AgentChannel;
 
     #[cfg(windows)]
@@ -583,6 +589,38 @@ mod tests {
             let exclusive = socket_exclusive.bind(&addr);
             assert!(exclusive.is_ok());
         }
+    }
+
+    #[test]
+    fn test_pull_state_activates_when_legacy_pull_marker_appears() {
+        // Mirrors a fresh installation: no registration file ever appears, and the Windows
+        // agent drops the legacy pull marker only after it has spawned the controller.
+        let test_registry = config::test_helpers::TestRegistry::new();
+        let mut pull_state = PullState::try_from(
+            config::PullConfig::new(
+                config::RuntimeConfig::default(),
+                cli::PullOpts {
+                    port: None,
+                    #[cfg(windows)]
+                    agent_channel: None,
+                },
+                test_registry.registry.clone(),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+        assert!(matches!(
+            pull_state.connection_mode,
+            ConnectionMode::Inactive
+        ));
+
+        test_registry.registry.activate_legacy_pull().unwrap();
+        pull_state.refresh().unwrap();
+
+        assert!(matches!(
+            pull_state.connection_mode,
+            ConnectionMode::Active(CryptoMode::Plain)
+        ));
     }
 
     #[test]

@@ -11,13 +11,8 @@ import pytest
 from cmk.agent_based.v2 import CheckResult, Result, State, StringTable
 from cmk.plugins.printer.agent_based.printer_alerts import (
     check_printer_alerts,
-    discovery_printer_alerts,
     parse_printer_alerts,
 )
-
-
-def test_discover_always() -> None:
-    assert list(discovery_printer_alerts(()))
 
 
 @pytest.mark.parametrize(
@@ -70,7 +65,7 @@ def test_discover_always() -> None:
         "Critical Error": State.CRIT,
     },
 )
-def test_check_printer_alerts(info: Sequence[StringTable], expected_result: CheckResult) -> None:  # type: ignore[misc]
+def test_check_printer_alerts(info: Sequence[StringTable], expected_result: CheckResult) -> None:
     data = parse_printer_alerts(info)
     result = check_printer_alerts(data)
     assert list(result) == expected_result

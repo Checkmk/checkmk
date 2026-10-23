@@ -9,7 +9,7 @@ import pytest
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
-from cmk.gui.page_menu import PageMenuLink
+from cmk.gui.page_menu import PageMenuDropdown, PageMenuLink
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 
 
@@ -135,6 +135,25 @@ def test_the_page_menu_carries_the_offered_menus_before_display_and_help() -> No
     assert [dropdown.name for dropdown in menu.dropdowns] == [
         "host",
         "services",
+        "display",
+        "help",
+    ]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_the_page_menu_carries_the_export_menu_after_the_host_menus() -> None:
+    menu = build_page_menu(
+        host_menus=_wired(_menu("host"), _menu("services")),
+        hostname="myhost",
+        site_id="mysite",
+        breadcrumb=Breadcrumb(),
+        export_dropdowns=[PageMenuDropdown(name="export", title="Export", topics=[])],
+    )
+
+    assert [dropdown.name for dropdown in menu.dropdowns] == [
+        "host",
+        "services",
+        "export",
         "display",
         "help",
     ]

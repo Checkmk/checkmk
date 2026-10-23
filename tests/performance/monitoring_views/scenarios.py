@@ -15,8 +15,6 @@ The same descriptions serve the in-process runs and the runs against a real site
 cannot drift between them.
 """
 
-from __future__ import annotations
-
 import json
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass

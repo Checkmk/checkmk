@@ -7,22 +7,27 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type Component } from 'vue'
 
 import DashboardContentEmbeddedView from './DashboardContentEmbeddedView.vue'
-import DashboardContentFigure from './DashboardContentFigure.vue'
 import DashboardContentIFrame from './DashboardContentIFrame.vue'
 import DashboardContentLinkedView from './DashboardContentLinkedView.vue'
+import DashboardContentMonitoringTable from './DashboardContentMonitoringTable.vue'
 import DashboardContentNtop from './DashboardContentNtop.vue'
 import DashboardContentSidebarElement from './DashboardContentSidebarElement.vue'
-import DashboardContentSingleMetric from './DashboardContentSingleMetric.vue'
 import DashboardContentStaticText from './DashboardContentStaticText.vue'
 import DashboardContentTimeSeriesGraph from './DashboardContentTimeSeriesGraph.vue'
-import DashboardContentTimelineCount from './DashboardContentTimelineCount.vue'
-import DashboardContentTopList from './DashboardContentTopList.vue'
+import DashboardContentTimeline from './DashboardContentTimeline.vue'
 import DashboardContentUserMessages from './DashboardContentUserMessages.vue'
-import DashboardContentNetworkFlowDonut from './NetworkFlow/DashboardContentNetworkFlowDonut.vue'
-import DashboardContentNetworkFlowKpiStatCard from './NetworkFlow/DashboardContentNetworkFlowKpiStatCard.vue'
-import DashboardContentNetworkFlowTopTable from './NetworkFlow/DashboardContentNetworkFlowTopTable.vue'
-import DashboardContentNetworkFlowTrendChart from './NetworkFlow/DashboardContentNetworkFlowTrendChart.vue'
-import { CONTENT_FIGURE_TYPES, NTOP_TYPES } from './types.ts'
+import DashboardContentAlertOverview from './figures/DashboardContentAlertOverview.vue'
+import DashboardContentBarplot from './figures/DashboardContentBarplot.vue'
+import DashboardContentGauge from './figures/DashboardContentGauge.vue'
+import DashboardContentInventory from './figures/DashboardContentInventory.vue'
+import DashboardContentSingleMetric from './figures/DashboardContentSingleMetric.vue'
+import DashboardContentSiteOverview from './figures/DashboardContentSiteOverview.vue'
+import DashboardContentState from './figures/DashboardContentState.vue'
+import DashboardContentStateSummary from './figures/DashboardContentStateSummary.vue'
+import DashboardContentStats from './figures/DashboardContentStats.vue'
+import DashboardContentTimelineCount from './figures/DashboardContentTimelineCount.vue'
+import DashboardContentTopList from './figures/DashboardContentTopList.vue'
+import { NTOP_TYPES } from './types.ts'
 </script>
 
 <script setup lang="ts">
@@ -46,6 +51,8 @@ function contentToComponent(content: WidgetContent): Component {
     // NOTE: this branch must match with the keys generated in componentKey() below.
     case isTimeline(content) && content.render_mode.type === 'simple_number':
       return DashboardContentTimelineCount
+    case isTimeline(content):
+      return DashboardContentTimeline
     case contentType === 'url':
       return DashboardContentIFrame
     case contentType === 'linked_view':
@@ -58,14 +65,6 @@ function contentToComponent(content: WidgetContent): Component {
       return DashboardContentTopList
     case contentType === 'single_metric':
       return DashboardContentSingleMetric
-    case contentType === 'network_flow_top_table':
-      return DashboardContentNetworkFlowTopTable
-    case contentType === 'network_flow_donut':
-      return DashboardContentNetworkFlowDonut
-    case contentType === 'network_flow_kpi_stat_card':
-      return DashboardContentNetworkFlowKpiStatCard
-    case contentType === 'network_flow_trend_chart':
-      return DashboardContentNetworkFlowTrendChart
     case contentType === 'user_messages':
       return DashboardContentUserMessages
     case contentType === 'sidebar_element':
@@ -77,11 +76,28 @@ function contentToComponent(content: WidgetContent): Component {
       'combined_graph',
       'average_scatterplot',
       'problem_graph',
-      'custom_graph'
+      'custom_graph',
+      'embedded_custom_graph'
     ].includes(contentType):
       return DashboardContentTimeSeriesGraph
-    case CONTENT_FIGURE_TYPES.includes(contentType):
-      return DashboardContentFigure
+    case ['host_stats', 'service_stats', 'event_stats'].includes(contentType):
+      return DashboardContentStats
+    case contentType === 'barplot':
+      return DashboardContentBarplot
+    case contentType === 'gauge':
+      return DashboardContentGauge
+    case ['host_state', 'service_state'].includes(contentType):
+      return DashboardContentState
+    case ['host_state_summary', 'service_state_summary'].includes(contentType):
+      return DashboardContentStateSummary
+    case contentType === 'inventory':
+      return DashboardContentInventory
+    case contentType === 'site_overview':
+      return DashboardContentSiteOverview
+    case contentType === 'alert_overview':
+      return DashboardContentAlertOverview
+    case contentType === 'monitoring_table':
+      return DashboardContentMonitoringTable
     case NTOP_TYPES.includes(contentType):
       return DashboardContentNtop
     default:
@@ -108,6 +124,8 @@ function componentKey(content: WidgetContent): string {
     :effective_filter_context="effective_filter_context"
     :dashboard-key="dashboardKey"
     :is-preview="isPreview"
+    :tick="tick"
+    :range="range"
     @update-time-range="$emit('updateTimeRange', $event)"
   />
 </template>

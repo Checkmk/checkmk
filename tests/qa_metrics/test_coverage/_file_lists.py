@@ -9,9 +9,10 @@ The repository-wide enumeration and the per-component one must answer the first
 question identically, or a component's number stops being comparable to the
 dashboard's.
 
-A file counts when a Bazel ``py_*`` rule compiles it and no such rule marks it
-``testonly``. A non-testonly target may not depend on a testonly one, so the
-split follows the build graph rather than a path name.
+A file counts when a Bazel ``py_*`` rule compiles it that is neither ``testonly``
+nor tagged ``exclude-from-test-coverage``. A non-testonly target may not depend on
+a testonly one, so that split follows the build graph rather than a path name. The
+tag is an unchecked opt-out for code not suited to package tests.
 """
 
 import subprocess

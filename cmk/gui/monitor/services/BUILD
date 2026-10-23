@@ -10,7 +10,9 @@ py_library(
     ],
     deps = [
         "//cmk/gui/monitor/command",
+        "//cmk/gui/monitor/export",
         "//cmk/gui/monitor/hosts",
+        "//cmk/gui/monitor/setup_folders",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/pagetypes",

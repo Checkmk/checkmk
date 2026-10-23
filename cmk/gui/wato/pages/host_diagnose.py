@@ -7,14 +7,13 @@
 
 """Verify or find out a hosts agent related configuration"""
 
-import json
 from collections.abc import Collection
 from typing import NotRequired, override, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site
-from cmk.checkengine.snmplib import SNMPCredentials  # astrein: disable=cmk-module-layer-violation
+from cmk.checkengine.snmplib import SNMPCredentials
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -33,7 +32,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, FixedValue, Float, Integer, Password
@@ -45,9 +44,9 @@ from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import diag_host
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
+    Folder,
     folder_from_request,
-    folder_preserving_link,
-    folder_tree,
+    make_folder_tree,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
@@ -57,6 +56,7 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
@@ -109,7 +109,7 @@ class ModeDiagHost(WatoMode):
     @override
     def _from_vars(self) -> None:
         self._hostname = request.get_validated_type_input_mandatory(HostName, "host")
-        self._tree = folder_tree()
+        self._tree = make_folder_tree(self._ctx.config)
         self._host = folder_from_request(
             self._tree, request.var("folder"), self._hostname
         ).load_host(self._hostname)
@@ -175,7 +175,7 @@ class ModeDiagHost(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return None
@@ -245,7 +245,7 @@ class ModeDiagHost(WatoMode):
         host_vars = vs_host.from_html_vars("vs_host")
         vs_host.validate_value(host_vars, "vs_host")
 
-        vs_rules = _vs_rules()
+        vs_rules = _vs_rules(self._host.folder())
         rule_vars = vs_rules.from_html_vars("vs_rules")
         vs_rules.validate_value(rule_vars, "vs_rules")
 
@@ -255,7 +255,7 @@ class ModeDiagHost(WatoMode):
         html.open_table()
         html.open_tr()
         html.open_td()
-        all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        all_rulesets = AllRulesets.load_all_rulesets(self._tree)
         agent_ports_ruleset = all_rulesets.get("agent_ports")
         tcp_connect_timeouts_ruleset = all_rulesets.get("tcp_connect_timeouts")
         snmp_timing_ruleset = all_rulesets.get("snmp_timing")
@@ -323,6 +323,7 @@ class ModeDiagHost(WatoMode):
             value = {}
             forms.section(legend=False)
             vs_rules = _vs_rules(
+                self._host.folder(),
                 agent_port=agent_port,
                 tcp_connect_timeout=tcp_connect_timeout,
                 snmp_timeout=snmp_timing.get("timeout"),
@@ -335,7 +336,10 @@ class ModeDiagHost(WatoMode):
             # When clicking "Save & Test" on the "Edit host" page, this will be set
             # to immediately execute the tests using the just saved settings
             if request.has_var("_start_on_load"):
-                html.final_javascript("cmk.page_menu.form_submit('diag_host', '_save');")
+                html.call_ts_function(
+                    function_name="form_submit",
+                    arguments={"form_name": "diag_host", "button_name": "_save"},
+                )
 
             html.hidden_fields()
 
@@ -389,13 +393,13 @@ class ModeDiagHost(WatoMode):
 
             html.close_tr()
             html.close_table()
-            html.javascript(
-                "cmk.host_diagnose.start_test(%s, %s, %s)"
-                % (
-                    json.dumps(ident),
-                    json.dumps(self._hostname),
-                    json.dumps(transactions.fresh_transid()),
-                )
+            html.call_ts_function(
+                function_name="host_diagnose_start_test",
+                arguments={
+                    "ident": ident,
+                    "hostname": self._hostname,
+                    "transid": transactions.fresh_transid(),
+                },
             )
 
 
@@ -437,6 +441,7 @@ def _vs_host(hostname: HostName) -> Dictionary:
 
 
 def _vs_rules(
+    folder: Folder,
     agent_port: int | None = None,
     tcp_connect_timeout: float | None = None,
     snmp_timeout: int | None = None,
@@ -453,8 +458,7 @@ def _vs_rules(
                     default_value=agent_port if agent_port is not None else 6556,
                     title=_('Checkmk agent port (<a href="%(url)s">rules</a>)')
                     % {
-                        "url": folder_preserving_link(
-                            request,
+                        "url": folder.url(
                             [
                                 ("mode", "edit_ruleset"),
                                 ("varname", "agent_ports"),
@@ -477,8 +481,7 @@ def _vs_rules(
                     size=2,  # SNMP-Timeout
                     title=_('TCP connection timeout (<a href="%(url)s">Rules</a>)')
                     % {
-                        "url": folder_preserving_link(
-                            request,
+                        "url": folder.url(
                             [
                                 ("mode", "edit_ruleset"),
                                 ("varname", "tcp_connect_timeouts"),
@@ -497,8 +500,7 @@ def _vs_rules(
                 Integer(
                     title=_('SNMP-timeout (<a href="%(url)s">Rules</a>)')
                     % {
-                        "url": folder_preserving_link(
-                            request,
+                        "url": folder.url(
                             [
                                 ("mode", "edit_ruleset"),
                                 ("varname", "snmp_timing"),
@@ -520,8 +522,7 @@ def _vs_rules(
                 Integer(
                     title=_('SNMP-retries (<a href="%(url)s">Rules</a>)')
                     % {
-                        "url": folder_preserving_link(
-                            request,
+                        "url": folder.url(
                             [
                                 ("mode", "edit_ruleset"),
                                 ("varname", "snmp_timing"),
@@ -540,7 +541,7 @@ def _vs_rules(
 class PageAjaxDiagHost(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
         if not user.may("wato.diag_host"):
             raise MKAuthException(_("You are not permitted to perform this action."))
 
@@ -553,7 +554,7 @@ class PageAjaxDiagHost(AjaxPage):
         if not hostname:
             raise MKGeneralException(_("The host name is missing."))
 
-        host = folder_tree().host(hostname)
+        host = make_folder_tree(ctx.config).host(hostname)
 
         if not host:
             raise MKGeneralException(_("The given host does not exist."))
@@ -579,7 +580,7 @@ class PageAjaxDiagHost(AjaxPage):
         vs_host = _vs_host(hostname)
         host_vars = vs_host.from_html_vars("vs_host")
         vs_host.validate_value(host_vars, "vs_host")
-        vs_rules = _vs_rules()
+        vs_rules = _vs_rules(host.folder())
         rule_vars = vs_rules.from_html_vars("vs_rules")
         vs_rules.validate_value(rule_vars, "vs_rules")
 

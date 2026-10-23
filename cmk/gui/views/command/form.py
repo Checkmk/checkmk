@@ -167,7 +167,7 @@ def do_actions(
         confirm_dialog_options.confirm_button,
         confirm_dialog_options.cancel_button,
         confirm_dialog_options.deny_button,
-        confirm_dialog_options.deny_js_function,
+        confirm_dialog_options.deny_popup_id,
     ):
         return False
 

@@ -57,6 +57,10 @@ defineProps<CmkHeadingProps>()
 
 .cmk-heading--h3 {
   font-size: var(--font-size-large);
+
+  /* Reset global style from old framework (`.wato h3`) */
+  padding: 0;
+  background-color: transparent;
 }
 
 .cmk-heading--h4 {

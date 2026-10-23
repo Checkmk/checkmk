@@ -3,8 +3,9 @@ load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:patchelf.bzl", "set_runpath", "set_runpath_tree")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//omd/packages/net-snmp:snmp-rules.bzl", "snmp_compile_mibs")
 
 bin_paths = [
@@ -188,6 +189,7 @@ pkg_mkdirs(
 py_library(
     name = "compile_mibs_lib",
     srcs = ["compile_mibs.py"],
+    imports = ["."],
     deps = [requirement("pysmi")],
 )
 
@@ -220,4 +222,12 @@ pkg_tar(
     stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__subpackages__"],
+)
+
+py_cmk_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/*.py"]),
+    data = ["@net-snmp//:mibs"],
+    deps = [":compile_mibs_lib"],
 )

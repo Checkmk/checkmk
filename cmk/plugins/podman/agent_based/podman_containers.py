@@ -17,14 +17,13 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     FixedLevelsT,
     NoLevelsT,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 type Params = Mapping[
     str,
@@ -101,10 +100,6 @@ agent_section_podman_containers: AgentSection = AgentSection(
 )
 
 
-def discover_podman_containers(section: SectionContainers) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_podman_containers(params: Params, section: SectionContainers) -> CheckResult:
     if section.counts.total == 0:
         yield Result(
@@ -130,7 +125,7 @@ def check_podman_containers(params: Params, section: SectionContainers) -> Check
 check_plugin_podman_containers = CheckPlugin(
     name="podman_containers",
     service_name="Podman containers",
-    discovery_function=discover_podman_containers,
+    discovery_function=discover_one_service,
     check_function=check_podman_containers,
     check_ruleset_name="podman_containers",
     check_default_parameters=DEFAULT_PARAMS,

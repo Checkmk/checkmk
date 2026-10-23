@@ -29,14 +29,15 @@ py_library(
         "//cmk/gui:app",
         "//packages/cmk-wsgi",
         "//tests/system:pkg_marker",
-        "//tests/testlib",
-        "//tests/testlib/common:utils",
+        "//tests/testlib/common",
+        "//tests/testlib/pytest_helpers",
+        "//tests/testlib/system",
     ] + select({
         "//:gpl+nonfree_repo": [
             "//cmk/gui/job_scheduler",
             "//non-free/packages/cmk-otel-collector:testlib",
             "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
-            "//non-free/tests/testlib/system:metric_backend",
+            "//non-free/tests/testlib/system:data_backend",
             "//non-free/tests/testlib/system:opentelemetry",
             "//non-free/tests/testlib/system/cloud",
         ],

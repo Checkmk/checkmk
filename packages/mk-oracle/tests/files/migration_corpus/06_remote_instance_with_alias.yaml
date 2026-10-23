@@ -5,8 +5,6 @@
 ---
 oracle:
   main:
-    connection:
-      hostname: localhost
     authentication:
       username: "sys"
       password: "secret"

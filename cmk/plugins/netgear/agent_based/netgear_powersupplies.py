@@ -44,9 +44,16 @@ def check_netgear_powersupplies(item: str, section: Mapping[str, str]) -> CheckR
         "2": (State.OK, "operational"),
         "3": (State.CRIT, "failed"),
     }
-    if item in section:
-        state, state_readable = map_states[section[item]]
-        yield Result(state=state, summary=f"Status: {state_readable}")
+    if (raw_state := section.get(item)) is None:
+        return
+    if raw_state not in map_states:
+        yield Result(
+            state=State.UNKNOWN,
+            summary=f"Status: unknown state {raw_state!r} (expected 1, 2 or 3)",
+        )
+        return
+    state, state_readable = map_states[raw_state]
+    yield Result(state=state, summary=f"Status: {state_readable}")
 
 
 snmp_section_netgear_powersupplies = SimpleSNMPSection(

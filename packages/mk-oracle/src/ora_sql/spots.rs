@@ -244,7 +244,31 @@ fn _make_work_result_ok(
                             container: None,
                         }]
                     } else {
-                        resolve_pdb_patterns(section.pdb_patterns(), pdbs, &service.to_string())
+                        // A predefined section covers the whole instance, so it
+                        // runs in the root as well as in every matching PDB: a
+                        // view without a `v$con_` twin - `v$pgastat` above all -
+                        // only yields a container's rows when the query runs
+                        // inside that container, which is what the legacy plugin
+                        // did with `dbms_sql.parse(container => ...)`.
+                        //
+                        // A custom metric names its own scope: `pdbs` there means
+                        // those PDBs and not the root, as documented.
+                        let mut blocks: Vec<QueryBlock> = Vec::new();
+                        if section.item_value().is_none() {
+                            blocks.push(QueryBlock {
+                                label: label.clone(),
+                                queries: q.clone(),
+                                title: section.to_work_header_for(service),
+                                post_processing: post,
+                                container: None,
+                            });
+                        }
+                        blocks.extend(
+                            resolve_pdb_patterns(
+                                section.pdb_patterns(),
+                                pdbs,
+                                &service.to_string(),
+                            )
                             .into_iter()
                             .map(|pdb| QueryBlock {
                                 label: format!("{label} in PDB {pdb}"),
@@ -252,8 +276,9 @@ fn _make_work_result_ok(
                                 title: section.to_work_header_for_pdb(service, &pdb),
                                 post_processing: post,
                                 container: Some(pdb),
-                            })
-                            .collect()
+                            }),
+                        );
+                        blocks
                     }
                 })
                 .collect::<Vec<QueryBlock>>();

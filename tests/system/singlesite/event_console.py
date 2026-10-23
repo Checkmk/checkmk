@@ -9,7 +9,7 @@
 import socket
 from typing import Any
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 class CMKEventConsole:
@@ -17,22 +17,6 @@ class CMKEventConsole:
         super().__init__()
         self.site = site
         self.status = CMKEventConsoleStatus(f"{site.root}/tmp/run/mkeventd/status")
-
-    def _config(self) -> dict[str, Any]:
-        cfg: dict[str, Any] = {}
-        content = self.site.read_file("etc/check_mk/mkeventd.d/wato/global.mk")
-        exec(content, {}, cfg)
-        return cfg
-
-    def _gather_status_port(self) -> None:
-        config = self._config()
-
-        if self.site.reuse and self.site.exists() and "remote_status" in config:
-            port = config["remote_status"][0]
-        else:
-            port = self.site.get_free_port_from(self.site.livestatus_port + 1)
-
-        self.status_port = port
 
 
 class CMKEventConsoleStatus:

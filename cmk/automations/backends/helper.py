@@ -16,13 +16,13 @@ from cmk.automations.backends._base import (
     AutomationExecutor,
     LocalAutomationResult,
 )
+from cmk.automations.internal import AutomationID
 from cmk.automations.models.helper import (
     AUTOMATION_HELPER_BASE_URL,
     AUTOMATION_HELPER_SOCKET_RELATIVE_PATH,
     AutomationPayload,
     AutomationResponse,
 )
-from cmk.automations.types import AutomationID
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 from cmk.utils import paths
@@ -33,6 +33,12 @@ logger = logging.getLogger(__name__)
 
 class AutomationHelperUnavailable(MKGeneralException):
     """Raised when the automation helper service cannot be reached."""
+
+
+# The automation enforces a given timeout itself and answers with a proper error message (see
+# arguments_with_timeout). The socket timeout of the request only frees the caller when the
+# helper cannot do that, e.g. because its process hangs, so it fires this much later.
+_RESPONSE_TIMEOUT_MARGIN: Final = 60
 
 
 class HelperExecutor(AutomationExecutor):
@@ -46,6 +52,8 @@ class HelperExecutor(AutomationExecutor):
         args: Sequence[str],
         stdin: str,
         timeout: int | None,
+        *,
+        for_cmk_version: str,
     ) -> LocalAutomationResult:
         session = make_unixsocket_session(
             self._SOCKET_PATH,
@@ -57,10 +65,24 @@ class HelperExecutor(AutomationExecutor):
             args=arguments_with_timeout(args, timeout),
             stdin=stdin,
             log_level=logger.getEffectiveLevel(),
+            for_cmk_version=for_cmk_version,
         ).model_dump(mode="json")
 
         try:
-            response = session.post(f"{self._BASE_URL}/automation", json=payload)
+            response = session.post(
+                f"{self._BASE_URL}/automation",
+                json=payload,
+                timeout=None if timeout is None else timeout + _RESPONSE_TIMEOUT_MARGIN,
+            )
+        except requests.Timeout:
+            raise AutomationHelperUnavailable(
+                _(
+                    "The automation helper did not answer within %(timeout)d seconds. "
+                    "Possibly the service <tt>automation-helper</tt> hangs, "
+                    "please check the state of the site services."
+                )
+                % {"timeout": (timeout or 0) + _RESPONSE_TIMEOUT_MARGIN}
+            )
         except requests.ConnectionError as e:
             raise AutomationHelperUnavailable(
                 _(
@@ -79,14 +101,18 @@ class HelperExecutor(AutomationExecutor):
                 return LocalAutomationResult(
                     exit_code=0,
                     output=response_data.serialized_result_or_error_code,
-                    command_description=self.command_description(command, args, timeout),
+                    command_description=self.command_description(
+                        command, args, timeout, for_cmk_version=for_cmk_version
+                    ),
                     error=response_data.stderr,
                 )
             case int():
                 return LocalAutomationResult(
                     exit_code=response_data.serialized_result_or_error_code,
                     output=response_data.stdout,
-                    command_description=self.command_description(command, args, timeout),
+                    command_description=self.command_description(
+                        command, args, timeout, for_cmk_version=for_cmk_version
+                    ),
                     error=response_data.stderr,
                 )
             case _:
@@ -98,5 +124,13 @@ class HelperExecutor(AutomationExecutor):
         command: AutomationID,
         args: Sequence[str],
         timeout: int | None,
+        *,
+        for_cmk_version: str,
     ) -> str:
-        return repr({"command": command, "args": arguments_with_timeout(args, timeout)})
+        return repr(
+            {
+                "command": command,
+                "args": arguments_with_timeout(args, timeout),
+                "for_cmk_version": for_cmk_version,
+            }
+        )

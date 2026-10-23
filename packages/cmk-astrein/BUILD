@@ -1,5 +1,6 @@
-load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_binary")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
@@ -9,25 +10,11 @@ exports_files([
 
 py_library(
     name = "library",
-    srcs = [
-        "cmk/astrein/__init__.py",
-        "cmk/astrein/checker_key_size.py",
-        "cmk/astrein/checker_localization.py",
-        "cmk/astrein/checker_logging_formatter.py",
-        "cmk/astrein/checker_module_layers.py",
-        "cmk/astrein/checker_request_input.py",
-        "cmk/astrein/checker_simple_patterns.py",
-        "cmk/astrein/checkers.py",
-        "cmk/astrein/cli.py",
-        "cmk/astrein/framework.py",
-        "cmk/astrein/lsp.py",
-        "cmk/astrein/module_layers_config.py",
-        "cmk/astrein/placeholders.py",
-        "cmk/astrein/sarif.py",
-    ],
+    srcs = glob(["cmk/astrein/**/*.py"]),
     data = [
         ":py_typed",
         "//:module_layers.toml",
+        "//tests/agent-plugin-unit:sources-list.txt",
     ],
     imports = ["."],
     deps = [
@@ -78,7 +65,7 @@ alias(
 
 py_cmk_test(
     name = "test",
-    srcs = glob(["tests/test_*.py"]),
+    srcs = glob(["tests/**/test_*.py"]),
     data = ["//:module_layers.toml"],
     deps = [
         ":library",

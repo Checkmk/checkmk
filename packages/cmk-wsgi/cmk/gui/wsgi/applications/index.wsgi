@@ -27,7 +27,6 @@ def load_default_config() -> ProfileSetting:
         cachegrind_file=paths.var_dir / "multisite.cachegrind",
         profile_file=paths.var_dir / "multisite.profile",
         accumulate=False,
-        discard_first_request=False,
     )
 
 
@@ -45,7 +44,6 @@ def load_actual_config() -> ProfileSetting:
         cachegrind_file=paths.var_dir / "multisite.cachegrind",
         profile_file=paths.var_dir / "multisite.profile",
         accumulate=False,
-        discard_first_request=False,
     )
 
 

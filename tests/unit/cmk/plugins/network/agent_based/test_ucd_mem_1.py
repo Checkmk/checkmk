@@ -73,3 +73,15 @@ def test_ucd_mem_1_check() -> None:
 
     metric_names = {m.name for m in metrics}
     assert {"mem_used", "mem_used_percent", "swap_used"} <= metric_names
+
+
+def test_check_ucd_mem_zero_total() -> None:
+    section = parse_ucd_mem(
+        [["0", "0", "0", "0", "0", "16000", "0", "0", "0", "1", "swap", "Running out of swap"]]
+    )
+    assert section is not None
+
+    assert list(check_ucd_mem({"levels": ("perc_used", (80.0, 90.0))}, section)) == [
+        Result(state=State.UNKNOWN, summary="Cannot evaluate RAM: device reports a total of 0 B"),
+        Result(state=State.OK, summary="Swap error: Running out of swap"),
+    ]

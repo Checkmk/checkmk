@@ -10,12 +10,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.netapp import models
 
 Section = Sequence[models.AlertModel]
@@ -50,10 +49,6 @@ agent_section_netapp_ontap_status = AgentSection(
 )
 
 
-def discovery_netapp_ontap_status(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_netapp_ontap_status(section: Section) -> CheckResult:
     if not section:
         yield Result(state=State.OK, summary="No alerts present")
@@ -80,6 +75,6 @@ check_plugin_netapp_ontap_status = CheckPlugin(
     name="netapp_ontap_status",
     service_name="Diagnosis Status",
     sections=["netapp_ontap_alerts"],
-    discovery_function=discovery_netapp_ontap_status,
+    discovery_function=discover_one_service,
     check_function=check_netapp_ontap_status,
 )

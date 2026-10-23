@@ -14,7 +14,7 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
+from cmk.gui.openapi.framework.model.base_models import TitledDomainObjectModel
 from cmk.gui.openapi.restful_objects.constructors import object_href
 
 from ._family import DASHBOARD_FAMILY
@@ -25,7 +25,7 @@ from .model.constants import (
 
 
 @api_model
-class DashboardConstantsObject(DomainObjectModel):
+class DashboardConstantsObject(TitledDomainObjectModel):
     domainType: Literal["constant"] = api_field(description="The domain type of the object.")
     extensions: DashboardConstantsResponse = api_field(
         description="All the constants data of a dashboard."

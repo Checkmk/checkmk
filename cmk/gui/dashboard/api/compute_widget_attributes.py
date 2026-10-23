@@ -6,6 +6,7 @@
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     APIVersion,
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -51,9 +52,8 @@ def compute_widget_attributes_v1(
     """Compute widget specification attributes"""
     user.need_permission("general.edit_dashboards")
     widget_config = body.content.to_internal()
-    return ComputedWidgetResponse(
-        domainType="widget-compute",
-        value=ComputedWidgetSpec(
+    return ComputedWidgetResponse.of(
+        ComputedWidgetSpec(
             filter_context=ComputedFilterContext(
                 uses_infos=determine_widget_filter_used_infos(widget_config)
             )
@@ -69,5 +69,6 @@ ENDPOINT_COMPUTE_WIDGET_ATTRIBUTES = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD),
     doc=EndpointDoc(family=DASHBOARD_FAMILY.name),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.UNSTABLE: EndpointHandler(handler=compute_widget_attributes_v1)},
 )

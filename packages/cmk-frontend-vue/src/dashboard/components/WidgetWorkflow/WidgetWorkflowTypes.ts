@@ -15,13 +15,34 @@ export interface WorkflowItem {
 
   icon: SimpleIcons
   icon_emblem?: IconEmblems | undefined
+
+  unavailableReason?: TranslatedString | undefined
 }
 
-export function getDashboardWidgetWorkflows(
-  ntopActive: boolean = false,
-  networkFlowActive: boolean = false
-): Record<string, WorkflowItem> {
-  const workflows: Record<string, WorkflowItem> = {
+export interface WorkflowGroup extends WorkflowItem {
+  subWorkflows: Record<string, WorkflowItem>
+}
+
+export type WorkflowCatalog = Record<string, WorkflowItem | WorkflowGroup>
+
+export function isWorkflowGroup(workflow: WorkflowItem | undefined): workflow is WorkflowGroup {
+  return workflow !== undefined && 'subWorkflows' in workflow
+}
+
+export function findParentWorkflowKey(
+  catalog: WorkflowCatalog,
+  workflowKey: string
+): string | null {
+  for (const [groupKey, workflow] of Object.entries(catalog)) {
+    if (isWorkflowGroup(workflow) && Object.hasOwn(workflow.subWorkflows, workflowKey)) {
+      return groupKey
+    }
+  }
+  return null
+}
+
+export function getDashboardWidgetWorkflows(ntopActive: boolean = false): WorkflowCatalog {
+  const workflows: WorkflowCatalog = {
     metrics_graphs: {
       title: _t('Metrics & graphs'),
       subtitle: _t('Visualize key metrics using charts and graphs'),
@@ -31,7 +52,28 @@ export function getDashboardWidgetWorkflows(
       title: _t('Custom graphs'),
       subtitle: _t('Visualize built-in and preconfigured custom graphs'),
       icon: 'graph',
-      icon_emblem: 'add'
+      icon_emblem: 'add',
+      subWorkflows: {
+        new_custom_graph: {
+          title: _t('New custom graph'),
+          subtitle: _t('Create and configure a new custom graph'),
+          icon: 'graph',
+          icon_emblem: 'add',
+          unavailableReason: _t('Not available yet.')
+        },
+        clone_custom_graph: {
+          title: _t('Clone custom graph'),
+          subtitle: _t('Configure and edit an existing custom graph'),
+          icon: 'graph',
+          icon_emblem: 'add',
+          unavailableReason: _t('Not available yet.')
+        },
+        link_custom_graph: {
+          title: _t('Link existing custom graph'),
+          subtitle: _t('Select a pre-configured custom graph'),
+          icon: 'graph'
+        }
+      }
     },
     views: {
       title: _t('Views'),
@@ -77,25 +119,20 @@ export function getDashboardWidgetWorkflows(
       icon: 'ntop'
     }
   }
-  if (networkFlowActive) {
-    workflows['network_flow'] = {
-      title: _t('Network flow monitoring'),
-      subtitle: _t('Visualize network flow traffic, applications and autonomous systems'),
-      icon: 'network-topology'
-    }
-  }
   return workflows
 }
 
-export type DashboardWidgetWorkflowKey =
-  | 'metrics_graphs'
-  | 'custom_graphs'
-  | 'views'
-  | 'host_site_overview'
-  | 'service_overview'
-  | 'hw_sw_inventory'
-  | 'alerts_notifications'
-  | 'event_stats'
-  | 'other'
-  | 'ntop'
-  | 'network_flow'
+export const DASHBOARD_WIDGET_WORKFLOW_KEYS = [
+  'metrics_graphs',
+  'link_custom_graph',
+  'views',
+  'host_site_overview',
+  'service_overview',
+  'hw_sw_inventory',
+  'alerts_notifications',
+  'event_stats',
+  'other',
+  'ntop'
+] as const
+
+export type DashboardWidgetWorkflowKey = (typeof DASHBOARD_WIDGET_WORKFLOW_KEYS)[number]

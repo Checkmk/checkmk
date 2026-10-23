@@ -39,6 +39,7 @@ import contextlib
 import dataclasses
 import json
 from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
+from http import HTTPStatus
 from typing import override
 from unittest import mock
 from unittest.mock import MagicMock
@@ -51,7 +52,6 @@ from cmk.automations.results import (
     AnalyzeServiceRuleMatchesResult,
     DeleteHostsResult,
     GetServicesLabelsResult,
-    SerializedResult,
     ServiceDiscoveryPreviewResult,
     ServiceDiscoveryResult,
     SetAutochecksV2Result,
@@ -63,7 +63,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import __version__, Version
 from cmk.checkengine.discovery import CheckPreviewEntry, DiscoverySettings
 from cmk.checkengine.plugins import SectionName
-from cmk.gui.config import Config
+from cmk.gui.config import Config, get_default_config, make_config_object
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.openapi.api_endpoints.service_discovery import update_service_phase
@@ -79,7 +79,7 @@ from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, Host
 from cmk.gui.watolib.pending_changes import (
     Change,
     ChangeScope,
@@ -105,6 +105,7 @@ from cmk.livestatus_client import (
     UnixSocketInfo,
 )
 from cmk.ruleset_matcher.labels import HostLabel, HostLabelValueDict
+from cmk.ruleset_matcher.tags import get_effective_tag_config
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.web.utils.permission_verification import BasePerm
 from tests.unit.cmk.gui.watolib.discovery_matrix import (
@@ -177,29 +178,29 @@ class Transport:
     def args_for(self, command: str) -> list[tuple[str, ...]]:
         return [c.args for c in self.calls if c.command == command]
 
-    def _answer(self, command: str, args: Sequence[str]) -> SerializedResult:
+    def _answer(self, command: str, args: Sequence[str]) -> str:
         match command:
             case "service-discovery-preview":
-                return self.preview.serialize(_THIS_VERSION)
+                return self.preview.serialize(__version__)
             case "set-autochecks-v2":
-                return SetAutochecksV2Result().serialize(_THIS_VERSION)
+                return SetAutochecksV2Result().serialize(__version__)
             case "update-host-labels":
-                return UpdateHostLabelsResult().serialize(_THIS_VERSION)
+                return UpdateHostLabelsResult().serialize(__version__)
             case "get-services-labels":
                 # args are [host_name, *service_names]; the caller indexes the result by name.
                 return GetServicesLabelsResult(labels={name: {} for name in args[1:]}).serialize(
-                    _THIS_VERSION
+                    __version__
                 )
             case "analyze-service-rule-matches":
-                return AnalyzeServiceRuleMatchesResult(results={}).serialize(_THIS_VERSION)
+                return AnalyzeServiceRuleMatchesResult(results={}).serialize(__version__)
             case "service-discovery":
-                return ServiceDiscoveryResult(hosts={}).serialize(_THIS_VERSION)
+                return ServiceDiscoveryResult(hosts={}).serialize(__version__)
             case _:
                 raise AssertionError(f"unexpected automation {command!r}")
 
     def local(
         self, *, command: str, args: Sequence[str] | None = None, **_kw: object
-    ) -> tuple[Sequence[str], SerializedResult]:
+    ) -> tuple[Sequence[str], str]:
         self.calls.append(AutomationCall(str(command), None, tuple(args or ())))
         return ["cmk", "--automation", str(command)], self._answer(str(command), args or ())
 
@@ -210,7 +211,7 @@ class Transport:
         command: str,
         args: Sequence[str] | None = None,
         **_kw: object,
-    ) -> SerializedResult:
+    ) -> str:
         self.calls.append(
             AutomationCall(str(command), automation_config.site_id, tuple(args or ()))
         )
@@ -229,7 +230,7 @@ class Transport:
         )
         return self.remote_check_table.serialize(_THIS_VERSION)
 
-    def sync(self, site_id: SiteId, debug: bool) -> None:  # noqa: ARG002
+    def sync(self, _tree: FolderTree, site_id: SiteId, debug: bool) -> None:  # noqa: ARG002
         self.synced_sites.append(site_id)
 
 
@@ -351,9 +352,18 @@ def site_configuration(site_id: SiteId, *, remote_url: str | None = None) -> Sit
     return config
 
 
+@pytest.fixture(name="config")
+def fixture_config() -> Config:
+    raw_config = get_default_config()
+    raw_config["tags"] = get_effective_tag_config(raw_config["wato_tags"])
+    config = make_config_object(raw_config)
+    config.sites = SiteConfigurations({SiteId("NO_SITE"): site_configuration(SiteId("NO_SITE"))})
+    return config
+
+
 @contextlib.contextmanager
-def _host_in_the_root_folder(attributes: HostAttributes) -> Iterator[Host]:
-    root_folder = folder_tree().root_folder()
+def _host_in_the_root_folder(tree: FolderTree, attributes: HostAttributes) -> Iterator[Host]:
+    root_folder = tree.root_folder()
     root_folder.create_hosts(
         [(HOST_NAME, attributes, None)],
         pprint_value=False,
@@ -377,11 +387,11 @@ def _host_in_the_root_folder(attributes: HostAttributes) -> Iterator[Host]:
 
 @pytest.fixture(name="sample_host")
 def fixture_sample_host(
-    request_context: None,
     with_admin_login: UserId,
+    tree: FolderTree,
 ) -> Generator[Host]:
     """A host on the site this process runs on, so ``LOCAL`` is its transport."""
-    with _host_in_the_root_folder(HostAttributes()) as host:
+    with _host_in_the_root_folder(tree, HostAttributes()) as host:
         # The site is inherited, not set; the assertion is what makes `remote_host` a contrast
         # rather than a second spelling of the same thing.
         assert host.site_id() != REMOTE_SITE
@@ -389,7 +399,7 @@ def fixture_sample_host(
 
 
 @pytest.fixture(name="remote_site")
-def fixture_remote_site(request_context: None) -> Generator[None]:
+def fixture_remote_site(tree: FolderTree) -> Generator[None]:
     """Adds ``REMOTE_SITE`` to the sites the folder tree knows about.
 
     The tree resolves a host's site every time it writes or deletes that host, against a snapshot
@@ -398,7 +408,6 @@ def fixture_remote_site(request_context: None) -> Generator[None]:
     asserted here, so that "the host's site" and "the automation config the test passes" cannot
     drift apart.
     """
-    tree = folder_tree()
     original = tree.config
     tree.config = dataclasses.replace(
         original,
@@ -420,6 +429,7 @@ def fixture_remote_site(request_context: None) -> Generator[None]:
 def fixture_remote_host(
     remote_site: None,
     with_admin_login: UserId,
+    tree: FolderTree,
 ) -> Generator[Host]:
     """A host that really lives on ``REMOTE_SITE`` -- every ``REMOTE`` parametrization uses this.
 
@@ -429,7 +439,7 @@ def fixture_remote_host(
     pre-sync target -- ``sync_changes_before_remote_automation(host.site_id())``, not the
     automation config's site -- indistinguishable from the local site.
     """
-    with _host_in_the_root_folder(HostAttributes(site=REMOTE_SITE)) as host:
+    with _host_in_the_root_folder(tree, HostAttributes(site=REMOTE_SITE)) as host:
         assert host.site_id() == REMOTE_SITE
         yield host
 
@@ -661,7 +671,7 @@ def test_write_paths_use_the_given_automation_config(
     # rather than a missed parameter, so do not "fix" it into a dispatched call. What the
     # correctness rests on is that the remote host is in the central site's `all_hosts` -- WATO
     # writes every host of the folder tree there with no site filter -- so it survives the
-    # `intersection_update(_all_configured_hosts)` inside `set_all_processed_hosts` instead of
+    # `intersection_update(_all_configured_hosts)` when narrowing the processed hosts instead of
     # landing in no candidate set and matching nothing at all. Beyond that: folder path, tags and
     # explicit labels are central data, and the service labels arrive as an argument that
     # `get_services_labels` already fetched from the owning site. Full reasoning, including the two
@@ -1283,7 +1293,7 @@ def test_update_during_active_job_writes_nothing_and_says_nothing(
     """Today: the requested change is discarded and the endpoint answers 204 anyway."""
     mocker.patch.object(ServiceDiscoveryBackgroundJob, "is_active", return_value=True)
 
-    assert update_ignored_phase(sample_host) == 204
+    assert update_ignored_phase(sample_host) == HTTPStatus.NO_CONTENT
 
     assert transport.commands == []
     assert pending_changes.recorded == []
@@ -1316,7 +1326,7 @@ def test_update_service_phase_demands_manage_services_and_edit(
     """
     transport.preview = preview_result([entry(DiscoveryState.MONITORED)])
 
-    assert update_ignored_phase(sample_host) == 204
+    assert update_ignored_phase(sample_host) == HTTPStatus.NO_CONTENT
 
     assert {"wato.edit", "wato.services"} <= set(demanded_permissions)
     assert "wato.edit" in UPDATE_PHASE_PERMISSIONS
@@ -1417,7 +1427,7 @@ def test_update_service_phase_leaves_the_discovery_failed_flag_set(
     transport.preview = preview_result([entry(DiscoveryState.MONITORED)])
     sample_host.set_discovery_failed(pprint_value=False, acting_user=user)
 
-    assert update_ignored_phase(sample_host) == 204
+    assert update_ignored_phase(sample_host) == HTTPStatus.NO_CONTENT
 
     assert "set-autochecks-v2" in transport.commands
     assert sample_host.discovery_failed() is True
@@ -1438,13 +1448,13 @@ def test_update_service_phase_clears_the_discovery_failed_flag(
     transport.preview = preview_result([entry(DiscoveryState.MONITORED)])
     sample_host.set_discovery_failed(pprint_value=False, acting_user=user)
 
-    assert update_ignored_phase(sample_host) == 204
+    assert update_ignored_phase(sample_host) == HTTPStatus.NO_CONTENT
 
     assert "set-autochecks-v2" in transport.commands
     assert sample_host.discovery_failed() is False
 
 
-# --- T2.15 / §10.10: quick setup applies remote-site hosts locally --------------------------
+# --- T2.15 / §10.10: quick setup applies on the host's site (Fixed in CMK-38596)-------------
 
 
 @pytest.fixture(name="quick_setup_fix_all")
@@ -1465,9 +1475,9 @@ def fixture_quick_setup_fix_all(mocker: MockerFixture) -> MagicMock:
     )
 
 
-def run_quick_setup_discovery(pending_changes: PendingChanges) -> None:
+def run_quick_setup_discovery(tree: FolderTree, pending_changes: PendingChanges) -> None:
     _run_service_discovery(
-        folder_tree(),
+        tree,
         str(HOST_NAME),
         REMOTE_SITE,
         automation_config=REMOTE,
@@ -1479,28 +1489,11 @@ def run_quick_setup_discovery(pending_changes: PendingChanges) -> None:
     )
 
 
-@pytest.mark.usefixtures("inline_background_jobs", "remote_host")
-def test_quick_setup_reads_remotely_and_writes_locally(
-    transport: Transport, pending_changes: RecordingPendingChanges, quick_setup_fix_all: MagicMock
-) -> None:
-    """Today: the check table is fetched from the remote site, the apply runs on the central one."""
-    run_quick_setup_discovery(pending_changes)
-
-    assert transport.synced_sites == [REMOTE_SITE]
-    assert [site for site, _command, _vars in transport.remote_jobs] == [REMOTE_SITE]
-    assert quick_setup_fix_all.call_args.kwargs["automation_config"] == LocalAutomationConfig()
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason="CMK-38596 (§10.10): quick setup derives the right automation config, uses it for the "
-    "read, and then passes LocalAutomationConfig() to perform_fix_all -- so a remote-site bundle's "
-    "autochecks land in the central site's var/check_mk/autochecks/",
-)
 @pytest.mark.usefixtures("inline_background_jobs", "remote_host", "transport")
 def test_quick_setup_writes_to_the_site_it_read_from(
-    pending_changes: RecordingPendingChanges, quick_setup_fix_all: MagicMock
+    tree: FolderTree, pending_changes: RecordingPendingChanges, quick_setup_fix_all: MagicMock
 ) -> None:
-    run_quick_setup_discovery(pending_changes)
+    """The apply goes to the site quick setup was given, not the central one (CMK-38596)."""
+    run_quick_setup_discovery(tree, pending_changes)
 
     assert quick_setup_fix_all.call_args.kwargs["automation_config"] == REMOTE

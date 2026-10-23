@@ -6,6 +6,7 @@
 
 import logging
 import os
+import re
 
 import pytest
 
@@ -13,16 +14,18 @@ import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
 from cmk.ec.history_mongo import filters_to_mongo_query, MongoDBHistory
 from cmk.ec.main import StatusTableHistory
-from cmk.ec.query import QueryFilter, QueryGET, StatusTable
+from cmk.ec.query import OperatorName, QueryFilter, QueryGET, StatusTable
 
-
-@pytest.mark.skipif(
+requires_mongodb = pytest.mark.skipif(
     os.getenv("MONGODB_CONNECTION_STRING") is None,
     reason="""MONGODB_CONNECTION_STRING env var is not set.
     Set it to any value(1 or True) to use the default host: "localhost", port: 27017.
     Or use real mongodb connection string. E.g.:
     MONGODB_CONNECTION_STRING="mongodb://<some_host>:<some_port>" """,
 )
+
+
+@requires_mongodb
 def test_pymongo_add_get(history_mongo: MongoDBHistory) -> None:
     """Add 2 documents to history, get filtered result with 1 document."""
 
@@ -50,6 +53,41 @@ def test_pymongo_add_get(history_mongo: MongoDBHistory) -> None:
     column_index = get_table("history").column_names.index
     assert row[column_index("history_what")] == "NEW"
     assert row[column_index("event_host")] == "ABC1"
+
+
+@requires_mongodb
+def test_get_with_zero_limit_does_not_fetch_the_whole_history(
+    history_mongo: MongoDBHistory,
+) -> None:
+    for text in ("one", "two", "three"):
+        history_mongo.add(event=ec.Event(text=text), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    query = QueryGET(
+        lambda _name: StatusTableHistory(logger, history_mongo), ["GET history", "Limit: 0"], logger
+    )
+
+    rows = history_mongo.get(query)
+
+    assert len(list(rows)) <= 1
+
+
+@requires_mongodb
+def test_history_query_applies_all_filters_on_the_same_column(
+    history_mongo: MongoDBHistory,
+) -> None:
+    for event_id in (1, 2, 3):
+        history_mongo.add(event=ec.Event(id=event_id, text=f"event {event_id}"), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history_mongo)
+    query = QueryGET(
+        lambda _name: table,
+        ["GET history", "Columns: event_id", "Filter: event_id >= 2", "Filter: event_id <= 2"],
+        logger,
+    )
+
+    _header, *rows = table.query(query)
+
+    assert rows == [[2]]
 
 
 def test_filters_to_mongo_query() -> None:
@@ -117,13 +155,87 @@ def test_filters_to_mongo_query() -> None:
         "event.time": {"$lt": 1234},
         "event.delay_until": {"$lte": 120},
         "event.comment": {"$regex": "test", "$options": ""},
-        "event.location": {"$regex": "seattle", "$options": "mi"},
+        "event.location": {"$regex": re.compile(r"\Aseattle\z", re.IGNORECASE)},
         "event.phase": {"$regex": "test", "$options": "i"},
         "event.owner": {"$in": ["foo", "bar"]},
         "owner": {"$in": "foobar"},
         "_id": {"$in": "some text"},
     }
     assert filters_to_mongo_query(filters) == expected_output
+
+
+def test_all_filters_on_the_same_column_end_up_in_the_mongo_query() -> None:
+    filters = [
+        QueryFilter(
+            column_name="event_id", operator_name=">=", predicate=lambda _: True, argument=2
+        ),
+        QueryFilter(
+            column_name="event_id", operator_name="<=", predicate=lambda _: True, argument=4
+        ),
+    ]
+
+    assert filters_to_mongo_query(filters) == {
+        "event.id": {"$gte": 2},
+        "$and": [{"event.id": {"$lte": 4}}],
+    }
+
+
+def mongo_filter_for(operator_name: OperatorName, argument: str) -> object:
+    query_filter = QueryFilter(
+        column_name="event_text",
+        operator_name=operator_name,
+        predicate=lambda _: True,
+        argument=argument,
+    )
+    return filters_to_mongo_query([query_filter])["event.text"]
+
+
+def mongo_regex_for(operator_name: OperatorName, argument: str) -> re.Pattern[str]:
+    match mongo_filter := mongo_filter_for(operator_name, argument):
+        case {"$regex": re.Pattern() as regex}:
+            return regex
+        case _:
+            raise AssertionError(f"no regex in MongoDB filter {mongo_filter!r}")
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        pytest.param("a.b",   True,  id="same value"),
+        pytest.param("A.B",   True,  id="value differs in case"),
+        pytest.param("axb",   False, id="value matches the argument only as a regex"),
+        pytest.param("xa.bx", False, id="value contains the argument"),
+        pytest.param("a.b\n", False, id="value has a trailing newline"),
+    ],
+)
+# fmt: on
+def test_case_insensitive_equality_filter_matches_only_the_whole_value_ignoring_case(
+    value: str, expected: bool
+) -> None:
+    regex = mongo_regex_for("=~", "a.b")
+
+    assert bool(regex.search(value)) is expected
+
+
+def test_negated_case_insensitive_equality_filter_negates_the_same_regex() -> None:
+    assert mongo_filter_for("!=~", "a.b") == {"$not": mongo_regex_for("=~", "a.b")}
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "operator_name, expected",
+    [
+        pytest.param("!=",  {"$ne": "a.b"},                             id="not equal"),
+        pytest.param("!~",  {"$not": re.compile("a.b")},                id="regex does not match"),
+        pytest.param("!~~", {"$not": re.compile("a.b", re.IGNORECASE)}, id="regex does not match ignoring case"),
+    ],
+)
+# fmt: on
+def test_negated_filter_becomes_negated_mongo_query(
+    operator_name: OperatorName, expected: dict[str, object]
+) -> None:
+    assert mongo_filter_for(operator_name, "a.b") == expected
 
 
 def test_filters_to_mongo_query_Exception() -> None:

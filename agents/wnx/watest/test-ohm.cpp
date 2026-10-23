@@ -26,14 +26,30 @@ void CopyOhmToBin() {
     }
 }
 
-int CalcOhmCount() {
-    int count = 0;
-    wtools::ScanProcessList([&count](const PROCESSENTRY32 &entry) {
+std::vector<DWORD> OhmPids() {
+    std::vector<DWORD> pids;
+    wtools::ScanProcessList([&pids](const PROCESSENTRY32 &entry) {
         if (cma::tools::IsEqual(wtools::ToUtf8(entry.szExeFile),
                                 cma::provider::ohm::kExeModule)) {
-            count++;
+            pids.push_back(entry.th32ProcessID);
         }
         return wtools::ScanAction::advance;
+    });
+    return pids;
+}
+
+constexpr auto kOhmSettleTimeout = std::chrono::seconds{5};
+
+// OHM process starts and kills are asynchronous, so asserting on the
+// process count right after either is a race (the lifecycle tests below
+// flipped between pass, skip and fail: the old "why doesn't this work on
+// CI" TODO). Returns the last count seen, so a failure shows how many OHM
+// processes were running.
+size_t WaitForOhmCount(size_t expected) {
+    size_t count = 0;
+    tst::WaitForSuccessSilent(kOhmSettleTimeout, [expected, &count] {
+        count = OhmPids().size();
+        return count == expected;
     });
     return count;
 }
@@ -45,7 +61,8 @@ bool SkipTest() {
     }
     cma::tools::RunCommandAndWait(L"net.exe", L"stop WinRing0_1_2_0");
     wtools::KillProcess(cma::provider::ohm::kExeModuleWide, 1);
-    if (CalcOhmCount() != 0) {
+    // The previous test's OHM may still be dying.
+    if (WaitForOhmCount(0) != 0) {
         XLOG::l(XLOG::kStdio).w("OHM is already started, TESTING IS SKIPPED");
         return true;
     }
@@ -125,7 +142,6 @@ TEST(SectionProviderOhm, ReadDataComponent) {
     EXPECT_FALSE(oprocess.running());
 }
 
-// TODO(sk,au): Check why the test doesn't work on CI
 TEST(SectionProviderOhm, ErrorReportingComponentExt) {
     if (SkipTest()) {
         GTEST_SKIP();
@@ -143,7 +159,6 @@ TEST(SectionProviderOhm, ErrorReportingComponentExt) {
 }  // namespace cma::provider
 
 namespace cma::srv {
-// TODO(sk,au): Check why the test doesn't work on CI
 TEST(SectionProviderOhm, DoubleStartComponentExt) {
     if (SkipTest()) {
         GTEST_SKIP();
@@ -155,15 +170,17 @@ TEST(SectionProviderOhm, DoubleStartComponentExt) {
 
     auto p = std::make_unique<TheMiniProcess>();
     p->start(ohm_path);
-    EXPECT_EQ(CalcOhmCount(), 1);
+    ASSERT_EQ(WaitForOhmCount(1), 1U);
+    // A second start must neither spawn another OHM nor replace the first:
+    // CreateProcess returns with the new process already listed.
+    const auto pids = OhmPids();
     p->start(ohm_path);
-    EXPECT_EQ(CalcOhmCount(), 1);
+    EXPECT_EQ(OhmPids(), pids);
     p.reset();
 
-    EXPECT_EQ(CalcOhmCount(), 0) << "OHM is not killed";
+    EXPECT_EQ(WaitForOhmCount(0), 0U) << "OHM is not killed";
 }
 
-// TODO(sk,au): Check why the test doesn't work on CI
 TEST(SectionProviderOhm, StartStopComponentExt) {
     if (SkipTest()) {
         GTEST_SKIP();
@@ -183,7 +200,6 @@ TEST(SectionProviderOhm, StartStopComponentExt) {
     EXPECT_EQ(oprocess.processId(), 0);
 }
 
-// TODO(sk,au): Check why the test doesn't work on CI
 TEST(SectionProviderOhm, ConditionallyStartOhmComponentExt) {
     if (SkipTest()) {
         GTEST_SKIP();
@@ -192,16 +208,15 @@ TEST(SectionProviderOhm, ConditionallyStartOhmComponentExt) {
     auto temp_fs = tst::TempCfgFs::Create();
     CopyOhmToBin();
     ServiceProcessor sp;
-    wtools::KillProcess(provider::ohm::kExeModuleWide, 1);
-    ASSERT_EQ(wtools::FindProcess(provider::ohm::kExeModuleWide), 0);
     EXPECT_FALSE(sp.stopRunningOhmProcess());
     EXPECT_FALSE(sp.isOhmStarted());
     EXPECT_TRUE(sp.conditionallyStartOhm());
-    ASSERT_EQ(wtools::FindProcess(provider::ohm::kExeModuleWide), 1);
-    EXPECT_TRUE(sp.conditionallyStartOhm());
-    ASSERT_EQ(wtools::FindProcess(provider::ohm::kExeModuleWide), 1);
+    ASSERT_EQ(WaitForOhmCount(1), 1U);
+    const auto pids = OhmPids();
+    ASSERT_TRUE(sp.conditionallyStartOhm());
+    EXPECT_EQ(OhmPids(), pids);
 
-    EXPECT_TRUE(sp.stopRunningOhmProcess());
-    ASSERT_EQ(wtools::FindProcess(provider::ohm::kExeModuleWide), 0);
+    ASSERT_TRUE(sp.stopRunningOhmProcess());
+    EXPECT_EQ(WaitForOhmCount(0), 0U);
 }
 }  // namespace cma::srv

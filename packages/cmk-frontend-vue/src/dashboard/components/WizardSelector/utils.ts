@@ -6,9 +6,10 @@
 import { type DashboardWidgetWorkflowKey } from '@/dashboard/components/WidgetWorkflow/WidgetWorkflowTypes.ts'
 import type { WidgetContentType } from '@/dashboard/types/widget.ts'
 
+// null: the widget has no editor yet
 export function widgetTypeToSelectorMatcher(
   widgetContentType: WidgetContentType
-): DashboardWidgetWorkflowKey {
+): DashboardWidgetWorkflowKey | null {
   switch (widgetContentType) {
     case 'combined_graph':
     case 'performance_graph':
@@ -22,7 +23,13 @@ export function widgetTypeToSelectorMatcher(
     }
 
     case 'custom_graph': {
-      return 'custom_graphs'
+      return 'link_custom_graph'
+    }
+
+    // edited in the Clone and Create workflows, which are not implemented yet
+    // Clone: CMK-39219; Create: CMK-39220
+    case 'embedded_custom_graph': {
+      return null
     }
 
     case 'linked_view':
@@ -71,11 +78,8 @@ export function widgetTypeToSelectorMatcher(
       return 'ntop'
     }
 
-    case 'network_flow_top_table':
-    case 'network_flow_donut':
-    case 'network_flow_kpi_stat_card':
-    case 'network_flow_trend_chart': {
-      return 'network_flow'
+    case 'monitoring_table': {
+      return null
     }
 
     default: {
@@ -84,4 +88,14 @@ export function widgetTypeToSelectorMatcher(
       )
     }
   }
+}
+
+export function wizardSlideInSize(wizard: string): 'small' | 'medium' | 'large' {
+  if (['other', 'ntop'].includes(wizard)) {
+    return 'small'
+  }
+  if (wizard === 'views') {
+    return 'large'
+  }
+  return 'medium'
 }

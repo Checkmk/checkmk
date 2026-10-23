@@ -8,23 +8,18 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.cisco.lib_ucs import DETECT, MAP_OPERABILITY
 
 
 def parse_cisco_ucs_system(string_table: StringTable) -> StringTable | None:
     return string_table or None
-
-
-def discover_cisco_ucs_system(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_cisco_ucs_system(section: StringTable) -> CheckResult:
@@ -48,6 +43,6 @@ snmp_section_cisco_ucs_system = SimpleSNMPSection(
 check_plugin_cisco_ucs_system = CheckPlugin(
     name="cisco_ucs_system",
     service_name="System health",
-    discovery_function=discover_cisco_ucs_system,
+    discovery_function=discover_one_service,
     check_function=check_cisco_ucs_system,
 )

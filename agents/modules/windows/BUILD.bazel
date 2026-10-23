@@ -1,8 +1,24 @@
 load("@rules_python//python:defs.bzl", "py_binary")
-load("@windows_python_wheels//:requirements.bzl", "REQUIREMENTS")
+load("@rules_uv//uv:pip.bzl", "pip_compile")
+load("@windows_python_wheels//:requirements.bzl", "all_whl_requirements")
 load("//:package_versions.bzl", "PYTHON_VERSION_WINDOWS")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
-load(":python_cab.bzl", "python_cab")
+load("//bazel/rules:requirements.bzl", "compile_requirements_in")
+load(":python_cab.bzl", "py_platform_transition_filegroup", "python_cab", "python_version_major_minor")
+
+exports_files([
+    "constraints-windows.txt",
+    "requirements-windows.in",
+    "requirements-windows.txt",
+])
+
+_PY_WIN_MAJOR_MINOR = python_version_major_minor(PYTHON_VERSION_WINDOWS)
+
+# Linux runtime of the CAB's interpreter line (use_repo'd in
+# //bazel/module:py.MODULE.bazel); uv resolves the lock under it.
+_PY_WIN_RESOLVER_RUNTIME = "@python_{}_x86_64-unknown-linux-gnu//:py3_runtime".format(
+    _PY_WIN_MAJOR_MINOR.replace(".", "_"),
+)
 
 # Pure-Python CAB writer driver, vendored via @cabarchive (LGPL-2.1-or-later).
 # Replaces the historical gcab/makecab.exe dependency.
@@ -26,12 +42,13 @@ py_binary(
 )
 
 # Offline pip driver — runs the sha256-pinned pip wheel from the closure
-# under the repo's hermetic CPython, so the metadata pip writes matches the
-# CAB's Python version instead of the build host's.
+# under the CAB's major.minor CPython, so pip-written metadata (RECORD
+# bytecode tags, versioned script names) matches the CAB's Python.
 py_binary(
     name = "pip_offline",
     srcs = ["pip_offline.py"],
     main = "pip_offline.py",
+    python_version = _PY_WIN_MAJOR_MINOR,
     visibility = ["//visibility:public"],
 )
 
@@ -53,23 +70,37 @@ filegroup(
     srcs = glob(["venv_scripts/*"]),
 )
 
-# Maintainer tool: regenerates windows_python_wheels.lock.json (the sha256-pinned
-# win_amd64 wheel closure) from the Pipfile.  Run via `bazel run` so the resolving
-# pip matches the build's; writes back to the source tree via
-# BUILD_WORKSPACE_DIRECTORY.  See the bump workflow in its module docstring.
-py_binary(
-    name = "refresh_wheel_pins",
-    srcs = ["refresh_wheel_pins.py"],
-    main = "refresh_wheel_pins.py",
+compile_requirements_in(
+    name = "requirements-windows-in",
+    constraints = [":constraints-windows.txt"],
+    requirements = [":requirements-windows.in"],
+)
+
+pip_compile(
+    name = "requirements_windows",
+    extra_args = [
+        # Fail loudly if any (transitive) dep lacks a win_amd64 wheel rather
+        # than silently resolving an sdist the hub cannot build.
+        "--only-binary=:all:",
+    ],
+    py3_runtime = _PY_WIN_RESOLVER_RUNTIME,
+    python_platform = "x86_64-pc-windows-msvc",
+    requirements_in = ":requirements-windows-in",
+    requirements_txt = ":requirements-windows.txt",
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
 # Maintainer tool: recomputes the sha256 hashes for the five python.org
-# per-feature MSIs and prints the http_file(...) blocks for MODULE.bazel.
-# Run after bumping PYTHON_VERSION_WINDOWS in defines.make.
+# per-feature MSIs and prints the _MSI_SHA256 map for
+# //bazel/extensions:python_cab_repositories.bzl.  Run after bumping
+# PYTHON_VERSION_WINDOWS in //:package_versions.bzl -- which it reads through
+# args below, so the hashes cannot be fetched for a different version than the
+# extension requests.
 py_binary(
     name = "refresh_msi_pins",
     srcs = ["refresh_msi_pins.py"],
+    args = ["--python-version=" + PYTHON_VERSION_WINDOWS],
     main = "refresh_msi_pins.py",
     visibility = ["//visibility:public"],
 )
@@ -96,16 +127,13 @@ filegroup(
     output_group = "cabextract",
 )
 
-# Linux-driven build of python-3.cab.  Replaces the historic
-# Windows-only flow under Makefile / build_the_module.cmd.
-#
-# The human source of truth for what the CAB ships is
-# agents/modules/windows/pipfiles/3/Pipfile (+ the pip seed pin in
-# refresh_wheel_pins.py).  REQUIREMENTS is the locked name==version closure
-# generated from windows_python_wheels.lock.json, so the install request and
-# the fetched wheels can never diverge; regenerate the lock with
-# `bazel run //agents/modules/windows:refresh_wheel_pins -- <version>`
-# whenever the Pipfile or python_version below change.
+py_platform_transition_filegroup(
+    name = "wheels",
+    srcs = all_whl_requirements,
+    python_version = PYTHON_VERSION_WINDOWS,
+    target_platform = "//bazel/platforms:x86_64-windows",
+)
+
 python_cab(
     name = "python_3_cab",
     cabextract = ":_cabextract",
@@ -117,10 +145,9 @@ python_cab(
     pip_offline = ":pip_offline",
     postinstall_cmd = "postinstall.cmd",
     python_version = PYTHON_VERSION_WINDOWS,
-    requirements = REQUIREMENTS,
     venv_scripts = [":venv_scripts"],
     visibility = ["//visibility:public"],
-    wheels = ["@windows_python_wheels//:wheels"],
+    wheels = [":wheels"],
 )
 
 py_cmk_test(

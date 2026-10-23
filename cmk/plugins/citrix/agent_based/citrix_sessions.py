@@ -19,20 +19,15 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def parse_citrix_sessions(string_table: StringTable) -> StringTable:
     return string_table
-
-
-def discover_citrix_sessions(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_citrix_sessions(params: Mapping[str, Any], section: StringTable) -> CheckResult:
@@ -72,7 +67,7 @@ agent_section_citrix_sessions = AgentSection(
 check_plugin_citrix_sessions = CheckPlugin(
     name="citrix_sessions",
     service_name="Citrix Sessions",
-    discovery_function=discover_citrix_sessions,
+    discovery_function=discover_one_service,
     check_function=check_citrix_sessions,
     check_ruleset_name="citrix_sessions",
     check_default_parameters={

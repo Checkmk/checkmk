@@ -14,7 +14,7 @@ describe('formatOverviewExtent', () => {
 
     const label = formatOverviewExtent(domain, 'UTC')
 
-    expect(label).toBe('2023-11-14 — 2023-11-19')
+    expect(label).toBe('2023-11-14 — 2023-11-19 | 22:13–22:13')
   })
 
   test('a same-day extent shows the date once with a start–end time range', () => {
@@ -23,6 +23,6 @@ describe('formatOverviewExtent', () => {
 
     const label = formatOverviewExtent(domain, 'UTC')
 
-    expect(label).toBe('2023-11-14 22:13–23:13')
+    expect(label).toBe('2023-11-14 | 22:13–23:13')
   })
 })

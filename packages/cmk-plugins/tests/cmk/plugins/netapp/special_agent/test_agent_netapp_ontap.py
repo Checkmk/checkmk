@@ -10,6 +10,7 @@
 import argparse
 import logging
 from collections.abc import Iterator
+from http import HTTPStatus
 from typing import override
 from unittest.mock import MagicMock, patch
 
@@ -22,6 +23,7 @@ from cmk.plugins.netapp.special_agent.agent_netapp_ontap import (
     agent_netapp_main,
     fetch_aggr,
     fetch_interfaces,
+    fetch_nodes,
     get_nodes,
     parse_arguments,
 )
@@ -38,7 +40,7 @@ class _AuthError(NetAppRestError):
     @property
     @override
     def status_code(self) -> int:
-        return 401
+        return HTTPStatus.UNAUTHORIZED
 
 
 class _ServerError(NetAppRestError):
@@ -50,7 +52,7 @@ class _ServerError(NetAppRestError):
     @property
     @override
     def status_code(self) -> int:
-        return 503
+        return HTTPStatus.SERVICE_UNAVAILABLE
 
 
 def test_agent_exits_1_when_connection_returns_401(capsys: pytest.CaptureFixture[str]) -> None:
@@ -376,3 +378,41 @@ def test_fetch_interfaces_continues_when_ha_partner_query_fails(
     assert len(caplog.records) == 1
     assert caplog.records[0].levelno == logging.ERROR
     assert caplog.records[0].exc_info is not None
+
+
+def _full_node_element(name: str, metric: dict[str, object] | None) -> MagicMock:
+    """Fake netapp_ontap Node resource as returned by the node section query."""
+    element = MagicMock()
+    element.to_dict.return_value = {
+        "name": name,
+        "uuid": f"uuid-{name}",
+        "version": {"full": "NetApp Release 9.17.1", "generation": 9, "major": 17, "minor": 1},
+        "nvram": {"battery_state": "battery_ok"},
+        "model": "FAS2820",
+        "serial_number": "123",
+        "system_id": "456",
+        **({"metric": metric} if metric is not None else {}),
+    }
+    return element
+
+
+def test_fetch_nodes_reports_node_without_metric() -> None:
+    """ONTAP may leave out the "metric" object of a node; the node is still reported."""
+    with patch.object(
+        NetAppResource.Node,  # type: ignore[attr-defined]
+        "get_collection",
+        return_value=iter(
+            [
+                _full_node_element(
+                    "node1",
+                    {"processor_utilization": 1, "timestamp": "2026-09-25T08:12:45Z"},
+                ),
+                _full_node_element("node2", None),
+            ]
+        ),
+    ):
+        nodes = {node.name: node for node in fetch_nodes(MagicMock())}
+
+    assert nodes["node1"].processor_utilization == 1
+    assert nodes["node2"].processor_utilization is None
+    assert nodes["node2"].processor_utilization_timestamp is None

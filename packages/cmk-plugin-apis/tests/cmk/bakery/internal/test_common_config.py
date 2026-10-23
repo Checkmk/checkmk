@@ -14,10 +14,30 @@ from cmk.bakery.internal import (
     AgentConfig,
     DeploymentModeProvider,
     get_unix_agent_paths_keeper,
+    is_agent_controller_deployed,
     LogicalPath,
     TargetPathsProvider,
     UnixSingleDirectoryKeeper,
 )
+
+
+@pytest.mark.parametrize("deployment_mode", ["auto", "systemd"])
+def test_agent_controller_is_deployed_with_systemd(deployment_mode: str) -> None:
+    assert is_agent_controller_deployed({"super_server": {"deployment_mode": deployment_mode}})
+
+
+@pytest.mark.parametrize("deployment_mode", ["xinetd", "no_service"])
+def test_agent_controller_is_not_deployed_without_systemd(deployment_mode: str) -> None:
+    assert not is_agent_controller_deployed({"super_server": {"deployment_mode": deployment_mode}})
+
+
+def test_agent_controller_is_not_deployed_when_disabled() -> None:
+    assert not is_agent_controller_deployed(
+        {
+            "super_server": {"deployment_mode": "auto"},
+            "agent_controller": {"agent_ctl_enabled": ("disabled", None)},
+        }
+    )
 
 
 def test_get_unix_agent_paths_keeper_multi_directory() -> None:

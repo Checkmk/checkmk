@@ -11,11 +11,12 @@ py_library(
     ],
     deps = [
         "//cmk/gui:core_toolkit",
+        "//cmk/gui/experimental_flags",
         "//cmk/gui/inventory",
         "//cmk/gui/valuespec",
         "//cmk/gui/wato:base",
         "//cmk/gui/watolib",
-        "//packages/cmk-plugins:aws",
+        "//packages/cmk-plugins:aws_deprecated",
         "//packages/cmk-web/cmk/web/utils",
     ],
 )

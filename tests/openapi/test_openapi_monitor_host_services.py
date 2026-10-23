@@ -5,6 +5,7 @@
 
 import time
 from collections.abc import Iterator
+from http import HTTPStatus
 
 import pytest
 import time_machine
@@ -14,7 +15,8 @@ from cmk.graphing.v1 import perfometers
 from cmk.gui.graphing import perfometers_from_api
 from cmk.gui.monitor.services._api._list_host_services import _MAX_HOST_SVC_LIMIT
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 @pytest.fixture(name="registered_perfometer")
@@ -41,7 +43,7 @@ class TestMonitorHostServicesAuth:
             hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, expect_ok=False
         )
 
-        assert resp.status_code == 401
+        assert resp.status_code == HTTPStatus.UNAUTHORIZED
         assert "credentials" in resp.json["detail"]
 
     def test_normal_user_is_permitted(
@@ -70,7 +72,7 @@ class TestMonitorHostServicesAuth:
                 hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, expect_ok=False
             )
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 class TestMonitorHostServicesQueryParamValidation:
@@ -78,7 +80,7 @@ class TestMonitorHostServicesQueryParamValidation:
         resp = clients.MonitorHosts.list_host_services(
             hostname=_HOSTNAME, site_id="no-such-site", limit=_LIMIT, expect_ok=False
         )
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     @pytest.mark.parametrize(
         "sort",
@@ -94,7 +96,7 @@ class TestMonitorHostServicesQueryParamValidation:
         resp = clients.MonitorHosts.list_host_services(
             hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, sort=sort, expect_ok=False
         )
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     @pytest.mark.parametrize(
         "filters",
@@ -116,7 +118,7 @@ class TestMonitorHostServicesQueryParamValidation:
                 {
                     "type": "condition",
                     "field": "labels",
-                    "op": "one_of",
+                    "op": "all_of",
                     "value": ["key:val\nue"],
                 },
                 id="newline in label choice value",
@@ -140,7 +142,7 @@ class TestMonitorHostServicesQueryParamValidation:
         resp = clients.MonitorHosts.list_host_services(
             hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, filters=filters, expect_ok=False
         )
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 class TestMonitorHostServicesFilters:
@@ -161,6 +163,9 @@ class TestMonitorHostServicesFilters:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 1,
                     "has_been_checked": 1,
@@ -253,6 +258,12 @@ class TestMonitorHostServicesFilters:
                 "summary": "WARN - load average: 3.10, 2.05, 1.01",
                 "last_check": 1783942740,
                 "last_state_change": 1783942740,
+                "reschedule": {
+                    "label": "Reschedule 'Check_MK' service",
+                    "tooltip": "Reschedule 'Check_MK' service",
+                    "icon_name": "reload-cmk",
+                    "target": "Check_MK",
+                },
             }
         ]
 
@@ -273,6 +284,9 @@ class TestMonitorHostServicesFilters:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 1,
                     "has_been_checked": 1,
@@ -362,6 +376,12 @@ class TestMonitorHostServicesFilters:
                 "summary": "WARN - load average: 3.10, 2.05, 1.01",
                 "last_check": 1783942740,
                 "last_state_change": 1783942740,
+                "reschedule": {
+                    "label": "Reschedule 'Check_MK' service",
+                    "tooltip": "Reschedule 'Check_MK' service",
+                    "icon_name": "reload-cmk",
+                    "target": "Check_MK",
+                },
             }
         ]
 
@@ -388,7 +408,7 @@ class TestMonitorHostServices:
                 hostname="no-such-host", site_id=_SITE_ID, limit=_LIMIT, expect_ok=False
             )
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
 
     @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
     def test_services(
@@ -407,6 +427,9 @@ class TestMonitorHostServices:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 1,
@@ -472,6 +495,12 @@ class TestMonitorHostServices:
                     "summary": "OK - load average: 0.10, 0.05, 0.01",
                     "last_check": 1783942710,
                     "last_state_change": 1783942740,
+                    "reschedule": {
+                        "label": "Reschedule 'Check_MK' service",
+                        "tooltip": "Reschedule 'Check_MK' service",
+                        "icon_name": "reload-cmk",
+                        "target": "Check_MK",
+                    },
                 }
             ],
             "meta": {
@@ -515,6 +544,9 @@ class TestMonitorHostServices:
                     "last_state_change": time.time(),
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "labels": {"cmk/check_plugin": "cpu_load", "owner": "platform"},
                     "label_sources": {"cmk/check_plugin": "discovered", "owner": "explicit"},
                     "tags": {},
@@ -565,6 +597,9 @@ class TestMonitorHostServices:
                     "last_state_change": time.time(),
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "labels": {},
                     "label_sources": {},
                     "tags": {"criticality": "prod", "networking": "lan"},
@@ -615,6 +650,9 @@ class TestMonitorHostServices:
                     "last_state_change": time.time(),
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "labels": {"cmk/check_plugin": "cpu_load"},
                     "label_sources": {"cmk/check_plugin": "discovered"},
                     "tags": {"criticality": "prod"},
@@ -662,6 +700,9 @@ class TestMonitorHostServices:
                     "last_state_change": time.time(),
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "labels": {"cmk/check_plugin": "cpu_load"},
                     "label_sources": {"cmk/check_plugin": "discovered"},
                     "tags": {"criticality": "prod"},
@@ -709,6 +750,9 @@ class TestMonitorHostServices:
                     "last_state_change": time.time(),
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "labels": {},
                     "label_sources": {},
                     "tags": {},
@@ -757,6 +801,9 @@ class TestMonitorHostServices:
                     "last_state_change": time.time(),
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "labels": {},
                     "label_sources": {},
                     "tags": {},
@@ -805,6 +852,9 @@ class TestMonitorHostServices:
                     "last_state_change": time.time(),
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "labels": {},
                     "label_sources": {},
                     "tags": {},
@@ -854,6 +904,9 @@ class TestMonitorHostServices:
                     "last_state_change": time.time(),
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "labels": {},
                     "label_sources": {},
                     "tags": {},
@@ -907,6 +960,9 @@ class TestMonitorHostServices:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                 }
             ],
         )
@@ -918,10 +974,8 @@ class TestMonitorHostServices:
             )
 
         assert resp.json["services"][0]["perfometer"] == {
-            "value": 42.0,
-            "value_range": {"min": 0.0, "max": 100.0},
+            "bars": [[{"share": 42.0, "color": "#8c8c8c"}, {"share": 58.0, "color": None}]],
             "formatted": "42",
-            "color": "#8c8c8c",
         }
 
     def test_service_without_performance_data_has_no_perfometer(
@@ -959,6 +1013,9 @@ class TestMonitorHostServices:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                 }
             ],
         )
@@ -1007,6 +1064,9 @@ class TestMonitorHostServices:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                 }
             ],
         )
@@ -1035,6 +1095,9 @@ class TestMonitorHostServices:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 0,
@@ -1172,6 +1235,9 @@ class TestMonitorHostServices:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 1,
@@ -1251,6 +1317,9 @@ class TestMonitorHostServicessLimitPermissions:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 1,
@@ -1330,6 +1399,9 @@ class TestMonitorHostServicessLimitPermissions:
                     "label_sources": {},
                     "tags": {},
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 1,
@@ -1402,6 +1474,9 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 1,
                     "has_been_checked": 1,
@@ -1519,6 +1594,9 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 2,
                     "has_been_checked": 1,
@@ -1574,6 +1652,128 @@ class TestMonitorServiceOverview:
 
         assert [mode["icon_name"] for mode in resp.json["modes"]] == expected_icons
 
+    @staticmethod
+    def _get_overview_link(
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        field: str = "legacy_service_parameters_link",
+        service_name: str | None = None,
+    ) -> str | None:
+        service_name = service_name or _SERVICE_DESCRIPTION
+        mock_livestatus.add_table(
+            "services", [{**_OVERVIEW_SERVICE_ROW, "description": service_name}]
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Columns: {_SERVICE_OVERVIEW_COLUMNS}",
+                f"Filter: host_name = {_HOSTNAME}",
+                f"Filter: description = {service_name}",
+                "And: 2",
+            ],
+            sites=[_SITE_ID],
+        )
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.get_service_overview(
+                hostname=_HOSTNAME, site_id=_SITE_ID, service_name=service_name
+            )
+        link: str | None = resp.json[field]
+        return link
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_links_parameters_of_a_host_setup_grants(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        assert self._get_overview_link(clients, mock_livestatus) == (
+            f"wato.py?mode=object_parameters&host={_HOSTNAME}&service=CPU+load"
+        )
+
+    def test_no_parameters_link_for_a_host_setup_does_not_grant(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        assert self._get_overview_link(clients, mock_livestatus) is None
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_no_parameters_link_while_setup_is_disabled(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        set_config: SetConfig,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        with set_config(wato_enabled=False):
+            assert self._get_overview_link(clients, mock_livestatus) is None
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_links_discovery_of_a_host_setup_grants(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        assert self._get_overview_link(
+            clients,
+            mock_livestatus,
+            field="legacy_service_discovery_link",
+            service_name="Check_MK Discovery",
+        ) == (f"wato.py?mode=inventory&host={_HOSTNAME}")
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_no_discovery_link_for_other_services(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        assert (
+            self._get_overview_link(clients, mock_livestatus, field="legacy_service_discovery_link")
+            is None
+        )
+
+    def test_no_discovery_link_for_a_host_setup_does_not_grant(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        assert (
+            self._get_overview_link(
+                clients,
+                mock_livestatus,
+                field="legacy_service_discovery_link",
+                service_name="Check_MK Discovery",
+            )
+            is None
+        )
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_no_discovery_link_while_setup_is_disabled(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        set_config: SetConfig,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        with set_config(wato_enabled=False):
+            assert (
+                self._get_overview_link(
+                    clients,
+                    mock_livestatus,
+                    field="legacy_service_discovery_link",
+                    service_name="Check_MK Discovery",
+                )
+                is None
+            )
+
     @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
     def test_passive_service_has_no_next_check(
         self,
@@ -1587,6 +1787,9 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 1,
@@ -1654,6 +1857,9 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 0,
@@ -1722,6 +1928,9 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
                     "host_name": _HOSTNAME,
                     "state": 1,
                     "has_been_checked": 1,
@@ -1801,7 +2010,7 @@ class TestMonitorServiceOverview:
                 expect_ok=False,
             )
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
 
     def test_unknown_site_is_rejected(self, clients: ClientRegistry) -> None:
         resp = clients.MonitorHosts.get_service_overview(
@@ -1810,7 +2019,7 @@ class TestMonitorServiceOverview:
             service_name=_SERVICE_DESCRIPTION,
             expect_ok=False,
         )
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     def test_invalid_credentials(self, clients: ClientRegistry) -> None:
         client = clients.MonitorHosts
@@ -1823,7 +2032,7 @@ class TestMonitorServiceOverview:
             expect_ok=False,
         )
 
-        assert resp.status_code == 401
+        assert resp.status_code == HTTPStatus.UNAUTHORIZED
         assert "credentials" in resp.json["detail"]
 
 
@@ -1897,7 +2106,7 @@ class TestMonitorHostServicesReschedule:
             expect_ok=False,
         )
 
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     def test_invalid_credentials(self, clients: ClientRegistry) -> None:
         client = clients.MonitorHosts
@@ -1908,7 +2117,7 @@ class TestMonitorHostServicesReschedule:
             expect_ok=False,
         )
 
-        assert resp.status_code == 401
+        assert resp.status_code == HTTPStatus.UNAUTHORIZED
         assert "credentials" in resp.json["detail"]
 
 
@@ -1921,7 +2130,7 @@ class TestMonitorServiceActionMenu:
             expect_ok=False,
         )
 
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     def test_missing_service_returns_404(
         self,
@@ -1947,7 +2156,64 @@ class TestMonitorServiceActionMenu:
                 expect_ok=False,
             )
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
+
+    def test_existing_service_lists_its_actions(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("services", [_ACTION_MENU_SERVICE_ROW])
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Filter: host_name = {_HOSTNAME}",
+                f"Filter: service_description = {_SERVICE_DESCRIPTION}",
+            ],
+            match_type="loose",
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.service_action_menu(
+                hostname=_HOSTNAME,
+                site_id=_SITE_ID,
+                service_name=_SERVICE_DESCRIPTION,
+                expect_ok=False,
+            )
+
+        assert resp.status_code == HTTPStatus.OK
+        assert resp.json["items"]
+
+    def test_normal_user_sees_the_actions_of_an_existing_service(
+        self,
+        clients: ClientRegistry,
+        with_user: tuple[UserId, str],
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        client = clients.MonitorHosts
+        client.set_credentials(*with_user)
+        mock_livestatus.add_table("services", [_ACTION_MENU_SERVICE_ROW])
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Filter: host_name = {_HOSTNAME}",
+                f"Filter: service_description = {_SERVICE_DESCRIPTION}",
+            ],
+            match_type="loose",
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = client.service_action_menu(
+                hostname=_HOSTNAME,
+                site_id=_SITE_ID,
+                service_name=_SERVICE_DESCRIPTION,
+                expect_ok=False,
+            )
+
+        assert resp.status_code == HTTPStatus.OK
+        assert resp.json["items"]
 
     def test_invalid_credentials(self, clients: ClientRegistry) -> None:
         client = clients.MonitorHosts
@@ -1960,14 +2226,77 @@ class TestMonitorServiceActionMenu:
             expect_ok=False,
         )
 
-        assert resp.status_code == 401
+        assert resp.status_code == HTTPStatus.UNAUTHORIZED
         assert "credentials" in resp.json["detail"]
 
 
 _SITE_ID = "NO_SITE"
 _HOSTNAME = "heute"
 _SERVICE_DESCRIPTION = "CPU load"
+_ACTION_MENU_SERVICE_ROW = {
+    "host_name": _HOSTNAME,
+    "host_address": "127.0.0.1",
+    "host_filename": "/wato/hosts.mk",
+    "host_check_type": 0,
+    "host_check_command": "check-mk-host-smart",
+    "host_custom_variable_names": [],
+    "host_custom_variable_values": [],
+    "service_host_name": _HOSTNAME,
+    "service_description": _SERVICE_DESCRIPTION,
+    "service_service_description": _SERVICE_DESCRIPTION,
+    "service_check_type": 0,
+    "service_check_command": "check_mk-cpu_loads",
+    "service_active_checks_enabled": 1,
+    "service_pnpgraph_present": 0,
+    "service_action_url_expanded": "",
+    "service_notes_url_expanded": "",
+    "service_custom_variable_names": [],
+    "service_custom_variable_values": [],
+    "service_cached_at": 0,
+    "service_cache_interval": 0,
+}
 _HOST_ALIAS = "Web Server"
+_OVERVIEW_SERVICE_ROW = {
+    "description": _SERVICE_DESCRIPTION,
+    "perf_data": "",
+    "check_command": "check_mk-test",
+    "check_type": 0,
+    "cached_at": 0,
+    "cache_interval": 0,
+    "host_name": _HOSTNAME,
+    "state": 0,
+    "has_been_checked": 1,
+    "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
+    "last_check": 0,
+    "last_state_change": 0,
+    "acknowledged": 0,
+    "scheduled_downtime_depth": 0,
+    "notifications_enabled": 1,
+    "comments": [],
+    "modified_attributes_list": [],
+    "active_checks_enabled": 1,
+    "accept_passive_checks": 1,
+    "in_notification_period": 1,
+    "in_service_period": 1,
+    "in_check_period": 1,
+    "in_passive_check_period": 1,
+    "is_flapping": 0,
+    "staleness": 0.0,
+    "host_alias": _HOST_ALIAS,
+    "host_state": 0,
+    "host_has_been_checked": 1,
+    "host_acknowledged": 0,
+    "host_scheduled_downtime_depth": 0,
+    "contact_groups": ["all"],
+    "long_plugin_output": "",
+    "current_attempt": 1,
+    "max_check_attempts": 1,
+    "next_check": 0,
+    "contacts": [],
+    "labels": {},
+    "label_sources": {},
+    "tags": {},
+}
 _SERVICE_OVERVIEW_COLUMNS = (
     "description host_name state has_been_checked plugin_output last_check last_state_change "
     "acknowledged "
@@ -1975,14 +2304,14 @@ _SERVICE_OVERVIEW_COLUMNS = (
     "host_has_been_checked host_acknowledged host_scheduled_downtime_depth contact_groups "
     "long_plugin_output "
     "current_attempt max_check_attempts next_check tags labels label_sources perf_data "
-    "check_command"
+    "check_command check_type cached_at cache_interval"
 )
 _LIMIT = 1000
 _SERVICES_COLUMNS = (
     "description host_name state has_been_checked plugin_output acknowledged "
     "scheduled_downtime_depth "
     "notifications_enabled comments modified_attributes_list active_checks_enabled accept_passive_checks in_notification_period in_service_period in_check_period in_passive_check_period is_flapping staleness last_check last_state_change perf_data "
-    "check_command"
+    "check_command check_type cached_at cache_interval"
 )
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"
 

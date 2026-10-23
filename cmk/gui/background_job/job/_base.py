@@ -10,6 +10,7 @@ import logging
 import os
 import shutil
 import time
+from collections.abc import Callable, Iterator
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import MKGeneralException
@@ -24,13 +25,31 @@ from cmk.trace import get_tracer, SpanContext, Status, StatusCode
 from cmk.web.utils.urls import makeuri_contextless
 
 from ._defines import BackgroundJobDefines
-from ._executor import AlreadyRunningError, JobExecutor, ThreadedJobExecutor
+from ._executor import AlreadyRunningError, JobExecutor
 from ._interface import JobTarget, SpanContextModel
 from ._job_scheduler_executor import JobSchedulerExecutor
 from ._status import BackgroundStatusSnapshot, InitialStatusArgs, JobStatusSpec, JobStatusStates
 from ._store import JobStatusStore
 
 tracer = get_tracer()
+
+# Deliberately a plain global, not a ContextVar: threading.Thread does not copy the context,
+# so jobs created from within a threaded job would silently fall back to the default.
+_default_executor: Callable[[logging.Logger], JobExecutor] = JobSchedulerExecutor
+
+
+@contextlib.contextmanager
+def override_default_executor(factory: Callable[[logging.Logger], JobExecutor]) -> Iterator[None]:
+    """Temporarily execute jobs created without an explicit executor with `factory`.
+
+    Restores the previous default on exit. Not safe for concurrent use; intended for tests.
+    """
+    global _default_executor
+    previous, _default_executor = _default_executor, factory
+    try:
+        yield
+    finally:
+        _default_executor = previous
 
 
 class BackgroundJob:
@@ -69,15 +88,7 @@ class BackgroundJob:
         self._work_dir = os.path.join(self._job_base_dir, self._job_id)
         self._jobstatus_store = JobStatusStore(self._work_dir)
 
-        self._executor: JobExecutor = (
-            executor
-            if executor
-            else (
-                ThreadedJobExecutor(self._logger)
-                if os.environ.get("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER") == "1"
-                else JobSchedulerExecutor(self._logger)
-            )
-        )
+        self._executor: JobExecutor = executor if executor else _default_executor(self._logger)
 
     @staticmethod
     def validate_job_id(job_id: str) -> None:

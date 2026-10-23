@@ -6,34 +6,24 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormAutocompleter from 'cmk-ui-library/components/FormAutocompleter/FormAutocompleter.vue'
+import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { LabelValueItem } from '@/dashboard/components/Wizard/types'
 
-import { type HostServiceContext } from './types'
 import { useLabelValueAutocomplete } from './useLabelValueAutocomplete'
 
 const { _t } = usei18n()
 
 interface CmkAutocompleteServiceProps {
-  hostName?: string | null
-  serviceDescription?: string | null
+  context: ConfiguredFilters
 }
 
 const props = defineProps<CmkAutocompleteServiceProps>()
 const serviceMetrics = defineModel<LabelValueItem | null>('serviceMetrics', { required: true })
 
 const metricNameAutocompleter = computed(() => {
-  const context: HostServiceContext = {}
-  if (props.hostName) {
-    context.host = { host: props.hostName }
-  }
-
-  if (props.serviceDescription) {
-    context.service = { service: props.serviceDescription }
-  }
-
   const autocompleter: Autocompleter = {
     fetch_method: 'rest_autocomplete',
     data: {
@@ -42,7 +32,7 @@ const metricNameAutocompleter = computed(() => {
         show_independent_of_context: true,
         escape_regex: false,
         strict: true,
-        context
+        context: props.context
       }
     }
   }

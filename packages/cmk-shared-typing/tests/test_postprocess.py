@@ -14,59 +14,22 @@ from utils.postprocess import postprocess
         pytest.param(
             """
                 class Foo(Enum):
-                    count = "count"
-                    foo = "bar"
-            """,
-            """
-                class Foo(str, Enum):
-                    count = "count"  # type: ignore[assignment]
-                    foo = "bar"
-            """,
-            id="enum-with-shadowing-member",
-        ),
-        pytest.param(
-            """
-                class Foo(StrEnum):
-                    count = "count"
-                    foo = "bar"
-            """,
-            """
-                class Foo(StrEnum):
-                    count = "count"  # type: ignore[assignment]
-                    foo = "bar"
-            """,
-            id="strenum-with-shadowing-member",
-        ),
-        pytest.param(
-            """
-                class Foo(str, Enum, metaclass=EnumMeta):
-                    count = "count"
-            """,
-            """
-                class Foo(str, Enum, metaclass=EnumMeta):
-                    count = "count"  # type: ignore[assignment]
-            """,
-            id="metaclass-keyword-does-not-hide-str-enum",
-        ),
-        pytest.param(
-            """
-                class Foo(Enum):
                     foo = "bar"
             """,
             """
                 class Foo(str, Enum):
                     foo = "bar"
             """,
-            id="no-shadowing-member",
+            id="enum-becomes-str-enum",
         ),
         pytest.param(
             """
                 class Foo(IntEnum):
-                    count = 1
+                    foo = 1
             """,
             """
                 class Foo(IntEnum):
-                    count = 1
+                    foo = 1
             """,
             id="non-str-enum-untouched",
         ),

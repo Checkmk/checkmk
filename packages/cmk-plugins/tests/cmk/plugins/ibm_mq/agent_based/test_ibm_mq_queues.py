@@ -8,13 +8,16 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
+from cmk.agent_based.v2 import IgnoreResultsError, Metric, NoLevelsT, Result, Service, State
 from cmk.plugins.ibm_mq.agent_based.ibm_mq_queues import (
-    _QueueParams,
     check_ibm_mq_queues,
+    DEFAULT_PARAMETERS,
     discover_ibm_mq_queues,
     parse_ibm_mq_queues,
+    QueueParams,
 )
+
+_NO_LEVELS: NoLevelsT = ("no_levels", None)
 
 pytestmark = pytest.mark.checks
 
@@ -92,7 +95,11 @@ def test_discovery_qmgr_not_included() -> None:
 
 
 def test_check() -> None:
-    params: _QueueParams = {"curdepth": (1500, 2000), "ipprocs": {"upper": (4, 8)}}
+    params: QueueParams = {
+        **DEFAULT_PARAMETERS,
+        "curdepth": ("fixed", (1500, 2000)),
+        "ipprocs": {"lower": _NO_LEVELS, "upper": ("fixed", (4, 8))},
+    }
     parsed: dict[str, dict[str, str]] = {
         "QM1": {"STATUS": "RUNNING"},
         "QM1:MY.QUEUE": {
@@ -122,14 +129,14 @@ def test_check() -> None:
 
 
 def test_stale_service_for_not_running_qmgr() -> None:
-    params: _QueueParams = {}
+    params = DEFAULT_PARAMETERS
     parsed: dict[str, dict[str, str]] = {"QM1": {"STATUS": "ENDED NORMALLY"}}
     with pytest.raises(IgnoreResultsError, match=r"Stale because queue manager ENDED NORMALLY"):
         list(check_ibm_mq_queues("QM1:MY.QUEUE", params, parsed))
 
 
 def test_vanished_service_for_running_qmgr() -> None:
-    params: _QueueParams = {}
+    params = DEFAULT_PARAMETERS
     parsed: dict[str, dict[str, str]] = {
         "QM1": {"STATUS": "RUNNING"},
         "QM1:QUEUE1": {"CURDEPTH": "0"},
@@ -142,7 +149,7 @@ def test_vanished_service_for_running_qmgr() -> None:
 # CURDEPTH, MAXDEPTH
 #
 def test_depth_no_params() -> None:
-    params: _QueueParams = {}
+    params = DEFAULT_PARAMETERS
     curdepth, maxdepth = 0, 5000
     expected: list[Result | Metric] = [
         Result(state=State.OK, summary="Queue depth: 0"),
@@ -152,7 +159,7 @@ def test_depth_no_params() -> None:
 
 
 def test_depth_with_percentage() -> None:
-    params: _QueueParams = {}
+    params = DEFAULT_PARAMETERS
     curdepth, maxdepth = 50, 5000
     expected: list[Result | Metric] = [
         Result(state=State.OK, summary="Queue depth: 50"),
@@ -162,7 +169,7 @@ def test_depth_with_percentage() -> None:
 
 
 def test_depth_no_max_depth() -> None:
-    params: _QueueParams = {}
+    params = DEFAULT_PARAMETERS
     curdepth, maxdepth = 50, None
     expected: list[Result | Metric] = [
         Result(state=State.OK, summary="Queue depth: 50"),
@@ -172,7 +179,7 @@ def test_depth_no_max_depth() -> None:
 
 
 def test_depth_param_ok() -> None:
-    params: _QueueParams = {"curdepth": (100, 500)}
+    params: QueueParams = {**DEFAULT_PARAMETERS, "curdepth": ("fixed", (100, 500))}
     curdepth, maxdepth = 50, 5000
     expected: list[Result | Metric] = [
         Result(state=State.OK, summary="Queue depth: 50"),
@@ -182,7 +189,7 @@ def test_depth_param_ok() -> None:
 
 
 def test_depth_param_warn() -> None:
-    params: _QueueParams = {"curdepth": (100, 500)}
+    params: QueueParams = {**DEFAULT_PARAMETERS, "curdepth": ("fixed", (100, 500))}
     curdepth, maxdepth = 100, 5000
     expected: list[Result | Metric] = [
         Result(state=State.WARN, summary="Queue depth: 100 (warn/crit at 100/500)"),
@@ -192,7 +199,7 @@ def test_depth_param_warn() -> None:
 
 
 def test_depth_param_crit() -> None:
-    params: _QueueParams = {"curdepth": (100, 500)}
+    params: QueueParams = {**DEFAULT_PARAMETERS, "curdepth": ("fixed", (100, 500))}
     curdepth, maxdepth = 500, 5000
     expected: list[Result | Metric] = [
         Result(state=State.CRIT, summary="Queue depth: 500 (warn/crit at 100/500)"),
@@ -202,7 +209,7 @@ def test_depth_param_crit() -> None:
 
 
 def test_depth_param_percentage_ok() -> None:
-    params: _QueueParams = {"curdepth_perc": (80.0, 90.0)}
+    params: QueueParams = {**DEFAULT_PARAMETERS, "curdepth_perc": ("fixed", (80.0, 90.0))}
     curdepth, maxdepth = 50, 5000
     expected: list[Result | Metric] = [
         Result(state=State.OK, summary="Queue depth: 50"),
@@ -212,7 +219,7 @@ def test_depth_param_percentage_ok() -> None:
 
 
 def test_depth_param_percentage_warn() -> None:
-    params: _QueueParams = {"curdepth_perc": (80.0, 90.0)}
+    params: QueueParams = {**DEFAULT_PARAMETERS, "curdepth_perc": ("fixed", (80.0, 90.0))}
     curdepth, maxdepth = 4000, 5000
     expected: list[Result | Metric] = [
         Result(state=State.OK, summary="Queue depth: 4000"),
@@ -222,7 +229,7 @@ def test_depth_param_percentage_warn() -> None:
 
 
 def test_depth_param_percentage_error() -> None:
-    params: _QueueParams = {"curdepth_perc": (80.0, 90.0)}
+    params: QueueParams = {**DEFAULT_PARAMETERS, "curdepth_perc": ("fixed", (80.0, 90.0))}
     curdepth, maxdepth = 4900, 5000
     expected: list[Result | Metric] = [
         Result(state=State.OK, summary="Queue depth: 4900"),
@@ -232,7 +239,7 @@ def test_depth_param_percentage_error() -> None:
 
 
 def test_depth_param_percentage_ignored_in_wato() -> None:
-    params: _QueueParams = {"curdepth_perc": (None, None)}
+    params: QueueParams = {**DEFAULT_PARAMETERS, "curdepth_perc": _NO_LEVELS}
     curdepth, maxdepth = 4900, 5000
     expected: list[Result | Metric] = [
         Result(state=State.OK, summary="Queue depth: 4900"),
@@ -242,7 +249,11 @@ def test_depth_param_percentage_ignored_in_wato() -> None:
 
 
 def test_depth_param_both_ok() -> None:
-    params: _QueueParams = {"curdepth": (100, 500), "curdepth_perc": (80.0, 90.0)}
+    params: QueueParams = {
+        **DEFAULT_PARAMETERS,
+        "curdepth": ("fixed", (100, 500)),
+        "curdepth_perc": ("fixed", (80.0, 90.0)),
+    }
     curdepth, maxdepth = 50, 5000
     expected: list[Result | Metric] = [
         Result(state=State.OK, summary="Queue depth: 50"),
@@ -252,7 +263,11 @@ def test_depth_param_both_ok() -> None:
 
 
 def test_depth_param_one_of_them_warn() -> None:
-    params: _QueueParams = {"curdepth": (100, 500), "curdepth_perc": (80.0, 90.0)}
+    params: QueueParams = {
+        **DEFAULT_PARAMETERS,
+        "curdepth": ("fixed", (100, 500)),
+        "curdepth_perc": ("fixed", (80.0, 90.0)),
+    }
     curdepth, maxdepth = 100, 5000
     expected: list[Result | Metric] = [
         Result(state=State.WARN, summary="Queue depth: 100 (warn/crit at 100/500)"),
@@ -262,7 +277,11 @@ def test_depth_param_one_of_them_warn() -> None:
 
 
 def test_depth_param_one_warn_one_crit() -> None:
-    params: _QueueParams = {"curdepth": (100, 4950), "curdepth_perc": (80.0, 90.0)}
+    params: QueueParams = {
+        **DEFAULT_PARAMETERS,
+        "curdepth": ("fixed", (100, 4950)),
+        "curdepth_perc": ("fixed", (80.0, 90.0)),
+    }
     curdepth, maxdepth = 4900, 5000
     expected: list[Result | Metric] = [
         Result(state=State.WARN, summary="Queue depth: 4900 (warn/crit at 100/4950)"),
@@ -274,7 +293,7 @@ def test_depth_param_one_warn_one_crit() -> None:
 def assert_depth(
     curdepth: int,
     maxdepth: int | None,
-    params: _QueueParams,
+    params: QueueParams,
     expected: Sequence[Result | Metric],
 ) -> None:
     queue_data: dict[str, str] = {
@@ -299,7 +318,7 @@ def assert_depth(
 
 
 def test_age_no_params() -> None:
-    params: _QueueParams = {}
+    params = DEFAULT_PARAMETERS
     msgage = 1800
     expected: list[Result | Metric] = [
         Result(state=State.OK, summary="Oldest message: 30 minutes 0 seconds"),
@@ -309,14 +328,14 @@ def test_age_no_params() -> None:
 
 
 def test_age_no_msgage() -> None:
-    params: _QueueParams = {}
+    params = DEFAULT_PARAMETERS
     msgage = None
     expected = [Result(state=State.OK, summary="Oldest message: n/a")]
     assert_age(msgage, params, expected)
 
 
 def test_age_ok() -> None:
-    params: _QueueParams = {"msgage": (1800, 3600)}
+    params: QueueParams = {**DEFAULT_PARAMETERS, "msgage": ("fixed", (1800.0, 3600.0))}
     msgage = 1200
     expected: list[Result | Metric] = [
         Result(state=State.OK, summary="Oldest message: 20 minutes 0 seconds"),
@@ -326,7 +345,7 @@ def test_age_ok() -> None:
 
 
 def test_age_warn() -> None:
-    params: _QueueParams = {"msgage": (1800, 3600)}
+    params: QueueParams = {**DEFAULT_PARAMETERS, "msgage": ("fixed", (1800.0, 3600.0))}
     msgage = 1801
     expected: list[Result | Metric] = [
         Result(
@@ -339,7 +358,7 @@ def test_age_warn() -> None:
 
 
 def test_age_crit() -> None:
-    params: _QueueParams = {"msgage": (1800, 3600)}
+    params: QueueParams = {**DEFAULT_PARAMETERS, "msgage": ("fixed", (1800.0, 3600.0))}
     msgage = 3601
     expected: list[Result | Metric] = [
         Result(
@@ -352,7 +371,7 @@ def test_age_crit() -> None:
 
 
 def assert_age(
-    msgage: int | None, params: _QueueParams, expected: Sequence[Result | Metric]
+    msgage: int | None, params: QueueParams, expected: Sequence[Result | Metric]
 ) -> None:
     queue_data: dict[str, str] = {
         "CURDEPTH": "13",
@@ -378,7 +397,7 @@ def assert_age(
 def test_lget_ok_no_params() -> None:
     lget = ("2018-04-19", "10.19.05")
     now = ("2018-04-19", "11.19.05")
-    params: _QueueParams = {}
+    params = DEFAULT_PARAMETERS
     expected = [Result(state=State.OK, summary="Last get: 1 hour 0 minutes")]
     assert_last_get_age(lget, now, params, expected)
 
@@ -386,7 +405,7 @@ def test_lget_ok_no_params() -> None:
 def test_lget_ok_no_info() -> None:
     lget = ("", "")
     now = ("2018-04-19", "11.19.05")
-    params: _QueueParams = {}
+    params = DEFAULT_PARAMETERS
     expected = [Result(state=State.OK, summary="Last get: n/a")]
     assert_last_get_age(lget, now, params, expected)
 
@@ -394,7 +413,7 @@ def test_lget_ok_no_info() -> None:
 def test_lget_ok() -> None:
     lget = ("2018-04-19", "10.19.05")
     now = ("2018-04-19", "10.19.15")
-    params: _QueueParams = {"lgetage": (1800, 3600)}
+    params: QueueParams = {**DEFAULT_PARAMETERS, "lgetage": ("fixed", (1800.0, 3600.0))}
     expected = [Result(state=State.OK, summary="Last get: 10 seconds")]
     assert_last_get_age(lget, now, params, expected)
 
@@ -402,7 +421,7 @@ def test_lget_ok() -> None:
 def test_lget_warn() -> None:
     lget = ("2018-04-19", "09.49.14")
     now = ("2018-04-19", "10.19.15")
-    params: _QueueParams = {"lgetage": (1800, 3600)}
+    params: QueueParams = {**DEFAULT_PARAMETERS, "lgetage": ("fixed", (1800.0, 3600.0))}
     expected = [
         Result(
             state=State.WARN,
@@ -415,7 +434,7 @@ def test_lget_warn() -> None:
 def test_lget_no_info_with_params() -> None:
     lget = ("", "")
     now = ("2018-04-19", "10.19.15")
-    params: _QueueParams = {"lgetage": (1800, 3600)}
+    params: QueueParams = {**DEFAULT_PARAMETERS, "lgetage": ("fixed", (1800.0, 3600.0))}
     expected = [Result(state=State.OK, summary="Last get: n/a")]
     assert_last_get_age(lget, now, params, expected)
 
@@ -423,7 +442,7 @@ def test_lget_no_info_with_params() -> None:
 def test_lget_crit() -> None:
     lget = ("2018-04-19", "09.19.14")
     now = ("2018-04-19", "10.19.15")
-    params: _QueueParams = {"lgetage": (1800, 3600)}
+    params: QueueParams = {**DEFAULT_PARAMETERS, "lgetage": ("fixed", (1800.0, 3600.0))}
     expected = [
         Result(
             state=State.CRIT,
@@ -436,7 +455,7 @@ def test_lget_crit() -> None:
 def assert_last_get_age(
     lget: tuple[str, str],
     now: tuple[str, str],
-    params: _QueueParams,
+    params: QueueParams,
     expected: Sequence[Result | Metric],
 ) -> None:
     lgetdate, lgettime = lget
@@ -465,7 +484,7 @@ def assert_last_get_age(
 
 
 def test_procs_no_params() -> None:
-    params: _QueueParams = {}
+    params = DEFAULT_PARAMETERS
     opprocs = 3
     expected: list[Result | Metric] = [
         Result(state=State.OK, summary="Open output handles: 3"),
@@ -475,7 +494,10 @@ def test_procs_no_params() -> None:
 
 
 def test_procs_upper() -> None:
-    params: _QueueParams = {"opprocs": {"upper": (10, 20)}}
+    params: QueueParams = {
+        **DEFAULT_PARAMETERS,
+        "opprocs": {"lower": _NO_LEVELS, "upper": ("fixed", (10, 20))},
+    }
 
     opprocs = 3
     expected: list[Result | Metric] = [
@@ -514,7 +536,10 @@ def test_procs_upper() -> None:
 
 
 def test_procs_lower() -> None:
-    params: _QueueParams = {"opprocs": {"lower": (3, 1)}}
+    params: QueueParams = {
+        **DEFAULT_PARAMETERS,
+        "opprocs": {"lower": ("fixed", (3, 1)), "upper": _NO_LEVELS},
+    }
 
     opprocs = 3
     expected: list[Result | Metric] = [
@@ -546,11 +571,12 @@ def test_procs_lower() -> None:
 
 
 def test_procs_lower_and_upper() -> None:
-    params: _QueueParams = {
+    params: QueueParams = {
+        **DEFAULT_PARAMETERS,
         "opprocs": {
-            "lower": (3, 1),
-            "upper": (10, 20),
-        }
+            "lower": ("fixed", (3, 1)),
+            "upper": ("fixed", (10, 20)),
+        },
     }
 
     opprocs = 1
@@ -575,7 +601,7 @@ def test_procs_lower_and_upper() -> None:
     assert_procs(opprocs, params, expected)
 
 
-def assert_procs(opprocs: int, params: _QueueParams, expected: Sequence[Result | Metric]) -> None:
+def assert_procs(opprocs: int, params: QueueParams, expected: Sequence[Result | Metric]) -> None:
     parsed: dict[str, dict[str, str]] = {
         "QM1": {"STATUS": "RUNNING"},
         "QM1:MY.QUEUE": {
@@ -595,7 +621,7 @@ def assert_procs(opprocs: int, params: _QueueParams, expected: Sequence[Result |
 
 
 def test_qtime_no_values() -> None:
-    params: _QueueParams = {}
+    params = DEFAULT_PARAMETERS
     qtime = ","
     expected: list[Result | Metric] = [
         Result(state=State.OK, summary="Qtime short: n/a"),
@@ -607,7 +633,7 @@ def test_qtime_no_values() -> None:
 
 
 def test_qtime_only_short() -> None:
-    params: _QueueParams = {}
+    params = DEFAULT_PARAMETERS
     qtime = "300000000,"
     expected: list[Result | Metric] = [
         Result(state=State.OK, summary="Qtime short: 5 minutes 0 seconds"),
@@ -619,7 +645,7 @@ def test_qtime_only_short() -> None:
 
 
 def test_qtime_both() -> None:
-    params: _QueueParams = {}
+    params = DEFAULT_PARAMETERS
     qtime = "300000000,420000000"
     expected: list[Result | Metric] = [
         Result(state=State.OK, summary="Qtime short: 5 minutes 0 seconds"),
@@ -630,7 +656,7 @@ def test_qtime_both() -> None:
     assert_qtime(qtime, params, expected)
 
 
-def assert_qtime(qtime: str, params: _QueueParams, expected: Sequence[Result | Metric]) -> None:
+def assert_qtime(qtime: str, params: QueueParams, expected: Sequence[Result | Metric]) -> None:
     parsed: dict[str, dict[str, str]] = {
         "QM1": {"STATUS": "RUNNING"},
         "QM1:MY.QUEUE": {

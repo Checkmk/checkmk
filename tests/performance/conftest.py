@@ -30,7 +30,12 @@ pytest.register_assert_rewrite(
 from tests.performance.perftest import PerformanceTest  # noqa: E402
 from tests.performance.sysmon import track_resources  # noqa: E402
 from tests.testlib.common.utils2 import is_containerized, run  # noqa: E402
-from tests.testlib.site import (  # noqa: E402
+from tests.testlib.pytest_helpers import (  # noqa: E402
+    diagnostics,
+    registration,
+)
+from tests.testlib.system.pytest_helpers import cmk_package  # noqa: E402
+from tests.testlib.system.site import (  # noqa: E402
     connection,
     get_site_factory,
     GlobalSettingsUpdate,
@@ -50,7 +55,8 @@ collect_ignore = ["monitoring_views/in_process"]
 logger = logging.getLogger(__name__)
 
 
-def pytest_addoption(parser: pytest.Parser) -> None:
+def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:
+    registration.register_pytest_plugins(pluginmanager, cmk_package, diagnostics)
     parser.addoption(
         "--iterations",
         action="store",

@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
+
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type {
   EffectiveWidgetFilterContext,
@@ -12,6 +14,8 @@ import type {
 
 // General
 export interface ContentProps<T = WidgetContent> {
+  tick: number
+  range: DateTimeRange
   widget_id: string
   general_settings: WidgetGeneralSettings
   content: T
@@ -21,27 +25,6 @@ export interface ContentProps<T = WidgetContent> {
   isPreview?: boolean
 }
 export type ContentPropsRecord = Readonly<Record<string, ContentProps>>
-
-// Figure
-export const CONTENT_FIGURE_TYPES: string[] = [
-  'alert_overview',
-  'alert_timeline',
-  'average_scatterplot',
-  'barplot',
-  'event_stats',
-  'gauge',
-  'host_state',
-  'host_state_summary',
-  'host_stats',
-  'inventory',
-  'notification_timeline',
-  'service_state',
-  'service_state_summary',
-  'service_stats',
-  'site_overview'
-]
-
-export type ContentFigureType = (typeof CONTENT_FIGURE_TYPES)[number]
 
 // Ntop
 export const NTOP_TYPES: string[] = ['ntop_alerts', 'ntop_flows', 'ntop_top_talkers']

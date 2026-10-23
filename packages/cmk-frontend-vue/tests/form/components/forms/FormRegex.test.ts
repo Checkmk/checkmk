@@ -26,7 +26,7 @@ const regexSpec: Regex = {
         input_hint: 'Type to search...'
       }
     },
-    fetch_method: 'ajax_vs_autocomplete'
+    fetch_method: 'rest_autocomplete'
   }
 }
 const textSpec: Regex = {
@@ -46,7 +46,7 @@ const textSpec: Regex = {
         input_hint: 'Type to search...'
       }
     },
-    fetch_method: 'ajax_vs_autocomplete'
+    fetch_method: 'rest_autocomplete'
   }
 }
 

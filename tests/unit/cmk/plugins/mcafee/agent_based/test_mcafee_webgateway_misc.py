@@ -10,7 +10,7 @@ import typing
 import pytest
 
 from cmk.agent_based.internal import evaluate_snmp_detection
-from cmk.agent_based.v2 import Metric, Result, Service, SimpleSNMPSection, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, SimpleSNMPSection, State, StringTable
 from cmk.plugins.mcafee import libgateway
 from cmk.plugins.mcafee.agent_based import (
     mcafee_webgateway_misc,
@@ -90,25 +90,6 @@ def test_parse(detected_section: SimpleSNMPSection) -> None:  # type: ignore[mis
 
     # Assert
     assert section is not None
-
-
-@pytest.mark.parametrize(
-    "detected_section",
-    [
-        mcafee_webgateway_misc_section.snmp_section_mcafee_webgateway_misc,
-        mcafee_webgateway_misc_section.snmp_section_skyhigh_security_webgateway_misc,
-    ],
-)
-def test_discovery(detected_section: SimpleSNMPSection) -> None:  # type: ignore[misc]
-    # Assemble
-    section = detected_section.parse_function([TABLE_MISC])
-    assert section is not None
-
-    # Act
-    services = list(mcafee_webgateway_misc.discovery_webgateway_misc(section=section))
-
-    # Assert
-    assert services == [Service()]
 
 
 @pytest.mark.parametrize(

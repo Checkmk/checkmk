@@ -76,4 +76,5 @@ def _migrate_to_password(
         case "cmk_postprocessed", "stored_password", (str(password_store_id), str(password)):
             return "cmk_postprocessed", "stored_password", (password_store_id, password)
 
-    raise TypeError(f"Could not migrate {model!r} to Password.")
+    # The value is not part of the message, since it may contain credentials
+    raise TypeError(f"Could not migrate a value of type {type(model).__name__} to Password.")

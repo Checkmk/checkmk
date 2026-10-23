@@ -21,14 +21,14 @@ from tests.testlib.common.utils2 import (
     ServiceInfo,
     version_spec_from_env,
 )
-from tests.testlib.site import Site, SiteFactory
-from tests.testlib.version import (
+from tests.testlib.common.version import (
     CMKPackageInfo,
     CMKVersion,
     edition_from_env,
     get_min_version,
     TypeCMKEdition,
 )
+from tests.testlib.system.site import Site, SiteFactory
 
 MODULE_PATH = Path(__file__).parent.resolve()
 RULES_DIR = MODULE_PATH / "rules"
@@ -110,6 +110,17 @@ def create_site(base_package: CMKPackageInfo) -> Site:
     with ctx:
         site_factory.initialize_site(site, auto_restart_httpd=True)
 
+    return site
+
+
+def install_package(package: CMKPackageInfo, site_id: str) -> Site:
+    """Install a Checkmk package on the host without creating a site.
+
+    Returns the `Site` handle needed to later uninstall it via `cleanup_cmk_package`.
+    """
+    site_factory = _get_site_factory(package)
+    site = site_factory.get_existing_site(site_id, start=False, init_livestatus=False)
+    site.install_cmk()
     return site
 
 
@@ -220,20 +231,40 @@ def check_errors_in_log_files(site: Site) -> None:
     assert not error_match_dict, f"Error string found in one or more log files: {error_match_dict}"
 
 
-def check_services(site: Site, hostname: str, base_data: dict[str, ServiceInfo]) -> None:
-    """Assert that current service status matches previous service status."""
+def check_services(
+    site: Site,
+    hostname: str,
+    base_data: dict[str, ServiceInfo],
+    skipped_prefixes: tuple[str, ...] = (),
+) -> None:
+    """Assert that current service status matches previous service status.
+
+    Services whose name starts with one of `skipped_prefixes` may change between OK, WARN and
+    CRIT, but must not become UNKNOWN.
+    """
     # get update monitoring data
     target_data = site.get_host_services(hostname)
 
-    base_ok_services = get_services_with_status(base_data, 0)
-    target_ok_services = get_services_with_status(target_data, 0)
-
-    not_found_services = [service for service in base_data if service not in target_data]
+    not_found_services = sorted(set(base_data) - set(target_data))
     err_msg = (
         f"The following services were found in base-version but not in target-version: "
         f"{not_found_services}"
     )
-    assert len(target_data) >= len(base_data), err_msg
+    assert not not_found_services, err_msg
+
+    skipped = {service for service in base_data if service.startswith(skipped_prefixes)}
+    unknown_skipped_services = sorted(
+        service for service in skipped if target_data[service].state == 3
+    )
+    unknown_details = [(s, target_data[s].summary) for s in unknown_skipped_services]
+    err_msg = (
+        f"The following services are `UNKNOWN` in target-version: {unknown_skipped_services}"
+        f"\nDetails: {unknown_details}"
+    )
+    assert not unknown_skipped_services, err_msg
+
+    base_ok_services = get_services_with_status(base_data, 0) - skipped
+    target_ok_services = get_services_with_status(target_data, 0)
 
     not_ok_services = [service for service in base_ok_services if service not in target_ok_services]
     err_details = [
@@ -294,34 +325,52 @@ class BaseVersions:
     min_version = get_min_version()
     _base_packages: list[CMKPackageInfo] | None = None
 
+    @staticmethod
+    def _read_versions(file_name: str) -> list[str] | None:
+        versions_file = MODULE_PATH / file_name
+        if not versions_file.exists():
+            return None
+        versions: list[str] = json.loads(versions_file.read_text(encoding="utf-8"))
+        return versions
+
+    @classmethod
+    def _version_lists(cls) -> list[list[str]]:
+        """The release-system-maintained version lists, oldest branch first."""
+        previous_branch = cls._read_versions("base_versions_previous_branch.json")
+        if previous_branch is None:
+            previous_branch = cls._read_versions("base_versions.json")
+        if previous_branch is None:
+            raise FileNotFoundError(f"No base versions list found in {MODULE_PATH}")
+        current_branch = cls._read_versions("base_versions_current_branch.json")
+        return [previous_branch] + ([current_branch] if current_branch else [])
+
     @classmethod
     def get_base_packages(cls) -> list[CMKPackageInfo]:
         if cls._base_packages is None:
-            base_versions_pb_file = MODULE_PATH / "base_versions_previous_branch.json"
-            if not base_versions_pb_file.exists():
-                base_versions_pb_file = MODULE_PATH / "base_versions.json"
-
-            base_versions_pb = cls._limit_versions(
-                json.loads(base_versions_pb_file.read_text(encoding="utf-8")), cls.min_version
-            )
-
-            base_versions_cb_file = MODULE_PATH / "base_versions_current_branch.json"
-            base_versions_cb = (
-                cls._limit_versions(
-                    json.loads(base_versions_cb_file.read_text(encoding="utf-8")),
-                    cls.min_version,
-                )
-                if base_versions_cb_file.exists()
-                else []
-            )
-
             cls._base_packages = [
                 CMKPackageInfo(CMKVersion(base_version_str), edition_from_env())
-                for base_version_str in base_versions_pb + base_versions_cb
+                for versions in cls._version_lists()
+                for base_version_str in cls._limit_versions(versions, cls.min_version)
             ]
 
         assert cls._base_packages, "No base packages found for the test!"
         return cls._base_packages
+
+    @classmethod
+    def get_first_release_packages(cls) -> list[CMKPackageInfo]:
+        """The `X.Y.0` release of every listed branch, oldest first.
+
+        Ignores the update minimum: customers may still run a branch's first release.
+        """
+        first_releases = dict.fromkeys(
+            CMKVersion(version_str).semantic
+            for versions in cls._version_lists()
+            for version_str in versions
+        )
+        return [
+            CMKPackageInfo(CMKVersion(version_str), edition_from_env())
+            for version_str in first_releases
+        ]
 
     @classmethod
     def get_latest_base_package(cls) -> CMKPackageInfo:

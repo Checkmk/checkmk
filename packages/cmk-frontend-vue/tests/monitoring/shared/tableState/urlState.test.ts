@@ -37,6 +37,7 @@ class TestService extends MonitoringService<TestItem> {
 const schema: TableStateSchema = {
   hideable: [],
   sortable: new Set(['name']),
+  defaultSort: [],
   defaultVisibility: {},
   offeredLimits: [1000, 5000]
 }
@@ -47,7 +48,6 @@ function makeUrlSync(search = ''): { urlSync: UrlSync; replaceUrl: ReturnType<ty
     urlSync: {
       getCurrentUrl: () => ({ pathname: '/monitor_all_hosts.py', search, hash: '' }),
       replaceUrl,
-      pushUrl: replaceUrl,
       onNavigate: () => () => {}
     },
     replaceUrl

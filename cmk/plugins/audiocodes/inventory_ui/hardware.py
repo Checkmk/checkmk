@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.inventory_ui.v1_unstable import Node, TextField, Title
+from cmk.inventory_ui.v1 import Node, TextField, Title
 
 node_hardware_uploaded_files = Node(
     name="hardware_uploaded_files",

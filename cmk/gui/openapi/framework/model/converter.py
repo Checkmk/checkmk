@@ -2,13 +2,14 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import inspect
 import ipaddress
 import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, TypeIs
 
-from pydantic import PlainValidator
+from pydantic import PlainValidator, ValidationInfo
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.regex import GROUP_NAME_PATTERN, regex, REGEX_ID
@@ -19,15 +20,16 @@ from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.groups import GroupName, GroupType
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
+from cmk.gui.openapi.framework._context import ApiContext
 from cmk.gui.openapi.framework.model import ApiOmitted
-from cmk.gui.permissions import load_dynamic_permissions, permission_registry
+from cmk.gui.openapi.framework.model.validation_context import validation_context_of
+from cmk.gui.permissions import all_permissions
 from cmk.gui.site_config import distributed_setup_remote_sites
 from cmk.gui.userdb import connection_choices, get_saml_connections
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import groups_io, tags
-from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
-from cmk.gui.watolib.passwords import load_passwords
+from cmk.gui.watolib.hosts_and_folders import FolderTree, Host, make_folder_tree
+from cmk.gui.watolib.passwords import load_passwords, password_id_in_use
 from cmk.gui.watolib.userroles import role_exists, RoleID
 from cmk.livestatus_client.expressions import LqSafe
 from cmk.livestatus_client.queries import Query
@@ -35,7 +37,10 @@ from cmk.livestatus_client.tables import Hostgroups, Hosts, Servicegroups
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 
 
-def TypedPlainValidator[T](input_type: type[T], validator: Callable[[T], object]) -> PlainValidator:
+def TypedPlainValidator[T](
+    input_type: type[T],
+    validator: Callable[[T], object] | Callable[[T, ValidationInfo[object]], object],
+) -> PlainValidator:
     """
     Creates a pydantic validator that replaces the normal validation with the given `validator`.
 
@@ -49,13 +54,16 @@ def TypedPlainValidator[T](input_type: type[T], validator: Callable[[T], object]
     Args:
         input_type: Allowed input type, will be used for the schema and actual validation.
         validator: A function which validates the input value and converts it to the output type.
+            If it takes a second parameter, it is called with the `ValidationInfo` as well, the
+            way pydantic calls its own validators.
     """
+    validate = _with_validation_info(validator)
 
-    def _with_type_check(value: T) -> object:
+    def _with_type_check(value: T, info: ValidationInfo[object]) -> object:
         if not isinstance(value, input_type):
-            raise TypeError(f"Expected {input_type}, got {value!r}")
+            raise ValueError(f"Expected {input_type.__name__}, got {type(value).__name__}")
 
-        return validator(value)
+        return validate(value, info)
 
     return PlainValidator(
         func=_with_type_check,
@@ -63,17 +71,56 @@ def TypedPlainValidator[T](input_type: type[T], validator: Callable[[T], object]
     )
 
 
+def _with_validation_info[T](
+    validator: Callable[[T], object] | Callable[[T, ValidationInfo[object]], object],
+) -> Callable[[T, ValidationInfo[object]], object]:
+    if _takes_validation_info(validator):
+        return validator
+    return lambda value, _info: validator(value)
+
+
+def _takes_validation_info[T](
+    validator: Callable[[T], object] | Callable[[T, ValidationInfo[object]], object],
+) -> TypeIs[Callable[[T, ValidationInfo[object]], object]]:
+    """Whether the validator has a second required positional parameter, like pydantic decides."""
+    try:
+        parameters = inspect.signature(validator).parameters.values()
+    except TypeError, ValueError:
+        # some built-in callables have no signature, they take the value alone
+        return False
+    positional = [
+        parameter
+        for parameter in parameters
+        if parameter.kind
+        in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+        and parameter.default is inspect.Parameter.empty
+    ]
+    return len(positional) == 2
+
+
+def _build_folder_tree(api_context: ApiContext) -> FolderTree:
+    return make_folder_tree(api_context.config)
+
+
+def folder_tree_of_request(api_context: ApiContext) -> FolderTree:
+    """The folder tree of the request, shared by its validators and its endpoint handler."""
+    return api_context.shared(_build_folder_tree)
+
+
+def folder_tree_of(info: ValidationInfo[object]) -> FolderTree:
+    """The folder tree of the request a value is validated for."""
+    return folder_tree_of_request(validation_context_of(info).api_context)
+
+
 @dataclass(slots=True)
 class RegistryConverter[T]:
-    registry_or_getter: Mapping[str, T] | Callable[[UserPermissions], Mapping[str, T]]
+    registry_or_getter: Mapping[str, T] | Callable[[], Mapping[str, T]]
     custom_error_message: str | None = None
 
     @property
     def _registry(self) -> Mapping[str, T]:
         if not isinstance(self.registry_or_getter, Mapping):
-            self.registry_or_getter = self.registry_or_getter(
-                UserPermissions.from_config(active_config, permission_registry)
-            )
+            self.registry_or_getter = self.registry_or_getter()
 
         return self.registry_or_getter
 
@@ -113,26 +160,40 @@ class HostConverter:
             raise ValueError("Host name cannot be empty.")
         return HostName.parse(value)
 
-    def host(self, value: str) -> Host:
+    def host(self, value: str, info: ValidationInfo[object]) -> Host:
+        api_context = validation_context_of(info).api_context
+        return self.host_in_tree(value, folder_tree_of_request(api_context), api_context.user)
+
+    def host_in_tree(self, value: str, tree: FolderTree, acting_user: LoggedInUser) -> Host:
         name = HostName(self._parse_host_name(value))
-        if host := folder_tree().host(name):
-            self._verify(host)
+        if host := tree.host(name):
+            self._verify(host, acting_user)
             return host
 
         raise ValueError(f"Host not found: {value!r}")
 
-    def host_name(self, value: str) -> HostName:
+    def host_name(self, value: str, info: ValidationInfo[object]) -> HostName:
+        api_context = validation_context_of(info).api_context
+        return self.host_name_in_tree(value, folder_tree_of_request(api_context), api_context.user)
+
+    def host_name_in_tree(
+        self, value: str, tree: FolderTree, acting_user: LoggedInUser
+    ) -> HostName:
         name = self._parse_host_name(value)
-        if host := folder_tree().host(name):
-            self._verify(host)
+        if host := tree.host(name):
+            self._verify(host, acting_user)
             return name
 
         raise ValueError(f"Host not found: {value!r}")
 
     @classmethod
-    def not_exists(cls, value: str) -> HostName:
+    def not_exists(cls, value: str, info: ValidationInfo[object]) -> HostName:
+        return cls.not_exists_in_tree(value, folder_tree_of(info))
+
+    @classmethod
+    def not_exists_in_tree(cls, value: str, tree: FolderTree) -> HostName:
         name = cls._parse_host_name(value)
-        if folder_tree().host(name):
+        if tree.host(name):
             raise ValueError(f"Host {value!r} already exists.")
 
         return name
@@ -151,23 +212,23 @@ class HostConverter:
             )
         return name
 
-    def _verify(self, host: Host) -> None:
+    def _verify(self, host: Host, acting_user: LoggedInUser) -> None:
         """Run all configured verifications for the host."""
-        self._verify_user_permissions(host)
+        self._verify_user_permissions(host, acting_user)
         self._verify_cluster(host)
         self._verify_monitored(host)
 
-    def _verify_user_permissions(self, host: Host) -> None:
+    def _verify_user_permissions(self, host: Host, acting_user: LoggedInUser) -> None:
         if self.permission_type == "monitor":
             return
 
         try:
-            host.permissions.need_permission("read", user)
+            host.permissions.need_permission("read", acting_user)
         except MKAuthException:
             raise ValueError(f"Host {host.name()!r} not found or access denied")
 
         if self.permission_type == "setup_write":
-            host.permissions.need_permission("write", user)
+            host.permissions.need_permission("write", acting_user)
 
     def _verify_cluster(self, host: Host) -> None:
         if self.should_be_cluster is None:
@@ -366,8 +427,6 @@ class UserRoleIdConverter:
         return RoleID(user_role)
 
     def _verify_user_permissions(self) -> None:
-        # TODO: clean this up (CMK-17068)
-        load_dynamic_permissions()
         user.need_permission("wato.users")
 
         if self.permission_type == "wato.edit":
@@ -378,8 +437,9 @@ class PermissionsConverter:
     @staticmethod
     def validate(value: dict[str, str]) -> dict[str, str]:
         _validation_errors = []
+        permissions = all_permissions()
         for key, val in value.items():
-            if key not in permission_registry:
+            if key not in permissions:
                 _validation_errors.append(f"The specified permission name doesn't exist: {key}")
             if val not in ["yes", "no", "default"]:
                 _validation_errors.append(
@@ -442,7 +502,7 @@ class PasswordConverter:
 
     @staticmethod
     def not_exists(ident: str) -> str:
-        if ident in load_passwords(user):
+        if password_id_in_use(ident):
             raise ValueError(f'Password "{ident}" already exists.')
         return ident
 

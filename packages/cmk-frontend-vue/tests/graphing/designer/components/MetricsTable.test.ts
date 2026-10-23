@@ -44,10 +44,6 @@ vi.mock('@/mode-custom-services/CreateCustomServiceSlideIn.vue', () => ({
   }
 }))
 
-afterEach(() => {
-  vi.restoreAllMocks()
-})
-
 const CREATE_SERVICE_LABEL = 'Create custom service'
 const EDIT_CALCULATION_LABEL = 'Edit calculation'
 
@@ -60,6 +56,12 @@ const TITLE_MACROS: TitleMacroGroup[] = [
 /** Whether the add-source dropdown took the focus while the spy was installed. */
 function focusedAddSource(focus: MockInstance): boolean {
   return focus.mock.contexts.includes(screen.getByRole('combobox', { name: 'Add source' }))
+}
+
+/** Confirms the delete dialog with its `button`. */
+async function confirmDelete(button: 'Delete' | 'Delete all' = 'Delete'): Promise<void> {
+  const dialog = await screen.findByRole('dialog')
+  await fireEvent.click(within(dialog).getByRole('button', { name: button }))
 }
 
 /** Waits for the row group holding `id` to have been scrolled into view. */
@@ -133,6 +135,9 @@ test('deleting the last source does not pull the focus to the add-source dropdow
   const { store } = renderTable([rrdMetricItem('A')])
   await fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
 
+  expect(await screen.findByText('Delete metric A?')).toBeInTheDocument()
+  await confirmDelete()
+
   expect(store.items.value).toHaveLength(0)
   expect(focusedAddSource(focus)).toBe(false)
 })
@@ -188,12 +193,27 @@ test('adding a service reference line opens the scalar form', async () => {
   expect(await screen.findByRole('combobox', { name: 'Threshold type' })).toBeInTheDocument()
 })
 
-test('deleting an unreferenced row needs no confirmation', async () => {
-  const { store } = renderTable([rrdMetricItem('A')])
-  await fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+test('deleting an unreferenced row asks by its display name', async () => {
+  const { store } = renderTable([rrdMetricItem('A'), constantItem('B')], true, true, {
+    resolvedTitles: new Map([['A', 'CPU load']])
+  })
+  const [deleteA] = screen.getAllByRole('button', { name: 'Delete' })
+  await fireEvent.click(deleteA!)
 
-  expect(store.items.value).toHaveLength(0)
-  expect(screen.queryByText('Delete A?')).not.toBeInTheDocument()
+  expect(await screen.findByText('Delete metric CPU load?')).toBeInTheDocument()
+  expect(store.items.value).toHaveLength(2)
+
+  await confirmDelete()
+  expect(store.items.value.map((item) => item.id)).toEqual(['B'])
+})
+
+test('cancelling the delete keeps the row', async () => {
+  const { store } = renderTable([rrdMetricItem('A'), constantItem('B')])
+  const [deleteA] = screen.getAllByRole('button', { name: 'Delete' })
+  await fireEvent.click(deleteA!)
+  await fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
+
+  expect(store.items.value).toHaveLength(2)
 })
 
 test('deleting a referenced row asks and cascades to its dependents', async () => {
@@ -204,10 +224,11 @@ test('deleting a referenced row asks and cascades to its dependents', async () =
   const [deleteA] = screen.getAllByRole('button', { name: 'Delete' })
   await fireEvent.click(deleteA!)
 
-  expect(await screen.findByText('Delete A?')).toBeInTheDocument()
+  expect(await screen.findByText('Delete metric A?')).toBeInTheDocument()
+  expect(screen.getByText('B = A')).toBeInTheDocument()
   expect(store.items.value).toHaveLength(2)
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Delete all' }))
+  await confirmDelete()
   expect(store.items.value).toHaveLength(0)
 })
 
@@ -233,7 +254,19 @@ test('bulk delete of a referenced row routes through the confirmation', async ()
   await fireEvent.click(selectA!)
   await fireEvent.click(screen.getByRole('button', { name: 'Delete selected sources' }))
 
-  await fireEvent.click(await screen.findByRole('button', { name: 'Delete all' }))
+  await confirmDelete()
+  expect(store.items.value).toHaveLength(0)
+})
+
+test('bulk delete of every row asks to delete all', async () => {
+  const { store } = renderTable([rrdMetricItem('A'), constantItem('B')])
+  for (const select of screen.getAllByLabelText('Select row')) {
+    await fireEvent.click(select)
+  }
+  await fireEvent.click(screen.getByRole('button', { name: 'Delete selected sources' }))
+
+  expect(await screen.findByText('Delete all metrics?')).toBeInTheDocument()
+  await confirmDelete('Delete all')
   expect(store.items.value).toHaveLength(0)
 })
 
@@ -288,30 +321,39 @@ test('the display name falls back to the stored title of an unresolved row', () 
   expect(screen.getByText('Raw title')).toBeInTheDocument()
 })
 
+test('a telemetry_metrics row explains its automatic colors instead of offering a picker', () => {
+  renderTable([telemetryMetricsItem('A')])
+
+  const row = screen.getByRole('checkbox', { name: 'Select row' }).closest('tr')!
+
+  expect(row.querySelector('input[type=color]')).toBeNull()
+  within(row).getByRole('img', { name: /Colors are assigned automatically/ })
+})
+
 test('a formula row expands to the read-only formula form', async () => {
   renderTable([formulaItem('A', { ast: { op: 'num', value: 5 } })])
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
   expect(await screen.findByText(/= 5/)).toBeInTheDocument()
 })
 
-test('a metric_backend row expands to the metric backend form', async () => {
+test('a telemetry_metrics row expands to the telemetry metrics form', async () => {
   renderTable([telemetryMetricsItem('A')])
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
   expect(await screen.findByText('Then consolidate by')).toBeInTheDocument()
 })
 
-test('the metric backend source is offered only when the feature is available', async () => {
+test('the telemetry metrics source is offered only when the feature is available', async () => {
   renderTable([], false)
   await fireEvent.click(screen.getByRole('combobox', { name: 'Add source' }))
   expect(screen.queryByRole('option', { name: 'Metrics backend' })).not.toBeInTheDocument()
 })
 
-test('adding a metric backend source opens its form', async () => {
+test('adding a telemetry metrics source opens its form', async () => {
   const { store } = renderTable([], true)
   await fireEvent.click(screen.getByRole('combobox', { name: 'Add source' }))
   await fireEvent.click(await screen.findByRole('option', { name: 'Metrics backend' }))
 
-  expect(store.items.value[0]).toMatchObject({ type: 'metric_backend', metric_name: null })
+  expect(store.items.value[0]).toMatchObject({ type: 'telemetry_metrics', metric_name: null })
   expect(await screen.findByText('Then consolidate by')).toBeInTheDocument()
 })
 
@@ -323,22 +365,22 @@ test('the title column header exposes the rendered macro help', async () => {
   expect(tooltip).toHaveTextContent('Checkmk RRD (single): $DEFAULT_TITLE$, $METRIC_NAME$')
 })
 
-test('a complete metric_backend row offers the create-custom-service action', () => {
+test('a complete telemetry_metrics row offers the create-custom-service action', () => {
   renderTable([telemetryMetricsItem('A')])
   expect(screen.getByRole('button', { name: CREATE_SERVICE_LABEL })).toBeInTheDocument()
 })
 
-test('the create-custom-service action is absent on non metric_backend rows', () => {
+test('the create-custom-service action is absent on non telemetry_metrics rows', () => {
   renderTable([rrdMetricItem('A')])
   expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
 
-test('the create-custom-service action is absent while the metric_backend query is incomplete', () => {
+test('the create-custom-service action is absent while the telemetry_metrics query is incomplete', () => {
   renderTable([newTelemetryMetricsDraft('A')])
   expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
 
-test('the create-custom-service action is absent when the metric backend is unavailable', () => {
+test('the create-custom-service action is absent when telemetry metrics are unavailable', () => {
   renderTable([telemetryMetricsItem('A')], false)
   expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
@@ -460,6 +502,7 @@ test('three metrics are three rows, and deleting one drops only that row', async
 
   const [, deleteSecond] = screen.getAllByRole('button', { name: 'Delete' })
   await fireEvent.click(deleteSecond!)
+  await confirmDelete()
 
   expect(store.items.value.map((item) => item.id)).toEqual(['A', 'C'])
   expect(screen.getAllByLabelText('Select row')).toHaveLength(2)
@@ -479,12 +522,12 @@ function previewMetric(name: string): Metric {
       color: '#28a2f3',
       attributes: []
     },
-    render: { stack: null, inverse: false, hidden: false },
+    render: { shape: 'line', inverse: false, hidden: false },
     data_points: [1]
   }
 }
 
-test('an expanded metric_backend row previews the series its query resolved to', async () => {
+test('an expanded telemetry_metrics row previews the series its query resolved to', async () => {
   renderTable([telemetryMetricsItem('A')], true, true, {
     metricsBySource: new Map([['A', [previewMetric('first'), previewMetric('second')]]])
   })
@@ -496,7 +539,7 @@ test('an expanded metric_backend row previews the series its query resolved to',
   expect(screen.getByText('second')).toBeInTheDocument()
 })
 
-test('a metric_backend row whose query resolved to nothing shows no preview', async () => {
+test('a telemetry_metrics row whose query resolved to nothing shows no preview', async () => {
   renderTable([telemetryMetricsItem('A')])
 
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))

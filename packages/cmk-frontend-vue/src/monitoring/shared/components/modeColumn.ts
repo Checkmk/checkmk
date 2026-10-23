@@ -16,7 +16,8 @@ export const MODE_ICONS_PER_ROW = 3
 
 const CELL_PADDING = 16
 
-export const EMPTY_MODE_COLUMN_WIDTH = 40
+export const MODE_COLUMN_MIN_WIDTH = 56
+export const MODE_COLUMN_MAX_WIDTH = 152
 export const FILLED_MODE_COLUMN_WIDTH = iconListWidth(MODE_ICONS_PER_ROW) + CELL_PADDING
 
 interface RowWithModes {
@@ -32,11 +33,18 @@ export function useModeColumnWidth(rows: () => readonly RowWithModes[]): Compute
     }
   })
 
-  return computed(() => (carriesModes.value ? FILLED_MODE_COLUMN_WIDTH : EMPTY_MODE_COLUMN_WIDTH))
+  return computed(() => (carriesModes.value ? FILLED_MODE_COLUMN_WIDTH : MODE_COLUMN_MIN_WIDTH))
 }
 
 export function sizeModeColumn<T>(columns: ColumnDef<T>[], width: number): ColumnDef<T>[] {
   return columns.map((column) =>
-    columnId(column) === MODE_COLUMN_ID ? { ...column, minSize: width, maxSize: width } : column
+    columnId(column) === MODE_COLUMN_ID
+      ? {
+          ...column,
+          minSize: Math.max(MODE_COLUMN_MIN_WIDTH, width),
+          maxSize: MODE_COLUMN_MAX_WIDTH,
+          meta: { ...column.meta, fitHeader: true }
+        }
+      : column
   )
 }

@@ -12,21 +12,16 @@ py_library(
         "__init__.py",
         "conftest.py",
     ],
-    tags = [
-        "deballast-keep=//cmk/plugins",  # rulesets/graphing discovered at runtime, not imported
-    ],
     deps = [
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//cmk/gui/utils:middle",
         "//cmk/gui/watolib:password_store",
-        "//cmk/plugins",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-livestatus-client:py_livestatus",
-        "//tests/testlib:fake_site",
-        "//tests/testlib:rest_api_client",
-        "//tests/testlib/gui",
+        "//tests/testlib/pytest_helpers",
+        "//tests/testlib/unit",
         requirement("flask"),
         requirement("pytest"),
         requirement("pytest-mock"),
@@ -66,15 +61,11 @@ py_cmk_test(
         "--random-order-bucket=global",
     ],
     env = {"EDITION": "community"},
-    tags = [
-        "deballast-keep=//cmk/gui/background_job/process:process",  # background jobs launched at runtime via the inline_background_jobs fixture
-    ],
     use_project_pytest_config = True,
     deps = [
         ":conftest",
         "//cmk/gui:auth_core",
         "//cmk/gui:core_toolkit",
-        "//cmk/gui/background_job/process",
         "//cmk/gui/fields",
         "//cmk/gui/form_specs",
         "//cmk/gui/graphing",
@@ -90,6 +81,7 @@ py_cmk_test(
         "//cmk/gui/valuespec",
         "//cmk/gui/watolib",
         "//cmk/validate_config",
+        "//tests/openapi/plugins/cmk/plugins/openapi_test",
         requirement("marshmallow-oneofschema"),
         requirement("polyfactory"),
         requirement("pytest-mock"),

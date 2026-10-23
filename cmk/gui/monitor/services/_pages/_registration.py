@@ -2,7 +2,9 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from cmk.gui.monitor.command import DowntimeRecurrences, MonitorCommands
+from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.pages import PageEndpoint, PageRegistry
 
 from .._page_menu import HostMenus
@@ -14,10 +16,18 @@ def register_pages(
     command_registry: MonitorCommands,
     recurrences: DowntimeRecurrences,
     host_menus: HostMenus,
+    teleport_target: str | None,
+    setup_folders: SetupFolderSource,
 ) -> None:
     page_registry.register(
         PageEndpoint(
             "monitor_host_services",
-            MonitorHostServicesPage(command_registry, recurrences, host_menus),
+            MonitorHostServicesPage(
+                command_registry,
+                recurrences,
+                host_menus,
+                teleport_target,
+                setup_folders=setup_folders,
+            ),
         )
     )

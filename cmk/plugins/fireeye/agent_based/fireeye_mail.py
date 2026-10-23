@@ -295,8 +295,18 @@ def check_fireeye_mail_received(
 ) -> CheckResult:
     start, end, received = section[0][13:16]
     yield Result(state=State.OK, summary=f"Mails received between {start} and {end}: {received}")
-    start_timestamp = time.mktime(time.strptime(start, "%m/%d/%y %H:%M:%S"))
-    end_timestamp = time.mktime(time.strptime(end, "%m/%d/%y %H:%M:%S"))
+    try:
+        start_timestamp = time.mktime(time.strptime(start, "%m/%d/%y %H:%M:%S"))
+        end_timestamp = time.mktime(time.strptime(end, "%m/%d/%y %H:%M:%S"))
+    except ValueError:
+        yield Result(
+            state=State.UNKNOWN,
+            summary=(
+                f"Cannot compute rate: got time window '{start}' to '{end}'"
+                " (expected MM/DD/YY HH:MM:SS)"
+            ),
+        )
+        return
     rate = float(received) / (end_timestamp - start_timestamp)
     yield from check_levels(
         rate,

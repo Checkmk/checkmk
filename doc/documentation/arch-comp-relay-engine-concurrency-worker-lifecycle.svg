@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="368" font-family="Helvetica, Arial, sans-serif" viewBox="0 0 760 368" role="img" aria-label="A worker serves one task at a time and replaces a failed helper" font-size="13">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs>
+<marker id="worker-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M0 0L10 5L0 10z" fill="#6b7280">
+</path>
+</marker>
+</defs>
+<text x="24" y="34" font-size="15" font-weight="600" fill="#111827">A worker serves one task at a time and replaces a failed helper</text>
+<text x="24" y="54" font-size="11.5" fill="#4b5563">Life of one PooledSubprocess in subprocess_pool.py</text>
+<g fill="none" stroke="#6b7280" stroke-width="1.25">
+<path d="M192 130H238" marker-end="url(#worker-arrow)">
+</path>
+<path d="M422 118H492" marker-end="url(#worker-arrow)">
+</path>
+<path d="M492 142H422" marker-end="url(#worker-arrow)">
+</path>
+<path d="M600 174V256" marker-end="url(#worker-arrow)">
+</path>
+<path d="M492 300H360V174" marker-end="url(#worker-arrow)">
+</path>
+<path d="M300 174V300H192" marker-end="url(#worker-arrow)">
+</path>
+</g>
+<g>
+<rect x="24" y="86" width="168" height="88" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="108" y="110" text-anchor="middle" font-weight="600" fill="#111827">Start</text>
+<text x="108" y="126" text-anchor="middle" font-size="11.5" fill="#111827">spawn helper process</text>
+<text x="108" y="142" text-anchor="middle" font-size="11.5" fill="#111827">start its stderr drain</text>
+<text x="108" y="158" text-anchor="middle" font-size="11.5" fill="#111827">start the worker loop</text>
+</g>
+<g>
+<rect x="238" y="86" width="184" height="88" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="330" y="110" text-anchor="middle" font-weight="600" fill="#111827">Wait</text>
+<text x="330" y="126" text-anchor="middle" font-size="11.5" fill="#111827">for the next task or a</text>
+<text x="330" y="142" text-anchor="middle" font-size="11.5" fill="#111827">stop request, whichever</text>
+<text x="330" y="158" text-anchor="middle" font-size="11.5" fill="#111827">comes first</text>
+</g>
+<g>
+<rect x="492" y="86" width="216" height="88" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="600" y="110" text-anchor="middle" font-weight="600" fill="#111827">Serve one task</text>
+<text x="600" y="126" text-anchor="middle" font-size="11.5" fill="#111827">write the command to stdin</text>
+<text x="600" y="142" text-anchor="middle" font-size="11.5" fill="#111827">read the reply from stdout</text>
+<text x="600" y="158" text-anchor="middle" font-size="11.5" fill="#111827">within timeout + 1 s grace</text>
+</g>
+<g>
+<rect x="492" y="256" width="216" height="88" rx="8" fill="#2563eb" fill-opacity="0.12" stroke="#2563eb" stroke-width="2">
+</rect>
+<text x="600" y="280" text-anchor="middle" font-weight="600" fill="#111827">Restart the helper</text>
+<text x="600" y="296" text-anchor="middle" font-size="11.5" fill="#111827">kill it if still running</text>
+<text x="600" y="312" text-anchor="middle" font-size="11.5" fill="#111827">emit an error, or requeue</text>
+<text x="600" y="328" text-anchor="middle" font-size="11.5" fill="#111827">spawn a new process</text>
+</g>
+<g>
+<rect x="24" y="256" width="168" height="88" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="108" y="280" text-anchor="middle" font-weight="600" fill="#111827">Stop</text>
+<text x="108" y="296" text-anchor="middle" font-size="11.5" fill="#111827">terminate the process</text>
+<text x="108" y="312" text-anchor="middle" font-size="11.5" fill="#111827">cancel loop and drain</text>
+<text x="108" y="328" text-anchor="middle" font-size="11.5" fill="#111827">set the stopped event</text>
+</g>
+<text x="457" y="110" text-anchor="middle" font-size="11.5" fill="#4b5563">next task</text>
+<text x="457" y="158" text-anchor="middle" font-size="11.5" fill="#4b5563">emitted</text>
+<text x="590" y="208" text-anchor="end" font-size="11.5" fill="#4b5563">timeout, reply cut short,</text>
+<text x="590" y="224" text-anchor="end" font-size="11.5" fill="#4b5563">unreadable, or helper died</text>
+<text x="426" y="292" text-anchor="middle" font-size="11.5" fill="#4b5563">new helper ready</text>
+<text x="292" y="244" text-anchor="end" font-size="11.5" fill="#4b5563">stop requested</text>
+</svg>

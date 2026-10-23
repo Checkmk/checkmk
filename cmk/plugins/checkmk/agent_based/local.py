@@ -305,19 +305,14 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
             errors[item] = LocalError(output=line, reason=perf_msg)
             continue
 
-        # convert escaped newline chars
-        # (will be converted back later individually for the different cores)
-        text = (raw_info or "").replace("\\n", "\n")
-        if state_msg or perf_msg:  # type: ignore[redundant-expr]
-            state = 3  # type: ignore[unreachable]
-            text = f"{state_msg}{perf_msg}Output is: {text}"
-
         parsed_data[item] = LocalResult(
             cache_info=CacheInfo.from_raw(raw_cached, now),
             item=item,
             state=State.OK if state == "P" else State(state),
             apply_levels=state == "P",
-            text=text,
+            # convert escaped newline chars
+            # (will be converted back later individually for the different cores)
+            text=(raw_info or "").replace("\\n", "\n"),
             perfdata=perfdata,
         )
 

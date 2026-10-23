@@ -4,12 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Mapping
+from http import HTTPStatus
 
-from cmk.graphing_engine import Graph
+from cmk.graphing_engine import EvaluatedGraph, Graph
 from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -22,7 +24,12 @@ from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.livestatus_client import MKLivestatusException
 from cmk.web.utils import permission_verification as permissions
 
-from .._graph_dispatch import evaluate_built_graphs, evaluate_graphs, EvaluatedGraphs
+from .._graph_dispatch import (
+    evaluate_built_graphs,
+    evaluate_graphs,
+    EvaluatedGraphs,
+    EvaluationOptions,
+)
 from .._user_specific_unit import get_temperature_unit
 from ._family import GRAPH_FAMILY
 from ._serialize import (
@@ -39,53 +46,54 @@ from .models import (
 )
 
 
-def _fetch_options(
+def graph_fetch_options(
     time_range: EngineTimeRange,
     consolidation_function: ApiConsolidation,
     combination_mode: ApiCombinationMode | None,
-) -> Mapping[str, object]:
-    options: dict[str, object] = {
-        "consolidation_function": api_consolidation_to_engine(consolidation_function),
-        "time_range": time_range,
-        "destination": None,
-    }
-    if combination_mode is not None:
-        options["combination_mode"] = combination_mode
-    return options
+) -> EvaluationOptions:
+    return EvaluationOptions(
+        time_range=time_range,
+        consolidation_function=api_consolidation_to_engine(consolidation_function),
+        destination=None,
+        combination_mode=combination_mode,
+        include_edge_neighbours=True,
+    )
 
 
-def _evaluated_or_problem(evaluate: Callable[[], EvaluatedGraphs]) -> EvaluatedGraphs:
+def evaluated_or_problem(evaluate: Callable[[], EvaluatedGraphs]) -> EvaluatedGraphs:
     try:
         return evaluate()
     except MKLivestatusException as exc:
         raise ProblemException(
-            status=503,
+            status=HTTPStatus.SERVICE_UNAVAILABLE,
             title="Monitoring data source unavailable",
             detail=str(exc),
         ) from exc
     except Exception as exc:
         raise ProblemException(
-            status=500,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
             title="Graph evaluation failed",
             detail=f"Failed to evaluate graph: {exc}",
         ) from exc
 
 
-def _single_graph_response(
-    evaluated: EvaluatedGraphs,
-    *,
-    fallback_time_range: EngineTimeRange,
-    temperature_unit: TemperatureUnit,
-) -> GraphFetchResponse:
+def only_graph(evaluated: EvaluatedGraphs) -> EvaluatedGraph:
     if len(evaluated.graphs) != 1:
         raise ProblemException(
-            status=500,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
             title="Graph evaluation failed",
             detail=f"Expected exactly one graph to be evaluated, but got {len(evaluated.graphs)}",
         )
+    return evaluated.graphs[0]
+
+
+def _single_graph_response(
+    evaluated: EvaluatedGraphs,
+    *,
+    temperature_unit: TemperatureUnit,
+) -> GraphFetchResponse:
     return evaluated_to_response(
-        evaluated.graphs[0],
-        fallback_time_range=fallback_time_range,
+        only_graph(evaluated),
         diagnostics=evaluated.diagnostics,
         temperature_unit=temperature_unit,
     )
@@ -101,10 +109,9 @@ def evaluate_graph_to_response(
 ) -> GraphFetchResponse:
     """Evaluate the serialized definition of exactly one graph into its fetched data."""
     time_range = api_time_range_to_engine(requested_time_range)
-    options = _fetch_options(time_range, consolidation_function, combination_mode)
+    options = graph_fetch_options(time_range, consolidation_function, combination_mode)
     return _single_graph_response(
-        _evaluated_or_problem(lambda: evaluate_graphs(internal, options)),
-        fallback_time_range=time_range,
+        evaluated_or_problem(lambda: evaluate_graphs(internal, options)),
         temperature_unit=temperature_unit,
     )
 
@@ -123,10 +130,9 @@ def evaluate_built_graph_to_response(
     it resolves the data exactly as the serialized entry point does, without a wire form in between.
     """
     time_range = api_time_range_to_engine(requested_time_range)
-    options = _fetch_options(time_range, consolidation_function, combination_mode)
+    options = graph_fetch_options(time_range, consolidation_function, combination_mode)
     return _single_graph_response(
-        _evaluated_or_problem(lambda: evaluate_built_graphs([graph], options)),
-        fallback_time_range=time_range,
+        evaluated_or_problem(lambda: evaluate_built_graphs([graph], options)),
         temperature_unit=temperature_unit,
     )
 
@@ -162,5 +168,6 @@ ENDPOINT_FETCH_GRAPH_DATA = VersionedEndpoint(
         )
     ),
     doc=EndpointDoc(family=GRAPH_FAMILY.name),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=fetch_graph_data_v1)},
 )

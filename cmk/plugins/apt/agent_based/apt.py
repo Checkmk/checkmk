@@ -38,13 +38,12 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.apt.lib import (
     ESM_ENABLED,
     ESM_NOT_ENABLED,
@@ -220,10 +219,6 @@ agent_section_apt = AgentSection(
 )
 
 
-def discover_apt(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def _format_summary(action: str, packages: Sequence[str], verbose: bool = False) -> str:
     summary = f"{len(packages)} {action}"
     if verbose and packages:
@@ -275,7 +270,7 @@ check_plugin_apt = CheckPlugin(
     name="apt",
     service_name="APT Updates",
     check_function=check_apt,
-    discovery_function=discover_apt,
+    discovery_function=discover_one_service,
     check_default_parameters={
         "normal": 1,
         "removals": 1,

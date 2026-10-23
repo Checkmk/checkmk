@@ -9,14 +9,13 @@ from typing import TypedDict
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.liebert.agent_based.lib import DETECT_LIEBERT, parse_liebert_without_unit
 
 # example output
@@ -37,10 +36,6 @@ class Section(TypedDict, total=True):
 
 def parse_liebert_system_events(string_table: StringTable) -> Section:
     return {"events": parse_liebert_without_unit([string_table], str)}
-
-
-def discover_liebert_system_events(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _is_active_event(event_name: str, event_type: str) -> bool:
@@ -75,7 +70,7 @@ snmp_section_liebert_system_events = SimpleSNMPSection(
 
 check_plugin_liebert_system_events = CheckPlugin(
     name="liebert_system_events",
-    discovery_function=discover_liebert_system_events,
+    discovery_function=discover_one_service,
     check_function=check_liebert_system_events,
     service_name="System events",
 )

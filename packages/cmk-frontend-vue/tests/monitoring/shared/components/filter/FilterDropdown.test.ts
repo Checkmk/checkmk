@@ -4,15 +4,18 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen } from '@testing-library/vue'
+import { render, screen, waitFor, within } from '@testing-library/vue'
 import { defineComponent, h, nextTick, ref } from 'vue'
 
 import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
 import FilterDropdown from '@/monitoring/shared/components/filter/FilterDropdown.vue'
 import type {
+  AutocompleteChoiceFilter,
   CheckboxListFilter,
+  ColumnFilterDefinition,
   ColumnFilterValue,
-  SortDirection
+  SortDirection,
+  StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
 
 const definition: CheckboxListFilter<'state'> = {
@@ -24,6 +27,20 @@ const definition: CheckboxListFilter<'state'> = {
   ]
 }
 
+const LABELS = ['cmk/os_family:linux', 'cmk/os_family:windows', 'cmk/site:heute']
+
+const labelsDefinition: AutocompleteChoiceFilter<'labels'> = {
+  type: 'autocomplete-choice',
+  field: 'labels',
+  op: 'all_of',
+  suggest: (query: string) => Promise.resolve(LABELS.filter((label) => label.includes(query)))
+}
+
+const nameDefinition: StringInputFilter<'name'> = {
+  type: 'string-input',
+  field: 'name'
+}
+
 function upFilter(): ColumnFilterNode<'state'> {
   return { type: 'condition', field: 'state', op: 'one_of', value: ['UP'] }
 }
@@ -32,22 +49,31 @@ function upFilter(): ColumnFilterNode<'state'> {
 // commits, and supplying the trigger slot the shell expects.
 function renderDropdown(
   initial: ColumnFilterNode<FilterField> | undefined = undefined,
-  sortable: boolean = false
+  sortable: boolean = false,
+  extendsSortOf: string[] = [],
+  filterDefinition: ColumnFilterDefinition = definition,
+  label: string = 'State'
 ) {
   const model = ref<ColumnFilterNode<FilterField> | undefined>(initial)
   const sort = ref<SortDirection>(false)
+  const extendedSort = ref<SortDirection>(false)
   const wrapper = defineComponent({
     setup() {
       return () =>
         h(
           FilterDropdown,
           {
-            definition: definition,
-            label: 'State',
+            definition: filterDefinition,
+            label: label,
             sortable: sortable,
             sort: sort.value,
             'onUpdate:sort': (value: SortDirection) => {
               sort.value = value
+            },
+            extendsSortOf: extendsSortOf,
+            extendedSort: extendedSort.value,
+            'onUpdate:extendedSort': (value: SortDirection) => {
+              extendedSort.value = value
             },
             modelValue: model.value,
             'onUpdate:modelValue': (value: ColumnFilterValue<FilterField> | undefined) => {
@@ -78,7 +104,7 @@ function renderDropdown(
         )
     }
   })
-  return { model, sort, ...render(wrapper) }
+  return { model, sort, extendedSort, ...render(wrapper) }
 }
 
 test('a sort direction is reported as it is picked, on its own', async () => {
@@ -92,6 +118,52 @@ test('a sort direction is reported as it is picked, on its own', async () => {
   expect(model.value).toBeUndefined()
 })
 
+test('picking a sort direction closes the panel', async () => {
+  const user = userEvent.setup()
+  renderDropdown(undefined, true)
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.click(screen.getByRole('button', { name: 'Sort descending' }))
+
+  expect(screen.queryByRole('group', { name: 'Filter State' })).not.toBeInTheDocument()
+})
+
+test('extending the active sort closes the panel', async () => {
+  const user = userEvent.setup()
+  renderDropdown(undefined, true, ['Host name'])
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  const extend = screen.getByRole('group', { name: 'Extend active sorting of "Host name" by' })
+  await user.click(within(extend).getByRole('button', { name: 'Sort ascending' }))
+
+  expect(screen.queryByRole('group', { name: 'Filter State' })).not.toBeInTheDocument()
+})
+
+test('picking a sort direction applies the staged selection with it', async () => {
+  const user = userEvent.setup()
+  const { model, sort } = renderDropdown(undefined, true)
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.click(screen.getByRole('checkbox', { name: 'UP' }))
+  await user.click(screen.getByRole('button', { name: 'Sort descending' }))
+
+  expect(sort.value).toBe('desc')
+  expect(model.value).toEqual(upFilter())
+})
+
+test('extending the active sort applies the staged selection with it', async () => {
+  const user = userEvent.setup()
+  const { model, extendedSort } = renderDropdown(undefined, true, ['Host name'])
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.click(screen.getByRole('checkbox', { name: 'UP' }))
+  const extend = screen.getByRole('group', { name: 'Extend active sorting of "Host name" by' })
+  await user.click(within(extend).getByRole('button', { name: 'Sort ascending' }))
+
+  expect(extendedSort.value).toBe('asc')
+  expect(model.value).toEqual(upFilter())
+})
+
 test('a column offers no sort directions unless it sorts', async () => {
   const user = userEvent.setup()
   renderDropdown()
@@ -99,6 +171,37 @@ test('a column offers no sort directions unless it sorts', async () => {
   await user.click(screen.getByRole('button', { name: 'Open' }))
 
   expect(screen.queryByRole('button', { name: 'Sort ascending' })).not.toBeInTheDocument()
+})
+
+test('opening the panel focuses the filter rather than the sort directions', async () => {
+  const user = userEvent.setup()
+  renderDropdown(undefined, true)
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await nextTick()
+
+  expect(screen.getByRole('checkbox', { name: 'Select all' })).toHaveFocus()
+})
+
+test('the sort is only offered for extension once another column sorts', async () => {
+  const user = userEvent.setup()
+  renderDropdown(undefined, true)
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+
+  expect(screen.queryByRole('group', { name: /Extend active sorting/ })).not.toBeInTheDocument()
+})
+
+test('extending the active sort is reported apart from sorting by the column', async () => {
+  const user = userEvent.setup()
+  const { sort, extendedSort } = renderDropdown(undefined, true, ['Host name'])
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  const extend = screen.getByRole('group', { name: 'Extend active sorting of "Host name" by' })
+  await user.click(within(extend).getByRole('button', { name: 'Sort descending' }))
+
+  expect(extendedSort.value).toBe('desc')
+  expect(sort.value).toBe(false)
 })
 
 test('toggling an option does not commit to the model before Apply', async () => {
@@ -184,6 +287,22 @@ test('the trigger points at the panel it expands', async () => {
   const panel = screen.getByRole('group', { name: 'Filter State' })
   expect(trigger.getAttribute('aria-controls')).toBe(panel.id)
   expect(panel.id).not.toBe('')
+})
+
+test('Alt+ArrowDown on the trigger opens the panel and moves into it', async () => {
+  const user = userEvent.setup()
+  renderDropdown()
+
+  const trigger = screen.getByRole('button', { name: 'Open' })
+  trigger.focus()
+  await user.keyboard('{ArrowDown}')
+  expect(trigger).toHaveAttribute('aria-expanded', 'false')
+
+  await user.keyboard('{Alt>}{ArrowDown}{/Alt}')
+
+  expect(trigger).toHaveAttribute('aria-expanded', 'true')
+  const panel = screen.getByRole('group', { name: 'Filter State' })
+  expect(panel).toContainElement(document.activeElement as HTMLElement)
 })
 
 function renderAnchoredDropdown(clipped = false) {
@@ -316,4 +435,74 @@ test('a column scrolled past the right edge keeps the panel inside it', async ()
 
   expect(panel.style.left).toBe('auto')
   expect(panel.style.right).toBe('100px')
+})
+
+test('the arrow keys walk the suggestions one at a time', async () => {
+  const user = userEvent.setup()
+  renderDropdown(undefined, false, [], labelsDefinition, 'Labels')
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.type(screen.getByRole('searchbox'), 'os_family')
+  await waitFor(() => screen.getByRole('button', { name: 'cmk/os_family:linux' }))
+
+  await user.keyboard('{ArrowDown}')
+  expect(screen.getByRole('button', { name: 'cmk/os_family:linux' })).toHaveFocus()
+
+  // The shell walks the panel's rows on the same keys, so without the suggestion list
+  // keeping them this second press would land on the third suggestion.
+  await user.keyboard('{ArrowDown}')
+  expect(screen.getByRole('button', { name: 'cmk/os_family:windows' })).toHaveFocus()
+
+  await user.keyboard('{ArrowUp}')
+  expect(screen.getByRole('button', { name: 'cmk/os_family:linux' })).toHaveFocus()
+})
+
+test('Clear leaves the focus in the emptied filter field', async () => {
+  const user = userEvent.setup()
+  renderDropdown(undefined, false, [], nameDefinition, 'Host')
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.type(screen.getByRole('textbox', { name: 'Value' }), 'web')
+  await user.click(screen.getByRole('button', { name: 'Clear' }))
+  await nextTick()
+
+  const field = screen.getByRole('textbox', { name: 'Value' })
+  expect(field).toHaveValue('')
+  expect(field).toHaveFocus()
+})
+
+test('Enter in a typed-in filter field commits it and closes the dropdown', async () => {
+  const user = userEvent.setup()
+  const { model } = renderDropdown(undefined, false, [], nameDefinition, 'Host')
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.type(screen.getByRole('textbox', { name: 'Value' }), 'web{Enter}')
+
+  expect(model.value).toEqual({ type: 'condition', field: 'name', op: 'contains', value: 'web' })
+  expect(screen.queryByRole('button', { name: 'Apply' })).not.toBeInTheDocument()
+})
+
+test('Enter in a suggestion search keeps the dropdown open', async () => {
+  const user = userEvent.setup()
+  renderDropdown(undefined, false, [], labelsDefinition, 'Labels')
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.type(screen.getByRole('searchbox'), 'os_family')
+  await waitFor(() => screen.getByRole('button', { name: 'cmk/os_family:linux' }))
+  await user.keyboard('{Enter}')
+
+  expect(screen.getByRole('searchbox')).toHaveValue('os_family')
+  expect(screen.getByRole('button', { name: 'Apply' })).toBeInTheDocument()
+})
+
+test('Enter in the option search of a checkbox list keeps the dropdown open', async () => {
+  const user = userEvent.setup()
+  const { model } = renderDropdown(undefined, false, [], { ...definition, searchThreshold: 0 })
+
+  await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.click(screen.getByRole('checkbox', { name: 'UP' }))
+  await user.type(screen.getByRole('searchbox'), 'DO{Enter}')
+
+  expect(model.value).toBeUndefined()
+  expect(screen.getByRole('button', { name: 'Apply' })).toBeInTheDocument()
 })

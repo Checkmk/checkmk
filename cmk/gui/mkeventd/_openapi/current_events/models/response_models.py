@@ -17,7 +17,7 @@ from cmk.gui.mkeventd._openapi.commands import (
     SyslogPriorityType,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
+from cmk.gui.openapi.framework.model.base_models import TitledDomainObjectModel
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.livestatus_client.queries import ResultRow
 
@@ -91,7 +91,7 @@ class CurrentEventFieldsModel:
 
 
 @api_model
-class CurrentEventModel(DomainObjectModel):
+class CurrentEventModel(TitledDomainObjectModel):
     domainType: Literal["event_console"] = api_field(
         description="The domain type of the object.",
     )

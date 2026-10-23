@@ -18,8 +18,9 @@ import CmkSuggestions, {
 } from 'cmk-ui-library/components/CmkSuggestions'
 import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
-import { untranslated } from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { useFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
@@ -29,6 +30,9 @@ import { computed, nextTick, ref, useSlots, useTemplateRef } from 'vue'
 import CmkInlineValidation from '../user-input/CmkInlineValidation.vue'
 import CmkDropdownButton, { type ButtonVariants } from './CmkDropdownButton.vue'
 import TruncateText from './TruncateText.vue'
+
+const { _t } = usei18n()
+useWidgetKeys(_t('Dropdown'), [{ combo: ['Alt', 'ArrowDown'], description: _t('Open') }])
 
 export interface DropdownOption {
   name: string
@@ -231,8 +235,8 @@ defineExpose({
       suppressNextClickOutside.value = false
     }, 0)
   },
-  focus: () => {
-    comboboxButtonRef.value?.focus()
+  focus: (options?: FocusOptions) => {
+    comboboxButtonRef.value?.focus(options)
   },
   isOpen: () => suggestionsShown.value
 })
@@ -252,6 +256,12 @@ function showSuggestions(): void {
         await suggestionsRef.value.focus()
       }
     })
+  }
+}
+
+function openFromKeyboard(): void {
+  if (!suggestionsShown.value) {
+    showSuggestions()
   }
 }
 
@@ -369,6 +379,7 @@ const group = computed<ButtonVariants['group']>(() => {
       :width="width"
       :class="{ 'cmk-dropdown__validation-error': formValidation }"
       @click="showSuggestions"
+      @keydown.alt.down.exact.prevent="openFromKeyboard"
     >
       <span v-if="!!slots['button-prefix']" class="cmk-dropdown--button-prefix">
         <slot name="button-prefix"></slot>
@@ -472,7 +483,7 @@ const group = computed<ButtonVariants['group']>(() => {
 }
 
 .cmk-dropdown__validation-error {
-  border: 1px solid var(--inline-error-border-color);
+  border: 1px solid var(--status-border-color-error);
 }
 
 .cmk-dropdown__anchor {

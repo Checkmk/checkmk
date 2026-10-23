@@ -89,6 +89,74 @@ def test_discover_proxmox_ve_node_mem_allocation_missing_data() -> None:
             [],
             id="No output when node total mem is missing",
         ),
+        pytest.param(
+            {
+                "mem_allocation_ratio": ("fixed", (100.0, 120.0)),
+            },
+            # An offline node is reported with all totals set to 0
+            SectionNodeAllocation(
+                allocated_cpu=0.0,
+                node_total_cpu=0.0,
+                allocated_mem=0.0,
+                node_total_mem=0.0,
+                status="offline",
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary=(
+                        "Node status: offline, total memory: 0 B, "
+                        "cannot calculate memory allocation ratio"
+                    ),
+                ),
+            ],
+            id="Offline node with node total mem 0",
+        ),
+        pytest.param(
+            {
+                "mem_allocation_ratio": ("fixed", (100.0, 120.0)),
+            },
+            # An offline node can still report the totals of its last known stats
+            SectionNodeAllocation(
+                allocated_cpu=0.0,
+                node_total_cpu=13.0,
+                allocated_mem=0.0,
+                node_total_mem=64000000.0,
+                status="offline",
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary=(
+                        "Node status: offline, total memory: 61.0 MiB, "
+                        "cannot calculate memory allocation ratio"
+                    ),
+                ),
+            ],
+            id="Offline node with node total mem reported",
+        ),
+        pytest.param(
+            {
+                "mem_allocation_ratio": ("fixed", (100.0, 120.0)),
+            },
+            SectionNodeAllocation(
+                allocated_cpu=0.0,
+                node_total_cpu=0.0,
+                allocated_mem=0.0,
+                node_total_mem=0.0,
+                status="online",
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary=(
+                        "Node status: online, total memory: 0 B, "
+                        "cannot calculate memory allocation ratio"
+                    ),
+                ),
+            ],
+            id="Online node with node total mem 0",
+        ),
     ],
 )
 def test_check_proxmox_ve_node_mem_allocation(

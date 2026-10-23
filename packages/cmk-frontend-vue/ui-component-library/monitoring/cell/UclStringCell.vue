@@ -29,13 +29,7 @@ export const panelConfig = {
     title: 'value',
     initialState:
       'example.host.checkmk.com / Filesystem /var/log — long_descriptive_label_that_keeps_going',
-    help: 'The text rendered inside the cell. Line breaks are allowed after spaces, hyphens, underscores and dots.'
-  },
-  hardBreakEvery: {
-    type: 'number' as const,
-    title: 'hardBreakEvery',
-    initialState: 15,
-    help: 'Fallback break opportunity inserted every N characters when no natural separators are available.'
+    help: 'The text rendered inside the cell. Long values wrap at the cell edge.'
   },
   linkEnabled: {
     type: 'boolean' as const,
@@ -217,20 +211,14 @@ const currentWidth = computed(() => `${effectiveCellWidth.value} px`)
             @update:filter-state="filterState = $event"
           >
             <template #row>
-              <StringCell
-                column-id="cell"
-                :value="propState.value"
-                :hard-break-every="propState.hardBreakEvery"
-                :linked-to="linkedTo"
-              />
+              <StringCell column-id="cell" :value="propState.value" :linked-to="linkedTo" />
             </template>
           </MonitoringTable>
         </div>
 
         <p class="ucl-string-cell__hint">
-          Drag the slider to change the cell width. The cell clamps at three lines and breaks
-          preferentially at spaces, hyphens, underscores and dots; longer unbroken runs fall back to
-          <code>hardBreakEvery</code>.
+          Drag the slider to change the cell width. The cell clamps at three lines and wraps long
+          values at the cell edge without adding characters to the copied text.
         </p>
       </div>
 

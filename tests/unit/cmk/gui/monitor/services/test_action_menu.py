@@ -69,6 +69,21 @@ def test_serialize_entry_maps_link() -> None:
     assert item.title == "Open log file viewer"
     assert item.url == "view.py?view_name=logwatch&host=web-server-01"
     assert isinstance(item.target, ApiOmitted)
+    assert isinstance(item.ident, ApiOmitted)
+
+
+@pytest.mark.usefixtures("passthrough_macros")
+def test_serialize_entry_keeps_the_ident() -> None:
+    entry = IconEntry(
+        sort_index=30,
+        icon_name=StaticIcon(IconNames.services),
+        title="Run service discovery",
+        url_spec="wato.py?mode=inventory&host=web-server-01",
+        ident="wato",
+    )
+    item = _serialize_entry(entry, {})
+    assert item is not None
+    assert item.ident == "wato"
 
 
 @pytest.mark.usefixtures("passthrough_macros")

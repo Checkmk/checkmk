@@ -80,10 +80,9 @@ describe('m4', () => {
     expect(buckets[1]!.gap).toBe(true)
   })
 
-  test('returns an empty array for null, empty, or non-positive bucketCount', () => {
+  test('returns an empty array for empty values or a non-positive bucketCount', () => {
     const timeRange = { start: 0, end: 2, step: 1 }
 
-    expect(m4(null, timeRange, 4)).toEqual([])
     expect(m4([], timeRange, 4)).toEqual([])
     expect(m4([10, 20], timeRange, 0)).toEqual([])
   })
@@ -166,16 +165,7 @@ describe('edgeSample', () => {
 
     const bucket = edgeSample(cache, RANGE_OF_THREE_VALUES.end)
 
-    expect(bucket.lastValue).toBe(3)
-  })
-
-  test('reports a gap where the range ends between samples', () => {
-    const cache = m4([1, 2, 3], RANGE_OF_THREE_VALUES, VALUE_COUNT)
-    const betweenTheSecondAndThirdSample = 250
-
-    const bucket = edgeSample(cache, betweenTheSecondAndThirdSample)
-
-    expect(bucket.gap).toBe(true)
+    expect(bucket?.lastValue).toBe(3)
   })
 
   test('reports a gap where the sample on the end carries no value', () => {
@@ -183,7 +173,7 @@ describe('edgeSample', () => {
 
     const bucket = edgeSample(cache, RANGE_OF_THREE_VALUES.end)
 
-    expect(bucket.gap).toBe(true)
+    expect(bucket?.gap).toBe(true)
   })
 })
 

@@ -7,69 +7,46 @@
 
 
 from collections.abc import Mapping
+from http import HTTPStatus
 
 import pytest
 
 import cmk.gui.views
 from cmk.ccc.site import SiteId
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.data_source import ABCDataSource, RowTable
-from cmk.gui.display_options import display_options
 from cmk.gui.graphing import vs_graph_render_option_elements
-from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import (
+from cmk.gui.painter import (
     all_painters,
     Cell,
-    Painter,
+    CellDrilldown,
+    InternalPainter,
     PainterRegistry,
     register_painter,
 )
-from cmk.gui.painter.v0 import registry as painter_registry_module
-from cmk.gui.painter.v0.helpers import RenderLink
-from cmk.gui.painter_options import painter_option_registry, PainterOptions
-from cmk.gui.theme.current_theme import theme
+from cmk.gui.painter import registry as painter_registry_module
+from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.type_defs import ColumnSpec, Row, SorterSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
 from cmk.gui.views import command
-from cmk.gui.views.command import command_group_registry, command_registry
 from cmk.gui.views.command import group as group_module
 from cmk.gui.views.command import registry as registry_module
-from cmk.gui.views.exporter import exporter_registry
 from cmk.gui.views.graph import _LEGACY_ONLY_RENDER_OPTIONS
-from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.page_show_view import get_limit
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from cmk.web.utils.request_cache import RequestCache
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
 @pytest.mark.usefixtures("request_context")
-def test_registered_painter_options() -> None:
-    expected = [
-        "aggr_expand",
-        "aggr_onlydiff",
-        "aggr_onlyproblems",
-        "aggr_treetype",
-        "aggr_wrap",
-        "matrix_omit_uniform",
-        "pnp_timerange",
-        "show_internal_tree_paths",
-        "ts_date",
-        "ts_format",
-        "graph_render_options",
-        "refresh",
-        "num_columns",
-        "show_internal_graph_and_metric_ids",
-    ]
-
-    names = painter_option_registry.keys()
-    assert sorted(expected) == sorted(names)
-
+def test_painter_options_provide_valuespec() -> None:
     for cls in painter_option_registry.values():
-        vs = cls.valuespec
+        vs = cls.valuespec(Config())
         assert isinstance(vs, ValueSpec)
 
 
@@ -78,93 +55,6 @@ def test_legacy_only_render_options_name_existing_options() -> None:
     assert set(_LEGACY_ONLY_RENDER_OPTIONS) <= {
         key for key, _vs in vs_graph_render_option_elements()
     }
-
-
-def test_registered_layouts() -> None:
-    expected = [
-        "boxed",
-        "boxed_graph",
-        "dataset",
-        "matrix",
-        "mobiledataset",
-        "mobilelist",
-        "mobiletable",
-        "table",
-        "tiled",
-    ]
-
-    names = layout_registry.keys()
-    assert sorted(expected) == sorted(names)
-
-
-def test_layout_properties() -> None:
-    expected = {
-        "boxed": {"checkboxes": True, "title": "Balanced boxes"},
-        "boxed_graph": {"checkboxes": True, "title": "Balanced graph boxes"},
-        "dataset": {"checkboxes": False, "title": "Single dataset"},
-        "matrix": {
-            "checkboxes": False,
-            "has_csv_export": True,
-            "options": ["matrix_omit_uniform"],
-            "title": "Matrix",
-        },
-        "mobiledataset": {"checkboxes": False, "title": "Mobile: Dataset"},
-        "mobilelist": {"checkboxes": False, "title": "Mobile: List"},
-        "mobiletable": {"checkboxes": False, "title": "Mobile: Table"},
-        "table": {"checkboxes": True, "title": "Table"},
-        "tiled": {"checkboxes": True, "title": "Tiles"},
-    }
-
-    for ident, spec in expected.items():
-        plugin = layout_registry[ident]()
-        assert isinstance(plugin.title, str)
-        assert spec["title"] == plugin.title
-        assert spec["checkboxes"] == plugin.can_display_checkboxes
-        assert spec.get("has_csv_export", False) == plugin.has_individual_csv_export
-
-
-def test_get_layout_choices() -> None:
-    choices = layout_registry.get_choices()
-    assert sorted(choices) == sorted(
-        [
-            ("matrix", "Matrix"),
-            ("boxed_graph", "Balanced graph boxes"),
-            ("dataset", "Single dataset"),
-            ("tiled", "Tiles"),
-            ("table", "Table"),
-            ("boxed", "Balanced boxes"),
-            ("mobiledataset", "Mobile: Dataset"),
-            ("mobiletable", "Mobile: Table"),
-            ("mobilelist", "Mobile: List"),
-        ]
-    )
-
-
-def test_registered_exporters() -> None:
-    expected = [
-        "csv",
-        "csv_export",
-        "json",
-        "json_export",
-        "jsonp",
-        "python",
-        "python-raw",
-    ]
-    names = exporter_registry.keys()
-    assert sorted(expected) == sorted(names)
-
-
-def test_registered_command_groups() -> None:
-    expected = [
-        "acknowledge",
-        "aggregations",
-        "downtimes",
-        "fake_check",
-        "various",
-    ]
-
-    names = command_group_registry.keys()
-    assert sorted(expected) == sorted(names)
 
 
 def test_legacy_register_command_group(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -178,130 +68,6 @@ def test_legacy_register_command_group(monkeypatch: pytest.MonkeyPatch) -> None:
     assert group.ident == "abc"
     assert group.title == "A B C"
     assert group.sort_index == 123
-
-
-def test_registered_commands() -> None:
-    expected: dict[str, dict[str, object]] = {
-        "acknowledge": {
-            "group": "acknowledge",
-            "permission": "action.acknowledge",
-            "tables": ["host", "service", "aggr"],
-            "title": "Acknowledge problems",
-        },
-        "freeze_aggregation": {
-            "group": "aggregations",
-            "permission": "action.aggregation_freeze",
-            "tables": ["aggr"],
-            "title": "Freeze aggregations",
-        },
-        "ec_custom_actions": {
-            "permission": "mkeventd.actions",
-            "tables": ["event"],
-            "title": "Custom action",
-        },
-        "remove_acknowledgments": {
-            "group": "acknowledge",
-            "permission": "action.acknowledge",
-            "tables": ["host", "service", "aggr"],
-            "title": "Remove acknowledgments",
-        },
-        "remove_comments": {
-            "permission": "action.addcomment",
-            "tables": ["comment"],
-            "title": "Delete comments",
-        },
-        "remove_downtimes_hosts_services": {
-            "permission": "action.downtimes",
-            "tables": ["host", "service", "aggr"],
-            "title": "Remove downtimes",
-        },
-        "remove_downtimes": {
-            "permission": "action.downtimes",
-            "tables": ["downtime"],
-            "title": "Remove downtimes",
-        },
-        "schedule_downtimes": {
-            "permission": "action.downtimes",
-            "tables": ["host", "service", "aggr"],
-            "title": "Schedule downtimes",
-        },
-        "ec_archive_events_of_host": {
-            "permission": "mkeventd.archive_events_of_hosts",
-            "tables": ["service"],
-            "title": "Archive events of hosts",
-        },
-        "ec_change_state": {
-            "permission": "mkeventd.changestate",
-            "tables": ["event"],
-            "title": "Change state",
-        },
-        "clear_modified_attributes": {
-            "permission": "action.clearmodattr",
-            "tables": ["host", "service"],
-            "title": "Reset modified attributes",
-        },
-        "send_custom_notification": {
-            "permission": "action.customnotification",
-            "tables": ["host", "service"],
-            "title": "Send custom notification",
-        },
-        "ec_archive_event": {
-            "permission": "mkeventd.delete",
-            "tables": ["event"],
-            "title": "Archive event",
-        },
-        "add_comment": {
-            "permission": "action.addcomment",
-            "tables": ["host", "service"],
-            "title": "Add comment",
-        },
-        "toggle_passive_checks": {
-            "permission": "action.enablechecks",
-            "tables": ["host", "service"],
-            "title": "Enable/disable passive checks",
-        },
-        "toggle_active_checks": {
-            "permission": "action.enablechecks",
-            "tables": ["host", "service"],
-            "title": "Enable/disable active checks",
-        },
-        "fake_check_result": {
-            "group": "fake_check",
-            "permission": "action.fakechecks",
-            "tables": ["host", "service"],
-            "title": "Fake check results",
-        },
-        "notifications": {
-            "permission": "action.notifications",
-            "tables": ["host", "service"],
-            "title": "Enable/disable notifications",
-        },
-        "reschedule": {
-            "permission": "action.reschedule",
-            "row_stats": True,
-            "tables": ["host", "service"],
-            "title": "Reschedule active checks",
-        },
-        "ec_update_event": {
-            "permission": "mkeventd.update",
-            "tables": ["event"],
-            "title": "Update & acknowledge",
-        },
-        "delete_crash_reports": {
-            "permission": "action.delete_crash_report",
-            "tables": ["crash"],
-            "title": "Delete crash reports",
-        },
-    }
-
-    names = command_registry.keys()
-    assert sorted(expected.keys()) == sorted(names)
-
-    for cmd in command_registry.values():
-        cmd_spec = expected[cmd.ident]
-        assert cmd.title == cmd_spec["title"]
-        assert cmd.tables == cmd_spec["tables"], cmd.ident
-        assert cmd.permission.name == cmd_spec["permission"]
 
 
 def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -334,25 +100,16 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_painter_export_title() -> None:
     registered_painters = all_painters(active_config.tags.tag_groups)
     user_permissions = UserPermissions({}, {}, {}, [])
-    painters: list[Painter] = [
-        painter_class(
-            config=active_config,
-            request=request,
-            painter_options=PainterOptions.get_instance(),
-            theme=theme,
-            url_renderer=RenderLink(request, response, display_options),
-            user_permissions=user_permissions,
-        )
-        for painter_class in registered_painters.values()
-    ]
-    painters_and_cells: list[tuple[Painter, Cell]] = [
+    painters: list[InternalPainter] = list(registered_painters.values())
+    painters_and_cells: list[tuple[InternalPainter, Cell]] = [
         (
             painter,
             Cell(
                 ColumnSpec(name=painter.ident),
                 None,
                 registered_painters,
-                user_permissions,
+                make_painter_context(user_permissions),
+                RequestCache(Config()),
             ),
         )
         for painter in painters
@@ -389,31 +146,40 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
     registered_painters = all_painters(active_config.tags.tag_groups)
-    painter = registered_painters["abc"](
-        config=active_config,
-        request=request,
-        painter_options=PainterOptions.get_instance(),
-        theme=theme,
-        url_renderer=RenderLink(request, response, display_options),
-        user_permissions=(user_permissions := UserPermissions({}, {}, {}, [])),
+    painter = registered_painters["abc"]
+    dummy_cell = Cell(
+        ColumnSpec(name=painter.ident),
+        None,
+        registered_painters,
+        make_painter_context(UserPermissions({}, {}, {}, [])),
+        None,
     )
-    dummy_cell = Cell(ColumnSpec(name=painter.ident), None, registered_painters, user_permissions)
-    assert isinstance(painter, Painter)
+    context = dummy_cell.painter_context()
+    assert isinstance(painter, InternalPainter)
     assert painter.ident == "abc"
-    assert painter.title(dummy_cell) == "A B C"
-    assert painter.short_title(dummy_cell) == "ABC"
+    assert painter.title(dummy_cell, context) == "A B C"
+    assert painter.short_title(dummy_cell, context) == "ABC"
     assert painter.columns == ["x"]
     assert painter.sorter == "aaaa"
     assert painter.painter_options == ["opt1"]
     assert painter.printable is False
-    assert painter.render(row={}, cell=dummy_cell, user=user) == ("abc", "xyz")
-    assert painter.group_by(row={}, cell=dummy_cell) == "xyz"
+    assert painter.render(row={}, cell=dummy_cell, acting_user=user, context=context) == (
+        "abc",
+        "xyz",
+    )
+    assert painter.group_by(row={}, cell=dummy_cell, context=context) == "xyz"
 
 
 def test_create_view_basics() -> None:
     view_name = "allhosts"
     view_spec = multisite_builtin_views[view_name]
-    view = View(view_name, view_spec, view_spec.get("context", {}), UserPermissions({}, {}, {}, []))
+    view = View(
+        view_name,
+        view_spec,
+        view_spec.get("context", {}),
+        make_painter_context(UserPermissions({}, {}, {}, [])),
+        RequestCache(Config()),
+    )
 
     assert view.name == view_name
     assert view.spec == view_spec
@@ -423,6 +189,27 @@ def test_create_view_basics() -> None:
     assert view.user_sorters is None
     assert view.want_checkboxes is False
     assert view.only_sites is None
+
+
+@pytest.mark.usefixtures("request_context")
+def test_view_row_cells_hands_a_drilldown_to_its_painters_cell_past_a_skipped_painter() -> None:
+    view_spec = multisite_builtin_views["allhosts"].copy()
+    view_spec["painters"] = [ColumnSpec("not_a_registered_painter"), ColumnSpec("alias")]
+    drilldown = CellDrilldown(columns=["host_name"], url=lambda _row: "")
+    view = View(
+        "allhosts",
+        view_spec,
+        {},
+        make_painter_context(UserPermissions({}, {}, {}, [])),
+        RequestCache(Config()),
+        column_drilldowns={1: drilldown},
+    )
+
+    cells = view.row_cells
+
+    assert [(cell.painter_name(), cell.needed_columns({})) for cell in cells] == [
+        ("alias", {"host_alias", "host_name"})
+    ]
 
 
 def test_view_row_limit(view: View) -> None:
@@ -578,6 +365,6 @@ def test_view_page(
     )
     live.expect_query("GET hosts\nColumns: filename\nStats: state >= 0")
     with live():
-        resp = wsgi_app.get("/NO_SITE/check_mk/view.py?view_name=allhosts", status=200)
+        resp = wsgi_app.get("/NO_SITE/check_mk/view.py?view_name=allhosts", status=HTTPStatus.OK)
         assert "heute" in resp.text
         assert "query=null" not in resp.text

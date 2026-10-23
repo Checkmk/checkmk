@@ -9,6 +9,8 @@ from cmk.gui.openapi.framework import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.permissions import PermissionSection, PermissionSectionRegistry
+from cmk.gui.search.matchers import MatchItemGeneratorRegistry
+from cmk.gui.search.permissions import category_permissions_handler_registry
 from cmk.gui.token_auth import (
     TokenAuthenticatedEndpoint,
     TokenAuthenticatedPageRegistry,
@@ -16,6 +18,7 @@ from cmk.gui.token_auth import (
 from cmk.gui.visuals.type import VisualTypeRegistry
 from cmk.gui.watolib.groups_io import ContactGroupUsageFinderRegistry
 
+from . import _search
 from ._find_group_usage import find_usages_of_contact_group_in_dashboards
 from .api import register_endpoints
 from .builtin_dashboards import builtin_dashboards
@@ -24,7 +27,6 @@ from .dashlet import DashletRegistry, register_dashlets
 from .page_check_token_validity import CheckTokenValidityPage
 from .page_edit_dashboard import page_edit_dashboard
 from .page_edit_dashboards import page_edit_dashboards, PAGE_EDIT_DASHBOARDS_LINK
-from .page_figure_widget import FigureWidgetPage, FigureWidgetTokenAuthPage
 from .page_show_dashboard import page_dashboard_app
 from .page_show_shared_dashboard import SharedDashboardPage
 from .page_view_widget import (
@@ -45,11 +47,11 @@ def register(
     autocompleter_registry: AutocompleterRegistry,
     endpoint_family_registry: EndpointFamilyRegistry,
     versioned_endpoint_registry: VersionedEndpointRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
 ) -> None:
     visual_type_registry.register(VisualTypeDashboards)
     permission_section_registry.register(PERMISSION_SECTION_DASHBOARD)
 
-    page_registry.register(PageEndpoint(FigureWidgetPage.ident(), FigureWidgetPage()))
     page_registry.register(PageEndpoint("widget_iframe_view", ViewWidgetIFramePage()))
     page_registry.register(PageEndpoint("widget_edit_view", ViewWidgetEditPage()))
     page_registry.register(PageEndpoint("dashboard", page_dashboard_app))
@@ -59,9 +61,6 @@ def register(
     page_registry.register(PageEndpoint("edit_dashboard", page_edit_dashboard))
     page_registry.register(PageEndpoint(PAGE_EDIT_DASHBOARDS_LINK, page_edit_dashboards))
 
-    token_authenticated_page_registry.register(
-        TokenAuthenticatedEndpoint(FigureWidgetTokenAuthPage.ident(), FigureWidgetTokenAuthPage())
-    )
     token_authenticated_page_registry.register(
         TokenAuthenticatedEndpoint("widget_iframe_view_token_auth", ViewWidgetIFrameTokenPage())
     )
@@ -76,6 +75,7 @@ def register(
         endpoint_family_registry,
         versioned_endpoint_registry,
     )
+    _search.register(match_item_generator_registry, category_permissions_handler_registry)
 
 
 PERMISSION_SECTION_DASHBOARD = PermissionSection(

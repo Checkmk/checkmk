@@ -98,9 +98,14 @@ def make_parsed_snmp_fetch_intervals_config(
         matcher=ruleset_matcher,
         labels_of_host=labels_of_host,
     )
-    return lambda host_name: {
-        SNMPSectionName(section_name): round(seconds)
-        for sections, (_option_id, seconds) in reversed(fetch_intervals(host_name))
-        if seconds is not None
-        for section_name in sections
-    }
+
+    def resolve(host_name: HostName) -> Mapping[SNMPSectionName, int]:
+        # "Fetch data every time" (None) must take part in the merge to override lower rules.
+        intervals = {
+            SNMPSectionName(section_name): seconds
+            for sections, (_option_id, seconds) in reversed(fetch_intervals(host_name))
+            for section_name in sections
+        }
+        return {name: round(seconds) for name, seconds in intervals.items() if seconds is not None}
+
+    return resolve

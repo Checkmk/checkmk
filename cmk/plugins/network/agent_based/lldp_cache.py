@@ -286,7 +286,7 @@ def parse_lldp_cache(string_table: Sequence[StringByteTable]) -> Lldp | None:
 
         neighbor_address = ""
         for mgmt_address in mgmt_addresses:
-            if str(mgmt_address).startswith(str(oid_end)):
+            if oid_end and str(mgmt_address).startswith(str(oid_end)):
                 neighbor_address = str(mgmt_address).replace(str(oid_end), "", 1).strip(".")
                 match neighbor_address.split(".")[0]:
                     case "1":  # ipv4 address
@@ -564,10 +564,14 @@ def parse_lldp_cache_fortinet(string_table: Sequence[StringByteTable]) -> Lldp |
         try:
             _interface = interfaces[str(local_if_index)]
         except KeyError:
-            trunk_name = map_if_idx2name[str(local_if_index)]
-            port = map_trunk2member[str(trunk_name)][0]
+            trunk_members = map_trunk2member.get(
+                str(map_if_idx2name.get(str(local_if_index), "")), []
+            )
+            if not trunk_members:
+                continue
+            port = trunk_members[0]
             entry[0] = str(entry[0]).replace(f".{local_if_index}.", f".{map_if_name2idx[port]}.")
-            map_trunk2member[str(trunk_name)].remove(port)
+            trunk_members.remove(port)
 
     return parse_lldp_cache([lldp_info, if_info, lldp_global, lldp_mgmt_addresses])
 

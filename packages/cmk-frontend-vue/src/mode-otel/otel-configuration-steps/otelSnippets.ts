@@ -3,19 +3,14 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import {
-  type AuthConfig,
-  type Credential,
-  type EndpointConfig,
-  GRPC_DEFAULT_PORT,
-  HTTP_DEFAULT_PORT,
-  resolveEndpoint
-} from './otelTypes'
+import { type AuthConfig, type Credential, type EndpointConfig, resolveEndpoint } from './otelTypes'
 
 export type { AuthConfig, Credential }
 
 export interface CollectorSnippetInput {
   siteName: string
+  httpDefaultPort: number
+  grpcDefaultPort: number
   httpInfo: ExporterConfig | null
   grpcInfo: ExporterConfig | null
 }
@@ -50,9 +45,9 @@ function buildAuthExtension(auth: AuthConfig, name: string): string | null {
 export function buildExporter(
   config: ExporterConfig,
   protocol: 'http' | 'grpc',
-  siteName: string
+  siteName: string,
+  defaultPort: number
 ): string {
-  const defaultPort = protocol === 'http' ? HTTP_DEFAULT_PORT : GRPC_DEFAULT_PORT
   const authenticatorName = protocol === 'http' ? 'basicauth/http' : 'basicauth/grpc'
 
   let endpointStr: string
@@ -106,16 +101,16 @@ export function buildCollectorSnippets(state: CollectorSnippetInput): CollectorS
   const siteName = state.siteName || '%SITENAME%'
 
   const httpResolved = state.httpInfo
-    ? resolveEndpoint(state.httpInfo.endpoint, HTTP_DEFAULT_PORT)
+    ? resolveEndpoint(state.httpInfo.endpoint, state.httpDefaultPort)
     : null
   const grpcResolved = state.grpcInfo
-    ? resolveEndpoint(state.grpcInfo.endpoint, GRPC_DEFAULT_PORT)
+    ? resolveEndpoint(state.grpcInfo.endpoint, state.grpcDefaultPort)
     : null
 
   const exporters = `exporters:
   ....
-  ${`${httpResolved && state.httpInfo ? buildExporter(state.httpInfo, 'http', siteName) : ''}
-  ${grpcResolved && state.grpcInfo ? buildExporter(state.grpcInfo, 'grpc', siteName) : ''}`.trim()}`
+  ${`${httpResolved && state.httpInfo ? buildExporter(state.httpInfo, 'http', siteName, state.httpDefaultPort) : ''}
+  ${grpcResolved && state.grpcInfo ? buildExporter(state.grpcInfo, 'grpc', siteName, state.grpcDefaultPort) : ''}`.trim()}`
 
   const httpAuthEntry = state.httpInfo
     ? buildAuthExtension(state.httpInfo.auth, 'basicauth/http')

@@ -7,6 +7,7 @@
 
 from collections.abc import Sequence
 from datetime import timedelta
+from functools import partial
 
 from cmk.ccc import version
 from cmk.gui import hooks
@@ -14,9 +15,10 @@ from cmk.gui.autocompleters import AutocompleterRegistry
 from cmk.gui.background_job.job import BackgroundJobRegistry
 from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
-from cmk.gui.form_specs.unstable import SingleChoiceEditable
+from cmk.gui.form_specs.unstable import FolderChoiceEditable, SingleChoiceEditable
 from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
 from cmk.gui.form_specs.visitors import register_recomposer_function, register_visitor_class
+from cmk.gui.logged_in import user
 from cmk.rulesets.internal.form_specs import InternalProxy
 from cmk.rulesets.v1.form_specs import Password, Proxy, TimePeriod
 
@@ -32,6 +34,7 @@ from . import (
     config_variable_groups,
     groups,
     host_attributes,
+    host_relations_export,
     rulespec_groups,
     sample_config,
 )
@@ -40,6 +43,7 @@ from .activate_changes import (
     AutomationGetConfigSyncState,
     AutomationReceiveConfigSync,
     execute_activation_cleanup_job,
+    RemoteActivationBackgroundJob,
 )
 from .agent_registration import AutomationRemoveTLSRegistration
 from .agent_token_automations import (
@@ -67,13 +71,13 @@ from .host_attributes import (
     HostAttributeTopicRegistry,
 )
 from .host_label_sync import AutomationDiscoveredHostLabelSync
+from .host_relation_scan import RelationDetectionBackgroundJob, RelationScanBackgroundJob
 from .host_rename import (
     AutomationRenameHostsUUIDLink,
     RenameHostBackgroundJob,
     RenameHostsBackgroundJob,
 )
 from .hosts_and_folders import (
-    find_usages_of_contact_group_in_hosts_and_folders,
     FolderValidators,
     FolderValidatorsRegistry,
     rebuild_folder_lookup_cache,
@@ -87,8 +91,7 @@ from .recomposers.internal_proxy import recompose as recompose_internal_proxy
 from .recomposers.proxy import recompose as recompose_proxy
 from .recomposers.time_period import recompose as recompose_time_period
 from .rulesets import (
-    find_timeperiod_usage_in_host_and_service_rules,
-    find_timeperiod_usage_in_time_specific_parameters,
+    find_timeperiod_usage_in_rules,
 )
 from .rulespecs import (
     RulespecGroupEnforcedServices,
@@ -96,7 +99,10 @@ from .rulespecs import (
 )
 from .sample_config import SampleConfigGeneratorRegistry
 from .services import ServiceDiscoveryBackgroundJob
-from .single_choice_editable_visitor import SingleChoiceEditableVisitor
+from .single_choice_editable_visitor import (
+    FolderChoiceEditableVisitor,
+    SingleChoiceEditableVisitor,
+)
 from .time_specific_visitor import TimeSpecificVisitor
 from .timeperiods import TimeperiodUsageFinderRegistry
 from .user_profile import handle_ldap_sync_finished, PushUserProfilesToSite
@@ -124,6 +130,7 @@ def register(
     _register_config_domains(config_domain_registry)
     host_attributes.register(host_attribute_topic_registry)
     activate_changes.register(replication_path_registry)
+    host_relations_export.register(replication_path_registry)
     _register_host_attribute(host_attribute_registry)
     _register_cronjobs(cron_job_registry)
     folder_validators_registry.register(
@@ -135,6 +142,7 @@ def register(
             validate_edit_folder=lambda f, a, si: None,  # noqa: ARG005
             validate_move_hosts=lambda f, n, t, si: None,  # noqa: ARG005
             validate_move_subfolder_to=lambda f, t, si: None,  # noqa: ARG005
+            validate_host_relation=lambda s, o, si: None,  # noqa: ARG005
         )
     )
     _sync_remote_sites.register(automation_command_registry, cron_job_registry)
@@ -151,18 +159,19 @@ def register(
     automation_command_registry.register(AutomationCheckAnalyzeConfig)
     automation_command_registry.register(AutomationDiscoveredHostLabelSync)
     sample_config.register(sample_config_generator_registry)
-    contact_group_usage_finder_registry_.register(find_usages_of_contact_group_in_hosts_and_folders)
     contact_group_usage_finder_registry_.register(
         find_usages_of_contact_group_in_notification_rules
     )
-    timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_host_and_service_rules)
-    timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_time_specific_parameters)
+    timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_rules)
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_notification_rules)
     config_variable_groups.register(config_variable_group_registry)
     autocompleter_registry.register_autocompleter("config_hostname", config_hostname_autocompleter)
     _register_autocompleters(autocompleter_registry)
     automation_background_job.register(job_registry, automation_command_registry)
     hooks.register_builtin("validate-host", builtin_attributes.validate_host_parents)
+    hooks.register_builtin(
+        "validate-host", partial(builtin_attributes.validate_host_relations, acting_user=user)
+    )
     hooks.register_builtin("ldap-sync-finished", handle_ldap_sync_finished)
     hooks.register_builtin("pre-activate-changes", update_builtin_host_labels_file)
     _register_form_specs()
@@ -184,9 +193,12 @@ def _register_gui_background_jobs(job_registry: BackgroundJobRegistry) -> None:
     job_registry.register(autodiscovery.AutodiscoveryBackgroundJob)
     job_registry.register(BulkDiscoveryBackgroundJob)
     job_registry.register(ActivateChangesSchedulerBackgroundJob)
+    job_registry.register(RemoteActivationBackgroundJob)
     job_registry.register(RenameHostsBackgroundJob)
     job_registry.register(RenameHostBackgroundJob)
     job_registry.register(ServiceDiscoveryBackgroundJob)
+    job_registry.register(RelationScanBackgroundJob)
+    job_registry.register(RelationDetectionBackgroundJob)
 
 
 def _register_config_domains(config_domain_registry: ConfigDomainRegistry) -> None:
@@ -210,6 +222,7 @@ def _register_host_attribute(host_attribute_registry: HostAttributeRegistry) -> 
         builtin_attributes.HostAttributeManagementProtocol,
         builtin_attributes.HostAttributeManagementSNMPCommunity,
         builtin_attributes.HostAttributeManagementIPMICredentials,
+        builtin_attributes.HostAttributeRelations,
         builtin_attributes.HostAttributeSite,
         builtin_attributes.HostAttributeLockedBy,
         builtin_attributes.HostAttributeLockedAttributes,
@@ -258,6 +271,7 @@ def _register_cronjobs(cron_job_registry: CronJobRegistry) -> None:
 
 def _register_form_specs() -> None:
     register_visitor_class(SingleChoiceEditable, SingleChoiceEditableVisitor)
+    register_visitor_class(FolderChoiceEditable, FolderChoiceEditableVisitor)
     register_visitor_class(TimeSpecific, TimeSpecificVisitor)
     register_visitor_class(Password, PasswordVisitor)
     register_recomposer_function(Proxy, recompose_proxy)
@@ -267,6 +281,7 @@ def _register_form_specs() -> None:
 
 def _register_autocompleters(autocompleter_registry: AutocompleterRegistry) -> None:
     from ._autocompleters import (
+        aux_tag_autocompleter,
         check_types_autocompleter,
         hostgroup_autocompleter,
         tag_group_autocompleter,
@@ -276,4 +291,5 @@ def _register_autocompleters(autocompleter_registry: AutocompleterRegistry) -> N
     autocompleter_registry.register_autocompleter("allgroups", hostgroup_autocompleter)
     autocompleter_registry.register_autocompleter("tag_groups", tag_group_autocompleter)
     autocompleter_registry.register_autocompleter("tag_groups_opt", tag_group_opt_autocompleter)
+    autocompleter_registry.register_autocompleter("aux_tags", aux_tag_autocompleter)
     autocompleter_registry.register_autocompleter("check_types", check_types_autocompleter)

@@ -6,7 +6,8 @@
 
 from typing import Literal, TypedDict
 
-from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
+from cmk.agent_based.v2 import CheckPlugin, CheckResult, Result, State
+from cmk.agent_based.v3_unstable import discover_one_service
 
 from .lib import SectionPodmanContainerInspect
 
@@ -16,12 +17,6 @@ class Params(TypedDict):
     starting: Literal[0, 1, 2, 3]
     unhealthy: Literal[0, 1, 2, 3]
     no_healthcheck: Literal[0, 1, 2, 3]
-
-
-def discover_podman_container_health(
-    section: SectionPodmanContainerInspect,  # noqa: ARG001
-) -> DiscoveryResult:
-    yield Service()
 
 
 def check_podman_container_health(
@@ -67,7 +62,7 @@ check_plugin_podman_container_health = CheckPlugin(
     name="podman_container_health",
     service_name="Health",
     sections=["podman_container_inspect"],
-    discovery_function=discover_podman_container_health,
+    discovery_function=discover_one_service,
     check_function=check_podman_container_health,
     check_ruleset_name="podman_container_health",
     check_default_parameters=Params(

@@ -44,15 +44,15 @@ perfometer_write_latency_read_latency = perfometers.Stacked(
 
 graph_disk_latency = graphs.Bidirectional(
     name="disk_latency",
-    title=Title("Disk latency"),
+    title=Title("Read and write latency"),
     lower=graphs.Graph(
         name="disk_latency_lower",
-        title=Title("Disk latency"),
+        title=Title("Read and write latency"),
         compound_lines=["write_latency"],
     ),
     upper=graphs.Graph(
         name="disk_latency_upper",
-        title=Title("Disk latency"),
+        title=Title("Read and write latency"),
         compound_lines=["read_latency"],
     ),
 )

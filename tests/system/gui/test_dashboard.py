@@ -38,7 +38,7 @@ from tests.system.gui.testlib.playwright.pom.sidebar.widget_wizard_sidebar impor
     VisualizationType,
 )
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 # Carried by every agent host and reporting the metric the graph widget draws.
 _GRAPH_WIDGET_SERVICE = "Check_MK"
@@ -311,23 +311,26 @@ def test_widget_filters(
     """Test that applying filters for 'Top 10: CPU utilization' widget works correctly.
 
     Test that after applying 'Site', 'Host label' and both filters together in widget settings,
-    the widget table contains all expected hosts.
+    the widget table contains all expected hosts. Changing the filters clears the selected
+    metric, so it is selected again after every change.
 
     Steps:
         1. Navigate to the 'Linux Hosts' dashboard page.
         2. Clone the built-in dashboard.
         3. Enter "edit widgets" mode.
-        4. Apply 'Site' filter for 'Top 10: CPU utilization' widget.
+        4. Apply 'Site' filter for 'Top 10: CPU utilization' widget and select the metric again.
         5. Check that widget contains all expected hosts.
-        6. Apply 'Host labels' filter for 'Top 10: CPU utilization' widget.
+        6. Apply 'Host labels' filter for 'Top 10: CPU utilization' widget and select the metric
+           again.
         7. Check that widget contains all expected hosts.
-        8. Delete 'Site' filter.
+        8. Delete 'Site' filter and select the metric again.
         9. Check that widget contains all expected hosts.
-        10. Delete 'Host labels' filter.
+        10. Delete 'Host labels' filter and select the metric again.
         11. Check that widget contains all expected hosts.
     """
     hosts_count = len(linux_hosts)
-    widget_title = "Top 10: CPU utilization"
+    metric = ServiceMetricDropdownOptions.CPU_UTILIZATION
+    widget_title = f"Top 10: {metric}"
 
     site_filter = "Site"
     host_name_filter = "Host name (exact match)"
@@ -343,6 +346,7 @@ def test_widget_filters(
         widget_wizard.get_host_filter_combobox(site_filter),
         SiteFilterDropdownOptions.LOCAL_SITE_GUI_E2E_CENTRAL,
     )
+    widget_wizard.select_service_metric(metric)
     widget_wizard.next_step_visualization_button.click()
     widget_wizard.save_widget_button.click()
     cloned_linux_hosts_dashboard.save_widgets()
@@ -366,6 +370,7 @@ def test_widget_filters(
         widget_wizard.get_host_filter_combobox(host_name_filter),
         linux_hosts[0],  # type: ignore[type-var]  # Host names are dynamic
     )
+    widget_wizard.select_service_metric(metric)
     widget_wizard.next_step_visualization_button.click()
     widget_wizard.save_widget_button.click()
     cloned_linux_hosts_dashboard.save_widgets()
@@ -387,6 +392,7 @@ def test_widget_filters(
         widget_wizard.get_host_filter_container(site_filter),
         message=f"{site_filter} filter was not removed",
     ).not_to_be_visible()
+    widget_wizard.select_service_metric(metric)
     widget_wizard.next_step_visualization_button.click()
     widget_wizard.save_widget_button.click()
     cloned_linux_hosts_dashboard.save_widgets()
@@ -408,6 +414,7 @@ def test_widget_filters(
         widget_wizard.get_host_filter_container(host_name_filter),
         message=f"{host_name_filter} filter was not removed",
     ).not_to_be_visible()
+    widget_wizard.select_service_metric(metric)
     widget_wizard.next_step_visualization_button.click()
     widget_wizard.save_widget_button.click()
     cloned_linux_hosts_dashboard.save_widgets()
@@ -657,11 +664,7 @@ def test_graph_widget_renders_through_the_engine(
 def test_problem_percentage_widget_renders_through_the_engine(
     javascript_errors: list[str], cloned_linux_hosts_dashboard: CustomDashboard
 ) -> None:
-    """The alerts & notifications widget renders through the engine as a problem percentage.
-
-    That visualisation is the one the widget offers on the engine; its alert and notification
-    timelines are drawn by the legacy figure component instead.
-    """
+    """The alerts & notifications widget renders through the engine as a problem percentage."""
     cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
     widget_wizard = cloned_linux_hosts_dashboard.open_add_widget_sidebar(
         AlertsAndNotificationsWidgetWizard

@@ -5,7 +5,7 @@
 import pytest
 
 from cmk.ccc.version import Edition
-from tests.testlib.openapi_endpoint_validation import assert_registered_endpoints_valid
+from tests.testlib.unit.openapi_endpoint_validation import assert_registered_endpoints_valid
 
 
 @pytest.mark.usefixtures("load_plugins")

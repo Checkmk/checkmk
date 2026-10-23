@@ -39,23 +39,24 @@ const stageModel = computed({
 
 <template>
   <CmkWizard v-model="stageModel" :mode="mode.value">
-    <QuickSetupStage
-      v-for="(stg, index) in regularStages"
-      :key="index"
-      :index="index"
-      :current-stage="currentStage"
-      :number-of-stages="numberOfStages"
-      :mode="props.mode.value"
-      :loading="loading"
-      :title="stg.title"
-      :sub_title="stg.sub_title || null"
-      :actions="stg.actions || []"
-      :content="stg.content || null"
-      :recap-content="stg.recapContent || null"
-      :errors="stg.errors"
-      :go-to-this-stage="stg.goToThisStage || null"
-      :hide-wait-icon="!!props.hideWaitIcon"
-    />
+    <template v-for="(stg, index) in regularStages" :key="index">
+      <QuickSetupStage
+        v-if="stg.is_applicable !== false"
+        :index="index"
+        :current-stage="currentStage"
+        :number-of-stages="numberOfStages"
+        :mode="props.mode.value"
+        :loading="loading"
+        :title="stg.title"
+        :sub_title="stg.sub_title || null"
+        :actions="stg.actions || []"
+        :content="stg.content || null"
+        :recap-content="stg.recapContent || null"
+        :errors="stg.errors"
+        :go-to-this-stage="stg.goToThisStage || null"
+        :hide-wait-icon="!!props.hideWaitIcon"
+      />
+    </template>
   </CmkWizard>
   <QuickSetupSaveStage
     v-if="saveStage && showSaveStage"

@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -14,18 +11,15 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersStorage,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput
+from cmk.gui.valuespec import Dictionary, Integer, TextInput
 
 
-def _parameter_valuespec_bossock_fibers() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                ("levels", SimpleLevels(spec=Integer, unit="fibers", title=_("Number of fibers")))
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
+def _parameter_valuespec_bossock_fibers() -> Dictionary:
+    return Dictionary(
+        elements=[
+            ("levels", SimpleLevels(spec=Integer, unit="fibers", title=_("Number of fibers")))
+        ],
+        optional_keys=[],
     )
 
 

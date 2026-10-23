@@ -12,7 +12,7 @@ from typing import Literal, Never, Self
 
 from pydantic import BaseModel
 
-from cmk.bakery.v2_unstable import BakeryPlugin, FileGenerator, OS, Plugin, PluginConfig, Secret
+from cmk.bakery.v2 import BakeryPlugin, FileGenerator, OS, Plugin, PluginConfig, Secret
 
 type _ValueTypeType = Literal["number", "string", "rate"]
 
@@ -49,9 +49,10 @@ class SetupConfigElement(BaseModel, frozen=True):
     custom_vars: Sequence[SetupConfigCustomVars] = ()
 
 
-class SetupConfig(SetupConfigElement):
+class SetupConfig(BaseModel, frozen=True):
+    deployment: Literal["sync", "do_not_deploy"]
+    main_instance: SetupConfigElement
     instances: Sequence[SetupConfigElement] = ()
-    deployment: Literal["sync", "do_not_deploy"] | None = None
 
 
 type PluginConfigInstanceKey = Literal[
@@ -113,7 +114,7 @@ def get_mk_jolokia_files(config: SetupConfig) -> FileGenerator:
 def _get_mk_jolokia_config(conf: SetupConfig) -> Iterable[str]:
     yield "# Default values"
 
-    for key, value in _key_value_pairs(conf):
+    for key, value in _key_value_pairs(conf.main_instance):
         yield from f"{key} = {pformat(value)}".split("\n")
 
     if conf.instances:

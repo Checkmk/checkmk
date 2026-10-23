@@ -1,6 +1,6 @@
 type = "System"
 display_name = "AI Dev Tools"
-previous_name = "ai_tools"
+previous_name = "AI Tools"
 members_required = 2
 description = """
 AI agent configurations and helpers for development

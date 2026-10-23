@@ -15,3 +15,4 @@ export type { ExternalReferenceItem } from './UclDetailPageExternalReference.vue
 export { default as UclDetailPageHeader } from './UclDetailPageHeader.vue'
 export { default as UclDetailPageLayout } from './UclDetailPageLayout.vue'
 export { default as UclPropertiesPanel } from './UclPropertiesPanel.vue'
+export { default as UclResizablePreview } from './UclResizablePreview.vue'

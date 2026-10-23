@@ -3,16 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal
+from typing import Literal, Self
 
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
+from cmk.gui.openapi.framework.model.base_models import TitledDomainObjectModel
 
 from .dashboard import RelativeGridDashboardResponse
 
 
 @api_model
-class RelativeGridDashboardDomainObject(DomainObjectModel):
+class RelativeGridDashboardDomainObject(TitledDomainObjectModel):
     domainType: Literal["dashboard"] = api_field(description="The domain type of the object.")
     extensions: RelativeGridDashboardResponse = api_field(
         description="All the data about this dashboard."
@@ -23,3 +23,8 @@ class RelativeGridDashboardDomainObject(DomainObjectModel):
 class ComputedWidgetResponse[T]:
     domainType: Literal["widget-compute"] = api_field(description="The domain type of the object.")
     value: T = api_field(description="The computed widget data.")
+
+    @classmethod
+    def of(cls, value: T) -> Self:
+        """The response that carries a computed widget value."""
+        return cls(domainType="widget-compute", value=value)

@@ -13,6 +13,7 @@ import type {
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import FormIndent from 'cmk-ui-library/components/CmkIndent.vue'
+import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
 import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
@@ -24,6 +25,7 @@ import { computed, ref, toRaw, watch } from 'vue'
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import FormLabel from '@/form/private/FormLabel.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
+import { helpAtTitle, rendersHelpItself } from '@/form/private/rendersHelpItself'
 import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 import { type ValidationMessages, validateValue } from '@/form/private/validation'
 
@@ -128,7 +130,13 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
     :class="{ 'form-cascading-single-choice__horizontal': props.spec.layout === 'horizontal' }"
   >
     <div>
-      <FormLabel v-if="$props.spec.label" :for="componentId">
+      <!-- The label is inline; a block of its own puts it above the choice. -->
+      <div v-if="rendersHelpItself(props.spec)" class="form-cascading-single-choice__label-above">
+        <CmkLabel :for="componentId" :help="untranslated(props.spec.help)">
+          {{ props.spec.label }}
+        </CmkLabel>
+      </div>
+      <FormLabel v-else-if="$props.spec.label" :for="componentId">
         {{ props.spec.label }}
         <CmkSpace size="small" />
       </FormLabel>
@@ -137,6 +145,7 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
         <CmkToggleButtonGroup
           v-model="selectedOption"
           :options="buttonGroupButtons"
+          :size="props.spec.button_group_size"
           class="form-cascading-single-choice__button-group"
         />
       </template>
@@ -163,8 +172,8 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
           :spec="activeElement.spec"
           :space="'before'"
         />
-        <CmkSpace size="small" />
-        <CmkHelpText :help="untranslated(activeElement.spec.help)" />
+        <CmkSpace v-if="helpAtTitle(activeElement.spec)" size="small" />
+        <CmkHelpText :help="untranslated(helpAtTitle(activeElement.spec))" />
       </template>
     </div>
     <CmkSpace v-if="props.spec.layout === 'horizontal'" :size="'medium'" />
@@ -194,6 +203,12 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
 
   .form-cascading-single-choice__button-group {
     display: inline-block;
+  }
+
+  /* The same space as between a label and its field in a row of a dictionary. */
+  .form-cascading-single-choice__label-above {
+    display: flex;
+    margin-bottom: var(--dimension-4);
   }
 }
 </style>

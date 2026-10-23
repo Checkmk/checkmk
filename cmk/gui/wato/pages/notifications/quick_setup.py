@@ -12,10 +12,6 @@ from cmk.ccc.version import Edition
 from cmk.events.notify_types import HostEventType, ServiceEventType
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.unstable import (
-    Autocompleter,
-    AutocompleterData,
-    AutocompleterParams,
-    CascadingSingleChoiceExtended,
     CommentTextArea,
     ConditionChoices,
     Labels,
@@ -24,10 +20,6 @@ from cmk.gui.form_specs.unstable import (
     SingleChoiceEditable,
     TwoColumnDictionary,
     World,
-)
-from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
-    CascadingSingleChoiceElementExtended,
-    CascadingSingleChoiceLayout,
 )
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple
 from cmk.gui.form_specs.unstable.list_unique_selection import (
@@ -51,6 +43,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupAction,
     QuickSetupActionButtonIcon,
     QuickSetupActionMode,
+    QuickSetupContext,
     QuickSetupStage,
     QuickSetupStageAction,
 )
@@ -84,7 +77,6 @@ from cmk.gui.watolib.groups_io import (
     load_host_group_information,
     load_service_group_information,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.mode import mode_url
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.pending_changes import (
@@ -97,8 +89,14 @@ from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.gui.watolib.user_scripts import load_notification_scripts, NotificationUserScripts
 from cmk.gui.watolib.users import notification_script_choices
-from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
+from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.internal.form_specs import (
+    Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
+    CascadingSingleChoiceElementExtended,
+    CascadingSingleChoiceExtended,
+    CascadingSingleChoiceLayout,
     DictionaryExtended,
     ListExtended,
     ListOfStrings,
@@ -293,7 +291,7 @@ def validate_at_least_one_event(trigger_events: Mapping[str, object]) -> None:
 
 
 def triggering_events() -> QuickSetupStage:
-    def _components() -> Sequence[Widget]:
+    def _components(_ctx: QuickSetupContext) -> Sequence[Widget]:
         return [
             FormSpecWrapper(
                 id=FormSpecId("triggering_events"),
@@ -400,8 +398,7 @@ def custom_recap_formspec_triggering_events(
     stage_index: StageIndex,
     all_stages_form_data: ParsedFormData,
     progress_logger: ProgressLogger,
-    site_configs: Mapping[SiteId, SiteConfiguration],
-    debug: bool,
+    ctx: QuickSetupContext,
 ) -> Sequence[Widget]:
     cleaned_stages_form_data = {
         form_spec_wrapper_id: (
@@ -421,8 +418,7 @@ def custom_recap_formspec_triggering_events(
         stage_index,
         cleaned_stages_form_data,
         progress_logger,
-        site_configs,
-        debug=debug,
+        ctx,
     )
 
 
@@ -449,8 +445,7 @@ def custom_recap_formspec_filter_for_hosts_and_services(
     stage_index: StageIndex,
     all_stages_form_data: ParsedFormData,
     progress_logger: ProgressLogger,
-    site_configs: Mapping[SiteId, SiteConfiguration],
-    debug: bool,
+    ctx: QuickSetupContext,
 ) -> Sequence[Widget]:
     cleaned_stages_form_data = {
         form_spec_wrapper_id: form_data
@@ -458,7 +453,11 @@ def custom_recap_formspec_filter_for_hosts_and_services(
         if len(form_data) > 0
     }
     return recaps.recaps_form_spec(
-        quick_setup_id, stage_index, cleaned_stages_form_data, progress_logger, site_configs, debug
+        quick_setup_id,
+        stage_index,
+        cleaned_stages_form_data,
+        progress_logger,
+        ctx,
     )
 
 
@@ -491,7 +490,7 @@ class IsValidRegularExpression:
 
 
 def filter_for_hosts_and_services() -> QuickSetupStage:
-    def _components() -> Sequence[Widget]:
+    def _components(ctx: QuickSetupContext) -> Sequence[Widget]:
         return [
             ConditionalNotificationECAlertStageWidget(
                 items=[
@@ -1057,7 +1056,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 % {"folder": _(" %(folder)s")}
                                                 % {"folder": folder},
                                             )
-                                            for name, folder in folder_tree().folder_choices(
+                                            for name, folder in ctx.tree.folder_choices(
                                                 logged_in_user
                                             )
                                         ],
@@ -1271,7 +1270,7 @@ def notification_method() -> QuickSetupStage:
                     required=True,
                     parameter_form=Integer(
                         title=Title("Max. notifications per bulk"),
-                        unit_symbol="notifications",
+                        unit_symbol=_("notifications"),
                         prefill=DefaultValue(1000),
                         custom_validate=[NumberInRange(min_value=2, max_value=1000)],
                     ),
@@ -1302,7 +1301,7 @@ def notification_method() -> QuickSetupStage:
             },
         )
 
-    def _components() -> Sequence[Widget]:
+    def _components(_ctx: QuickSetupContext) -> Sequence[Widget]:
         notification_scripts = load_notification_scripts()
         default_method_choice: DefaultValue[str] | InputHint[Title] = InputHint(
             Title("Please choose")
@@ -1419,7 +1418,7 @@ def _contact_group_choice() -> Sequence[UniqueSingleChoiceElement]:
         UniqueSingleChoiceElement(
             parameter_form=SingleChoiceElementExtended(
                 name=ident,
-                title=Title(title),  # astrein: disable=localization-checker
+                title=Title(title),  # astrein: disable=localization
             ),
         )
         for ident, title in sorted_contact_group_choices()
@@ -1437,7 +1436,7 @@ def custom_macros_cannot_be_empty(custom_macros: Sequence[tuple[str, str]]) -> N
 
 
 def recipient(edition: Edition) -> QuickSetupStage:
-    def _components() -> Sequence[Widget]:
+    def _components(_ctx: QuickSetupContext) -> Sequence[Widget]:
         recipient_elements = [
             UniqueCascadingSingleChoiceElement(
                 parameter_form=CascadingSingleChoiceElementExtended(
@@ -1509,7 +1508,7 @@ def recipient(edition: Edition) -> QuickSetupStage:
                                 UniqueSingleChoiceElement(
                                     parameter_form=SingleChoiceElementExtended(
                                         name=ident,
-                                        title=Title(title),  # astrein: disable=localization-checker
+                                        title=Title(title),  # astrein: disable=localization
                                     )
                                 )
                                 for ident, title in _get_sorted_users()
@@ -1713,7 +1712,7 @@ def validate_throttling_values(values: tuple[object, ...]) -> None:
 
 
 def sending_conditions() -> QuickSetupStage:
-    def _components() -> Sequence[Widget]:
+    def _components(_ctx: QuickSetupContext) -> Sequence[Widget]:
         return [
             FormSpecWrapper(
                 id=FormSpecId("sending_conditions"),
@@ -1731,7 +1730,7 @@ def sending_conditions() -> QuickSetupStage:
                                             elements=[
                                                 SingleChoiceElementExtended(
                                                     name=name,
-                                                    title=Title(  # astrein: disable=localization-checker
+                                                    title=Title(  # astrein: disable=localization
                                                         title
                                                     ),
                                                 )
@@ -1772,7 +1771,7 @@ def sending_conditions() -> QuickSetupStage:
                                                 Integer(
                                                     label=Label("send every"),
                                                     prefill=DefaultValue(5),
-                                                    unit_symbol="notifications",
+                                                    unit_symbol=_("notifications"),
                                                 ),
                                             ],
                                             layout="horizontal",
@@ -1857,7 +1856,7 @@ def sending_conditions() -> QuickSetupStage:
 
 
 def general_properties() -> QuickSetupStage:
-    def _components() -> Sequence[Widget]:
+    def _components(_ctx: QuickSetupContext) -> Sequence[Widget]:
         return [
             FormSpecWrapper(
                 id=FormSpecId("general_properties"),
@@ -1942,18 +1941,17 @@ def save_and_test_action(
     mode: QuickSetupActionMode,
     _progress_logger: ProgressLogger,
     object_id: str | None,
-    use_git: bool,
-    pprint_value: bool,
+    ctx: QuickSetupContext,
 ) -> str:
     result_msg = _save_or_edit(
         all_stages_form_data,
         mode,
         _progress_logger,
         object_id,
-        pprint_value=pprint_value,
+        pprint_value=ctx.pprint_value,
         pending_changes=_pending_changes(
             active_config.sites,
-            use_git=use_git,
+            use_git=ctx.use_git,
             local_site=omd_site(),
             user_id=logged_in_user.id,
         ),
@@ -1968,18 +1966,17 @@ def save_and_new_action(
     mode: QuickSetupActionMode,
     _progress_logger: ProgressLogger,
     object_id: str | None,
-    use_git: bool,
-    pprint_value: bool,
+    ctx: QuickSetupContext,
 ) -> str:
     result_msg = _save_or_edit(
         all_stages_form_data,
         mode,
         _progress_logger,
         object_id,
-        pprint_value=pprint_value,
+        pprint_value=ctx.pprint_value,
         pending_changes=_pending_changes(
             active_config.sites,
-            use_git=use_git,
+            use_git=ctx.use_git,
             local_site=omd_site(),
             user_id=logged_in_user.id,
         ),
@@ -1995,18 +1992,17 @@ def save_and_view_action(
     mode: QuickSetupActionMode,
     _progress_logger: ProgressLogger,
     object_id: str | None,
-    use_git: bool,
-    pprint_value: bool,
+    ctx: QuickSetupContext,
 ) -> str:
     result_msg = _save_or_edit(
         all_stages_form_data,
         mode,
         _progress_logger,
         object_id,
-        pprint_value=pprint_value,
+        pprint_value=ctx.pprint_value,
         pending_changes=_pending_changes(
             active_config.sites,
-            use_git=use_git,
+            use_git=ctx.use_git,
             local_site=omd_site(),
             user_id=logged_in_user.id,
         ),

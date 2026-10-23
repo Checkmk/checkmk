@@ -10,6 +10,7 @@
 
 from collections.abc import Iterable, Sequence
 from datetime import datetime
+from http import HTTPStatus
 from typing import Any, override
 
 from cmk.ccc.version import Edition
@@ -24,20 +25,18 @@ from cmk.gui.i18n import _, _u, localize
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
-from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import CustomUserAttrSpec, UserSpec
 from cmk.gui.userdb import get_user_attributes, get_user_attributes_by_topic, UserAttribute
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.verify_requirements import verify_requirements
 from cmk.gui.wato.pages.users import select_language
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.language_cookie import set_language_cookie
 
 from .page_menu import user_profile_page_menu
-from .verify_requirements import verify_requirements
 
 
 def _get_input(valuespec: ValueSpec, varprefix: str) -> Any:
@@ -76,7 +75,7 @@ class UserProfile(Page):
             user.reset_language()
 
         # load the new language
-        localize(user.language)
+        localize(user.language, config.user_localizations)
 
         # Custom attributes
         user_attributes = get_user_attributes(config.wato_user_attrs)
@@ -118,12 +117,12 @@ class UserProfile(Page):
         html.reload_whole_page(back_url)
         html.footer()
 
-        raise FinalizeRequest(code=200)
+        raise FinalizeRequest(code=HTTPStatus.OK)
 
     @override
     def page(self, ctx: PageContext) -> None:
         verify_requirements(
-            UserPermissions.from_config(ctx.config, permission_registry),
+            ctx.user_permissions,
             "general.edit_profile",
             ctx.config.wato_enabled,
         )

@@ -14,7 +14,7 @@ Belongs here:
 - Metric definitions: names, titles, units, colors, scaling and notations
 - Perf-O-Meters and graph templates
 - Parsing performance data from checks, metric expressions and their evaluation
-- Retrieving time series from RRD and from metric backends
+- Retrieving time series from RRD and from data backends
 - The integration of the cmk.graphing.v1 plugin API for metrics, graphs and
   perfometers
 - Rendering graph images (PNG/PDF) for reports and legacy views
@@ -25,6 +25,6 @@ Goes elsewhere:
 - A graph does not render, stays empty or does not refresh in the browser
   → Graph Display
 - The REST API endpoints that serve graphs to the frontend → Graph Display
-- The stored metric data itself and the ClickHouse metric store → Metric Backend
+- The stored metric data itself and the ClickHouse metric store → Data backend
 - Checkmk itself is slow or does not scale → Performance
 """

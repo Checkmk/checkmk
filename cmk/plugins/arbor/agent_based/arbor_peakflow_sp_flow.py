@@ -8,12 +8,11 @@ from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 from .lib import DETECT_PEAKFLOW_SP
 
@@ -33,10 +32,6 @@ snmp_section_arbor_peakflow_sp_flow = SimpleSNMPSection(
 )
 
 
-def discover_arbor_peakflow_sp_flows(section: int) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_arbor_peakflow_sp_flows(section: int) -> CheckResult:
     yield from check_levels_v1(section, metric_name="flows", label="Flows", render_func=str)
 
@@ -44,6 +39,6 @@ def check_arbor_peakflow_sp_flows(section: int) -> CheckResult:
 check_plugin_arbor_peakflow_sp_flows = CheckPlugin(
     name="arbor_peakflow_sp_flows",
     service_name="Flow Count",
-    discovery_function=discover_arbor_peakflow_sp_flows,
+    discovery_function=discover_one_service,
     check_function=check_arbor_peakflow_sp_flows,
 )

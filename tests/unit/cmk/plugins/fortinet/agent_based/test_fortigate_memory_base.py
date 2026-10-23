@@ -7,10 +7,9 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.fortinet.agent_based.fortigate_memory_base import (
     check_fortigate_memory_base,
-    discover_fortigate_memory_base,
     parse_fortigate_memory_base,
 )
 
@@ -29,10 +28,6 @@ def test_parse_fortigate_memory_base(
     string_table: StringTable, expected: tuple[float, float] | None
 ) -> None:
     assert parse_fortigate_memory_base(string_table) == expected
-
-
-def test_discover_fortigate_memory_base() -> None:
-    assert list(discover_fortigate_memory_base(_SECTION)) == [Service()]
 
 
 @pytest.mark.parametrize(

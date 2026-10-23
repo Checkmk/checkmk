@@ -8,22 +8,17 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.alcatel.lib import DETECT_ALCATEL, DETECT_ALCATEL_AOS7
 
 
 def parse_alcatel_cpu(string_table: StringTable) -> float | None:
     return int(string_table[0][0]) if string_table else None
-
-
-def discover_alcatel_cpu(section: float) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_alcatel_cpu(section: float) -> CheckResult:
@@ -48,7 +43,7 @@ snmp_section_alcatel_cpu = SimpleSNMPSection(
 check_plugin_alcatel_cpu = CheckPlugin(
     name="alcatel_cpu",
     service_name="CPU utilization",
-    discovery_function=discover_alcatel_cpu,
+    discovery_function=discover_one_service,
     check_function=check_alcatel_cpu,
 )
 snmp_section_alcatel_cpu_aos7 = SimpleSNMPSection(
@@ -63,6 +58,6 @@ snmp_section_alcatel_cpu_aos7 = SimpleSNMPSection(
 check_plugin_alcatel_cpu_aos7 = CheckPlugin(
     name="alcatel_cpu_aos7",
     service_name="CPU utilization",
-    discovery_function=discover_alcatel_cpu,
+    discovery_function=discover_one_service,
     check_function=check_alcatel_cpu,
 )

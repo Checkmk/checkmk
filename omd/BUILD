@@ -2,15 +2,16 @@ load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@rules_gzip//gzip/compress:defs.bzl", "gzip_compress")
 load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@rules_uv//uv:pip.bzl", "pip_compile")
-load("@rules_uv//uv:venv.bzl", "create_venv")
+load("//bazel/rules:agent_package_signing.bzl", "requires_signed_agent_rpm")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:git_hash_file.bzl", "git_hash_file")
+load("//bazel/rules:installed_size_from_archive.bzl", "installed_size_from_archive")
 load("//bazel/rules:md5sums_from_archive.bzl", "md5sums_from_archive")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:pkg_cma_from_tar.bzl", "pkg_cma_from_tar")
 load("//bazel/rules:pkg_name_info.bzl", "pkg_name_info")
 load("//bazel/rules:pkg_rpm_from_tar.bzl", "pkg_rpm_from_tar")
+load("//bazel/rules:sign_package.bzl", "RELEASE_KEY_FINGERPRINT", "sign_package")
 load("//bazel/rules:write_omd_spec.bzl", "write_omd_spec")
 
 exports_files([
@@ -43,16 +44,18 @@ edition_deps = select({
         "//non-free/packages/cmk-data-backend:pkg_tar",
         "//non-free/packages/cmk-data-backend:pkg_tar-telemetry-metrics",
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
-        "//non-free/packages/cmk-network-flow:pkg_tar",
         "//non-free/packages/cmk-notification-plugins-nonfree:pkg_tar",
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//non-free/packages/cmk-otel-collector:pkg_tar-auth-only",
-        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-aws_extended",
+        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-aws_deprecated_extended",
+        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-aws_v2_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-azure_deprecated_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-azure_v2_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-gcp_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-kube_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-diagnostics",
+        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-checkmk",
+        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-notifications",
         "//non-free/packages/cmk-relay-engine:relay_install_pkg",
         "//non-free/packages/cmk-telemetry:pkg_tar",
         "//non-free/packages/cmk-telemetry:pkg_tar-auth-only",
@@ -69,9 +72,11 @@ edition_deps = select({
         "//omd/non-free/packages/reporting:pkg_tar",
         "//omd/non-free/packages/robotmk:pkg_tar",
         "//omd/non-free/packages/saml2:pkg_tar",
+        "//omd/packages/cmk-maps:pkg_tar",
     ],
     "@cmk//edition:community": [
         "//omd/packages/jaeger:pkg_tar",
+        "//omd/packages/cmk-maps:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
     "@cmk//edition:pro": [
@@ -88,6 +93,8 @@ edition_deps = select({
         "//non-free/packages/cmk-notification-plugins-nonfree:pkg_tar",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-kube_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-diagnostics",
+        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-checkmk",
+        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-notifications",
         "//non-free/packages/cmk-update-agent:pkg_tar",
         "//omd/non-free/packages/alert-handling:pkg_tar",
         "//omd/non-free/packages/cmc:pkg_tar",
@@ -102,6 +109,7 @@ edition_deps = select({
         "//omd/non-free/packages/robotmk:pkg_tar",
         "//omd/non-free/packages/saml2:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
+        "//omd/packages/cmk-maps:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
     "@cmk//edition:ultimate": [
@@ -119,15 +127,17 @@ edition_deps = select({
         "//non-free/packages/cmk-data-backend:pkg_tar",
         "//non-free/packages/cmk-data-backend:pkg_tar-telemetry-metrics",
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
-        "//non-free/packages/cmk-network-flow:pkg_tar",
         "//non-free/packages/cmk-notification-plugins-nonfree:pkg_tar",
         "//non-free/packages/cmk-otel-collector:pkg_tar",
-        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-aws_extended",
+        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-aws_deprecated_extended",
+        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-aws_v2_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-azure_deprecated_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-azure_v2_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-gcp_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-kube_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-diagnostics",
+        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-checkmk",
+        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-notifications",
         "//non-free/packages/cmk-relay-engine:relay_install_pkg",
         "//non-free/packages/cmk-telemetry:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
@@ -145,7 +155,7 @@ edition_deps = select({
         "//omd/non-free/packages/robotmk:pkg_tar",
         "//omd/non-free/packages/saml2:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
-        "//omd/non-free/packages/cmk-network-flow:pkg_tar",
+        "//omd/packages/cmk-maps:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
     "@cmk//edition:ultimatemt": [
@@ -164,15 +174,17 @@ edition_deps = select({
         "//non-free/packages/cmk-data-backend:pkg_tar-telemetry-metrics",
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
         "//non-free/packages/cmk-multi-tenancy:pkg_tar",
-        "//non-free/packages/cmk-network-flow:pkg_tar",
         "//non-free/packages/cmk-notification-plugins-nonfree:pkg_tar",
         "//non-free/packages/cmk-otel-collector:pkg_tar",
-        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-aws_extended",
+        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-aws_deprecated_extended",
+        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-aws_v2_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-azure_deprecated_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-azure_v2_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-gcp_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-kube_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-diagnostics",
+        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-checkmk",
+        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-notifications",
         "//non-free/packages/cmk-relay-engine:pkg_tar",
         "//non-free/packages/cmk-relay-engine:relay_install_pkg",
         "//non-free/packages/cmk-telemetry:pkg_tar",
@@ -191,7 +203,7 @@ edition_deps = select({
         "//omd/non-free/packages/robotmk:pkg_tar",
         "//omd/non-free/packages/saml2:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
-        "//omd/non-free/packages/cmk-network-flow:pkg_tar",
+        "//omd/packages/cmk-maps:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
 })
@@ -221,6 +233,7 @@ edition_skel_permissions = select({
         "//omd/packages/openssl:skel.permissions",
         "//omd/packages/perl-modules:skel.permissions",
         "//packages/cmk-agent-receiver:skel.permissions",
+        "//omd/packages/cmk-maps:skel.permissions",
     ],
     "@cmk//edition:community": [
         "//omd/packages/apache-omd:skel.permissions",
@@ -228,6 +241,7 @@ edition_skel_permissions = select({
         "//omd/packages/jaeger:skel.permissions",
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
+        "//omd/packages/cmk-maps:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
         "//omd/packages/omd:skel.permissions",
         "//omd/packages/pnp4nagios:skel.permissions",
@@ -253,6 +267,7 @@ edition_skel_permissions = select({
         "//omd/packages/jaeger:skel.permissions",
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
+        "//omd/packages/cmk-maps:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
         "//omd/packages/omd:skel.permissions",
         "//omd/packages/pnp4nagios:skel.permissions",
@@ -279,9 +294,9 @@ edition_skel_permissions = select({
         "//omd/non-free/packages/saml2:skel.permissions",
         "//omd/packages/check_mk:skel.permissions",
         "//omd/packages/jaeger:skel.permissions",
-        "//omd/non-free/packages/cmk-network-flow:skel_permissions_gated",
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
+        "//omd/packages/cmk-maps:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
         "//omd/packages/omd:skel.permissions",
         "//omd/packages/pnp4nagios:skel.permissions",
@@ -308,9 +323,9 @@ edition_skel_permissions = select({
         "//omd/non-free/packages/saml2:skel.permissions",
         "//omd/packages/check_mk:skel.permissions",
         "//omd/packages/jaeger:skel.permissions",
-        "//omd/non-free/packages/cmk-network-flow:skel_permissions_gated",
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
+        "//omd/packages/cmk-maps:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
         "//omd/packages/omd:skel.permissions",
         "//omd/packages/pnp4nagios:skel.permissions",
@@ -323,19 +338,6 @@ edition_skel_permissions = select({
         "//packages/cmk-agent-receiver:skel.permissions",
     ],
 })
-
-pip_compile(
-    name = "requirements_lock",
-    requirements_in = ":requirements.txt",
-    requirements_txt = ":requirements_lock.txt",
-    tags = ["manual"],
-)
-
-create_venv(
-    name = "venv",
-    destination_folder = "omd/.venv",
-    requirements_txt = ":requirements_lock.txt",
-)
 
 file_from_flag(
     name = "omd_root_dir",
@@ -787,10 +789,14 @@ pkg_tar(
     ],
     stamp = 1,
     tags = ["manual"],
-    visibility = ["//omd:__subpackages__"],
+    visibility = [
+        # //:deploy-python-drift-test checks the deploy wheel lists against
+        # the wheels actually shipped via this target.
+        "//:__pkg__",
+        "//omd:__subpackages__",
+    ],
     deps = [
         "//active_checks:pkg_tar",
-        "//bin:pkg_tar",
         "//cmk:cmk_tar",
         "//packages/cmk-plugin-apis/doc:pkg_tar",
         "//locale",
@@ -837,11 +843,13 @@ pkg_tar(
         "//packages/cmk-backup:pkg_tar",
         "//packages/cmk-ccc:pkg_tar",
         "//packages/cmk-check-engine:pkg_tar",
+        "//packages/cmk-cli-engine:pkg_tar",
         "//packages/cmk-crash:pkg_tar",
         "//packages/cmk-crypto:pkg_tar",
         "//packages/cmk-diagnostics:pkg_tar",
         "//packages/cmk-ec:pkg_tar",
         "//packages/cmk-events:pkg_tar",
+        "//packages/cmk-fastapi:pkg_tar",
         "//packages/cmk-flags:pkg_tar",
         "//packages/cmk-graphing-engine:pkg_tar",
         "//packages/cmk-inventory:pkg_tar",
@@ -879,13 +887,31 @@ pkg_tar(
     }) + edition_deps,
 )
 
+# Every release package is built from :deps_packages, which bundles
+# //agents:agents. Depending on this empty target makes them refuse to build
+# with the unsigned agent .rpm, i.e. without a signing key, unless signing is
+# disabled or artifacts are faked. It is a dependency instead of a
+# target_compatible_with on the packages themselves, because Bazel doesn't
+# analyse the dependencies of directly incompatible targets: cquery
+# 'deps(//omd:deb)' without a key, as used by
+# check_community_edition_all_free.sh, would silently come up empty.
+filegroup(
+    name = "agent_package_signing_guard",
+    srcs = [],
+    tags = ["manual"],
+    target_compatible_with = requires_signed_agent_rpm(),
+)
+
 # If we include the bom in the initial tar, we have a circular dependency
+# deps_packages_base is stamped, so this target and everything packing it
+# below is unique per build: keep them out of the remote cache.
 pkg_tar(
     name = "deps_packages",
-    tags = ["manual"],
-    # //:deploy-python-drift-test checks the deploy wheel lists against
-    # the wheels actually shipped via this target.
-    visibility = ["//:__pkg__"],
+    srcs = [":agent_package_signing_guard"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     deps = [
         ":deps_packages_base",
         "//omd/dependency_management:license_info",
@@ -897,7 +923,10 @@ pkg_tar(
     mtime = 1767744000,
     package_dir_file = ":omd_root_dir",
     portable_mtime = False,
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     deps = [
         ":deps_packages",
     ],
@@ -907,7 +936,10 @@ pkg_tar(
     name = "complete_install",
     mtime = 1767744000,
     portable_mtime = False,
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     deps = [
         ":deps_install",
         ":omd_global_dirs_tar",
@@ -924,7 +956,10 @@ pkg_tar(
     extension = "tar.zst",
     mtime = 1767744000,
     portable_mtime = False,
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     deps = [
         ":complete_install",
     ],
@@ -934,7 +969,10 @@ pkg_tar(
     name = "complete_install_uncompressed",
     mtime = 1767744000,
     portable_mtime = False,
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     deps = [
         ":complete_install",
     ],
@@ -985,6 +1023,18 @@ md5sums_from_archive(
     name = "md5sums",
     src = "//omd/packages/heirloom-mailx",
     out = "md5",
+    tags = ["no-remote-cache"],
+)
+
+# Computed from the uncompressed tar, whatever compression the package uses.
+installed_size_from_archive(
+    name = "installed_size",
+    src = ":complete_install",
+    out = "installed_size.txt",
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
 )
 
 pkg_deb(
@@ -998,6 +1048,7 @@ pkg_deb(
     depends_file = "//omd/distros:dependencies",
     description = "Checkmk - Best-in-class infrastructure & application monitoring",
     homepage = "https://checkmk.com",
+    installed_size_file = ":installed_size",
     maintainer = "Checkmk team <feedback@checkmk.com>",
     md5sums = ":md5sums",
     package = "{package}-{cmk_version}",
@@ -1009,7 +1060,10 @@ pkg_deb(
     prerm = "//omd/debian:prerm",
     priority = "optional",
     section = "admin",
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     templates = "//omd/debian:templates",
     triggers = "//omd/debian:triggers",
     version_file = "//omd/distros:distro_version_file",
@@ -1072,7 +1126,10 @@ sh_test(
             "//tests/packaging/package_validator:system_dependencies_ubuntu",
         ],
     }),
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
 )
 
 write_omd_spec(
@@ -1122,13 +1179,26 @@ pkg_rpm_from_tar(
     input_tarball = "complete_install",
     omd_spec = ":omd_spec",
     rpm = "cmk.rpm",
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     target_compatible_with = select({
         "@cmk//distro:almalinux": [],
         "@cmk//distro:sles": [],
         "//conditions:default": ["@platforms//:incompatible"],
     }),
     version = "@cmk//version",
+)
+
+sign_package(
+    name = "rpm_signed",
+    src = ":rpm",
+    expected_fingerprint = RELEASE_KEY_FINGERPRINT,
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
 )
 
 sh_test(
@@ -1188,7 +1258,10 @@ sh_test(
             "//tests/packaging/package_validator:system_dependencies_sles16_0",
         ],
     }),
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     target_compatible_with = select({
         "@cmk//distro:almalinux": [],
         "@cmk//distro:sles": [],
@@ -1202,6 +1275,7 @@ pkg_tar(
     mtime = 1767744000,
     package_dir_file = "//omd:omd_root_dir_appliance",
     portable_mtime = False,
+    tags = ["no-remote-cache"],
     target_compatible_with = select({
         "@cmk//edition:pro": [],
         "@cmk//edition:ultimate": [],
@@ -1225,7 +1299,10 @@ pkg_cma_from_tar(
     }),
     edition = "@cmk//edition",
     input_tarball = ":appliance",
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     target_compatible_with = select({
         "@cmk//distro:debian-12": [],
         "//conditions:default": ["@platforms//:incompatible"],
@@ -1250,12 +1327,14 @@ sh_test(
         "//tests/packaging/package_validator:system_dependencies_all",
         "//tests/packaging/package_validator:system_dependencies_cma",
     ],
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
 )
 
+# Lets shellcheck see these scripts. Nothing depends on this target.
 sh_library(
-    name = "omd_sh",
-    srcs = [
-        "run-binreplace",
-    ],
+    name = "shell_scripts",
+    srcs = ["configure"],
 )

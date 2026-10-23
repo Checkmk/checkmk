@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { loadGraphPin, saveGraphPin } from '@/graphing/api/graphPin'
 
@@ -18,10 +18,6 @@ describe('loadGraphPin', () => {
 
   beforeEach(() => {
     getSpy = vi.spyOn(client, 'GET')
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
   })
 
   function mockPinTime(pinTime: number | null): void {
@@ -66,10 +62,6 @@ describe('saveGraphPin', () => {
 
   beforeEach(() => {
     postSpy = vi.spyOn(client, 'POST')
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
   })
 
   function mockNoContent(): void {

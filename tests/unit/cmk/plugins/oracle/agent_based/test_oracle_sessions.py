@@ -27,8 +27,8 @@ def test_discover_oracle_sessions_normal() -> None:
     assert list(discover_oracle_sessions(parse_oracle_sessions(_NORMAL))) == [Service(item="orcl")]
 
 
-def test_discover_oracle_sessions_skips_failure_only() -> None:
-    assert not list(discover_oracle_sessions(parse_oracle_sessions(_FAILURE)))
+def test_discover_oracle_sessions_failure_row() -> None:
+    assert list(discover_oracle_sessions(parse_oracle_sessions(_FAILURE))) == [Service(item="orcl")]
 
 
 def test_check_oracle_sessions_normal() -> None:
@@ -54,25 +54,5 @@ def test_check_oracle_sessions_surfaces_non_ora_failure():
         Result(
             state=State.UNKNOWN,
             summary="IO Error: The Network Adapter could not establish the connection",
-        )
-    ]
-
-
-_LEGACY_ERROR = [["orcl", "ORA-01017:", "invalid username/password"]]
-
-
-def test_discover_oracle_sessions_skips_legacy_error():
-    assert not list(discover_oracle_sessions(parse_oracle_sessions(_LEGACY_ERROR)))
-
-
-def test_check_oracle_sessions_surfaces_legacy_error():
-    assert list(
-        check_oracle_sessions(
-            "orcl", {"sessions_abs": (150, 300)}, parse_oracle_sessions(_LEGACY_ERROR)
-        )
-    ) == [
-        Result(
-            state=State.UNKNOWN,
-            summary='Found error in agent output "ORA-01017: invalid username/password"',
         )
     ]

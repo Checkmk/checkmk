@@ -17,20 +17,38 @@ export interface NumberCellProps {
   decimals?: number | undefined
   highlight?: CellHighlight | undefined
   columnId?: string | undefined
+  button?: boolean | undefined
+  buttonLabel?: TranslatedString | undefined
+  /** Render nothing at all for a zero. */
+  blankWhenZero?: boolean | undefined
 }
 
 const props = defineProps<NumberCellProps>()
 
+const emit = defineEmits<{
+  (event: 'click', payload: MouseEvent): void
+}>()
+
 const valueString = computed(() => {
   if (props.value === undefined) {
     return 'n/a' as TranslatedString
+  }
+  if (props.value === 0 && props.blankWhenZero) {
+    return '' as TranslatedString
   }
   return props.value.toFixed(props.decimals ?? 0) as TranslatedString
 })
 </script>
 
 <template>
-  <BaseCell :column-id="columnId" :linked-to="linkedTo" :highlight="highlight">
+  <BaseCell
+    :column-id="columnId"
+    :linked-to="linkedTo"
+    :highlight="highlight"
+    :button="button"
+    :button-label="buttonLabel"
+    @click="emit('click', $event)"
+  >
     <template #default>{{ valueString }}</template>
   </BaseCell>
 </template>

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.site import omd_site
@@ -69,13 +70,13 @@ def update_service_phase_v1(
     """Update the phase of a service"""
     if body.target_phase not in _COMMAND_PHASES:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Not a valid target phase",
             detail=f"{body.target_phase!r} is not a phase a service can be moved to. "
             f"Use one of {sorted(_COMMAND_PHASES)}.",
         )
     _update_service_phase(api_context, body.target_phase, body.check_type, body.service_item, host)
-    return ApiResponse(body=None, status_code=204)
+    return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT)
 
 
 def update_service_phase_unstable(
@@ -94,7 +95,7 @@ def update_service_phase_unstable(
     # `target_phase` is narrowed to the four command phases at the model level, so no value check is
     # needed here -- an unaccepted phase is a `literal_error` from the framework before this runs.
     _update_service_phase(api_context, body.target_phase, body.check_type, body.service_item, host)
-    return ApiResponse(body=None, status_code=204)
+    return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT)
 
 
 def _update_service_phase(

@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Callable
 from dataclasses import asdict
 from typing import override
 from urllib.parse import urlencode
@@ -22,15 +23,19 @@ from cmk.gui.monitor.command import (
     downtime_presets,
     downtime_presets_url,
     DowntimeRecurrences,
+    host_setup_links,
+    HOST_SUPPORTED_ACTIONS,
     MonitorCommands,
     notification_rules_url,
 )
+from cmk.gui.monitor.export import EXPORT_EVENT, MonitorExportMenu
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
 from cmk.gui.monitor.services._ai_explain import ai_explain
+from cmk.gui.monitor.services._api._list_host_services import LIMIT_TIERS
 from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
+from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.monitoring.host_services import (
     AcknowledgeDefaults,
@@ -60,14 +65,18 @@ _ALL_HOSTS_PERMISSION = "view.allhosts"
 _RULESETS_PERMISSION = "wato.rulesets"
 
 
-def _row_actions(config: Config, hostname: HostName) -> list[RowAction]:
+def _row_actions(
+    config: Config, hostname: HostName, *, setup_access: Callable[[], bool]
+) -> list[RowAction]:
     """The links a row offers on the service it shows.
 
     The host is the page, so it is part of the address already; the service is not, and travels as
     the `{service}` placeholder the listing resolves per row - the same shape the hosts listing
-    uses for `{host}`.
+    uses for `{host}`. Setup restricts a host to the contact groups its permissions name, so a user
+    allowed to edit rules may still be refused this host's parameters: `setup_access` says whether
+    they may open it. It is asked last, as finding the host in Setup is the costly check.
     """
-    if not config.wato_enabled or not user.may(_RULESETS_PERMISSION):
+    if not config.wato_enabled or not user.may(_RULESETS_PERMISSION) or not setup_access():
         return []
     return [
         RowAction(
@@ -86,15 +95,26 @@ class MonitorHostServicesPage(Page):
         commands: MonitorCommands,
         recurrences: DowntimeRecurrences,
         host_menus: HostMenus,
+        teleport_target: str | None = None,
+        *,
+        setup_folders: SetupFolderSource,
     ) -> None:
         self._commands = commands
         self._recurrences = recurrences
         self._host_menus = host_menus
+        self._teleport_target = teleport_target
+        self._setup_folders = setup_folders
 
     def _permitted_actions(self) -> list[MonitoringAction]:
         return [
             MonitoringAction(ident=command.ident, title=str(command.title), icon=command.icon)
             for command in self._commands.permitted_actions(user, "service", _SUPPORTED_ACTIONS)
+        ]
+
+    def _permitted_host_actions(self) -> list[MonitoringAction]:
+        return [
+            MonitoringAction(ident=command.ident, title=str(command.title), icon=command.icon)
+            for command in self._commands.permitted_actions(user, "host", HOST_SUPPORTED_ACTIONS)
         ]
 
     @override
@@ -105,9 +125,8 @@ class MonitorHostServicesPage(Page):
         site_id = SiteId(ctx.request.get_str_input_mandatory("site"))
         title = _("Services of host %(host)s") % {"host": hostname}
 
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         host_url = _host_url(ctx, hostname, site_id)
-        breadcrumb = _make_breadcrumb(ctx, hostname, site_id, host_url, user_permissions)
+        breadcrumb = _make_breadcrumb(ctx, hostname, site_id, host_url, ctx.user_permissions)
 
         make_header(
             html,
@@ -118,6 +137,7 @@ class MonitorHostServicesPage(Page):
                 hostname=hostname,
                 site_id=site_id,
                 breadcrumb=breadcrumb,
+                export_dropdowns=MonitorExportMenu().dropdowns(),
             ),
             enable_main_page_scrollbar=False,
             debug=ctx.config.debug,
@@ -141,18 +161,32 @@ class MonitorHostServicesPage(Page):
                 MonitoringHostServicesApp(
                     poll_interval_ms=ctx.config.view_option_refreshes[0] * 1000,
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
+                    limit_tiers=list(LIMIT_TIERS),
                     host=hostname,
+                    export_event=EXPORT_EVENT,
                     site=site_id,
                     host_url=host_url,
                     user_id=str(user.id),
                     edition=Edition(edition(paths.omd_root).short),
+                    header_teleport_target=self._teleport_target,
                     ai_explain=ai_explain.is_enabled(),
                     actions=self._permitted_actions(),
                     downtime_recurrences=[
                         DowntimeRecurrence(recur=recurrence.recur, title=recurrence.title)
                         for recurrence in self._recurrences.offered()
                     ],
-                    row_actions=_row_actions(ctx.config, hostname),
+                    row_actions=_row_actions(
+                        ctx.config,
+                        hostname,
+                        setup_access=lambda: self._setup_folders(ctx.config, user).may_read_host(
+                            hostname, None
+                        ),
+                    ),
+                    host_actions=self._permitted_host_actions(),
+                    host_row_actions=[
+                        RowAction(ident=link.ident, title=link.title, icon=link.icon, url=link.url)
+                        for link in host_setup_links(ctx.config, user)
+                    ],
                     acknowledge_presets_url=acknowledge_presets_url(ctx.config),
                     acknowledge_defaults=AcknowledgeDefaults(
                         sticky=ack.sticky,

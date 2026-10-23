@@ -89,8 +89,14 @@ ignore = [
 max-complexity = 64 # TODO: This is far too much, we need to lower this!
 
 [tool.ruff.lint.isort]
+# Same-package detection looks for __init__.py files next to the linted file.
+# The sandbox of `bazel lint` only contains the sources of the linted target,
+# which often lack the __init__.py of their package, so the import order would
+# differ between `bazel lint` and a plain `ruff check`.
+detect-same-package = false
 known-first-party = ["agents", "buildscripts", "cmk", "scripts", "tests"]
 known-third-party = [
+  "fastapi",      # avoid confusion with the cmk.fastapi package
   "requirements", # avoid confusion with our toplevel directory
 ]
 order-by-type = false
@@ -110,7 +116,7 @@ first-party-not-cmk = ["cmc_proto", "omdlib", "livestatus"]
 [tool.ruff.lint.pylint]
 max-positional-args = 16
 
-# NOTE: Keep this is sync with mypy-gpl.ini!
+# NOTE: Keep this in sync with mypy-gpl.toml!
 # The number of errors/files below are just a snapshot to give a rough idea. In
 # addition, a single cause can imply multiple symptoms, so these numbers have to
 # be taken with a grain of salt...
@@ -201,7 +207,6 @@ follow_imports = "skip"
 init_forbid_extra = true
 init_typed = true
 warn_required_dynamic_aliases = true
-warn_untyped_fields = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

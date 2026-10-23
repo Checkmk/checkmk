@@ -135,14 +135,15 @@ function onClickGoTo() {
 
   &.cmk-wizard-step--active::before,
   &.cmk-wizard-step--complete::before {
-    background-color: var(--success-dimmed);
-    border-color: var(--success-dimmed);
+    background-color: var(--success);
+    border-color: var(--success);
+    color: var(--black);
   }
 
   &.cmk-wizard-step--active::after {
     background: linear-gradient(
       to bottom,
-      var(--success-dimmed) 50px,
+      var(--success) 50px,
       var(--wizard-progress-bar-background-color) 50px
     );
   }
@@ -156,7 +157,7 @@ function onClickGoTo() {
     }
 
     &::after {
-      background-color: var(--success-dimmed);
+      background-color: var(--success);
     }
   }
 

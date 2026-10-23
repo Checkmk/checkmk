@@ -10,6 +10,7 @@ from typing import Literal
 from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
 from cmk.graphing_engine import (
     ConsolidationFunction,
+    Direction,
     FetchedData,
     HostName,
     MetricName,
@@ -28,11 +29,8 @@ from cmk.gui.graphing._prediction_source import (
     _LivestatusQuerierSource,
     _LoadedPrediction,
     _LoadedPredictions,
-    _PredictionGrid,
     _PredictionKey,
-    _resolved_grid,
     _sample_prediction_curves,
-    Direction,
     PredictionFetchData,
 )
 from cmk.gui.graphing._source import PerformanceDataRow, RRDFetchTimeSeries
@@ -46,7 +44,6 @@ _PERIOD: Literal["wday"] = "wday"
 _VALID_FROM = 0
 _VALID_UNTIL = 86400
 _RANGE = TimeRange(start=0, end=30, step=10)
-_GRID = _PredictionGrid(time_range=_RANGE, num_points=3)
 
 
 def _prediction(curve_kind: PredictionCurveKind, metric: MetricName = _METRIC) -> PredictionMetric:
@@ -164,12 +161,13 @@ def _fetch(
 ) -> tuple[Mapping[MetricProtocol, Sequence[FetchedData]], PredictionFetchData]:
     fetch = PredictionFetchData(
         debug=False,
+        consolidation_function=ConsolidationFunction.MAX,
         performance_data_source=_FakeRRDPerformanceData(),
         time_series_source=_FakeRRDTimeSeries(observed, observed_range),
         prediction_source=_FakePredictionSource(loaded, raises=raises, unreadable=unreadable),
     )
     return (
-        fetch(metrics, consolidation_function=ConsolidationFunction.MAX, time_range=_RANGE),
+        fetch(metrics, time_range=_RANGE),
         fetch,
     )
 
@@ -273,20 +271,16 @@ def test_a_graph_without_prediction_curves_is_fetched_as_before() -> None:
     assert list(fetched) == [_observed()]
 
 
-def test_the_grid_falls_back_to_the_requested_range_when_nothing_was_fetched() -> None:
-    assert _resolved_grid({}, _RANGE) == _PredictionGrid(time_range=_RANGE, num_points=3)
-
-
 def test_sampling_a_prediction_needs_no_fetch_at_all() -> None:
-    sampled = _sample_prediction_curves({"upper": _loaded("upper", 0.0, 5.0, 6.0, 7.0)}, _GRID)
+    sampled = _sample_prediction_curves({"upper": _loaded("upper", 0.0, 5.0, 6.0, 7.0)}, _RANGE)
 
     assert sampled[PredictionCurveKind.UPPER_CRITICAL] == [9.0, 10.0, 11.0]
 
 
 def test_a_prediction_is_sampled_at_the_timestamp_its_point_is_drawn_at() -> None:
-    grid = _PredictionGrid(time_range=TimeRange(start=0, end=20, step=10), num_points=1)
+    time_range = TimeRange(start=0, end=10, step=10)
 
-    sampled = _sample_prediction_curves({"upper": _loaded("upper", 1.0, 2.0, 3.0)}, grid)
+    sampled = _sample_prediction_curves({"upper": _loaded("upper", 1.0, 2.0, 3.0)}, time_range)
 
     assert sampled[PredictionCurveKind.UPPER_REFERENCE] == [2.0]
 
@@ -304,7 +298,12 @@ def test_every_predicted_metric_of_a_service_is_read_in_one_go() -> None:
 
 
 def test_the_real_time_series_source_is_the_production_default() -> None:
-    assert isinstance(PredictionFetchData(debug=False).time_series_source, RRDFetchTimeSeries)
+    assert isinstance(
+        PredictionFetchData(
+            debug=False, consolidation_function=ConsolidationFunction.MAX
+        ).time_series_source,
+        RRDFetchTimeSeries,
+    )
 
 
 def _key(service_name: ServiceName, metric: MetricName = _METRIC) -> _PredictionKey:

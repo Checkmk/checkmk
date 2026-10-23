@@ -7,6 +7,7 @@ from collections.abc import Callable
 from typing import override
 
 from cmk.ccc.plugin_registry import Registry
+from cmk.gui.config import Config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -30,7 +31,7 @@ from .pending_changes import Change, ChangeScope, PendingChanges
 TIMEPERIOD_ID_PATTERN = r"^[-a-z0-9A-Z_]+\Z"
 TimeperiodUsage = tuple[str, str]
 
-TimeperiodUsageFinder = Callable[[str], list[TimeperiodUsage]]
+TimeperiodUsageFinder = Callable[[str, Config], list[TimeperiodUsage]]
 
 
 # The WatoConfigFile hierarchy is broken in many ways regarding typing, so we have to add some
@@ -109,6 +110,7 @@ def load_timeperiod(name: TimeperiodName) -> TimeperiodSpec:
 def delete_timeperiod(
     name: TimeperiodName,
     *,
+    config: Config,
     pprint_value: bool,
     pending_changes: PendingChanges,
 ) -> None:
@@ -117,7 +119,7 @@ def delete_timeperiod(
     time_periods = TimePeriodsConfigFile().load_timeperiod_specs_for_modification()
     if name not in time_periods:
         raise TimePeriodNotFoundError
-    if usages := list(find_usages_of_timeperiod(name)):
+    if usages := list(find_usages_of_timeperiod(name, config)):
         raise TimePeriodInUseError(usages=usages)
     del time_periods[name]
     save_timeperiods(time_periods, pprint_value)
@@ -214,7 +216,7 @@ class TimeperiodSelection(DropdownChoice[str]):
         return sorted(elements, key=lambda x: x[1].lower())
 
 
-def find_usages_of_timeperiod(time_period_name: str) -> list[TimeperiodUsage]:
+def find_usages_of_timeperiod(time_period_name: str, config: Config) -> list[TimeperiodUsage]:
     """Find all usages of a timeperiod
 
     Possible usages:
@@ -228,7 +230,7 @@ def find_usages_of_timeperiod(time_period_name: str) -> list[TimeperiodUsage]:
     """
     used_in: list[TimeperiodUsage] = []
     for finder in timeperiod_usage_finder_registry.values():
-        used_in += finder(time_period_name)
+        used_in += finder(time_period_name, config)
     used_in += _find_usages_in_other_timeperiods(time_period_name)
     return used_in
 

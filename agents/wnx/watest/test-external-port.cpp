@@ -224,6 +224,24 @@ TEST_F(ExternalPortTestFixture, ReadComponent) {
     EXPECT_EQ(reply_text_, text);
 }
 
+TEST(AsioSessionTest, ReadIpTimeoutKeepsSessionAliveComponent) {
+    asio::io_context io;
+    tcp::acceptor acceptor{io, {asio::ip::make_address("127.0.0.1"), 0}};
+    tcp::socket client{io};
+    client.connect(acceptor.local_endpoint());
+    tcp::socket server{io};
+    acceptor.accept(server);
+
+    auto session = std::make_shared<AsioSession>(std::move(server));
+    const std::weak_ptr<AsioSession> alive = session;
+    session->read_ip();  // the client stays silent: times out
+    session.reset();
+    ASSERT_FALSE(alive.expired());
+
+    io.run();  // the cancelled read's handler
+    EXPECT_TRUE(alive.expired());
+}
+
 class ExternalPortQueueFixture : public ::testing::Test {
 public:
     void TearDown() override { test_port_.shutdownIo(); }
@@ -246,9 +264,24 @@ public:
             test_port_.putOnQueue(c);
         }
     }
+    void addResult(const std::string &request) {
+        const std::lock_guard lk(result_lock_);
+        result_.emplace_back(request);
+    }
+    size_t resultCount() const {
+        const std::lock_guard lk(result_lock_);
+        return result_.size();
+    }
+    std::string joinedResults() const {
+        const std::lock_guard lk(result_lock_);
+        return std::accumulate(result_.begin(), result_.end(), ""s);
+    }
     ExternalPort test_port_{nullptr};
     asio::io_context io_;
     std::vector<AsioSession::s_ptr> sessions_;
+
+    /// guards result_: filled by the processQueue thread, read by the test
+    mutable std::mutex result_lock_;
     std::vector<std::string> result_;
 };
 
@@ -270,7 +303,7 @@ TEST_F(ExternalPortQueueFixture, FillAndConsumeMailSlotRequests) {
 
     test_port_.startIo(
         [this](const std::string &r) {
-            result_.emplace_back(r);
+            addResult(r);
             return std::vector<uint8_t>{};
         },
         ExternalPort::IoParam{
@@ -278,10 +311,10 @@ TEST_F(ExternalPortQueueFixture, FillAndConsumeMailSlotRequests) {
             .local_only = LocalOnly::no,
             .pid = ::GetCurrentProcessId(),
         });
+    // the queue is drained before the reply is called: wait for the replies
     EXPECT_TRUE(tst::WaitForSuccessSilent(
-        1000ms, [this] { return test_port_.entriesInQueue() == 0; }));
-    EXPECT_EQ(std::accumulate(result_.begin(), result_.end(), ""s),
-              "0123456789101112131415"s);
+        1000ms, [this] { return resultCount() == kMaxSessionQueueLength; }));
+    EXPECT_EQ(joinedResults(), "0123456789101112131415"s);
 }
 
 namespace {

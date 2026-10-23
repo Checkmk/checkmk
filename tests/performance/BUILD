@@ -31,9 +31,8 @@ py_library(
         requirement("playwright"),
         requirement("pytest_benchmark"),
         requirement("cryptography"),
-        "//tests/testlib",
-        "//tests/testlib/common:repo",
-        "//tests/testlib/common:utils",
+        "//tests/testlib/common",
+        "//tests/testlib/system",
     ],
 )
 
@@ -54,7 +53,7 @@ py_library(
     ],
     deps = [
         "//tests:pkg_marker",
-        "//tests/testlib",
+        "//tests/testlib/common",
         requirement("psutil"),
     ],
 )

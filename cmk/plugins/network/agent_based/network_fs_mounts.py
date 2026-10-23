@@ -148,20 +148,12 @@ def _scaled_metric(new_name: str, metric: Metric, factor: float) -> Metric:
         new_name,
         metric.value * factor,
         levels=(
-            (
-                metric.levels[0] * factor if metric.levels[0] is not None else None,
-                metric.levels[1] * factor if metric.levels[1] is not None else None,
-            )
-            if metric.levels  # type: ignore[redundant-expr]
-            else None
+            metric.levels[0] * factor if metric.levels[0] is not None else None,
+            metric.levels[1] * factor if metric.levels[1] is not None else None,
         ),
         boundaries=(
-            (
-                metric.boundaries[0] * factor if metric.boundaries[0] is not None else None,
-                metric.boundaries[1] * factor if metric.boundaries[1] is not None else None,
-            )
-            if metric.boundaries  # type: ignore[redundant-expr]
-            else None
+            metric.boundaries[0] * factor if metric.boundaries[0] is not None else None,
+            metric.boundaries[1] * factor if metric.boundaries[1] is not None else None,
         ),
     )
 

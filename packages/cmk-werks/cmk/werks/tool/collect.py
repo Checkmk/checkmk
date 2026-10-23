@@ -9,63 +9,18 @@ import sys
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Literal, NamedTuple
+from typing import NamedTuple
 
 from git.objects.commit import Commit
-from git.objects.tree import Tree
 from git.repo import Repo
 
-from cmk.werks.tool import load_werk, parse_werk
+from cmk.werks.tool import parse_werk
 
-from .config import try_load_version_from_defines_make_content
 from .constants import NON_WERK_FILES_IN_WERK_FOLDER
+from .flavor import Flavor
 from .models import AllWerks, WebsiteWerkV2, WebsiteWerkV3
 
 logger = logging.getLogger(__name__)
-
-
-class FailReason:
-    def __init__(self, reason: str):
-        self.reason = reason
-
-
-class Config:
-    """
-    We read werks from different git repositories, and each repo has its own
-    quirks. This config tries to hold all repo specific configuration.
-    """
-
-    def __init__(self, flavor: Literal["cma", "cmk", "checkmk_kube_agent", "cloudmk"]) -> None:
-        self.flavor = flavor
-
-    # only branches matching this regex will be considered for searching for
-    # werk files.
-    branch_regex: str
-    _defines_make: str = "defines.make"
-
-    def get_next_version(self, tree: Tree) -> str | FailReason:
-        # load the version that werks without version should have.
-        # this should return the version of the next release.
-        try:
-            defines_make = tree[self._defines_make]
-        except KeyError:
-            return FailReason(f"Can not find {self._defines_make} file in the git tree.")
-        if (
-            version := try_load_version_from_defines_make_content(defines_make.data_stream.stream)
-        ) is not None:
-            return version
-        return FailReason(f"Could not read the version in {self._defines_make}.")
-
-    def cleanup_branch_name(self, branch_name: str) -> str:
-        # in previous releases of cmk there were branches called 1.2.7i3
-        # but we want to store the werks in 1.2.7, we use this function to
-        # adapt this.
-        return branch_name
-
-    def adapt_werk_string(self, werk_string: str, werk_id: int) -> str:  # noqa: ARG002
-        # there is one faulty werk in cmk repo, but in many branches
-        # its easier to fix here...
-        return werk_string
 
 
 def branch_name_to_sort(branch_name: str) -> tuple[str | int, ...]:
@@ -92,7 +47,7 @@ class WerkFile(NamedTuple):
 
 
 def _get_branches(
-    r: Repo, c: Config, branch_replacement: Mapping[str, str]
+    r: Repo, c: Flavor, branch_replacement: Mapping[str, str]
 ) -> Iterable[tuple[str, Commit]]:
     if branch_replacement:
         for branch, rev in branch_replacement.items():
@@ -115,9 +70,9 @@ def _get_branches(
         yield branch_name, ref.commit
 
 
-def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
+def main(flavor: Flavor, repo_path: Path, branches: Mapping[str, str]) -> None:
     logging.basicConfig()
-    c = config
+    c = flavor
 
     defines_make_version_by_branch: dict[str, str] = {}
     werk_files_by_id_and_branch: dict[int, dict[str, WerkFile]] = defaultdict(dict)
@@ -125,11 +80,11 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
     for branch_name, ref in _get_branches(r, c, branches):
         tree = r.tree(ref)
 
-        version = config.get_next_version(tree)
-        if isinstance(version, FailReason):
+        version = flavor.read_current_version(tree)
+        if version is None:
             logger.warning(
-                "could not determine the next release version in branch %(branch)s. reason: %(reason)s",
-                {"branch": branch_name, "reason": version.reason},
+                "could not determine the next release version in branch %(branch)s",
+                {"branch": branch_name},
             )
             continue
 
@@ -168,11 +123,13 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
             werk_string = c.adapt_werk_string(werk_string, werk_id)
 
             try:
-                parsed = parse_werk(werk_string, werk_file.file_name)
+                parsed = parse_werk(
+                    werk_string, werk_file.file_name, v1_defaults=flavor.v1_defaults
+                )
             except Exception as e:
                 raise RuntimeError(
                     f"could not parse werk {werk_file.file_name} from "
-                    f"branch {branch} of flavor {config.flavor}"
+                    f"branch {branch} of flavor {flavor.name}"
                 ) from e
             if (werk_version := parsed.metadata.get("version")) is None:
                 # if there is no version in the werk itself,
@@ -183,30 +140,17 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
         try:
             # and here we simply access variables of the latest werk iteration above.
             assert werk_string is not None
-            werk = load_werk(
+            werk = flavor.load_werk(
                 file_content=werk_string, file_name=werk_file.file_name
             )  # this could be optimized, as we now parse the werk twice.
         except Exception as e:
-            raise RuntimeError(f"could not load werk {werk_id} from flavor {config.flavor}") from e
+            raise RuntimeError(f"could not load werk {werk_id} from flavor {flavor.name}") from e
 
         werk_dict = {k: v for k, v in werk.to_json_dict().items() if v is not None}
         werk_dict.pop("version", None)
-        website_werk: WebsiteWerkV2 | WebsiteWerkV3
-        if werk_dict["__version__"] == "2":
-            website_werk = WebsiteWerkV2(
-                versions=versions,
-                product=config.flavor,
-                **werk_dict,  # type: ignore[arg-type]
-            )
-        elif werk_dict["__version__"] == "3":
-            website_werk = WebsiteWerkV3(
-                versions=versions,
-                product=config.flavor,
-                **werk_dict,  # type: ignore[arg-type]
-            )
-        else:
-            raise RuntimeError
-        all_werks_by_id[str(werk_id)] = website_werk
+        all_werks_by_id[str(werk_id)] = WebsiteWerkV3.model_validate(
+            werk_dict | {"versions": versions, "product": flavor.name}
+        )
 
     if not all_werks_by_id:
         raise RuntimeError("Expected to collect at least one Werk, but it's completely empty.")

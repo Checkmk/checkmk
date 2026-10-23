@@ -36,3 +36,23 @@ test('renders the pending label for the PENDING state', () => {
   expect(screen.getByText('PENDING')).toBeInTheDocument()
   expect(screen.queryByText('CRITICAL')).not.toBeInTheDocument()
 })
+
+test.each<[ServiceState, string, string]>([
+  ['WARN', 'WA', 'Warning'],
+  ['CRIT', 'CR', 'Critical'],
+  ['UNKNOWN', 'UN', 'Unknown'],
+  ['PENDING', 'PD', 'Pending']
+])('spells out the abbreviated %s state on hover', (state, label, title) => {
+  render(ServiceStateDisplay, { props: { state, abbreviated: true } })
+
+  expect(screen.getByText(label)).toHaveAttribute('title', title)
+})
+
+test.each<[ServiceState, boolean, string]>([
+  ['OK', true, 'OK'],
+  ['WARN', false, 'WARNING']
+])('shows no tooltip on the %s state when nothing is abbreviated', (state, abbreviated, label) => {
+  render(ServiceStateDisplay, { props: { state, abbreviated } })
+
+  expect(screen.getByText(label)).not.toHaveAttribute('title')
+})

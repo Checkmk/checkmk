@@ -13,17 +13,15 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import override
 
-from cmk.automations.results._base import ABCAutomationResult, result_type_registry
+from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.helper_interface import AgentRawData
 from cmk.checkengine.submitters import ServiceDetails
 from cmk.utils.config_warnings import ConfigurationWarnings
 
-from ..types import AutomationID
-
 
 @dataclass
-class RenameHostsResult(ABCAutomationResult):
+class RenameHostsResult(AutomationResult):
     action_counts: Mapping[str, int]
 
     @staticmethod
@@ -32,42 +30,30 @@ class RenameHostsResult(ABCAutomationResult):
         return AutomationID("rename-hosts")
 
 
-result_type_registry.register(RenameHostsResult)
-
-
 @dataclass
-class DeleteHostsResult(ABCAutomationResult):
+class DeleteHostsResult(AutomationResult):
     @staticmethod
     @override
     def automation_call() -> AutomationID:
         return AutomationID("delete-hosts")
 
 
-result_type_registry.register(DeleteHostsResult)
-
-
 @dataclass
-class DeleteHostsKnownRemoteResult(ABCAutomationResult):
+class DeleteHostsKnownRemoteResult(AutomationResult):
     @staticmethod
     @override
     def automation_call() -> AutomationID:
         return AutomationID("delete-hosts-known-remote")
 
 
-result_type_registry.register(DeleteHostsKnownRemoteResult)
-
-
 @dataclass
-class RestartResult(ABCAutomationResult):
+class RestartResult(AutomationResult):
     config_warnings: ConfigurationWarnings
 
     @staticmethod
     @override
     def automation_call() -> AutomationID:
         return AutomationID("restart")
-
-
-result_type_registry.register(RestartResult)
 
 
 @dataclass
@@ -78,11 +64,8 @@ class ReloadResult(RestartResult):
         return AutomationID("reload")
 
 
-result_type_registry.register(ReloadResult)
-
-
 @dataclass
-class GetConfigurationResult(ABCAutomationResult):
+class GetConfigurationResult(AutomationResult):
     result: Mapping[str, object]
 
     @staticmethod
@@ -91,11 +74,8 @@ class GetConfigurationResult(ABCAutomationResult):
         return AutomationID("get-configuration")
 
 
-result_type_registry.register(GetConfigurationResult)
-
-
 @dataclass
-class GetCheckInformationResult(ABCAutomationResult):
+class GetCheckInformationResult(AutomationResult):
     plugin_infos: Mapping[str, Mapping[str, object]]
 
     @staticmethod
@@ -104,11 +84,8 @@ class GetCheckInformationResult(ABCAutomationResult):
         return AutomationID("get-check-information")
 
 
-result_type_registry.register(GetCheckInformationResult)
-
-
 @dataclass
-class GetSectionInformationResult(ABCAutomationResult):
+class GetSectionInformationResult(AutomationResult):
     section_infos: Mapping[str, Mapping[str, str]]
 
     @staticmethod
@@ -117,11 +94,8 @@ class GetSectionInformationResult(ABCAutomationResult):
         return AutomationID("get-section-information")
 
 
-result_type_registry.register(GetSectionInformationResult)
-
-
 @dataclass
-class UpdateDNSCacheResult(ABCAutomationResult):
+class UpdateDNSCacheResult(AutomationResult):
     n_updated: int
     failed_hosts: Sequence[HostName]
 
@@ -131,22 +105,16 @@ class UpdateDNSCacheResult(ABCAutomationResult):
         return AutomationID("update-dns-cache")
 
 
-result_type_registry.register(UpdateDNSCacheResult)
-
-
 @dataclass
-class UpdatePasswordsMergedFileResult(ABCAutomationResult):
+class UpdatePasswordsMergedFileResult(AutomationResult):
     @staticmethod
     @override
     def automation_call() -> AutomationID:
         return AutomationID("update-passwords-merged-file")
 
 
-result_type_registry.register(UpdatePasswordsMergedFileResult)
-
-
 @dataclass
-class GetAgentOutputResult(ABCAutomationResult):
+class GetAgentOutputResult(AutomationResult):
     success: bool
     service_details: ServiceDetails
     raw_agent_data: AgentRawData
@@ -157,11 +125,8 @@ class GetAgentOutputResult(ABCAutomationResult):
         return AutomationID("get-agent-output")
 
 
-result_type_registry.register(GetAgentOutputResult)
-
-
 @dataclass
-class BakeAgentsResult(ABCAutomationResult):
+class BakeAgentsResult(AutomationResult):
     output: str | None
 
     @staticmethod
@@ -170,11 +135,8 @@ class BakeAgentsResult(ABCAutomationResult):
         return AutomationID("bake-agents")
 
 
-result_type_registry.register(BakeAgentsResult)
-
-
 @dataclass
-class BakeryChangedTargetsResult(ABCAutomationResult):
+class BakeryChangedTargetsResult(AutomationResult):
     # Targets are carried as their .serialize() form (see BakeryTarget); decode
     # with cmk.bakery.shared.type_defs.get_bakery_target() on the consumer side
     # when typed objects are needed. Avoids pulling non-free types into this
@@ -185,6 +147,3 @@ class BakeryChangedTargetsResult(ABCAutomationResult):
     @override
     def automation_call() -> AutomationID:
         return AutomationID("bakery-changed-targets")
-
-
-result_type_registry.register(BakeryChangedTargetsResult)

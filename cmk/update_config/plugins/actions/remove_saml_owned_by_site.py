@@ -18,8 +18,8 @@ from typing import cast, override
 
 from cmk.gui.config import active_config
 from cmk.gui.userdb import UserConnectionConfigFile
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 from cmk.utils.log import VERBOSE
 
 

@@ -24,7 +24,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions, permission_registry
 from cmk.gui.sidebar import (
     SidebarRenderer,
     SidebarSnapin,
@@ -34,6 +34,8 @@ from cmk.gui.sidebar import (
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 
@@ -116,7 +118,13 @@ def fixture_extra_snapins() -> Iterator[None]:
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request)
+    return PageContext(
+        config=config,
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
+    )
 
 
 def _only_test_snapins(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -126,7 +134,7 @@ def _only_test_snapins(monkeypatch: pytest.MonkeyPatch) -> None:
     the code under test here."""
     monkeypatch.setattr(
         "cmk.gui.sidebar.all_snapins",
-        lambda user_permissions: {"quiet": QuietSnapin, "noisy": NoisySnapin},  # noqa: ARG005
+        lambda: {"quiet": QuietSnapin, "noisy": NoisySnapin},
     )
 
 
@@ -488,7 +496,7 @@ def test_open_close_rejects_an_invalid_state(
     request.set_var("name", "quiet")
     request.set_var("state", "sideways")
     with monkeypatch.context() as m:
-        m.setattr("cmk.gui.sidebar.check_csrf_token", lambda: None)
+        m.setattr("cmk.gui.sidebar.check_csrf_token", lambda _session, _request, **_kwargs: None)
         with pytest.raises(MKUserError, match="Invalid state"):
             sidebar.AjaxOpenCloseSnapin().page(_page_context(load_config))
 
@@ -497,7 +505,7 @@ def test_open_close_needs_the_configure_permission(
     monkeypatch: pytest.MonkeyPatch, load_config: Config
 ) -> None:
     with monkeypatch.context() as m:
-        m.setattr("cmk.gui.sidebar.check_csrf_token", lambda: None)
+        m.setattr("cmk.gui.sidebar.check_csrf_token", lambda _session, _request, **_kwargs: None)
         m.setattr(user, "may", lambda x: x != "general.configure_sidebar")
         m_save = _NeverCalled()
         m.setattr(sidebar.UserSidebarConfig, "save", m_save)
@@ -509,7 +517,7 @@ def test_open_close_without_a_snapin_name(
     monkeypatch: pytest.MonkeyPatch, load_config: Config
 ) -> None:
     with monkeypatch.context() as m:
-        m.setattr("cmk.gui.sidebar.check_csrf_token", lambda: None)
+        m.setattr("cmk.gui.sidebar.check_csrf_token", lambda _session, _request, **_kwargs: None)
 
         assert sidebar.AjaxOpenCloseSnapin().page(_page_context(load_config)) is None
 
@@ -521,7 +529,7 @@ def test_open_close_of_a_snapin_that_is_not_configured(
     request.set_var("name", "quiet")
     request.set_var("state", "closed")
     with monkeypatch.context() as m:
-        m.setattr("cmk.gui.sidebar.check_csrf_token", lambda: None)
+        m.setattr("cmk.gui.sidebar.check_csrf_token", lambda _session, _request, **_kwargs: None)
         m.setattr(
             sidebar.UserSidebarConfig,
             "_user_config",
@@ -542,7 +550,7 @@ def test_add_snapin_needs_the_configure_permission(
     monkeypatch: pytest.MonkeyPatch, load_config: Config
 ) -> None:
     with monkeypatch.context() as m:
-        m.setattr("cmk.gui.sidebar.check_csrf_token", lambda: None)
+        m.setattr("cmk.gui.sidebar.check_csrf_token", lambda _session, _request, **_kwargs: None)
         m.setattr(user, "may", lambda x: x != "general.configure_sidebar")
         with pytest.raises(MKGeneralException, match="not allowed"):
             sidebar.AjaxAddSnapin().page(_page_context(load_config))
@@ -553,7 +561,7 @@ def test_add_snapin_rejects_an_unknown_snapin(
 ) -> None:
     request.set_var("name", "no_such_snapin")
     with monkeypatch.context() as m:
-        m.setattr("cmk.gui.sidebar.check_csrf_token", lambda: None)
+        m.setattr("cmk.gui.sidebar.check_csrf_token", lambda _session, _request, **_kwargs: None)
         with pytest.raises(MKUserError, match="Invalid sidebar element"):
             sidebar.AjaxAddSnapin().page(_page_context(load_config))
 
@@ -564,7 +572,7 @@ def test_add_snapin_rejects_an_already_enabled_snapin(
 ) -> None:
     request.set_var("name", "quiet")
     with monkeypatch.context() as m:
-        m.setattr("cmk.gui.sidebar.check_csrf_token", lambda: None)
+        m.setattr("cmk.gui.sidebar.check_csrf_token", lambda _session, _request, **_kwargs: None)
         m.setattr(
             sidebar.UserSidebarConfig,
             "_user_config",
@@ -580,7 +588,7 @@ def test_add_snapin_returns_the_rendered_snapin(
 ) -> None:
     request.set_var("name", "quiet")
     with monkeypatch.context() as m:
-        m.setattr("cmk.gui.sidebar.check_csrf_token", lambda: None)
+        m.setattr("cmk.gui.sidebar.check_csrf_token", lambda _session, _request, **_kwargs: None)
         m.setattr(
             sidebar.UserSidebarConfig,
             "_user_config",

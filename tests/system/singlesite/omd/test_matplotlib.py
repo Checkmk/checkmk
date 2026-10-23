@@ -8,7 +8,7 @@
 # the site -- built with its vendored freetype/harfbuzz/sheenbidi/libraqm/qhull, see
 # omd/packages/python3-modules/build-python3-modules.bzl -- is importable and can render a plot.
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 _PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 

@@ -52,7 +52,8 @@ function fitByChars(full: string, fits: (candidate: string) => boolean): string 
 /**
  * Middle-truncate `text` to the largest form that satisfies `fits`, keeping the start and the end and
  * dropping the centre behind an ellipsis. Whole words are dropped first so the ellipsis always sits
- * between two words (a space on each side); a single over-long word falls back to a character split.
+ * between two words (a space on each side); when no whole-word split fits (a single over-long word,
+ * or a first word too long on its own) it falls back to a character split.
  *
  * `fits` is the caller's own fit predicate - typically a DOM measurement
  */
@@ -61,5 +62,11 @@ export function middleTruncate(text: string, fits: (candidate: string) => boolea
     return text
   }
   const words = text.split(/\s+/).filter((word) => word.length > 0)
-  return words.length > 1 ? fitByWords(words, fits) : fitByChars(text, fits)
+  if (words.length > 1) {
+    const fittedByWords = fitByWords(words, fits)
+    if (fittedByWords !== ELLIPSIS) {
+      return fittedByWords
+    }
+  }
+  return fitByChars(text, fits)
 }

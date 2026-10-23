@@ -16,7 +16,7 @@ from cmk.plugins.kaspersky.agent_based import kaspersky_av_client
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 
-@pytest.fixture(scope="module", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture(scope="module")
 def set_fixed_timezone() -> Iterator[None]:
     with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         yield
@@ -35,6 +35,7 @@ def set_fixed_timezone() -> Iterator[None]:
         ([["Signatures", "Missing"]], 0, {}),
     ],
 )
+@pytest.mark.usefixtures("set_fixed_timezone")
 def test_parse_kaspersky_av_client(
     string_table: StringTable, now: int, expected_section: kaspersky_av_client.Section
 ) -> None:
@@ -87,6 +88,7 @@ def test_parse_kaspersky_av_client(
         ),
     ],
 )
+@pytest.mark.usefixtures("set_fixed_timezone")
 def test_check_kaskpersky_av_client(
     section: kaspersky_av_client.Section, results: Sequence[Result]
 ) -> None:

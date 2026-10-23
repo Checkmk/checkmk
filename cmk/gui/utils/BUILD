@@ -9,6 +9,7 @@ load("//bazel/rules:doctest.bzl", "py_doc_test")
 py_library(
     name = "base",
     srcs = [
+        "host_relations.py",
         "images.py",
     ],
     imports = ["../../.."],
@@ -17,6 +18,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-web",
         requirement("pillow"),
     ],
@@ -27,6 +29,7 @@ py_library(
     srcs = [
         "dataclasses.py",
         "doc_reference_urls.py",
+        "host_relation_kinds.py",
         "misc.py",
         "mobile.py",
         "output_funnel.py",
@@ -48,8 +51,8 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":base",
         "//cmk/gui:core_toolkit",
-        "//cmk/utils",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:user",
@@ -57,6 +60,7 @@ py_library(
         "//packages/cmk-web",
         "//packages/cmk-web/cmk/web/utils",
         requirement("flask"),
+        "//cmk/utils:security_event",
     ],
 )
 
@@ -65,8 +69,8 @@ py_library(
     srcs = [
         "compatibility.py",
         "confirm_with_preview.py",
-        "csrf_token.py",
         "encrypter.py",
+        "graph_refresh.py",
         "htpasswd.py",
         "json.py",
         "labels.py",
@@ -74,6 +78,7 @@ py_library(
         "regex.py",
         "rendering.py",
         "request_context.py",
+        "session.py",
         "sort.py",
         "temperature_unit.py",
         "time.py",
@@ -91,20 +96,20 @@ py_library(
         "//cmk/gui:auth_core",
         "//cmk/gui:core_toolkit",
         "//cmk/gui:html_toolkit",
-        "//cmk/utils",
-        "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:i18n",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
+        "//packages/cmk-graphing-engine",
         "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-ruleset-matcher",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web/cmk/web/utils",
         requirement("flask"),
+        "//cmk/utils:security_event",
     ],
 )
 

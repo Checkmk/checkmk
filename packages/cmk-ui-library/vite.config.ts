@@ -10,10 +10,8 @@ import vue from '@vitejs/plugin-vue'
 import path from 'node:path'
 import { defineConfig } from 'vite'
 
-// CI hands over the CPU budget of its container. os.availableParallelism() does
-// not see a cgroup quota, and where that quota lives is CI's concern rather than
-// this config's. Unset elsewhere so vitest keeps its own default.
-const maxWorkers = Number(process.env.VITEST_MAX_WORKERS) || undefined
+import isolatedTests from './vitest.isolated.json'
+import { testProjects } from './vitest.shared'
 
 export default defineConfig({
   plugins: [
@@ -29,9 +27,11 @@ export default defineConfig({
     alias: {
       // Self-reference: package files import each other as `cmk-ui-library/...`.
       'cmk-ui-library': path.resolve('.'),
-      // Icons and theme images resolved from the classic frontend, same
-      // temporary hack as in cmk-frontend-vue's vite config.
-      '~cmk-frontend': path.resolve('../cmk-frontend/dist')
+      // Icons from the classic frontend, same temporary hack as in cmk-frontend-vue's
+      // vite config; under vitest only theme images resolve.
+      '~cmk-frontend': path.resolve(
+        process.env.VITEST ? '../cmk-frontend/src' : '../cmk-frontend/dist'
+      )
     }
   },
   server: {
@@ -44,8 +44,11 @@ export default defineConfig({
     // enable jest-like global test APIs
     globals: true,
     environment: 'jsdom',
-    ...(maxWorkers === undefined ? {} : { maxWorkers }),
-    setupFiles: ['tests/setup-tests.ts'],
+    restoreMocks: true,
+    clearMocks: true,
+    unstubGlobals: true,
+    setupFiles: ['vitest.shared-setup.ts', 'tests/setup-tests.ts'],
+    projects: testProjects(isolatedTests),
     reporters: process.env.XML_OUTPUT_FILE // variable set by bazel
       ? [
           [

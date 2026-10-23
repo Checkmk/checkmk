@@ -1,0 +1,6 @@
+################################################################################
+# Interactive use: `bazel lint //cmk/gui/...`
+# CI example: bazel build --config=deballast //cmk/gui/...
+################################################################################
+common:deballast --aspects //bazel/tools:aspects.bzl%deballast
+common:deballast --output_groups=rules_lint_human,rules_lint_machine

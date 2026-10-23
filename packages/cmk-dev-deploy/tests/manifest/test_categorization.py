@@ -152,6 +152,17 @@ def _make_manifest(
     }
 
 
+_VUE_SPEC_WITH_PROFILING_INPUT: dict[str, Any] = {
+    "source_prefix": "packages/cmk-frontend-vue",
+    "frontend_supervised": True,
+    "input_prefixes": ["packages/cmk-profiling/"],
+}
+_PROFILING_INPUT_EXTENSIONS = {
+    "packages/cmk-frontend-vue": frozenset({".vue"}),
+    "packages/cmk-profiling": frozenset({".ts", ".vue"}),
+}
+
+
 def _load_toml_supplementary() -> tuple[CategorizationRule, ...]:
     """Load supplementary rules from the real deploy_specs.toml."""
     from cmk.dev_deploy.manifest.update import _load_supplementary_rules, specs_path
@@ -320,16 +331,21 @@ class TestComputeCategorizationRules:
             for r in rules
         )
 
-    def test_cmk_shared_typing_dual_rules(self) -> None:
-        """cmk-shared-typing gets a PYTHON (.py) rule plus the VUE (.ts) rule from the TOML."""
+    def test_wheel_package_feeding_the_vue_dist_gets_python_and_vue_rules(self) -> None:
+        """A wheel package that is an input of the vue dist is categorized by extension."""
         from cmk.dev_deploy.manifest.update import _compute_categorization_rules
 
-        manifest = _make_manifest(wheel_prefixes=["packages/cmk-shared-typing/"])
-        rules = _compute_categorization_rules(manifest, {}, _load_toml_supplementary())
-        st_rules = [r for r in rules if r["prefix"] == "packages/cmk-shared-typing/"]
-        categories = {r["category"] for r in st_rules}
-        assert "python" in categories
-        assert "vue" in categories
+        manifest = _make_manifest(
+            install_specs=[_VUE_SPEC_WITH_PROFILING_INPUT],
+            wheel_prefixes=["packages/cmk-profiling/"],
+        )
+        rules = _compute_categorization_rules(manifest, _PROFILING_INPUT_EXTENSIONS)
+        profiling_rules = {
+            r["category"]: r["extensions"]
+            for r in rules
+            if r["prefix"] == "packages/cmk-profiling/"
+        }
+        assert profiling_rules == {"python": [".py"], "vue": [".ts", ".vue"]}
 
     def test_config_spec_locale_is_data(self) -> None:
         """Config spec with locale_compile method produces DATA category."""
@@ -467,15 +483,3 @@ class TestComputeCategorizationRules:
         rules = _compute_categorization_rules(manifest, extensions)
         vue_rules = [r for r in rules if r["prefix"] == "packages/cmk-frontend-vue/"]
         assert vue_rules[0]["extensions"] == sorted(vue_rules[0]["extensions"])
-
-    def test_same_prefix_different_extensions_coexist(self) -> None:
-        """Rules with same prefix but different extensions are both emitted."""
-        from cmk.dev_deploy.manifest.update import _compute_categorization_rules
-
-        manifest = _make_manifest(wheel_prefixes=["packages/cmk-shared-typing/"])
-        rules = _compute_categorization_rules(manifest, {}, _load_toml_supplementary())
-        st_rules = [r for r in rules if r["prefix"] == "packages/cmk-shared-typing/"]
-        assert len(st_rules) == 2
-        ext_sets = [frozenset(r["extensions"]) for r in st_rules]
-        assert frozenset({".py"}) in ext_sets
-        assert frozenset({".ts"}) in ext_sets

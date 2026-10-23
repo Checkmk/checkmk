@@ -9,6 +9,8 @@ from cmk.events.notify_types import PagerDutyWebhookURL
 from cmk.gui.http import request
 from cmk.rulesets.internal.form_specs import (
     DictionaryExtended,
+    InternalProxy,
+    migrate_to_internal_proxy,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
@@ -17,9 +19,7 @@ from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     FixedValue,
-    migrate_to_proxy,
     Password,
-    Proxy,
 )
 from cmk.rulesets.v1.form_specs.validators import LengthInRange
 from cmk.utils import password_store
@@ -79,8 +79,8 @@ def form_spec() -> DictionaryExtended:
                 )
             ),
             "proxy_url": DictElement(
-                parameter_form=Proxy(
-                    migrate=migrate_to_proxy,
+                parameter_form=InternalProxy(
+                    migrate=migrate_to_internal_proxy,
                 ),
             ),
             "url_prefix": _get_url_prefix_setting(

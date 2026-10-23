@@ -5,6 +5,14 @@
 
 """Provides functionality to enable tracing in the Python components of Checkmk"""
 
+# Workaround for https://github.com/open-telemetry/opentelemetry-python/issues/5789
+# (opentelemetry-sdk >= 1.44.0): Imported for its fork handlers, which have to be registered before
+# the ones of a TracerProvider. The TracerProvider runs a ThreadPoolExecutor in the child after
+# os.fork(). This deadlocks when this module registered its handlers later, because then its lock
+# acquired before the fork is not yet reset in the child at this point.
+# Remove this import once we use an opentelemetry-sdk release which contains the fix
+# https://github.com/open-telemetry/opentelemetry-python/pull/5790.
+import concurrent.futures.thread  # noqa: F401
 import json
 import socket
 from collections.abc import Mapping

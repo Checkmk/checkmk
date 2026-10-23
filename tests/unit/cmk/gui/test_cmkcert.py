@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+from dataclasses import asdict
 from datetime import date
 from pathlib import Path
 from unittest.mock import patch
@@ -13,14 +15,17 @@ from pytest_mock import MockerFixture
 from livestatus import SiteConfigurations
 
 from cmk.ccc.site import SiteId
+from cmk.crypto.certificate import CertificateRevocationList, CertificateRevocationListPEM
+from cmk.crypto.issued_certificates import IssuedCertificateEntry
 from cmk.gui.cmkcert.main import (
     _certificate_path,
     _run_init,
+    _run_revoke,
     _run_rotate,
-    CertificateType,
+    InitCertificateType,
 )
 from cmk.gui.config import Config
-from cmk.utils.certs import cert_dir, RootCA, SiteCA
+from cmk.utils.certs import cert_dir, crl_path, issued_certificates_path, RootCA, SiteCA
 
 
 @pytest.fixture(name="omd_root")
@@ -73,7 +78,7 @@ def _dummy_cert_with_key() -> str:
     return f"{_dummy_key()}\n{_dummy_certificate()}"
 
 
-def _create_dummy(omd_root: Path, target_certificate: CertificateType) -> Path:
+def _create_dummy(omd_root: Path, target_certificate: InitCertificateType) -> Path:
     cert_path = _certificate_path(
         omd_root=omd_root,
         site_id=_site_id(),
@@ -104,7 +109,7 @@ def fixture_agent_ca(omd_root: Path) -> Path:
     return agent_ca_path
 
 
-def _test_init(omd_root: Path, target_cert: CertificateType) -> None:
+def _test_init(omd_root: Path, target_cert: InitCertificateType) -> None:
     site_id = _site_id()
     cert_path = _certificate_path(
         omd_root=omd_root,
@@ -129,9 +134,11 @@ def _test_init(omd_root: Path, target_cert: CertificateType) -> None:
     [
         "site-ca",
         "agent-ca",
+        "relay-ca",
+        "data-backend-ca",
     ],
 )
-def test_init_cas(omd_root: Path, target_cert: CertificateType) -> None:
+def test_init_cas(omd_root: Path, target_cert: InitCertificateType) -> None:
     _test_init(omd_root, target_cert)
 
 
@@ -141,16 +148,29 @@ def test_init_site(omd_root: Path) -> None:
     _test_init(omd_root, "site")
 
 
+def test_init_data_backend(omd_root: Path) -> None:
+    _run_init(
+        omd_root=omd_root,
+        site_id=_site_id(),
+        target_certificate="data-backend-ca",
+        key_size=1024,
+    )
+    _test_init(omd_root, "data-backend")
+
+
 @pytest.mark.parametrize(
     "target_certificate",
     [
         "site-ca",
         "agent-ca",
+        "relay-ca",
+        "data-backend-ca",
         "site",
+        "data-backend",
     ],
 )
 def test_init_cert_does_not_replace_existing(
-    omd_root: Path, target_certificate: CertificateType
+    omd_root: Path, target_certificate: InitCertificateType
 ) -> None:
     _create_dummy(omd_root, target_certificate)
 
@@ -161,6 +181,33 @@ def test_init_cert_does_not_replace_existing(
             target_certificate=target_certificate,
             key_size=1024,
         )
+
+
+@pytest.mark.parametrize(
+    "target_certificate",
+    [
+        "site-ca",
+        "agent-ca",
+        "relay-ca",
+        "data-backend-ca",
+        "site",
+        "data-backend",
+    ],
+)
+def test_init_if_missing_keeps_existing(
+    omd_root: Path, target_certificate: InitCertificateType
+) -> None:
+    cert_path = _create_dummy(omd_root, target_certificate)
+
+    _run_init(
+        omd_root=omd_root,
+        site_id=_site_id(),
+        target_certificate=target_certificate,
+        key_size=1024,
+        if_missing=True,
+    )
+
+    assert cert_path.read_text() == _dummy_cert_with_key()
 
 
 @pytest.mark.usefixtures("site_ca")
@@ -402,3 +449,53 @@ def test_rotate_agent_ca_rejects_provided_ca_with_a_weak_key(
         )
 
     assert agent_ca.read_text() == _dummy_cert_with_key()
+
+
+def _revoked_serial_numbers(ca_path: Path) -> list[int]:
+    crl = CertificateRevocationList.load_pem(
+        CertificateRevocationListPEM(crl_path(ca_path).read_bytes())
+    )
+    return [revoked.serial_number for revoked in crl.revoked_certificates]
+
+
+def _agent_certificate_log(omd_root: Path) -> Path:
+    return issued_certificates_path(omd_root, "agents")
+
+
+def _record_issued_certificate(omd_root: Path, serial_number: int) -> IssuedCertificateEntry:
+    entry = IssuedCertificateEntry(
+        ts="2026-09-16T12:00:00Z",
+        event="issued",
+        serial=f"{serial_number:02x}",
+        fp_sha256="d0f1a2",
+        issuer_ski="8411",
+        subject="CN=my agent",
+        san={"dns": ["my-agent"]},
+        not_before="2026-09-16T12:00:00Z",
+        not_after="2036-09-16T12:00:00Z",
+    )
+    entry.append_to(_agent_certificate_log(omd_root))
+    return entry
+
+
+def test_revoke_adds_the_serial_number_to_the_crl_and_records_the_revocation(
+    omd_root: Path, agent_ca: Path
+) -> None:
+    issued = _record_issued_certificate(omd_root, 0xAB)
+
+    _run_revoke(omd_root, _site_id(), "agent-ca", 0xAB)
+
+    assert _revoked_serial_numbers(agent_ca) == [0xAB]
+    revocation = json.loads(_agent_certificate_log(omd_root).read_text().splitlines()[-1])
+    assert revocation == asdict(issued) | {"event": "revoked", "ts": revocation["ts"]}
+    assert revocation["ts"] != issued.ts
+
+
+def test_revoke_certificate_that_is_not_recorded_as_issued(omd_root: Path, agent_ca: Path) -> None:
+    _run_revoke(omd_root, _site_id(), "agent-ca", 0xAB)
+
+    assert _revoked_serial_numbers(agent_ca) == [0xAB]
+    revocation = json.loads(_agent_certificate_log(omd_root).read_text().splitlines()[-1])
+    assert revocation["event"] == "revoked"
+    assert revocation["serial"] == "ab"
+    assert revocation["subject"] is None

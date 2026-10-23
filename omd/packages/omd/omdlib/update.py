@@ -201,6 +201,7 @@ HOOK_RELPATHS = [
     "etc/apache/conf.d/cookie_auth.conf",
     "etc/apache/conf.d/mcp.conf",
     "etc/apache/conf.d/nagios.conf",
+    "etc/apache/conf.d/nagvis.conf",
     "etc/apache/conf.d/pnp4nagios.conf",
     "etc/check_mk/conf.d/microcore.mk",
     "etc/check_mk/conf.d/mkeventd.mk",

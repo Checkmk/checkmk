@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from pathlib import Path
 from unittest.mock import AsyncMock
 
 import pytest
@@ -22,3 +23,9 @@ def mock_api_client() -> AsyncMock:
 @pytest.fixture(scope="session")
 def mock_azure_subscription() -> AzureSubscription:
     return fake_azure_subscription()
+
+
+@pytest.fixture
+def storage_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
+    return tmp_path

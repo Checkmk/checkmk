@@ -92,8 +92,9 @@ class EndpointBehavior:
     """When set to True, the decorator will not try to acquire a wato configuration lock,
     which can lead to higher performance of this particular endpoint. WARNING: Do not
     activate this flag when configuration files are changed by the endpoint! This
-    exposes the data to potential race conditions. Use it for endpoints which trigger
-    livestatus commands."""
+    exposes the data to potential race conditions. Use it for non-mutating endpoints,
+    such as those triggering livestatus commands or read-only endpoints that carry a
+    POST body, which must also set `update_config_generation=False`."""
 
     update_config_generation: bool = True
     """Whether to generate a new configuration. All endpoints with methods other than `get`
@@ -205,3 +206,18 @@ class VersionedEndpoint:
     """If an endpoint should be accessible via token authentication, the allowed token types
     need to be specified here. If empty, token authentication is not allowed for this
     endpoint."""
+
+    token_failure_detail: str | None = None
+    """The problem detail sent when a token is unknown, expired or revoked. If None, the
+    generic authentication failure is sent."""
+
+    remote_site_only: bool = False
+    """If set to True, then this endpoint is only accessible with RemoteSite authentication,
+    the distributed setup secret that a remote site sends to its central site. A remote site
+    reaches no other endpoint, and no other credential reaches this one."""
+
+    def __post_init__(self) -> None:
+        if self.remote_site_only and self.allowed_tokens:
+            # Token authentication is answered before the remote site is checked, so a token
+            # would reach an endpoint that claims to accept a remote site and nothing else.
+            raise ValueError("An endpoint cannot declare both remote_site_only and allowed_tokens.")

@@ -16,7 +16,7 @@ from cmk.crypto.totp import TOTP
 from tests.system.gui.testlib.playwright.helpers import CmkCredentials
 from tests.system.gui.testlib.playwright.pom.login import LoginPage
 from tests.testlib.common.utils import wait_until
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def generate_code(secret: str) -> str:

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime, timedelta, UTC
+from http import HTTPStatus
 
 import pytest
 import time_machine
@@ -16,8 +17,12 @@ from cmk.gui.oauth.pages._introspect import OAuthIntrospectPage
 from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.scopes import DEFAULT_SCOPE
-from tests.testlib.gui.users import create_and_destroy_user
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
+from tests.testlib.unit.gui.users import create_and_destroy_user
 
 _FORM_CONTENT_TYPE = "application/x-www-form-urlencoded"
 _TOKEN_TTL = timedelta(minutes=5)
@@ -54,11 +59,17 @@ class TestOAuthIntrospectPage:
         token = _issue_token(user_id, client_id, expires_at)
         with flask_app.test_request_context(method="POST", data={"token": token}):
             flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthIntrospectPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             assert response.json == {"active": True, "exp": int(expires_at.timestamp())}
 
     def test_reports_an_expired_token_as_inactive(
@@ -71,11 +82,17 @@ class TestOAuthIntrospectPage:
             flask_app.test_request_context(method="POST", data={"token": token}),
         ):
             flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthIntrospectPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             assert response.json == {"active": False}
 
     @pytest.mark.parametrize(
@@ -90,11 +107,17 @@ class TestOAuthIntrospectPage:
     ) -> None:
         with flask_app.test_request_context(method="POST", data={"token": token}):
             flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthIntrospectPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             assert response.json == {"active": False}
 
     def test_reports_a_token_of_a_deleted_user_as_inactive(
@@ -108,11 +131,17 @@ class TestOAuthIntrospectPage:
 
         with flask_app.test_request_context(method="POST", data={"token": token}):
             flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthIntrospectPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             assert response.json == {"active": False}
 
     def test_reports_a_token_of_a_locked_user_as_inactive(
@@ -125,11 +154,17 @@ class TestOAuthIntrospectPage:
             token = _issue_token(user_id, client_id, datetime.now(UTC) + _TOKEN_TTL)
             with flask_app.test_request_context(method="POST", data={"token": token}):
                 flask_app.preprocess_request()
-                OAuthIntrospectPage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthIntrospectPage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
-                assert response.status_code == 200
+                assert response.status_code == HTTPStatus.OK
                 assert response.json == {"active": False}
 
     @pytest.mark.parametrize("data", [{}, {"token": ""}], ids=["missing", "empty"])
@@ -140,11 +175,17 @@ class TestOAuthIntrospectPage:
             method="POST", data=data, content_type=_FORM_CONTENT_TYPE
         ):
             flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthIntrospectPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     def test_ignores_a_token_in_the_query_string(
@@ -156,21 +197,33 @@ class TestOAuthIntrospectPage:
             f"/oauth_introspect.py?token={token}", method="POST", content_type=_FORM_CONTENT_TYPE
         ):
             flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthIntrospectPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
 
     def test_returns_405_when_method_is_not_post(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(method="GET"):
             flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthIntrospectPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 405
+            assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
 
     def test_rejects_a_non_form_content_type(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(
@@ -179,20 +232,15 @@ class TestOAuthIntrospectPage:
             content_type="application/json",
         ):
             flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthIntrospectPage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
             assert response.json == {"error": "invalid_request"}
-
-    def test_returns_404_when_disabled(self, flask_app: Flask) -> None:
-        with flask_app.test_request_context(
-            method="POST", data={"token": "cmko1.tXWlEdCFwyWyLLD9AoSvBaLl6HXhFsEEJ4kUcgQvzKY"}
-        ):
-            flask_app.preprocess_request()
-            OAuthIntrospectPage(lambda: False).handle_page(
-                PageContext(config=Config(), request=request)
-            )
-
-            assert response.status_code == 404

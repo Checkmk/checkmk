@@ -10,9 +10,7 @@ import time
 from cmk.gui import visuals
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import SingleInfos
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import Checkbox, Dictionary
 
 from .store import get_all_dashboards
@@ -25,10 +23,11 @@ def page_edit_dashboard(ctx: PageContext) -> None:
     visuals.page_edit_visual(
         "dashboards",
         get_all_dashboards(),
-        UserPermissions.from_config(ctx.config, permission_registry),
+        ctx.user_permissions,
         ctx.config,
         create_handler=create_dashboard,
         custom_field_handler=dashboard_fields_handler,
+        custom_fields_after_context=True,
         info_handler=dashboard_info_handler,
         help_text_context=_(
             "A dashboard can have an optional context. It can for example be restricted to display "

@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from cmk.server_side_programs.v1_unstable._vcrtrace import _check_path
+from cmk.server_side_programs.v1._vcrtrace import _check_path
 
 ALLOWDIR = "tmp/check_mk/debug"
 

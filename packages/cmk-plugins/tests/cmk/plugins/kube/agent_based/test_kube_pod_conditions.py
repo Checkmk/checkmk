@@ -357,3 +357,26 @@ def test_check_handles_unknown_status() -> None:
         Result(state=State.OK, summary="RESIZEINPROGRESS: False"),
         Result(state=State.OK, summary="ALLCONTAINERSRESTARTING: False"),
     ]
+
+
+def test_check_transition_time_in_the_future() -> None:
+    """The clock of the cluster may run ahead of the clock of the Checkmk server,
+    so a condition appears to have changed in the future.
+    """
+    section = _make_section(ready=ConditionStatus.FALSE, age_minutes=-2)
+    assert list(kube_pod_conditions._check(TIMESTAMP, {}, section)) == [  # noqa: SLF001
+        Result(state=State.OK, summary="SCHEDULED: True"),
+        Result(state=State.OK, summary="HASNETWORK: True"),
+        Result(state=State.OK, summary="INITIALIZED: True"),
+        Result(state=State.OK, summary="CONTAINERSREADY: True"),
+        Result(
+            state=State.UNKNOWN,
+            summary=(
+                f"READY: False ({REASON}: {DETAIL}), but the last transition is"
+                " 2 minutes 0 seconds in the future (check the system time)"
+            ),
+        ),
+        Result(state=State.OK, summary="RESIZEPENDING: False"),
+        Result(state=State.OK, summary="RESIZEINPROGRESS: False"),
+        Result(state=State.OK, summary="ALLCONTAINERSRESTARTING: False"),
+    ]

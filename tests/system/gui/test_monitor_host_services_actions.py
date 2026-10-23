@@ -29,7 +29,7 @@ from tests.system.gui.testlib.playwright.pom.monitor.host_services_experimental 
     HostServicesExperimental,
 )
 from tests.testlib.common.utils import wait_until
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -172,7 +172,6 @@ def test_a_service_downtime_offers_no_child_hosts_option(
 
     expect(services_page.action_form(SCHEDULE_DOWNTIME)).to_be_visible()
     expect(services_page.downtime_comment).to_be_visible()
-    expect(services_page.catalog_panel("Duration")).to_be_visible()
     expect(services_page.form_option(CHILD_HOSTS_OPTION)).to_have_count(0)
     expect(services_page.submit_action("Schedule service downtime")).to_be_disabled()
 

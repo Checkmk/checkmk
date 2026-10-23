@@ -27,6 +27,8 @@ def generate_prism_command(
         str(params["username"]),
         "--password-id",
         secret,
+        "--api-version",
+        str(params["api_version"]),
     ]
 
     if "port" in params:

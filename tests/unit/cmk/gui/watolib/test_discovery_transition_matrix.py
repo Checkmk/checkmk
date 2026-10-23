@@ -230,12 +230,8 @@ def test_no_op_cells_yield_no_transition(source: str, command: Command, target: 
 # --------------------------------------------------------------------------------------------
 # T1a.4 -- the source states §2.1 claims are unreachable
 #
-# Only `removed` is testable here: it is unreachable because the check engine's `Transition`
-# vocabulary does not contain it, which is a static, cross-boundary fact. `clustered_ignored` is
-# unreachable for a different reason -- no *classifier* emits it, which is a property of
-# `_node_service_source` and is pinned where that function lives, in
-# `packages/cmk-check-engine/tests/cmk/checkengine/discovery/test__autodiscovery.py`. Its
-# behaviour as a `table_target` is characterization of a defect and lives in the quarantine tier.
+# Only `removed` is unreachable: the check engine's `Transition` vocabulary does not contain it,
+# which is a static, cross-boundary fact.
 # --------------------------------------------------------------------------------------------
 
 
@@ -524,6 +520,39 @@ def test_node_entry_unknown_on_the_cluster_is_dropped() -> None:
     assert set(transition.new_autochecks.nodes_services[NODE1]) == {DESCRIPTION}
 
 
+def test_accept_all_on_the_node_does_not_write_a_disabled_clustered_service() -> None:
+    """Disabled services are not written to autochecks (CMK-33299), clustered or not (CMK-38591).
+
+    The other row only makes the transition non-empty.
+    """
+    transition, _permissions = compute(
+        action=DiscoveryAction.FIX_ALL,
+        update_target=None,
+        selected_services=(),
+        check_table=[
+            make_entry(DiscoveryState.CLUSTERED_IGNORED),
+            make_entry(DiscoveryState.UNDECIDED, item="other", description="Other"),
+        ],
+    )
+    assert transition is not None
+    assert set(transition.new_autochecks.target_services) == {"Other"}
+
+
+def test_changing_another_service_does_not_write_a_disabled_clustered_service() -> None:
+    """An untouched disabled clustered row is not written back with the rest of the host."""
+    transition, _permissions = compute(
+        action=DiscoveryAction.SINGLE_UPDATE,
+        update_target=DiscoveryState.MONITORED,
+        selected_services=((PLUGIN, "other"),),
+        check_table=[
+            make_entry(DiscoveryState.CLUSTERED_IGNORED),
+            make_entry(DiscoveryState.UNDECIDED, item="other", description="Other"),
+        ],
+    )
+    assert transition is not None
+    assert set(transition.new_autochecks.target_services) == {"Other"}
+
+
 # --------------------------------------------------------------------------------------------
 # T1a.5 -- totality: no enum value may exist without a verdict
 # --------------------------------------------------------------------------------------------
@@ -547,10 +576,10 @@ _SOURCES_NOT_ELIGIBLE = {
     DiscoveryState.CLUSTERED_NEW,
     DiscoveryState.CLUSTERED_OLD,
     DiscoveryState.CLUSTERED_VANISHED,
+    DiscoveryState.CLUSTERED_IGNORED,
 }
 _SOURCES_UNREACHABLE = {
     DiscoveryState.REMOVED,  # a command, never an observation
-    DiscoveryState.CLUSTERED_IGNORED,  # no producer since 692c918bf86 (§10.13)
 }
 
 
@@ -849,8 +878,7 @@ def test_an_unselected_row_is_left_alone(
     on a page whose entire interface is the checkboxes.
 
     `FIX_ALL` and the two `UPDATE_*` value actions are deliberately absent: they are whole-table
-    actions that never consult the selection, which is intended (A1-F2 — the host-wide scope is
-    the design, the missing `update_source` filter is the defect, §10.5).
+    actions that never consult the selection, by design (§10.5, CMK-38599).
     """
     transition, _permissions = compute(
         action=action,
@@ -879,15 +907,12 @@ def test_a_whole_table_value_update_leaves_a_disabled_service_disabled(
     expected_params: Mapping[str, object],
     expected_labels: Mapping[str, str],
 ) -> None:
-    """Werk 17711 / CMK-22272: *"used to move disabled services to monitored services … no longer"*.
+    """Werk 17711 / CMK-22272: these two actions must not re-enable a disabled service.
 
-    The `IGNORED` carve-out in both branches is that werk's entire diff, and it is the only thing
-    standing between these two actions and a re-enabled service: they retarget **every** row on
-    the host to `update_target` (A1-F2), so without the carve-out "Update service labels" silently
-    accepts every disabled service on the host back into monitoring.
-
-    The changed row is what the action is *for*; its adopted values are asserted alongside so that
-    "the disabled row was skipped" cannot be satisfied by the action not running.
+    A disabled service is `ignored`, not `changed`, so the scope gate leaves it alone: it is
+    neither written back into the autochecks file nor stripped of its disabling rule. The changed
+    row is what the action is *for*; its adopted values are asserted alongside so that "the disabled
+    row was skipped" cannot be satisfied by the action not running (§10.5, CMK-38599).
     """
     transition, _permissions = compute(
         action=action,

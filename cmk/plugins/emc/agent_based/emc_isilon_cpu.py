@@ -12,23 +12,17 @@ from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.emc.lib import DETECT_ISILON
 
 
 def parse_emc_isilon_cpu(string_table: StringTable) -> StringTable | None:
     return string_table or None
-
-
-def discover_emc_isilon_cpu_utilization(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    # the device reports cpu utilization for each core and a total. This interprets only the total
-    yield Service()
 
 
 def check_emc_isilon_cpu_utilization(
@@ -77,7 +71,7 @@ snmp_section_emc_isilon_cpu = SimpleSNMPSection(
 check_plugin_emc_isilon_cpu = CheckPlugin(
     name="emc_isilon_cpu",
     service_name="Node CPU utilization",
-    discovery_function=discover_emc_isilon_cpu_utilization,
+    discovery_function=discover_one_service,
     check_function=check_emc_isilon_cpu_utilization,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={},

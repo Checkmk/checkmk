@@ -16,6 +16,7 @@ import tempfile
 from argparse import ArgumentParser, BooleanOptionalAction
 from argparse import Namespace as Args
 from collections.abc import Iterator
+from http import HTTPStatus
 from os import environ
 from pathlib import Path
 from typing import get_args, Literal, NamedTuple, Protocol, Self
@@ -31,7 +32,6 @@ from buildscripts.scripts.lib.common import (  # type: ignore[import-not-found]
 sys.path.insert(0, (Path(__file__).parent.parent.parent / "packages" / "cmk-ccc").as_posix())
 from cmk.ccc.version import Edition, Version
 
-HTTP_STATUS_OK = 200
 DOCKER_HUB_API = "https://hub.docker.com/v2"
 NEXUS_DOCKER_API = "https://artifacts.lan.tribe29.com:4000/v2"
 RELAY_IMAGE_NAME = "checkmk/check-mk-relay"
@@ -262,7 +262,7 @@ def file_exists_on_download_server(
             auth=(credentials.username, credentials.password),
             timeout=10,
         ).status_code
-        != HTTP_STATUS_OK
+        != HTTPStatus.OK
     ):
         sys.stdout.write(" MISSING\n")
         return False
@@ -353,7 +353,7 @@ def assert_relay_image_on_docker_hub(version: str) -> AssertResult:
     url = f"{DOCKER_HUB_API}/repositories/{RELAY_IMAGE_NAME}/tags/{version}/"
     sys.stdout.write(f"Checking if relay image {RELAY_IMAGE_NAME}:{version} is on Docker Hub...")
     response = requests.get(url, timeout=30)
-    if response.status_code == HTTP_STATUS_OK:
+    if response.status_code == HTTPStatus.OK:
         sys.stdout.write(" OK\n")
         return AssertResult(assertion_ok=True, message="")
     sys.stdout.write(f" MISSING (HTTP {response.status_code})\n")

@@ -11,8 +11,8 @@ from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
     LinkModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.framework.versioned_endpoint import (
     EndpointDoc,
@@ -46,14 +46,13 @@ _FILTER_GROUP_TITLES: Mapping[FilterGroup, str] = {
     FilterGroup.SERVICE_STATE: "Service state",
     FilterGroup.AGENT: "Agent",
     FilterGroup.CLOUD: "Cloud",
-    FilterGroup.NETWORK_FLOW: "Network flow",
     FilterGroup.NOTIFICATIONS: "Notifications",
     FilterGroup.OTHER: "Other",
 }
 
 
 @dataclass(kw_only=True, slots=True, frozen=True)
-class FilterGroupDomainObject(DomainObjectModel):
+class FilterGroupDomainObject(TitledDomainObjectModel):
     domainType: Literal["visual_filter_group"] = api_field(
         description="The domain type of the object."
     )

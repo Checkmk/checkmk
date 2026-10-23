@@ -228,7 +228,7 @@ def _profile_to_folded_stacks(
     # emitted before the global _MAX_STACKS budget runs out. Weight each edge by
     # the callee's *own* cumtime rather than the per-caller edge cumtime
     # (``caller_info[3]``): cProfile reports the edge cumtime as 0.0 for the
-    # single call into a re-entrant entry point (e.g. ``cmk.base.modes.call``),
+    # single call into a re-entrant entry point (e.g. ``cmk.cli.engine.call``),
     # which would sort the program's entire heavy subtree last and let a trivial
     # sibling exhaust the budget through shared builtins — leaving the real call
     # tree missing from the flamegraph. The callee's own cumtime also matches how

@@ -227,3 +227,20 @@ def test_merge_check_data() -> None:
         "test_command_2": {"count": 11, "count_hosts": 10, "count_disabled": 2},
     }
     assert checks_collector.merge_check_data(checks1, checks2) == merged_checks
+
+
+@pytest.mark.usefixtures("mock_instance_id")
+def test_get_services_query_can_be_answered_as_json(local_connection: MockType) -> None:
+    local_connection.query.return_value = []
+
+    checks_collector._get_services(local_connection)  # noqa: SLF001
+
+    assert local_connection.query.call_args.args[0].supports_json_format()
+
+
+def test_get_disabled_services_query_can_be_answered_as_json(local_connection: MockType) -> None:
+    local_connection.query.return_value = []
+
+    checks_collector._get_disabled_services(local_connection)  # noqa: SLF001
+
+    assert local_connection.query.call_args.args[0].supports_json_format()

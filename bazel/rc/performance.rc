@@ -1,0 +1,7 @@
+# Resource usage of the Bazel server
+
+# Limit JVM thread pools to match cgroup CPU limit (nproc reports host CPUs, not cgroup)
+# --host_jvm_args is a startup option, see https://bazel.build/run/bazelrc
+startup --host_jvm_args=-XX:ActiveProcessorCount=8
+startup --host_jvm_args=-XX:ParallelGCThreads=4
+startup --host_jvm_args=-XX:ConcGCThreads=2

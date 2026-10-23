@@ -83,3 +83,41 @@ def test_list_unique_items_nested_list_duplicates() -> None:
 
     with pytest.raises(ValidationError, match="Duplicate entry found at entry #2"):
         Bar().load({"entries": [{"lists": ["2"]}, {"lists": ["2"]}]})
+
+
+def test_nested_schema_class_gets_the_parent_context() -> None:
+    """marshmallow 3 warns about a context handed to a schema's constructor, the tests make
+    that an error, so the nested schema has to get the context after its construction"""
+
+    class Inner(Schema):
+        value = String()
+
+    class Outer(Schema):
+        inner = Nested(Inner)
+
+    outer = Outer()
+    outer.context["request"] = "this one"
+
+    assert outer.load({"inner": {"value": "v"}}) == {"inner": {"value": "v"}}
+    inner = outer.fields["inner"]
+    assert isinstance(inner, Nested)
+    assert inner.schema.context == {"request": "this one"}
+
+
+def test_nested_schema_named_by_string_gets_the_parent_context() -> None:
+    """A schema referenced by its class name is resolved and built by our Nested field,
+    so marshmallow does not hand the parent's context to its constructor"""
+
+    class InnerByName(Schema):
+        value = String()
+
+    class OuterByName(Schema):
+        inner = Nested("InnerByName")
+
+    outer = OuterByName()
+    outer.context["request"] = "this one"
+
+    assert outer.load({"inner": {"value": "v"}}) == {"inner": {"value": "v"}}
+    inner = outer.fields["inner"]
+    assert isinstance(inner, Nested)
+    assert inner.schema.context == {"request": "this one"}

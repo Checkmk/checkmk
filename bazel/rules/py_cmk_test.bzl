@@ -14,6 +14,7 @@ def py_cmk_test(
 
     Always sets --import-mode=importlib so tests are isolated from each other
     and work correctly with namespace packages and duplicate test filenames.
+    Always keeps pytest from collecting the generated runner, see below.
     Always enables the built-in pytest entry-point and makes pytest and
     coverage available as deps.
 
@@ -38,7 +39,17 @@ def py_cmk_test(
     py_test(
         name = name,
         pytest_main = True,
-        args = ["--import-mode=importlib"] + args + extra_args,
+        # --ignore-glob keeps pytest from collecting the runner rules_py generates
+        # for this target. It lands in the runfiles next to the sources as
+        # <name>.pytest_main.py, which matches pytest's own test_*.py glob
+        # whenever the target is named test_*. Collecting it re-imports the
+        # runner mid-session, and its module-level coverage.start() then pushes a
+        # second collector that the outer cov.stop() trips over -- so the target
+        # passes under `bazel test` and fails under `bazel coverage`.
+        args = [
+            "--import-mode=importlib",
+            "--ignore-glob=*pytest_main.py",
+        ] + args + extra_args,
         data = data + extra_data,
         deps = deps + extra_deps + [
             requirement("coverage"),

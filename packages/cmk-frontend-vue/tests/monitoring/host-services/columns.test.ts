@@ -10,10 +10,13 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { buildHostColumns } from '@/monitoring/all-hosts/columns'
 import {
   buildHostServicesColumnPinning,
+  uncapNameWithoutSummary,
   useHostServicesColumns,
   visibleServiceFields
 } from '@/monitoring/host-services/columns'
+import { ServiceExport } from '@/monitoring/host-services/export/serviceExport'
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
+import { RowExport } from '@/monitoring/shared/export/rowExport'
 import {
   MonitoringService,
   type PagedResponse
@@ -60,14 +63,15 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-test('the labels, tags and contact columns start hidden', () => {
+test('the labels, tags, contact and group columns start hidden', () => {
   const service = makeService()
 
   expect(service.defaultColumnVisibility).toEqual({
     labels: false,
     tags: false,
     contacts: false,
-    contact_groups: false
+    contact_groups: false,
+    groups: false
   })
   expect(service.columnVisibility.value).toEqual(service.defaultColumnVisibility)
 })
@@ -77,9 +81,9 @@ test('a table on its defaults asks for none of their fields', () => {
 })
 
 test('a column the user shows asks for its field again', () => {
-  expect(visibleServiceFields({ labels: false, tags: false, contacts: false })).toEqual([
-    'contact_groups'
-  ])
+  expect(
+    visibleServiceFields({ labels: false, tags: false, contacts: false, groups: false })
+  ).toEqual(['contact_groups'])
 })
 
 test('the state column reads as the one in the hosts listing', () => {
@@ -97,9 +101,9 @@ test('the state column reads as the one in the hosts listing', () => {
     stateOf(
       buildHostColumns({
         includeSelect: true,
-        includeActions: true,
         showCustomer: false,
-        sites: []
+        sites: [],
+        showRelations: false
       }) as ColumnDef<never>[]
     )
   )
@@ -137,13 +141,13 @@ test('the mode column filter no longer offers flapping, which moved to the state
     groups: [
       { field: 'in_downtime', title: 'In downtime' },
       { field: 'acknowledged', title: 'Acknowledged' },
-      { field: 'notifications_enabled', title: 'Notifications enabled' },
+      { field: 'notifications_enabled', title: 'Notifications disabled', negated: true },
       { field: 'has_comments', title: 'Has comments' },
       { field: 'active_checks_disabled', title: 'Active checks disabled' },
       { field: 'passive_checks_disabled', title: 'Passive checks disabled' },
-      { field: 'in_notification_period', title: 'In notification period' },
-      { field: 'in_service_period', title: 'In service period' },
-      { field: 'in_check_period', title: 'In check period' },
+      { field: 'in_notification_period', title: 'Out of notification period', negated: true },
+      { field: 'in_service_period', title: 'Out of service period', negated: true },
+      { field: 'in_check_period', title: 'Out of check period', negated: true },
       { field: 'check_crashed', title: 'Check crashed' }
     ]
   })
@@ -160,7 +164,7 @@ test('the select column is neither rendered nor pinned when no action is permitt
 
 test('the hidden columns stay on offer in the picker', () => {
   expect(makeService().toggleableColumns.map((column) => column.id)).toEqual(
-    expect.arrayContaining(['labels', 'tags', 'contacts', 'contact_groups'])
+    expect.arrayContaining(['labels', 'tags', 'contacts', 'contact_groups', 'groups'])
   )
 })
 
@@ -178,4 +182,44 @@ test('the select column adds itself without disturbing the other columns', () =>
 test('the select column is never on offer in the picker', () => {
   expect(schemaOf(true).hideable).not.toContain('select')
   expect(makeService().toggleableColumns.map((column) => column.id)).not.toContain('select')
+})
+
+function nameColumn(columns: ColumnDef<HostServiceEntry>[]): ColumnDef<HostServiceEntry> {
+  return columns.find((column) => columnId(column) === 'name')!
+}
+
+test('the service name keeps its cap while the summary takes the spare width', () => {
+  const columns = uncapNameWithoutSummary(serviceColumns(), {})
+
+  expect(nameColumn(columns).maxSize).toBe(350)
+})
+
+test('the service name takes the spare width once the summary is hidden', () => {
+  const columns = uncapNameWithoutSummary(serviceColumns(), { summary: false })
+
+  expect(nameColumn(columns).maxSize).toBeUndefined()
+  expect(nameColumn(columns).minSize).toBe(150)
+})
+
+test('the actions column widens by one button width per inline action', () => {
+  const actionsSize = (inlineActions: number) =>
+    useHostServicesColumns({ includeSelect: true, inlineActions }).find(
+      (column) => columnId(column) === 'actions'
+    )!.minSize!
+
+  expect(actionsSize(2) - actionsSize(1)).toBe(actionsSize(1) - actionsSize(0))
+  expect(actionsSize(1)).toBeGreaterThan(actionsSize(0))
+})
+
+test('last state change comes before last check, matching the legacy view', () => {
+  const ids = serviceColumns().map((column) => columnId(column as ColumnDef<never>))
+  expect(ids.indexOf('last_state_change')).toBeLessThan(ids.indexOf('last_check'))
+})
+
+test('the export carries every data column of the table in table order', () => {
+  const dataColumns = serviceColumns()
+    .map(columnId)
+    .filter((id) => id !== 'select' && id !== 'actions')
+
+  expect(RowExport.shownColumns(serviceColumns(), {}, ServiceExport.isColumn)).toEqual(dataColumns)
 })

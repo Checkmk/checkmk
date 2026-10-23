@@ -1,0 +1,23 @@
+title: AWS v2 EC2: Instance Disk IO
+agents: aws_v2
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors
+
+ - completed read and write operations
+
+ - read and write throughput
+
+ to all instance store volumes available to the instance.
+
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS) v2}.
+
+item:
+ Name of the instance
+
+discovery:
+ One service is created for each disk if all required metrics
+ (ReadOps, WriteOps, ReadBytes and WriteBytes) are given.

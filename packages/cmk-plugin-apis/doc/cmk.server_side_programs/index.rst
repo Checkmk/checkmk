@@ -5,9 +5,9 @@ Server-side programs
 .. automodule:: cmk.server_side_programs
    :members:
 
-Version 1 (UNSTABLE): `cmk.server_side_programs.v1_unstable`
-============================================================
+Version 1: `cmk.server_side_programs.v1`
+========================================
 
-.. automodule:: cmk.server_side_programs.v1_unstable
+.. automodule:: cmk.server_side_programs.v1
    :members:
    :show-inheritance:

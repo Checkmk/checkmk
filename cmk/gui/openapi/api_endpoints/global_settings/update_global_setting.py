@@ -2,6 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
 from cmk.ccc.site import omd_site
 from cmk.gui.i18n import _
 from cmk.gui.openapi.framework import (
@@ -22,6 +24,7 @@ from cmk.gui.watolib.global_settings import (
     affected_sites,
     effective_value,
     global_settings_diff_text,
+    GlobalSettingsOrigin,
     load_configuration_settings,
     need_write_permission,
     save_global_settings,
@@ -32,15 +35,15 @@ from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
     ensure_changes_allowed,
     ensure_setup_access,
-    form_spec_of,
     global_setting_etag,
     global_settings_context_of,
     GlobalSettingVarName,
     make_pending_changes,
     RW_PERMISSIONS,
+    to_json,
     value_from_json,
-    value_to_json,
 )
+from .models.error_models import GlobalSettingValidation422
 from .models.request_models import UpdateGlobalSettingModel
 from .models.response_models import GlobalSettingModel
 
@@ -58,17 +61,15 @@ def update_global_setting_v1(
     config_variable = config_variable_registry[varname]
     need_write_permission(config_variable)
     ensure_changes_allowed(api_context)
-    context = global_settings_context_of(omd_site(), api_context)
-    form_spec = form_spec_of(config_variable, omd_site(), api_context)
+    context = global_settings_context_of(omd_site(), api_context, edits_site_specific_value=False)
+    form_spec = config_variable.value_model(context)
 
     settings = dict(load_configuration_settings())
-    old_value, was_default = effective_value(settings, varname)
+    old_value, old_origin = effective_value(settings, varname)
     if api_context.etag.enabled:
-        api_context.etag.verify(
-            global_setting_etag(varname, value_to_json(form_spec, old_value), was_default)
-        )
+        api_context.etag.verify(global_setting_etag(varname, old_value, old_origin))
 
-    new_value = value_from_json(form_spec, body.value)
+    new_value = value_from_json(form_spec, varname, body.value)
     settings[varname] = new_value
     save_global_settings(settings, api_context.config.sites)
 
@@ -82,17 +83,18 @@ def update_global_setting_v1(
         diff_text=global_settings_diff_text(
             config_variable,
             context,
-            {} if was_default else {varname: old_value},
+            {varname: old_value} if old_origin is GlobalSettingsOrigin.global_ else {},
             {varname: new_value},
         ),
     )
 
-    # The variable now carries an explicit value, so it is no longer at its default.
-    json_value = value_to_json(form_spec, new_value)
+    spec, json_value = to_json(form_spec, new_value)
     return ApiResponse(
-        body=GlobalSettingModel(varname=varname, value=json_value, is_default=False),
-        status_code=200,
-        etag=global_setting_etag(varname, json_value, False),
+        body=GlobalSettingModel(
+            varname=varname, value=json_value, spec=spec, origin=GlobalSettingsOrigin.global_
+        ),
+        status_code=HTTPStatus.OK,
+        etag=global_setting_etag(varname, new_value, GlobalSettingsOrigin.global_),
     )
 
 
@@ -105,5 +107,11 @@ ENDPOINT_UPDATE_GLOBAL_SETTING = VersionedEndpoint(
     behavior=EndpointBehavior(etag="both"),
     permissions=EndpointPermissions(required=RW_PERMISSIONS),
     doc=EndpointDoc(family=GLOBAL_SETTINGS_FAMILY.name),
-    versions={APIVersion.INTERNAL: EndpointHandler(handler=update_global_setting_v1)},
+    versions={
+        APIVersion.INTERNAL: EndpointHandler(
+            handler=update_global_setting_v1,
+            error_schemas={HTTPStatus.UNPROCESSABLE_ENTITY: GlobalSettingValidation422},
+            additional_status_codes=[HTTPStatus.UNPROCESSABLE_ENTITY],
+        )
+    },
 )

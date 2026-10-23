@@ -88,9 +88,6 @@ class QuantityCodec:
                 raise ValueError(f"duplicate quantity kind: {spec.kind}")
             self._by_kind[spec.kind] = spec
 
-    def kinds(self) -> Sequence[str]:
-        return tuple(self._by_kind)
-
     def serialize(self, quantity: QuantityProtocol) -> Mapping[str, object]:
         kind = quantity.kind()
         return {"kind": kind, **self._by_kind[kind].to_dict(quantity, self)}
@@ -151,14 +148,6 @@ def _attributes_from_json(data: object) -> CurveAttributes:
         unit=_unit_from_json(data["unit"]),
         color=ensure_type(data["color"], str),
     )
-
-
-def _display_to_json(display: CurveAttributes | None) -> Mapping[str, object] | None:
-    return None if display is None else _attributes_to_json(display)
-
-
-def _display_from_json(data: object) -> CurveAttributes | None:
-    return None if data is None else _attributes_from_json(data)
 
 
 def _rrd_metric_to_json(quantity: QuantityProtocol, _codec: QuantityCodec) -> Mapping[str, object]:
@@ -225,11 +214,11 @@ def _prediction_metric_from_json(
 
 def _constant_to_json(quantity: QuantityProtocol, _codec: QuantityCodec) -> Mapping[str, object]:
     quantity = ensure_type(quantity, Constant)
-    return {"value": quantity.value, "display": _display_to_json(quantity.display)}
+    return {"value": quantity.value}
 
 
 def _constant_from_json(data: Mapping[str, object], _codec: QuantityCodec) -> Constant:
-    return Constant(_as_number(data["value"]), _display_from_json(data["display"]))
+    return Constant(_as_number(data["value"]))
 
 
 def _scalar_of_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mapping[str, object]:
@@ -237,18 +226,13 @@ def _scalar_of_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mapp
     return {
         "metric": codec.serialize(quantity.metric),
         "scalar_kind": str(quantity.scalar_kind),
-        "color": quantity.color,
     }
 
 
 def _scalar_of_from_json(data: Mapping[str, object], codec: QuantityCodec) -> ScalarOf:
-    color = data["color"]
-    if color is not None and not isinstance(color, str):
-        raise TypeError(f"expected a string or None, got {type(color).__name__}")
     return ScalarOf(
         metric=ensure_type(codec.deserialize(data["metric"]), RRDMetric),
         scalar_kind=ScalarKind(ensure_type(data["scalar_kind"], str)),
-        color=color,
     )
 
 
@@ -258,32 +242,30 @@ def _operands_to_json(
     return [codec.serialize(operand) for operand in operands]
 
 
-def _operands_from_json(data: object, codec: QuantityCodec) -> Sequence[QuantityProtocol]:
-    return [codec.deserialize(operand) for operand in _as_list(data)]
+def _operands_from_json(data: object, codec: QuantityCodec) -> tuple[QuantityProtocol, ...]:
+    return tuple(codec.deserialize(operand) for operand in _as_list(data))
 
 
 def _sum_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mapping[str, object]:
     quantity = ensure_type(quantity, Sum)
     return {
         "summands": _operands_to_json(quantity.summands, codec),
-        "display": _display_to_json(quantity.display),
     }
 
 
 def _sum_from_json(data: Mapping[str, object], codec: QuantityCodec) -> Sum:
-    return Sum(_operands_from_json(data["summands"], codec), _display_from_json(data["display"]))
+    return Sum(_operands_from_json(data["summands"], codec))
 
 
 def _product_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mapping[str, object]:
     quantity = ensure_type(quantity, Product)
     return {
         "factors": _operands_to_json(quantity.factors, codec),
-        "display": _display_to_json(quantity.display),
     }
 
 
 def _product_from_json(data: Mapping[str, object], codec: QuantityCodec) -> Product:
-    return Product(_operands_from_json(data["factors"], codec), _display_from_json(data["display"]))
+    return Product(_operands_from_json(data["factors"], codec))
 
 
 def _difference_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mapping[str, object]:
@@ -291,7 +273,6 @@ def _difference_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Map
     return {
         "minuend": codec.serialize(quantity.minuend),
         "subtrahend": codec.serialize(quantity.subtrahend),
-        "display": _display_to_json(quantity.display),
     }
 
 
@@ -299,7 +280,6 @@ def _difference_from_json(data: Mapping[str, object], codec: QuantityCodec) -> D
     return Difference(
         minuend=codec.deserialize(data["minuend"]),
         subtrahend=codec.deserialize(data["subtrahend"]),
-        display=_display_from_json(data["display"]),
     )
 
 
@@ -308,7 +288,6 @@ def _fraction_to_json(quantity: QuantityProtocol, codec: QuantityCodec) -> Mappi
     return {
         "dividend": codec.serialize(quantity.dividend),
         "divisor": codec.serialize(quantity.divisor),
-        "display": _display_to_json(quantity.display),
     }
 
 
@@ -316,25 +295,12 @@ def _fraction_from_json(data: Mapping[str, object], codec: QuantityCodec) -> Fra
     return Fraction(
         dividend=codec.deserialize(data["dividend"]),
         divisor=codec.deserialize(data["divisor"]),
-        display=_display_from_json(data["display"]),
     )
 
 
 class GraphCodec:
     def __init__(self, quantities: QuantityCodec) -> None:
         self._quantities = quantities
-
-    def quantity_kinds(self) -> Sequence[str]:
-        # The quantity kinds this codec can carry. The engine owns the quantities but not their
-        # transport, so a quantity gaining a field cannot break the build - only a round-trip test
-        # catches it. Tests use this to assert every registered kind has such a test.
-        return self._quantities.kinds()
-
-    def serialize_quantity(self, quantity: QuantityProtocol) -> Mapping[str, object]:
-        return self._quantities.serialize(quantity)
-
-    def deserialize_quantity(self, data: object) -> QuantityProtocol:
-        return self._quantities.deserialize(data)
 
     def _bound_to_json(self, bound: int | float | QuantityProtocol) -> Mapping[str, object]:
         if isinstance(bound, int | float):
@@ -388,18 +354,13 @@ class GraphCodec:
         return {
             "members": [self._curve_to_json(member) for member in stack.members],
             "inverse": stack.inverse,
-            "reference": (
-                None if stack.reference is None else self._curve_to_json(stack.reference)
-            ),
         }
 
     def _stack_from_json(self, data: object) -> Stack:
         data = _as_mapping(data)
-        reference = data["reference"]
         return Stack(
             members=[self._curve_from_json(member) for member in _as_list(data["members"])],
             inverse=ensure_type(data["inverse"], bool),
-            reference=None if reference is None else self._curve_from_json(reference),
         )
 
     def _line_to_json(self, line: Line) -> Mapping[str, object]:
@@ -469,16 +430,6 @@ class GraphCodec:
             regions=tuple(self._region_from_json(region) for region in _as_list(data["regions"])),
         )
 
-    def serialize_graphs(self, graphs: Sequence[Graph]) -> Mapping[str, object]:
-        return {"graphs": [self.serialize_graph(graph) for graph in graphs]}
-
-    def deserialize_graphs(self, data: Mapping[str, object]) -> Sequence[Graph]:
-        return [self.deserialize_graph(graph) for graph in ensure_type(data["graphs"], list)]
-
-
-def graph_codec(specs: Sequence[QuantitySpec]) -> GraphCodec:
-    return GraphCodec(QuantityCodec(specs))
-
 
 # What this edition can carry: the engine's own quantities. Every edition on top of it extends this
 # set, so a graph written by a smaller edition stays readable by a bigger one.
@@ -494,8 +445,4 @@ COMMUNITY_QUANTITY_SPECS: Sequence[QuantitySpec] = (
 )
 
 
-def community_graph_codec() -> GraphCodec:
-    # One codec per edition rather than one per graph kind: a definition may hold a quantity another
-    # kind introduced - a combined aggregation inside a custom graph - and every kind has to be able to
-    # read it back.
-    return graph_codec(COMMUNITY_QUANTITY_SPECS)
+COMMUNITY_GRAPH_CODEC = GraphCodec(QuantityCodec(COMMUNITY_QUANTITY_SPECS))

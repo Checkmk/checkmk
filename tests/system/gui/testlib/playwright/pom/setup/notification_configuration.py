@@ -25,9 +25,9 @@ class NotificationConfiguration(CmkPage):
     @override
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.page_title)
-        self.main_menu.setup_menu("Notifications", exact=True).click()
-        self.page.wait_for_url(
-            url=re.compile(re.escape("wato.py?mode=notifications")), wait_until="load"
+        self.click_and_wait_for_navigation(
+            self.main_menu.setup_menu("Notifications", exact=True),
+            frame_url=re.compile(re.escape("wato.py?mode=notifications")),
         )
         self.validate_page()
 

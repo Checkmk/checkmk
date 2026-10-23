@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.logged_in import user
@@ -17,13 +18,13 @@ from cmk.gui.openapi.framework import (
     PathParam,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.watolib.custom_attributes import (
     save_custom_attrs_to_mk_file,
     update_host_custom_attrs,
 )
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 
 from ._family import CUSTOM_HOST_ATTR_FAMILY
 from ._utils import attr_etag, DOMAIN_TYPE, find_attr_or_raise, RW_PERMISSIONS, serialize_attr
@@ -60,12 +61,12 @@ def update_custom_host_attr_v1(
         attr["add_custom_macro"] = body.add_custom_macro
     save_custom_attrs_to_mk_file(all_attrs)
     update_host_custom_attrs(
-        make_folder_tree(api_context.config),
+        folder_tree_of_request(api_context),
         all_attrs["host"],
         pprint_value=api_context.config.wato_pprint_config,
     )
     return ApiResponse(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         body=serialize_attr(attr),
         etag=attr_etag(attr),
     )

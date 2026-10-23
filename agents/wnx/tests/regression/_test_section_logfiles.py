@@ -178,7 +178,7 @@ def with_statefile():
     yield
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def verify_logstate():
     yield
     if platform.system() == "Windows":
@@ -217,7 +217,7 @@ def verify_logstate():
             )
 
 
-@pytest.fixture(params=["utf-8", "utf-16"], autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture(params=["utf-8", "utf-16"])
 def manage_logfiles(request):
     Globals.utf_encoding = request.param
     if platform.system() == "Windows":
@@ -231,7 +231,7 @@ def manage_logfiles(request):
             os.unlink(log)
 
 
-@pytest.mark.usefixtures("no_statefile", "testconfig_glob")
+@pytest.mark.usefixtures("manage_logfiles", "verify_logstate", "no_statefile", "testconfig_glob")
 def test_section_logfiles__new_file(  # type: ignore[misc]
     request,
     expected_output_no_statefile,
@@ -242,7 +242,7 @@ def test_section_logfiles__new_file(  # type: ignore[misc]
     local_test(expected_output_no_statefile, actual_output, testfile, request.node.name)
 
 
-@pytest.mark.usefixtures("with_statefile", "testconfig_glob")
+@pytest.mark.usefixtures("manage_logfiles", "verify_logstate", "with_statefile", "testconfig_glob")
 def test_section_logfiles__new_entries_in_log(  # type: ignore[misc]
     request,
     expected_output_with_statefile,

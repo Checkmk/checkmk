@@ -12,6 +12,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.agent_based import kube_node_container_count
 from cmk.plugins.kube.agent_based.kube_node_container_count import KubeContainersLevelsUpperLower
 from cmk.plugins.kube.schemata.section import ContainerCount
@@ -53,7 +54,7 @@ def test_register_check_plugin_calls() -> None:
     check_plugin = kube_node_container_count.check_plugin_kube_node_container_count
     assert check_plugin.name == "kube_node_container_count"
     assert check_plugin.service_name == "Containers"
-    assert check_plugin.discovery_function == kube_node_container_count.discovery
+    assert check_plugin.discovery_function is discover_one_service
     assert check_plugin.check_function == kube_node_container_count.check
     assert check_plugin.check_default_parameters == {}
     assert check_plugin.check_ruleset_name == "kube_node_container_count"
@@ -64,11 +65,6 @@ def test_parse(string_table: StringTable, running: int, waiting: int, terminated
     assert section.running == running
     assert section.waiting == waiting
     assert section.terminated == terminated
-
-
-def test_discovery_returns_an_iterable(string_table: StringTable) -> None:
-    parsed = kube_node_container_count.parse(string_table)
-    assert list(kube_node_container_count.discovery(parsed))
 
 
 @pytest.fixture

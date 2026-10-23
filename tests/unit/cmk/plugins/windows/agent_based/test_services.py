@@ -378,3 +378,14 @@ def test_discovery_services_summary() -> None:
 )
 def test_check_services_summary(params: Mapping[str, object], yielded_results: CheckResult) -> None:
     assert yielded_results == list(services.check_services_summary(params, PARSED_AUTO))
+
+
+def test_discovery_windows_services_with_unusable_pattern() -> None:
+    # A rule holding a glob where a regular expression belongs, e.g. "*SQL*".
+    # Observed on 2.4.0, where it aborted the discovery of the whole host.
+    assert list(
+        services.discovery_windows_services(
+            [{"services": ["*SQL*", "Security"]}],
+            PARSED,
+        )
+    ) == [Service(item="wscsvc")]

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from http import HTTPStatus
+
 import cmk.web.utils.permission_verification as permissions
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.logged_in import user
@@ -38,7 +40,7 @@ def verify_permissions(host: Host) -> None:
         return
 
     unathorized_excpt = ProblemException(
-        status=403,
+        status=HTTPStatus.FORBIDDEN,
         title="Insufficient permissions",
         detail="You have insufficient permissions to register this host. You either need the "
         "explicit permission to register any host, the explict permission to register this host or "

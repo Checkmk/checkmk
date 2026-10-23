@@ -1,5 +1,5 @@
-load("@rules_pkg//:pkg.bzl", "pkg_zip")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_mklink")
+load("//bazel/rules:pkg.bzl", "pkg_zip")
 
 pkg_zip(
     name = "oci_light_win_x64",

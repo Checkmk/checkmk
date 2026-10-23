@@ -10,9 +10,12 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.gui import view_breadcrumbs
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.config import Config
 from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
+from cmk.web.utils.request_cache import RequestCache
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 HOST_BREADCRUMB = Breadcrumb([BreadcrumbItem("myhost", "view.py?view_name=host", None)])
 
@@ -24,7 +27,8 @@ def _single_service_view_without_service_context() -> View:
         "svcproblems",
         cast(ViewSpec, {"single_infos": ["host", "service"], "datasource": "services"}),
         {"host": {"host": "myhost"}},
-        UserPermissions({}, {}, {}, []),
+        make_painter_context(UserPermissions({}, {}, {}, [])),
+        RequestCache(Config()),
     )
 
 
@@ -61,3 +65,19 @@ def test_make_host_breadcrumb_without_permission_for_the_host_view(
     )
 
     assert [item.title for item in breadcrumb][-2:] == ["All hosts", "myhost"]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_make_host_breadcrumb_links_all_hosts_to_the_new_view(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        view_breadcrumbs, "get_permitted_views", lambda: {"allhosts": ALLHOSTS_VIEW_SPEC}
+    )
+
+    breadcrumb = view_breadcrumbs.make_host_breadcrumb(
+        HostName("myhost"), UserPermissions({}, {}, {}, [])
+    )
+
+    all_hosts = next(item for item in breadcrumb if item.title == "All hosts")
+    assert all_hosts.url == "monitor_all_hosts.py"

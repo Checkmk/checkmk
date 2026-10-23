@@ -17,12 +17,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 MAP_INSTANCE_STATE = {
     True: "yes",
@@ -54,10 +53,6 @@ agent_section_jenkins_instance = AgentSection(
 )
 
 
-def discover_jenkins_instance(section: JenkinsInstance) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_jenkins_instance(params: dict, section: JenkinsInstance) -> CheckResult:  # noqa: ARG001
     if not section:
         return
@@ -86,7 +81,7 @@ def check_jenkins_instance(params: dict, section: JenkinsInstance) -> CheckResul
 check_plugin_jenkins_instance = CheckPlugin(
     name="jenkins_instance",
     service_name="Jenkins Instance",
-    discovery_function=discover_jenkins_instance,
+    discovery_function=discover_one_service,
     check_function=check_jenkins_instance,
     check_default_parameters={},
 )

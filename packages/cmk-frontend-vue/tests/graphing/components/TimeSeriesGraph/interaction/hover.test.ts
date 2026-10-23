@@ -7,27 +7,45 @@ import { describe, expect, test } from 'vitest'
 
 import { metricHitDistance } from '@/graphing/components/TimeSeriesGraph/interaction/hover'
 
+const BAND_TOP = 40
+const BAND_BOTTOM = 80
+
 describe('metricHitDistance', () => {
-  test('line: distance is measured to the drawn edge, ignoring the lower edge', () => {
-    expect(metricHitDistance(100, 80, 0, false)).toBe(20)
-    expect(metricHitDistance(60, 80, 0, false)).toBe(20)
-    expect(metricHitDistance(80, 80, 999, false)).toBe(0)
+  test('a line has no height, so the distance is the gap to its single edge from either side', () => {
+    const edge = 80
+    const gap = 20
+
+    const fromBelow = metricHitDistance(edge + gap, edge, edge)
+    const fromAbove = metricHitDistance(edge - gap, edge, edge)
+
+    expect(fromBelow).toBe(gap)
+    expect(fromAbove).toBe(gap)
   })
 
-  test('filled: cursor inside the band is a zero distance', () => {
-    expect(metricHitDistance(50, 40, 80, true)).toBe(0)
-    expect(metricHitDistance(40, 40, 80, true)).toBe(0)
-    expect(metricHitDistance(80, 40, 80, true)).toBe(0)
+  test('a cursor inside a filled band, its edges included, is at zero distance', () => {
+    const inside = [BAND_TOP, (BAND_TOP + BAND_BOTTOM) / 2, BAND_BOTTOM]
+
+    const distances = inside.map((cursorY) => metricHitDistance(cursorY, BAND_TOP, BAND_BOTTOM))
+
+    expect(distances).toEqual([0, 0, 0])
   })
 
-  test('filled: cursor outside the band measures to the nearer edge', () => {
-    expect(metricHitDistance(30, 40, 80, true)).toBe(10)
-    expect(metricHitDistance(95, 40, 80, true)).toBe(15)
+  test('a cursor outside a filled band measures to the nearer edge', () => {
+    const gap = 10
+
+    const above = metricHitDistance(BAND_TOP - gap, BAND_TOP, BAND_BOTTOM)
+    const below = metricHitDistance(BAND_BOTTOM + gap, BAND_TOP, BAND_BOTTOM)
+
+    expect(above).toBe(gap)
+    expect(below).toBe(gap)
   })
 
-  test('filled: edges may arrive in either order (inverse metric mirrored below zero)', () => {
-    expect(metricHitDistance(60, 80, 40, true)).toBe(0)
-    expect(metricHitDistance(30, 80, 40, true)).toBe(10)
-    expect(metricHitDistance(95, 80, 40, true)).toBe(15)
+  test('the edges may arrive in either order, as a metric mirrored below zero hands them over', () => {
+    const cursorY = BAND_BOTTOM + 15
+
+    const upright = metricHitDistance(cursorY, BAND_TOP, BAND_BOTTOM)
+    const mirrored = metricHitDistance(cursorY, BAND_BOTTOM, BAND_TOP)
+
+    expect(mirrored).toBe(upright)
   })
 })

@@ -36,7 +36,7 @@ from cmk.gui.logged_in import (
     UserDefaultConfig,
 )
 from cmk.gui.logged_in import user as global_user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.role_types import CustomUserRole
 from cmk.gui.scopes import ScopeId
 from cmk.gui.session import session
@@ -44,7 +44,7 @@ from cmk.gui.session_context import SuperUserContext, UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.rulesets import may_edit_ruleset
 from cmk.ruleset_matcher.definition import RuleGroup
-from tests.testlib.gui.users import create_and_destroy_user
+from tests.testlib.unit.gui.users import create_and_destroy_user
 
 
 def test_user_context(with_user: tuple[UserId, str]) -> None:
@@ -86,7 +86,7 @@ def test_user_context_nested(with_user: tuple[UserId, str], with_admin: tuple[Us
 
         assert global_user.id == first_user_id
 
-    assert global_user.id is None  # type: ignore[unreachable]
+    assert global_user.id is None
 
 
 def test_user_context_explicit_permissions(with_user: tuple[UserId, str]) -> None:
@@ -275,6 +275,13 @@ def test_logged_in_remote_site_permissions() -> None:
         user.need_permission("any_permission")
 
 
+def test_only_nobody_is_anonymous() -> None:
+    """The CSRF check skips anonymous users, and these three all have no user id."""
+    assert LoggedInNobody().is_anonymous is True
+    assert LoggedInSuperUser().is_anonymous is False
+    assert LoggedInRemoteSite(site_name="site_id").is_anonymous is False
+
+
 MONITORING_USER_CACHED_PROFILE = {
     "alias": "Test user",
     "authorized_sites": ["heute", "heute_slave_1"],
@@ -324,7 +331,7 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
     with create_and_destroy_user(username="test", config=active_config) as user:
         yield LoggedInUser(
             user[0],
-            UserPermissions.from_config(active_config, permission_registry),
+            UserPermissions.from_config(active_config, all_permissions()),
             defaults=UserDefaultConfig(
                 users=active_config.multisite_users,
                 default_language=active_config.default_language,
@@ -482,6 +489,29 @@ def test_monitoring_user_permissions(
 )
 def test_ruleset_permissions_with_commandline_access(varname: str) -> None:
     assert may_edit_ruleset(varname) is False
+
+
+@pytest.mark.parametrize(
+    "permissions, expected",
+    [
+        pytest.param({"wato.rulesets"}, True, id="rulesets"),
+        pytest.param(
+            {"wato.services", "wato.service_discovery_to_ignored"},
+            True,
+            id="services_and_discovery_to_ignored",
+        ),
+        pytest.param({"wato.services"}, False, id="services_only"),
+        pytest.param({"wato.service_discovery_to_ignored"}, False, id="discovery_to_ignored_only"),
+        pytest.param(set(), False, id="none"),
+    ],
+)
+def test_may_edit_ignored_services_ruleset(
+    with_user: tuple[UserId, str], permissions: set[str], expected: bool
+) -> None:
+    with UserContext(
+        with_user[0], UserPermissions({}, {}, {}, []), explicit_permissions=permissions
+    ):
+        assert may_edit_ruleset("ignored_services") is expected
 
 
 @pytest.fixture()

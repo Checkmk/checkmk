@@ -14,7 +14,7 @@ from cmk.plugins.checkmk.agent_based.cmk_site_statistics import (
     parse_cmk_site_statistics,
     ServiceStatistics,
 )
-from cmk.plugins.checkmk.agent_based.livestatus_status import LivestatusSection
+from cmk.plugins.lib.livestatus_status import LivestatusStatusSection
 
 _SECTION_CMK_SITE_STATISTICS = {
     "heute": (
@@ -436,7 +436,7 @@ def test_discover_cmk_site_statistics() -> None:
 def test_check_cmk_site_statistics(
     item: str,
     section_cmk_site_statistics: CMKSiteStatisticsSection,
-    section_livestatus_status: LivestatusSection,
+    section_livestatus_status: LivestatusStatusSection,
     expected_result: CheckResult,
 ) -> None:
     assert (

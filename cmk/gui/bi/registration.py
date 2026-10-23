@@ -5,11 +5,12 @@
 
 from datetime import timedelta
 
+from cmk.gui.autocompleters import autocompleter_registry
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
-from cmk.gui.painter.v0 import PainterRegistry
+from cmk.gui.painter import PainterRegistry
 from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.sidebar import SnapinRegistry
@@ -20,7 +21,7 @@ from cmk.gui.watolib.host_rename import RenameHostHook, RenameHostHookRegistry, 
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 
-from . import _config, _filters, _icons, _openapi, _snapins, _valuespecs
+from . import _autocompleters, _config, _filters, _icons, _openapi, _snapins, _valuespecs
 from ._cron import compile_bi_aggregations, COMPILE_BI_AGGREGATIONS_JOB_ID
 from ._host_rename import rename_host_in_bi
 from .ajax_endpoints import ajax_render_tree, ajax_save_treestate, ajax_set_assumption
@@ -32,21 +33,21 @@ from .view import (
     DataSourceBIHostAggregations,
     DataSourceBIHostnameAggregations,
     DataSourceBIHostnameByGroupAggregations,
-    PainterAggrAcknowledged,
-    PainterAggrAssumedState,
-    PainterAggrGroup,
-    PainterAggrHosts,
-    PainterAggrHostsServices,
-    PainterAggrIcons,
-    PainterAggrInDowntime,
-    PainterAggrName,
-    PainterAggrOutput,
-    PainterAggrRealState,
-    PainterAggrState,
-    PainterAggrStateNum,
-    PainterAggrTreestate,
-    PainterAggrTreestateBoxed,
-    PainterAggrTreestateFrozenDiff,
+    make_aggr_acknowledged_painter,
+    make_aggr_assumed_state_painter,
+    make_aggr_group_painter,
+    make_aggr_hosts_painter,
+    make_aggr_hosts_services_painter,
+    make_aggr_icons_painter,
+    make_aggr_in_downtime_painter,
+    make_aggr_name_painter,
+    make_aggr_output_painter,
+    make_aggr_real_state_painter,
+    make_aggr_state_num_painter,
+    make_aggr_state_painter,
+    make_aggr_treestate_boxed_painter,
+    make_aggr_treestate_frozen_diff_painter,
+    make_aggr_treestate_painter,
     PainterOptionAggrExpand,
     PainterOptionAggrOnlyDifferences,
     PainterOptionAggrOnlyProblems,
@@ -80,21 +81,21 @@ def register(
     data_source_registry.register(DataSourceBIHostnameAggregations)
     data_source_registry.register(DataSourceBIHostnameByGroupAggregations)
 
-    painter_registry.register(PainterAggrIcons)
-    painter_registry.register(PainterAggrInDowntime)
-    painter_registry.register(PainterAggrAcknowledged)
-    painter_registry.register(PainterAggrState)
-    painter_registry.register(PainterAggrStateNum)
-    painter_registry.register(PainterAggrRealState)
-    painter_registry.register(PainterAggrAssumedState)
-    painter_registry.register(PainterAggrGroup)
-    painter_registry.register(PainterAggrName)
-    painter_registry.register(PainterAggrOutput)
-    painter_registry.register(PainterAggrHosts)
-    painter_registry.register(PainterAggrHostsServices)
-    painter_registry.register(PainterAggrTreestate)
-    painter_registry.register(PainterAggrTreestateFrozenDiff)
-    painter_registry.register(PainterAggrTreestateBoxed)
+    painter_registry.register(make_aggr_icons_painter())
+    painter_registry.register(make_aggr_in_downtime_painter())
+    painter_registry.register(make_aggr_acknowledged_painter())
+    painter_registry.register(make_aggr_state_painter())
+    painter_registry.register(make_aggr_state_num_painter())
+    painter_registry.register(make_aggr_real_state_painter())
+    painter_registry.register(make_aggr_assumed_state_painter())
+    painter_registry.register(make_aggr_group_painter())
+    painter_registry.register(make_aggr_name_painter())
+    painter_registry.register(make_aggr_output_painter())
+    painter_registry.register(make_aggr_hosts_painter())
+    painter_registry.register(make_aggr_hosts_services_painter())
+    painter_registry.register(make_aggr_treestate_painter())
+    painter_registry.register(make_aggr_treestate_frozen_diff_painter())
+    painter_registry.register(make_aggr_treestate_boxed_painter())
 
     painter_option_registry.register(PainterOptionAggrExpand())
     painter_option_registry.register(PainterOptionAggrOnlyDifferences())
@@ -121,6 +122,9 @@ def register(
     _icons.register(icon_and_action_registry)
     _snapins.register(snapin_registry)
     _valuespecs.register()
+    autocompleter_registry.register_autocompleter(
+        "bi_aggregation_groups", _autocompleters.aggregation_group_autocompleter
+    )
 
     rename_host_hook_registry.register(
         RenameHostHook(RenamePhase.SETUP, "BI aggregations", rename_host_in_bi)

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.bakery.v2_unstable import OS, Plugin
+from cmk.bakery.v2 import OS, Plugin
 from cmk.plugins.collection.bakery.mcafee_av_client import bakery_plugin_mcafee_av_client
 
 

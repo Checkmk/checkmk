@@ -394,7 +394,7 @@ def _message_spec(users: Sequence[_MessageRecipient]) -> Dictionary:
                                     elements=[
                                         MultipleChoiceElementExtended(
                                             name=recipient.user_id,
-                                            title=Title(  # astrein: disable=localization-checker
+                                            title=Title(  # astrein: disable=localization
                                                 recipient.alias
                                             ),
                                         )
@@ -432,7 +432,7 @@ def _message_spec(users: Sequence[_MessageRecipient]) -> Dictionary:
                     elements=[
                         MultipleChoiceElement(
                             name=k,
-                            title=Title(v["title"]),  # astrein: disable=localization-checker
+                            title=Title(v["title"]),  # astrein: disable=localization
                         )
                         for k, v in _messaging_methods().items()
                     ],

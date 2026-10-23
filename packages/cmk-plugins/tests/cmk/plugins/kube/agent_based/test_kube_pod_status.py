@@ -407,43 +407,26 @@ def test_check_alert_resets() -> None:
     )
 
     expectations = (
-        (
-            State.OK,
-            "0 seconds",
-            None,
-        ),
+        (State.OK, "0 seconds"),
         (
             State.WARN,
             "1 minute 0 seconds (warn/crit at 1 minute 0 seconds/2 minutes 0 seconds)",
-            None,
         ),
-        (
-            State.OK,
-            "0 seconds",
-            None,
-        ),
-        (
-            State.OK,
-            "0 seconds",
-            None,
-        ),
+        (State.OK, "0 seconds"),
+        (State.OK, "0 seconds"),
     )
 
     for time, expected, section_kube_pod_lifecycle in zip(
         count(0.1, 60.1), expectations, pod_cycles
     ):
-        expected_state, expected_summary, expected_notice = expected
+        expected_state, expected_summary = expected
         summary_result, *notice = _check_kube_pod_status(
             time, value_store, params, section_kube_pod_containers, None, section_kube_pod_lifecycle
         )
         assert isinstance(summary_result, Result)
         assert summary_result.state == expected_state
         assert summary_result.summary.endswith(expected_summary)
-        if expected_notice is None:
-            assert notice == []
-        else:
-            assert isinstance(notice[0], Result)  # type: ignore[unreachable]
-            assert expected_notice == notice[0].details
+        assert notice == []
 
 
 def test_check_group_timer() -> None:

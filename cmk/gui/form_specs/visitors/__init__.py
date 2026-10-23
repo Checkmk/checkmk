@@ -25,7 +25,7 @@ from ._utils import (
     get_prefill_default,
     get_title_and_help,
     localize,
-    optional_validation,
+    run_validators,
 )
 
 __all__ = [
@@ -45,7 +45,7 @@ __all__ = [
     "RawDiskData",
     "RawFrontendData",
     "register_recomposer_function",
-    "optional_validation",
+    "run_validators",
     "register_visitor_class",
     "VisitorOptions",
 ]

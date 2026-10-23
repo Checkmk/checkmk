@@ -20,6 +20,7 @@ import logging
 import sys
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from http import HTTPStatus
 from typing import Any, Literal
 
 import urllib3
@@ -33,8 +34,8 @@ from redfish.rest.v1 import (
     ServerDownOrUnreachableError,
 )
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 __version__ = "3.0.0b1"
 
@@ -121,21 +122,10 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def dropnonascii(input_str):
-    """Drop all non ASCII characters from string"""
-    output_str = ""
-    for i in input_str:
-        num = ord(i)
-        if num >= 0 and num <= 127:
-            output_str = output_str + i
-
-    return output_str
-
-
 def fetch_data(redfishobj, url, component):
     """fetch a single data object from Redfish"""
     response_url = redfishobj.get(url, None)
-    if response_url.status == 200:
+    if response_url.status == HTTPStatus.OK:
         try:
             return response_url.dict
         except JsonDecodingError:

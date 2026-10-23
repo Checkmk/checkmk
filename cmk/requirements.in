@@ -2,7 +2,6 @@ annotated_types
 apispec
 apispec-oneofschema
 cryptography
-docstring-parser
 exchangelib
 fastapi
 feedparser
@@ -62,6 +61,7 @@ setproctitle
 setuptools
 setuptools-scm
 starlette
+typing-extensions
 tzlocal
 urllib3
 uvicorn

@@ -8,18 +8,22 @@
 // it lives here rather than in either of them: a metric's kind, its stacking base and the value
 // extent it forces are the render contract, and two implementations of that is what let the strip
 // drift from the plot it summarises.
-import type { ConsolidationFn } from '../../consolidation'
 import { type DomainBucket, computeYDomain } from '../axes/valueAxis'
 import { downsampleToColumns, edgeNeighbours, edgeSample, m4 } from '../decimation/decimate'
-import type { M4Cache } from '../decimation/types'
+import type { M4Bucket, M4Cache } from '../decimation/types'
 import type { Metric, ShadedRegion, TimeRange } from '../types'
-import { invertBucket } from './bucket'
-import { type StackedSeries, computeStackedSeries } from './stacked'
+import { type BarSeries, composeBars } from './bars'
+import { invertBucket, keptSamples } from './bucket'
+import { connectorPolylines } from './line'
+import { type TimeValuePoint, clampedValueAt } from './polyline'
+import { type AreaSeries, type StackedSeries, bandOutlines, computeStackedSeries } from './stacked'
 
 export interface ComposedSeries {
   bucketsOnPlot: M4Cache[]
   paddedBuckets: M4Cache[]
   stacks: StackedSeries[]
+  stacksOnPlot: StackedSeries[]
+  valuesDrawnOnPlot: number[][]
 }
 
 /** Strips the flanking off-plot neighbours `composeSeries` pads with. */
@@ -30,16 +34,18 @@ export function withoutOffPlotNeighbours<T>(items: T[]): T[] {
 export function composeSeries(options: {
   metrics: Metric[]
   cache: M4Cache[]
+  dataTimeRange: TimeRange
   visibleTimeRange: [number, number]
   columnCount: number
-  consolidation: ConsolidationFn
+  binEdges: number[] | null
 }): ComposedSeries {
-  const { metrics, cache, visibleTimeRange, columnCount, consolidation } = options
+  const { metrics, cache, dataTimeRange, visibleTimeRange, columnCount, binEdges } = options
 
-  const bucketsOnPlot = cache.map((metricCache) => [
-    ...downsampleToColumns(metricCache, visibleTimeRange, columnCount),
-    edgeSample(metricCache, visibleTimeRange[1])
-  ])
+  const bucketsOnPlot = cache.map((metricCache) => {
+    const columns = downsampleToColumns(metricCache, visibleTimeRange, columnCount)
+    const sampleOnTheRightEdge = edgeSample(metricCache, visibleTimeRange[1])
+    return sampleOnTheRightEdge === undefined ? columns : [...columns, sampleOnTheRightEdge]
+  })
 
   // Inverse mirrors a metric below the baseline; stacking then resolves cumulative bands.
   const paddedBuckets = cache.map((metricCache, i) => {
@@ -48,11 +54,75 @@ export function composeSeries(options: {
     return metrics[i]!.render.inverse ? padded.map((bucket) => invertBucket(bucket)) : padded
   })
 
+  const bars = composeBars(metrics, dataTimeRange, binEdges)
+  const stacks = computeStackedSeries(metrics, paddedBuckets).map(
+    (series, i): StackedSeries => bars[i] ?? series
+  )
   return {
     bucketsOnPlot,
     paddedBuckets,
-    stacks: computeStackedSeries(metrics, paddedBuckets, consolidation)
+    stacks,
+    stacksOnPlot: stacks.map(onPlotSeries),
+    valuesDrawnOnPlot: stacks.map((series, i) => {
+      switch (series.kind) {
+        case 'area-stacked':
+          return bandValuesDrawnOn(visibleTimeRange, series)
+        case 'bars':
+          return barValuesDrawnOn(visibleTimeRange, series)
+        case 'line':
+          return lineValuesDrawnOn(visibleTimeRange, paddedBuckets[i]!)
+      }
+    })
   }
+}
+
+function barValuesDrawnOn([start, end]: [number, number], series: BarSeries): number[] {
+  return series.bars.flatMap((bar) =>
+    bar.value === null || bar.end <= start || bar.start >= end ? [] : [bar.from, bar.to]
+  )
+}
+
+function isWithin([start, end]: [number, number], time: number): boolean {
+  return start <= time && time <= end
+}
+
+function spans(polyline: TimeValuePoint[], time: number): boolean {
+  const first = polyline[0]
+  const last = polyline[polyline.length - 1]
+  return first !== undefined && last !== undefined && isWithin([first.time, last.time], time)
+}
+
+function valuesDrawnOn(
+  plotTimeRange: [number, number],
+  polylines: TimeValuePoint[][],
+  vertices: TimeValuePoint[]
+): number[] {
+  const verticesOnPlot = vertices.filter((vertex) => isWithin(plotTimeRange, vertex.time))
+  const crossingsOfThePlotEdges = plotTimeRange.flatMap((plotEdge) => {
+    const crossing = polylines.find((polyline) => spans(polyline, plotEdge))
+    return crossing === undefined ? [] : [clampedValueAt(crossing, plotEdge)]
+  })
+  return [...verticesOnPlot.map((vertex) => vertex.value), ...crossingsOfThePlotEdges]
+}
+
+function lineValuesDrawnOn(plotTimeRange: [number, number], buckets: M4Bucket[]): number[] {
+  return valuesDrawnOn(plotTimeRange, connectorPolylines(buckets), buckets.flatMap(keptSamples))
+}
+
+function bandValuesDrawnOn(plotTimeRange: [number, number], series: AreaSeries): number[] {
+  const outlines = bandOutlines(series)
+  return (['lower', 'upper'] as const).flatMap((side) => {
+    const edge = outlines.map((outline) =>
+      outline.map((vertex) => ({ time: vertex.time, value: vertex[side] }))
+    )
+    return valuesDrawnOn(plotTimeRange, edge, edge.flat())
+  })
+}
+
+function onPlotSeries(series: StackedSeries): StackedSeries {
+  return series.kind === 'area-stacked'
+    ? { kind: series.kind, columns: withoutOffPlotNeighbours(series.columns) }
+    : series
 }
 
 export function hasMirroredMetric(metrics: Metric[]): boolean {
@@ -61,6 +131,10 @@ export function hasMirroredMetric(metrics: Metric[]): boolean {
 
 function mixesMirroredAndUnmirrored(metrics: Metric[]): boolean {
   return hasMirroredMetric(metrics) && metrics.some((metric) => !metric.render.inverse)
+}
+
+function asDomainBucket(value: number): DomainBucket {
+  return { gap: false, minValue: value, maxValue: value }
 }
 
 function regionBoundBuckets(regions: ShadedRegion[]): DomainBucket[][] {
@@ -90,15 +164,7 @@ export function composedValueDomain(
     if (metric.render.hidden) {
       return []
     }
-    return [
-      composed.stacks[i]!.kind === 'area-stacked'
-        ? withoutOffPlotNeighbours(composed.stacks[i]!.bands).map((band) => ({
-            gap: band.gap,
-            minValue: Math.min(band.lower, band.upper),
-            maxValue: Math.max(band.lower, band.upper)
-          }))
-        : withoutOffPlotNeighbours(composed.paddedBuckets[i]!)
-    ]
+    return [composed.valuesDrawnOnPlot[i]!.map(asDomainBucket)]
   })
   return computeYDomain([...domainBuckets, ...regionBoundBuckets(regions)], {
     symmetric: mixesMirroredAndUnmirrored(metrics)

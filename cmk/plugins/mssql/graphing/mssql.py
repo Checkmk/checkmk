@@ -9,7 +9,7 @@ UNIT_TIME = metrics.Unit(metrics.TimeNotation())
 
 metric_database_job_duration = metrics.Metric(
     name="database_job_duration",
-    title=Title("Job Duration"),
+    title=Title("Database job duration"),
     unit=UNIT_TIME,
     color=metrics.Color.BLUE,
 )

@@ -20,6 +20,8 @@ import ScheduleDowntimeForm, {
   untilPresetEnd
 } from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
 
+import { FakeResizeObserver } from '@tests/lib/fakeResizeObserver'
+
 /** What a site offers out of the box, as `user_downtime_timeranges` has it. */
 const PRESETS: DowntimePresetOption[] = [
   { title: '2 hours', end: 2 * 60 * 60 },
@@ -43,18 +45,6 @@ function mountForm(
     ...render(ScheduleDowntimeForm, { props: { modelValue, recurrences, presets, presetsUrl } }),
     modelValue
   }
-}
-
-// jsdom has neither ResizeObserver nor layout, so stub the observer (its callback is the overflow
-// composable's recompute, invoked directly below) and hand the row its geometry by hand.
-class FakeResizeObserver {
-  static instances: FakeResizeObserver[] = []
-  constructor(public callback: ResizeObserverCallback) {
-    FakeResizeObserver.instances.push(this)
-  }
-  observe(): void {}
-  unobserve(): void {}
-  disconnect(): void {}
 }
 
 /** Every duration the form offers, in render order, to tell chips from the form's other buttons. */
@@ -86,7 +76,7 @@ function squeezeChipRow(container: Element, visible: number): void {
   stubGeometry(row, { clientWidth: (visible + 1) * CHIP })
 
   const observer = FakeResizeObserver.instances.at(-1)!
-  observer.callback([], observer as unknown as ResizeObserver)
+  observer.fire()
 }
 
 test('is invalid until a comment is provided', async () => {
@@ -173,7 +163,6 @@ describe('a row too narrow for every duration', () => {
 
   afterEach(() => {
     FakeResizeObserver.instances = []
-    vi.unstubAllGlobals()
   })
 
   it('narrows the row further than the count cap already does', async () => {
@@ -257,28 +246,64 @@ test('the ad hoc duration names its two inputs and the span they belong to', () 
   expect(within(span).getByRole('spinbutton', { name: 'Minutes' })).toBeInTheDocument()
 })
 
+test.each(['Hours', 'Minutes'])('the ad hoc %s accept digits only', async (name) => {
+  const { modelValue } = mountForm({ selection: 'adhoc' })
+  const input = screen.getByRole('spinbutton', { name })
+
+  await userEvent.clear(input)
+  await userEvent.type(input, '1e-2.+5')
+
+  expect(input).toHaveValue(125)
+  expect(name === 'Hours' ? modelValue.adhocHours : modelValue.adhocMinutes).toBe(125)
+})
+
+test.each(['Hours', 'Minutes'])(
+  'pasting non-digits into the ad hoc %s is rejected',
+  async (name) => {
+    mountForm({ selection: 'adhoc', adhocHours: 3, adhocMinutes: 3 })
+    const input = screen.getByRole('spinbutton', { name })
+
+    await userEvent.click(input)
+    await userEvent.paste('1e5')
+
+    expect(input).toHaveValue(3)
+  }
+)
+
 describe('isScheduleDowntimeValid', () => {
   it('requires a non-empty comment', () => {
     expect(
-      isScheduleDowntimeValid({ ...defaultScheduleDowntimeValues(PRESETS), comment: '' }, PRESETS)
+      isScheduleDowntimeValid({ ...defaultScheduleDowntimeValues(PRESETS), comment: '' })
     ).toBe(false)
     expect(
-      isScheduleDowntimeValid({ ...defaultScheduleDowntimeValues(PRESETS), comment: 'x' }, PRESETS)
+      isScheduleDowntimeValid({ ...defaultScheduleDowntimeValues(PRESETS), comment: 'x' })
     ).toBe(true)
   })
 
   it('rejects a zero ad hoc duration', () => {
     expect(
-      isScheduleDowntimeValid(
-        {
-          ...defaultScheduleDowntimeValues(PRESETS),
-          comment: 'x',
-          selection: 'adhoc',
-          adhocHours: 0,
-          adhocMinutes: 0
-        },
-        PRESETS
-      )
+      isScheduleDowntimeValid({
+        ...defaultScheduleDowntimeValues(PRESETS),
+        comment: 'x',
+        selection: 'adhoc',
+        adhocHours: 0,
+        adhocMinutes: 0
+      })
+    ).toBe(false)
+  })
+
+  it.each([
+    { part: 'hours', adhocHours: -1, adhocMinutes: 90 },
+    { part: 'minutes', adhocHours: 1, adhocMinutes: -30 }
+  ])('rejects an ad hoc duration with negative $part', ({ adhocHours, adhocMinutes }) => {
+    expect(
+      isScheduleDowntimeValid({
+        ...defaultScheduleDowntimeValues(PRESETS),
+        comment: 'x',
+        selection: 'adhoc',
+        adhocHours,
+        adhocMinutes
+      })
     ).toBe(false)
   })
 })
@@ -380,60 +405,58 @@ describe('Repeat', () => {
     expect(modelValue.recur).toBe('day')
   })
 
-  /**
-   * The classic view rejects the same thing: a downtime repeating on a day the short months do
-   * not have would skip them.
-   */
-  it('is invalid when a monthly repeat starts after the 28th', () => {
-    const start = toZoned(parseAbsolute('2026-08-29T10:00:00Z', 'UTC'), 'UTC')
+  it('is valid when a monthly repeat starts on a day short months do not have', () => {
+    const start = toZoned(parseAbsolute('2026-08-31T10:00:00Z', 'UTC'), 'UTC')
 
     expect(
-      isScheduleDowntimeValid(
-        {
-          ...defaultScheduleDowntimeValues(PRESETS),
-          comment: 'maintenance',
-          selection: 'custom',
-          customRange: { from: start, to: start.add({ hours: 4 }) },
-          recur: 'day_of_month'
-        },
-        PRESETS
-      )
-    ).toBe(false)
-  })
-
-  it('is valid when a monthly repeat starts on a day every month has', () => {
-    const start = toZoned(parseAbsolute('2026-08-28T10:00:00Z', 'UTC'), 'UTC')
-
-    expect(
-      isScheduleDowntimeValid(
-        {
-          ...defaultScheduleDowntimeValues(PRESETS),
-          comment: 'maintenance',
-          selection: 'custom',
-          customRange: { from: start, to: start.add({ hours: 4 }) },
-          recur: 'day_of_month'
-        },
-        PRESETS
-      )
-    ).toBe(true)
-  })
-
-  it('says why a monthly repeat is refused', async () => {
-    const start = toZoned(parseAbsolute('2026-08-29T10:00:00Z', 'UTC'), 'UTC')
-    mountForm(
-      {
+      isScheduleDowntimeValid({
+        ...defaultScheduleDowntimeValues(PRESETS),
         comment: 'maintenance',
         selection: 'custom',
         customRange: { from: start, to: start.add({ hours: 4 }) },
         recur: 'day_of_month'
-      },
-      RECURRENCES
-    )
+      })
+    ).toBe(true)
+  })
+})
 
+describe('Custom duration', () => {
+  const start = toZoned(parseAbsolute('2026-08-28T15:00:00Z', 'UTC'), 'UTC')
+
+  it('picks the start and the end with a date & time picker each once Custom is chosen', async () => {
+    mountForm({ selection: presetSelection(0) })
+    expect(screen.queryByRole('group', { name: 'From' })).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Custom' }))
+
+    expect(within(screen.getByRole('group', { name: 'From' })).getByLabelText('Time')).toBeVisible()
+    expect(within(screen.getByRole('group', { name: 'To' })).getByLabelText('Time')).toBeVisible()
+  })
+
+  it('reads times as 24 hours, so no AM/PM segment widens the pickers', () => {
+    mountForm({ selection: 'custom', customRange: { from: start, to: start.add({ hours: 4 }) } })
+
+    expect(screen.queryByRole('spinbutton', { name: 'AM or PM' })).not.toBeInTheDocument()
+  })
+
+  it('is invalid when the downtime ends before it starts', () => {
     expect(
-      await screen.findByText(
-        'A downtime repeating monthly has to start between the 1st and the 28th.'
-      )
-    ).toBeInTheDocument()
+      isScheduleDowntimeValid({
+        ...defaultScheduleDowntimeValues(PRESETS),
+        comment: 'maintenance',
+        selection: 'custom',
+        customRange: { from: start, to: start.subtract({ hours: 1 }) }
+      })
+    ).toBe(false)
+  })
+
+  it('says why a downtime ending before it starts is refused', async () => {
+    mountForm({
+      comment: 'maintenance',
+      selection: 'custom',
+      customRange: { from: start, to: start.subtract({ hours: 1 }) }
+    })
+
+    expect(await screen.findByText('The downtime has to end after it starts.')).toBeVisible()
   })
 })

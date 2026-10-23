@@ -62,7 +62,7 @@ from cmk.ccc.regex import RegexFutureWarning
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Version
-from cmk.crypto import certificate, keys
+from cmk.crypto import keys
 from cmk.gui import forms, site_config, sites, user_sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -98,7 +98,7 @@ from cmk.utils import dateutils
 from cmk.utils.render import SecondsRenderer
 from cmk.web.utils import escaping
 from cmk.web.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
-from cmk.web.utils.choices import ChoiceId, Choices, ChoiceText
+from cmk.web.utils.choices import Choice, ChoiceId, ChoiceText
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import (
     DynamicIcon,
@@ -804,7 +804,7 @@ class Filesize(Integer):
         exp, count = self.get_exponent(value)
         self._renderer.text_input(varprefix + "_size", str(count))
         html.nbsp()
-        choices: Choices = [(str(nr), name) for (nr, name) in enumerate(self._names)]
+        choices: list[Choice] = [(str(nr), name) for (nr, name) in enumerate(self._names)]
         html.dropdown(varprefix + "_unit", choices, deflt=str(exp))
 
     @override
@@ -913,7 +913,7 @@ class LegacyDataSize(Integer):
         selected_unit, scaled_value = self._scale_value(value)
         self._renderer.text_input(varprefix + "_size", scaled_value)
         html.nbsp()
-        choices: Choices = [(str(unit.value), unit.name) for unit in self._units]
+        choices: list[Choice] = [(str(unit.value), unit.name) for unit in self._units]
         html.dropdown(varprefix + "_unit", choices, deflt=str(selected_unit.value))
 
     @override
@@ -2258,13 +2258,13 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
             html.close_div()
         html.close_div()
         html.div("", style="clear:left;")
-        html.javascript(
-            "cmk.valuespecs.list_of_strings_init(%s, %s, %s);"
-            % (
-                json.dumps(varprefix),
-                json.dumps(self._split_on_paste),
-                json.dumps(self._split_separators),
-            )
+        html.call_ts_function(
+            function_name="list_of_strings_init",
+            arguments={
+                "varprefix": varprefix,
+                "split_on_paste": self._split_on_paste,
+                "split_separators": self._split_separators,
+            },
         )
 
     @override
@@ -2292,7 +2292,6 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
             for varname, value in request.itervars()
             if varname.startswith(list_prefix)
             and varname[len(list_prefix) :].isdigit()
-            and value is not None  # type: ignore[redundant-expr]
             and value.strip()
         ]
 
@@ -2479,9 +2478,8 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
         html.close_div()
 
         if count:
-            html.javascript(
-                "cmk.valuespecs.listof_update_indices(%s)" % json.dumps(varprefix),
-                data_cmk_execute_after_replace="",
+            html.call_ts_function(
+                function_name="listof_update_indices", arguments={"varprefix": varprefix}
             )
 
     def _show_entries(self, varprefix: str, value: ListOfModel[T]) -> None:
@@ -2848,7 +2846,9 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
             style="width: %dex" % self._size if self._size is not None else None,
             class_=["vlof_filter"] if self._delete_style == "filter" else [],
         )
-        html.javascript("cmk.valuespecs.listofmultiple_init(%s);" % json.dumps(varprefix))
+        html.call_ts_function(
+            function_name="listofmultiple_init", arguments={"varprefix": varprefix}
+        )
         html.jsbutton(
             varprefix + "_add",
             self._add_label,
@@ -3368,7 +3368,7 @@ class DropdownChoice[T](ValueSpec[T | None]):
             )
         return value
 
-    def _options_for_html(self, orig_options: DropdownChoiceEntries) -> Choices:
+    def _options_for_html(self, orig_options: DropdownChoiceEntries) -> list[Choice]:
         return [(self._option_for_html(val), title) for val, title in orig_options]
 
     @staticmethod
@@ -3590,7 +3590,7 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
         self._css_spec = css_spec
         self._hint_label = hint_label
 
-    def _choices_from_value(self, value: str | None) -> Choices:
+    def _choices_from_value(self, value: str | None) -> list[Choice]:
         raise NotImplementedError
 
     @override
@@ -3908,7 +3908,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         value: CascadingDropdownChoiceValue,
     ) -> None:
         def_val = "0"
-        options: Choices = []
+        options: list[Choice] = []
         choices = self.choices()
         if not choices:
             html.write_text_permissive(self._no_elements_text)
@@ -3996,17 +3996,15 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         }
         request_vars.update(self._render_sub_vs_request_vars)
 
-        html.javascript(
-            "cmk.valuespecs.add_cascading_sub_valuespec_parameters(%s, %s);"
-            % (
-                json.dumps(varprefix),
-                json.dumps(
-                    {
-                        "page_name": self._render_sub_vs_page_name,
-                        "request_vars": request_vars,
-                    }
-                ),
-            )
+        html.call_ts_function(
+            function_name="add_cascading_sub_valuespec_parameters",
+            arguments={
+                "varprefix": varprefix,
+                "parameters": {
+                    "page_name": self._render_sub_vs_page_name,
+                    "request_vars": request_vars,
+                },
+            },
         )
 
     def _choice_from_value_raise(self, message: str, varprefix: str | None) -> Exception:
@@ -5618,16 +5616,16 @@ class Timerange(CascadingDropdown):
             if rangespec[0] == "age":
                 title = _("The last ") + str(Age().value_to_html(rangespec[1]))
                 return ComputedTimerange((int(now - rangespec[1]), int(now)), title)
-            if isinstance(rangespec, tuple) and rangespec[0] == "next":  # type: ignore[redundant-expr]
+            if rangespec[0] == "next":
                 title = _("The next ") + str(Age().value_to_html(rangespec[1]))
                 return ComputedTimerange((int(now), int(now + rangespec[1])), title)
-            if isinstance(rangespec, tuple) and rangespec[0] == "until":  # type: ignore[redundant-expr]
+            if rangespec[0] == "until":
                 return ComputedTimerange(
                     (int(now), int(rangespec[1])),
                     str(AbsoluteDate().value_to_html(rangespec[1])),
                 )
             # NOTE: can't use `in` here, because mypy doesn't understand it
-            if isinstance(rangespec, tuple) and (rangespec[0] == "date" or rangespec[0] == "time"):  # type: ignore[redundant-expr]
+            if rangespec[0] == "date" or rangespec[0] == "time":
                 return _fixed_dates(rangespec)
 
             raise NotImplementedError
@@ -6399,7 +6397,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
         param: str,
         vs: ValueSpec,
     ) -> None:
-        if not self._horizontal or self._horizontal and nr == 0:  # type: ignore[redundant-expr]
+        if not self._horizontal or nr == 0:
             html.open_tr(class_="show_more_mode" if param in self._show_more_keys else None)
 
         self._render_td(
@@ -8113,7 +8111,9 @@ class LabelGroups(LabelGroup):
             value = self.from_html_vars(varprefix)
         value = self._add_empty_row_to_groups(value)
         super().render_input(varprefix, value)
-        html.final_javascript(f"cmk.forms.remove_label_filter_hidden_fields('{varprefix}');")
+        html.call_ts_function(
+            function_name="remove_label_filter_hidden_fields", arguments={"varprefix": varprefix}
+        )
 
     def _add_empty_row_to_groups(
         self, value: ListOfAndOrNotDropdownValue
@@ -8754,206 +8754,6 @@ def SchedulePeriod(
         render_sub_vs_request_vars=render_sub_vs_request_vars,
         title=_("Period"),
         help=help,
-        default_value=default_value,
-        validate=validate,
-    )
-
-
-_CAInputModel = None | tuple[str, int, bytes]
-
-
-class _CAInput(ValueSpec[_CAInputModel]):
-    """Allows users to fetch CAs interactively so that they don't have to upload files or
-    paste text manually."""
-
-    def __init__(self) -> None:
-        super().__init__(title=_("Fetch certificate from server"))
-        self.address = HostAddress()
-        self.port = NetworkPort(title=None)
-
-    @override
-    def render_input(self, varprefix: str, value: _CAInputModel) -> None:
-        address, port, content = value or ("", 443, b"")
-
-        self.address.render_input(varprefix + "_address", address)
-        self.port.render_input(varprefix + "_port", port)
-        html.icon_button(
-            url=None,
-            title=_("Fetch certificate from server"),
-            icon=StaticIcon(IconNames.host),
-            onclick="cmk.valuespecs.fetch_ca_from_server(%s)" % json.dumps(varprefix),
-        )
-        html.div(None, id_=varprefix + "_status")
-        html.text_area(varprefix, content.decode("ascii"), cols=80, readonly="")
-
-    @override
-    def canonical_value(self) -> _CAInputModel:
-        return None
-
-    @override
-    def mask(self, value: _CAInputModel) -> _CAInputModel:
-        return value
-
-    @override
-    def value_to_json(self, value: _CAInputModel) -> JSONValue:
-        return None if value is None else [value[0], value[1], value[2].decode("ascii")]
-
-    @override
-    def value_from_json(self, json_value: JSONValue) -> _CAInputModel:
-        return (
-            None
-            if json_value is None
-            else (json_value[0], json_value[1], json_value[2].encode("ascii"))
-        )
-
-    @override
-    def from_html_vars(self, varprefix: str) -> _CAInputModel:
-        address = self.address.from_html_vars(varprefix + "_address")
-        port = self.port.from_html_vars(varprefix + "_port")
-        content = request.get_binary_input_mandatory(varprefix)
-        return (address, port, content)
-
-
-class _CAorCAChain(UploadOrPasteTextFile):
-    def __init__(
-        self,
-        # UploadOrPasteTextFile
-        file_title: str | None = None,
-        allow_empty: bool = False,
-        # Alternative
-        show_alternative_title: bool = False,
-        on_change: str | None = None,
-        orientation: Literal["horizontal", "vertical"] = "vertical",
-        # ValueSpec
-        title: str | None = None,
-        help: ValueSpecHelp | None = None,  # noqa: A002
-        default_value: ValueSpecDefault[Any] = DEF_VALUE,
-        validate: ValueSpecValidateFunc[Any] | None = None,
-    ):
-        super().__init__(
-            file_title=_("CRT/PEM file") if file_title is None else file_title,
-            allow_empty=allow_empty,
-            elements=[_CAInput()],
-            mime_types=[
-                "application/x-x509-user-cert",
-                "application/x-x509-ca-cert",
-                "application/pkix-cert",
-            ],
-            allowed_extensions=[".pem", ".crt"],
-            match=lambda val: (
-                2 if not isinstance(val, tuple) else (0 if isinstance(val[1], int) else 1)
-            ),
-            show_alternative_title=show_alternative_title,
-            on_change=on_change,
-            orientation=orientation,
-            title=(
-                _("Certificate chain (root / intermediate certificate)") if title is None else title
-            ),
-            help=help,
-            default_value=default_value,
-            validate=validate,
-        )
-
-    @staticmethod
-    def _analyse_cert(cert: certificate.Certificate) -> dict[str, str]:
-        """
-        Inspect the certificate and place selected info in a dict.
-        """
-
-        return {
-            "issuer": cert.issuer.rfc4514_string(),
-            "subject": cert.subject.rfc4514_string(),
-            "creation": cert.not_valid_before.date().isoformat(),
-            "expiration": cert.not_valid_after.date().isoformat(),
-            "fingerprint": cert.show_fingerprint(),
-        }
-
-    @override
-    def _validate_value(self, value: Any, varprefix: str) -> None:
-        # value is really str | bytes, but UploadOrPasteTextFile doesn't know this
-        try:
-            # make sure the PEM can be loaded
-            certificate.Certificate.load_pem(certificate.CertificatePEM(value))
-        except Exception as e:
-            raise MKUserError(varprefix, _("Invalid certificate file: %(e)s") % {"e": e})
-
-    @override
-    def value_to_html(self, value: Any) -> ValueSpecText:
-        # value is really str | bytes, but UploadOrPasteTextFile doesn't know this
-        cert_info = self._analyse_cert(
-            certificate.Certificate.load_pem(certificate.CertificatePEM(value))
-        )
-        show_info = {k: HTML.with_escaping(cert_info[k]) for k in ("issuer", "subject")}
-        show_info["fingerprint"] = HTMLWriter.render_span(
-            cert_info["fingerprint"][:41], title=cert_info["fingerprint"]
-        )
-        show_info["validity"] = HTML.without_escaping(
-            _("Not before: %(not_before)s - Not after: %(not_after)s")
-            % {
-                "not_before": cert_info["creation"],
-                "not_after": cert_info["expiration"],
-            }
-        )
-        rows = []
-        for what, title in [
-            ("issuer", _("Issuer")),
-            ("subject", _("Subject")),
-            ("validity", _("Validity")),
-            ("fingerprint", _("Fingerprint")),
-        ]:
-            rows.append(
-                HTMLWriter.render_tr(
-                    HTMLWriter.render_td("%s:" % title) + HTMLWriter.render_td(show_info[what])
-                )
-            )
-        return HTMLWriter.render_table(HTML.empty().join(rows))
-
-
-def ListOfCAs[T](
-    # ListOf
-    magic: str = "@!@",
-    add_label: str | None = None,
-    del_label: str | None = None,
-    style: ListOf.Style | None = None,
-    totext: str | None = None,
-    text_if_empty: str | None = None,
-    allow_empty: bool = False,  # NOTE: Different!
-    empty_text: str | None = None,
-    sort_by: int | None = None,
-    # ValueSpec
-    title: str | None = None,
-    help: ValueSpecHelp | None = None,  # noqa: A002
-    default_value: ValueSpecDefault[ListOfModel[T]] = DEF_VALUE,
-    validate: ValueSpecValidateFunc[ListOfModel[T]] | None = None,
-) -> ListOf:
-    return ListOf(
-        valuespec=_CAorCAChain(),
-        magic=magic,
-        add_label=(_("Add new CA certificate or chain") if add_label is None else add_label),
-        del_label=del_label,
-        movable=False,
-        style=style,
-        totext=totext,
-        text_if_empty=text_if_empty,
-        allow_empty=allow_empty,
-        empty_text=(
-            _("You need to enter at least one CA. Otherwise no SSL connection can be made.")
-            if empty_text is None
-            else empty_text
-        ),
-        sort_by=sort_by,
-        title=_("CAs to accept") if title is None else title,
-        help=(
-            _(
-                "Only accepting HTTPS connections with a server which certificate "
-                "is signed with one of the CAs that are listed here. That way it is guaranteed "
-                "that it is communicating only with the authentic server. "
-                "If you use self signed certificates for you server then enter that certificate "
-                "here."
-            )
-            if help is None
-            else help
-        ),
         default_value=default_value,
         validate=validate,
     )

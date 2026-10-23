@@ -13,6 +13,8 @@ import types
 from collections.abc import Iterator, Mapping
 from typing import Any, cast, get_args, TypeAliasType, Union
 
+from typing_extensions import TypeForm
+
 from cmk.gui.openapi.restful_objects.type_defs import ErrorStatusCodeInt, StatusCodeInt
 from cmk.gui.openapi.restful_objects.utils import identify_expected_status_codes
 from cmk.gui.openapi.restful_objects.validators import PathParamsValidator
@@ -144,8 +146,7 @@ def _validate_defaults_model_fields(
 
 
 def _validate_schema_type(
-    # TODO(PEP-747): replace `type | TypeAliasType | types.UnionType` with `TypeForm`
-    schema_type: type | TypeAliasType | types.UnionType,
+    schema_type: TypeForm[object],
     *,
     path_prefix: str,
     other_defaults_allowed: bool,
@@ -414,10 +415,26 @@ class EndpointValidator:
                 )
 
     @staticmethod
+    def _validate_locking(endpoint: RequestEndpoint) -> None:
+        if endpoint.method == "get":
+            # For GET neither flag has any effect.
+            return
+
+        if endpoint.skip_locking and endpoint.update_config_generation:
+            raise ValueError(
+                f"Endpoint {endpoint.operation_id} skips the configuration lock but still "
+                "updates the configuration generation. Regenerating and committing the "
+                "configuration without the lock exposes it to race conditions. Set "
+                "`update_config_generation=False` for endpoints that do not mutate the "
+                "configuration."
+            )
+
+    @staticmethod
     def validate_endpoint_definition(endpoint_definition: EndpointDefinition) -> None:
         """Validate a versioned endpoint configuration"""
         # TODO: this function should be invoked for custom endpoints
         endpoint = endpoint_definition.request_endpoint()
+        EndpointValidator._validate_locking(endpoint)
         with _with_endpoint_context(endpoint.operation_id):
             EndpointValidator._validate_parameters(endpoint.handler)
 

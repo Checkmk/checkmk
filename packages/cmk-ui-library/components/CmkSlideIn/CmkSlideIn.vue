@@ -5,6 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
+import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { provideFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
 import { DialogContent, DialogPortal, DialogRoot } from 'reka-ui'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
@@ -33,7 +35,7 @@ const slideInVariants = cva('', {
 
 export type SlideInVariants = VariantProps<typeof slideInVariants>
 
-export type Focusable = { focus: () => void }
+export type Focusable = { focus: (options?: FocusOptions) => void }
 
 export interface CmkSlideInProps {
   open: boolean
@@ -47,6 +49,9 @@ export interface CmkSlideInProps {
 const props = defineProps<CmkSlideInProps>()
 const emit = defineEmits(['close'])
 const dialogContentRef = ref<InstanceType<typeof DialogContent>>()
+
+const { _t } = usei18n()
+useWidgetKeys(_t('Slide-in'), [{ combo: ['Escape'], description: _t('Close') }])
 
 provideFloatingTarget(() => dialogContentRef.value?.$el as HTMLElement | undefined)
 
@@ -72,7 +77,7 @@ watch(
       await nextTick(() => {
         const target = props.initialFocusTarget ?? dialogContentRef.value?.$el
         if (target && typeof (target as Partial<Focusable>).focus === 'function') {
-          ;(target as Focusable).focus()
+          ;(target as Focusable).focus({ focusVisible: false, preventScroll: true })
         }
       })
     }
@@ -147,7 +152,7 @@ onBeforeUnmount(() => {
   }
 
   &[data-state='closed'] {
-    animation: cmk-slide-in__container-hide 0.2s ease-in-out;
+    animation: cmk-slide-in__container-hide 0.2s ease-in-out forwards;
   }
 }
 
@@ -193,6 +198,7 @@ onBeforeUnmount(() => {
   }
 
   to {
+    visibility: hidden;
     opacity: 0;
     transform: translate(50%, 0%);
   }

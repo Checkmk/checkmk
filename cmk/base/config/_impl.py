@@ -9,7 +9,6 @@
 
 
 import contextlib
-import copy
 import dataclasses
 import enum
 import itertools
@@ -18,9 +17,8 @@ import os
 import socket
 import sys
 import time
-from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Container, Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
-from types import ModuleType
 from typing import Any, AnyStr, assert_never, Final, Literal, NamedTuple, overload, override
 
 import cmk.ccc.debug
@@ -28,8 +26,12 @@ import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.utils
 import cmk.utils.paths
 from cmk import trace
-from cmk.agent_based.legacy import discover_legacy_checks, find_legacy_check_modules
-from cmk.base import default_config
+from cmk.base.config._load_raw import (
+    exit_on_config_file_load_error,
+    load_raw_config,
+    strip_tag,
+    strip_tags,
+)
 from cmk.base.configlib.agent import make_only_from_config
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.exit_code import make_exit_code_spec
@@ -68,19 +70,13 @@ from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections, SNMPFetcherCon
 from cmk.checkengine.filecache import MaxAge
 from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.parser import ParserConfig, SectionStore
-from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins
-from cmk.checkengine.plugin_backend.section_plugins_legacy import (
-    convert_legacy_sections,
-)
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
-    AgentSectionPlugin,
     AutocheckEntry,
     CheckPlugin,
     CheckPluginName,
     SectionName,
     ServiceID,
-    SNMPSectionPlugin,
 )
 from cmk.checkengine.snmplib import (  # some of these are required in the modules' namespace to load the configuration!
     parse_oid_range_config,
@@ -95,7 +91,7 @@ from cmk.checkengine.snmplib import (  # some of these are required in the modul
 from cmk.checkengine.source_abc import SourceConfig
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.summarize import SummaryConfig
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.piggyback import backend as piggyback_backend
 from cmk.ruleset_matcher import matcher as ruleset_matcher
 from cmk.ruleset_matcher import tuple_rulesets
@@ -119,27 +115,30 @@ from cmk.server_side_calls_backend import (
     ExecutableFinderProtocol,
     load_active_checks,
     load_special_agents,
+    NotSupportedError,
     relay_compatible_plugin_families,
+    relay_supported_active_checks,
     SecretsConfig,
+    SITE_SIDE_ONLY_ACTIVE_CHECKS,
     SpecialAgent,
     SpecialAgentCommandLine,
     SSCRules,
 )
 from cmk.server_side_calls_backend.config_processing import (
-    extract_all_adhoc_secrets,
+    extract_secrets,
 )
 from cmk.utils import config_warnings, ip_lookup, password_store
 from cmk.utils.caching import cache_manager
-from cmk.utils.check_utils import maincheckify, section_name_of
-from cmk.utils.host_storage import (
-    apply_hosts_file_to_object,
-    get_host_storage_loaders,
-    StorageFormat,
+from cmk.utils.check_utils import maincheckify
+from cmk.utils.ip_lookup import (
+    IPLookup,
+    IPLookupOptional,
+    IPStackConfig,
+    is_fallback_ip,
+    SupportedAddressFamily,
 )
-from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.misc import key_config_paths
 from cmk.utils.password_store import make_configured_passwords_lookup
 from cmk.utils.servicename import Item, MAX_SERVICE_NAME_LEN, ServiceName
 
@@ -410,11 +409,19 @@ class _ServiceFilter:
                 return self.is_mine(service)
 
     def is_ignored(self, service: ConfiguredService) -> bool:
-        """Determine whether the user disabled this service."""
-        return self._config_cache.check_plugin_ignored(
-            self._host_name, service.check_plugin_name
-        ) or self._config_cache.service_ignored(
+        """Determine whether the user disabled this service.
+
+        A clustered service is disabled by the rules of its cluster, not by those of the node.
+        """
+        effective_host = self._config_cache.clustering.effective_host(
             self._host_name,
+            service.description,
+            service.labels,
+        )
+        return self._config_cache.check_plugin_ignored(
+            effective_host, service.check_plugin_name
+        ) or self._config_cache.service_ignored(
+            effective_host,
             service.description,
             service.labels,
         )
@@ -495,10 +502,9 @@ def _get_clustered_services(
     nodes = hosts_config.clusters.get(cluster_name, ())
 
     if not config_cache.is_ping_host(cluster_name):
-
+        # No ignore filter here: a clustered service is disabled by the rules of the
+        # cluster, and those are applied to the cluster's check table.
         def appears_on_cluster(node_name: HostAddress, entry: AutocheckEntry) -> bool:
-            if config_cache.check_plugin_ignored(node_name, entry.check_plugin_name):
-                return False
             service_name = service_name_config(
                 node_name,
                 entry.id(),
@@ -515,7 +521,7 @@ def _get_clustered_services(
                 node_name, service_name, entry.service_labels
             )
 
-            return not config_cache.service_ignored(node_name, service_name, service_labels) and (
+            return (
                 config_cache.clustering.effective_host(node_name, service_name, service_labels)
                 == cluster_name
             )
@@ -530,7 +536,7 @@ def _get_clustered_services(
 
     yield from merge_enforced_services(
         {node_name: enforced_services_table(node_name) for node_name in nodes},
-        # similiar to appears_on_cluster, but we don't check for ignored services
+        # same as appears_on_cluster
         lambda node_name, service_name, discovered_labels: (
             config_cache.clustering.effective_host(
                 node_name,
@@ -581,20 +587,6 @@ def handle_ip_lookup_failure(host_name: HostName, exc: Exception) -> None:
     )
 
 
-def get_default_config() -> dict[str, object]:
-    """Provides a dictionary containing the Check_MK default configuration"""
-    # Note: variable_defaults contains a lot of additional values not part of
-    # BaseConfig:
-    # Type definitions that are leaked by the '*' import, but also deprecated actual
-    # config values.
-    return {
-        key: copy.deepcopy(value) if isinstance(value, dict | list) else value
-        for key, value in default_config.__dict__.items()
-        # we don't want default_configs submodules here:
-        if key[0] != "_" and not isinstance(value, ModuleType)
-    }
-
-
 # .
 #   .--Read Config---------------------------------------------------------.
 #   |        ____                _    ____             __ _                |
@@ -621,11 +613,9 @@ class LoadingResult:
     config_cache: ConfigCache
 
 
-def load(
-    with_conf_d: bool = True,
-    validate_hosts: bool = True,
-) -> LoadingResult:
-    raw_config = _load_config(get_default_config(), StorageFormat.PICKLE, with_conf_d=with_conf_d)
+def load(validate_hosts: bool) -> LoadingResult:
+    with exit_on_config_file_load_error():
+        raw_config = load_raw_config()
 
     loading_result = perform_post_config_loading_actions(
         raw_config,
@@ -635,23 +625,36 @@ def load(
     )
 
     if validate_hosts:
-        hosts_config = loading_result.hosts_config
-        if duplicates := sorted(
-            hosts_config.duplicates(
-                lambda hn: (
-                    loading_result.config_cache.is_active(hn)
-                    and loading_result.config_cache.is_online(hn)
-                )
-            )
-        ):
-            # TODO: Raise an exception
-            console.error(
-                f"Error in configuration: duplicate hosts: {', '.join(duplicates)}",
-                file=sys.stderr,
-            )
-            sys.exit(3)
+        exit_on_duplicate_hosts(loading_result)
 
     return loading_result
+
+
+def exit_on_duplicate_hosts(loading_result: LoadingResult) -> None:
+    hosts_config = loading_result.hosts_config
+    if duplicates := sorted(
+        hosts_config.duplicates(
+            lambda hn: (
+                loading_result.config_cache.is_active(hn)
+                and loading_result.config_cache.is_online(hn)
+            )
+        )
+    ):
+        # TODO: Raise an exception
+        console.error(
+            f"Error in configuration: duplicate hosts: {', '.join(duplicates)}",
+            file=sys.stderr,
+        )
+        sys.exit(3)
+
+
+def make_base_config(loaded_context: Mapping[str, Any]) -> BaseConfig:  # type: ignore[explicit-any]
+    """Pick the base configuration from what load_raw_config() read.
+
+    This is the cheap part of the post-loading actions: it derives nothing below
+    the configuration, and touches no caches.
+    """
+    return BaseConfig(**{f.name: loaded_context[f.name] for f in dataclasses.fields(BaseConfig)})
 
 
 def perform_post_config_loading_actions(  # type: ignore[explicit-any]
@@ -664,9 +667,7 @@ def perform_post_config_loading_actions(  # type: ignore[explicit-any]
 ) -> LoadingResult:
     """These tasks must be performed after loading the Check_MK base configuration"""
     return make_loading_result(
-        BaseConfig(
-            **{f.name: loaded_context[f.name] for f in dataclasses.fields(BaseConfig)},
-        ),
+        make_base_config(loaded_context),
         autochecks_dir=autochecks_dir,
         discovered_host_labels_dir=discovered_host_labels_dir,
         builtin_host_labels_file=builtin_host_labels_file,
@@ -706,168 +707,9 @@ def make_loading_result(
             discovered_host_labels_dir=discovered_host_labels_dir,
             builtin_host_labels_file=builtin_host_labels_file,
             excluded_service_ids=excluded_service_ids,
+            relay_supported_active_checks=relay_supported_active_checks(),
         ),
     )
-
-
-class SetFolderPathAbstract:
-    def __init__(self, the_object: Iterable) -> None:
-        # TODO: Cleanup this somehow to work nicer with mypy
-        super().__init__(the_object)  # type: ignore[call-arg]
-        self._current_path: str | None = None
-        self._collected_host_paths: dict[HostName, str] = {}
-
-    def set_current_path(self, current_path: str | None) -> None:
-        self._current_path = current_path
-
-    @property
-    def collected_host_paths(self) -> Mapping[HostName, str]:
-        return self._collected_host_paths
-
-    def _set_folder_paths(self, new_hosts: Iterable[str]) -> None:
-        if self._current_path is None:
-            return
-        for hostname in strip_tags(new_hosts):
-            self._collected_host_paths[hostname] = self._current_path
-
-
-class SetFolderPathList(SetFolderPathAbstract, list):
-    @override
-    def __iadd__(self, new_hosts: Iterable[str]) -> SetFolderPathList:  # type: ignore[override]
-        assert isinstance(new_hosts, list)
-        self._set_folder_paths(new_hosts)
-        super().__iadd__(new_hosts)
-        return self
-
-    @override
-    def extend(self, new_hosts: Iterable[str]) -> None:
-        self._set_folder_paths(new_hosts)
-        super().extend(new_hosts)
-
-    # Probably unused
-    @override
-    def __add__(self, new_hosts: Iterable[str]) -> SetFolderPathList:  # type: ignore[override]
-        assert isinstance(new_hosts, list)
-        self._set_folder_paths(new_hosts)
-        return SetFolderPathList(super().__add__(new_hosts))
-
-    # Probably unused
-    @override
-    def append(self, new_host: str) -> None:
-        self._set_folder_paths([new_host])
-        super().append(new_host)
-
-
-# TODO: This whole class must die!
-class SetFolderPathDict(SetFolderPathAbstract, dict):
-    # TODO: How to annotate this?
-    @override
-    def update(self, new_hosts: Mapping[str, object]) -> None:  # type: ignore[override]
-        self._set_folder_paths(new_hosts)
-        return super().update(new_hosts)
-
-    # Probably unused+
-    @override
-    def __setitem__(self, cluster_name: str, value: object) -> None:
-        self._set_folder_paths([cluster_name])
-        return super().__setitem__(cluster_name, value)
-
-
-def _load_config_file(file_to_load: Path, into_dict: dict[str, object]) -> None:
-    exec(compile(file_to_load.read_text(), file_to_load, "exec"), into_dict, into_dict)  # nosec B102 # BNS:aee528
-
-
-def _load_config(
-    target_context: dict[str, object],
-    storage_format: StorageFormat,
-    *,
-    with_conf_d: bool,
-) -> dict[str, object]:
-    helper_vars = {
-        "FOLDER_PATH": None,
-    }
-
-    raw_all_hosts = target_context["all_hosts"]
-    raw_clusters = target_context["clusters"]
-    if not isinstance(raw_all_hosts, Iterable):
-        raise TypeError("Load config error: The all_hosts parameter is not a list")
-    if not isinstance(raw_clusters, dict):
-        raise TypeError("Load config error: The clusters parameter is not a dict")
-
-    target_context["all_hosts"] = (all_hosts_h := SetFolderPathList(raw_all_hosts))
-    target_context["clusters"] = (clusters_h := SetFolderPathDict(raw_clusters))
-
-    target_context |= helper_vars
-
-    host_storage_loaders = get_host_storage_loaders(storage_format)
-    for path in get_config_file_paths(with_conf_d):
-        try:
-            # Make the config path available as a global variable to be used
-            # within the configuration file. The FOLDER_PATH is only used by
-            # rules.mk files these days, but may also be used in some legacy
-            # config files or files generated by 3rd party mechanisms.
-            current_path: str | None = None
-            folder_path: str | None = None
-            with contextlib.suppress(ValueError):
-                relative_path = path.relative_to(cmk.utils.paths.check_mk_config_dir)
-                current_path = f"/{relative_path}"
-                folder_path = str(relative_path.parent)
-            target_context["FOLDER_PATH"] = folder_path
-
-            all_hosts_h.set_current_path(current_path)
-            clusters_h.set_current_path(current_path)
-
-            if path.name == "hosts.mk":
-                apply_hosts_file_to_object(
-                    path.with_suffix(""), host_storage_loaders, target_context
-                )
-            else:
-                _load_config_file(path, target_context)
-
-            host_paths = target_context["host_paths"]
-            if not isinstance(host_paths, dict):
-                raise TypeError("Load config error: The host_paths parameter is not a dict")
-
-            if not isinstance(target_context["all_hosts"], SetFolderPathList):
-                raise TypeError(
-                    "Load config error: The all_hosts parameter was modified through an other method than: x+=a or x=x+a"
-                )
-            host_paths.update(target_context["all_hosts"].collected_host_paths)
-
-            if not isinstance(target_context["clusters"], SetFolderPathDict):
-                raise TypeError(
-                    "Load config error: The clusters parameter was modified through an other method than: x['a']=b or x.update({'a': b})"
-                )
-            host_paths.update(target_context["clusters"].collected_host_paths)
-
-        except Exception as e:
-            if cmk.ccc.debug.enabled():
-                raise
-            if sys.stderr.isatty():
-                console.error(f"Cannot read in configuration file {path}: {e}", file=sys.stderr)
-            sys.exit(1)
-
-    # Cleanup helper vars
-    for helper_var in helper_vars:
-        del target_context[helper_var]
-
-    # Revert specialised SetFolderPath classes back to normal, because it improves
-    # the lookup performance and the helper_vars are no longer available anyway..
-    target_context["all_hosts"] = list(all_hosts_h)
-    target_context["clusters"] = dict(clusters_h)
-    return target_context
-
-
-# Create list of all files to be included during configuration loading
-def get_config_file_paths(with_conf_d: bool) -> list[Path]:
-    list_of_files = [cmk.utils.paths.main_config_file]
-    if with_conf_d:
-        all_files = cmk.utils.paths.check_mk_config_dir.rglob("*")
-        list_of_files += sorted([p for p in all_files if p.suffix in {".mk"}], key=key_config_paths)
-    for path in [cmk.utils.paths.final_config_file, cmk.utils.paths.local_config_file]:
-        if path.exists():
-            list_of_files.append(path)
-    return list_of_files
 
 
 def parse_hostname_list(
@@ -916,32 +758,6 @@ def parse_hostname_list(
                     "Host name or tag specification '%s' does not match any host." % arg
                 )
     return hostlist
-
-
-# .
-#   .--Host tags-----------------------------------------------------------.
-#   |              _   _           _     _                                 |
-#   |             | | | | ___  ___| |_  | |_ __ _  __ _ ___                |
-#   |             | |_| |/ _ \/ __| __| | __/ _` |/ _` / __|               |
-#   |             |  _  | (_) \__ \ |_  | || (_| | (_| \__ \               |
-#   |             |_| |_|\___/|___/\__|  \__\__,_|\__, |___/               |
-#   |                                             |___/                    |
-#   +----------------------------------------------------------------------+
-#   |  Helper functions for dealing with host tags                         |
-#   '----------------------------------------------------------------------'
-
-
-def strip_tag(tagged_hostname: str) -> HostName:
-    return HostName(tagged_hostname.split("|", 1)[0])
-
-
-def strip_tags(tagged_hostlist: Iterable[str]) -> Sequence[HostName]:
-    cache = cache_manager.obtain_cache("strip_tags")
-
-    cache_id = tuple(tagged_hostlist)
-    with contextlib.suppress(KeyError):
-        return cache[cache_id]
-    return cache.setdefault(cache_id, [strip_tag(h) for h in tagged_hostlist])
 
 
 # .
@@ -1047,58 +863,6 @@ NEGATE = tuple_rulesets.NEGATE
 
 
 # .
-#   .--Loading-------------------------------------------------------------.
-#   |                _                    _ _                              |
-#   |               | |    ___   __ _  __| (_)_ __   __ _                  |
-#   |               | |   / _ \ / _` |/ _` | | '_ \ / _` |                 |
-#   |               | |__| (_) | (_| | (_| | | | | | (_| |                 |
-#   |               |_____\___/ \__,_|\__,_|_|_| |_|\__, |                 |
-#   |                                               |___/                  |
-#   +----------------------------------------------------------------------+
-#   | Loading of check plug-ins                                            |
-#   '----------------------------------------------------------------------'
-
-
-def load_all_plugins() -> AgentBasedPlugins:
-    with tracer.span("load_legacy_check_plugins"):
-        with tracer.span("discover_legacy_check_plugins"):
-            module_names = find_legacy_check_modules()
-
-        legacy_errors, sections, checks = load_and_convert_legacy_checks(module_names)
-
-    return agent_based_register.load_all_plugins(
-        sections=sections,
-        checks=checks,
-        legacy_errors=legacy_errors,
-        raise_errors=cmk.ccc.debug.enabled(),
-    )
-
-
-@tracer.instrument("load_and_convert_legacy_checks")
-def load_and_convert_legacy_checks(
-    module_list: Iterable[str],
-) -> tuple[list[str], Sequence[SNMPSectionPlugin | AgentSectionPlugin], Sequence[CheckPlugin]]:
-    discovered_legacy_checks = discover_legacy_checks(
-        module_list, raise_errors=cmk.ccc.debug.enabled()
-    )
-
-    section_errors, sections = convert_legacy_sections(
-        discovered_legacy_checks.sane_check_info,
-        discovered_legacy_checks.plugin_files,
-        raise_errors=cmk.ccc.debug.enabled(),
-    )
-    check_errors, checks = convert_legacy_check_plugins(
-        discovered_legacy_checks.sane_check_info,
-        discovered_legacy_checks.plugin_files,
-        # skip validation. These plugins are not changed anymore.
-        validate_creation_kwargs=False,
-        raise_errors=cmk.ccc.debug.enabled(),
-    )
-
-    return (section_errors + check_errors, sections, checks)
-
-
-# .
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
 #   |                 | | | | ___| |_ __   ___ _ __ ___                    |
@@ -1183,6 +947,22 @@ def load_resource_cfg_macros(
             raise
         error_handler(f"Cannot read {resource_cfg}: {exc}")
     return {}
+
+
+def _without_unusable_address(ip_address_of: IPLookup) -> IPLookupOptional:
+    """Report the unspecified address as the absent address it stands for.
+
+    `0.0.0.0` and `::` are how a failed or unconfigured lookup is spelled (see
+    `cmk.utils.ip_lookup`), but they look like ordinary addresses, which defeats
+    the two places that already handle a missing one: `get_host_attributes()`
+    renders `None` as `""`, and `IPConfig.address` raises `RuntimeError`.
+    """
+
+    def lookup(host_name: HostName, family: SupportedAddressFamily) -> HostAddress | None:
+        address = ip_address_of(host_name, family)
+        return None if is_fallback_ip(address) else address
+
+    return lookup
 
 
 def get_ssc_host_config(
@@ -1317,6 +1097,24 @@ class AutochecksConfigurer:
         )
 
 
+def make_ruleset_matcher(
+    hosts_config: Hosts, host_tags: HostTags
+) -> ruleset_matcher.RulesetMatcher:
+    """Make a ruleset matcher for the configured hosts.
+
+    The ConfigCache holds the one the configuration's rulesets are matched with.
+    Make another one to match rules that are not part of the configuration: the
+    matcher caches its results by the identity of the ruleset.
+    """
+    return ruleset_matcher.RulesetMatcher(
+        host_tags=host_tags.host_tags_maps,
+        host_paths=hosts_config.host_paths,
+        clusters_of=hosts_config.clusters_of_nodes,
+        nodes_of=hosts_config.clusters,
+        all_configured_hosts=frozenset(hosts_config.all_configured_hosts),
+    )
+
+
 class ConfigCache:
     def __init__(
         self,
@@ -1328,6 +1126,7 @@ class ConfigCache:
         discovered_host_labels_dir: Path,
         builtin_host_labels_file: Path,
         excluded_service_ids: Container[ServiceID] = frozenset(),
+        relay_supported_active_checks: Container[str] = frozenset(),
     ) -> None:
         """Hold the configuration and derive the check tables from it.
 
@@ -1339,12 +1138,18 @@ class ConfigCache:
         service name is not available without the plug-in).  Computing results
         for services the core does not know about makes nagios log warnings
         about check results it cannot assign (CMK-37190).
+
+        `relay_supported_active_checks` holds the plug-in names (the entry-point
+        names) of the active checks that may be routed to a relay; everything else
+        is rejected for relay-monitored hosts (except the site-side-only checks,
+        which stay on the site).
         """
         super().__init__()
         self._loaded_config: Final = loaded_config
         self._hosts_config = hosts_config
         self._host_tags = host_tags
         self._excluded_service_ids: Final = excluded_service_ids
+        self._relay_supported_active_checks: Final = relay_supported_active_checks
         self.__enforced_services_table: dict[
             HostName,
             Mapping[
@@ -1365,17 +1170,10 @@ class ConfigCache:
         self.__snmp_backend: dict[HostName, SNMPBackendEnum] = {}
 
         self._check_table_cache = cache_manager.obtain_cache("check_tables")
-        self._cache_section_name_of: dict[str, str] = {}
 
         self.autochecks_memoizer: Final = AutochecksMemoizer(autochecks_dir)
 
-        self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
-            host_tags=self._host_tags.host_tags_maps,
-            host_paths=self._hosts_config.host_paths,
-            clusters_of=self._hosts_config.clusters_of_nodes,
-            nodes_of=self._hosts_config.clusters,
-            all_configured_hosts=frozenset(self._hosts_config.all_configured_hosts),
-        )
+        self.ruleset_matcher = make_ruleset_matcher(self._hosts_config, self._host_tags)
         self.label_manager = LabelManager(
             LabelConfig(
                 self.ruleset_matcher,
@@ -1394,7 +1192,7 @@ class ConfigCache:
             self.label_manager,
         )
 
-        self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
+        self.ruleset_matcher.ruleset_optimizer.set_default_processed_hosts(
             {
                 hn
                 for hn in set(self._hosts_config.hosts).union(self._hosts_config.clusters)
@@ -2016,10 +1814,10 @@ class ConfigCache:
             or cds.is_tcp
             or self.is_piggyback_host(host_name)
             or self.has_management_board(host_name)
-            or self._has_metric_backend(host_name)
+            or self._has_telemetry_metrics(host_name)
         )
 
-    def _has_metric_backend(self, host_name: HostName) -> bool:
+    def _has_telemetry_metrics(self, host_name: HostName) -> bool:
         return self.metrics_association(host_name) is not None
 
     def metrics_association(self, host_name: HostName) -> str | None:
@@ -2162,6 +1960,7 @@ class ConfigCache:
         single_plugin: str | None = None,
         *,
         for_relay: bool,
+        raise_on_unsupported: bool = False,
     ) -> Iterator[ActiveServiceData]:
         plugin_configs = (
             self.active_checks(host_name)
@@ -2211,18 +2010,42 @@ class ConfigCache:
             },
             lambda x: final_service_name_config(host_name, x, self.label_manager.labels_of_host),
             secrets_config,
+            # Built for the relay. cmk_inv (HW/SW Inventory) is the site-side exception:
+            # the relay config writer drops it, so it never runs on the relay. The prefix
+            # map does not touch its libexec path either, so its site command stays valid.
             ExecutableFinder(
                 cmk.utils.paths.local_nagios_plugins_dir,
                 cmk.utils.paths.nagios_plugins_dir,
-                prefix_map=(),  # no relay support yet.
+                prefix_map=(
+                    (
+                        cmk.utils.paths.nagios_plugins_dir,
+                        Path("/opt/check-mk-relay/lib/nagios/plugins"),
+                    ),
+                )
+                if for_relay
+                else (),
             ),
             ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
             for_relay=for_relay,
+            relay_supported_active_checks=self._relay_supported_active_checks,
+            site_side_only_active_checks=SITE_SIDE_ONLY_ACTIVE_CHECKS,
         )
 
         for plugin_name, plugin_params in plugin_configs:
             try:
                 yield from active_check_config.get_active_service_data(plugin_name, plugin_params)
+            except NotSupportedError:
+                if raise_on_unsupported:
+                    # The ad-hoc caller re-raises this into an explicit UNKNOWN result.
+                    raise
+                # This is a misconfiguration, not a failure: the check is fine, it just
+                # cannot run where this host is monitored. Report it as such. Unlike the
+                # generic handler below, do not re-raise under debug - nothing to debug.
+                config_warnings.warn(
+                    f"Host '{host_name}': active check '{plugin_name}' is not supported "
+                    "for relay-monitored hosts. Its services have not been created."
+                )
+                continue
             except Exception as e:
                 if cmk.ccc.debug.enabled():
                     raise
@@ -2302,7 +2125,16 @@ class ConfigCache:
         if not (host_special_agents := self.special_agents(host_name)):
             return
 
-        host_attrs = self.get_host_attributes(host_name, host_ip_family, ip_address_of)
+        # Handing a special agent the unspecified address would aim it at the
+        # local system, so drop it from every channel that reaches the plug-in:
+        # the `ip_address` argument, the `$HOSTADDRESS$` macro built from the
+        # host attributes, and the address in the `HostConfig`. Doing it here
+        # rather than in the callers is what makes it hold for all of them.
+        usable_ip_address_of = _without_unusable_address(ip_address_of)
+        if ip_address is not None and is_fallback_ip(ip_address):
+            ip_address = None
+
+        host_attrs = self.get_host_attributes(host_name, host_ip_family, usable_ip_address_of)
         special_agent = SpecialAgent(
             load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
             host_name,
@@ -2318,7 +2150,7 @@ class ConfigCache:
                     "<HOST>": host_name,
                     **self.get_host_macros_from_attributes(host_name, host_attrs),
                 },
-                ip_address_of,
+                usable_ip_address_of,
             ),
             host_attrs,
             config_processing.GlobalProxiesWithLookup(
@@ -2349,14 +2181,52 @@ class ConfigCache:
                         f"Config creation for special agent {agentname} failed on host '{host_name}': {exc}"
                     )
 
-    def collect_passwords(self) -> Mapping[str, Secret[str]]:
-        # consider making the hosts an argument. Sometimes we only need one.
+    def collect_passwords(
+        self, hosts: Collection[HostName] | None = None
+    ) -> Mapping[str, Secret[str]]:
+        """Collect the secrets required by the server side calls configuration
 
-        def _compose_filtered_ssc_rules(
-            ssc_config: Iterable[tuple[str, Sequence[RuleSpec[Mapping[str, object]]]]],
-        ) -> Sequence[tuple[str, Sequence[Mapping[str, object]]]]:
-            """Get _all_ configured rulesets (not only the ones matching any host)"""
-            return [(name, [r["value"] for r in ruleset]) for name, ruleset in ssc_config]
+        Without `hosts` this returns a superset: the secrets of _all_ configured rules,
+        plus the complete user managed password store. Consumers that resolve passwords
+        against a configuration newer than this collection need that superset, because
+        rules may start to apply before the passwords are written again (werk 17199).
+
+        With `hosts` only the secrets referenced by the configuration of those hosts are
+        returned, the nodes of a cluster included, since fetching a cluster means fetching
+        its nodes. This is only safe for consumers using the very configuration these
+        passwords were computed from, such as the per relay secrets shipped along with a
+        relay's configuration.
+        """
+        if hosts is None:
+
+            def _compose_ssc_rules(
+                ssc_config: Iterable[tuple[str, Sequence[RuleSpec[Mapping[str, object]]]]],
+            ) -> Sequence[tuple[str, Sequence[Mapping[str, object]]]]:
+                return [(name, [r["value"] for r in ruleset]) for name, ruleset in ssc_config]
+
+        else:
+            fetched_hosts = {
+                h
+                for host_name in hosts
+                for h in (host_name, *self._hosts_config.clusters.get(host_name, ()))
+            }
+
+            def _compose_ssc_rules(
+                ssc_config: Iterable[tuple[str, Sequence[RuleSpec[Mapping[str, object]]]]],
+            ) -> Sequence[tuple[str, Sequence[Mapping[str, object]]]]:
+                return [
+                    (
+                        name,
+                        [
+                            value
+                            for host_name in fetched_hosts
+                            for value in self.ruleset_matcher.get_host_values_all(
+                                host_name, ruleset, self.label_manager.labels_of_host
+                            )
+                        ],
+                    )
+                    for name, ruleset in ssc_config
+                ]
 
         global_proxies_with_lookup = config_processing.GlobalProxiesWithLookup(
             global_proxies={
@@ -2365,32 +2235,26 @@ class ConfigCache:
             },
             password_lookup=make_configured_passwords_lookup(),
         )
-        return {
-            **{
-                k: Secret(s)
-                for k, s in password_store.load(password_store.password_store_path()).items()
+        extracted = extract_secrets(
+            rules_by_name=_compose_ssc_rules(
+                itertools.chain(
+                    self._loaded_config.active_checks.items(),
+                    self._loaded_config.special_agents.items(),
+                )
+            ),
+            global_proxies_with_lookup=global_proxies_with_lookup,
+            oauth2_connections={
+                ident: config_processing.OAuth2Connection(**entry)
+                for ident, entry in self._loaded_config.oauth2_connections.items()
             },
-            **extract_all_adhoc_secrets(
-                rules_by_name=_compose_filtered_ssc_rules(
-                    self._loaded_config.active_checks.items()
-                ),
-                global_proxies_with_lookup=global_proxies_with_lookup,
-                oauth2_connections={
-                    ident: config_processing.OAuth2Connection(**entry)
-                    for ident, entry in self._loaded_config.oauth2_connections.items()
-                },
-            ),
-            **extract_all_adhoc_secrets(
-                rules_by_name=_compose_filtered_ssc_rules(
-                    self._loaded_config.special_agents.items()
-                ),
-                global_proxies_with_lookup=global_proxies_with_lookup,
-                oauth2_connections={
-                    ident: config_processing.OAuth2Connection(**entry)
-                    for ident, entry in self._loaded_config.oauth2_connections.items()
-                },
-            ),
+        )
+        stored = {
+            k: Secret(s)
+            for k, s in password_store.load(password_store.password_store_path()).items()
         }
+        if hosts is not None:
+            stored = {k: v for k, v in stored.items() if k in extracted.referenced_ids}
+        return {**stored, **extracted.adhoc}
 
     def explicit_check_command(self, host_name: HostName) -> HostCheckCommand:
         def explicit_check_command_impl() -> HostCheckCommand:
@@ -2705,14 +2569,6 @@ class ConfigCache:
             for identifier in identifiers
             for msg in piggyback_backend.get_messages_for(identifier, cmk.utils.paths.omd_root)
         )
-
-    def section_name_of(self, section: str) -> str:
-        try:
-            return self._cache_section_name_of[section]
-        except KeyError:
-            section_name = section_name_of(section)
-            self._cache_section_name_of[section] = section_name
-            return section_name
 
     @staticmethod
     def _get_tag_attributes(

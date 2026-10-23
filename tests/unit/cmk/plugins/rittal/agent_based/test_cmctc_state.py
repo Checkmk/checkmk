@@ -3,12 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.rittal.agent_based.cmctc_state import (
-    check_cmctc_state,
-    discover_cmctc_state,
-    parse_cmctc_state,
-)
+from cmk.agent_based.v2 import Result, State, StringTable
+from cmk.plugins.rittal.agent_based.cmctc_state import check_cmctc_state, parse_cmctc_state
 
 
 def _section_ok() -> StringTable:
@@ -24,10 +20,6 @@ def _section_failed() -> StringTable:
 def _section_unknown() -> StringTable:
     assert (section := parse_cmctc_state([["4", "1"]])) is not None
     return section
-
-
-def test_discovery_ok() -> None:
-    assert list(discover_cmctc_state(_section_ok())) == [Service()]
 
 
 def test_check_ok() -> None:

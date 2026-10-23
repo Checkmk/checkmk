@@ -3,23 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 import os
 import shutil
 from collections.abc import Iterator
+from http import HTTPStatus
 
 import pytest
 
 from livestatus import SiteConfigurations
 
 from cmk.ccc.site import SiteId
-from cmk.gui.logged_in import user
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.logged_in import LoggedInSuperUser
+from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.shared_typing.configuration_entity import ConfigEntityType
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.gui.common_fixtures import make_default_config
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 SUB_FOLDER = "sub-folder"
 SUB_FOLDER_TITLE = "Sub Folder"
@@ -37,22 +37,23 @@ def _noop_pending_changes() -> PendingChanges:
     )
 
 
+@pytest.fixture(name="tree")
+def fixture_tree() -> FolderTree:
+    return make_folder_tree(make_default_config())
+
+
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def create_folder_test_environment(
-    with_admin_login: None,
-    load_config: None,
     clients: ClientRegistry,
+    tree: FolderTree,
 ) -> Iterator[None]:
-    tree = folder_tree()
-    tree.invalidate_caches()
-
     tree.root_folder().create_subfolder(
         name=SUB_FOLDER,
         title=SUB_FOLDER_TITLE,
         attributes={},
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
-        acting_user=user,
+        acting_user=LoggedInSuperUser(),
     )
 
     clients.ContactGroup.create(
@@ -74,7 +75,7 @@ def create_folder_test_environment(
         },
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
-        acting_user=user,
+        acting_user=LoggedInSuperUser(),
     )
 
     yield
@@ -135,7 +136,7 @@ def test_list_folders_as_admin(
         assert titles == {"Main", SUB_FOLDER_TITLE, PROTECTED_FOLDER_TITLE}
 
 
-def test_create_folder(clients: ClientRegistry) -> None:
+def test_create_folder(clients: ClientRegistry, tree: FolderTree) -> None:
     # GIVEN
     schema_resp = clients.ConfigurationEntity.get_configuration_entity_schema(
         entity_type=ConfigEntityType.folder,
@@ -163,10 +164,10 @@ def test_create_folder(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    assert resp.status_code == 200, resp.json
+    assert resp.status_code == HTTPStatus.OK, resp.json
     assert resp.json["title"] == "New Folder"
-    folder_tree().invalidate_caches()
-    assert folder_tree().all_folders()["new_folder"].title() == "New Folder"
+    tree.invalidate_caches()
+    assert tree.all_folders()["new_folder"].title() == "New Folder"
 
 
 def test_create_folder_without_permissions(clients: ClientRegistry) -> None:
@@ -209,7 +210,7 @@ def test_create_folder_without_permissions(clients: ClientRegistry) -> None:
     assert "do not have write permission" in resp.json["ext"]["validation_errors"][0]["message"]
 
 
-def test_create_folder_with_permissions(clients: ClientRegistry) -> None:
+def test_create_folder_with_permissions(clients: ClientRegistry, tree: FolderTree) -> None:
     # GIVEN
     schema_resp = clients.ConfigurationEntity.get_configuration_entity_schema(
         entity_type=ConfigEntityType.folder,
@@ -248,10 +249,10 @@ def test_create_folder_with_permissions(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    assert resp.status_code == 200, resp.json
+    assert resp.status_code == HTTPStatus.OK, resp.json
     assert resp.json["title"] == "Protected Folder/New Folder"
-    folder_tree().invalidate_caches()
-    assert folder_tree().all_folders()["protected-folder/new_folder"].title() == "New Folder"
+    tree.invalidate_caches()
+    assert tree.all_folders()["protected-folder/new_folder"].title() == "New Folder"
 
 
 def test_update_folder_not_implemented(clients: ClientRegistry) -> None:

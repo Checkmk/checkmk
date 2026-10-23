@@ -28,7 +28,7 @@ from pytest_benchmark.fixture import BenchmarkFixture
 
 from tests.performance.activation import scenario
 from tests.performance.perftest import PerformanceTest
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

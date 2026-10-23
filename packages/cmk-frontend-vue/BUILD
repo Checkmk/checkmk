@@ -1,16 +1,20 @@
 load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library", "js_run_binary", "js_run_devserver")
-load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
+load("@aspect_rules_js//npm:defs.bzl", "npm_link_package", "npm_package")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:vitest/package_json.bzl", vitest_bin = "bin")
 load("@npm//:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
 load("@npm//:vue3-gettext/package_json.bzl", vue_gettext_bin = "bin")
 load("@npm//packages/cmk-frontend-vue:vite/package_json.bzl", vite_bin = "bin")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:css_library.bzl", "css_library")
 load("//bazel/rules:git_hash_file.bzl", "git_hash_file")
+load("//bazel/rules:link_shared_typing.bzl", "link_shared_typing")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
+load("//bazel/rules:vitest_test.bzl", "vitest_test")
 load("//bazel/rules:vue_library.bzl", "vue_library")
 
 exports_files([
@@ -38,8 +42,14 @@ js_library(
         # tsconfig chain used by type-aware rules extends
         # cmk-ui-library/tsconfig.vue-base.json, resolved via this node_modules link.
         ":node_modules/cmk-ui-library",
+        ":vitest_isolated",
         "//packages/cmk-ui-library:eslintrc",
     ],
+)
+
+js_library(
+    name = "vitest_isolated",
+    srcs = ["vitest.isolated.json"],
 )
 
 npm_link_all_packages(name = "node_modules")
@@ -87,10 +97,14 @@ filegroup(
     ],
 )
 
+NONFREE = ["src/**/nonfree/**"]
+
 vue_library(
     name = "src_vue",
-    srcs = glob(["src/**/*.vue"]),
-    data = [":tsconfig"],
+    srcs = glob(
+        ["src/**/*.vue"],
+        exclude = NONFREE,
+    ) + [":tsconfig"],
     deps = [
         ":src_ts",
         "//:node_modules/vue",
@@ -99,21 +113,70 @@ vue_library(
 
 js_library(
     name = "src_ts",
-    srcs = glob(["src/**/*.ts"]) + [":tsconfig"],
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = NONFREE,
+    ) + [":tsconfig"],
 )
 
 css_library(
     name = "src_css",
-    srcs = glob([
-        "src/**/*.css",
-        "src/**/*.scss",
-    ]),
+    srcs = glob(
+        [
+            "src/**/*.css",
+            "src/**/*.scss",
+        ],
+        exclude = NONFREE,
+    ),
+)
+
+vue_library(
+    name = "src_nonfree_vue",
+    srcs = glob(
+        ["src/**/nonfree/**/*.vue"],
+        allow_empty = True,
+    ) + [":tsconfig"],
+    deps = [
+        ":src_ts",
+        "//:node_modules/vue",
+    ],
+)
+
+js_library(
+    name = "src_nonfree",
+    srcs = glob(
+        [
+            "src/**/nonfree/**/*.ts",
+            "src/**/nonfree/**/*.css",
+            "src/**/nonfree/**/*.scss",
+        ],
+        allow_empty = True,
+    ) + [":tsconfig"],
+    deps = [
+        ":src_nonfree_vue",
+        ":src_ts",
+        "//:node_modules/vue",
+    ],
+)
+
+BUNDLED_NONFREE = select({
+    "@cmk//edition:community": [],
+    "//conditions:default": [":src_nonfree"],
+})
+
+copy_file(
+    name = "nav_sidebar_elements",
+    src = select({
+        "@cmk//edition:community": "src/navSidebarElements.community.ts",
+        "//conditions:default": "src/nonfree/navSidebarElements.ts",
+    }),
+    out = "src/navSidebarElements.ts",
+    allow_symlink = False,
 )
 
 vue_library(
     name = "demo_vue",
-    srcs = glob(["ui-component-library/**/*.vue"]),
-    data = [":tsconfig"],
+    srcs = glob(["ui-component-library/**/*.vue"]) + [":tsconfig"],
     deps = [
         ":demo_ts",
         "//:node_modules/vue",
@@ -134,13 +197,12 @@ js_run_binary(
     name = "extract_pot_file",
     srcs = [
         "gettext.config.js",
-        ":demo_ts",
-        ":demo_vue",
         ":node_modules/vue3-gettext",
         ":src_ts",
         ":src_vue",
-        "//packages/cmk-ui-library:pkg",
-    ],
+        "//packages/cmk-profiling",
+        "//packages/cmk-ui-library",
+    ] + BUNDLED_NONFREE,
     outs = ["locale/messages.pot"],
     tool = ":gettext-extract",
     visibility = ["//locale:__pkg__"],
@@ -175,50 +237,45 @@ js_run_binary(
     visibility = ["//visibility:private"],
 )
 
-TOOLING = [
+TEST_TOOLING = [
+    "//:node_modules/@vue/test-utils",
+    "//:node_modules/jsdom",
+    "//:node_modules/vitest",
+    "//:node_modules/vitest-fail-on-console",
+    "//:node_modules/vue",
+]
+
+TOOLING = TEST_TOOLING + [
     "//:node_modules/@eslint/js",
     "//:node_modules/@typescript-eslint/parser",
     "//:node_modules/@vue/compiler-dom",
     "//:node_modules/@vue/eslint-config-prettier",
     "//:node_modules/@vue/eslint-config-typescript",
     "//:node_modules/@vue/server-renderer",
-    "//:node_modules/@vue/test-utils",
     "//:node_modules/eslint",
     "//:node_modules/eslint-plugin-vue",
-    "//:node_modules/jsdom",
     "//:node_modules/postcss-html",
     "//:node_modules/sass-embedded",
     "//:node_modules/stylelint",
     "//:node_modules/stylelint-config-standard",
     "//:node_modules/typescript-eslint",
-    "//:node_modules/vitest",
-    "//:node_modules/vitest-fail-on-console",
-    "//:node_modules/vue",
     "//:node_modules/vue-tsc",
     "//:node_modules/vue3-gettext",
 ]
 
-SRCS = [
-    "//:eslintrc",
-    "//packages/cmk-frontend:dist",
+VITE_SRCS = [
     ":node_modules/cmk-ui-library",
-    "env.d.ts",
-    "weaki18nString.d.ts",
-    "scripts/stylelint-vue-bem-naming-convention.js",
-    "ui-component-library/_ucl/vite-plugin-ucl-mcp.ts",
-    "ui-component-library/_ucl/ucl-mcp-runtime.mjs",
-    "index.html",
+    "//packages/cmk-ui-library:vitest_shared",
     "package.json",
-    "vite.config.ucl.ts",
     "vite.config.ts",
-    "ui-component-library/index.html",
+    ":vitest_isolated",
     ":demo_ts",
     ":demo_vue",
     ":demo_css",
     ":src_ts",
     ":src_vue",
     ":src_css",
-    ":compile_i18n",
+    ":nav_sidebar_elements",
     ":node_modules/@tanstack",
     ":node_modules/@testing-library",
     ":node_modules/@tsconfig",
@@ -228,9 +285,15 @@ SRCS = [
     ":node_modules/acorn",
     ":node_modules/axios",
     ":node_modules/class-variance-authority",
+    ":node_modules/cmk-ai-control-plane",
     ":node_modules/cmk-shared-typing-bzl",
     ":node_modules/d3-array",
     ":node_modules/d3-axis",
+    ":node_modules/d3-drag",
+    ":node_modules/d3-ease",
+    ":node_modules/d3-force",
+    ":node_modules/d3-hierarchy",
+    ":node_modules/d3-interpolate",
     ":node_modules/d3-scale",
     ":node_modules/d3-selection",
     ":node_modules/d3-shape",
@@ -238,6 +301,7 @@ SRCS = [
     ":node_modules/d3-transition",
     ":node_modules/d3-zoom",
     ":node_modules/grid-layout-plus",
+    ":node_modules/leaflet",
     ":node_modules/marked",
     ":node_modules/msw",
     ":node_modules/openapi-fetch",
@@ -250,16 +314,33 @@ SRCS = [
     ":node_modules/typescript",
     ":node_modules/vue-component-type-helpers",
     ":node_modules/vue-router",
-] + LOCALE_OUTS + glob([
+] + glob([
     "ui-component-library/**/*.png",
     "ui-component-library/**/*.svg",
-    "ui-component-library/public/*",
 ])
+
+TYPE_CHECK_SRCS = VITE_SRCS + [
+    ":node_modules/cmk-profiling",
+    "//:eslintrc",
+    "env.d.ts",
+    "weaki18nString.d.ts",
+    "scripts/stylelint-vue-bem-naming-convention.js",
+    "ui-component-library/_ucl/vite-plugin-ucl-mcp.ts",
+    "ui-component-library/_ucl/ucl-mcp-runtime.mjs",
+    "index.html",
+    "vite.config.ucl.ts",
+    "ui-component-library/index.html",
+] + glob(["ui-component-library/public/*"])
+
+# The dev server serves no translations and falls back to English: compiling the
+# catalogs re-extracts them from all sources, which takes seconds per rebuild.
+DEV_SERVER_SRCS = TYPE_CHECK_SRCS + ["//packages/cmk-frontend:dist"]
+
+SRCS = DEV_SERVER_SRCS + LOCALE_OUTS
 
 vue_library(
     name = "test_vue",
-    srcs = glob(["tests/**/*.vue"]),
-    data = [":tsconfig"],
+    srcs = glob(["tests/**/*.vue"]) + [":tsconfig"],
     deps = [
         ":src_ts",
         ":test_ts",
@@ -270,21 +351,52 @@ vue_library(
 js_library(
     name = "test_ts",
     srcs = glob(["tests/**/*.ts"]) + [":tsconfig"],
+    deps = ["//packages/cmk-ui-library:vitest_msw"],
 )
 
-SRCS_AND_TESTS = SRCS + [":test_ts"]
+TYPE_CHECK_DATA = TOOLING + TYPE_CHECK_SRCS + [":src_nonfree"]
+
+TEST_DATA = TEST_TOOLING + VITE_SRCS + [
+    ":src_nonfree",
+    ":test_ts",
+    ":test_vue",
+    "//packages/cmk-frontend:theme_images",
+    "//packages/cmk-ui-library:vitest_shared_setup",
+]
+
+link_shared_typing()
+
+write_file(
+    name = "ai_control_plane_typescript_stub_package_json",
+    out = "ai_control_plane_typescript_stub/package.json",
+    content = ['{"name": "cmk-ai-control-plane"}'],
+)
+
+npm_package(
+    name = "ai_control_plane_typescript_stub",
+    srcs = [":ai_control_plane_typescript_stub_package_json"],
+    out = "ai_control_plane_typescript_stub_package",
+    package = "cmk-ai-control-plane",
+    root_paths = [package_name() + "/ai_control_plane_typescript_stub"],
+)
+
+alias(
+    name = "ai_control_plane_typescript",
+    actual = select({
+        "@//:gpl+nonfree_repo": "//non-free/packages/cmk-ai-control-plane:typescript",
+        "@//:gpl_repo": ":ai_control_plane_typescript_stub",
+    }),
+)
 
 npm_link_package(
-    name = "node_modules/cmk-shared-typing-bzl",
-    src = "//packages/cmk-shared-typing:cmk_shared_typing_ts",
-    package = "cmk-shared-typing",
-    root_package = "packages/cmk-frontend-vue",
-    visibility = ["//packages:__subpackages__"],
+    name = "node_modules/cmk-ai-control-plane",
+    src = ":ai_control_plane_typescript",
+    package = "cmk-ai-control-plane",
 )
 
 vite_bin.vite(
     name = "dist",
-    srcs = TOOLING + SRCS,
+    srcs = TOOLING + SRCS + BUNDLED_NONFREE,
     args = ["build"],
     chdir = package_name(),
     out_dirs = ["dist"],
@@ -330,19 +442,15 @@ vite_bin.vite(
 
 # "UI Component Library" end
 
-vitest_bin.vitest_test(
+vitest_test(
     name = "unit-test",
     timeout = "long",
-    args = [
-        "--configLoader=runner",
-        "run",
-    ],
-    chdir = package_name(),
-    data = TOOLING + SRCS_AND_TESTS + [":test_vue"],
+    data = TEST_DATA,
+    shard_count = 8,
 )
 
 # One target per tsconfig project: they have no cross-references, so a single
-# `--build` only ran them serially. Mirrors //bazel/rules:vue_package.bzl. Only
+# `--build` only ran them serially. Mirrors //packages/cmk-ui-library. Only
 # the tests project needs tests/ in its sandbox.
 vue_tsc_bin.vue_tsc_test(
     name = "type-check",
@@ -352,7 +460,7 @@ vue_tsc_bin.vue_tsc_test(
         "tsconfig.app.json",
     ],
     chdir = package_name(),
-    data = TOOLING + SRCS,
+    data = TYPE_CHECK_DATA,
     include_types = True,
 )
 
@@ -364,7 +472,7 @@ vue_tsc_bin.vue_tsc_test(
         "tsconfig.node.json",
     ],
     chdir = package_name(),
-    data = TOOLING + SRCS,
+    data = TYPE_CHECK_DATA,
     include_types = True,
 )
 
@@ -378,7 +486,7 @@ vue_tsc_bin.vue_tsc_test(
         "tsconfig.ucl.json",
     ],
     chdir = package_name(),
-    data = TOOLING + SRCS,
+    data = TYPE_CHECK_DATA,
     include_types = True,
 )
 
@@ -390,7 +498,10 @@ vue_tsc_bin.vue_tsc_test(
         "tsconfig.test.json",
     ],
     chdir = package_name(),
-    data = TOOLING + SRCS_AND_TESTS + [":test_vue"],
+    data = TYPE_CHECK_DATA + [
+        ":test_ts",
+        ":test_vue",
+    ],
     include_types = True,
 )
 
@@ -399,7 +510,7 @@ vite_bin.vite_binary(name = "vite_server")
 js_run_devserver(
     name = "vite",
     chdir = package_name(),
-    data = TOOLING + SRCS,
+    data = TOOLING + DEV_SERVER_SRCS + BUNDLED_NONFREE,
     tool = ":vite_server",
 )
 
@@ -407,7 +518,7 @@ js_run_devserver(
 vitest_bin.vitest_binary(
     name = "vitest",
     chdir = package_name(),
-    data = TOOLING + SRCS_AND_TESTS + [":test_vue"],
+    data = TEST_DATA,
 )
 
 alias(
@@ -455,7 +566,10 @@ py_cmk_test(
         "scripts/test_license_headers.py",
         "scripts/test_ucl_parity.py",
     ],
-    data = glob(["**"]) + ["//packages/cmk-ui-library:srcs"],
+    data = glob(["**"]) + [
+        "//packages/cmk-profiling:srcs",
+        "//packages/cmk-ui-library:srcs",
+    ],
 )
 
 build_test(
@@ -466,7 +580,6 @@ build_test(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "run",
     ],
 )

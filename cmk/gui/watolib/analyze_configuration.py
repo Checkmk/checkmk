@@ -176,17 +176,15 @@ class ACTest:
     def help(self) -> str:
         raise NotImplementedError
 
-    def is_relevant(self) -> bool:
-        """A test can check whether or not is relevant for the current evnironment.
-        In case this method returns False, the check will not be executed and not
-        be shown to the user."""
-        raise NotImplementedError
-
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         """Implement the test logic here. The method needs to add one or more test
         results like this:
 
         yield ACResultOK(_("it's fine"))
+
+        A test that does not apply to the environment, for example one only meant for the
+        central site of a distributed setup, yields nothing: it is then neither shown nor
+        counted.
         """
         raise NotImplementedError
 
@@ -275,9 +273,6 @@ class AutomationCheckAnalyzeConfig(AutomationCommand[_TCheckAnalyzeConfig]):
             test = test_cls()
 
             if categories and test.category() not in categories:
-                continue
-
-            if not test.is_relevant():
                 continue
 
             for result in test.run(api_request["site_id"], api_request["config"]):
@@ -546,10 +541,6 @@ class ABCACTestPluginAPIs(ACTest):
             "description": self._describe(),
             "folders": "', '".join(str(r) for r in local_plugin_roots()),
         }
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:

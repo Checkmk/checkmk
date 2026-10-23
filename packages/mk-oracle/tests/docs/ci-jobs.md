@@ -17,23 +17,32 @@ mapping is in the tables below and the topology diagram in
 Jenkins folder prefixes (`cv/`, `heavy/`, `builders/`) — the tables carry the
 full job paths.
 
+Jobs triggered from more than one place (per change and by a chain) appear
+once per triggering block.
+
 ```mermaid
 flowchart TD
     subgraph CV["Gerrit CV — per change"]
         TG["test-gerrit<br/>(stages.yml)"]
-        PKG["'Package mk-oracle' stage<br/>build-cmk-package-k8s<br/>⇒ oracle-rocky-ci"]
         WTB["winagt-test-build<br/>⇒ oracle-rocky-ci"]
-        TG -->|"mk-oracle files<br/>changed"| PKG
+        subgraph CVORA[" "]
+            PKG["'Package mk-oracle' stage<br/>build-cmk-package-k8s<br/>⇒ oracle-rocky-ci"]
+            CVTSM["test-system-mk-oracle<br/>⇒ Docker Oracle Free"]
+            CVWMO["winagt-test-mk-oracle<br/>⇒ ORACLE-WIN-CI<br/>(network + run-on-VM)"]
+            CVTCM["test-component-mk-oracle<br/>⇒ oracle-rocky-ci<br/>(SSH, runs on VM)"]
+        end
+        TG -->|"on changes touching<br/>packages/mk-oracle"| CVORA
     end
-
 
     subgraph HEAVY["Post-submit heavy chain — several times a day"]
         HSPACE[" "]
         TH["trigger-post-submit-<br/>tests-heavy"]
-        WMO["winagt-test-mk-oracle<br/>⇒ ORACLE-WIN-CI<br/>(network + run-on-VM)"]
-        IAP["test-integration-<br/>agent-plugin<br/>⇒ Docker Oracle Free"]
         HSPACE ~~~ TH
-        TH --> WMO
+        HTSM["test-system-mk-oracle"]
+        HWMO["winagt-test-mk-oracle"]
+        IAP["test-integration-<br/>agent-plugin<br/>⇒ Docker Oracle Free"]
+        TH --> HTSM
+        TH --> HWMO
         TH --> IAP
     end
 
@@ -41,23 +50,17 @@ flowchart TD
         NSPACE[" "]
         BC["trigger-cmk-build-<br/>chain-&lt;edition&gt;"]
         NSPACE ~~~ BC
-        TCM["test-component-mk-oracle<br/>(ultimatemt only)<br/>⇒ oracle-rocky-ci<br/>(SSH, runs on VM)"]
+        NTCM["test-component-mk-oracle<br/>(ultimatemt only)"]
         AIXSOL["build-mk-oracle-<br/>on-aix-and-solaris<br/>⇒ AIX + Solaris<br/>(build only)"]
         WB["winagt-build (signed)<br/>build only, no DB tests"]
-        BC --> TCM
+        BC --> NTCM
         BC --> AIXSOL
         BC --> WB
     end
 
-    subgraph SHARED["Shared builder"]
-        K8S["build-cmk-package-<br/>mk-oracle-k8s<br/>(mk-oracle.rhel8<br/>+ test binary)"]
-    end
-
-    CV -.-> HEAVY
-    HEAVY -.-> NIGHTLY
-
-    TCM -. "test binary" .-> K8S
-    IAP -. "mk-oracle.rhel8" .-> K8S
+    %% invisible links: keep the blocks in development-workflow order
+    CVTSM ~~~ HSPACE
+    HTSM ~~~ NSPACE
 
     classDef spacer fill:none,stroke:none
     class HSPACE,NSPACE spacer
@@ -80,16 +83,30 @@ otherwise it is skipped with "No mk-oracle files changed".
 (the authoritative trigger pattern lives in the Jenkins job-definition repo,
 not in checkmk.git).
 
+Since [CMK-38578](https://jira.lan.tribe29.com/browse/CMK-38578) the CV
+additionally triggers the three mk-oracle test jobs per change, guarded by
+`ONLY_WHEN_NOT_EMPTY: CHANGED_MK_ORACLE_FILES` (changes under
+`packages/mk-oracle/` or top-level `packages/` files; no reference-image or
+Rust-workspace trigger). Previously these ran only post-submit or via manual
+`start: <job>` comments. The stages reuse the existing job definitions
+unchanged — see the stage 2 / stage 3 tables for what they run:
+
+| CV stage (`stages.yml`)                                   | Triggered job                       | Notes                                                                                                                                                                |
+| --------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **System tests for mk-oracle**                            | `heavy/test-system-mk-oracle`       | junit report shown in the CV result table                                                                                                                            |
+| **Windows on-VM component tests for mk-oracle**           | `heavy/winagt-test-mk-oracle`       | test output linked in the CV result table (`mk-oracle-win.txt`)                                                                                                      |
+| **Linux/Solaris/AIX on-VM component tests for mk-oracle** | `builders/test-component-mk-oracle` | `EDITION=ultimatemt`, like the nightly chain (plugin is edition-independent); per-lane test output linked in the CV result table (`mk-oracle-component-tests/*.txt`) |
+
 ## Stage 2 — post-submit heavy chain (several times a day)
 
 `trigger-post-submit-tests-heavy` fans out to the `heavy/` folder. The jobs
 run with the heavy chain — observed several times a day (post-submit, not
 nightly).
 
-| Job                           | Definition                     | Runs                                                                                                                                                                                                            | System                                                                                                              | Credentials                                              |
-| ----------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `heavy/winagt-test-mk-oracle` | `winagt-test-mk-oracle.groovy` | `run.cmd --component-tests` on a Windows build node                                                                                                                                                             | ORACLE-WIN-CI: network stage (23ai Free over TCP) + run-on-VM local stage (test binary executed on the VM over SSH) | `CI_ORA_WIN_TEST_PASSWORD`, `jenkins-oracle-win-ssh-key` |
-| `heavy/test-system-mk-oracle` | `test-system-mk-oracle.groovy` | `make test-system-mk-oracle` — the pytest suite in `tests/system/mk_oracle/` incl. the legacy-vs-new comparison test; consumes the `mk-oracle.rhel8` binary built by `builders/build-cmk-package-mk-oracle-k8s` | Docker Oracle Free (ephemeral, Docker-in-Docker)                                                                    | none (DB credentials are container-local)                |
+| Job                           | Definition                     | Runs                                                                                                                                                                                                   | System                                                                                                              | Credentials                                              |
+| ----------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `heavy/winagt-test-mk-oracle` | `winagt-test-mk-oracle.groovy` | `run.cmd --component-tests` on a Windows build node                                                                                                                                                    | ORACLE-WIN-CI: network stage (23ai Free over TCP) + run-on-VM local stage (test binary executed on the VM over SSH) | `CI_ORA_WIN_TEST_PASSWORD`, `jenkins-oracle-win-ssh-key` |
+| `heavy/test-system-mk-oracle` | `test-system-mk-oracle.groovy` | `make test-system-mk-oracle` — the pytest suite in `tests/system/mk_oracle/` incl. the legacy-vs-new comparison test; builds the `//packages/mk-oracle` binary hermetically in its own build container | Docker Oracle Free (ephemeral, Docker-in-Docker)                                                                    | none (DB credentials are container-local)                |
 
 ## Stage 3 — nightly / weekly build chain (per edition)
 
@@ -98,10 +115,9 @@ use case, weekends = `weekly`), around 02:00–03:00.
 
 | Job / stage                                   | Definition                                                                                                                                                            | Runs                                                                                                                                                                                                                                                             | System                           | Credentials                                                                                       |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `builders/test-component-mk-oracle`           | `test-component-mk-oracle.groovy` — chain stage "Component tests for mk-oracle", **ultimatemt edition only** (plugin is edition-independent, one run saves resources) | builds the `test_ora_*_test` binaries via `builders/build-cmk-package-mk-oracle-k8s` (almalinux-8 Bazel), copies them to the Rocky VM over SSH, executes them **on** the VM (`run --remote-host`) — the Linux local-execution model                              | oracle-rocky-ci (SSH + local DB) | `jenkins-oracle-ssh-key`, `CI_ORA_TEST_PASSWORD`, env `CI_ORA2_DB_TEST_SERVER`                    |
+| `builders/test-component-mk-oracle`           | `test-component-mk-oracle.groovy` — chain stage "Component tests for mk-oracle", **ultimatemt edition only** (plugin is edition-independent, one run saves resources) | builds the `test_ora_*_test` binaries hermetically with Bazel, copies them to the Rocky VM over SSH, executes them **on** the VM (`run --remote-host`) — the Linux local-execution model                                                                         | oracle-rocky-ci (SSH + local DB) | `jenkins-oracle-ssh-key`, `CI_ORA_TEST_PASSWORD`, env `CI_ORA2_DB_TEST_SERVER`                    |
 | `builders/build-mk-oracle-on-aix-and-solaris` | `build-mk-oracle-on-aix-and-solaris.groovy`                                                                                                                           | **build + unit tests** (`ssh-run-ci` runs `run -bu`; no DB-dependent tests), archives `mk-oracle.aix` / `mk-oracle.solaris`; post-build smoke tests are planned ([CMK-35442](https://jira.lan.tribe29.com/browse/CMK-35442))                                     | AIX + Solaris nodes (SSH)        | `jenkins-aix-build-ssh-key`, known-hosts files, `oracle_test_db_user_password` (unused for tests) |
 | `winagt-build`                                | `winagt-build.groovy` → `run.cmd --all --skip-sql-test --sign…`                                                                                                       | signed Windows agent; mk-oracle is **built only** (`--skip-sql-test` → `run.cmd --build`: compile, no unit or DB tests — build/test separation per [CMK-30036](https://jira.lan.tribe29.com/browse/CMK-30036); the agent's own unit tests still run in this job) | —                                | `CI_ORA_TEST_PASSWORD` bound but unused for tests                                                 |
-| `builders/build-cmk-package-mk-oracle-k8s`    | parameterised generic package job (`utils/package_helper.groovy`)                                                                                                     | produces the shipping Linux binary (`mk-oracle.rhel8`, via `bazel build mk-oracle` on almalinux-8) and, for test jobs, the external test binaries (`test_ora_no_db_test`, `test_ora_discovery_test`, `test_ora_with_db_test`)                                    | build container                  | none                                                                                              |
 
 Distro/package builds (`build-cmk-deliverables` etc.) consume the mk-oracle
 artifacts via `package_helper.provide_agent_binaries` — build surface only, no
@@ -138,6 +154,9 @@ cover:
 | `builders/test-component-mk-oracle`           | daily ~03:00 (+ on-demand re-runs)           | green        |
 | `builders/build-mk-oracle-on-aix-and-solaris` | ~2/day (nightly chains + on demand)          | green        |
 | `winagt-build`                                | several/day                                  | green        |
+
+The per-change CV triggering added by CMK-38578 (see stage 1) postdates this
+snapshot and is therefore not reflected here.
 
 ## Known gaps / TODO
 

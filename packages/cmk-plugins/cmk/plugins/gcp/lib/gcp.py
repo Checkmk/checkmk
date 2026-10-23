@@ -287,12 +287,13 @@ def generic_check(
 ) -> CheckResult:
     for metric_name, metric_spec in metrics.items():
         value = get_value(timeseries, metric_spec.extraction)
+        levels_upper: tuple[float, float] | dict[str, object] | None
         if metric_spec.params:
             levels_upper = metric_spec.params.level_extractor(params, metric_name)
         else:
             levels_upper = params[metric_name]
         if isinstance(levels_upper, dict):
-            yield from check_levels_predictive(  # type: ignore[unreachable]
+            yield from check_levels_predictive(
                 value,
                 metric_name=metric_name,
                 render_func=metric_spec.display.render_func,

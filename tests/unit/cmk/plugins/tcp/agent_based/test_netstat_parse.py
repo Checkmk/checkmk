@@ -340,3 +340,62 @@ def test_parse_connection_state_normalizes_dashes(
 def test_parse_connection_state_raises_on_unknown_state() -> None:
     with pytest.raises(ValueError, match="Unknown connection state 'NOPE'"):
         parse_connection_state("NOPE")
+
+
+@pytest.mark.parametrize(
+    "string_table",
+    [
+        pytest.param(
+            [
+                ["udp", "UNCONN", "0", "0", "10.0.0.1:53", "10.0.0.2:*"],
+                ["No", "updates", "pending", "for", "installation"],
+            ],
+            id="five_fields_after_connection",
+        ),
+        pytest.param(
+            [
+                ["udp", "UNCONN", "0", "0", "10.0.0.1:53", "10.0.0.2:*"],
+                ["Found", "3", "pending", "updates", "now"],
+            ],
+            id="five_fields_numeric_second_token_after_connection",
+        ),
+        pytest.param(
+            [
+                ["udp", "UNCONN", "0", "0", "10.0.0.1:53", "10.0.0.2:*"],
+                ["Some", "text", "here", "now"],
+            ],
+            id="four_fields_after_connection",
+        ),
+        pytest.param(
+            [
+                ["Some", "text", "here", "now"],
+                ["udp", "UNCONN", "0", "0", "10.0.0.1:53", "10.0.0.2:*"],
+            ],
+            id="four_fields_before_connection",
+        ),
+        pytest.param(
+            [
+                ["udp", "UNCONN", "0", "0", "10.0.0.1:53", "10.0.0.2:*"],
+                ["Update", "found", "at", "1.2.3", "12:00", "today"],
+            ],
+            id="six_fields_unknown_protocol",
+        ),
+        pytest.param(
+            [
+                ["Update", "1.2.3", "found", "at", "12:00", "today"],
+                ["Found", "3", "updates", "for", "1.2.3", "today"],
+                ["udp", "UNCONN", "0", "0", "10.0.0.1:53", "10.0.0.2:*"],
+            ],
+            id="six_fields_foreign_line_before_ss_connection",
+        ),
+    ],
+)
+def test_parse_netstat_ignores_foreign_line(string_table: StringTable) -> None:
+    assert parse_netstat(string_table) == [
+        Connection(
+            proto="UDP",
+            local_address=SplitIP("10.0.0.1", "53"),
+            remote_address=SplitIP("10.0.0.2", "*"),
+            state=ConnectionState.LISTENING,
+        )
+    ]

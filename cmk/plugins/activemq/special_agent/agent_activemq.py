@@ -11,14 +11,15 @@ import argparse
 import sys
 import xml.etree.ElementTree as ET
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from typing import Literal
 from urllib.parse import urljoin
 
 from requests import Response, Session
 from requests.auth import HTTPBasicAuth
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import (
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1 import (
     HostnameValidationAdapter,
     report_agent_crashes,
     vcrtrace,
@@ -170,7 +171,7 @@ def agent_activemq_main(args: argparse.Namespace) -> int:
 
     try:
         response = session.get("queues.jsp")
-        if response.status_code == 401:
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
             raise Exception("Unauthorized")
 
         xml = response.text

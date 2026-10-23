@@ -1,0 +1,776 @@
+<!--
+Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+<script setup lang="ts">
+import usei18n from 'cmk-ui-library/lib/i18n'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+
+import HoverCard from '@/maps/map/components/HoverCard.vue'
+import HoverCardHeadline from '@/maps/map/components/HoverCardHeadline.vue'
+import HoverPillRow, { type HoverPill } from '@/maps/map/components/HoverPillRow.vue'
+import { useMetricInfo } from '@/maps/map/composables/useMetricInfo'
+import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
+import { displayRows, perfometerCaption } from '@/maps/map/composables/usePerfometer'
+import { useMapsApis } from '@/maps/services/context'
+import type { MapElement, ObjectState, ServicesSummary } from '@/maps/types/api'
+import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
+import {
+  buildHostStateViewUrl,
+  buildServiceStateViewUrl,
+  summarySubject
+} from '@/maps/utils/mapNavigation'
+import {
+  VISUAL_ONLY_TYPES,
+  getEffectiveObjectType,
+  getMapElementIdentifier
+} from '@/maps/utils/naming'
+import { usePointerOverlayStyle } from '@/maps/utils/overlayFrame'
+import { type PerfMetric, parsePerfData, utilColor, utilPercent } from '@/maps/utils/perf'
+import { sanitizeTemplateHtml } from '@/maps/utils/sanitize'
+import { interpolateTemplate } from '@/maps/utils/template'
+import { formatRelativeDuration, formatRelativeFuture } from '@/maps/utils/time'
+
+const props = defineProps<{
+  object: MapElement
+  state: ObjectState | undefined
+  x: number
+  y: number
+  template?: string | null
+  connectionId?: string | null
+  // Checkmk GUI base — makes the service-state pills clickable links into
+  // the filtered allservices view. Omit (standalone) for plain pills.
+  checkmkUrl?: string | null
+  // Bounding rect of the hovered icon (in viewport coords). When the tooltip
+  // has to flip to avoid overflow we anchor the flipped position at this
+  // rect's edges so the tooltip never lands on top of the icon.
+  anchorRect?: HoverAnchorRect | null
+}>()
+
+// Drives the close-grace in the host views (see ``useHoverGrace``). Emitted
+// from mouseenter, NOT pointerenter: pointer events fire first, so a
+// pointerenter-cancel would run before the object's mouseleave schedules the
+// close and the timer would survive.
+const emit = defineEmits<{
+  'card-enter': []
+  'card-leave': []
+}>()
+
+const pinned = ref(false)
+function onCardEnter() {
+  pinned.value = true
+  emit('card-enter')
+}
+function onCardLeave() {
+  pinned.value = false
+  emit('card-leave')
+}
+
+const { _t } = usei18n()
+const { objects } = useMapsApis()
+
+// ``pending`` hides the raw perf_data fallback while the CMK perfometer is
+// still loading, so the tooltip does not flicker between two bar styles.
+const isServiceLinked = computed(
+  () =>
+    props.object.type === 'service' ||
+    ((props.object.type === 'line' || props.object.type === 'graph') &&
+      !!props.object.service_description)
+)
+const { info: cmkMetricInfo, pending: cmkPerfometerPending } = useMetricInfo({
+  connectionId: () => props.connectionId,
+  hostName: () => props.object.host_name,
+  serviceDescription: () => props.object.service_description,
+  perfData: () => props.state?.perf_data,
+  checkCommand: () => props.state?.check_command,
+  enabled: () =>
+    isServiceLinked.value &&
+    // No perfdata to resolve when the service doesn't exist or we're locked out.
+    props.state?.state !== 'NOT_FOUND' &&
+    props.state?.state !== 'NO_PERMISSION'
+})
+const cmkPerfometer = computed(() => cmkMetricInfo.value?.perfometer ?? null)
+
+// Member host names for a (non-bundle) dyngroup, fetched lazily so its pills
+// can deep-link to a host_regex-filtered Checkmk view. Bundles already carry
+// bundle_hosts, so they skip this.
+const dyngroupMemberHosts = ref<string[] | null>(null)
+
+// Where the card opens and what it steps around when it has to flip. Frozen
+// while the pointer is on the card: the parent keeps emitting hover
+// coordinates, which would yank the card from under the cursor mid-click.
+const opensAt = ref({ x: props.x, y: props.y, around: props.anchorRect ?? null })
+watch(
+  () => [props.x, props.y, props.anchorRect],
+  () => {
+    if (!pinned.value) {
+      opensAt.value = { x: props.x, y: props.y, around: props.anchorRect ?? null }
+    }
+  }
+)
+
+const rootEl = ref<HTMLDivElement | null>(null)
+const positionStyle = usePointerOverlayStyle(
+  rootEl,
+  () => opensAt.value,
+  () => opensAt.value.around
+)
+
+onMounted(() => {
+  if (
+    props.object.type === 'dyngroup' &&
+    !props.object.bundle_hosts?.length &&
+    props.object.object_filter &&
+    props.connectionId &&
+    props.checkmkUrl
+  ) {
+    objects
+      .fetchDyngroupMembers(props.object.object_types ?? 'host', props.object.object_filter)
+      .then((rows) => {
+        dyngroupMemberHosts.value = [...new Set(rows.map((r) => r.host).filter(Boolean))]
+      })
+      .catch(() => {})
+  }
+})
+
+const renderedTemplate = computed(() => {
+  if (!props.template) {
+    return null
+  }
+  const html = interpolateTemplate(props.template, props.object, props.state)
+  return sanitizeTemplateHtml(html)
+})
+
+const displayName = computed(() => getMapElementIdentifier(props.object) ?? '')
+
+const hoverTypeLabel = computed(() => objectTypeLabel(getEffectiveObjectType(props.object), _t))
+
+const hasMonitoring = computed(() => {
+  // A line linked to a host/service is not purely decorative — show its state.
+  if (props.object.type === 'line') {
+    return !!(props.object.host_name || props.object.service_description)
+  }
+  return !(VISUAL_ONLY_TYPES as readonly string[]).includes(props.object.type)
+})
+
+const isNoPermission = computed(() => props.state?.state === 'NO_PERMISSION')
+const isNotFound = computed(() => props.state?.state === 'NOT_FOUND')
+
+const STATE_TEXT: Record<string, string> = {
+  UP: 'maps-hover-menu__state--ok',
+  OK: 'maps-hover-menu__state--ok',
+  DOWN: 'maps-hover-menu__state--down',
+  CRITICAL: 'maps-hover-menu__state--down',
+  UNREACHABLE: 'maps-hover-menu__state--unknown',
+  UNKNOWN: 'maps-hover-menu__state--unknown',
+  WARNING: 'maps-hover-menu__state--warn',
+  PENDING: 'maps-hover-menu__state--pending'
+}
+
+const dotState = computed(() => (hasMonitoring.value ? (props.state?.state ?? 'PENDING') : null))
+const stateTextColor = computed(
+  () => STATE_TEXT[props.state?.state ?? 'PENDING'] ?? 'maps-hover-menu__state--pending'
+)
+
+const subtitleText = computed(() => {
+  const parts: string[] = [hoverTypeLabel.value]
+  const seen = new Set<string>([displayName.value])
+  const push = (raw: string | undefined | null, prefix = '') => {
+    const v = raw?.trim()
+    if (!v || seen.has(v)) {
+      return
+    }
+    seen.add(v)
+    parts.push(prefix ? `${prefix}${v}` : v)
+  }
+  // alias and address help identify the host beyond the (possibly customised)
+  // displayName; site is shown last as a "@site" suffix so it reads naturally
+  // ("host · 10.0.4.12 · @eu_west").
+  push(props.state?.alias)
+  push(props.state?.address)
+  push(props.state?.site_id, '@')
+  return parts.join(' · ')
+})
+
+// Reactive clock so "since X" / "next check in X" tick down while the tooltip
+// stays open. Driven by a 1-Hz interval that lives only as long as the
+// component is mounted, so closed tooltips don't keep timers alive.
+const nowMs = ref(Date.now())
+let _tick: ReturnType<typeof setInterval> | null = null
+onMounted(() => {
+  _tick = setInterval(() => {
+    nowMs.value = Date.now()
+  }, 1000)
+})
+onUnmounted(() => {
+  if (_tick) {
+    clearInterval(_tick)
+  }
+  _tick = null
+})
+
+const attemptsBadge = computed(() => {
+  const cur = props.state?.current_attempt ?? 0
+  const max = props.state?.max_attempts ?? 0
+  if (!cur || !max) {
+    return ''
+  }
+  // Steady-state HARD checks don't need to advertise "1/3" — show only when
+  // there's something interesting (SOFT progression or non-first attempt).
+  if (props.state?.state_type === 'SOFT' || cur > 1) {
+    return `${props.state?.state_type ?? ''} ${cur}/${max}`.trim()
+  }
+  return ''
+})
+
+const stateDuration = computed(() =>
+  formatRelativeDuration(props.state?.last_state_change, nowMs.value)
+)
+
+// SOFT-state escalation gets an amber attention cue.
+const attemptsCls = computed(() =>
+  props.state?.state_type === 'SOFT' ? 'maps-hover-menu__attempts--soft' : ''
+)
+
+interface NextCheckText {
+  text: string
+  cls: string
+}
+// CMC's check scheduling can make `next_check` lag behind "now" by a
+// second or two even when the check is healthy. Suppress the "overdue"
+// label until the LAST check is itself stale by this many seconds.
+const OVERDUE_GRACE_SECONDS = 60
+const nextCheckText = computed((): NextCheckText | null => {
+  const ts = props.state?.next_check
+  if (!ts) {
+    return null
+  }
+  const future = formatRelativeFuture(ts, nowMs.value)
+  if (future) {
+    return {
+      text: _t('next check in %{duration}', { duration: future }),
+      cls: ''
+    }
+  }
+  // next_check is in the past, which on its own means nothing (see
+  // OVERDUE_GRACE_SECONDS) — only a stale last_check makes it overdue.
+  const lastCheck = props.state?.last_check
+  const sinceLastCheckSec =
+    lastCheck && lastCheck > 0 ? Math.floor(nowMs.value / 1000 - lastCheck) : Infinity
+  if (sinceLastCheckSec < OVERDUE_GRACE_SECONDS) {
+    return null
+  }
+  const overdue = formatRelativeDuration(ts, nowMs.value)
+  if (!overdue) {
+    return null
+  }
+  return {
+    text: _t('check overdue by %{duration}', { duration: overdue }),
+    cls: 'maps-hover-menu__next-check--overdue'
+  }
+})
+
+interface PillRow {
+  label: string
+  pills: HoverPill[]
+}
+
+const dyngroupHostSet = computed<string[] | null>(() =>
+  props.object.type === 'dyngroup'
+    ? props.object.bundle_hosts?.length
+      ? props.object.bundle_hosts
+      : dyngroupMemberHosts.value
+    : null
+)
+
+// Severity-descending, so the worst state reads first.
+function buildPills(summary: ServicesSummary, kind: 'hosts' | 'services'): HoverPill[] {
+  const hosts = dyngroupHostSet.value
+  const linkFor = (state: string | null): string | null => {
+    if (!state || !props.checkmkUrl) {
+      return null
+    }
+    if (kind === 'hosts') {
+      return props.object.type === 'dyngroup' && hosts?.length
+        ? buildHostStateViewUrl(props.checkmkUrl, hosts, state)
+        : null
+    }
+    if (props.object.type === 'host') {
+      return buildServiceStateViewUrl(props.checkmkUrl, { host: props.object.host_name }, state)
+    }
+    if (props.object.type === 'dyngroup' && hosts?.length) {
+      return buildServiceStateViewUrl(props.checkmkUrl, { hosts }, state)
+    }
+    return null
+  }
+  const defs =
+    kind === 'hosts'
+      ? ([
+          { key: 'critical', label: 'DOWN', tone: 'crit', state: 'DOWN' },
+          { key: 'unknown', label: 'UNREACH', tone: 'unknown', state: 'UNREACHABLE' },
+          { key: 'pending', label: 'PEND', tone: 'pending', state: null },
+          { key: 'ok', label: 'UP', tone: 'ok', state: 'UP' }
+        ] as const)
+      : ([
+          { key: 'critical', label: 'CRIT', tone: 'crit', state: 'CRITICAL' },
+          { key: 'unknown', label: 'UNKN', tone: 'unknown', state: 'UNKNOWN' },
+          { key: 'warning', label: 'WARN', tone: 'warn', state: 'WARNING' },
+          { key: 'pending', label: 'PEND', tone: 'pending', state: 'PENDING' },
+          { key: 'ok', label: 'OK', tone: 'ok', state: 'OK' }
+        ] as const)
+  return defs
+    .filter((d) => (summary[d.key] ?? 0) > 0)
+    .map((d) => ({
+      label: d.label,
+      count: summary[d.key] ?? 0,
+      tone: d.tone,
+      url: linkFor(d.state)
+    }))
+}
+
+// Host dyngroups show two rows (member hosts + their services); everything else
+// shows one. ``services_summary`` holds host states for host groups (labelled
+// accordingly), services otherwise.
+const pillRows = computed<PillRow[]>(() => {
+  if (!['host', 'hostgroup', 'servicegroup', 'dyngroup'].includes(props.object.type)) {
+    return []
+  }
+  const rows: PillRow[] = []
+  const hs = props.state?.hosts_summary
+  if (hs) {
+    const pills = buildPills(hs, 'hosts')
+    if (pills.length) {
+      rows.push({ label: _t('Hosts'), pills })
+    }
+  }
+  const ss = props.state?.services_summary
+  if (ss) {
+    const kind = summarySubject(props.object)
+    const pills = buildPills(ss, kind)
+    if (pills.length) {
+      rows.push({ label: kind === 'hosts' ? _t('Hosts') : _t('Services'), pills })
+    }
+  }
+  return rows
+})
+
+const perfMetrics = computed((): PerfMetric[] => {
+  // Same reasoning as `isServiceLinked` above — only service-linked objects have perf data.
+  const showPerf =
+    props.object.type === 'service' ||
+    ((props.object.type === 'line' || props.object.type === 'graph') &&
+      !!props.object.service_description)
+  if (!showPerf) {
+    return []
+  }
+  return parsePerfData(props.state?.perf_data ?? '').slice(0, 4)
+})
+
+function fmtMetricValue(m: PerfMetric): string {
+  const v = Number.isInteger(m.value) ? String(m.value) : m.value.toFixed(2).replace(/\.?0+$/, '')
+  return `${v}${m.unit}`
+}
+</script>
+
+<template>
+  <div ref="rootEl" class="maps-hover-menu" :style="positionStyle">
+    <HoverCard @card-enter="onCardEnter" @card-leave="onCardLeave">
+      <!-- No permission: skip all templates and show only this -->
+      <div v-if="isNoPermission" class="maps-hover-menu__empty">
+        {{ _t('No permission') }}
+      </div>
+
+      <!-- NOT_FOUND: object referenced on the map doesn't exist in monitoring data. -->
+      <div v-else-if="isNotFound" class="maps-hover-menu__empty">
+        <div class="maps-hover-menu__empty-name">
+          {{ displayName }}
+        </div>
+        {{ _t('Not found in monitoring data') }}
+      </div>
+
+      <!-- Custom template — content is sanitized via sanitizeTemplateHtml before rendering -->
+      <!-- eslint-disable vue/no-v-html -->
+      <div
+        v-else-if="renderedTemplate"
+        class="maps-hover-menu__template"
+        v-html="renderedTemplate"
+      />
+      <!-- eslint-enable vue/no-v-html -->
+
+      <template v-else>
+        <HoverCardHeadline :name="displayName" :subtitle="subtitleText" :state="dotState">
+          <span
+            v-if="hasMonitoring && state"
+            class="maps-hover-menu__state"
+            :class="stateTextColor"
+          >
+            {{ state.state }}
+          </span>
+          <span v-if="hasMonitoring && state && stateDuration" class="maps-hover-menu__since">
+            {{ _t('since %{duration}', { duration: stateDuration }) }}
+          </span>
+        </HoverCardHeadline>
+
+        <template v-if="hasMonitoring">
+          <div v-if="state">
+            <div v-if="attemptsBadge" class="maps-hover-menu__attempts" :class="attemptsCls">
+              {{ attemptsBadge }}
+            </div>
+            <!-- Modifier badges (ACK / DOWNTIME / STALE / MUTED) — directly
+                             under the state so the operator sees "no action needed" or
+                             "I won't be paged" before scrolling to output/pills. -->
+            <div
+              v-if="
+                state.acknowledged ||
+                state.in_downtime ||
+                state.stale ||
+                state.notifications_enabled === false
+              "
+              class="maps-hover-menu__badges"
+            >
+              <span
+                v-if="state.acknowledged"
+                class="maps-hover-menu__badge maps-hover-menu__badge--warn"
+              >
+                <svg
+                  class="maps-hover-menu__badge-icon"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="3"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                {{ _t('ACK') }}
+              </span>
+              <span
+                v-if="state.in_downtime"
+                class="maps-hover-menu__badge maps-hover-menu__badge--downtime"
+              >
+                <svg class="maps-hover-menu__badge-icon" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                </svg>
+                {{ _t('DOWNTIME') }}
+              </span>
+              <span v-if="state.stale" class="maps-hover-menu__badge maps-hover-menu__badge--stale">
+                <svg
+                  class="maps-hover-menu__badge-icon"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                {{ _t('STALE') }}
+              </span>
+              <!-- Critical operator awareness: notifications disabled means
+                                 nobody gets paged when this host breaks. Don't let the
+                                 operator assume otherwise. -->
+              <span
+                v-if="state.notifications_enabled === false"
+                class="maps-hover-menu__badge maps-hover-menu__badge--warn"
+                :title="_t('Notifications disabled — alerts will not be sent for this host')"
+              >
+                <svg
+                  class="maps-hover-menu__badge-icon"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9.143 17.082a24.248 24.248 0 003.844.148m-3.844-.148a23.856 23.856 0 01-5.455-1.31 8.964 8.964 0 002.3-5.542m3.155 6.852a3 3 0 005.667 1.97m1.965-2.277L21 21M4.5 4.5l15 15"
+                  />
+                </svg>
+                {{ _t('MUTED') }}
+              </span>
+            </div>
+          </div>
+
+          <div v-if="state?.output" class="maps-hover-menu__output">
+            {{ state.output }}
+          </div>
+
+          <!-- State pills, one labelled row per summary (host dyngroups show
+                         both Hosts and Services); each pill deep-links to the
+                         matching filtered Checkmk view. -->
+          <HoverPillRow
+            v-for="row in pillRows"
+            :key="row.label"
+            :label="row.label"
+            :pills="row.pills"
+          />
+
+          <div v-if="cmkPerfometer" class="maps-hover-menu__perfometer">
+            <div class="maps-hover-menu__perfometer-label">
+              {{ perfometerCaption(cmkPerfometer) }}
+            </div>
+            <div
+              v-for="(row, ri) in displayRows(cmkPerfometer)"
+              :key="ri"
+              class="maps-hover-menu__perfometer-row"
+            >
+              <div
+                v-for="(seg, si) in row"
+                :key="si"
+                class="maps-hover-menu__perfometer-seg"
+                :style="{ width: `${seg.pct}%`, backgroundColor: seg.color }"
+              />
+            </div>
+          </div>
+
+          <!-- Fallback: simple perf_data bars — only when no CMK perfometer is on the way -->
+          <div
+            v-else-if="!cmkPerfometerPending && perfMetrics.length"
+            class="maps-hover-menu__metrics"
+          >
+            <template v-for="m in perfMetrics" :key="m.label">
+              <div class="maps-hover-menu__metric-head">
+                <span class="maps-hover-menu__metric-label">{{ m.label }}</span>
+                <span class="maps-hover-menu__metric-value">{{ fmtMetricValue(m) }}</span>
+              </div>
+              <div v-if="utilPercent(m) > 0" class="maps-hover-menu__metric-bar">
+                <div
+                  class="maps-hover-menu__metric-fill"
+                  :style="{
+                    width: `${utilPercent(m)}%`,
+                    backgroundColor: utilColor(utilPercent(m))
+                  }"
+                />
+              </div>
+            </template>
+          </div>
+
+          <div v-if="nextCheckText" class="maps-hover-menu__next-check" :class="nextCheckText.cls">
+            {{ nextCheckText.text }}
+          </div>
+        </template>
+      </template>
+    </HoverCard>
+  </div>
+</template>
+
+<style scoped>
+.maps-hover-menu {
+  position: fixed;
+  z-index: 50;
+  width: max-content;
+  max-width: calc(100% - 16px);
+  pointer-events: none;
+}
+
+.maps-hover-menu__empty {
+  font-size: var(--font-size-normal);
+  line-height: 16px;
+  font-style: italic;
+  color: var(--font-color-dimmed);
+}
+
+.maps-hover-menu__empty-name {
+  margin-bottom: var(--dimension-3);
+  font-style: normal;
+  font-weight: var(--font-weight-bold);
+  color: var(--font-color);
+}
+
+.maps-hover-menu__template {
+  /* Holds author- and monitoring-driven markup: without paint containment a
+     purely cosmetic style (margin + size) still covers the map and eats clicks.
+     contain: paint clips descendant paint but not this box's own height, so a
+     tall child would still grow the card into a full-viewport overlay — the
+     max-height + overflow caps it. */
+  contain: paint;
+  max-height: 40vh;
+  overflow: auto;
+  font-size: var(--font-size-normal);
+  line-height: 16px;
+  color: var(--font-color);
+}
+
+.maps-hover-menu__state {
+  flex-shrink: 0;
+  font-size: var(--font-size-normal);
+  line-height: 1.25;
+  font-weight: var(--font-weight-bold);
+}
+
+.maps-hover-menu__state--ok {
+  color: var(--status-text-color-success-bright);
+}
+
+.maps-hover-menu__state--down {
+  color: var(--status-text-color-error-bright);
+}
+
+.maps-hover-menu__state--unknown {
+  color: var(--status-text-color-unknown-bright);
+}
+
+.maps-hover-menu__state--warn {
+  color: var(--status-text-color-warning-bright);
+}
+
+.maps-hover-menu__state--pending {
+  color: var(--font-color-dimmed);
+}
+
+.maps-hover-menu__since {
+  flex-shrink: 0;
+  font-size: var(--font-size-small);
+  color: var(--font-color-dimmed);
+}
+
+.maps-hover-menu__attempts {
+  margin-top: var(--dimension-4);
+  font-size: var(--font-size-small);
+  color: var(--font-color-dimmed);
+}
+
+.maps-hover-menu__attempts--soft {
+  font-weight: var(--font-weight-bold);
+  color: var(--status-text-color-warning-bright);
+}
+
+.maps-hover-menu__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dimension-4);
+  margin-top: var(--dimension-4);
+}
+
+.maps-hover-menu__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dimension-3);
+  padding: var(--dimension-2) var(--dimension-4);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+  border-radius: 9999px;
+}
+
+.maps-hover-menu__badge--warn {
+  color: var(--status-text-color-warning-bright);
+  background: color-mix(in srgb, var(--color-warning) var(--status-tint-mix), transparent);
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--color-warning) var(--status-tint-border-mix), transparent);
+}
+
+.maps-hover-menu__badge--downtime {
+  color: var(--status-text-color-downtime);
+  background: color-mix(in srgb, var(--status-color-downtime) var(--status-tint-mix), transparent);
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--status-color-downtime) var(--status-tint-border-mix), transparent);
+}
+
+.maps-hover-menu__badge--stale {
+  color: var(--font-color-dimmed);
+  background: color-mix(in srgb, var(--color-state-pending) 20%, transparent);
+  box-shadow: 0 0 0 1px var(--default-border-color);
+}
+
+.maps-hover-menu__badge-icon {
+  width: 10px;
+  height: 10px;
+}
+
+.maps-hover-menu__output {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  margin-top: var(--dimension-5);
+  font-size: var(--font-size-normal);
+  line-height: 1.375;
+  color: var(--font-color-dimmed);
+  overflow-wrap: break-word;
+}
+
+.maps-hover-menu__perfometer {
+  margin-top: var(--dimension-5);
+}
+
+.maps-hover-menu__perfometer > * + * {
+  margin-top: var(--dimension-3);
+}
+
+.maps-hover-menu__perfometer-label {
+  margin-bottom: var(--dimension-3);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--font-color);
+}
+
+.maps-hover-menu__perfometer-row {
+  display: flex;
+  overflow: hidden;
+  height: 12px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 0 0 1px var(--default-border-color);
+}
+
+.maps-hover-menu__perfometer-seg {
+  height: 100%;
+  transition: all 0.15s;
+}
+
+.maps-hover-menu__metrics {
+  margin-top: var(--dimension-5);
+}
+
+.maps-hover-menu__metrics > * + * {
+  margin-top: var(--dimension-4);
+}
+
+.maps-hover-menu__metric-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--dimension-3);
+  font-size: var(--font-size-small);
+}
+
+.maps-hover-menu__metric-label {
+  overflow: hidden;
+  color: var(--font-color-dimmed);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.maps-hover-menu__metric-value {
+  flex-shrink: 0;
+  font-weight: var(--font-weight-medium);
+  color: var(--font-color);
+}
+
+.maps-hover-menu__metric-bar {
+  overflow: hidden;
+  height: 6px;
+  margin-top: -2px;
+  background: var(--input-hover-bg-color);
+  border-radius: 9999px;
+}
+
+.maps-hover-menu__metric-fill {
+  height: 100%;
+  border-radius: 9999px;
+}
+
+.maps-hover-menu__next-check {
+  margin-top: var(--dimension-5);
+  font-size: var(--font-size-small);
+  color: var(--font-color-dimmed);
+}
+
+.maps-hover-menu__next-check--overdue {
+  color: var(--status-text-color-warning-bright);
+}
+</style>

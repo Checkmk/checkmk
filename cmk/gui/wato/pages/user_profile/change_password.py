@@ -22,15 +22,14 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
-from cmk.gui.permissions import permission_registry
 from cmk.gui.session import session
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.userdb import get_connection, get_user_attributes, UserAttribute
 from cmk.gui.userdb.htpasswd import hash_password
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
+from cmk.gui.verify_requirements import verify_requirements
 from cmk.gui.wato.pages._user_security_message import (
     SecurityNotificationEvent,
     send_security_message,
@@ -46,7 +45,6 @@ from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.urls import makeuri_contextless
 
 from .page_menu import user_profile_page_menu
-from .verify_requirements import verify_requirements
 
 
 def register(edition: Edition, page_registry: PageRegistry) -> None:
@@ -114,6 +112,7 @@ class UserChangePasswordPage(Page):
                 config.user_connections,
                 now,
                 config.default_user_profile,
+                time_based_lock_out_enabled=False,
                 pprint_value=config.wato_pprint_config,
                 debug=config.debug,
             )
@@ -190,7 +189,7 @@ class UserChangePasswordPage(Page):
     @override
     def page(self, ctx: PageContext) -> None:
         verify_requirements(
-            UserPermissions.from_config(ctx.config, permission_registry),
+            ctx.user_permissions,
             "general.change_password",
             ctx.config.wato_enabled,
         )

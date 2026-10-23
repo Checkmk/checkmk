@@ -29,24 +29,33 @@ const propsCva = cva('', {
       fill: 'cmk-tag--variant-fill',
       outline: 'cmk-tag--variant-outline',
       weighted: 'cmk-tag--variant-weighted'
+    },
+    spacing: {
+      inline: 'cmk-tag--spacing-inline',
+      none: ''
     }
   },
   defaultVariants: {
     size: 'medium',
     color: 'default',
-    variant: 'outline'
+    variant: 'outline',
+    spacing: 'inline'
   }
 })
 
 export type Sizes = VariantProps<typeof propsCva>['size']
 export type Colors = VariantProps<typeof propsCva>['color']
 export type Variants = VariantProps<typeof propsCva>['variant']
+export type Spacings = VariantProps<typeof propsCva>['spacing']
 
 export interface CmkTagProps {
   size?: Sizes
   color?: Colors
   variant?: Variants
+  spacing?: Spacings
   content: TranslatedString
+  /** Set in bold after the content, as the value of a `key: value` label. */
+  value?: string | undefined
   /** Native tooltip, e.g. the full text when a consumer clips the tag to its column. */
   title?: string
 }
@@ -55,8 +64,11 @@ defineProps<CmkTagProps>()
 </script>
 
 <template>
-  <span class="cmk-tag" :class="propsCva({ size, color, variant })" :title="title">
-    {{ content }}
+  <span class="cmk-tag" :class="propsCva({ size, color, variant, spacing })" :title="title">
+    <template v-if="value !== undefined"
+      >{{ content }}: <strong>{{ value }}</strong></template
+    >
+    <template v-else>{{ content }}</template>
   </span>
 </template>
 
@@ -64,6 +76,9 @@ defineProps<CmkTagProps>()
 .cmk-tag {
   border-radius: 4px;
   text-align: center;
+}
+
+.cmk-tag--spacing-inline {
   margin: 0 4px;
 }
 

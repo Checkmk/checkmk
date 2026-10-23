@@ -6,23 +6,18 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.mcafee.libgateway import DETECT_EMAIL_GATEWAY
 
 
 def parse_mcafee_emailgateway_spam_mcafee(string_table: StringTable) -> StringTable | None:
     return string_table or None
-
-
-def discover_mcafee_emailgateway_spam_mcafee(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_mcafee_emailgateway_spam_mcafee(section: StringTable) -> CheckResult:
@@ -47,6 +42,6 @@ snmp_section_mcafee_emailgateway_spam_mcafee = SimpleSNMPSection(
 check_plugin_mcafee_emailgateway_spam_mcafee = CheckPlugin(
     name="mcafee_emailgateway_spam_mcafee",
     service_name="Spam McAfee",
-    discovery_function=discover_mcafee_emailgateway_spam_mcafee,
+    discovery_function=discover_one_service,
     check_function=check_mcafee_emailgateway_spam_mcafee,
 )

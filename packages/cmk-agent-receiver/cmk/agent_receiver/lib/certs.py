@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from functools import cache
+from pathlib import Path
 from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
@@ -12,6 +13,8 @@ from cmk.agent_receiver.lib.config import get_config
 from cmk.crypto.certificate import (
     Certificate,
     CertificatePEM,
+    CertificateRevocationList,
+    CertificateRevocationListPEM,
     CertificateSigningRequest,
     CertificateSigningRequestPEM,
     CertificateWithPrivateKey,
@@ -24,14 +27,29 @@ def site_root_certificate() -> Certificate:
     return Certificate.load_pem(CertificatePEM(config.site_ca_path.read_bytes()))
 
 
+def is_revoked(crl_path: Path, serial_number: int) -> bool:
+    try:
+        # Read on every call, so that a revocation takes effect without a restart.
+        crl_pem = crl_path.read_bytes()
+    except FileNotFoundError:
+        return False  # a CA that never revoked a certificate has no list
+    return CertificateRevocationList.load_pem(CertificateRevocationListPEM(crl_pem)).is_revoked(
+        serial_number
+    )
+
+
 def sign_csr(
     csr: CertificateSigningRequest,
     lifetime_in_months: int,
     keypair: CertificateWithPrivateKey,
+    cert_log: Path,
 ) -> Certificate:
     expiry = relativedelta(months=lifetime_in_months)
     return keypair.sign_csr(
-        csr, expiry, SubjectAlternativeNames([SAN.dns_name(extract_cn_from_csr(csr))])
+        csr,
+        expiry,
+        SubjectAlternativeNames([SAN.dns_name(extract_cn_from_csr(csr))]),
+        cert_log=cert_log,
     )
 
 

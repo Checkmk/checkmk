@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from http import HTTPStatus
 from unittest.mock import MagicMock
 
 import pytest
@@ -26,7 +27,7 @@ from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.gui.watolib.sites import SitesConfigFile
 from cmk.livestatus_client import SAMLAuthenticationEntry, SiteConfiguration
 from cmk.utils import paths
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry, Response
 
 DOMAIN_TYPE = "site_connection"
 
@@ -56,13 +57,35 @@ def test_get_a_site_connection(clients: ClientRegistry) -> None:
 
 
 def test_get_site_connection_that_doesnt_exist(clients: ClientRegistry) -> None:
-    clients.SiteManagement.get(site_id="NON_SITE", expect_ok=False).assert_status_code(404)
+    clients.SiteManagement.get(site_id="NON_SITE", expect_ok=False).assert_status_code(
+        HTTPStatus.NOT_FOUND
+    )
 
 
 def test_get_site_connections(clients: ClientRegistry) -> None:
     resp = clients.SiteManagement.get_all()
     assert resp.json["domainType"] == DOMAIN_TYPE
     assert resp.json["value"][0]["id"] == "NO_SITE"
+
+
+def test_get_site_connections_expose_authentication_connections(
+    clients: ClientRegistry,
+) -> None:
+    """A listed site carries `authentication_connections` too (werk 18500).
+
+    The werk names the collection endpoint as gaining the key, but
+    `test_get_site_connections` only pins the envelope -- nothing asserted that a
+    listed site actually carries the key.
+    """
+    config, site_id = _default_config_with_site_id()
+    config["configuration_connection"]["authentication_connections"] = {"type": "disabled"}
+    clients.SiteManagement.create(site_config=config)
+
+    listed = {site["id"]: site for site in clients.SiteManagement.get_all().json["value"]}
+    assert site_id in listed, listed.keys()
+    assert listed[site_id]["extensions"]["configuration_connection"][
+        "authentication_connections"
+    ] == {"type": "disabled"}
 
 
 def test_login_replication_enabled(
@@ -151,7 +174,7 @@ def test_login_replication_disabled(
     # TODO fix this.  We shouldn't return a 500 on login failure
     clients.SiteManagement.login(
         site_id=remote_site_id, username="cmkadmin", password="cmk", expect_ok=False
-    ).assert_status_code(500)
+    ).assert_status_code(HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
 def test_login_site_doesnt_exist(
@@ -164,7 +187,7 @@ def test_login_site_doesnt_exist(
         username="cmkadmin",
         password="cmk",
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_login_site_problem(
@@ -186,7 +209,7 @@ def test_login_site_problem(
         username="cmkadmin",
         password="cmk",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_logout_site(clients: ClientRegistry) -> None:
@@ -197,7 +220,7 @@ def test_logout_site_that_doesnt_exist(clients: ClientRegistry) -> None:
     clients.SiteManagement.logout(
         site_id="NO_EXIST_SITE",
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_delete_site_connection(clients: ClientRegistry) -> None:
@@ -223,7 +246,7 @@ def test_delete_site_connection_problem(
     clients.SiteManagement.delete(
         site_id=site_id,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_create_site_connection(clients: ClientRegistry) -> None:
@@ -261,7 +284,7 @@ def test_create_site_connection_with_invalid_site_id(
     clients.SiteManagement.create(
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_create_site_connection_that_already_exists(
@@ -271,7 +294,7 @@ def test_create_site_connection_that_already_exists(
     clients.SiteManagement.create(
         site_config=_default_config(),
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 keys_to_remove = ("basic_settings", "status_connection", "configuration_connection")
@@ -290,7 +313,59 @@ def test_create_site_connection_missing_config(
     clients.SiteManagement.create(
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
+AUTHENTICATION_CONNECTIONS_FIELD = (
+    "body.site_config.configuration_connection.authentication_connections"
+)
+
+
+def _assert_authentication_connections_missing(resp: Response) -> None:
+    fields = resp.json["fields"]
+    assert AUTHENTICATION_CONNECTIONS_FIELD in fields, fields
+    assert fields[AUTHENTICATION_CONNECTIONS_FIELD]["type"] == "missing", fields
+
+
+def test_create_site_connection_requires_authentication_connections(
+    clients: ClientRegistry,
+) -> None:
+    """`authentication_connections` is required with no default (werk 18500).
+
+    The site schema was changed in place rather than behind a new endpoint, so a
+    client written before the werk must be rejected rather than silently given a
+    default for which connections may log in on the site.
+    """
+    config = _default_config()
+    del config["configuration_connection"]["authentication_connections"]
+    _assert_authentication_connections_missing(
+        clients.SiteManagement.create(
+            site_config=config,
+            expect_ok=False,
+        ).assert_status_code(HTTPStatus.BAD_REQUEST)
+    )
+
+
+def test_update_site_connection_requires_authentication_connections(
+    clients: ClientRegistry,
+) -> None:
+    """`authentication_connections` is required with no default (werk 18500).
+
+    A PUT replaces the whole site config, so a client written before the werk
+    cannot omit `authentication_connections` and keep the site's stored value --
+    there is no partial-update path.
+    """
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+
+    del config["configuration_connection"]["authentication_connections"]
+    _assert_authentication_connections_missing(
+        clients.SiteManagement.update(
+            site_id=site_id,
+            site_config=config,
+            expect_ok=False,
+        ).assert_status_code(HTTPStatus.BAD_REQUEST)
+    )
 
 
 def test_create_then_get_site_connection(clients: ClientRegistry) -> None:
@@ -343,7 +418,7 @@ def test_update_site_connection_that_doesnt_exist(
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.update(
         site_id=site_id, site_config=config, expect_ok=False
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_update_site_connection_alias(clients: ClientRegistry) -> None:
@@ -434,7 +509,7 @@ def test_update_site_connection_status_connection_400(
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 proxy_test_data_200: list[Proxy] = [
@@ -584,7 +659,7 @@ def test_update_site_connection_proxy_400(
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_update_site_connection_user_sync(clients: ClientRegistry) -> None:
@@ -676,6 +751,27 @@ def test_update_site_connection_authentication_connections(clients: ClientRegist
     assert stored["authentication_connections"] == [("ldap", "LDAP_1")]
 
 
+def test_create_site_connection_authentication_connections_disabled(
+    clients: ClientRegistry,
+) -> None:
+    """`authentication_connections` can forbid LDAP and SAML login on a site (werk 18500).
+
+    The stored value has to stay the bare `"disabled"` string rather than an empty
+    list -- only that string resolves to no connection at all, which
+    tests/unit/cmk/gui/userdb/test_authentication_connections.py pins.
+    """
+    config, site_id = _default_config_with_site_id()
+    config["configuration_connection"]["authentication_connections"] = {"type": "disabled"}
+    clients.SiteManagement.create(site_config=config)
+
+    extensions = clients.SiteManagement.get(site_id=site_id).json["extensions"]
+    extensions.pop("logged_in", None)
+    assert extensions == config
+
+    stored = SitesConfigFile().load_for_reading()[SiteId(site_id)]
+    assert stored["authentication_connections"] == "disabled"
+
+
 @pytest.mark.parametrize(
     "authentication_connections",
     [
@@ -695,7 +791,7 @@ def test_update_site_connection_empty_authentication_connections_400(
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.fixture(name="saml_connection")
@@ -765,7 +861,7 @@ def test_update_site_connection_unknown_saml_authentication_connection_400(
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.usefixtures("saml_connection")
@@ -793,7 +889,7 @@ def test_update_site_connection_saml_authentication_connection_needs_global_perm
             "connections": [{"type": "saml", "connection_id": saml_id}],
         }
         resp = clients.SiteManagement.update(site_id=site_id, site_config=config, expect_ok=False)
-        resp.assert_status_code(403)
+        resp.assert_status_code(HTTPStatus.FORBIDDEN)
         details.append(resp.json["detail"])
     assert details[0] == details[1]
 
@@ -864,7 +960,7 @@ def test_update_site_connection_user_sync_no_permission_does_not_leak_ldap_exist
             "ldap_connections": [ldap_id],
         }
         resp = clients.SiteManagement.update(site_id=site_id, site_config=config, expect_ok=False)
-        resp.assert_status_code(403)
+        resp.assert_status_code(HTTPStatus.FORBIDDEN)
         details.append(resp.json["detail"])
     assert details[0] == details[1]
 
@@ -883,7 +979,7 @@ def test_update_site_connection_user_sync_with_ldap_connections_400(
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 config_cnx_test_data_200: list[ConfigurationConnection] = [
@@ -1017,7 +1113,7 @@ def test_update_configuration_connection_400(  # type: ignore[misc]
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_update_status_host_200(clients: ClientRegistry) -> None:
@@ -1049,7 +1145,7 @@ def test_update_status_host_400(clients: ClientRegistry, data: StatusHost) -> No
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 url_of_remote_site_test_data_200: list[str] = [
@@ -1094,7 +1190,7 @@ def test_update_url_of_remote_site_400(
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_update_url_prefix_200(clients: ClientRegistry) -> None:
@@ -1115,7 +1211,7 @@ def test_update_url_prefix_400(clients: ClientRegistry) -> None:
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_post_site_config_customer_field(clients: ClientRegistry) -> None:
@@ -1124,12 +1220,16 @@ def test_post_site_config_customer_field(clients: ClientRegistry) -> None:
         r = clients.SiteManagement.create(site_config=config)
         assert "customer" in r.json["extensions"]["basic_settings"]
         del config["basic_settings"]["customer"]
-        clients.SiteManagement.create(site_config=config, expect_ok=False).assert_status_code(400)
+        clients.SiteManagement.create(site_config=config, expect_ok=False).assert_status_code(
+            HTTPStatus.BAD_REQUEST
+        )
     else:
         r = clients.SiteManagement.create(site_config=config)
         assert "customer" not in r.json["extensions"]["basic_settings"]
         config["basic_settings"].update({"customer": "provider"})
-        clients.SiteManagement.create(site_config=config, expect_ok=False).assert_status_code(400)
+        clients.SiteManagement.create(site_config=config, expect_ok=False).assert_status_code(
+            HTTPStatus.BAD_REQUEST
+        )
 
 
 def test_validation_layer_min_config(clients: ClientRegistry) -> None:

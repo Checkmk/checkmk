@@ -20,13 +20,13 @@ import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 let postSpy: any
 
 beforeEach(() => {
-  document.body.innerHTML = '<div class="titlebar"></div>'
+  document.body.innerHTML = '<div class="titlebar"><div class="titlebar-main"></div></div>'
   postSpy = vi.spyOn(client, 'POST')
 })
 
 afterEach(() => {
-  vi.useRealTimers()
   vi.restoreAllMocks()
+  vi.useRealTimers()
   localStorage.clear()
   window.history.replaceState(null, '', '/monitor_all_hosts.py')
 })
@@ -46,20 +46,23 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
     num_services_unknown: 0,
     num_services_pending: 0,
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-1',
+    num_relations: 0,
     ...overrides
   }
 }
 
-function mockHosts(hosts: HostEntry[]): void {
+function mockHosts(hosts: HostEntry[], matched: number = hosts.length): void {
   postSpy.mockResolvedValue({
     data: {
       hosts,
-      meta: { limit: 1000, matched: hosts.length, total: hosts.length, fields: [] }
+      meta: { limit: 1000, matched, total: matched, fields: [] }
     },
     error: undefined,
     response: new Response()
   } as never)
 }
+
+const EXPORT_EVENT = 'cmk-monitoring-export'
 
 function renderApp(
   edition: MonitoringAllHostsApp['edition'],
@@ -71,6 +74,8 @@ function renderApp(
       site: 'local',
       sites: [{ id: 'local', alias: 'Local site' }],
       edition,
+      limit_tiers: [1000, 5000],
+      export_event: EXPORT_EVENT,
       ...overrides
     } satisfies MonitoringAllHostsApp
   })
@@ -100,6 +105,87 @@ test.each(['community', 'ultimatemt'] as const)(
     ])
   }
 )
+
+test('shows the listing as sorted by host name ascending before the user sorts', async () => {
+  mockHosts([makeHost()])
+  renderApp('community')
+
+  expect(await screen.findByRole('columnheader', { name: 'Host' })).toHaveAttribute(
+    'aria-sort',
+    'ascending'
+  )
+})
+
+test('asks for the hosts sorted by host name ascending before the user sorts', async () => {
+  mockHosts([makeHost()])
+  renderApp('community')
+
+  await vi.waitUntil(() => postSpy.mock.calls.length > 0)
+
+  expect(postSpy.mock.lastCall![1].body.sort).toEqual(['name:asc'])
+})
+
+test('extends the default sort by the State column when it is shift-clicked', async () => {
+  const user = userEvent.setup()
+  mockHosts([makeHost()])
+  renderApp('community')
+  const stateHeader = await screen.findByRole('button', { name: 'State' })
+
+  await user.keyboard('{Shift>}')
+  await user.click(stateHeader)
+  await user.keyboard('{/Shift}')
+
+  expect(postSpy.mock.lastCall![1].body.sort).toEqual(['name:asc', 'state:desc'])
+})
+
+const UNHANDLED_PROBLEMS_FILTER = {
+  type: 'and',
+  children: [
+    { type: 'condition', field: 'state', op: 'one_of', value: ['DOWN', 'UNREACHABLE'] },
+    { type: 'condition', field: 'acknowledged', op: 'eq', value: false },
+    { type: 'condition', field: 'in_downtime', op: 'eq', value: false }
+  ]
+}
+
+function openWithFilter(filter: object): void {
+  window.history.replaceState(
+    null,
+    '',
+    `/monitor_all_hosts.py?filter=${encodeURIComponent(JSON.stringify(filter))}`
+  )
+}
+
+test('asks for the hosts a link arrived filtered to with its one and only first request', async () => {
+  openWithFilter(UNHANDLED_PROBLEMS_FILTER)
+  mockHosts([makeHost()])
+  renderApp('community')
+
+  await screen.findByText('Total rows: 1')
+
+  expect(postSpy).toHaveBeenCalledTimes(1)
+  expect(postSpy.mock.lastCall![1].body.filter).toEqual(UNHANDLED_PROBLEMS_FILTER)
+})
+
+test('shows the unhandled-problems chip as active when a link arrived with its filter', async () => {
+  openWithFilter(UNHANDLED_PROBLEMS_FILTER)
+  mockHosts([makeHost()])
+  renderApp('community')
+
+  expect(await screen.findByRole('button', { name: 'Unhandled host problems' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+})
+
+test('resetting all filters drops the filter a link arrived with', async () => {
+  openWithFilter(UNHANDLED_PROBLEMS_FILTER)
+  mockHosts([makeHost()])
+  renderApp('community')
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Reset search and filters' }))
+
+  expect(postSpy.mock.lastCall![1].body.filter).toBeUndefined()
+})
 
 test('never asks for the customer, the API deriving it from the site', async () => {
   mockHosts([makeHost({ customer: 'Customer A' })])
@@ -229,4 +315,115 @@ test('leaves the listing alone after a command the site refused', async () => {
   await vi.advanceTimersByTimeAsync(ACTION_REFRESH_DELAY_MS)
 
   expect(listingReads()).toBe(1)
+})
+
+test('typing letters focuses the first host name containing them', async () => {
+  // The rows only render once the virtualiser sees a viewport.
+  const offsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
+  const offsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+  Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
+  Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
+  try {
+    mockHosts([makeHost({ name: 'dbnode' }), makeHost({ name: 'cpunode' })])
+    renderApp('community')
+    const target = await screen.findByRole('button', { name: 'cpunode' })
+
+    await userEvent.keyboard('cpu')
+
+    expect(target).toHaveFocus()
+    expect(screen.getByRole('status')).toHaveTextContent('cpu')
+  } finally {
+    if (offsetHeight) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', offsetHeight)
+    }
+    if (offsetWidth) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', offsetWidth)
+    }
+  }
+})
+
+/*
+ * The Export CSV entry lives in the legacy page menu, which reaches the app through a document
+ * event. jsdom has no object URLs and does not download, so the test records the file name the
+ * download link was clicked with.
+ */
+
+let downloads: string[]
+
+function stubDownloads(): void {
+  downloads = []
+  URL.createObjectURL = vi.fn(() => 'blob:hosts')
+  URL.revokeObjectURL = vi.fn()
+  vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+    this: HTMLAnchorElement
+  ) {
+    downloads.push(this.download)
+  })
+}
+
+async function exportCsv(): Promise<void> {
+  await screen.findByRole('columnheader', { name: 'Host' })
+  await vi.waitUntil(() => postSpy.mock.calls.length > 0)
+  document.dispatchEvent(new CustomEvent(EXPORT_EVENT, { detail: 'csv' }))
+}
+
+test('says how many hosts were exported when the row limit left some out', async () => {
+  const user = userEvent.setup()
+  stubDownloads()
+  mockHosts([makeHost(), makeHost({ name: 'web-2' })], 3)
+  renderApp('community')
+
+  await exportCsv()
+
+  expect(
+    await screen.findByText('Exported 2 of 3 hosts. Show more hosts to export more.')
+  ).toBeInTheDocument()
+  expect(downloads).toEqual([expect.stringMatching(/^all_hosts-.*\.csv$/)])
+
+  await user.click(screen.getByRole('button', { name: 'Dismiss' }))
+
+  expect(screen.queryByText(/^Exported/)).not.toBeInTheDocument()
+})
+
+test('suggests narrowing the filters when no higher row limit is left', async () => {
+  stubDownloads()
+  mockHosts([makeHost(), makeHost({ name: 'web-2' })], 3)
+  renderApp('community', { limit_tiers: [1000] })
+
+  await exportCsv()
+
+  expect(
+    await screen.findByText('Exported 2 of 3 hosts. Narrow the filters to export all of them.')
+  ).toBeInTheDocument()
+})
+
+test('exports without a note when every matching host is loaded', async () => {
+  stubDownloads()
+  mockHosts([makeHost(), makeHost({ name: 'web-2' })])
+  renderApp('community')
+
+  await exportCsv()
+  await vi.waitUntil(() => downloads.length > 0)
+
+  expect(screen.queryByText(/^Exported/)).not.toBeInTheDocument()
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+})
+
+test('exports nothing and says so when the hosts could not be loaded', async () => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+  stubDownloads()
+  postSpy.mockResolvedValue({
+    data: undefined,
+    error: {},
+    response: new Response('', { status: 500, statusText: 'Internal Server Error' })
+  } as never)
+  renderApp('community')
+
+  await exportCsv()
+
+  expect(
+    await screen.findByText('The hosts could not be loaded, so nothing was exported.')
+  ).toBeInTheDocument()
+  expect(downloads).toEqual([])
+  expect(consoleError).toHaveBeenCalled()
 })

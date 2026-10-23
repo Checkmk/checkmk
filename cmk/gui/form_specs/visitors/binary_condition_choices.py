@@ -29,6 +29,7 @@ from cmk.shared_typing.vue_formspec_components import (
     ValidationMessage as ValidationMessage,
 )
 
+from ._autocompleter import to_vue_autocompleter
 from ._base import FormSpecVisitor
 from ._type_defs import DefaultValue, IncomingData, InvalidValue, RawFrontendData
 from ._utils import (
@@ -129,7 +130,7 @@ class BinaryConditionChoicesVisitor(
                 title=title,
                 help=help_text,
                 label=localize(self.form_spec.label),
-                autocompleter=self.form_spec.autocompleter,
+                autocompleter=to_vue_autocompleter(self.form_spec.autocompleter),
                 validators=build_vue_validators(self.form_spec.custom_validate or []),
             ),
             [] if isinstance(parsed_value, InvalidValue) else parsed_value,

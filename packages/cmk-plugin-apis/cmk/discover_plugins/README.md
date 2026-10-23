@@ -51,7 +51,10 @@ The `<variant>` is one of:
 - **`v1`, `v2`, …** — stable public API. Examples:
   `cmk.server_side_calls.v1`, `cmk.agent_based.v2`.
 - **`v1_unstable`, `v2_unstable`, …** — work-in-progress public API.
-  Examples: `cmk.bakery.v2_unstable`, `cmk.inventory_ui.v1_unstable`.
+  Examples: `cmk.agent_based.v3_unstable`, `cmk.graphing.v2_unstable`.
+  Once stabilized, such a variant is renamed to its plain version
+  (e.g. `cmk.bakery.v2_unstable` → `cmk.bakery.v2`) and the old name
+  is kept as a deprecated alias for one major version.
 
 A domain may expose several variants in parallel (e.g.,
 `server_side_calls` ships `internal` and `v1`); the loader can

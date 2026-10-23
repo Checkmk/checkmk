@@ -49,11 +49,9 @@ from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.form_specs import registration as vue_registration
 from cmk.gui.graphing import registration as graphing_registration
 from cmk.gui.graphing.openapi import register as register_graphing_openapi_endpoints
-from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.monitor.command import downtime_recurrences, monitor_commands
 from cmk.gui.monitor.hosts import registration as monitor_hosts_registration
-from cmk.gui.monitor.hosts._folder import monitor_folders, SetupFolders
 from cmk.gui.monitor.services import registration as monitor_services_registration
 from cmk.gui.monitor.services._page_menu import host_menus
 from cmk.gui.nodevis import nodevis
@@ -65,7 +63,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.page_menu_utils import LegacyHostMenus
 from cmk.gui.pages import PageRegistry
 from cmk.gui.pagetypes import registration as pagetypes_registration
-from cmk.gui.painter.v0 import PainterRegistry
+from cmk.gui.painter import PainterRegistry
 from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup import registration as quick_setup_registration
@@ -113,9 +111,7 @@ from cmk.gui.watolib.host_attributes import (
 )
 from cmk.gui.watolib.host_rename import RenameHostHookRegistry
 from cmk.gui.watolib.hosts_and_folders import (
-    all_folder_title_paths,
-    folder_title_path,
-    folder_tree,
+    FolderReader,
     FolderValidatorsRegistry,
 )
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
@@ -186,6 +182,7 @@ def register(
     token_authenticated_page_registry: TokenAuthenticatedPageRegistry,
     builtin_pagetype_topic_registry: pagetypes.BuiltinPagetypeTopicRegistry,
     agent_bakery_enabled: bool,
+    monitoring_teleport_target: str | None = None,
 ) -> None:
     hooks.register_thread_cache_cleanup()
     notification_parameter_registry.register_form_spec_plugin = register_plugin
@@ -224,6 +221,7 @@ def register(
         data_source_registry,
         endpoint_family_registry,
         versioned_endpoint_registry,
+        match_item_generator_registry,
     )
     inventory.register(
         config_variable_registry,
@@ -247,24 +245,19 @@ def register(
         autocompleter_registry,
         endpoint_family_registry,
         versioned_endpoint_registry,
+        match_item_generator_registry,
     )
     monitor_commands.use_legacy_source(command_registry)
     downtime_recurrences.use_legacy_source(command_registry)
     host_menus.use_legacy_source(LegacyHostMenus())
-    # Setup answers about the folders of whoever is asking, so both the tree and the user are read
-    # per call - `user` is the request's, not this wiring's.
-    monitor_folders.use_setup_source(
-        SetupFolders(
-            title_of=lambda path: folder_title_path(folder_tree(), path, user),
-            all_titles=lambda: all_folder_title_paths(folder_tree(), user),
-        )
-    )
     monitor_hosts_registration.register(
         endpoint_family_registry,
         versioned_endpoint_registry,
         page_registry,
         monitor_commands,
         downtime_recurrences,
+        monitoring_teleport_target,
+        FolderReader,
     )
     monitor_services_registration.register(
         endpoint_family_registry,
@@ -273,6 +266,8 @@ def register(
         monitor_commands,
         downtime_recurrences,
         host_menus,
+        monitoring_teleport_target,
+        FolderReader,
     )
     crash_reporting.register(
         page_registry,
@@ -359,7 +354,7 @@ def register(
         config_domain_registry,
         config_variable_registry,
         config_variable_group_registry,
-        replication_path_registry,
+        show_in_global_settings=experimental_flags.global_config.is_development_site(),
     )
     quick_setup_registration.register(
         automation_command_registry,
@@ -420,7 +415,7 @@ def register(
         agent_bakery_enabled,
     )
     welcome.register(page_registry, snapin_registry)
-    global_settings.register(page_registry)
+    global_settings.register(page_registry, match_item_generator_registry)
     search_registration.register(
         page_registry,
         job_registry,
@@ -441,6 +436,7 @@ def _register_visuals_autocompleters(
         check_command_autocompleter,
         kubernetes_labels_autocompleter,
         label_autocompleter,
+        label_key_autocompleter,
         monitored_hostname_autocompleter,
         monitored_service_description_autocompleter,
     )
@@ -456,3 +452,4 @@ def _register_visuals_autocompleters(
         "kubernetes_labels", kubernetes_labels_autocompleter
     )
     autocompleter_registry.register_autocompleter("label", label_autocompleter)
+    autocompleter_registry.register_autocompleter("label_key", label_key_autocompleter)

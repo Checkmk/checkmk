@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.hostaddress import HostName
@@ -90,7 +91,7 @@ def update_cluster_nodes_v1(
                 )
             ],
         ),
-        status_code=200,
+        status_code=HTTPStatus.OK,
         etag=host_etag(host),
     )
 

@@ -8,6 +8,7 @@ import type { DynamicIcon } from 'cmk-shared-typing/typescript/icon'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
 
@@ -15,6 +16,7 @@ import IconGallery from './IconGallery.vue'
 import type { IconCategory } from './types'
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Icon selector'), [{ combo: ['Escape'], description: _t('Close') }])
 
 interface IconPopupProps {
   categories: IconCategory[]

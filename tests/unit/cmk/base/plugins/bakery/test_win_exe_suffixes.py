@@ -4,22 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.bakery.v1 import WindowsGlobalConfigEntry
-from cmk.base.plugins.bakery.win_exe_suffixes import (
-    get_win_exe_suffixes_windows_config,
-)
+from cmk.base.plugins.bakery.win_exe_suffixes import get_win_exe_suffixes_windows_config
 
 
 def test_win_exe_suffixes_windows_config() -> None:
-    conf = "exe bat vbs"
-    result = list(get_win_exe_suffixes_windows_config(conf))
-    assert result == [
-        WindowsGlobalConfigEntry(name="execute", content="exe bat vbs"),
+    assert list(get_win_exe_suffixes_windows_config({"mode": ("only", ["exe", "bat", "vbs"])})) == [
+        WindowsGlobalConfigEntry(name="execute", content=["exe", "bat", "vbs"]),
     ]
 
 
-def test_win_exe_suffixes_windows_config_single() -> None:
-    conf = "ps1"
-    result = list(get_win_exe_suffixes_windows_config(conf))
-    assert result == [
-        WindowsGlobalConfigEntry(name="execute", content="ps1"),
+def test_win_exe_suffixes_windows_config_empty_list() -> None:
+    assert list(get_win_exe_suffixes_windows_config({"mode": ("only", [])})) == [
+        WindowsGlobalConfigEntry(name="execute", content=[]),
     ]
+
+
+def test_win_exe_suffixes_windows_config_execute_all() -> None:
+    assert list(get_win_exe_suffixes_windows_config({"mode": ("all_files", None)})) == []

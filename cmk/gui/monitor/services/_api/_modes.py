@@ -2,17 +2,16 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import enum
+
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import api_field, api_model
 
-from .._models import Service, ServiceOverview
+from .._models import CheckType, Service, ServiceOverview
 from ._urls import (
     crash_report_link,
-    host_panel_link,
     host_view_link,
-    service_panel_link,
-    service_panel_link_by_id,
     service_view_link,
     service_view_link_by_id,
 )
@@ -22,11 +21,28 @@ from ._urls import (
 # unprefixed name would collide with the hosts model.
 
 
+class ServiceModeId(enum.StrEnum):
+    DOWNTIME = "downtime"
+    ACKNOWLEDGED = "acknowledged"
+    NOTIFICATIONS_OFF = "notifications_off"
+    COMMENTS = "comments"
+    ACTIVE_CHECKS_OFF = "active_checks_off"
+    PASSIVE_CHECKS_OFF = "passive_checks_off"
+    OUT_OF_NOTIFICATION_PERIOD = "out_of_notification_period"
+    OUT_OF_SERVICE_PERIOD = "out_of_service_period"
+    NOT_CHECKED = "not_checked"
+    CRASHED = "crashed"
+    SHADOW = "shadow"
+
+
 @api_model
 class ServiceModeInfo:
+    id: ServiceModeId = api_field(
+        description="Stable, untranslated identifier of the mode", example="downtime"
+    )
     icon_name: str = api_field(description="Icon to render for this mode", example="downtime")
     link: str = api_field(
-        description="URL the mode icon links to",
+        description="URL the mode icon links to, empty for a mode without a view of its own",
         example="view.py?view_name=downtimes_of_service&host=web-server-01&service=CPU+load",
     )
     title: str = api_field(
@@ -42,6 +58,15 @@ def _comment_title(count: int) -> str:
     ) % {"count": count}
 
 
+def _shadow_service_mode() -> ServiceModeInfo:
+    return ServiceModeInfo(
+        id=ServiceModeId.SHADOW,
+        icon_name="shadow",
+        link="",
+        title=_("This object is a shadow object from a remote site. It cannot be managed here."),
+    )
+
+
 def _crashed_check_mode(service: Service, *, site_id: str) -> ServiceModeInfo:
     """The crash icon, as much of it as the viewer is allowed to see.
 
@@ -51,6 +76,7 @@ def _crashed_check_mode(service: Service, *, site_id: str) -> ServiceModeInfo:
     """
     if not user.may("general.see_crash_reports"):
         return ServiceModeInfo(
+            id=ServiceModeId.CRASHED,
             icon_name="crash",
             link="",
             title=_(
@@ -60,6 +86,7 @@ def _crashed_check_mode(service: Service, *, site_id: str) -> ServiceModeInfo:
         )
     if (crash_id := service.crash_id) is None:
         return ServiceModeInfo(
+            id=ServiceModeId.CRASHED,
             icon_name="crash",
             link="",
             title=_(
@@ -68,6 +95,7 @@ def _crashed_check_mode(service: Service, *, site_id: str) -> ServiceModeInfo:
             ),
         )
     return ServiceModeInfo(
+        id=ServiceModeId.CRASHED,
         icon_name="crash",
         link=crash_report_link(site_id=site_id, crash_id=crash_id),
         title=_(
@@ -83,6 +111,7 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
     if service.in_downtime:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.DOWNTIME,
                 icon_name="downtime",
                 link=service_view_link("downtimes_of_service", service),
                 title=_("In scheduled downtime"),
@@ -91,69 +120,79 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
     if service.acknowledged:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.ACKNOWLEDGED,
                 icon_name="ack",
-                link=service_panel_link(service),
+                link="",
                 title=_("Problem acknowledged"),
             )
         )
     if not service.notifications_enabled:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.NOTIFICATIONS_OFF,
                 icon_name="notif-disabled",
-                link=service_panel_link(service),
+                link="",
                 title=_("Notifications are disabled for this service"),
             )
         )
     if service.num_comments:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.COMMENTS,
                 icon_name="comment",
                 link=service_view_link("comments_of_service", service),
                 title=_comment_title(service.num_comments),
             )
         )
-    if service.active_checks_disabled:
+    if service.active_checks_manually_disabled:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.ACTIVE_CHECKS_OFF,
                 icon_name="disabled",
-                link=service_panel_link(service),
+                link="",
                 title=_("Active checks have been manually disabled for this service"),
             )
         )
     if service.passive_checks_disabled:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.PASSIVE_CHECKS_OFF,
                 icon_name="npassive",
-                link=service_panel_link(service),
+                link="",
                 title=_("Passive checks have been manually disabled for this service"),
             )
         )
     if not service.in_notification_period:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.OUT_OF_NOTIFICATION_PERIOD,
                 icon_name="outofnot",
-                link=service_panel_link(service),
+                link="",
                 title=_("Out of notification period"),
             )
         )
     if not service.in_service_period:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.OUT_OF_SERVICE_PERIOD,
                 icon_name="outof-serviceperiod",
-                link=service_panel_link(service),
+                link="",
                 title=_("Out of service period"),
             )
         )
     if not service.in_check_period:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.NOT_CHECKED,
                 icon_name="pause",
-                link=service_panel_link(service),
+                link="",
                 title=_("This service is currently not being checked"),
             )
         )
     if service.check_crashed:
         modes.append(_crashed_check_mode(service, site_id=service.site_id))
+    if service.check_type is CheckType.SHADOW:
+        modes.append(_shadow_service_mode())
     return modes
 
 
@@ -165,6 +204,7 @@ def build_service_modes_by_id(
     if service.in_downtime:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.DOWNTIME,
                 icon_name="downtime",
                 link=service_view_link_by_id(
                     "downtimes_of_service",
@@ -178,26 +218,25 @@ def build_service_modes_by_id(
     if service.acknowledged:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.ACKNOWLEDGED,
                 icon_name="ack",
-                link=service_panel_link_by_id(
-                    site_id=site_id, hostname=hostname, service_name=service.name
-                ),
+                link="",
                 title=_("Problem acknowledged"),
             )
         )
     if not service.notifications_enabled:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.NOTIFICATIONS_OFF,
                 icon_name="notif-disabled",
-                link=service_panel_link_by_id(
-                    site_id=site_id, hostname=hostname, service_name=service.name
-                ),
+                link="",
                 title=_("Notifications are disabled for this service"),
             )
         )
     if service.num_comments:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.COMMENTS,
                 icon_name="comment",
                 link=service_view_link_by_id(
                     "comments_of_service",
@@ -208,58 +247,55 @@ def build_service_modes_by_id(
                 title=_comment_title(service.num_comments),
             )
         )
-    if service.active_checks_disabled:
+    if service.active_checks_manually_disabled:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.ACTIVE_CHECKS_OFF,
                 icon_name="disabled",
-                link=service_panel_link_by_id(
-                    site_id=site_id, hostname=hostname, service_name=service.name
-                ),
+                link="",
                 title=_("Active checks have been manually disabled for this service"),
             )
         )
     if service.passive_checks_disabled:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.PASSIVE_CHECKS_OFF,
                 icon_name="npassive",
-                link=service_panel_link_by_id(
-                    site_id=site_id, hostname=hostname, service_name=service.name
-                ),
+                link="",
                 title=_("Passive checks have been manually disabled for this service"),
             )
         )
     if not service.in_notification_period:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.OUT_OF_NOTIFICATION_PERIOD,
                 icon_name="outofnot",
-                link=service_panel_link_by_id(
-                    site_id=site_id, hostname=hostname, service_name=service.name
-                ),
+                link="",
                 title=_("Out of notification period"),
             )
         )
     if not service.in_service_period:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.OUT_OF_SERVICE_PERIOD,
                 icon_name="outof-serviceperiod",
-                link=service_panel_link_by_id(
-                    site_id=site_id, hostname=hostname, service_name=service.name
-                ),
+                link="",
                 title=_("Out of service period"),
             )
         )
     if not service.in_check_period:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.NOT_CHECKED,
                 icon_name="pause",
-                link=service_panel_link_by_id(
-                    site_id=site_id, hostname=hostname, service_name=service.name
-                ),
+                link="",
                 title=_("This service is currently not being checked"),
             )
         )
     if service.check_crashed:
         modes.append(_crashed_check_mode(service, site_id=site_id))
+    if service.check_type is CheckType.SHADOW:
+        modes.append(_shadow_service_mode())
     return modes
 
 
@@ -269,6 +305,7 @@ def build_host_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
     if service.host_in_downtime:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.DOWNTIME,
                 icon_name="downtime",
                 link=host_view_link("downtimes_of_host", service),
                 title=_("Host is in scheduled downtime"),
@@ -277,8 +314,9 @@ def build_host_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
     if service.host_acknowledged:
         modes.append(
             ServiceModeInfo(
+                id=ServiceModeId.ACKNOWLEDGED,
                 icon_name="ack",
-                link=host_panel_link(service),
+                link="",
                 title=_("Host problem acknowledged"),
             )
         )

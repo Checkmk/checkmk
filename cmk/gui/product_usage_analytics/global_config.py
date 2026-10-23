@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Final, override
 
@@ -13,9 +13,12 @@ from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.wato._http_proxy import http_proxy_reference_form_spec
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    ActivationContext,
     ConfigDomainName,
     ConfigVariable,
     ConfigVariableGroup,
+    ConfigVariableHint,
+    GlobalSettingsContext,
     SerializedSettings,
 )
 from cmk.rulesets.v1 import form_specs as fs
@@ -65,7 +68,9 @@ class ConfigDomainProductUsageAnalytics(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         return []
 
     @override
@@ -78,14 +83,9 @@ class ConfigDomainProductUsageAnalytics(ABCConfigDomain):
         }
 
 
-def make_product_usage_analytics_config_variable(
-    hint: Callable[[], HTML] = HTML.empty,
-) -> ConfigVariable:
-    return ConfigVariable(
-        group=ConfigVariableGroupProductUsageAnalytics,
-        primary_domain=ConfigDomainProductUsageAnalytics,
-        ident="product_usage_analytics",
-        domain_hint=HTML.without_escaping(
+def _inspect_data_hint() -> ConfigVariableHint:
+    return ConfigVariableHint(
+        HTML.without_escaping(
             _(
                 "Inspect product usage data: Run <tt>cmk-product-usage --dry-run</tt> as site user, or %(link)s. "
                 "This allows you to review the data locally; it does not enable the feature or transmit any information."
@@ -96,8 +96,18 @@ def make_product_usage_analytics_config_variable(
                     href="download_product_usage.py",
                 )
             }
-        ),
-        hint=hint,
+        )
+    )
+
+
+def make_product_usage_analytics_config_variable(
+    hints: Callable[[GlobalSettingsContext], Sequence[ConfigVariableHint]] = lambda _context: (),
+) -> ConfigVariable:
+    return ConfigVariable(
+        group=ConfigVariableGroupProductUsageAnalytics,
+        primary_domain=ConfigDomainProductUsageAnalytics,
+        ident="product_usage_analytics",
+        hints=lambda context: [_inspect_data_hint(), *hints(context)],
         form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
             title=Title("Product usage analytics"),
             elements={

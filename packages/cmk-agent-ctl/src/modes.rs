@@ -6,8 +6,11 @@ pub mod daemon;
 pub mod delete_connection;
 pub mod dump;
 pub mod import_connection;
+#[cfg(unix)]
+pub mod install_agent;
 pub mod pull;
 pub mod push;
 pub mod registration;
 pub mod renew_certificate;
 pub mod status;
+pub mod update;

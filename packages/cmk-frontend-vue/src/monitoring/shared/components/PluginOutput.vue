@@ -9,21 +9,12 @@ import { computed } from 'vue'
 import { type OutputSegment, splitStateMarkers } from '@/monitoring/shared/stateMarkers'
 
 import ServiceStateDisplay from './ServiceStateDisplay.vue'
-import { softBreak } from './cell/base/useSoftBreak'
 
 const props = defineProps<{
   output: string
-  /** Break opportunities for a cell that has to wrap; omit to keep the text as written. */
-  hardBreakEvery?: number | undefined
 }>()
 
-const segments = computed<OutputSegment[]>(() =>
-  splitStateMarkers(props.output).map((segment) =>
-    segment.type === 'text' && props.hardBreakEvery !== undefined
-      ? { type: 'text', text: softBreak(segment.text, props.hardBreakEvery) }
-      : segment
-  )
-)
+const segments = computed<OutputSegment[]>(() => splitStateMarkers(props.output))
 </script>
 
 <template>

@@ -14,7 +14,9 @@ import {
   MonitoringService,
   type MonitoringServiceOptions,
   type PagedResponse,
-  buildColumnStorageKey
+  buildColumnStorageKey,
+  buildDisplayOptionsStorageKey,
+  sanitizeDisplayOptions
 } from '@/monitoring/shared/services/MonitoringService'
 import type { TableStateSchema } from '@/monitoring/shared/tableState/types'
 
@@ -190,6 +192,16 @@ describe('MonitoringService', () => {
 
     expect(fetchBatch).not.toHaveBeenCalled()
     expect(service.fetchState.value).toBe('idle')
+  })
+
+  it('does not report an aborted fetch as failed when stopPolling() runs', async () => {
+    const fetchBatch = vi.fn().mockReturnValue(new Promise(() => {}))
+    const service = new TestService(fetchBatch)
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.stopPolling()
+
+    expect(service.loadFailed.value).toBe(false)
   })
 
   it('stops polling after stopPolling()', async () => {
@@ -1276,6 +1288,7 @@ describe('MonitoringService', () => {
       const tableStateSchema: TableStateSchema = {
         hideable: ['value'],
         sortable: new Set(['value']),
+        defaultSort: [],
         defaultVisibility: { value: false },
         offeredLimits: [42, 99]
       }
@@ -1300,6 +1313,7 @@ describe('MonitoringService', () => {
       const tableStateSchema: TableStateSchema = {
         hideable: ['phantom'],
         sortable: new Set(),
+        defaultSort: [],
         defaultVisibility: {},
         offeredLimits: [1000]
       }
@@ -1309,6 +1323,88 @@ describe('MonitoringService', () => {
       })
 
       expect(service.toggleableColumns).toEqual([{ id: 'phantom', label: 'phantom' }])
+
+      service.stopPolling()
+    })
+  })
+
+  describe('default sort', () => {
+    const tableStateSchema: TableStateSchema = {
+      hideable: [],
+      sortable: new Set(['name', 'value']),
+      defaultSort: [{ id: 'name', desc: false }],
+      defaultVisibility: {},
+      offeredLimits: [1000]
+    }
+
+    it('starts with the default sort when no initial sort is given', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        tableStateSchema
+      })
+
+      expect(service.sortState.value).toEqual([{ id: 'name', desc: false }])
+
+      service.stopPolling()
+    })
+
+    it('returns to the default sort and fetches with it once the user clears theirs', async () => {
+      const fetchedWith: SortingState[] = []
+      const service: TestService = new TestService(
+        vi.fn().mockImplementation(() => {
+          fetchedWith.push(service.sortState.value)
+          return Promise.resolve(makeResponse([], 0, 0))
+        }),
+        { tableStateSchema, initialState: { sort: [{ id: 'value', desc: true }] } }
+      )
+      await vi.advanceTimersByTimeAsync(0)
+
+      service.updateSort([])
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(fetchedWith).toEqual([[{ id: 'value', desc: true }], [{ id: 'name', desc: false }]])
+
+      service.stopPolling()
+    })
+
+    it('extends the default sort by a column added to it', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        tableStateSchema
+      })
+
+      service.updateSort([
+        { id: 'name', desc: false },
+        { id: 'value', desc: true }
+      ])
+
+      expect(service.sortState.value).toEqual([
+        { id: 'name', desc: false },
+        { id: 'value', desc: true }
+      ])
+
+      service.stopPolling()
+    })
+
+    it('keeps the default sort when it is picked again', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        tableStateSchema
+      })
+
+      service.updateSort([{ id: 'name', desc: false }])
+
+      expect(service.sortState.value).toEqual([{ id: 'name', desc: false }])
+
+      service.stopPolling()
+    })
+
+    it('leaves the listing unsorted once cleared when there is no default sort', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        tableStateSchema: { ...tableStateSchema, defaultSort: [] },
+        initialState: { sort: [{ id: 'value', desc: true }] }
+      })
+
+      service.updateSort([])
+
+      expect(service.sortState.value).toEqual([])
 
       service.stopPolling()
     })
@@ -1392,6 +1488,42 @@ describe('MonitoringService', () => {
       service.stopPolling()
     })
 
+    it('shows a quick filter as active when the seed matches its conditions', () => {
+      const filter: FilterNode = {
+        type: 'and',
+        children: [
+          { type: 'condition', field: 'acknowledged', op: 'eq', value: false },
+          { type: 'condition', field: 'in_downtime', op: 'eq', value: false }
+        ]
+      }
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        quickFilters: [{ label: 'Unhandled', filter }],
+        initialFilterState: { filter: structuredClone(filter) }
+      })
+
+      expect(service.filters.quickFilters[0]!.isActive.value).toBe(true)
+
+      service.stopPolling()
+    })
+
+    it('clearAllFilters empties a seeded filter and search rather than returning to them', async () => {
+      const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
+      const service = new TestService(fetchBatch, {
+        initialFilterState: {
+          filter: { type: 'condition', field: 'name', op: 'contains', value: 'web' },
+          search: 'web01'
+        }
+      })
+      await vi.advanceTimersByTimeAsync(0)
+
+      service.clearAllFilters()
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(service.filterUrlState.value).toEqual({ filter: undefined, search: '' })
+
+      service.stopPolling()
+    })
+
     it('leaves filter and search at their defaults when no initial filter state is given', () => {
       const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)))
 
@@ -1438,6 +1570,40 @@ describe('MonitoringService', () => {
       resolveFetch(makeResponse([], 0, 0))
       await vi.advanceTimersByTimeAsync(0)
       service.stopPolling()
+    })
+  })
+})
+
+describe('display options storage', () => {
+  it('keys a choice by view, site, user and edition', () => {
+    expect(
+      buildDisplayOptionsStorageKey({
+        view: 'all-hosts',
+        site: 'heute',
+        userId: 'harri',
+        edition: 'community'
+      })
+    ).toBe('monitoring-all-hosts-display-options-heute-harri-community')
+  })
+
+  it('restores a stored choice', () => {
+    expect(sanitizeDisplayOptions({ dateFormat: '%d.%m.%Y', timestampFormat: 'abs' })).toEqual({
+      dateFormat: '%d.%m.%Y',
+      timestampFormat: 'abs'
+    })
+  })
+
+  it('falls back to the default date format when storage holds one that is no longer offered', () => {
+    expect(sanitizeDisplayOptions({ dateFormat: 'yyyy/mm/dd', timestampFormat: 'abs' })).toEqual({
+      dateFormat: '%Y-%m-%d',
+      timestampFormat: 'abs'
+    })
+  })
+
+  it('falls back to the defaults when storage holds something unusable', () => {
+    expect(sanitizeDisplayOptions(['abs'])).toEqual({
+      dateFormat: '%Y-%m-%d',
+      timestampFormat: 'mixed'
     })
   })
 })

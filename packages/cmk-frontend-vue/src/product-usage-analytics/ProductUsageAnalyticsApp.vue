@@ -130,7 +130,7 @@ const popupOpen = ref(true)
     background-color: color-mix(
       in srgb,
       var(--default-button-primary-color) 90%,
-      var(--color-conference-grey-10) 10%
+      var(--interactive-press-tint) 10%
     );
   }
 }

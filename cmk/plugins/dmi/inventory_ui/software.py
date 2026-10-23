@@ -5,7 +5,7 @@
 
 import time
 
-from cmk.inventory_ui.v1_unstable import Label, Node, NumberField, TextField, Title
+from cmk.inventory_ui.v1 import Label, Node, NumberField, TextField, Title
 
 
 def _render_date(value: int | float) -> Label | str:

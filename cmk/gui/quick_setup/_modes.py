@@ -30,13 +30,16 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.page_menu_entry import enable_page_menu_entry
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
+from cmk.gui.quick_setup.config_setups.kubernetes.constants import (
+    QUICK_SETUP_ID as KUBERNETES_QUICK_SETUP_ID,
+)
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Dictionary, DictionaryEntry, FixedValue, RuleComment, TextInput
 from cmk.gui.wato import TileMenuRenderer
@@ -58,9 +61,7 @@ from cmk.gui.watolib.configuration_bundles import (
     valid_special_agent_bundle,
 )
 from cmk.gui.watolib.hosts_and_folders import (
-    folder_tree,
     FolderTree,
-    make_action_link,
     make_folder_tree,
 )
 from cmk.gui.watolib.main_menu import (
@@ -83,11 +84,12 @@ from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.ruleset_matcher.definition import RuleGroup, RuleGroupType
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import HTTPVariable
+from cmk.web.utils.urls import HTTPVariable, makeactionuri_contextless
 
 
 def register(
@@ -100,10 +102,19 @@ def register(
     mode_registry.register(ModeEditConfigurationBundles)
     mode_registry.register(ModeQuickSetupSpecialAgent)
     main_module_registry.register(MainModuleQuickSetupAWS)
+    main_module_registry.register(MainModuleQuickSetupAWSV2)
     main_module_registry.register(MainModuleQuickSetupAzure)
     main_module_registry.register(MainModuleQuickSetupAzureV2)
     main_module_registry.register(MainModuleQuickSetupGCP)
     main_module_registry.register(MainModuleQuickSetupProxmoxVE)
+    main_module_registry.register(MainModuleQuickSetupKubernetes)
+
+
+def _is_deprecated_special_agent(group_name: str) -> bool:
+    # A Quick Setup follows the deprecation of its special agent rule set: existing
+    # configurations stay editable, but the user cannot add new ones.
+    rulespec = rulespec_registry.get(group_name)
+    return rulespec is not None and rulespec.is_deprecated
 
 
 MainModuleTopicQuickSetup = MainModuleTopic(
@@ -151,6 +162,11 @@ class ModeQuickSetupSpecialAgent(WatoMode):
             raise MKUserError(
                 None,
                 _("No configuration Quick Setup for %(name)s available") % {"name": self._name},
+            )
+        if _is_deprecated_special_agent(self._name):
+            raise MKUserError(
+                None,
+                _("This Quick Setup is deprecated. You cannot add new configurations."),
             )
         self._quick_setup_id = quick_setup.id
 
@@ -232,6 +248,7 @@ class ModeEditConfigurationBundles(WatoMode):
 
     @override
     def _from_vars(self) -> None:
+        self._tree = make_folder_tree(self._ctx.config)
         self._name = request.get_ascii_input_mandatory(self.VAR_NAME)
         try:
             self._bundle_group_type = RuleGroupType(self._name.split(":")[0])
@@ -278,6 +295,11 @@ class ModeEditConfigurationBundles(WatoMode):
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
+                                    is_enabled=not _is_deprecated_special_agent(self._name),
+                                    disabled_tooltip=_(
+                                        "This Quick Setup is deprecated. You cannot add new "
+                                        "configurations."
+                                    ),
                                 )
                             ],
                         )
@@ -295,7 +317,7 @@ class ModeEditConfigurationBundles(WatoMode):
             )
             html.div(display_varname, class_="varname")
 
-        self._bundles_listing(make_folder_tree(config), self._name)
+        self._bundles_listing(self._tree, self._name)
 
     def _delete_bundle(
         self,
@@ -353,21 +375,24 @@ class ModeEditConfigurationBundles(WatoMode):
         if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
             subtype = re.sub(r"_v\d+$", "", self._name.split(":", maxsplit=1)[1])
 
-            html.div(
-                html.render_dynamic_icon(DynamicIconName(f"qs_{subtype}"))
-                + html.render_b(_("No %(title)s configuration yet") % {"title": self.title()})
-                + html.render_p(
+            header = html.render_dynamic_icon(DynamicIconName(f"qs_{subtype}")) + html.render_b(
+                _("No %(title)s configuration yet") % {"title": self.title()}
+            )
+            if _is_deprecated_special_agent(self._name):
+                body = html.render_p(
+                    _("This Quick Setup is deprecated. You cannot add new configurations.")
+                )
+            else:
+                body = html.render_p(
                     _(
                         'Click the "Add configuration" button to start setting up your first '
                         "configuration."
                     )
-                )
-                + html.render_a(
+                ) + html.render_a(
                     _("Add configuration"),
                     mode_url(ModeQuickSetupSpecialAgent.name(), varname=self._name),
-                ),
-                css=["no-config-bundles"],
-            )
+                )
+            html.div(header + body, css=["no-config-bundles"])
             return
 
         raise MKGeneralException("Not implemented")
@@ -379,11 +404,11 @@ class ModeEditConfigurationBundles(WatoMode):
             (self.VAR_BUNDLE_ID, bundle_id),
             (self.VAR_ACTION, action),
         ]
-        return make_action_link(request, vars_)
+        return makeactionuri_contextless(request, transactions.get(), vars_, filename="wato.py")
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
         if not transactions.check_transaction(request):
             return redirect(self.mode_url(**{"mode": self.name(), self.VAR_NAME: self._name}))
 
@@ -391,9 +416,9 @@ class ModeEditConfigurationBundles(WatoMode):
         action = request.get_ascii_input_mandatory(self.VAR_ACTION)
         if action == "delete":
             self._delete_bundle(
-                make_folder_tree(config),
+                self._tree,
                 bundle_id,
-                user_permissions=UserPermissions.from_config(config, permission_registry),
+                user_permissions=UserPermissions.from_config(config, all_permissions()),
                 pprint_value=config.wato_pprint_config,
                 use_git=config.wato_use_git,
                 debug=config.debug,
@@ -416,6 +441,8 @@ class ModeEditConfigurationBundles(WatoMode):
         self, group_name: str, bundles: Mapping[BundleId, BundleReferences]
     ) -> None:
         special_agent_valuespec = rulespec_registry[group_name].valuespec
+        quick_setup = quick_setup_registry.get(group_name)
+        allow_push_agent = quick_setup is not None and quick_setup.allow_push_agent
         with table_element(
             table_id=None,
             title="Configurations",
@@ -426,11 +453,9 @@ class ModeEditConfigurationBundles(WatoMode):
             limit=0,
         ) as table:
             for index, (bundle_id, bundle) in enumerate(sorted(bundles.items())):
-                if not valid_special_agent_bundle(bundle):
+                if not valid_special_agent_bundle(bundle, allow_push_agent=allow_push_agent):
                     raise MKGeneralException(f"Invalid configuration: {bundle_id}")
-                assert bundle.rules is not None
                 assert bundle.hosts is not None
-                rule_value = bundle.rules[0].value
                 host_name = bundle.hosts[0].name()
                 table.row()
 
@@ -454,6 +479,10 @@ class ModeEditConfigurationBundles(WatoMode):
                         )
                     )
                 )
+                if not bundle.rules:
+                    html.write_text(_("Push mode"))
+                    continue
+                rule_value = bundle.rules[0].value
                 try:
                     value_html = special_agent_valuespec.value_to_html(rule_value)
                 except Exception as e:
@@ -563,6 +592,45 @@ class MainModuleQuickSetupAWS(ABCMainModuleQuickSetup):
     @override
     def sort_index(self) -> int:
         return 10
+
+    @classmethod
+    @override
+    def main_menu_search_terms(cls) -> Sequence[str]:
+        return ["aws"]
+
+
+class MainModuleQuickSetupAWSV2(ABCMainModuleQuickSetup):
+    @property
+    @override
+    def rule_group_type(self) -> RuleGroupType:
+        return RuleGroupType.SPECIAL_AGENTS
+
+    @property
+    @override
+    def mode_or_url(self) -> str:
+        return mode_url(
+            ModeEditConfigurationBundles.name(), varname=RuleGroup.SpecialAgents("aws_v2")
+        )
+
+    @property
+    @override
+    def title(self) -> str:
+        return _("Amazon Web Services (AWS) v2")
+
+    @property
+    @override
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.quick_setup_aws)
+
+    @property
+    @override
+    def description(self) -> str:
+        return _("Configure Amazon Web Services (AWS) monitoring in Checkmk")
+
+    @property
+    @override
+    def sort_index(self) -> int:
+        return 16
 
     @classmethod
     @override
@@ -736,6 +804,43 @@ class MainModuleQuickSetupProxmoxVE(ABCMainModuleQuickSetup):
         return ["proxmox", "proxmox_ve"]
 
 
+class MainModuleQuickSetupKubernetes(ABCMainModuleQuickSetup):
+    @property
+    @override
+    def rule_group_type(self) -> RuleGroupType:
+        return RuleGroupType.SPECIAL_AGENTS
+
+    @property
+    @override
+    def mode_or_url(self) -> str:
+        return mode_url(ModeEditConfigurationBundles.name(), varname=KUBERNETES_QUICK_SETUP_ID)
+
+    @property
+    @override
+    def title(self) -> str:
+        return _("Kubernetes")
+
+    @property
+    @override
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.kubernetes)
+
+    @property
+    @override
+    def description(self) -> str:
+        return _("Configure Kubernetes monitoring using the in-cluster agent")
+
+    @property
+    @override
+    def sort_index(self) -> int:
+        return 15
+
+    @classmethod
+    @override
+    def main_menu_search_terms(cls) -> Sequence[str]:
+        return ["kubernetes", "k8s", "cluster"]
+
+
 class EditDCDConnection(Protocol):
     def __init__(self) -> None: ...
 
@@ -791,6 +896,7 @@ class ModeConfigurationBundle(WatoMode):
 
     @override
     def _from_vars(self) -> None:
+        self._tree = make_folder_tree(self._ctx.config)
         self._bundle_id = request.get_validated_type_input_mandatory(BundleId, "bundle_id")
 
         bundle_store = ConfigBundleStore().load_for_reading()
@@ -802,7 +908,7 @@ class ModeConfigurationBundle(WatoMode):
         self._bundle: ConfigBundle = bundle_store[self._bundle_id]
         self._bundle_group = self._bundle["group"]
         self._bundle_references = identify_bundle_references(
-            folder_tree(),
+            self._tree,
             self._bundle_group,
             {self._bundle_id},
             acting_user=user,
@@ -829,7 +935,11 @@ class ModeConfigurationBundle(WatoMode):
                 )
 
     def _verify_special_agent_vars(self) -> None:
-        if not valid_special_agent_bundle(self._bundle_references):
+        quick_setup = quick_setup_registry.get(self._bundle_group)
+        if not valid_special_agent_bundle(
+            self._bundle_references,
+            allow_push_agent=quick_setup is not None and quick_setup.allow_push_agent,
+        ):
             raise MKGeneralException(
                 _(
                     "The configuration bundle '%(bundle_id)s' is not valid. "
@@ -881,26 +991,10 @@ class ModeConfigurationBundle(WatoMode):
                 )
 
     def _page_section_bundle_links(self) -> None:
-        assert self._bundle_references.rules and self._bundle_references.hosts
+        assert self._bundle_references.hosts
         host = self._bundle_references.hosts[0]
-        rule = self._bundle_references.rules[0]
 
         bundle_entity_links = [
-            MenuItem(
-                mode_or_url=mode_url(
-                    "edit_rule",
-                    varname=RuleGroup.SpecialAgents(self._bundle_group.split(":")[1]),
-                    rule_id=rule.id,
-                ),
-                title=_("Rule"),
-                icon=StaticIcon(IconNames.cloud),
-                permission="rulesets",
-                description=_(
-                    'The rule set "{rule_title}" contains the special '
-                    "agent configuration. Credentials and other "
-                    "agent-specific data can be edited here."
-                ).format(rule_title=rule.ruleset.title()),
-            ),
             MenuItem(
                 mode_or_url=mode_url("edit_host", host=host.name()),
                 title=_("Host"),
@@ -911,6 +1005,27 @@ class ModeConfigurationBundle(WatoMode):
                 ).format(host_name=host.name()),
             ),
         ]
+
+        if self._bundle_references.rules:
+            rule = self._bundle_references.rules[0]
+            bundle_entity_links.insert(
+                0,
+                MenuItem(
+                    mode_or_url=mode_url(
+                        "edit_rule",
+                        varname=RuleGroup.SpecialAgents(self._bundle_group.split(":")[1]),
+                        rule_id=rule.id,
+                    ),
+                    title=_("Rule"),
+                    icon=StaticIcon(IconNames.cloud),
+                    permission="rulesets",
+                    description=_(
+                        'The rule set "{rule_title}" contains the special '
+                        "agent configuration. Credentials and other "
+                        "agent-specific data can be edited here."
+                    ).format(rule_title=rule.ruleset.title()),
+                ),
+            )
 
         if self._bundle_references.dcd_connections:
             dcd_config_id, dcd_config_spec = self._bundle_references.dcd_connections[0]
@@ -974,7 +1089,7 @@ class ModeConfigurationBundle(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return redirect(self.mode_url(bundle_id=self._bundle_id))
@@ -983,16 +1098,15 @@ class ModeConfigurationBundle(WatoMode):
             return redirect(self.mode_url(bundle_id=self._bundle_id))
 
         if request.has_var("_clean_up"):
-            tree = make_folder_tree(config)
             references = identify_bundle_references(
-                tree,
+                self._tree,
                 None,
                 {self._bundle_id},
                 acting_user=user,
                 program_id=self._bundle["program_id"],
             )[self._bundle_id]
             delete_config_bundle_objects(
-                tree,
+                self._tree,
                 references,
                 acting_user=user,
                 pprint_value=config.wato_pprint_config,

@@ -11,6 +11,5 @@ An id of None marks the entry that stands for "nothing selected".
 ChoiceText = str
 ChoiceId = str | None
 Choice = tuple[ChoiceId, ChoiceText]
-Choices = list[Choice]  # TODO: Change to Sequence, perhaps DropdownChoiceEntries[str]
 
-__all__ = ["Choice", "ChoiceId", "ChoiceText", "Choices"]
+__all__ = ["Choice", "ChoiceId", "ChoiceText"]

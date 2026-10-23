@@ -9,7 +9,6 @@ py_cmk_test(
     ],
     data = glob(
         include = [
-            "**/_check_form_submit_response",
             "**/*.json",
             "**/*.yaml",
         ],
@@ -20,13 +19,13 @@ py_cmk_test(
     deps = [
         "//cmk/gui/rule_specs:legacy_converter",
         "//cmk/gui/watolib",
-        "//cmk/legacy_checks",
         "//cmk/plugins",
+        "//cmk/plugins/diagnostics/cli",
         "//packages/cmk-check-engine:specs",
         "//packages/cmk-plugins:azure_deprecated",
         "//packages/cmk-plugins:azure_v2",
         "//packages/cmk-plugins:proxmox_ve",
-        "//tests/testlib/common:repo",
+        "//tests/testlib/common",
         requirement("exchangelib"),
         requirement("feedparser"),
         requirement("polyfactory"),

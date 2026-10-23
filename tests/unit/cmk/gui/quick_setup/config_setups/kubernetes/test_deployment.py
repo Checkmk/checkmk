@@ -54,7 +54,7 @@ def test_pull_bundle_enables_only_pull_and_exposes_requested_port(bundle: Deploy
 
     assert values["push"] == {"enabled": False}
     assert values["pull"]["enabled"] is True
-    assert values["metricsCache"]["service"] == {"type": "NodePort", "nodePort": 30050}
+    assert values["clusterAggregator"]["service"] == {"type": "NodePort", "nodePort": 30050}
     assert values["pull"]["encryption"] == {"enabled": False, "existingSecret": ""}
 
 
@@ -90,7 +90,7 @@ def test_helm_command_uses_compatible_chart_range_and_generated_files(
         "upgrade",
         "--install",
         "monitoring",
-        "oci://ghcr.io/checkmk/charts/cmk-rustik",
+        "oci://ghcr.io/checkmk/charts/checkmk-agent",
         "--version",
         chart_version_range,
         "--namespace",
@@ -190,7 +190,7 @@ def test_push_enables_verified_push_and_disables_pull(push_bundle: DeploymentBun
     }
     assert values["pull"] == {"enabled": False}
     assert values["clusterHostName"] == "legacy-host"
-    assert "metricsCache" not in values  # No externally exposed pull service is needed.
+    assert "clusterAggregator" not in values  # No externally exposed pull service is needed.
     assert "fullnameOverride" not in values
 
 
@@ -228,7 +228,7 @@ def test_install_applies_registration_secret_before_helm(push_bundle: Deployment
         "upgrade",
         "--install",
         "monitoring",
-        "oci://ghcr.io/checkmk/charts/cmk-rustik",
+        "oci://ghcr.io/checkmk/charts/checkmk-agent",
         "--version",
         "~3.0.0",
         "--namespace",

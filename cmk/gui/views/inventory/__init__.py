@@ -5,24 +5,32 @@
 
 
 from collections.abc import Iterable, Mapping, Sequence
+from typing import override
 
 from cmk.ccc.user import UserId
-from cmk.gui.data_source import DataSourceRegistry
+from cmk.gui.data_source import DataSourceRegistry, RowTable
 from cmk.gui.i18n import _l
-from cmk.gui.painter.v0 import Painter, PainterRegistry
-from cmk.gui.painter_options import PainterOptions
-from cmk.gui.type_defs import ColumnSpec, FilterName, VisualContext, VisualLinkSpec
+from cmk.gui.painter import PainterRegistry
+from cmk.gui.type_defs import (
+    ColumnName,
+    ColumnSpec,
+    FilterName,
+    SingleInfos,
+    VisualContext,
+    VisualLinkSpec,
+)
+from cmk.gui.valuespec import DictionaryEntry
 from cmk.gui.views.sorter import Sorter, SorterRegistry
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import FilterRegistry
+from cmk.gui.visuals.filter.components import FilterComponent
 from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
-from cmk.inventory.structured_data import InventoryPath, TreeSource
+from cmk.inventory.raw_paths import InventoryPath, TreeSource
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, StaticIcon
 
 from ._data_sources import ABCDataSourceInventory, RowTableInventory
 from ._display_hints import (
-    FilterMigration,
-    find_non_canonical_filters,
+    AttributeDisplayHint,
     inv_display_hints,
     load_inventory_ui_plugins,
     NodeDisplayHint,
@@ -32,29 +40,25 @@ from ._display_hints import (
     TableWithView,
 )
 from ._painters import (
-    attribute_painter_from_hint,
-    AttributePainterFromHint,
-    column_painter_from_hint,
-    ColumnPainterFromHint,
-    node_painter_from_hint,
-    NodePainterFromHint,
+    make_inventory_attribute_painter,
+    make_inventory_column_painter,
+    make_inventory_node_painter,
 )
 from ._sorter import attribute_sorter_from_hint, column_sorter_from_hint, SorterFromHint
 from ._tree_renderer import make_table_view_name_of_host
 from .registry import (
-    inv_paint_funtions,
+    inv_paint_functions,
     inventory_displayhints,
     InventoryHintSpec,
     InvPaintFunction,
 )
 
 __all__ = [
-    "FilterMigration",
+    "AttributeDisplayHint",
     "InventoryHintSpec",
     "NodeDisplayHint",
     "OrderedColumnDisplayHintsOfView",
     "TableWithView",
-    "find_non_canonical_filters",
     "inv_display_hints",
     "load_inventory_ui_plugins",
 ]
@@ -63,44 +67,7 @@ __all__ = [
 def register_inv_paint_functions(mapping: Mapping[str, object]) -> None:
     for k, v in mapping.items():
         if k.startswith(PAINT_FUNCTION_NAME_PREFIX) and callable(v):
-            inv_paint_funtions.register(InvPaintFunction(name=k, func=v))
-
-
-def _register_painter(
-    painter_registry: PainterRegistry,
-    from_hint: AttributePainterFromHint | ColumnPainterFromHint | NodePainterFromHint,
-) -> None:
-    # TODO Clean this up one day
-    cls = type(
-        "LegacyPainter%s" % from_hint["name"].title(),
-        (Painter,),
-        {
-            "_ident": from_hint["name"],
-            "_spec": from_hint,
-            "ident": property(lambda s: s._ident),  # noqa: SLF001
-            "title": lambda s, cell: s._spec["title"],  # noqa: ARG005, SLF001
-            "short_title": lambda s, cell: s._spec.get("short", s.title),  # noqa: ARG005, SLF001
-            "tooltip_title": lambda s, cell: s._spec.get("tooltip_title", s.title),  # noqa: ARG005, SLF001
-            "columns": property(lambda s: s._spec["columns"]),  # noqa: SLF001
-            "render": lambda self, row, cell, user: from_hint["paint"](row),  # noqa: ARG005
-            "export_for_python": lambda self, row, cell, user: from_hint["export_for_python"](  # noqa: ARG005
-                row, cell
-            ),
-            "export_for_csv": lambda self, row, cell, user: from_hint["export_for_csv"](row, cell),  # noqa: ARG005
-            "export_for_json": lambda self, row, cell, user: from_hint["export_for_json"](  # noqa: ARG005
-                row, cell
-            ),
-            "group_by": lambda self, row, cell: (
-                None if (f := self._spec.get("groupby")) is None else f(row, cell)
-            ),
-            "parameters": property(lambda s: s._spec.get("params")),  # noqa: SLF001
-            "painter_options": property(lambda s: s._spec.get("options", [])),  # noqa: SLF001
-            "printable": property(lambda s: s._spec.get("printable", True)),  # noqa: SLF001
-            "sorter": property(lambda s: s._spec.get("sorter", None)),  # noqa: SLF001
-            "load_inv": property(lambda s: s._spec.get("load_inv", False)),  # noqa: SLF001
-        },
-    )
-    painter_registry.register(cls)
+            inv_paint_functions.register(InvPaintFunction(name=k, func=v))
 
 
 def _register_sorter(sorter_registry: SorterRegistry, from_hint: SorterFromHint) -> None:
@@ -244,50 +211,81 @@ def _register_table_view(
     data_source_registry: DataSourceRegistry,
     table: TableWithView,
 ) -> None:
-    # Declare the "info" (like a database table)
-    visual_info_registry.register(
-        type(
-            "VisualInfo%s" % table.name.title(),
-            (VisualInfo,),
-            {
-                "_ident": table.name,
-                "ident": property(lambda self: self._ident),
-                "_title": table.long_title,
-                "title": property(lambda self: self._title),
-                "_title_plural": table.long_title,
-                "title_plural": property(lambda self: self._title_plural),
-                "single_spec": property(lambda self: []),  # noqa: ARG005
-                "single_spec_components": lambda self: [],  # noqa: ARG005
-            },
-        )
-    )
+    class _VisualInfoOfTable(VisualInfo):
+        @property
+        @override
+        def ident(self) -> str:
+            return table.name
 
-    # Create the datasource (like a database view)
-    data_source_registry.register(
-        type(
-            "DataSourceInventory%s" % table.name.title(),
-            (ABCDataSourceInventory,),
-            {
-                "_ident": table.name,
-                "_inventory_path": InventoryPath(path=table.path, source=TreeSource.table),
-                "_title": table.long_inventory_title,
-                "_infos": ["host", table.name],
-                "ident": property(lambda s: s._ident),  # noqa: SLF001
-                "title": property(lambda s: s._title),  # noqa: SLF001
-                "table": property(lambda s: RowTableInventory(s._ident, s._inventory_path)),  # noqa: SLF001
-                "infos": property(lambda s: s._infos),  # noqa: SLF001
-                "keys": property(lambda s: []),  # noqa: ARG005
-                "id_keys": property(lambda s: []),  # noqa: ARG005
-                "inventory_path": property(lambda s: s._inventory_path),  # noqa: SLF001
-                "join": ("services", "host_name"),
-            },
-        )
-    )
+        @property
+        @override
+        def title(self) -> str:
+            return table.long_title
+
+        @property
+        @override
+        def title_plural(self) -> str:
+            return table.long_title
+
+        @property
+        @override
+        def single_spec(self) -> list[DictionaryEntry]:
+            return []
+
+        @override
+        def single_spec_components(self) -> list[FilterComponent]:
+            return []
+
+    inventory_path = InventoryPath(path=table.path, source=TreeSource.table)
+
+    class _DataSourceOfTable(ABCDataSourceInventory):
+        @property
+        @override
+        def ident(self) -> str:
+            return table.name
+
+        @property
+        @override
+        def title(self) -> str:
+            return table.long_inventory_title
+
+        @property
+        @override
+        def table(self) -> RowTable:
+            return RowTableInventory(table.name, inventory_path)
+
+        @property
+        @override
+        def infos(self) -> SingleInfos:
+            return ["host", table.name]
+
+        @property
+        @override
+        def keys(self) -> list[ColumnName]:
+            return []
+
+        @property
+        @override
+        def id_keys(self) -> list[ColumnName]:
+            return []
+
+        @property
+        @override
+        def inventory_path(self) -> InventoryPath:
+            return inventory_path
+
+        @property
+        @override
+        def join(self) -> tuple[str, str]:
+            return ("services", "host_name")
+
+    visual_info_registry.register(_VisualInfoOfTable)
+    data_source_registry.register(_DataSourceOfTable)
 
     painters: list[ColumnSpec] = []
     filters = []
     for col_hint in table.columns.values():
-        _register_painter(painter_registry, column_painter_from_hint(col_hint))
+        painter_registry.register(make_inventory_column_painter(col_hint))
         _register_sorter(sorter_registry, column_sorter_from_hint(col_hint))
         filter_registry.register(col_hint.filter)
 
@@ -304,7 +302,6 @@ def register_table_views_and_columns(
     visual_info_registry: VisualInfoRegistry,
     data_source_registry: DataSourceRegistry,
 ) -> None:
-    painter_options = PainterOptions.get_instance()
     register_display_hints(load_inventory_ui_plugins(), inventory_displayhints)
     for node_hint in inv_display_hints:
         if "*" in node_hint.path:
@@ -319,12 +316,11 @@ def register_table_views_and_columns(
             #   'DataSourceInventory' uses 'RowTableInventory'
             continue
 
-        _register_painter(painter_registry, node_painter_from_hint(node_hint, painter_options))
+        painter_registry.register(make_inventory_node_painter(node_hint))
 
         for key, attr_hint in node_hint.attributes.items():
-            _register_painter(
-                painter_registry,
-                attribute_painter_from_hint(node_hint.path, key, attr_hint),
+            painter_registry.register(
+                make_inventory_attribute_painter(node_hint.path, key, attr_hint)
             )
             _register_sorter(
                 sorter_registry,

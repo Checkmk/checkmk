@@ -113,7 +113,7 @@ class SiteConfiguration(TypedDict):
     id: SiteId
     insecure: bool
     multisiteurl: str
-    persist: bool
+    persist: bool  # Ineffective: persistent connections were removed. Will be dropped.
     proxy: ProxyConfig | None
     replicate_ec: bool
     replicate_mkps: bool
@@ -210,10 +210,6 @@ class LivestatusTestingError(RuntimeError):
 #   '----------------------------------------------------------------------'
 
 tracer = trace.get_tracer()
-
-# TODO: This mechanism does not take different connection options into account
-# Keep a global array of persistent connections
-persistent_connections: dict[str, socket.socket] = {}
 
 # Regular expression for removing Cache: headers if caching is not allowed
 remove_cache_regex = re.compile("\nCache:[^\n]*")
@@ -594,7 +590,6 @@ class SingleSiteConnection(Helpers):
         self,
         socketurl: str,
         site_name: SiteId | None = None,
-        persist: bool = False,
         allow_cache: bool = False,
         tls: bool = False,
         verify: bool = True,
@@ -609,12 +604,10 @@ class SingleSiteConnection(Helpers):
         self.deadsites: dict[SiteId, DeadSite] = {}
         self.limit: int | None = None
         self.auth_header = ""
-        self.persist = persist
         self.allow_cache = allow_cache
         self.socketurl = socketurl
         self.socket: socket.socket | None = None
         self.timeout: int | None = None
-        self.successful_persistence = False
         self._output_format = LivestatusOutputFormat.PYTHON
 
         # Whether to establish an encrypted connection
@@ -630,29 +623,15 @@ class SingleSiteConnection(Helpers):
             return site_local_ca_path()
         return self._tls_ca_file_path
 
-    def successfully_persisted(self) -> bool:
-        return self.successful_persistence
-
     def set_timeout(self, timeout: int) -> None:
         self.timeout = timeout
         if self.socket:
             self.socket.settimeout(float(timeout))
 
-    def _try_get_persisted_connection(self) -> socket.socket | None:
-        if self.persist and self.socketurl in persistent_connections:
-            self.successful_persistence = True
-            return persistent_connections[self.socketurl]
-        return None
-
     def connect(self) -> None:
-        if (site_socket := self._try_get_persisted_connection()) is None:
-            site_socket = self._create_new_socket_connection()
-            if self.persist:
-                persistent_connections[self.socketurl] = site_socket
-        self.socket = site_socket
+        self.socket = self._create_new_socket_connection()
 
     def _create_new_socket_connection(self) -> socket.socket:
-        self.successful_persistence = False
         family, address = parse_socket_url(self.socketurl)
         site_socket = self._create_socket(family, self.site_name)
 
@@ -729,11 +708,6 @@ class SingleSiteConnection(Helpers):
                 self.socket.close()
 
             self.socket = None
-
-        if self.persist:
-            self.successful_persistence = False
-            with contextlib.suppress(KeyError):
-                del persistent_connections[self.socketurl]
 
     def receive_data(self, size: int, timeout: float | None = None) -> bytes:
         if self.socket is None:
@@ -874,13 +848,6 @@ class SingleSiteConnection(Helpers):
             # In case of an IO error or the other side having
             # closed the socket do a reconnect and try again
             self.disconnect()
-
-            # In case of unix socket connections, do not start any reconnection attempts
-            # The other side (liveproxyd) might have had a good reason to disconnect
-            # Note: In most scenarios the liveproxyd still tries to send back a reasonable
-            # error response back to the client
-            if self.socket and self.socket.family == socket.AF_UNIX:
-                raise MKLivestatusSocketError("Unix socket was closed by peer")
 
             now = time.time()
             if not timeout_at or timeout_at > now:
@@ -1173,19 +1140,15 @@ class MultiSiteConnection(Helpers):
                         "exception": ex,
                     }
 
-    def connect_to_site(
-        self, site_name: SiteId, site: SiteConfiguration, temporary: bool = False
-    ) -> SingleSiteConnection:
+    def connect_to_site(self, site_name: SiteId, site: SiteConfiguration) -> SingleSiteConnection:
         """Helper function for connecting to a site"""
         url = site["socket"]
         assert isinstance(url, str)
-        persist = not temporary and site.get("persist", False)
         tls_type, tls_params = site.get("tls", ("plain_text", TLSParams()))
 
         connection = SingleSiteConnection(
             socketurl=url,
             site_name=site_name,
-            persist=persist,
             allow_cache=site.get("cache", False),
             tls=tls_type != "plain_text",
             verify=tls_params.get("verify", True),
@@ -1229,12 +1192,6 @@ class MultiSiteConnection(Helpers):
 
     def alive_sites(self) -> list[SiteId]:
         return [s.id for s in self.connections]
-
-    def successfully_persisted(self) -> bool:
-        for connected_site in self.connections:
-            if connected_site.connection.successfully_persisted():
-                return True
-        return False
 
     def set_output_format(self, output_format: LivestatusOutputFormat) -> None:
         for connected_site in self.connections:
@@ -1595,63 +1552,6 @@ def livestatus_lql(
         what = "service"
         query_filter += lq_logic("Filter: service_description =", [service_description], "Or")
     return f"GET {what}s\n{query_filter}"
-
-
-def get_rrd_data(
-    connection: SingleSiteConnection,
-    host_name: str,
-    service_description: str,
-    rpn: str,
-    fromtime: int,
-    untiltime: int,
-    max_entries: int = 400,
-) -> RRDResponse | None:
-    """Fetch RRD historic metrics data of a specific service, within the specified time range
-
-    returns a TimeSeries object holding interval and data information
-
-    Query to livestatus always returns if database is found, thus:
-    - Values can be None when there is no data for a given timestamp
-    - Reply from livestatus/rrdtool is always enough to describe the
-      queried interval. That means, the returned bounds are always outside
-      the queried interval.
-
-    LEGEND
-    O timestamps of measurements
-    | query values, fromtime and untiltime
-    x returned start, no data contained
-    v returned data rows, includes end y
-
-    --O---O---O---O---O---O---O---O
-            |---------------|
-          x---v---v---v---v---y
-
-    """
-
-    step = 1
-    point_range = ":".join(lqencode(str(x)) for x in (fromtime, untiltime, step, max_entries))
-    column = f"rrddata:m1:{rpn}:{point_range}"
-    lql = livestatus_lql([host_name], [column], service_description) + "OutputFormat: python\n"
-
-    # This can raise, but let the caller deal with it.
-    response = connection.query_value(lql)
-
-    if not response:
-        # Appending nonsense to the column will give you None.
-        # It seems that querying in case we haven't got enough records (yet)
-        # will give you an empty response as of Checkmk 2.4.
-        # Not sure what that means for the comment below.
-        return None
-
-    raw_start, raw_end, raw_step, *values = response
-
-    return (
-        # According to a comment in RRDColumn.cc we should have `raw_step >= step` (which is 1)
-        # However, it is zero for empty responses (non existing metrics, for instance).
-        None
-        if (step := int(raw_step)) == 0
-        else RRDResponse(range(int(raw_start), int(raw_end), step), values)
-    )
 
 
 def get_timeperiods_active_map(timeout: int) -> Mapping[str, bool]:

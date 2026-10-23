@@ -4,13 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import { getLocalTimeZone, parseDate } from '@internationalized/date'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { renderDate } from 'cmk-ui-library/lib/renderTime'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, ref } from 'vue'
 
@@ -49,13 +51,12 @@ const displaySuccessMessage = ref<boolean>(false)
 
 const expiryDate = computed({
   get: (): string => {
-    return validUntil.value ? validUntil.value.toISOString().split('T')[0]! : ''
+    return validUntil.value ? renderDate(validUntil.value) : ''
   },
 
   set: (dateStr: string | undefined): void => {
     if (dateStr) {
-      const date = new Date(dateStr)
-      validUntil.value = date
+      validUntil.value = parseDate(dateStr).toDate(getLocalTimeZone())
     } else {
       validUntil.value = null
     }
@@ -80,9 +81,12 @@ const handleSave = () => {
 
   <ContentSpacer />
 
-  <CmkAlertBox v-if="displaySuccessMessage" :dismissible="true" variant="success">{{
-    _t('Link settings saved.')
-  }}</CmkAlertBox>
+  <CmkAlert
+    v-if="displaySuccessMessage"
+    :dismissible="true"
+    variant="success"
+    :text="_t('Link settings saved.')"
+  />
 
   <TableForm>
     <TableFormRow>

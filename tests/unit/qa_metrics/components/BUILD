@@ -8,5 +8,8 @@ py_cmk_test(
         "test_ownership.py",
     ],
     imports = ["../../../.."],
-    deps = ["//tests/qa_metrics/components"],
+    deps = [
+        "//tests/qa_metrics/components",
+        "//tests/unit/qa_metrics",
+    ],
 )

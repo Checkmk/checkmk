@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { AddTo } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import CmkHtml from 'cmk-ui-library/components/CmkHtml.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
@@ -18,11 +19,20 @@ import type {
   AverageScatterplotContent,
   CombinedGraphContent,
   CustomGraphContent,
+  EmbeddedCustomGraphContent,
   PerformanceGraphContent,
   ProblemGraphContent,
-  SingleTimeseriesContent
+  SingleTimeseriesContent,
+  WidgetEmitTimeRange
 } from '@/dashboard/types/widget.ts'
-import { GraphFigure } from '@/graphing'
+import {
+  GraphFigure,
+  type GraphFigureLegend,
+  type GraphFigureSource,
+  type RequestedTimeRange,
+  toDateTimeRange,
+  toRequestedTimeRange
+} from '@/graphing'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import { createSharedGraphFetcher } from './sharedGraphFetcher.ts'
@@ -40,8 +50,16 @@ const props =
       | AverageScatterplotContent
       | ProblemGraphContent
       | CustomGraphContent
+      | EmbeddedCustomGraphContent
     >
   >()
+const emit = defineEmits<WidgetEmitTimeRange>()
+
+const dashboardTimeRange = computed(() => toRequestedTimeRange(props.range))
+
+function onCommitTimeRange(range: RequestedTimeRange): void {
+  emit('updateTimeRange', toDateTimeRange(range, props.range.from.timeZone))
+}
 
 const shell = ref<DiscoveredGraph | null>(null)
 const errorMessage = ref<string | null>(null)
@@ -52,9 +70,20 @@ const isDiscovering = ref<boolean>(true)
 // backend discovers the shells at page render and the data is fetched per widget instead.
 const cmkToken = useInjectCmkToken()
 const sharedWidgetGraphs = useInjectSharedWidgetGraphs()
-const fetchGraph = computed(() =>
-  cmkToken === undefined ? undefined : createSharedGraphFetcher(props.widget_id, cmkToken)
-)
+const figureSource = computed<GraphFigureSource | null>(() => {
+  if (shell.value === null) {
+    return null
+  }
+  const internal = shell.value.internal
+  return cmkToken === undefined
+    ? { type: 'definition', internal }
+    : {
+        type: 'fetch',
+        key: internal,
+        fetch: createSharedGraphFetcher(props.widget_id, cmkToken),
+        binUnit: null
+      }
+})
 
 const singleContext = computed(() => {
   const filters = props.effective_filter_context.filters
@@ -174,7 +203,19 @@ const discoverGraphs = async (): Promise<GraphDiscovery> => {
         await client.POST('/domain-types/graph/actions/discover_custom_graphs/invoke', {
           params: { header: { 'Content-Type': 'application/json' } },
           body: {
-            custom_graph: content.custom_graph
+            type: 'saved',
+            name: content.custom_graph
+          }
+        })
+      )
+    case 'embedded_custom_graph':
+      return unwrap(
+        await client.POST('/domain-types/graph/actions/discover_custom_graphs/invoke', {
+          params: { header: { 'Content-Type': 'application/json' } },
+          body: {
+            type: 'inline',
+            // the widget content keeps the definition untyped; the endpoint validates it
+            definition: content.definition as components['schemas']['CustomGraphDefinition']
           }
         })
       )
@@ -244,6 +285,8 @@ const discoveryKey = computed(() => {
       return { context: props.effective_filter_context.filters }
     case 'custom_graph':
       return { custom_graph: content.custom_graph }
+    case 'embedded_custom_graph':
+      return { definition: content.definition }
     default:
       staticAssertNever(content)
       return {}
@@ -269,7 +312,15 @@ const timerange = computed(() => {
   const content = props.content
   return content.type === 'average_scatterplot' ? content.time_range : content.timerange
 })
-const showLegend = computed(() => graphRenderOptions.value?.show_legend ?? false)
+const legendOptions = computed(() =>
+  props.content.type === 'average_scatterplot' ? props.content : graphRenderOptions.value
+)
+const legend = computed((): GraphFigureLegend => {
+  if (!(legendOptions.value?.show_legend ?? false)) {
+    return 'none'
+  }
+  return legendOptions.value?.legend_style ?? 'compact'
+})
 const showTimestamp = computed(() => graphRenderOptions.value?.show_graph_time ?? false)
 const showPin = computed(
   () => props.isPreview !== true && (graphRenderOptions.value?.show_pin ?? true)
@@ -287,6 +338,31 @@ const combinationMode = computed(() => {
   return content.type === 'combined_graph' ? content.presentation : null
 })
 
+// The burger menu's add-to target: the discovery shell carries the add type and specification,
+// which the actions replay, plus the built graph they store. Null for graph kinds that offer no
+// add-to.
+const addTo = computed<AddTo | null>(() => {
+  const discovered = shell.value
+  if (
+    discovered === null ||
+    discovered.add_type === null ||
+    discovered.add_to_specification === null
+  ) {
+    return null
+  }
+  return {
+    type: discovered.add_type,
+    specification: discovered.add_to_specification,
+    internal: discovered.internal
+  }
+})
+const showBurgerMenu = computed(
+  () =>
+    sharedWidgetGraphs === undefined &&
+    (graphRenderOptions.value?.show_controls ?? false) &&
+    addTo.value !== null
+)
+
 onMounted(() => {
   if (sharedWidgetGraphs === undefined) {
     void loadGraph()
@@ -303,7 +379,7 @@ onMounted(() => {
     :effective-title="effectiveTitle"
     :general_settings="general_settings"
     content-overflow="hidden"
-    :is-scrollable-preview="(isPreview ?? false) && showLegend"
+    :is-scrollable-preview="(isPreview ?? false) && legend !== 'none'"
   >
     <div
       class="db-content-time-series-graph"
@@ -322,19 +398,22 @@ onMounted(() => {
         <CmkHtml :html="noDataMessage" />
       </div>
       <GraphFigure
-        v-else-if="shell"
-        :internal="shell.internal"
+        v-else-if="shell && figureSource"
+        :source="figureSource"
         :y-axis="shell.y_axis"
         :timerange="timerange"
+        :requested-time-range="dashboardTimeRange"
         :combination-mode="combinationMode"
-        :show-legend="showLegend"
+        :legend="legend"
         :show-timestamp="showTimestamp"
         :show-pin="showPin"
         :show-time-axis="showTimeAxis"
         :show-value-axis="showValueAxis"
         :show-margin="showMargin"
         :min-value-axis-width="valueAxisWidth"
-        :fetch-graph="fetchGraph"
+        :show-burger-menu="showBurgerMenu"
+        :add-to="addTo"
+        @commit-time-range="onCommitTimeRange"
       />
     </div>
   </DashboardContentContainer>

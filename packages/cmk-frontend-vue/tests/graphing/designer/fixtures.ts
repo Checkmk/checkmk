@@ -170,7 +170,7 @@ export function telemetryMetricsItem(
 ): TelemetryMetricsItem {
   return {
     id,
-    type: 'metric_backend',
+    type: 'telemetry_metrics',
     title: id,
     line_type: 'line',
     mirrored: false,
@@ -186,7 +186,7 @@ export function telemetryMetricsItem(
   }
 }
 
-/** One item of each kind: A/B static RRD metrics, C a dynamic RRD query, D an RRD formula, E a metric_backend item (other domain). */
+/** One item of each kind: A/B static RRD metrics, C a dynamic RRD query, D an RRD formula, E a telemetry_metrics item (other domain). */
 export const items: GraphItem[] = [
   rrdMetricItem('A'),
   rrdMetricItem('B'),

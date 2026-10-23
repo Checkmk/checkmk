@@ -13,6 +13,7 @@ import type {
   ContentPropsRecord
 } from '@/dashboard/components/DashboardContent/types'
 import RelativeGrid from '@/dashboard/components/RelativeGrid/RelativeGrid.vue'
+import type { MeasuredRelativeGridLayout } from '@/dashboard/components/RelativeGrid/types'
 import ResponsiveGrid from '@/dashboard/components/ResponsiveGrid/ResponsiveGrid.vue'
 import { squashFilters } from '@/dashboard/components/Wizard/components/FiltersRecap/utils'
 import type { DashboardFilters } from '@/dashboard/composables/useDashboardFilters'
@@ -28,6 +29,8 @@ import type {
 import type { WidgetLayout } from '@/dashboard/types/widget'
 
 interface DashboardProps {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   baseFilters: DashboardFilters['baseFilters']
   widgetCores: DashboardWidgets['widgetCores']
@@ -69,7 +72,9 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
         restricted_to_single: widgetConstants.filter_context.restricted_to_single,
         filters: squashFilters(props.baseFilters.value, widget.filter_context.filters)
       },
-      dashboardKey: props.dashboardKey
+      dashboardKey: props.dashboardKey,
+      tick: props.tick,
+      range: props.range
     }
   }
   return record
@@ -78,12 +83,8 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
 const relativeGrid = ref<InstanceType<typeof RelativeGrid> | null>(null)
 
 defineExpose({
-  /**
-   * The relative grid's widget IDs in reading order, or null when the active dashboard does not
-   * use the relative grid layout or its grid has not been measured yet.
-   */
-  getRelativeGridWidgetOrder: (): string[] | null =>
-    relativeGrid.value?.getWidgetReadingOrder() ?? null
+  getRelativeGridMeasurement: (): MeasuredRelativeGridLayout | null =>
+    relativeGrid.value?.getMeasuredLayout() ?? null
 })
 
 // eslint-disable-next-line @typescript-eslint/naming-convention

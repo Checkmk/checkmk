@@ -6,26 +6,36 @@
 import json
 from collections.abc import Mapping
 
+from cmk.gui.config import RequestCacheConfig
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.request_cache import RequestCache
 
 from ._filter_valuespecs import VisualFilterListWithAddPopup
 
 
 def render_filter_form(
-    info_list: SingleInfos, context: VisualContext, page_name: str, reset_ajax_page: str
+    info_list: SingleInfos,
+    context: VisualContext,
+    page_name: str,
+    reset_ajax_page: str,
+    request_cache: RequestCache[RequestCacheConfig],
 ) -> HTML:
     with output_funnel.plugged():
-        show_filter_form(info_list, context, page_name, reset_ajax_page)
+        show_filter_form(info_list, context, page_name, reset_ajax_page, request_cache)
         return HTML.without_escaping(output_funnel.drain())
 
 
 def show_filter_form(
-    info_list: SingleInfos, context: VisualContext, page_name: str, reset_ajax_page: str
+    info_list: SingleInfos,
+    context: VisualContext,
+    page_name: str,
+    reset_ajax_page: str,
+    request_cache: RequestCache[RequestCacheConfig],
 ) -> None:
     html.show_user_errors()
     form_name: str = "filter"
@@ -36,7 +46,7 @@ def show_filter_form(
         onsubmit=f"cmk.forms.on_filter_form_submit_remove_vars({json.dumps('form_' + form_name)});",
     ):
         varprefix = ""
-        vs_filters = VisualFilterListWithAddPopup(info_list=info_list)
+        vs_filters = VisualFilterListWithAddPopup(info_list=info_list, request_cache=request_cache)
 
         filter_list_id = VisualFilterListWithAddPopup.filter_list_id(varprefix)
         filter_list_selected_id = filter_list_id + "_selected"
@@ -58,10 +68,9 @@ def show_filter_form(
     # The filter popup is shown automatically when it has been submitted before on page reload. To
     # know that the user closed the popup after filtering, we have to hook into the close_popup
     # function.
-    html.final_javascript(
-        "cmk.page_menu.register_on_open_handler('popup_filters', cmk.page_menu.on_filter_popup_open);"
-        "cmk.page_menu.register_on_close_handler('popup_filters', cmk.page_menu.on_filter_popup_close);"
-        f"cmk.forms.add_filter_form_error_listener('{filter_list_selected_id}');"
+    html.call_ts_function(
+        function_name="init_filter_form",
+        arguments={"filter_list_selected_id": filter_list_selected_id},
     )
 
 

@@ -6,4 +6,4 @@
 import CmkSlideInTabbed from './CmkSlideInTabbed.vue'
 
 export default CmkSlideInTabbed
-export type { CmkSlideInTabbedProps, SlideInTab, SlideInTabState, SlideInTabStatus } from './types'
+export type { CmkSlideInTabbedProps, SlideInTab } from './types'

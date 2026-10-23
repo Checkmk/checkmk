@@ -6,14 +6,10 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import TimeSelectorColumn from 'cmk-ui-library/components/date-time/private/time-selector/TimeSelectorColumn.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test } from 'vitest'
 
 const label = 'Hour' as TranslatedString
 const pad = (value: string | number): string => value.toString().padStart(2, '0')
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 describe('TimeSelectorColumn', () => {
   test('one button per option, formatted', () => {

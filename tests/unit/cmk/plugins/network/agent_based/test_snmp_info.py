@@ -6,10 +6,9 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Attributes, Result, Service, State
+from cmk.agent_based.v2 import Attributes, Result, State
 from cmk.plugins.network.agent_based.snmp_info import (
     check_snmp_info,
-    discover_snmp_info,
     inventorize_snmp_info,
     parse_snmp_info,
     SNMPInfo,
@@ -51,10 +50,6 @@ def _get_section() -> SNMPInfo:
     )
     assert section
     return section
-
-
-def test_discover_snmp_info(section: SNMPInfo) -> None:
-    assert list(discover_snmp_info(section)) == [Service()]
 
 
 def test_check_snmp_info(section: SNMPInfo) -> None:

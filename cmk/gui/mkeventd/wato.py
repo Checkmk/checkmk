@@ -20,19 +20,18 @@ import warnings
 import zipfile
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from html import escape as html_escape
 from pathlib import Path
-from typing import Any, cast, Literal, overload, override
+from typing import Any, cast, Literal, overload, override, Self
 
 import cmk.ccc.translations
 
 # It's OK to import centralized config load logic
-import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=module-layers
 import cmk.mkp_tool
 import cmk.utils.paths
 import cmk.utils.render
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import RegexFutureWarning
 from cmk.ccc.site import omd_site, SiteId
@@ -56,7 +55,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.type_defs import RequireConfirmation
 from cmk.gui.http import request
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     get_search_expression,
@@ -75,6 +74,7 @@ from cmk.gui.rule_specs.legacy_converter import convert_dictionary_formspec_to_v
 from cmk.gui.search.matchers import (
     ABCMatchItemGenerator,
     MatchItem,
+    MatchItemConfig,
     MatchItemGeneratorRegistry,
     MatchItems,
 )
@@ -82,8 +82,8 @@ from cmk.gui.site_config import enabled_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites, get_event_console_site_choices
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Age,
@@ -117,24 +117,16 @@ from cmk.gui.wato import (
     MainModuleTopicEvents,
     sorted_contact_group_choices,
 )
-from cmk.gui.wato.pages.global_settings import (
-    ABCEditGlobalSettingMode,
-    ABCGlobalSettingsMode,
-    MatchItemGeneratorSettings,
-)
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_domain_registry,
-    config_variable_group_registry,
-    config_variable_registry,
     ConfigDomainRegistry,
     ConfigVariable,
     ConfigVariableGroup,
     ConfigVariableGroupRegistry,
     ConfigVariableRegistry,
     EVENT_CONSOLE,
-    GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainOMD
 from cmk.gui.watolib.config_sync import (
@@ -149,16 +141,10 @@ from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupWATO,
 )
 from cmk.gui.watolib.global_settings import (
-    load_configuration_settings,
-    make_global_settings_context,
     make_pending_changes,
-    save_global_settings,
 )
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
-from cmk.gui.watolib.hosts_and_folders import (
-    FolderTree,
-    make_action_link,
-)
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.notification_parameter import (
@@ -181,6 +167,7 @@ from cmk.gui.watolib.sample_config import (
     SampleConfigGenerator,
     SampleConfigGeneratorRegistry,
 )
+from cmk.gui.watolib.sites import load_site_globals
 from cmk.gui.watolib.translation import translation_form_spec_elements
 from cmk.livestatus_client import (
     ECCreate,
@@ -189,7 +176,6 @@ from cmk.livestatus_client import (
     LivestatusClient,
     LocalConnection,
     MKLivestatusSocketError,
-    SiteConfiguration,
     SiteConfigurations,
 )
 from cmk.ruleset_matcher.definition import RuleGroup
@@ -217,24 +203,28 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.form_specs import (
     List as FSList,
 )
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
+from cmk.web.utils.urls import (
+    makeactionuri_contextless,
+    makeuri_contextless,
+    makeuri_contextless_rulespec_group,
+)
 
 from ._rulespecs import RulespecLogwatchEC
 from .config_domain import ConfigDomainEventConsole
 from .defines import syslog_facilities, syslog_priorities
-from .helpers import action_choices, eventd_configuration, service_levels
+from .helpers import action_choices, service_levels
 from .permission_section import PERMISSION_SECTION_EVENT_CONSOLE
 
 
 def register(
-    edition: Edition,
     permission_registry: PermissionRegistry,
     sample_config_generator_registry: SampleConfigGeneratorRegistry,
     mode_registry: ModeRegistry,
@@ -256,8 +246,6 @@ def register(
     mode_registry.register(ModeEventConsoleEditRulePack)
     mode_registry.register(ModeEventConsoleEditRule)
     mode_registry.register(ModeEventConsoleStatus)
-    mode_registry.register(ModeEventConsoleSettings)
-    mode_registry.register(ModeEventConsoleEditGlobalSetting)
     mode_registry.register(ModeEventConsoleMIBs)
     mode_registry.register(ModeEventConsoleUploadMIBs)
 
@@ -310,15 +298,6 @@ def register(
     register_permissions(permission_registry)
 
     match_item_generator_registry.register(MatchItemEventConsole)
-    match_item_generator_registry.register(
-        MatchItemGeneratorSettings(
-            "event_console_settings",
-            _("Event Console settings"),
-            lambda: ModeEventConsoleSettings(
-                edition, PageContext(config=active_config, request=request)
-            ),
-        )
-    )
 
     notification_parameter_registry.register(
         NotificationParameter(
@@ -355,27 +334,237 @@ def register_permissions(permission_registry: PermissionRegistry) -> None:
     permission_registry.register(SwitchSlaveReplicationPermission)
 
 
-def match_event_rule(
-    rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event, site_config: SiteConfiguration
-) -> ec.MatchResult:
-    if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT:
-        rule_customer_id = (
-            rule_pack["customer"] if "customer" in rule_pack else rule.get("customer", SCOPE_GLOBAL)
-        )
-        site_customer_id = customer_api().get_customer_id(site_config)
-        if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
-            return ec.MatchFailure(reason=_("Wrong customer"))
+def _no_livestatus_connection_message(site_id: SiteId) -> str:
+    """Explains why the GUI has no Livestatus connection to a site, as far as the GUI knows it"""
+    if user.is_site_disabled(site_id):
+        return _(
+            "The GUI has no Livestatus connection to site %(site)s, because the site is disabled "
+            'in the "Site status" snap-in.'
+        ) % {"site": site_id}
+    if dead_site := sites.live().dead_sites().get(site_id):
+        return _("The GUI has no Livestatus connection to site %(site)s: %(error)s") % {
+            "site": site_id,
+            "error": dead_site["exception"],
+        }
+    return _("The GUI has no Livestatus connection to site %(site)s.") % {"site": site_id}
 
-    time_period = ec.TimePeriods(log.logger, LocalConnection())
-    rule_matcher = ec.RuleMatcher(
-        logger=None,
-        omd_site_id=omd_site(),
-        is_active_time_period=time_period.active,
+
+class _SiteLivestatus:
+    """Sends Livestatus queries to a single site"""
+
+    def __init__(self, site_id: SiteId) -> None:
+        self._site_id = site_id
+
+    def query(self, query: str) -> Sequence[Sequence[Any]]:
+        # The GUI has no connection to its own site if the user disabled it in the site status
+        # snap-in, so query the local site directly.
+        if self._site_id == omd_site():
+            return LocalConnection().query(query)
+        # Restricting a query via sites.only_sites() silently returns no rows if the GUI has no
+        # connection to the site, e.g. because it is down or disabled, so fail loudly instead.
+        try:
+            connection = sites.live().get_connection(self._site_id)
+        except KeyError:
+            raise MKGeneralException(_no_livestatus_connection_message(self._site_id)) from None
+        return connection.query(query)
+
+
+class _TimePeriodsUnavailable(MKGeneralException):
+    pass
+
+
+def _timeout_causing(exception: BaseException) -> MKTimeout | None:
+    """Returns the timeout which caused an exception, e.g. one the Livestatus client turned into an
+    error of its own"""
+    seen: set[int] = set()
+    cause: BaseException | None = exception
+    while cause is not None and id(cause) not in seen:
+        if isinstance(cause, MKTimeout):
+            return cause
+        seen.add(id(cause))
+        cause = cause.__cause__ or cause.__context__
+    return None
+
+
+class _SiteTimePeriods:
+    """Tells whether time periods of a site are active, giving up after the first failed query"""
+
+    def __init__(self, site_id: SiteId) -> None:
+        self._time_periods = ec.TimePeriods(log.logger, _SiteLivestatus(site_id))
+        self._error: str | None = None
+
+    def active(self, name: ec.TimeperiodName) -> bool:
+        # Querying again for every rule could mean waiting for a timeout every time.
+        if self._error is not None:
+            raise _TimePeriodsUnavailable(self._error)
+        try:
+            return self._time_periods.active(name)
+        except MKTimeout:
+            raise
+        except Exception as e:
+            # The Livestatus client turns e.g. a request timeout into an error of its own.
+            if (timeout := _timeout_causing(e)) is not None:
+                raise timeout from None
+            self._error = str(e)
+            raise _TimePeriodsUnavailable(self._error) from e
+
+
+@dataclass(frozen=True)
+class RuleMatch:
+    result: ec.MatchSuccess
+    outcome: ec.MatchOutcome
+
+
+@dataclass(frozen=True)
+class UnknownMatch(ec.MatchFailure):
+    """The simulator can't tell whether a rule matches, unlike the Event Console of the site"""
+
+
+@dataclass(frozen=True)
+class RulePackMatch:
+    matching_rules: int
+    # Like in the Event Console, the first matching rule decides what happens.
+    first_match: RuleMatch | None
+    # One of these rules before the first match might match and decide instead.
+    unknown_matches: Sequence[UnknownMatch]
+
+
+class EventSimulator:
+    """Matches a simulated event against rules like the Event Console of the simulated site"""
+
+    def __init__(
+        self,
+        event: ec.Event,
+        site_configs: SiteConfigurations,
+        hostname_translation: cmk.ccc.translations.TranslationOptions,
+    ) -> None:
+        # Like the Event Console, match against the translated host name.
+        self._event = event.copy()
+        self._event["host"] = ec.translate_event_host(hostname_translation, event["host"])
+        self._site_config = site_configs[event["site"]]
+        self._rule_matcher = ec.RuleMatcher(
+            logger=None,
+            # Match against the site the event is simulated for, not the one running the GUI.
+            omd_site_id=event["site"],
+            is_active_time_period=_SiteTimePeriods(event["site"]).active,
+        )
+
+    @classmethod
+    def for_event(cls, event: ec.Event, site_configs: SiteConfigurations) -> Self:
+        """Creates a simulator with the host name translation of the simulated site"""
+        return cls(event, site_configs, hostname_translation_of_site(event["site"], site_configs))
+
+    def match_rule(self, rule_pack: ec.ECRulePack, rule: ec.Rule) -> ec.MatchResult:
+        if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT:
+            rule_customer_id = (
+                rule_pack["customer"]
+                if "customer" in rule_pack
+                else rule.get("customer", SCOPE_GLOBAL)
+            )
+            site_customer_id = customer_api().get_customer_id(self._site_config)
+            if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
+                return ec.MatchFailure(reason=_("Wrong customer"))
+
+        # The Event Console ignores rules it can't compile, and errors while matching mean no match.
+        # A request timeout must still abort the page, though.
+        try:
+            active_rule = ec.compile_active_rule(rule_pack, rule)
+        except MKTimeout:
+            raise
+        except Exception as e:
+            return ec.MatchFailure(reason=_("Cannot compile the rule: %(error)s") % {"error": e})
+        if isinstance(active_rule, str):
+            return ec.MatchFailure(reason=active_rule)
+        try:
+            return self._match_compiled_rule(active_rule)
+        except MKTimeout:
+            raise
+        except Exception as e:
+            log.logger.exception(
+                "Cannot match rule %(pack)s/%(rule_id)s against the simulated event",
+                {"pack": active_rule["pack"], "rule_id": active_rule["id"]},
+            )
+            return ec.MatchFailure(reason=_("Cannot match the rule: %(error)s") % {"error": e})
+
+    def _match_compiled_rule(self, rule: ec.Rule) -> ec.MatchResult:
+        try:
+            return self._rule_matcher.event_rule_matches(rule, self._event)
+        except _TimePeriodsUnavailable as e:
+            # The Event Console of the site knows its time periods, though, so the simulator can
+            # only tell whether the rule matches if that doesn't depend on them. The failed query is
+            # logged already.
+            if_active = self._match_assuming_time_periods(rule, active=True)
+            if_inactive = self._match_assuming_time_periods(rule, active=False)
+            if isinstance(if_active, ec.MatchSuccess) is isinstance(if_inactive, ec.MatchSuccess):
+                return if_active
+            return UnknownMatch(
+                reason=_("Cannot look up the time periods: %(error)s") % {"error": e}
+            )
+
+    def _match_assuming_time_periods(self, rule: ec.Rule, *, active: bool) -> ec.MatchResult:
+        """Matches the rule as if all time periods were active or all were inactive"""
+        return ec.RuleMatcher(
+            logger=None,
+            omd_site_id=self._event["site"],
+            is_active_time_period=lambda _name: active,
+        ).event_rule_matches(rule, self._event)
+
+    def match_rule_pack(self, rule_pack: ec.ECRulePack) -> RulePackMatch:
+        matching_rules = 0
+        first_match: RuleMatch | None = None
+        unknown_matches: list[UnknownMatch] = []
+        for rule in rule_pack["rules"]:
+            result = self.match_rule(rule_pack, rule)
+            if isinstance(result, ec.MatchSuccess):
+                matching_rules += 1
+                if first_match is None:
+                    first_match = RuleMatch(result, ec.match_outcome(rule, result))
+            elif isinstance(result, UnknownMatch) and first_match is None:
+                unknown_matches.append(result)
+        return RulePackMatch(matching_rules, first_match, tuple(unknown_matches))
+
+    def has_decisive_match(self, rule_packs: Iterable[ec.ECRulePack]) -> bool:
+        """Tells whether a rule of the rule packs decides what happens, like in the Event Console"""
+        return any(
+            (first_match := self.match_rule_pack(rule_pack).first_match) is not None
+            and first_match.outcome is not ec.MatchOutcome.SKIP_PACK
+            for rule_pack in rule_packs
+        )
+
+
+def hostname_translation_of_site(
+    site_id: SiteId, site_configs: SiteConfigurations
+) -> cmk.ccc.translations.TranslationOptions:
+    """Returns the host name translation the Event Console of the given site uses"""
+    # Only the configuration of the local Event Console is available with all its files, including
+    # the ones written by hand, which override the ones of Setup.
+    if site_id == omd_site():
+        return ec.load_config_to_activate(ec.create_paths(cmk.utils.paths.omd_root))[
+            "hostname_translation"
+        ]
+    site_globals = load_site_globals(site_configs, site_id)
+    if "hostname_translation" in site_globals:
+        return cast(cmk.ccc.translations.TranslationOptions, site_globals["hostname_translation"])
+    # Without a site-specific setting, the site inherits the global one, which in turn falls back to
+    # the built-in default. The host name translation is a global setting of the Event Console only,
+    # so don't determine the defaults of all configuration domains, which would e.g. run an
+    # automation of the core.
+    ec_domain = config_domain_registry[EVENT_CONSOLE]
+    return cast(
+        cmk.ccc.translations.TranslationOptions,
+        {**ec_domain.default_globals(), **ec_domain.load()}["hostname_translation"],
     )
-    rule = rule.copy()
-    rule["pack"] = rule_pack["id"]
-    ec.compile_rule(rule)
-    return rule_matcher.event_rule_matches(rule, event)
+
+
+def message_match_groups_text(result: ec.MatchSuccess) -> str:
+    """Returns the groups of the message text pattern which decided the match as text"""
+    # Like the Event Console, treat groups which didn't take part in the match as empty.
+    groups = (
+        result.match_groups.get("match_groups_message_ok", ())
+        if result.cancelling
+        else result.match_groups.get("match_groups_message", ())
+    )
+    return ",".join(g or _("(empty)") for g in groups) if groups is not False else ""
 
 
 # .
@@ -846,7 +1035,7 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
                 title=_("Custom event limit"),
                 help=_(
                     "Use this option to override the "
-                    '<a href="wato.py?mode=mkeventd_edit_configvar&site=&varname=event_limit">'
+                    '<a href="event_console_settings.py?varname=event_limit">'
                     "global rule event limit</a>"
                 ),
                 elements=[
@@ -1857,9 +2046,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     item=make_simple_link(
                         make_confirm_delete_link(
                             i18n=_,
-                            url=make_action_link(
+                            url=makeactionuri_contextless(
                                 request,
+                                transactions.get(),
                                 [("mode", "mkeventd_rule_packs"), ("_reset_counters", "1")],
+                                filename="wato.py",
                             ),
                             title=_("Reset all rule hit counters to zero"),
                             message=_("This affects all rule packs."),
@@ -2029,8 +2220,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         if rep_mode in ["sync", "takeover"]:
             copy_url = make_confirm_delete_link(
                 i18n=_,
-                url=make_action_link(
-                    request, [("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")]
+                url=makeactionuri_contextless(
+                    request,
+                    transactions.get(),
+                    [("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")],
+                    filename="wato.py",
                 ),
                 title=_("Copy all event rules from the central site"),
                 message=_("This will replace your local configuration"),
@@ -2079,6 +2273,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         id_to_mkp = self._get_rule_pack_to_mkp_map()
 
+        simulator = EventSimulator.for_event(event, config.sites) if event else None
         have_match = False
 
         rule_stats = _get_rule_stats_from_ec()
@@ -2111,16 +2306,22 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 # clone_url  = makeuri_contextless(request, [("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
                 # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
 
-                drag_url = make_action_link(
-                    request, [("mode", "mkeventd_rule_packs"), ("_move", nr)]
+                drag_url = makeactionuri_contextless(
+                    request,
+                    transactions.get(),
+                    [("mode", "mkeventd_rule_packs"), ("_move", nr)],
+                    filename="wato.py",
                 )
                 table.element_dragger_url("tr", base_url=drag_url)
 
                 if type_ == ec.RulePackType.internal:
                     delete_url = make_confirm_delete_link(
                         i18n=_,
-                        url=make_action_link(
-                            request, [("mode", "mkeventd_rule_packs"), ("_delete", nr)]
+                        url=makeactionuri_contextless(
+                            request,
+                            transactions.get(),
+                            [("mode", "mkeventd_rule_packs"), ("_delete", nr)],
+                            filename="wato.py",
                         ),
                         title=_("Delete rule pack #%(nr)d") % {"nr": nr},
                         suffix=rule_pack["title"],
@@ -2147,8 +2348,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 if edition(cmk.utils.paths.omd_root) is not Edition.COMMUNITY:
                     # Icons for mkp export (Commercial editions only)
                     if type_ == ec.RulePackType.internal:
-                        export_url = make_action_link(
-                            request, [("mode", "mkeventd_rule_packs"), ("_export", nr)]
+                        export_url = makeactionuri_contextless(
+                            request,
+                            transactions.get(),
+                            [("mode", "mkeventd_rule_packs"), ("_export", nr)],
+                            filename="wato.py",
                         )
                         html.icon_button(
                             export_url,
@@ -2159,8 +2363,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                             ),
                         )
                     elif type_ == ec.RulePackType.exported:
-                        dissolve_url = make_action_link(
-                            request, [("mode", "mkeventd_rule_packs"), ("_dissolve", nr)]
+                        dissolve_url = makeactionuri_contextless(
+                            request,
+                            transactions.get(),
+                            [("mode", "mkeventd_rule_packs"), ("_dissolve", nr)],
+                            filename="wato.py",
                         )
                         html.icon_button(
                             dissolve_url,
@@ -2171,8 +2378,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                             ),
                         )
                     elif type_ == ec.RulePackType.modified_mkp:
-                        reset_url = make_action_link(
-                            request, [("mode", "mkeventd_rule_packs"), ("_reset", nr)]
+                        reset_url = makeactionuri_contextless(
+                            request,
+                            transactions.get(),
+                            [("mode", "mkeventd_rule_packs"), ("_reset", nr)],
+                            filename="wato.py",
                         )
                         html.icon_button(
                             reset_url,
@@ -2182,8 +2392,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                                 emblem="disable",
                             ),
                         )
-                        sync_url = make_action_link(
-                            request, [("mode", "mkeventd_rule_packs"), ("_synchronize", nr)]
+                        sync_url = makeactionuri_contextless(
+                            request,
+                            transactions.get(),
+                            [("mode", "mkeventd_rule_packs"), ("_synchronize", nr)],
+                            filename="wato.py",
                         )
                         html.icon_button(
                             sync_url,
@@ -2229,44 +2442,26 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     )
 
                 # Simulation of all rules in this pack
-                elif event:
-                    matches = 0
-                    cancelling_matches = 0
-                    skips = 0
-
-                    for rule in rule_pack["rules"]:
-                        result = match_event_rule(
-                            rule_pack, rule, event, config.sites[event["site"]]
-                        )
-                        if isinstance(result, ec.MatchSuccess):
-                            cancelling, groups = result.cancelling, result.match_groups
-
-                            if not cancelling and rule.get("drop") == "skip_pack":
-                                matches += 1
-                                skips = 1
-                                break
-
-                            if cancelling and matches == 0:
-                                cancelling_matches += 1
-
-                            matches += 1
-
-                    if matches == 0:
+                elif simulator:
+                    pack_match = simulator.match_rule_pack(rule_pack)
+                    if (first_match := pack_match.first_match) is None:
                         msg = _("None of the rules in this pack matches")
                         icon = StaticIcon(IconNames.hyphen)
                     else:
                         msg = _("Number of matching rules in this pack: %(matches)d") % {
-                            "matches": matches
+                            "matches": pack_match.matching_rules
                         }
-                        if skips:
+                        if first_match.outcome is ec.MatchOutcome.SKIP_PACK:
                             msg += _(", the first match skips this rule pack")
                             icon = StaticIcon(IconNames.hyphen)
                         else:
-                            if cancelling:  # type: ignore[possibly-undefined]
+                            if first_match.outcome is ec.MatchOutcome.CANCEL_EVENTS:
                                 msg += _(", first match is a cancelling match")
-                            if groups:  # type: ignore[possibly-undefined]
+                            elif first_match.outcome is ec.MatchOutcome.DROP_MESSAGE:
+                                msg += _(", first match drops the message")
+                            if groups := message_match_groups_text(first_match.result):
                                 msg += _(", match groups of decisive match: %(groups)s") % {
-                                    "groups": ",".join([g or _("&lt;None&gt;") for g in groups])
+                                    "groups": groups
                                 }
                             if have_match:
                                 msg += _(
@@ -2277,6 +2472,18 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                                 icon = StaticIcon(IconNames.checkmark)
                                 have_match = True
                     html.static_icon(icon, title=msg)
+                    if unknown_matches := pack_match.unknown_matches:
+                        html.static_icon(
+                            StaticIcon(IconNames.warning),
+                            title=ungettext(
+                                "This might be wrong, because the simulator cannot tell whether "
+                                "%(count)d rule of this pack matches: %(reason)s",
+                                "This might be wrong, because the simulator cannot tell whether "
+                                "%(count)d rules of this pack match: %(reason)s",
+                                len(unknown_matches),
+                            )
+                            % {"count": len(unknown_matches), "reason": unknown_matches[0].reason},
+                        )
 
                 table.cell(_("ID"), id_)
                 table.cell(_("Title"), rule_pack["title"])
@@ -2316,6 +2523,18 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     found_rules = found_packs.setdefault(rule_pack["id"], [])
                     found_rules.append(rule)
         return found_packs
+
+
+def _rule_match_text(outcome: ec.MatchOutcome) -> str:
+    match outcome:
+        case ec.MatchOutcome.NEW_EVENT:
+            return _("This rule matches.")
+        case ec.MatchOutcome.CANCEL_EVENTS:
+            return _("This rule does a cancelling match.")
+        case ec.MatchOutcome.DROP_MESSAGE:
+            return _("This rule matches and drops the message.")
+        case ec.MatchOutcome.SKIP_PACK:
+            return _("This rule matches and skips the rest of this rule pack.")
 
 
 def _deref[T](x: T | Callable[[], T]) -> T:
@@ -2428,7 +2647,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return redirect(self.mode_url(rule_pack=self._rule_pack_id))
@@ -2571,27 +2790,35 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
         # Show content of the rule pack
         with table_element(title=_("Rules"), css="ruleset", limit=0) as table:
-            have_match = False
             hits = _get_rule_stats_from_ec()
+            simulator = EventSimulator.for_event(event, site_configs) if event else None
+            # A match in a previous rule pack overrules the matches in this one.
+            have_match = simulator is not None and simulator.has_decisive_match(
+                self._rule_packs[: self._rule_pack_nr]
+            )
             for nr, rule in enumerate(rules):
                 table.row(css=["matches_search"] if rule in found_rules else [])
                 delete_url = make_confirm_delete_link(
                     i18n=_,
-                    url=make_action_link(
+                    url=makeactionuri_contextless(
                         request,
+                        transactions.get(),
                         [
                             ("mode", "mkeventd_rules"),
                             ("rule_pack", self._rule_pack_id),
                             ("_delete", nr),
                         ],
+                        filename="wato.py",
                     ),
                     title=_("Delete rule #%(nr)d") % {"nr": nr},
                     message=_("ID: %(id_)s") % {"id_": rule["id"]},
                     suffix=rule.get("description", ""),
                 )
-                drag_url = make_action_link(
+                drag_url = makeactionuri_contextless(
                     request,
+                    transactions.get(),
                     [("mode", "mkeventd_rules"), ("rule_pack", self._rule_pack_id), ("_move", nr)],
+                    filename="wato.py",
                 )
                 edit_url = _rule_edit_url(self._rule_pack_id, nr)
                 clone_url = makeuri_contextless(
@@ -2619,36 +2846,31 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         StaticIcon(IconNames.disabled),
                         title=_("This rule is currently disabled and will not be applied"),
                     )
-                elif event:
-                    event["host"] = HostName(
-                        cmk.ccc.translations.translate(
-                            eventd_configuration()["hostname_translation"], event["host"]
+                elif simulator:
+                    result = simulator.match_rule(self._rule_pack, rule)
+                    if isinstance(result, UnknownMatch):
+                        html.static_icon(
+                            StaticIcon(IconNames.warning),
+                            title=_(
+                                "The simulator cannot tell whether this rule matches: %(reason)s"
+                            )
+                            % {"reason": result.reason},
                         )
-                    )
-                    result = match_event_rule(
-                        self._rule_pack, rule, event, site_configs[event["site"]]
-                    )
-                    if not isinstance(result, ec.MatchSuccess):
+                    elif not isinstance(result, ec.MatchSuccess):
                         html.static_icon(
                             StaticIcon(IconNames.hyphen),
                             title=_("Rule does not match: %(reason)s") % {"reason": result.reason},
                         )
                     else:
-                        cancelling, groups = result.cancelling, result.match_groups
                         if have_match:
                             msg = _("This rule matches, but is overruled by a previous match.")
                             icon = StaticIcon(IconNames.checkmark_plus)
                         else:
-                            if cancelling:
-                                msg = _("This rule does a cancelling match.")
-                            else:
-                                msg = _("This rule matches.")
+                            msg = _rule_match_text(ec.match_outcome(rule, result))
                             icon = StaticIcon(IconNames.checkmark)
                             have_match = True
-                        if groups:
-                            msg += _(" Match groups: %(groups)s") % {
-                                "groups": ",".join([g or _("&lt;None&gt;") for g in groups])
-                            }
+                        if groups := message_match_groups_text(result):
+                            msg += _(" Match groups: %(groups)s") % {"groups": groups}
                         html.static_icon(icon, title=msg)
 
                 if rule.get("invert_matching"):
@@ -2750,7 +2972,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 # Move rule to other pack
                 if len(self._rule_packs) > 1:
                     table.cell(_("Move to pack..."))
-                    choices: Choices = [("", "")]
+                    choices: list[Choice] = [("", "")]
                     choices += [
                         (pack["id"], pack["title"])
                         for pack in self._rule_packs
@@ -3289,135 +3511,10 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
                 html.hidden_fields()
 
 
-class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
-    @classmethod
-    @override
-    def name(cls) -> str:
-        return "mkeventd_config"
-
-    @staticmethod
-    @override
-    def static_permissions() -> Collection[PermissionName]:
-        return ["mkeventd.config"]
-
-    @classmethod
-    @override
-    def parent_mode(cls) -> type[WatoMode] | None:
-        return ModeEventConsoleRulePacks
-
-    def __init__(self, edition: Edition, ctx: PageContext) -> None:
-        super().__init__(edition, ctx)
-
-        self._default_values = self._config_domain.default_globals()
-        self._current_settings = dict(load_configuration_settings())
-
-    @staticmethod
-    @override
-    def _get_groups(show_all: bool) -> Iterable[ConfigVariableGroup]:
-        return [
-            g
-            for g in sorted(
-                config_variable_group_registry.values(), key=lambda grp: grp.sort_index()
-            )
-            if g
-            in (
-                ConfigVariableGroupEventConsoleGeneric,
-                ConfigVariableGroupEventConsoleLogging,
-                ConfigVariableGroupEventConsoleSNMP,
-            )
-        ]
-
-    @override
-    def title(self) -> str:
-        if self._search:
-            return html_escape(
-                _("Event Console configuration matching '%(search)s'") % {"search": self._search}
-            )
-        return _("Event Console configuration")
-
-    @override
-    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        return PageMenu(
-            dropdowns=[
-                PageMenuDropdown(
-                    name="related",
-                    title=_("Related"),
-                    topics=[
-                        PageMenuTopic(
-                            title=_("Setup"),
-                            entries=list(_page_menu_entries_related_ec(self.name())),
-                        ),
-                    ],
-                ),
-            ],
-            breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(),
-        )
-
-    # TODO: Consolidate with ModeEditGlobals.action()
-    @override
-    def action(self, config: Config) -> ActionResult:
-        varname = request.var("_varname")
-        action = request.var("_action")
-        if not varname:
-            return None
-
-        try:
-            config_variable = config_variable_registry[varname]
-        except KeyError:
-            raise MKUserError("_varname", _("The requested global setting does not exist."))
-
-        def_value = self._default_values[varname]
-
-        if not transactions.check_transaction(request):
-            return None
-
-        if varname in self._current_settings:
-            self._current_settings[varname] = not self._current_settings[varname]
-        else:
-            self._current_settings[varname] = not def_value
-        msg = _("Changed Configuration variable %(varname)s to %(value)s.") % {
-            "varname": varname,
-            "value": self._current_settings[varname] and _("on") or _("off"),
-        }
-
-        save_global_settings(self._current_settings, config.sites)
-
-        self._add_change(
-            action_name="edit-configvar",
-            text=msg,
-            domains=config_variable.all_domains(),
-            pending_changes=_pending_changes_for_ec(config=config, acting_user=user.id),
-        )
-
-        if action == "_reset":
-            flash(msg)
-        return redirect(mode_url("mkeventd_config"))
-
-    @property
-    @override
-    def edit_mode_name(self) -> str:
-        return "mkeventd_edit_configvar"
-
-    @override
-    def page(self, config: Config) -> None:
-        self._verify_ec_enabled(enabled=config.mkeventd_enabled)
-        self._show_configuration_variables(config)
-
-    @override
-    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(
-            self._edition,
-            omd_site(),
-            sites=config.sites,
-            graph_timeranges=config.graph_timeranges,
-        )
-
-
 ConfigVariableGroupEventConsoleGeneric = ConfigVariableGroup(
     title=_l("Event Console: generic"),
     sort_index=18,
-    icon=IconNames.snmpmib,
+    icon=IconNames.event_console,
     description=_l("Configures general Event Console settings"),
 )
 
@@ -3425,7 +3522,7 @@ ConfigVariableGroupEventConsoleGeneric = ConfigVariableGroup(
 ConfigVariableGroupEventConsoleLogging = ConfigVariableGroup(
     title=_l("Event Console: logging & diagnose"),
     sort_index=19,
-    icon=IconNames.snmpmib,
+    icon=IconNames.event_console,
     description=_l("Configures Event Console logging and diagnostic settings"),
 )
 
@@ -3433,51 +3530,9 @@ ConfigVariableGroupEventConsoleLogging = ConfigVariableGroup(
 ConfigVariableGroupEventConsoleSNMP = ConfigVariableGroup(
     title=_l("Event Console: SNMP traps"),
     sort_index=20,
-    icon=IconNames.snmpmib,
+    icon=IconNames.event_console,
     description=_l("Configures how the Event Console receives SNMP traps"),
 )
-
-
-class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
-    @classmethod
-    @override
-    def name(cls) -> str:
-        return "mkeventd_edit_configvar"
-
-    @staticmethod
-    @override
-    def static_permissions() -> Collection[PermissionName]:
-        return ["mkeventd.config"]
-
-    @classmethod
-    @override
-    def parent_mode(cls) -> type[WatoMode] | None:
-        return ModeEventConsoleSettings
-
-    def __init__(self, edition: Edition, ctx: PageContext) -> None:
-        super().__init__(edition, ctx)
-        self._need_restart = None
-
-    @override
-    def title(self) -> str:
-        return _("Event Console configuration")
-
-    @override
-    def _affected_sites(self) -> list[SiteId]:
-        return _get_event_console_sync_sites()
-
-    @override
-    def _back_url(self) -> str:
-        return ModeEventConsoleSettings.mode_url()
-
-    @override
-    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(
-            self._edition,
-            omd_site(),
-            sites=config.sites,
-            graph_timeranges=config.graph_timeranges,
-        )
 
 
 def _get_event_console_sync_sites() -> list[SiteId]:
@@ -3581,7 +3636,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return redirect(self.mode_url())
@@ -3666,8 +3721,11 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 if deletable:
                     delete_url = make_confirm_delete_link(
                         i18n=_,
-                        url=make_action_link(
-                            request, [("mode", "mkeventd_mibs"), ("_delete", filename)]
+                        url=makeactionuri_contextless(
+                            request,
+                            transactions.get(),
+                            [("mode", "mkeventd_mibs"), ("_delete", filename)],
+                            filename="wato.py",
                         ),
                         title=_("Delete MIB file"),
                         message=_("File name: %(filename)s") % {"filename": str(filename)},
@@ -3759,7 +3817,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not request.uploaded_file("_upload_mib"):
             return None  # type: ignore[unreachable]
@@ -3895,7 +3953,13 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     def _validate_and_compile_mib(self, *, mibname: str, content: str, debug: bool) -> str:  # noqa: ARG002
         if not content or content.isspace():
             raise Exception(_("The file is empty"))
-        results = ec.compile_mib(
+
+        # The import is deliberately done here and not at module level: the MIB compiler adds
+        # about 4 MB to every process importing it, and every process loading the GUI imports
+        # this module. This way it is only loaded when a MIB is uploaded.
+        from cmk.ec.mib_compiler import compile_mib  # astrein: disable=module-layers
+
+        results = compile_mib(
             mibname=mibname,
             content=content,
             source_dirs=[path for path, _title, _deletable in self._mib_dirs()],
@@ -3965,7 +4029,7 @@ def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:
     if mode_name != "mkeventd_status":
         yield _page_menu_entry_status()
 
-    if mode_name != "mkeventd_config" and user.may("mkeventd.config"):
+    if user.may("mkeventd.config"):
         yield _page_menu_entry_settings(is_suggested=False)
 
     if mode_name != "mkeventd_mibs":
@@ -3996,7 +4060,9 @@ def _page_menu_entry_settings(is_suggested: bool) -> PageMenuEntry:
         icon_name=StaticIcon(IconNames.configuration),
         is_shortcut=is_suggested,
         is_suggested=is_suggested,
-        item=make_simple_link(makeuri_contextless(request, [("mode", "mkeventd_config")])),
+        item=make_simple_link(
+            makeuri_contextless(request, [], filename="event_console_settings.py")
+        ),
     )
 
 
@@ -5152,7 +5218,7 @@ def _contact_group_elements() -> Sequence[SingleChoiceElementExtended[str]]:
     return [
         SingleChoiceElementExtended(
             name=name,
-            title=Title(title),  # astrein: disable=localization-checker
+            title=Title(title),  # astrein: disable=localization
         )
         for name, title in sorted_contact_group_choices()
     ] + [
@@ -5224,7 +5290,7 @@ ConfigVariableEventConsoleNotifyFacility = ConfigVariable(
         elements=[
             SingleChoiceElementExtended(
                 name=value,
-                title=Title(title),  # astrein: disable=localization-checker
+                title=Title(title),  # astrein: disable=localization
             )
             for value, title in syslog_facilities
         ],
@@ -5534,7 +5600,7 @@ def _sl_help() -> str:
         "with the rule set <i>Service level of services</i>. Assigning no service level "
         "is equal to defining a level of 0.<br><br>The list of available service "
         "levels is configured via a <a href='%(url)s'>global option.</a>"
-    ) % {"url": "wato.py?varname=mkeventd_service_levels&mode=edit_configvar"}
+    ) % {"url": "global_settings.py?varname=mkeventd_service_levels"}
 
 
 def _valuespec_extra_host_conf__ec_sl() -> DropdownChoice:
@@ -5702,7 +5768,9 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
         self._rule_pack_loader = rule_pack_loader
 
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, _config: MatchItemConfig
+    ) -> MatchItems:
         for rule_pack in self._iter_rulepacks():
             rule_pack_title = rule_pack["title"]
             rule_pack_id = rule_pack["id"]

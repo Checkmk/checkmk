@@ -1,37 +1,37 @@
-"""vue_library: a js_library for Vue single-file components with stylelint integration.
+"""vue_library: a js_library plus a stylelint filegroup of its styles.
 
-Vue SFCs contain embedded `<style>` blocks that stylelint should check.
-This macro bundles the two concerns cleanly:
-
-  * an internal `filegroup` of the `.vue` sources tagged for stylelint
-  * a `js_library` that includes those sources alongside any additional ones
-    (e.g. tsconfig) needed for TypeScript / ESLint processing
-
-Usage:
-
-    vue_library(
-        name = "src_vue",
-        srcs = glob(["src/**/*.vue"]),
-        data = [":tsconfig"],
-        deps = [":src_ts", "//:node_modules/vue"],
-    )
+Stylelint fails on empty input, so the filegroup exists only if there are styles.
 """
 
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 
-def vue_library(name, srcs = [], data = [], tags = [], **kwargs):
-    stylelint_fg = name + "_fg"
+_STYLE_EXTENSIONS = (".vue", ".css", ".scss")
 
-    native.filegroup(
-        name = stylelint_fg,
-        srcs = srcs,
-        tags = (tags or []) + ["stylelint"],
-        visibility = ["//visibility:private"],
-    )
+def _vue_library_impl(name, visibility, srcs, tags, **kwargs):
+    style_srcs = [src for src in srcs if src.name.endswith(_STYLE_EXTENSIONS)]
+    other_srcs = [src for src in srcs if not src.name.endswith(_STYLE_EXTENSIONS)]
+
+    if style_srcs:
+        native.filegroup(
+            name = name + "_styles",
+            srcs = style_srcs,
+            tags = (tags or []) + ["stylelint"],
+        )
+        other_srcs.append(":" + name + "_styles")
 
     js_library(
         name = name,
-        srcs = [":" + stylelint_fg] + data,
+        srcs = other_srcs,
         tags = tags,
+        visibility = visibility,
         **kwargs
     )
+
+vue_library = macro(
+    doc = "A js_library whose `.vue`, `.css` and `.scss` sources are checked by stylelint.",
+    implementation = _vue_library_impl,
+    inherit_attrs = js_library,
+    attrs = {
+        "srcs": attr.label_list(allow_files = True, configurable = False),
+    },
+)

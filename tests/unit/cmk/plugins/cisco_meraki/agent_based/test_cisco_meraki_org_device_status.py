@@ -11,14 +11,13 @@ import pytest
 import time_machine
 from polyfactory.factories import TypedDictFactory
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable, TableRow
+from cmk.agent_based.v2 import Metric, Result, State, StringTable, TableRow
 from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_device_status import (
     check_device_status,
     check_device_status_ps,
     CheckParamsDeviceStatus,
     CheckParamsPowerSupply,
     DeviceStatus,
-    discover_device_status,
     discover_device_status_ps,
     inventorize_power_supplies,
     parse_device_status,
@@ -81,23 +80,6 @@ def test_check_device_status_ps_disconnected() -> None:
 
     value = list(check_device_status_ps("1", params, section))
     expected = [Result(state=State.WARN, summary="Status: disconnected")]
-
-    assert value == expected
-
-
-@pytest.mark.parametrize(
-    "device_status",
-    [
-        _RawDevicesStatusFactory.build(status="powering"),
-        _RawDevicesStatusFactory.build(status="offline"),
-    ],
-)
-def test_discover_device_status(device_status: RawDevicesStatus) -> None:
-    string_table = _get_string_table_from_device_status(device_status)
-    section = _parse_and_assert_not_none(string_table)
-
-    value = sorted(discover_device_status(section))
-    expected = [Service()]
 
     assert value == expected
 

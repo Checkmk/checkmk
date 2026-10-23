@@ -12,9 +12,14 @@ from urllib.parse import quote
 import requests
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
-from pydantic import BaseModel, UUID4
+from pydantic import BaseModel, UUID4, ValidationError
 
-from cmk.agent_receiver.agent_receiver.models import ConnectionMode
+from cmk.agent_receiver.agent_receiver.models import (
+    ConnectionMode,
+    DownloadRequest,
+    UpdateStatusRequest,
+    UpdateStatusResponse,
+)
 from cmk.agent_receiver.lib.auth import B64SiteInternalSecret
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import logger
@@ -57,22 +62,6 @@ def _credentials_to_rest_api_auth(credentials: HTTPBasicCredentials) -> str:
     return f"Bearer {credentials.username} {credentials.password}"
 
 
-def _forward_post(
-    endpoint: str,
-    credentials: HTTPBasicCredentials,
-    json_body: dict[str, object],
-) -> requests.Response:
-    return requests.post(
-        f"{_local_rest_api_url()}/{endpoint}",
-        headers={
-            "Authorization": _credentials_to_rest_api_auth(credentials),
-            "Accept": "application/json",
-        },
-        json=json_body,
-        timeout=30,
-    )
-
-
 def _forward_get(
     endpoint: str,
     credentials: HTTPBasicCredentials,
@@ -112,6 +101,23 @@ def _forward_put_token(
         headers={
             "Authorization": f"CMK-TOKEN {token}",
             "Accept": "application/json",
+        },
+        json=json_body,
+        timeout=30,
+    )
+
+
+def _forward_post_internal(
+    endpoint: str,
+    site_internal_secret: B64SiteInternalSecret,
+    json_body: dict[str, object],
+    accept: str,
+) -> requests.Response:
+    return requests.post(
+        f"{_local_internal_rest_api_url()}/{endpoint}",
+        headers={
+            "Authorization": f"InternalToken {site_internal_secret}",
+            "Accept": accept,
         },
         json=json_body,
         timeout=30,
@@ -208,35 +214,6 @@ def register_token(
     return RegisterResponse.model_validate(response.json())
 
 
-@log_http_exception
-def get_root_cert(credentials: HTTPBasicCredentials) -> str:
-    response = _forward_get(
-        "root_cert",
-        credentials,
-    )
-    _verify_response(response, HTTPStatus.OK)
-    return str(response.json()["cert"])
-
-
-@log_http_exception
-def post_csr(
-    credentials: HTTPBasicCredentials,
-    csr: str,
-) -> str:
-    response = _forward_post(
-        "csr",
-        credentials,
-        {"csr": csr},
-    )
-    _verify_response(response, HTTPStatus.OK)
-    return str(response.json()["cert"])
-
-
-class HostConfiguration(BaseModel, frozen=True):
-    site: str
-    is_cluster: bool
-
-
 def _url_encode_hostname(host_name: str) -> str:
     """Escape special characters in the host name to make it URL safe
 
@@ -260,40 +237,6 @@ def _url_encode_hostname(host_name: str) -> str:
 
 
 @log_http_exception
-def host_configuration(
-    credentials: HTTPBasicCredentials,
-    host_name: str,
-) -> HostConfiguration:
-    if (
-        response := _forward_get(
-            f"objects/host_config_internal/{_url_encode_hostname(host_name)}",
-            credentials,
-        )
-    ).status_code == HTTPStatus.NOT_FOUND:
-        # The REST API only says 'Not Found' in the response title here
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail=f"Host {host_name} does not exist.",
-        )
-    _verify_response(response, HTTPStatus.OK)
-    return HostConfiguration(**response.json())
-
-
-@log_http_exception
-def link_host_with_uuid(
-    credentials: HTTPBasicCredentials,
-    host_name: str,
-    uuid: UUID4,
-) -> None:
-    response = _forward_put(
-        f"objects/host_config_internal/{_url_encode_hostname(host_name)}/actions/link_uuid/invoke",
-        credentials,
-        {"uuid": str(uuid)},
-    )
-    _verify_response(response, HTTPStatus.NO_CONTENT)
-
-
-@log_http_exception
 def cmk_edition(credentials: HTTPBasicCredentials) -> CMKEdition:
     response = _forward_get(
         "version",
@@ -301,6 +244,60 @@ def cmk_edition(credentials: HTTPBasicCredentials) -> CMKEdition:
     )
     _verify_response(response, HTTPStatus.OK)
     return CMKEdition[response.json()["edition"]]
+
+
+@log_http_exception
+def deployment_status(
+    site_internal_secret: B64SiteInternalSecret,
+    host_name: str,
+    uuid: UUID4,
+    status_request: UpdateStatusRequest,
+) -> UpdateStatusResponse:
+    response = _forward_post_internal(
+        f"objects/agent_deployment_internal/{_url_encode_hostname(host_name)}/actions/status/invoke",
+        site_internal_secret,
+        {**status_request.model_dump(exclude_none=True), "uuid": str(uuid)},
+        "application/json",
+    )
+    _verify_agent_update_response(response)
+    return UpdateStatusResponse.model_validate(response.json())
+
+
+@log_http_exception
+def deployment_download(
+    site_internal_secret: B64SiteInternalSecret,
+    host_name: str,
+    uuid: UUID4,
+    download_request: DownloadRequest,
+) -> bytes:
+    response = _forward_post_internal(
+        f"objects/agent_deployment_internal/{_url_encode_hostname(host_name)}/actions/download/invoke",
+        site_internal_secret,
+        {**download_request.model_dump(), "uuid": str(uuid)},
+        "application/octet-stream",
+    )
+    _verify_agent_update_response(response)
+    return response.content
+
+
+def _verify_agent_update_response(response: requests.Response) -> None:
+    if response.status_code == HTTPStatus.NOT_FOUND and _matched_no_endpoint(response):
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_IMPLEMENTED,
+            detail="This site offers no agent updates.",
+        )
+    _verify_response(response, HTTPStatus.OK)
+
+
+def _matched_no_endpoint(response: requests.Response) -> bool:
+    # The REST API titles a URL that matches no endpoint with the bare status phrase, which is
+    # what a Community site answers, as it has no agent deployment endpoints. The endpoints give
+    # their own 404s a title of their own.
+    try:
+        title = _RestApiErrorDescr.model_validate_json(response.text).title
+    except ValidationError:
+        return True
+    return title == HTTPStatus.NOT_FOUND.phrase
 
 
 def _verify_response(
@@ -322,7 +319,7 @@ class _RestApiErrorDescr(BaseModel, frozen=True):
 def _parse_error_response_body(body: str) -> str:
     """
     The REST API often returns JSON error bodies such as
-    {"title": "You do not have the permission for agent pairing.", "status": 403}
+    {"title": "Insufficient permissions", "status": 403}
     from which we want to extract the title field.
 
     >>> _parse_error_response_body("123")

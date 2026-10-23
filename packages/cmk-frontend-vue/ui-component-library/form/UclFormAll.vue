@@ -355,6 +355,7 @@ function getCascadingSingleChoice(
       }
     ],
     layout: 'vertical',
+    button_group_size: 'medium',
     ...options
   }
 }
@@ -656,7 +657,7 @@ function getLabels(name: string, options?: Partial<Omit<Labels, 'type'>>): Label
     type: 'labels',
     ...getFormSpecDefaults(name),
     autocompleter: {
-      fetch_method: 'ajax_vs_autocomplete',
+      fetch_method: 'rest_autocomplete',
       data: {
         ident: 'label',
         params: {

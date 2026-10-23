@@ -3,8 +3,16 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
+<script lang="ts">
+import type { HostServiceEntry } from '@/monitoring/shared/api/types'
+
+export type ServiceHeaderSubject = Pick<
+  HostServiceEntry,
+  'name' | 'state' | 'stale' | 'is_flapping' | 'modes'
+>
+</script>
+
 <script setup lang="ts">
-import type { HostServiceEntry, ServiceMode } from '@/monitoring/shared/api/types'
 import ServiceStateDisplay from '@/monitoring/shared/components/ServiceStateDisplay.vue'
 import StateModeIcons from '@/monitoring/shared/components/StateModeIcons.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
@@ -12,21 +20,18 @@ import SlideInHeader from '@/monitoring/shared/components/slide-in/SlideInHeader
 
 withDefaults(
   defineProps<{
-    service: HostServiceEntry
-    // The modes and actions only arrive with the overview, so the header renders without them
-    // until it loads.
-    modes?: ServiceMode[]
+    service: ServiceHeaderSubject
     actions?: CellAction[]
     loadActionMenu?: (() => Promise<CellAction[]>) | undefined
   }>(),
-  { modes: () => [], actions: () => [], loadActionMenu: undefined }
+  { actions: () => [], loadActionMenu: undefined }
 )
 </script>
 
 <template>
   <SlideInHeader
     :title="service.name"
-    :modes="modes"
+    :modes="service.modes ?? []"
     :actions="actions"
     :load-action-menu="loadActionMenu"
   >

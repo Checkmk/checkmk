@@ -10,27 +10,17 @@ from cmk.gui.dashboard.type_defs import (
 )
 from cmk.gui.fields.attributes import MappingConverter
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.valuespec.definitions import HostStateValue, MonitoringStateValue
 
+from ..type_defs import (
+    HOST_STATE_VALUES,
+    HostState,
+    MONITORING_STATE_VALUES,
+    MonitoringState,
+)
 from ._base import BaseWidgetContent
 
-type HostState = Literal["UP", "DOWN", "UNREACHABLE"]
-_HOST_STATE_CONVERTER = MappingConverter[HostState, HostStateValue](
-    {
-        "UP": 0,
-        "DOWN": 1,
-        "UNREACHABLE": 2,
-    }
-)
-type MonitoringState = Literal["OK", "WARNING", "CRITICAL", "UNKNOWN"]
-_MONITORING_STATE_CONVERTER = MappingConverter[MonitoringState, MonitoringStateValue](
-    {
-        "OK": 0,
-        "WARNING": 1,
-        "CRITICAL": 2,
-        "UNKNOWN": 3,
-    }
-)
+_HOST_STATE_CONVERTER = MappingConverter(HOST_STATE_VALUES)
+_MONITORING_STATE_CONVERTER = MappingConverter(MONITORING_STATE_VALUES)
 
 
 @api_model

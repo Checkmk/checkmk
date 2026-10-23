@@ -19,13 +19,13 @@ UNIT_PERCENTAGE = Unit(DecimalNotation("%"))
 
 metric_pagefile_used_percent = Metric(
     name="pagefile_used_percent",
-    title=Title("Used virtual memory"),
+    title=Title("Used virtual memory percentage"),
     unit=UNIT_PERCENTAGE,
     color=Color.BLUE,
 )
 metric_pagefile_used_percent_avg = Metric(
     name="pagefile_used_percent_avg",
-    title=Title("Used virtual memory (averaged)"),
+    title=Title("Used virtual memory percentage (averaged)"),
     unit=UNIT_PERCENTAGE,
     color=Color.PINK,
 )

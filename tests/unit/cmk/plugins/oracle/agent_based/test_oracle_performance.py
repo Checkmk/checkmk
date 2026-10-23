@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Mapping, Sequence
 
 import pytest
 
 from cmk.agent_based.v2 import (
     CheckResult,
+    IgnoreResultsError,
     InventoryResult,
     Metric,
     Result,
@@ -19,7 +21,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.oracle.agent_based import oracle_performance_check
 from cmk.plugins.oracle.agent_based import oracle_performance_check as opc
-from cmk.plugins.oracle.agent_based.liboracle import SectionPerformance
+from cmk.plugins.oracle.agent_based.liboracle import Ok, SectionPerformance
 from cmk.plugins.oracle.agent_based.oracle_performance_inventory import (
     inventorize_oracle_performance,
 )
@@ -101,6 +103,20 @@ def test_discover_oracle_performance(
 ) -> None:
     section = parse_oracle_performance(string_table)
     assert sorted(opc.discover_oracle_performance({}, section)) == expected_result
+
+
+def test_discover_oracle_performance_ignores_rows_without_instance_name() -> None:
+    # The agent output contained a row whose instance name column was empty,
+    # which made discovery crash on Service(item="").
+    section = parse_oracle_performance(
+        [
+            *_AGENT_OUTPUT_1,
+            ["", "sys_time_model", "DB CPU", "14826"],
+        ]
+    )
+    assert list(opc.discover_oracle_performance({}, section)) == [
+        Service(item="TWH", parameters={"check_dbtime": True, "check_memory": True})
+    ]
 
 
 @pytest.mark.parametrize(
@@ -235,9 +251,11 @@ def test_inventorize_oracle_performance(
                 "dbtime": [("oracle_db_cpu", ("fixed", (1.0, 2.0)))],
             },
             {
-                "Oracle DB": {
-                    "sys_time_model": {"DB CPU": 1000000, "DB time": 1000000},
-                }
+                "Oracle DB": Ok(
+                    {
+                        "sys_time_model": {"DB CPU": 1000000, "DB time": 1000000},
+                    }
+                )
             },
             [
                 Result(state=State.OK, summary="DB Time: 0.00/s"),
@@ -269,14 +287,16 @@ def test_check_oracle_performance_dbtime(
                 "memory": [("oracle_sga_size", ("fixed", (1, 2)))],
             },
             {
-                "Oracle DB": {
-                    "SGA_info": {
-                        "Maximum SGA Size": 34359738368,
-                    },
-                    "PGA_info": {
-                        "total PGA allocated": [2561432576, None],
-                    },
-                }
+                "Oracle DB": Ok(
+                    {
+                        "SGA_info": {
+                            "Maximum SGA Size": 34359738368,
+                        },
+                        "PGA_info": {
+                            "total PGA allocated": [2561432576, None],
+                        },
+                    }
+                )
             },
             [
                 Result(
@@ -308,11 +328,13 @@ def test_check_oracle_performance_memory(
                 "memory": [("oracle_sga_size", ("fixed", (1, 2)))],
             },
             {
-                "Oracle DB": {
-                    "iostat_file": {
-                        "Archive Log Backup": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                "Oracle DB": Ok(
+                    {
+                        "iostat_file": {
+                            "Archive Log Backup": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        }
                     }
-                }
+                )
             },
             [
                 Result(state=State.OK, notice="Archive Log Backup Small Reads: 0.00/s"),
@@ -354,11 +376,13 @@ def test_check_oracle_performance_iostat_ios(
                 "waitclasses": [("oracle_wait_class_total", ("fixed", (1.0, 3.0)))],
             },
             {
-                "Oracle DB": {
-                    "sys_wait_class": {
-                        "Administrative": [207484198, 36421528, 162, 118],
-                    },
-                }
+                "Oracle DB": Ok(
+                    {
+                        "sys_wait_class": {
+                            "Administrative": [207484198, 36421528, 162, 118],
+                        },
+                    }
+                )
             },
             [
                 Result(state=State.OK, notice="Administrative wait class: 0.00/s"),
@@ -381,3 +405,68 @@ def test_check_oracle_performance_waitclasses(
     expected_result: CheckResult,
 ) -> None:
     assert list(opc.check_oracle_performance_waitclasses(item, params, section)) == expected_result
+
+
+_FAILURE = [["TWH", "FAILURE", "ORA-00942: table or view does not exist"]]
+
+
+def test_discover_failure_row() -> None:
+    section = parse_oracle_performance(_FAILURE)
+    assert list(opc.discover_oracle_performance({}, section)) == [
+        Service(item="TWH", parameters={"check_dbtime": True, "check_memory": True})
+    ]
+    assert list(opc.discover_oracle_performance_subcheck("dbtime")({"dbtime": []}, section)) == [
+        Service(item="TWH")
+    ]
+
+
+def test_check_surfaces_failure() -> None:
+    section = parse_oracle_performance(_FAILURE)
+    expected = [Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist")]
+    assert (
+        list(
+            opc.check_oracle_performance(
+                "TWH", {"check_dbtime": True, "check_memory": True}, section
+            )
+        )
+        == expected
+    )
+    assert list(opc.check_oracle_performance_dbtime("TWH", {}, section)) == expected
+    assert list(opc.check_oracle_performance_memory("TWH", {}, section)) == expected
+    assert list(opc.check_oracle_performance_iostat_bytes("TWH", {}, section)) == expected
+    assert list(opc.check_oracle_performance_iostat_ios("TWH", {}, section)) == expected
+    assert list(opc.check_oracle_performance_waitclasses("TWH", {}, section)) == expected
+
+
+def test_failure_row_wins_over_data_rows() -> None:
+    assert list(
+        opc.check_oracle_performance_dbtime(
+            "TWH", {}, parse_oracle_performance(_AGENT_OUTPUT_1 + _FAILURE)
+        )
+    ) == [Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist")]
+
+
+def test_inventory_skips_failure_row() -> None:
+    assert not list(inventorize_oracle_performance(parse_oracle_performance(_FAILURE)))
+
+
+def test_check_missing_goes_stale() -> None:
+    with pytest.raises(IgnoreResultsError):
+        list(opc.check_oracle_performance_dbtime("TWH", {}, parse_oracle_performance([])))
+
+
+def test_check_iostat_bytes_reports_non_integer_counter(monkeypatch: pytest.MonkeyPatch) -> None:
+    store: dict[str, object] = {
+        f"DB.iostat_file.oracle_ios_f_temp_file_{suffix}": (0.0, 0)
+        for suffix in ("s_rb", "l_rb", "s_wb", "l_wb")
+    }
+    monkeypatch.setattr(oracle_performance_check, "get_value_store", lambda: store)
+    monkeypatch.setattr(time, "time", lambda: 100.0)
+    section: SectionPerformance = {
+        "DB": Ok({"iostat_file": {"Temp File": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, None]}})
+    }
+
+    assert Result(
+        state=State.UNKNOWN,
+        summary="Temp File Large Write: Oracle reported no integer value, counter skipped",
+    ) in list(opc.check_oracle_performance_iostat_bytes("DB", {}, section))

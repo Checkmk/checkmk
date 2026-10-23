@@ -7,11 +7,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkLinkCard from 'cmk-ui-library/components/CmkLinkCard'
+import StateTag from 'cmk-ui-library/components/StateTag.vue'
+import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import { ref } from 'vue'
 
 defineProps<{ screenshotMode: boolean }>()
 const bordersSelected = ref<'standard' | 'borderless'>('standard')
 const contrastSelected = ref<'standard' | 'high'>('standard')
+const subtitleColorSelected = ref<'dimmed' | 'secondary'>('dimmed')
 </script>
 
 <template>
@@ -46,6 +49,22 @@ const contrastSelected = ref<'standard' | 'high'>('standard')
     label="some label"
     required
   />
+  <br />
+  <label>Subtitle color: </label>
+  <CmkDropdown
+    v-model="subtitleColorSelected"
+    :options="{
+      type: 'fixed',
+      suggestions: [
+        { name: 'dimmed', title: 'Dimmed' },
+        { name: 'secondary', title: 'Secondary' }
+      ]
+    }"
+    input-hint="some input hint"
+    no-results-hint="no results hint"
+    label="some label"
+    required
+  />
   <br /><br /><br />
   <CmkLinkCard
     title="Checkmk website"
@@ -54,6 +73,7 @@ const contrastSelected = ref<'standard' | 'high'>('standard')
     url="https://checkmk.com"
     :borders="bordersSelected"
     :contrast="contrastSelected"
+    :subtitle-color="subtitleColorSelected"
     :open-in-new-tab="true"
   />
   <CmkLinkCard
@@ -62,6 +82,7 @@ const contrastSelected = ref<'standard' | 'high'>('standard')
     url="https://chat.checkmk.com"
     :borders="bordersSelected"
     :contrast="contrastSelected"
+    :subtitle-color="subtitleColorSelected"
     :open-in-new-tab="true"
   />
   <CmkLinkCard
@@ -82,4 +103,25 @@ const contrastSelected = ref<'standard' | 'high'>('standard')
     :disabled="true"
     :open-in-new-tab="false"
   />
+
+  <CmkLinkCard
+    title="Without a link"
+    subtitle="A card with neither url nor callback is a plain container: no hover, no focus ring."
+    :borders="bordersSelected"
+    :contrast="contrastSelected"
+    :subtitle-color="subtitleColorSelected"
+    :open-in-new-tab="false"
+  >
+    <template #leading>
+      <StateTag label="UP" tone="ok" kind="host" class="ucl-cmk-link-card-dev__leading" />
+    </template>
+    <CmkParagraph>Anything the card should carry below its subtitle goes here.</CmkParagraph>
+  </CmkLinkCard>
 </template>
+
+<style scoped>
+.ucl-cmk-link-card-dev__leading {
+  align-self: flex-start;
+  margin-right: var(--dimension-6);
+}
+</style>

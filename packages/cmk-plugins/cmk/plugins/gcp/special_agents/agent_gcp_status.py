@@ -12,11 +12,12 @@ import argparse
 import sys
 import typing
 from collections.abc import Sequence
+from http import HTTPStatus
 
 import pydantic
 import requests
 
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 __version__ = "3.0.0b1"
 
@@ -78,7 +79,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
 def _health_info() -> str:
     resp = requests.get("https://status.cloud.google.com/incidents.json", timeout=900)
-    if resp.status_code == 200:
+    if resp.status_code == HTTPStatus.OK:
         return resp.text
     return "{}"
 

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkCollapsible, { CmkCollapsibleTitle } from 'cmk-ui-library/components/CmkCollapsible'
 import CmkHtml from 'cmk-ui-library/components/CmkHtml.vue'
 import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
@@ -35,7 +35,7 @@ const crashReportUrl = computed<string | null>(() =>
 </script>
 
 <template>
-  <CmkAlertBox variant="error">
+  <CmkAlertBoxDeprecated variant="error">
     <div class="cmk-error-alert">
       <div class="cmk-error-alert__paragraph">
         <p>{{ _t('An unexpected error occurred') }}:</p>
@@ -79,7 +79,7 @@ const crashReportUrl = computed<string | null>(() =>
         </CmkCollapsible>
       </div>
     </div>
-  </CmkAlertBox>
+  </CmkAlertBoxDeprecated>
 </template>
 
 <style scoped>

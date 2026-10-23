@@ -3,15 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass
 from typing import Literal
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 from pydantic import BaseModel
 
 from cmk.ccc.site import SiteId
-from cmk.password_store.v1_unstable import Secret as StoreSecret
+from cmk.password_store.v1 import Secret as StoreSecret
 from cmk.server_side_calls import internal, v1
 from cmk.utils import config_warnings
 
@@ -20,6 +20,12 @@ CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 type _PasswordSpec = tuple[
     Literal["cmk_postprocessed"], Literal["stored_password", "explicit_password"], tuple[str, str]
+]
+
+type _ProxySpec = tuple[
+    Literal["cmk_postprocessed"],
+    Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
+    str,
 ]
 
 
@@ -57,7 +63,11 @@ class BackendProxy(BaseModel):
                 return secret_value
 
     def _make_url_with_auth(self, user: str, password: str) -> str:
-        return f"{self.scheme}://{user}:{password}@{self.proxy_server_name}:{self.port}"
+        # User and password are stored as typed, the URL needs them percent-encoded
+        return (
+            f"{self.scheme}://{quote(user, safe='')}:{quote(password, safe='')}"
+            f"@{self.proxy_server_name}:{self.port}"
+        )
 
 
 type GlobalProxies = Mapping[str, BackendProxy]
@@ -84,15 +94,28 @@ class OAuth2Connection:
     authority: str
     sites: OAuth2Sites
     connector_type: OAuth2ConnectorType
+    proxy: _ProxySpec = ("cmk_postprocessed", "environment_proxy", "")
 
 
-def extract_all_adhoc_secrets(
+@dataclass(frozen=True)
+class ExtractedSecrets:
+    """The ad hoc secrets of a configuration, and the ids of all secrets it references.
+
+    `referenced_ids` includes the ids of stored passwords, which are not part of
+    `adhoc` because their value lives in the user managed password store.
+    """
+
+    adhoc: Mapping[str, StoreSecret[str]]
+    referenced_ids: Set[str]
+
+
+def extract_secrets(
     rules_by_name: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     global_proxies_with_lookup: GlobalProxiesWithLookup,
     oauth2_connections: Mapping[str, OAuth2Connection],
-) -> Mapping[str, StoreSecret[str]]:
+) -> ExtractedSecrets:
     """
-    >>> extract_all_adhoc_secrets(
+    >>> extract_secrets(
     ...     rules_by_name=[
     ...         (
     ...             'pure_storage_fa',
@@ -110,32 +133,25 @@ def extract_all_adhoc_secrets(
     ...     ),
     ...     oauth2_connections={},
     ... )
-    {':uuid:1234': Secret('****')}
+    ExtractedSecrets(adhoc={':uuid:1234': Secret('****')}, referenced_ids={':uuid:1234'})
     """
     use_alpha = True  # whatever is more comprehensive in extracting secrets
     preprocessing_results = [
-        (
-            name,
-            [
-                process_configuration_to_parameters(
-                    rule,
-                    global_proxies_with_lookup,
-                    oauth2_connections,
-                    f"ruleset: {name}",
-                    use_alpha,
-                )
-                for rule in rules
-            ],
+        process_configuration_to_parameters(
+            rule,
+            global_proxies_with_lookup,
+            oauth2_connections,
+            f"ruleset: {name}",
+            use_alpha,
         )
         for name, rules in rules_by_name
+        for rule in rules
     ]
 
-    return {
-        k: v
-        for name, prep in preprocessing_results
-        for res in prep
-        for k, v in res.found_secrets.items()
-    }
+    return ExtractedSecrets(
+        adhoc={k: v for res in preprocessing_results for k, v in res.found_secrets.items()},
+        referenced_ids={name for res in preprocessing_results for name in res.surrogates.values()},
+    )
 
 
 @dataclass(frozen=True)
@@ -207,7 +223,9 @@ def _processed_config_value(
                 str() as connection_id,
             )
         ):
-            return _replace_oauth2_connection(connection_id, oauth2_connections)
+            return _replace_oauth2_connection(
+                connection_id, oauth2_connections, global_proxies_with_lookup
+            )
 
         case tuple(("cmk_postprocessed", str() as special_type, value)):
             match special_type, value, is_internal:
@@ -270,8 +288,26 @@ def _replace_password(
     )
 
 
+def _replace_oauth2_proxy(
+    proxy: _ProxySpec,
+    global_proxies_with_lookup: GlobalProxiesWithLookup,
+    usage_hint: str,
+) -> ReplacementResult[v1.EnvProxy | v1.NoProxy | v1.URLProxy]:
+    match proxy:
+        case ("cmk_postprocessed", "no_proxy", _):
+            return ReplacementResult(v1.NoProxy(), {}, {})
+        case ("cmk_postprocessed", "stored_proxy", str(proxy_name)):
+            return _replace_v1_stored_proxy(proxy_name, global_proxies_with_lookup, usage_hint)
+        case ("cmk_postprocessed", "explicit_proxy", str(url)):
+            return _replace_v1_explicit_proxy(url)
+        case _:
+            return ReplacementResult(v1.EnvProxy(), {}, {})
+
+
 def _replace_oauth2_connection(
-    connection_id: str, oauth2_connections: Mapping[str, OAuth2Connection]
+    connection_id: str,
+    oauth2_connections: Mapping[str, OAuth2Connection],
+    global_proxies_with_lookup: GlobalProxiesWithLookup,
 ) -> ReplacementResult[internal.OAuth2Connection]:
     try:
         oauth2_connection = oauth2_connections[connection_id]
@@ -293,6 +329,11 @@ def _replace_oauth2_connection(
     _replaced_client_secret = _replace_password(oauth2_connection.client_secret[2][0], None, True)
     _replaced_access_token = _replace_password(oauth2_connection.access_token[2][0], None, True)
     _replaced_refresh_token = _replace_password(oauth2_connection.refresh_token[2][0], None, True)
+    _replaced_proxy = _replace_oauth2_proxy(
+        oauth2_connection.proxy,
+        global_proxies_with_lookup,
+        f'OAuth2 connection "{connection_id}"',
+    )
     return ReplacementResult(
         internal.OAuth2Connection(
             client_secret=_replaced_client_secret.value,
@@ -302,16 +343,19 @@ def _replace_oauth2_connection(
             tenant_id=oauth2_connection.tenant_id,
             authority=oauth2_connection.authority,
             connector_type=oauth2_connection.connector_type,
+            proxy=_replaced_proxy.value,
         ),
         {
             **_replaced_client_secret.found_secrets,
             **_replaced_access_token.found_secrets,
             **_replaced_refresh_token.found_secrets,
+            **_replaced_proxy.found_secrets,
         },
         {
             **_replaced_client_secret.surrogates,
             **_replaced_access_token.surrogates,
             **_replaced_refresh_token.surrogates,
+            **_replaced_proxy.surrogates,
         },
     )
 

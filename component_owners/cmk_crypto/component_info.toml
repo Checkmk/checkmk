@@ -4,5 +4,5 @@ has_support_component = true
 members_required = 3
 tier = 2
 description = """
--
+- the cmk-crypto package and all things related to cryptography
 """

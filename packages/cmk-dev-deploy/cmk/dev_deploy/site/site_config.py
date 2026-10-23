@@ -120,7 +120,7 @@ def is_stale_override(mk_path: Path, pid_file: Path, site_name: str) -> bool:
 
     Args:
         mk_path: Path to the override ``.mk`` file.
-        pid_file: Path to the iBazel PID file.
+        pid_file: Path to the frontend dev server's PID file.
         site_name: OMD site name, e.g. ``'v260'``.
 
     Returns:

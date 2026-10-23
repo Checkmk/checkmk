@@ -29,31 +29,21 @@ const combinedMetricsAutocompleter = computed<Autocompleter>(() => {
   // A single, specific host/service resolves to exactly one object, so its own graph templates are
   // offered. Any broader selection is a combined graph: match the templates against the objects the
   // configured filters select (an empty context falls back to all templates on the server side).
-  if (
+
+  const ident =
     props.hostSelectionMode === ElementSelection.SPECIFIC &&
     props.serviceSelectionMode === ElementSelection.SPECIFIC
-  ) {
-    return {
-      fetch_method: 'rest_autocomplete',
-      data: {
-        ident: 'available_graph_templates',
-        params: {
-          show_independent_of_context: true,
-          escape_regex: false,
-          strict: true,
-          context: {}
-        }
-      }
-    }
-  }
+      ? 'available_graph_templates'
+      : 'combined_graphs'
 
   return {
     fetch_method: 'rest_autocomplete',
     data: {
-      ident: 'combined_graphs',
+      ident,
       params: {
+        show_independent_of_context: true,
+        escape_regex: false,
         strict: true,
-        datasource: 'services',
         context: props.context
       }
     }

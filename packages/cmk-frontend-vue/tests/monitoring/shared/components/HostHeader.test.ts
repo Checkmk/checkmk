@@ -6,17 +6,11 @@
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { expect, test, vi } from 'vitest'
 
-import type { HostEntry } from '@/monitoring/shared/api/types'
+import type { HostEntry, HostMode } from '@/monitoring/shared/api/types'
 import HostHeader from '@/monitoring/shared/components/HostHeader.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
-
-beforeAll(() => {
-  // reka-ui's menu interactions rely on pointer-capture APIs that jsdom does not implement.
-  window.HTMLElement.prototype.hasPointerCapture = () => false
-  window.HTMLElement.prototype.setPointerCapture = () => {}
-  window.HTMLElement.prototype.releasePointerCapture = () => {}
-})
 
 function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   return {
@@ -34,8 +28,16 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
     num_services_unknown: 0,
     num_services_pending: 0,
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-1',
+    num_relations: 0,
     ...overrides
   }
+}
+
+const DOWNTIME: HostMode = {
+  id: 'downtime',
+  icon_name: 'downtime',
+  link: 'view.py?view_name=downtimes_of_host&host=web-1',
+  title: 'In scheduled downtime'
 }
 
 const INLINE_ACTIONS: CellAction[] = [
@@ -75,20 +77,26 @@ test('links the host name to the given url', () => {
   )
 })
 
-test('renders the mode icons ahead of the host name', () => {
+test('reports a click on the linked host name', async () => {
+  const onTitleClick = vi.fn((event: MouseEvent) => event.preventDefault())
   render(HostHeader, {
-    props: {
-      host: makeHost({
-        modes: [
-          {
-            icon_name: 'downtime',
-            link: 'view.py?view_name=downtimes_of_host&host=web-1',
-            title: 'In scheduled downtime'
-          }
-        ]
-      })
-    }
+    props: { host: makeHost(), url: 'monitor_all_hosts.py#host=web-1', onTitleClick }
   })
+
+  await userEvent.click(screen.getByRole('link', { name: 'web-1' }))
+
+  expect(onTitleClick).toHaveBeenCalledOnce()
+})
+
+test('shows the name and state without any modes', () => {
+  render(HostHeader, { props: { host: makeHost() } })
+
+  expect(screen.getByText('web-1')).toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: 'In scheduled downtime' })).not.toBeInTheDocument()
+})
+
+test('renders the mode icons ahead of the host name', () => {
+  render(HostHeader, { props: { host: makeHost({ modes: [DOWNTIME] }) } })
 
   const downtime = screen.getByRole('link', { name: 'In scheduled downtime' })
   expect(downtime).toHaveAttribute('href', 'view.py?view_name=downtimes_of_host&host=web-1')

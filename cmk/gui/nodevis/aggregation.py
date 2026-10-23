@@ -30,10 +30,10 @@ from cmk.gui.page_menu import make_display_options_dropdown, PageMenu, PageMenuT
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, PainterParameters, VisualLinkSpec
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import FilterRegistry
+from cmk.web.utils.csrf_token import check_csrf_token
 
 
 def register(
@@ -284,7 +284,7 @@ class NodeVisualizationBIDataMapper:
 class AjaxSaveBIAggregationLayout(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token()
+        check_csrf_token(ctx.session, ctx.request, i18n=_)
         layout_var = ctx.request.get_str_input_mandatory("layout", "{}")
         layout_config = json.loads(layout_var)
         ctx.config.bi_layouts["aggregations"].update(layout_config)
@@ -295,7 +295,7 @@ class AjaxSaveBIAggregationLayout(AjaxPage):
 class AjaxDeleteBIAggregationLayout(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token()
+        check_csrf_token(ctx.session, ctx.request, i18n=_)
         for_aggregation = ctx.request.var("aggregation_name")
         ctx.config.bi_layouts["aggregations"].pop(for_aggregation)
         BILayoutManagement.save_layouts(ctx.config.bi_layouts)
@@ -343,10 +343,9 @@ def _bi_map(ctx: PageContext) -> None:
 
     div_id = "node_visualization"
     html.div("", id=div_id)
-    html.javascript("node_instance = new cmk.nodevis.BIVisualization(%s);" % json.dumps(div_id))
-
-    html.javascript(
-        f"node_instance.show_aggregations({json.dumps([aggr_name])}, {json.dumps(layout_id)})"
+    html.call_ts_function(
+        function_name="show_bi_aggregation",
+        arguments={"div_id": div_id, "aggr_name": aggr_name, "layout_id": layout_id},
     )
 
 

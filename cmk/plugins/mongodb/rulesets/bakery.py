@@ -50,15 +50,20 @@ def migrate_auth(value: object) -> Mapping[str, object]:
 
 
 def migrate(value: object) -> Mapping[str, object]:
-    if isinstance(value, dict) and "deployment" in value:
-        return value
-    if value is None:
-        return {"deployment": ("do_not_deploy", None)}
-    if value is True:
-        return {"deployment": ("sync", None)}
-    if isinstance(value, dict):
-        return {"deployment": ("sync", None), "auth": value}
-    raise ValueError(f"Unexpected value: {value!r}")
+    match value:
+        # already migrated / new
+        case dict() if "deployment" in value:
+            return value
+        # In all other cases: We're switching from match type "first" to "merge", so
+        # only return fully filled rules to preserve behavior.
+        case None:
+            return {"deployment": ("do_not_deploy", None), "auth": ("no_auth", None)}
+        case True:
+            return {"deployment": ("sync", None), "auth": ("no_auth", None)}
+        case dict():
+            return {"deployment": ("sync", None), "auth": ("auth", value)}
+        case _:
+            raise ValueError(f"Unexpected value: {value!r}")
 
 
 def _tls_form() -> Dictionary:
@@ -216,7 +221,22 @@ def _valuespec_agent_config_mk_mongodb() -> Dictionary:
                 ),
             ),
             "auth": DictElement(
-                parameter_form=_auth_form(),
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Authentication"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="no_auth",
+                            title=Title("No authentication"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="auth",
+                            title=Title("Authenticate"),
+                            parameter_form=_auth_form(),
+                        ),
+                    ),
+                    prefill=DefaultValue("no_auth"),
+                ),
             ),
         },
         migrate=migrate,

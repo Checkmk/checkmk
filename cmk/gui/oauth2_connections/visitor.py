@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 from dataclasses import asdict
-from typing import override
+from typing import assert_never, override
 
 from cmk.gui.form_specs import (
     FormSpecVisitor,
@@ -23,6 +23,7 @@ from cmk.gui.oauth2_connections.wato._modes import (
 )
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.shared_typing.vue_formspec_components import ConnectorType, Oauth2ConnectionConfig
+from cmk.utils.oauth2_connection import OAuth2ConnectorType
 
 _ParsedValueModel = Mapping[str, IncomingData]
 _FallbackDataModel = _ParsedValueModel
@@ -69,7 +70,7 @@ class OAuth2ConnectionSetupVisitor(
                     )
                     for ident, name in get_authority_mapping().items()
                 ],
-                connector_type=ConnectorType(self.form_spec.connector_type),
+                connector_type=_to_shared_connector_type(self.form_spec.connector_type),
             ),
             vue_value,
         )
@@ -80,3 +81,11 @@ class OAuth2ConnectionSetupVisitor(
         return get_visitor(get_oauth2_connection_form_spec(ident), self.visitor_options)._to_disk(  # noqa: SLF001
             parsed_value
         )
+
+
+def _to_shared_connector_type(connector_type: OAuth2ConnectorType) -> ConnectorType:
+    match connector_type:
+        case "microsoft_entra_id":
+            return ConnectorType.microsoft_entra_id
+        case _:
+            assert_never(connector_type)

@@ -78,7 +78,7 @@ module.exports = {
       {
         test: /\.scss$/,
         use: [
-          // 5. Write to theme specific file
+          // 4. Write to theme specific file
           {
             loader: 'file-loader',
             options: {
@@ -86,25 +86,19 @@ module.exports = {
               name: 'themes/[1]/[2].css'
             }
           },
-          // 4. Extract CSS definitions from JS wrapped CSS
+          // 3. Extract CSS definitions from JS wrapped CSS
           {
             loader: 'extract-loader'
           },
-          // 3. Interpret and resolve @import / url()
+          // 2. Interpret and resolve @import / url()
           {
             loader: 'css-loader',
             options: {
               url: false,
-              importLoaders: 2,
+              importLoaders: 1,
               esModule: false,
               sourceMap: false
             }
-          },
-          // 2. Some postprocessing of CSS definitions (see postcss.config.js)
-          // - add browser vendor prefixes https://github.com/postcss/autoprefixer
-          // - minifies CSS with https://github.com/cssnano/cssnano
-          {
-            loader: 'postcss-loader'
           },
           // 1. Transform sass definitions into CSS
           {

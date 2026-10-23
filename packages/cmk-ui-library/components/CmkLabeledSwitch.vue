@@ -5,7 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { computed, ref } from 'vue'
+
+const { _t } = usei18n()
+useWidgetKeys(_t('Switch'), [
+  { combo: [' '], description: _t('Toggle') },
+  { combo: ['Enter'], description: _t('Toggle') }
+])
 
 const modelValue = defineModel({ type: Boolean, default: false })
 
@@ -103,8 +111,8 @@ function toggle() {
   align-items: stretch;
   height: var(--dimension-7);
   padding: 1px;
-  background-color: var(--toggle-button-group-inactive-bg-color);
-  border: 1px solid var(--toggle-button-group-border-color);
+  background-color: var(--background-base);
+  border: 1px solid var(--border-color-default);
   border-radius: calc(var(--dimension-7) / 2);
   cursor: pointer;
 

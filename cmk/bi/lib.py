@@ -486,7 +486,9 @@ CompiledNodeKind = Literal[
 
 @dataclass(frozen=True)
 class FrozenMarker:
-    status: Literal["missing", "new", "ok", "parent"]
+    status: Literal["missing", "new", "ok", "parent", "changed"]
+    # What exactly was reconfigured, for "changed". Rendered next to the node.
+    details: str = ""
 
 
 @dataclass(frozen=True)

@@ -13,6 +13,7 @@ import type {
   HostServicesResponse
 } from '@/monitoring/shared/api/types'
 import { DEFAULT_BATCH_SIZE } from '@/monitoring/shared/constants'
+import { RowsNotLoadedError } from '@/monitoring/shared/services/MonitoringService'
 
 import { makeKeyShortcutService } from '../../shared/services/testHelpers'
 
@@ -112,7 +113,7 @@ describe('HostServicesService', () => {
         sort: [],
         searchQuery: '',
         filter: undefined,
-        fields: ['labels', 'tags', 'contacts', 'contact_groups']
+        fields: ['labels', 'tags', 'contacts', 'contact_groups', 'groups']
       },
       expect.any(AbortSignal)
     )
@@ -139,7 +140,7 @@ describe('HostServicesService', () => {
         sort: [{ id: 'state', desc: true }],
         searchQuery: '',
         filter: undefined,
-        fields: ['labels', 'tags', 'contacts', 'contact_groups']
+        fields: ['labels', 'tags', 'contacts', 'contact_groups', 'groups']
       },
       expect.any(AbortSignal)
     )
@@ -166,7 +167,7 @@ describe('HostServicesService', () => {
         sort: [],
         searchQuery: 'CPU',
         filter: undefined,
-        fields: ['labels', 'tags', 'contacts', 'contact_groups']
+        fields: ['labels', 'tags', 'contacts', 'contact_groups', 'groups']
       },
       expect.any(AbortSignal)
     )
@@ -183,8 +184,23 @@ describe('HostServicesService', () => {
 
     await vi.advanceTimersByTimeAsync(0)
 
-    expect(fetchHost).toHaveBeenCalledWith(HOST, expect.any(AbortSignal))
+    expect(fetchHost).toHaveBeenCalledWith(HOST, expect.any(AbortSignal), undefined)
     expect(service.hostEntry.value).toEqual(makeHost())
+  })
+
+  it('asks for the host fields the page needs', async () => {
+    const fetchServices = vi.fn().mockResolvedValue(makeServicesResponse([], 0, 0))
+    service = new HostServicesService(
+      { fetchServices },
+      { fetchHost },
+      HOST,
+      makeKeyShortcutService(),
+      { hostFields: ['setup_access'] }
+    )
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(fetchHost).toHaveBeenCalledWith(HOST, expect.any(AbortSignal), ['setup_access'])
   })
 
   it('re-reads the host on every refresh, so its state follows the table', async () => {
@@ -205,5 +221,47 @@ describe('HostServicesService', () => {
     await vi.advanceTimersByTimeAsync(0)
 
     expect(service.hostEntry.value?.state).toBe('DOWN')
+  })
+
+  it('exports the shown columns of the loaded services', async () => {
+    const fetchServices = vi
+      .fn()
+      .mockResolvedValue(
+        makeServicesResponse([makeService(), makeService({ name: 'Memory', state: 'WARN' })], 2, 2)
+      )
+    service = new HostServicesService(
+      { fetchServices },
+      { fetchHost },
+      HOST,
+      makeKeyShortcutService(),
+      {
+        columns: [
+          { accessorKey: 'name', header: 'Service' },
+          { accessorKey: 'state', header: 'State' },
+          { accessorKey: 'summary', header: 'Summary' }
+        ]
+      }
+    )
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.updateColumnVisibility({ summary: false })
+
+    expect(await (await service.export()).file('csv').text()).toBe(
+      '"name";"state"\n"CPU load";"OK"\n"Memory";"WARN"\n'
+    )
+  })
+
+  it('exports nothing when the services could not be loaded', async () => {
+    const fetchServices = vi.fn().mockRejectedValue(new Error('boom'))
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    service = new HostServicesService(
+      { fetchServices },
+      { fetchHost },
+      HOST,
+      makeKeyShortcutService()
+    )
+    await vi.advanceTimersByTimeAsync(0)
+
+    await expect(service.export()).rejects.toThrow(RowsNotLoadedError)
   })
 })

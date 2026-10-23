@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -14,25 +11,22 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Migrate, Percentage
+from cmk.gui.valuespec import Dictionary, Percentage
 
 
-def _parameter_valuespec_citrix_load() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels",
-                    SimpleLevels(
-                        spec=Percentage,
-                        title=_("Citrix server load"),
-                        default_levels=(85.0, 95.0),
-                    ),
-                )
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels": (p[0] / 100.0, p[1] / 100.0)},
+def _parameter_valuespec_citrix_load() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                SimpleLevels(
+                    spec=Percentage,
+                    title=_("Citrix server load"),
+                    default_levels=(85.0, 95.0),
+                ),
+            )
+        ],
+        optional_keys=[],
     )
 
 

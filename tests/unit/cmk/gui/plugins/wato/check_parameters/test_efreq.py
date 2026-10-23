@@ -9,27 +9,6 @@ from cmk.gui.plugins.wato.check_parameters.efreq import _parameter_valuespec_efr
 
 
 @pytest.mark.parametrize(
-    "entry, expected",
-    [
-        pytest.param((45, 40), {"levels_lower": (45, 40)}, id="legacy bare tuple is wrapped"),
-        pytest.param(
-            {"levels_lower": (45, 40)},
-            {"levels_lower": (45, 40)},
-            id="dict is passed through",
-        ),
-        pytest.param(
-            {"levels_lower": (45, 40), "levels_upper": (55, 60)},
-            {"levels_lower": (45, 40), "levels_upper": (55, 60)},
-            id="dict with upper levels is passed through",
-        ),
-        pytest.param({}, {}, id="empty dict is passed through"),
-    ],
-)
-def test_efreq_migrate(entry: object, expected: dict[str, object]) -> None:
-    assert _parameter_valuespec_efreq().to_valuespec(entry) == expected
-
-
-@pytest.mark.parametrize(
     "value",
     [
         pytest.param({}, id="both levels omitted"),

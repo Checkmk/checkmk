@@ -5,28 +5,30 @@
  */
 import { render, screen } from '@testing-library/vue'
 import axios from 'axios'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import DashboardContentNtop from '@/dashboard/components/DashboardContent/DashboardContentNtop.vue'
 import { useProvideIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
+
+import { makeContentProps } from '@tests/dashboard/contentProps'
 
 import { flushPromises } from '../../utils.ts'
 
 vi.mock('axios')
 const mockedAxiosGet = vi.mocked(axios.get)
 
-const baseProps = {
-  widget_id: 'w1',
-  general_settings: {
-    title: { text: 'ntop', render_mode: 'with_background' as const },
-    render_background: true
-  },
-  content: { type: 'ntop_top_talkers' as const },
-  effectiveTitle: 'ntop top talkers',
-  effective_filter_context: { uses_infos: [], filters: {}, context: {} },
-  dashboardKey: { owner: 'cmkadmin', name: 'main' }
-}
+const baseProps = makeContentProps(
+  { type: 'ntop_top_talkers' as const },
+  {
+    widget_id: 'w1',
+    general_settings: {
+      title: { text: 'ntop', render_mode: 'with_background' },
+      render_background: true
+    },
+    effectiveTitle: 'ntop top talkers'
+  }
+)
 
 function renderInPublicDashboard() {
   const wrapper = defineComponent({
@@ -39,10 +41,6 @@ function renderInPublicDashboard() {
 }
 
 describe('DashboardContentNtop', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
   it('renders the "Not available" placeholder on a shared dashboard', async () => {
     renderInPublicDashboard()
     await flushPromises()

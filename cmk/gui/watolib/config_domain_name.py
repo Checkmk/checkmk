@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="type-arg"
 
 
 import abc
@@ -30,7 +29,6 @@ from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.config_warnings import ConfigurationWarnings
-from cmk.web.utils.flashed_messages import MsgType
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames
 from cmk.web.utils.permission_verification import PermissionName
@@ -49,6 +47,12 @@ CA_CERTIFICATES: Final[ConfigDomainName] = "ca-certificates"
 SITE_CERTIFICATE: Final[ConfigDomainName] = "site-certificate"
 OMD: Final[ConfigDomainName] = "omd"
 EVENT_CONSOLE: Final[ConfigDomainName] = "ec"
+# Kept as "release_flags" (not "experimental_flags"): this is the ConfigDomain
+# ident used as a dict key on both sides of activate_changes. A central and a
+# remote site running different versions would otherwise raise a hard KeyError
+# there. Renaming it needs a dual-registration alias spanning a major version
+# boundary; see CMK-38694 / the 2026-09-09 revert of #22265.
+EXPERIMENTAL_FLAGS: Final[ConfigDomainName] = "release_flags"
 
 
 def wato_fileheader() -> str:
@@ -76,6 +80,44 @@ class DomainRequest:
 
 
 DomainRequests = Sequence[DomainRequest]
+
+
+@dataclass(frozen=True, slots=True)
+class ActivationContextKey[T]:
+    """A value the activation of a site hands to the config domains it activates
+
+    Keys are defined next to the type of their value, which may live above this module in the
+    dependency graph. Define each one once at module level.
+    """
+
+    name: str
+    type_: type[T]
+
+
+@dataclass(frozen=True)
+class ActivationContext:
+    """What the activation of a site knows, for the config domains it activates
+
+    A domain activated outside an activation, e.g. while a site is set up, gets an empty one.
+    """
+
+    values: Mapping[ActivationContextKey[object], object] = field(default_factory=dict)
+
+    def get[T](self, key: ActivationContextKey[T]) -> T:
+        if not isinstance(value := self.values.get(key), key.type_):
+            raise MKGeneralException(f"The activation provides no {key.name}")
+        return value
+
+    def get_or_none[T](self, key: ActivationContextKey[T]) -> T | None:
+        """The value, or None for a value the activation does not provide"""
+        if not isinstance(value := self.values.get(key), key.type_):
+            return None
+        return value
+
+
+# Limits the core restart/reload automation of an activation, in seconds. An activation that
+# does not provide it lets the restart take as long as it takes.
+ACTIVATION_CORE_RESTART_TIMEOUT = ActivationContextKey("core restart timeout", int)
 
 
 class ABCConfigDomain(abc.ABC):
@@ -127,7 +169,9 @@ class ABCConfigDomain(abc.ABC):
         """
 
     @abc.abstractmethod
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings: ...
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings: ...
 
     @classmethod
     def enabled(cls) -> bool:
@@ -358,6 +402,17 @@ class GlobalSettingsContext:
     site_neutral_var_dir: Path
     configured_sites: SiteConfigurations
     configured_graph_timeranges: Sequence[GraphTimerange]
+    folder_choices: Callable[[], Sequence[tuple[str, str]]]
+    edits_site_specific_value: bool | None = None
+    """None: the caller edits no value, so form specs apply no scope-dependent behavior."""
+
+
+@dataclass(frozen=True)
+class ConfigVariableHint:
+    text: HTML
+    variant: Literal["info", "warning"] = "warning"
+    copyable: str | None = None
+    """Value the frontend shows behind the text with a control that copies it."""
 
 
 class ConfigVariable:
@@ -372,9 +427,10 @@ class ConfigVariable:
         need_apache_reload: bool = False,
         allow_reset: bool = True,
         in_global_settings: bool = True,
-        hint: Callable[[], HTML] = HTML.empty,
-        hint_type: MsgType = "warning",
-        domain_hint: HTML | None = None,
+        hints: Callable[
+            [GlobalSettingsContext], Sequence[ConfigVariableHint]
+        ] = lambda _context: (),
+        always_affects_local_site: bool = False,
     ) -> None:
         self._group = group
         self._primary_domain_ident = primary_domain.ident()
@@ -384,9 +440,8 @@ class ConfigVariable:
         self._need_apache_reload = need_apache_reload
         self._allow_reset = allow_reset
         self._in_global_settings = in_global_settings
-        self._hint_func = hint
-        self._hint_type = hint_type
-        self._domain_hint = domain_hint
+        self._hints = hints
+        self._always_affects_local_site = always_affects_local_site
         self._idents_of_affected_domains = [self._primary_domain_ident]
 
     def group(self) -> ConfigVariableGroup:
@@ -433,14 +488,12 @@ class ConfigVariable:
         """Whether or not to show this option on the global settings page"""
         return self._in_global_settings
 
-    def hint(self) -> HTML:
-        return self._hint_func()
+    def hints(self, context: GlobalSettingsContext) -> Sequence[ConfigVariableHint]:
+        domain_hint = self.primary_domain().hint()
+        return [*([ConfigVariableHint(domain_hint)] if domain_hint else []), *self._hints(context)]
 
-    def hint_type(self) -> MsgType:
-        return self._hint_type
-
-    def domain_hint(self) -> HTML:
-        return self._domain_hint or self.primary_domain().hint() or HTML.empty()
+    def always_affects_local_site(self) -> bool:
+        return self._always_affects_local_site
 
     def add_config_domain_affected_by_change(
         self,

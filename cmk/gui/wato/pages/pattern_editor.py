@@ -32,6 +32,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.search.matchers import (
     ABCMatchItemGenerator,
     MatchItem,
+    MatchItemConfig,
     MatchItemGeneratorRegistry,
     MatchItems,
 )
@@ -49,8 +50,7 @@ from cmk.gui.watolib.check_mk_automations import (
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
-    folder_preserving_link,
-    folder_tree,
+    make_folder_tree,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulesets import Rule, rules_grouped_by_folder, SingleRulesetRecursively
@@ -126,7 +126,7 @@ class ModePatternEditor(WatoMode):
         self._item = request.get_str_input_mandatory("file", "")
         self._match_txt = request.get_str_input_mandatory("match", "")
 
-        self._tree = folder_tree()
+        self._tree = make_folder_tree(self._ctx.config)
         self._host = folder_from_request(self._tree, request.var("folder"), self._hostname).host(
             self._hostname
         )
@@ -239,8 +239,12 @@ class ModePatternEditor(WatoMode):
         self, *, site_configs: Mapping[SiteId, SiteConfiguration], debug: bool
     ) -> None:
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(
-            folder_tree(), "logwatch_rules"
+            self._tree, "logwatch_rules"
         ).get("logwatch_rules")
+
+        target_folder = folder_from_request(
+            self._tree, request.var("folder"), request.get_ascii_input("host")
+        )
 
         html.h3(_("Log file patterns"))
         if ruleset.is_empty():
@@ -248,8 +252,7 @@ class ModePatternEditor(WatoMode):
             html.write_text_permissive(
                 "There are no logfile patterns defined. You may create "
                 'logfile patterns using the <a href="%s">Rule Editor</a>.'
-                % folder_preserving_link(
-                    request,
+                % target_folder.url(
                     [
                         ("mode", "edit_ruleset"),
                         ("varname", "logwatch_rules"),
@@ -261,9 +264,6 @@ class ModePatternEditor(WatoMode):
         # Loop all rules for this ruleset
         already_matched = False
         abs_rulenr = 0
-        target_folder = folder_from_request(
-            self._tree, request.var("folder"), request.get_ascii_input("host")
-        )
 
         rules = ruleset.get_rules()
         rule_match_results = (
@@ -379,8 +379,7 @@ class ModePatternEditor(WatoMode):
 
                     table.row(fixed=True, collect_headers=False)
                     table.cell(colspan=7)
-                    edit_url = folder_preserving_link(
-                        request,
+                    edit_url = target_folder.url(
                         [
                             ("mode", "edit_rule"),
                             ("varname", "logwatch_rules"),
@@ -426,7 +425,9 @@ class ModePatternEditor(WatoMode):
 
 class MatchItemGeneratorLogfilePatternAnalyzer(ABCMatchItemGenerator):
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, _config: MatchItemConfig
+    ) -> MatchItems:
         title = ModePatternEditor.title_pattern_analyzer()
         yield MatchItem(
             title=title,

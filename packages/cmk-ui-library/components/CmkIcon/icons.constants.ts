@@ -324,6 +324,7 @@ import lightIconMainUserSvg from '~cmk-frontend/themes/facelift/images/icon_main
 import lightIconMainUserActiveSvg from '~cmk-frontend/themes/facelift/images/icon_main_user_active.svg?url&no-inline'
 import lightIconManualSvg from '~cmk-frontend/themes/facelift/images/icon_manual.svg?url&no-inline'
 import lightIconManualActiveSvg from '~cmk-frontend/themes/facelift/images/icon_manual_active.svg?url&no-inline'
+import lightIconMapsSvg from '~cmk-frontend/themes/facelift/images/icon_maps.svg?url&no-inline'
 import lightIconMatrixPng from '~cmk-frontend/themes/facelift/images/icon_matrix.png?url&no-inline'
 import lightIconMenuPng from '~cmk-frontend/themes/facelift/images/icon_menu.png?url&no-inline'
 import lightIconMenuItemCheckedPng from '~cmk-frontend/themes/facelift/images/icon_menu_item_checked.png?url&no-inline'
@@ -491,6 +492,7 @@ import lightIconServicesGreenSvg from '~cmk-frontend/themes/facelift/images/icon
 import lightIconServicesRefreshSvg from '~cmk-frontend/themes/facelift/images/icon_services_refresh.svg?url&no-inline'
 import lightIconServicesStopPng from '~cmk-frontend/themes/facelift/images/icon_services_stop.png?url&no-inline'
 import lightIconServicesTabulaRasaSvg from '~cmk-frontend/themes/facelift/images/icon_services_tabula_rasa.svg?url&no-inline'
+import lightIconShadowPng from '~cmk-frontend/themes/facelift/images/icon_shadow.png?url&no-inline'
 import lightIconShowLessSvg from '~cmk-frontend/themes/facelift/images/icon_show_less.svg?url&no-inline'
 import lightIconShowLessGreenSvg from '~cmk-frontend/themes/facelift/images/icon_show_less_green.svg?url&no-inline'
 import lightIconShowMoreSvg from '~cmk-frontend/themes/facelift/images/icon_show_more.svg?url&no-inline'
@@ -727,6 +729,7 @@ import darkSpeedometerSvg from '~cmk-frontend/themes/modern-dark/images/speedome
 export const emblems = [
   'add',
   'api',
+  'burger',
   'disable',
   'download',
   'downtime',
@@ -747,6 +750,7 @@ export const emblems = [
 ] as const
 
 export const oneColorIcons = [
+  'ai-assistant',
   'burger-menu',
   'cancel',
   'changes',
@@ -792,9 +796,17 @@ export const oneColorIcons = [
   'more-actions',
   'open-details',
   'dash',
-  'dashlet-resize'
+  'arrow-down',
+  'chat-new',
+  'chat-history',
+  'docking',
+  'calendar',
+  'clock',
+  'megaphone',
+  'sparkle',
+  'wrench'
 ] as const
-export const twoColorIcons = ['aggr', 'experiment'] as const
+export const twoColorIcons = ['aggr', 'experiment', 'columns', 'display-options'] as const
 
 export const iconSizes: Record<IconSizes, number> = {
   xxsmall: 8,
@@ -1136,6 +1148,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   'main-setup-active': lightIconMainSetupActiveSvg,
   'main-user-active': lightIconMainUserActiveSvg,
   'manual-active': lightIconManualActiveSvg,
+  maps: lightIconMapsSvg,
   matrix: lightIconMatrixPng,
   menu: lightIconMenuPng,
   'menu-item-checked': lightIconMenuItemCheckedPng,
@@ -1294,6 +1307,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   'services-refresh': lightIconServicesRefreshSvg,
   'services-stop': lightIconServicesStopPng,
   'services-tabula-rasa': lightIconServicesTabulaRasaSvg,
+  shadow: lightIconShadowPng,
   'show-less-green': lightIconShowLessGreenSvg,
   'show-more-green': lightIconShowMoreGreenSvg,
   showbi: lightIconShowbiPng,

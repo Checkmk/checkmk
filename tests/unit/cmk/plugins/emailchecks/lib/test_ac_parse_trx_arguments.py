@@ -127,3 +127,48 @@ class TestParseTrxArgumentsAuth:
                     "449555d1-b96b-439b-838f-d9c3bc5c950b:/path/to/password_store",
                 ]
             )
+
+
+class TestParseTrxArgumentsProxy:
+    @pytest.mark.parametrize(
+        "argv, expected",
+        [
+            pytest.param([], {}, id="unset: use the process environment"),
+            pytest.param(
+                ["--send-proxy", "FROM_ENVIRONMENT"],
+                {},
+                id="explicitly use the process environment",
+            ),
+            pytest.param(
+                ["--send-proxy", "NO_PROXY"],
+                {"http": "", "https": ""},
+                id="connect directly",
+            ),
+            pytest.param(
+                ["--send-proxy", "http://proxy.example:3128"],
+                {"http": "http://proxy.example:3128", "https": "http://proxy.example:3128"},
+                id="explicit proxy",
+            ),
+            pytest.param(
+                ["--send-proxy", "http://user:pw@proxy.example:3128"],
+                {
+                    "http": "http://user:pw@proxy.example:3128",
+                    "https": "http://user:pw@proxy.example:3128",
+                },
+                id="proxy with credentials embedded in the URL",
+            ),
+        ],
+    )
+    def test_parse_proxy(
+        self, parser: ArgumentParser, argv: list[str], expected: dict[str, str]
+    ) -> None:
+        args = parser.parse_args(
+            ["--send-server", "outlook.office.com", "--send-protocol", "SMTP", *argv]
+        )
+        assert parse_trx_arguments(args, Scope.SEND).proxy == expected
+
+    def test_invalid_proxy_raises(self, parser: ArgumentParser) -> None:
+        args = parser.parse_args(["--send-server", "outlook.office.com", "--send-protocol", "SMTP"])
+        args.send_proxy = 42
+        with pytest.raises(ValueError, match="Invalid proxy setting"):
+            parse_trx_arguments(args, Scope.SEND)

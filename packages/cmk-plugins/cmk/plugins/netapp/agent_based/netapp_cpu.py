@@ -13,15 +13,14 @@ from cmk.agent_based.v2 import (
     all_of,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     exists,
     get_value_store,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.cpu_util import check_cpu_util
 
 
@@ -37,10 +36,6 @@ def check_netapp_cpu(params: Mapping[str, Any], section: StringTable) -> CheckRe
 
 def parse_netapp_cpu(string_table: StringTable) -> StringTable | None:
     return string_table or None
-
-
-def discover_netapp_cpu(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 snmp_section_netapp_cpu = SimpleSNMPSection(
@@ -59,7 +54,7 @@ snmp_section_netapp_cpu = SimpleSNMPSection(
 check_plugin_netapp_cpu = CheckPlugin(
     name="netapp_cpu",
     service_name="CPU utilization",
-    discovery_function=discover_netapp_cpu,
+    discovery_function=discover_one_service,
     check_function=check_netapp_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},

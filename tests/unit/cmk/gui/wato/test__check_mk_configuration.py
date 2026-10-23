@@ -11,16 +11,21 @@ import pytest
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.form_specs import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
+from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
 from cmk.gui.wato._check_mk_configuration import (
     _migrate_log_levels,
     _migrate_piggybacked_host_files,
     ConfigVariableChooseSNMPBackend,
+    ConfigVariableTableRowLimit,
+    ConfigVariableTrustedCertificateAuthorities,
     make_snmp_backend_hosts_rulespec,
+    Snmpv3Contexts,
 )
 from cmk.gui.watolib.config_domain_name import GlobalSettingsContext
+from cmk.gui.watolib.config_domains import ConfigDomainCACertificates, ConfigDomainCore
 from cmk.livestatus_client import SiteConfigurations
-from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, Integer
 
 
 @pytest.mark.parametrize(
@@ -171,6 +176,7 @@ def _global_settings_context(edition: Edition) -> GlobalSettingsContext:
         site_neutral_var_dir=Path("/omd/sites/mysite/var"),
         configured_sites=SiteConfigurations({}),
         configured_graph_timeranges=[],
+        folder_choices=lambda: [("", "Main")],
     )
 
 
@@ -203,3 +209,78 @@ def test_inline_snmp_backend_unavailable_in_community() -> None:
         make_snmp_backend_hosts_rulespec(Edition.COMMUNITY).valuespec.validate_value(
             "inline", "varprefix"
         )
+
+
+def _table_row_limit_form_spec() -> Integer:
+    form_spec = ConfigVariableTableRowLimit.value_model(_global_settings_context(Edition.COMMUNITY))
+    assert isinstance(form_spec, Integer)
+    return form_spec
+
+
+def test_table_row_limit_uses_form_spec_backend() -> None:
+    assert isinstance(
+        ConfigVariableTableRowLimit.value_model(_global_settings_context(Edition.COMMUNITY)),
+        FormSpec,
+    )
+
+
+def test_table_row_limit_default_matches_general_config() -> None:
+    assert _table_row_limit_form_spec().prefill == DefaultValue(100)
+
+
+def test_table_row_limit_valid_value_round_trips_as_int() -> None:
+    visitor = get_visitor(
+        _table_row_limit_form_spec(),
+        VisitorOptions(migrate_values=False, mask_values=False),
+    )
+    assert visitor.validate(RawFrontendData(50)) == []
+    assert visitor.to_disk(RawFrontendData(50)) == 50
+
+
+def test_table_row_limit_rejects_value_below_minimum() -> None:
+    visitor = get_visitor(
+        _table_row_limit_form_spec(),
+        VisitorOptions(migrate_values=False, mask_values=False),
+    )
+    assert visitor.validate(RawFrontendData(0))
+
+
+def test_table_row_limit_upgrade_keeps_stored_int() -> None:
+    assert migrate_form_spec_disk_value(_table_row_limit_form_spec(), 42) == 42
+
+
+@pytest.mark.parametrize(
+    ("contexts", "expected_form_value"),
+    [
+        pytest.param(["vrf1", "mgmt"], [False, ["vrf1", "mgmt"]], id="without default context"),
+        pytest.param(["vrf1", "", "mgmt"], [True, ["vrf1", "mgmt"]], id="with default context"),
+    ],
+)
+def test_snmpv3_contexts_rule_maps_the_default_context_to_the_checkbox(
+    contexts: list[str], expected_form_value: list[object]
+) -> None:
+    form_value = Snmpv3Contexts.valuespec.value_to_json((None, contexts, "stop_on_timeout"))
+
+    assert form_value == [None, expected_form_value, "stop_on_timeout"]
+
+
+def test_snmpv3_contexts_rule_keeps_existing_rules_without_default_context() -> None:
+    rule_value = (None, ["vrf1", "mgmt"], "stop_on_timeout")
+
+    assert Snmpv3Contexts.valuespec.transform_value(rule_value) == rule_value
+
+
+def test_snmpv3_contexts_rule_moves_the_default_context_first() -> None:
+    rule_value = Snmpv3Contexts.valuespec.transform_value(
+        (None, ["vrf1", "", "mgmt"], "stop_on_timeout")
+    )
+
+    assert rule_value == (None, ["", "vrf1", "mgmt"], "stop_on_timeout")
+
+
+def test_trusted_cas_change_activates_the_core() -> None:
+    """The core snapshots the trusted CA bundle into every helper config serial, and relays
+    receive that serial. Without a core activation a new CA never reaches them."""
+    domain_idents = [d.ident() for d in ConfigVariableTrustedCertificateAuthorities.all_domains()]
+    assert domain_idents[0] == ConfigDomainCACertificates.ident()
+    assert ConfigDomainCore.ident() in domain_idents

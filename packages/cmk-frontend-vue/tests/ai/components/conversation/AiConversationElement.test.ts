@@ -64,10 +64,6 @@ function renderAiConversationElement(props: IAiConversationElement): ReturnType<
   })
 }
 
-afterEach(() => {
-  vi.clearAllMocks()
-})
-
 test('shows copy button after answer is complete', async () => {
   renderAiConversationElement({
     role: AiRole.ai,

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import json
 import time
 from collections.abc import Mapping, Sequence
 
@@ -28,6 +29,10 @@ from cmk.plugins.azure_deprecated.agent_based.azure_virtual_network_gateways imp
     VNetGWSettings,
 )
 from cmk.plugins.azure_deprecated.agent_based.lib import AzureMetric, Resource
+from cmk.plugins.azure_deprecated.special_agent.agent_azure import (
+    ALL_METRICS,
+    create_metric_dict,
+)
 
 SECTION: Section = {
     "vpn-001": VNetGateway(
@@ -93,20 +98,20 @@ SECTION: Section = {
                 "maximum_P2SConnectionCount": AzureMetric(
                     name="P2SConnectionCount", aggregation="maximum", value=1.0, unit="count"
                 ),
-                "count_TunnelIngressBytes": AzureMetric(
-                    name="TunnelIngressBytes", aggregation="count", value=4.0, unit="bytes"
+                "total_TunnelIngressBytes": AzureMetric(
+                    name="TunnelIngressBytes", aggregation="total", value=18472.0, unit="bytes"
                 ),
-                "count_TunnelEgressBytes": AzureMetric(
-                    name="TunnelEgressBytes", aggregation="count", value=4.0, unit="bytes"
+                "total_TunnelEgressBytes": AzureMetric(
+                    name="TunnelEgressBytes", aggregation="total", value=6729.0, unit="bytes"
                 ),
-                "count_TunnelIngressPacketDropCount": AzureMetric(
+                "total_TunnelIngressPacketDropCount": AzureMetric(
                     name="TunnelIngressPacketDropCount",
-                    aggregation="count",
-                    value=4.0,
+                    aggregation="total",
+                    value=0.0,
                     unit="count",
                 ),
-                "count_TunnelEgressPacketDropCount": AzureMetric(
-                    name="TunnelEgressPacketDropCount", aggregation="count", value=4.0, unit="count"
+                "total_TunnelEgressPacketDropCount": AzureMetric(
+                    name="TunnelEgressPacketDropCount", aggregation="total", value=3.0, unit="count"
                 ),
             },
             subscription="xyz",
@@ -442,16 +447,16 @@ SECTION_WITHOUT_PEER_ADDRESSES = {
                     '{"name": "P2SConnectionCount", "aggregation": "maximum", "value": 1.0, "unit": "count", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter":   null}'
                 ],
                 [
-                    '{"name": "TunnelIngressBytes", "aggregation": "count", "value": 4.0, "unit": "bytes", "timestamp": "2022-06-30T12:05:00Z", "filter": null, "interval_id": "PT5M", "interval": "0:05:00"}'
+                    '{"name": "TunnelIngressBytes", "aggregation": "total", "value": 18472.0, "unit": "bytes", "timestamp": "2022-06-30T12:05:00Z", "filter": null, "interval_id": "PT5M", "interval": "0:05:00"}'
                 ],
                 [
-                    '{"name": "TunnelEgressBytes", "aggregation": "count", "value": 4.0, "unit": "bytes", "timestamp": "2022-06-30T12:05:00Z", "filter": null, "interval_id": "PT5M", "interval": "0:05:00"}'
+                    '{"name": "TunnelEgressBytes", "aggregation": "total", "value": 6729.0, "unit": "bytes", "timestamp": "2022-06-30T12:05:00Z", "filter": null, "interval_id": "PT5M", "interval": "0:05:00"}'
                 ],
                 [
-                    '{"name": "TunnelIngressPacketDropCount", "aggregation": "count", "value": 4.0, "unit": "count", "timestamp": "2022-06-30T12:05:00Z", "filter": null, "interval_id": "PT5M", "interval": "0:05:00"}'
+                    '{"name": "TunnelIngressPacketDropCount", "aggregation": "total", "value": 0.0, "unit": "count", "timestamp": "2022-06-30T12:05:00Z", "filter": null, "interval_id": "PT5M", "interval": "0:05:00"}'
                 ],
                 [
-                    '{"name": "TunnelEgressPacketDropCount", "aggregation": "count", "value": 4.0, "unit": "count", "timestamp": "2022-06-30T12:05:00Z", "filter": null, "interval_id": "PT5M", "interval": "0:05:00"}'
+                    '{"name": "TunnelEgressPacketDropCount", "aggregation": "total", "value": 3.0, "unit": "count", "timestamp": "2022-06-30T12:05:00Z", "filter": null, "interval_id": "PT5M", "interval": "0:05:00"}'
                 ],
             ],
             SECTION,
@@ -519,14 +524,14 @@ def test_discovery_virtual_network_gateways(
                     summary="Site-to-site bandwidth: 13.7 kB/s (warn/crit at 12.0 kB/s/14.0 kB/s)",
                 ),
                 Metric("s2s_bandwidth", 13729.0, levels=(12000.0, 14000.0), boundaries=(0.0, None)),
-                Result(state=State.OK, summary="Tunnel Ingress Bytes: 4 B"),
-                Metric("ingress", 4.0, boundaries=(0.0, None)),
-                Result(state=State.OK, summary="Tunnel Egress Bytes: 4 B"),
-                Metric("egress", 4.0, boundaries=(0.0, None)),
-                Result(state=State.OK, summary="Tunnel Ingress Packet Drop Count: 4"),
-                Metric("ingress_packet_drop", 4.0, boundaries=(0.0, None)),
-                Result(state=State.OK, summary="Tunnel Egress Packet Drop Count: 4"),
-                Metric("egress_packet_drop", 4.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Tunnel Ingress Bytes: 18.0 KiB"),
+                Metric("ingress", 18472.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Tunnel Egress Bytes: 6.57 KiB"),
+                Metric("egress", 6729.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Tunnel Ingress Packet Drop Count: 0"),
+                Metric("ingress_packet_drop", 0.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Tunnel Egress Packet Drop Count: 3"),
+                Metric("egress_packet_drop", 3.0, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Location: maxwellmonteswest"),
             ],
             id="item_present",
@@ -694,3 +699,86 @@ def test_check_virtual_network_gateway_peering(
     section: Section, item: str, expected_result: Sequence[Result]
 ) -> None:
     assert list(check_virtual_network_gateway_peering(item, section)) == expected_result
+
+
+RAW_RESOURCE = {
+    "id": "/subscriptions/xyz/resourceGroups/rg-vpn-1/providers/Microsoft.Network/virtualNetworkGateways/vpn-001",
+    "name": "vpn-001",
+    "type": "Microsoft.Network/virtualNetworkGateways",
+    "group": "rg-vpn-1",
+    "properties": {
+        "health": {
+            "availabilityState": "Available",
+            "summary": "",
+            "reasonType": "",
+            "occuredTime": "",
+        },
+        "remote_vnet_peerings": [],
+    },
+    "specific_info": {
+        "gatewayType": "Vpn",
+        "vpnType": "RouteBased",
+        "enableBgp": False,
+        "activeActive": False,
+        "disableIPSecReplayProtection": False,
+    },
+}
+
+TUNNEL_TOTALS = {
+    "TunnelIngressBytes": 18472.0,
+    "TunnelEgressBytes": 6729.0,
+    "TunnelIngressPacketDropCount": 0.0,
+    "TunnelEgressPacketDropCount": 3.0,
+}
+
+
+def _agent_metric_rows() -> list[list[str]]:
+    rows: list[list[str]] = []
+    for metric_names, interval, aggregation in ALL_METRICS[
+        "Microsoft.Network/virtualNetworkGateways"
+    ]:
+        for name in metric_names.split(","):
+            raw_metric = {
+                "name": {"value": name},
+                "unit": "Count",
+                "timeseries": [
+                    {
+                        "data": [
+                            {
+                                "timeStamp": "2026-09-15T12:05:00Z",
+                                "average": 0.0,
+                                "maximum": 0.0,
+                                "count": 4.0,
+                                "total": TUNNEL_TOTALS.get(name, 0.0),
+                            }
+                        ]
+                    }
+                ],
+            }
+            rows.append([json.dumps(create_metric_dict(raw_metric, aggregation, interval))])
+    return rows
+
+
+def test_check_reports_tunnel_totals_from_agent_metric_definitions() -> None:
+    metric_rows = _agent_metric_rows()
+    section = parse_virtual_network_gateway(
+        [
+            ["Resource"],
+            [json.dumps(RAW_RESOURCE)],
+            ["metrics following", str(len(metric_rows))],
+            *metric_rows,
+        ]
+    )
+
+    tunnel_results = [
+        result
+        for result in check_azure_virtual_network_gateway("vpn-001", {}, section)
+        if isinstance(result, Result) and result.summary.startswith("Tunnel")
+    ]
+
+    assert tunnel_results == [
+        Result(state=State.OK, summary="Tunnel Ingress Bytes: 18.0 KiB"),
+        Result(state=State.OK, summary="Tunnel Egress Bytes: 6.57 KiB"),
+        Result(state=State.OK, summary="Tunnel Ingress Packet Drop Count: 0"),
+        Result(state=State.OK, summary="Tunnel Egress Packet Drop Count: 3"),
+    ]

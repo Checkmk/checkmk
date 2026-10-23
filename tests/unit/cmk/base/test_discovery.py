@@ -52,6 +52,7 @@ from cmk.checkengine.discovery import (
     DiscoverySettingFlags,
     DiscoverySettings,
     DiscoveryValueSpecModel,
+    execute_check_discovery,
     find_plugins,
     HostLabelPlugin,
     QualifiedDiscovery,
@@ -92,7 +93,6 @@ from cmk.checkengine.plugins import (
     DiscoveryPlugin,
     FinalCheckResult,
     FinalDiscoveryResult,
-    LegacyPluginLocation,
     ParsedSectionName,
     SectionName,
     ServiceID,
@@ -106,6 +106,8 @@ from cmk.checkengine.sectionparser import (
 )
 from cmk.checkengine.snmplib import SNMPRawDataElem
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
+from cmk.discover_plugins import PluginLocation
+from cmk.inventory.label_picker import InventorizedHostLabelsStore
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.ruleset_matcher.ruleset_name import RuleSetName
 from cmk.utils.everythingtype import EVERYTHING
@@ -168,7 +170,7 @@ _TEST_SECTION = AgentSectionPlugin(
     host_label_ruleset_name=None,
     host_label_ruleset_type="merged",
     supersedes=set(),
-    location=LegacyPluginLocation(file_name="<test>"),
+    location=PluginLocation(module="<test>", name="<test>"),
 )
 
 _TEST_LABELS_SECTION = AgentSectionPlugin(
@@ -180,7 +182,7 @@ _TEST_LABELS_SECTION = AgentSectionPlugin(
     host_label_ruleset_name=None,
     host_label_ruleset_type="merged",
     supersedes=set(),
-    location=LegacyPluginLocation(file_name="<test>"),
+    location=PluginLocation(module="<test>", name="<test>"),
 )
 
 
@@ -200,7 +202,7 @@ _TEST_CHECK_PLUGIN = InternalCheckPlugin(
     check_default_parameters=None,
     check_ruleset_name=None,
     cluster_check_function=None,
-    location=LegacyPluginLocation(file_name="<test>"),
+    location=PluginLocation(module="<test>", name="<test>"),
 )
 
 _TEST_AGENT_SECTIONS: Mapping[SectionName, AgentSectionPlugin] = {
@@ -891,6 +893,37 @@ def test__get_post_discovery_services_drops_ignored_from_autochecks() -> None:
     assert post_discovery == {}
     assert result.services.kept == 1
     assert result.services.removed == 0
+
+
+def test__get_post_discovery_services_drops_clustered_ignored_from_autochecks() -> None:
+    """Disabled clustered services are not persisted either, like disabled services."""
+    entry = AutocheckEntry(CheckPluginName("check_plugin_name"), "Ignored Item", {}, {})
+    result = DiscoveryReport()
+
+    post_discovery = get_post_discovery_autocheck_services(
+        HostName("hostname"),
+        {
+            "clustered_ignored": [
+                AutocheckServiceWithNodes(
+                    DiscoveredItem[AutocheckEntry](new=entry, previous=entry), []
+                ),
+            ],
+        },
+        ServiceFilters.accept_all(),
+        result,
+        get_service_description=lambda hn, entry: f"Test Description {entry.item}",  # noqa: ARG005
+        settings=DiscoverySettings(
+            update_host_labels=True,
+            add_new_services=True,
+            remove_vanished_services=True,
+            update_changed_service_labels=True,
+            update_changed_service_parameters=True,
+        ),
+        keep_clustered_vanished_services=True,
+    )
+
+    assert post_discovery == {}
+    assert result.clustered_ignored == 1
 
 
 def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
@@ -1716,6 +1749,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         on_error=OnError.RAISE,
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+        inventorized_host_labels_dir=cmk.utils.paths.inventorized_host_labels_dir,
     )
 
     assert succeeded is True
@@ -1758,6 +1792,7 @@ def test_commandline_discovery_reports_failure(tmp_path: Path) -> None:
         on_error=OnError.RAISE,
         autochecks_dir=tmp_path / "autochecks",
         discovered_host_labels_dir=tmp_path / "host_labels",
+        inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
     )
 
     assert succeeded is False
@@ -1804,9 +1839,69 @@ def test_commandline_discovery_reports_failed_source(tmp_path: Path) -> None:
         on_error=OnError.RAISE,
         autochecks_dir=autochecks_dir,
         discovered_host_labels_dir=tmp_path / "host_labels",
+        inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
     )
 
     assert succeeded is False
+
+
+def test_commandline_discovery_ii_keeps_services_and_labels_when_a_source_failed(
+    tmp_path: Path,
+) -> None:
+    """`cmk -II` falls back to `cmk -I` for a host with a failed data source.
+
+    A failed source says nothing about its services or host labels, so they must not be
+    taken for vanished. What the other sources found is still added.
+    """
+    host_name = HostName("test-host")
+    failed: tuple[SourceInfo, result.Result[HostSections, Exception]] = (
+        SourceInfo(host_name, None, "agent", FetcherType.TCP, SourceType.HOST),
+        result.Error(MKIPAddressLookupError(f"Failed to lookup IPv4 address of {host_name}")),
+    )
+    delivered: tuple[SourceInfo, result.Result[HostSections, Exception]] = (
+        SourceInfo(host_name, None, "special_test", FetcherType.SPECIAL_AGENT, SourceType.HOST),
+        result.OK(
+            HostSections[AgentRawDataSection](
+                sections={_TEST_SECTION_NAME: [["item_a", "ok"], ["item_new", "ok"]]}
+            )
+        ),
+    )
+    AutochecksStore(host_name, _autochecks_dir(tmp_path)).write(
+        [
+            AutocheckEntry(_TEST_PLUGIN_NAME, "item_a", {}, {}),
+            AutocheckEntry(_TEST_PLUGIN_NAME, "of_failed_source", {}, {}),
+        ]
+    )
+    (labels_dir := tmp_path / "host_labels").mkdir()
+    label_of_failed_source = HostLabel("cmk/of_failed_source", "yes", _TEST_LABELS_NAME)
+    DiscoveredHostLabelsStore(host_name, labels_dir).save([label_of_failed_source])
+
+    succeeded = commandline_discovery(
+        host_name=host_name,
+        clear_ruleset_matcher_caches=lambda: None,
+        parser=lambda fetched: [failed, delivered],  # noqa: ARG005
+        fetcher=_EmptyFetcher(),
+        section_plugins={_TEST_SECTION_NAME: _section_plugin(_TEST_SECTION)},
+        section_error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+        host_label_plugins={_TEST_SECTION_NAME: HostLabelPlugin.trivial()},
+        plugins=_test_discovery_plugins(),
+        run_plugin_names=EVERYTHING,
+        autochecks_config=_CommandlineAutochecksConfig(),
+        enforced_services={},
+        arg_only_new=False,
+        on_error=OnError.RAISE,
+        autochecks_dir=_autochecks_dir(tmp_path),
+        discovered_host_labels_dir=labels_dir,
+        inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
+    )
+
+    assert succeeded is False
+    assert {e.id() for e in AutochecksStore(host_name, _autochecks_dir(tmp_path)).read()} == {
+        ServiceID(_TEST_PLUGIN_NAME, "item_a"),
+        ServiceID(_TEST_PLUGIN_NAME, "item_new"),
+        ServiceID(_TEST_PLUGIN_NAME, "of_failed_source"),
+    }
+    assert DiscoveredHostLabelsStore(host_name, labels_dir).load() == [label_of_failed_source]
 
 
 # ---------------------------------------------------------------------------
@@ -1851,6 +1946,65 @@ class _CommandlineAutochecksConfig:
 
     def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:  # noqa: ARG002
         return {}
+
+
+def test_commandline_discovery_discovers_inventorized_host_labels(tmp_path: Path) -> None:
+    host_name = HostName("test-host")
+    InventorizedHostLabelsStore(host_name, tmp_path / "inventorized_host_labels").save(
+        {"cmk/inventory/product": "foo"}
+    )
+
+    commandline_discovery(
+        host_name=host_name,
+        clear_ruleset_matcher_caches=lambda: None,
+        parser=lambda fetched: [],  # noqa: ARG005
+        fetcher=_EmptyFetcher(),
+        section_plugins={},
+        section_error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+        host_label_plugins={},
+        plugins={},
+        run_plugin_names=EVERYTHING,
+        autochecks_config=_CommandlineAutochecksConfig(),
+        enforced_services={},
+        arg_only_new=False,
+        only_host_labels=True,
+        on_error=OnError.RAISE,
+        autochecks_dir=tmp_path / "autochecks",
+        discovered_host_labels_dir=tmp_path / "host_labels",
+        inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
+    )
+
+    assert DiscoveredHostLabelsStore(host_name, tmp_path / "host_labels").load() == [
+        HostLabel("cmk/inventory/product", "foo", None)
+    ]
+
+
+def test_execute_check_discovery_ignores_inventorized_host_labels(tmp_path: Path) -> None:
+    check_results = execute_check_discovery(
+        HostName("test-host"),
+        omd_root=tmp_path,
+        autodiscovery_dir=tmp_path / "autodiscovery",
+        is_cluster=False,
+        cluster_nodes=(),
+        params=_get_params({}),
+        fetched=(),
+        parser=lambda fetched: [],  # noqa: ARG005
+        summarizer=lambda host_sections: [],  # noqa: ARG005
+        section_plugins={},
+        host_label_plugins={},
+        plugins={},
+        autochecks_config=_CommandlineAutochecksConfig(),
+        section_error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+        enforced_services=frozenset(),
+        read_autochecks=lambda host_name: [],  # noqa: ARG005
+        read_discovered_host_labels=lambda host_name: [  # noqa: ARG005
+            HostLabel("cmk/inventory/product", "foo", None)
+        ],
+    )
+
+    assert [r.summary for r in check_results if "label" in r.summary] == [
+        "Host labels: all up to date"
+    ]
 
 
 _OTHER_PLUGIN_NAME = CheckPluginName("other_plugin")
@@ -1921,10 +2075,12 @@ def _run_commandline_service_discovery(
         enforced_services=enforced_services,
         only_new=only_new,
         load_labels=only_new,
+        keep_vanished_host_labels=False,
         only_host_labels=False,
         on_error=OnError.RAISE,
         autochecks_dir=_autochecks_dir(tmp_path),
         discovered_host_labels_dir=labels_dir,
+        inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
     )
     return {e.id() for e in AutochecksStore(host_name, _autochecks_dir(tmp_path)).read()}
 
@@ -2474,6 +2630,7 @@ def test__perform_host_label_discovery_on_realhost(
             ),
             providers=scenario.providers,
             on_error=OnError.RAISE,
+            inventorized_host_labels={},
         ),
     )
 
@@ -2538,6 +2695,7 @@ def test__perform_host_label_discovery_on_cluster(
                 ),
                 providers=scenario.providers,
                 on_error=OnError.RAISE,
+                inventorized_host_labels={},
             )
             for node in nodes
         },

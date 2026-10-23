@@ -23,13 +23,10 @@ def test_discover_normal() -> None:
     ]
 
 
-def test_discover_skips_error_row() -> None:
-    error_info = [["orcl", "ORA-16000: database open for read-only access"]]
-    assert not list(discover_oracle_logswitches(parse_oracle_logswitches(error_info)))
-
-
-def test_discover_skips_failure_row() -> None:
-    assert not list(discover_oracle_logswitches(parse_oracle_logswitches(_FAILURE)))
+def test_discover_failure_row() -> None:
+    assert list(discover_oracle_logswitches(parse_oracle_logswitches(_FAILURE))) == [
+        Service(item="orcl")
+    ]
 
 
 def test_check_normal() -> None:

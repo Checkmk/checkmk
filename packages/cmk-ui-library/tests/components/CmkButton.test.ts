@@ -11,6 +11,21 @@ import { defineComponent } from 'vue'
 
 const submitHandler = vi.fn((e) => e.preventDefault())
 
+test('CmkButton provides the download filename on links', () => {
+  render(CmkButton, {
+    props: { href: 'data:text/plain,example', download: 'values.yaml' },
+    slots: { default: 'Download' }
+  })
+
+  expect(screen.getByRole('link', { name: 'Download' })).toHaveAttribute('download', 'values.yaml')
+})
+
+test('CmkButton omits download on ordinary links', () => {
+  render(CmkButton, { props: { href: '/example' }, slots: { default: 'Open' } })
+
+  expect(screen.getByRole('link', { name: 'Open' })).not.toHaveAttribute('download')
+})
+
 beforeEach(() => {
   document.addEventListener('submit', submitHandler)
 })

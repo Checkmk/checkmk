@@ -5,10 +5,9 @@
 
 """The agent slideout rewrites these command templates in the browser.
 
-`packages/cmk-frontend-vue/src/mode-host/agent-connection-test/lib/commandTemplate.ts`
-substitutes the macros and the token placeholders below. Nothing else ties the
-two ends together, so renaming one here without the other would leave the
-slideout handing out commands that cannot be run.
+The page hands the slideout the macros and token placeholders it substitutes, so
+the browser always looks for the ones defined in `cmk.gui.agent_commands`. These
+tests make sure the templates use exactly those.
 
 The commercial editions build their install commands in
 `cmk/gui/nonfree/pro/agent_commands.py`; the same contract is checked for those
@@ -17,17 +16,25 @@ in `tests/unit/cmk/gui/nonfree/pro/test_agent_commands.py`.
 
 from dataclasses import asdict
 
+import pytest
+
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.agent_commands import (
     build_agent_install_cmds,
     build_agent_registration_cmds,
     build_agent_status_cmds,
+    build_kubernetes_helm_cmd,
+    DOWNLOAD_TOKEN_PLACEHOLDER,
+    HOST_NAME_MACRO,
+    KUBERNETES_VALUES,
+    REGISTRATION_TOKEN_PLACEHOLDER,
+    REGISTRATION_USER_FLAG,
+    SERVER_MACRO,
+    SITE_MACRO,
 )
 from cmk.shared_typing.agent_slideout import AgentInstallCmds
 
-DOWNLOAD_TOKEN_PLACEHOLDER = "[AGENT_DOWNLOAD_OTT]"
-REGISTRATION_USER_FLAG = "--user agent_registration"
-MACROS = ("{{HOSTNAME}}", "{{SITE}}", "{{SERVER}}")
+MACROS = (HOST_NAME_MACRO, SITE_MACRO, SERVER_MACRO)
 
 #: Commands hitting one of these endpoints have to authorize with a token.
 DOWNLOAD_ENDPOINT_MARKER = "download_by"
@@ -60,6 +67,32 @@ def test_registration_commands_use_the_known_macros() -> None:
             continue
         for macro in MACROS:
             assert macro in cmd, f"{name} does not resolve {macro}"
+
+
+def test_kubernetes_helm_command_carries_the_token_placeholder() -> None:
+    assert REGISTRATION_TOKEN_PLACEHOLDER in build_kubernetes_helm_cmd("2.5.0")
+
+
+def test_kubernetes_values_use_the_known_macros() -> None:
+    for macro in MACROS:
+        assert macro in KUBERNETES_VALUES, f"values.yaml does not resolve {macro}"
+
+
+@pytest.mark.parametrize(
+    "version, chart_range",
+    [
+        pytest.param("2.5.0p12", "~2.5.0", id="patch release"),
+        pytest.param("3.0.0b1", "~3.0.0", id="beta release"),
+    ],
+)
+def test_kubernetes_chart_takes_the_newest_patch_of_the_checkmk_major_minor(
+    version: str, chart_range: str
+) -> None:
+    assert f'--version "{chart_range}" ' in build_kubernetes_helm_cmd(version)
+
+
+def test_kubernetes_chart_of_a_daily_build_uses_the_master_tag() -> None:
+    assert '--version "0.0.0-master" ' in build_kubernetes_helm_cmd("2026.09.23")
 
 
 def test_status_commands_need_no_substitution() -> None:

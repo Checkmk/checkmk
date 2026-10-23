@@ -10,11 +10,15 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request
 from cmk.gui.pages import PageContext, PageResult
+from cmk.gui.permissions import all_permissions
 from cmk.gui.search._pages import (
     _LIVESTATUS_ENGINE_ROW_LIMIT,
     _UNIFIED_SEARCH_LIVESTATUS_ORDER,
     PageUnifiedSearch,
 )
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.shared_typing.unified_search import (
     MessageVariant,
@@ -189,7 +193,11 @@ class TestPage:
     @staticmethod
     def _context(config: Config, query_string: str) -> PageContext:
         return PageContext(
-            config=config, request=Request(create_environ(query_string=query_string))
+            config=config,
+            request=Request(create_environ(query_string=query_string)),
+            transactions=transactions,
+            session=session,
+            user_permissions=UserPermissions.from_config(config, all_permissions()),
         )
 
     def test_a_monitoring_search_is_answered_as_an_api_response(

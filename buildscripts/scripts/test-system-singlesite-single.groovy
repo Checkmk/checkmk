@@ -77,7 +77,7 @@ void main() {
         /// parameter and requiring it would fail them. Absent reads as null, the
         /// elvis turns that into "", which means "not sharded".
         ///
-        /// tests/conftest.py reads it as the default of --shard-durations-build.
+        /// tests/testlib/system/pytest_helpers/sharding.py reads it as the default of --shard-durations-build.
         def shard_build_based_on = params.SHARD_BUILD_BASED_ON ?: "";
 
         withEnv([

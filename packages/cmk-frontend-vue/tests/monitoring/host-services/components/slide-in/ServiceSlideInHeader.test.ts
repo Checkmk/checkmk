@@ -23,6 +23,7 @@ function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntr
 }
 
 const DOWNTIME: ServiceMode = {
+  id: 'downtime',
   icon_name: 'downtime',
   link: 'view.py?view_name=downtimes_of_service&host=web-server-01&service=CPU+load',
   title: 'In scheduled downtime'
@@ -36,7 +37,7 @@ describe('ServiceSlideInHeader', () => {
     expect(screen.getByText('CRITICAL')).toBeInTheDocument()
   })
 
-  it('shows the name and state before the modes have loaded', () => {
+  it('shows the name and state without any modes', () => {
     render(ServiceSlideInHeader, { props: { service: makeService() } })
 
     expect(screen.getByText('CPU load')).toBeInTheDocument()
@@ -44,7 +45,7 @@ describe('ServiceSlideInHeader', () => {
   })
 
   it('renders a mode icon linking to its legacy view', () => {
-    render(ServiceSlideInHeader, { props: { service: makeService(), modes: [DOWNTIME] } })
+    render(ServiceSlideInHeader, { props: { service: makeService({ modes: [DOWNTIME] }) } })
 
     expect(screen.getByRole('link', { name: 'In scheduled downtime' })).toHaveAttribute(
       'href',
@@ -53,7 +54,7 @@ describe('ServiceSlideInHeader', () => {
   })
 
   it('renders the mode icons ahead of the service name', () => {
-    render(ServiceSlideInHeader, { props: { service: makeService(), modes: [DOWNTIME] } })
+    render(ServiceSlideInHeader, { props: { service: makeService({ modes: [DOWNTIME] }) } })
 
     const downtime = screen.getByRole('link', { name: 'In scheduled downtime' })
     expect(downtime.compareDocumentPosition(screen.getByText('CPU load'))).toBe(

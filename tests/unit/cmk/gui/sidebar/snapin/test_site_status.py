@@ -17,9 +17,13 @@ from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.sidebar._snapin._site_status import SiteStatus as SiteStatusSnapin
 from cmk.gui.sites import SiteStatus
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 
 
 class RecordingSiteConfig:
@@ -160,7 +164,13 @@ def test_show_offers_the_bulk_switches(
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request)
+    return PageContext(
+        config=config,
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
+    )
 
 
 def test_switch_site_needs_the_snapin_permission(
@@ -170,7 +180,10 @@ def test_switch_site_needs_the_snapin_permission(
     permission itself instead of relying on the snap-in being visible."""
     recorded = RecordingSiteConfig()
     with monkeypatch.context() as m:
-        m.setattr("cmk.gui.sidebar._snapin._site_status.check_csrf_token", lambda: None)
+        m.setattr(
+            "cmk.gui.sidebar._snapin._site_status.check_csrf_token",
+            lambda _session, _request, **_kwargs: None,
+        )
         m.setattr(user, "may", lambda x: x != "sidesnap.sitestatus")
         recorded.install(m)
         request.set_var("_site_switch", "heute:off")
@@ -200,7 +213,10 @@ def test_switch_site_applies_the_requested_states(
     recorded = RecordingSiteConfig()
     config = _config_with_sites(load_config, {"heute": "Heute", "beta": "Beta"})
     with monkeypatch.context() as m:
-        m.setattr("cmk.gui.sidebar._snapin._site_status.check_csrf_token", lambda: None)
+        m.setattr(
+            "cmk.gui.sidebar._snapin._site_status.check_csrf_token",
+            lambda _session, _request, **_kwargs: None,
+        )
         recorded.install(m)
         request.set_var("_site_switch", switch_var)
 
@@ -216,7 +232,10 @@ def test_switch_site_without_a_request_variable(
 ) -> None:
     recorded = RecordingSiteConfig()
     with monkeypatch.context() as m:
-        m.setattr("cmk.gui.sidebar._snapin._site_status.check_csrf_token", lambda: None)
+        m.setattr(
+            "cmk.gui.sidebar._snapin._site_status.check_csrf_token",
+            lambda _session, _request, **_kwargs: None,
+        )
         recorded.install(m)
 
         SiteStatusSnapin()._ajax_switch_site(_page_context(load_config))  # noqa: SLF001

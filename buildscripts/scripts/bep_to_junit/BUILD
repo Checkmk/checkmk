@@ -1,4 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
 py_binary(
     name = "bep_to_junit",
@@ -12,4 +13,12 @@ py_binary(
     ],
     imports = [".."],
     main = "__main__.py",
+)
+
+py_cmk_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/*.py"]),
+    imports = [".."],
+    deps = [":bep_to_junit"],
 )

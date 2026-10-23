@@ -24,15 +24,16 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.utils import render
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
+from cmk.web.utils.urls import makeactionuri_contextless
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -92,7 +93,7 @@ class ModeRegisteredOAuthClients(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
         if not transactions.check_transaction(request):
             return redirect(self.mode_url())
 
@@ -144,8 +145,11 @@ class ModeRegisteredOAuthClients(WatoMode):
                     table.cell(_("Actions"), css=["buttons"])
                     delete_url = make_confirm_delete_link(
                         i18n=_,
-                        url=make_action_link(
-                            request, [("mode", self.name()), ("_delete", client.client_id)]
+                        url=makeactionuri_contextless(
+                            request,
+                            transactions.get(),
+                            [("mode", self.name()), ("_delete", client.client_id)],
+                            filename="wato.py",
                         ),
                         title=_("Delete registered client"),
                         suffix=client.client_name or client.client_id,

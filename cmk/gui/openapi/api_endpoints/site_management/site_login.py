@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.site import SiteId
@@ -11,6 +12,7 @@ from cmk.gui.openapi.framework import ApiContext, PathParam
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.converter import (
+    folder_tree_of_request,
     SiteIdConverter,
     TypedPlainValidator,
     UserConverter,
@@ -24,7 +26,6 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
 )
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.site_management import (
     LoginException,
     SitesApiMgr,
@@ -66,7 +67,7 @@ def site_connection_login_v1(
     user.need_permission("wato.users")
     try:
         SitesApiMgr().login_to_site(
-            make_folder_tree(api_context.config),
+            folder_tree_of_request(api_context),
             site_id=site_id,
             username=body.username,
             password=body.password,
@@ -78,7 +79,7 @@ def site_connection_login_v1(
         )
     except LoginException as exc:
         raise RestAPIRequestGeneralException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Login problem",
             detail=str(exc),
         )

@@ -5,11 +5,12 @@
 
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
-from typing import overload, override
+from typing import Final, overload, override
 from urllib.parse import urlparse
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.version import Version
 from cmk.gui.config import Config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
@@ -34,6 +35,9 @@ from cmk.shared_typing.mode_host import (
     AgentStatusCmds as ModeHostAgentStatusCmds,
 )
 from cmk.shared_typing.mode_host import (
+    CommandPlaceholders as ModeHostCommandPlaceholders,
+)
+from cmk.shared_typing.mode_host import (
     ModeHostServerPerSite,
 )
 from cmk.shared_typing.mode_host import (
@@ -44,6 +48,7 @@ from cmk.shared_typing.setup import AgentInstallCmds as SetupAgentInstallCmds
 from cmk.shared_typing.setup import AgentRegistrationCmds as SetupAgentRegistrationCmds
 from cmk.shared_typing.setup import AgentSlideout as SetupAgentSlideout
 from cmk.shared_typing.setup import AgentStatusCmds as SetupAgentStatusCmds
+from cmk.shared_typing.setup import CommandPlaceholders as SetupCommandPlaceholders
 from cmk.shared_typing.setup import UnbakedFallback as SetupUnbakedFallback
 from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 
@@ -70,19 +75,44 @@ WINDOWS_AGENT_INSTALL_CMD = "msiexec /i check-mk-agent_{version}.msi /quiet /nor
 
 WINDOWS_AGENT_INSTALL_CMD_POWERSHELL = 'Start-Process msiexec.exe -ArgumentList "/i `"$PWD\\check-mk-agent_{version}.msi`" /quiet /norestart" -Wait'
 
-LINUX_DEBIAN_AGENT_INSTALL_CMD = """curl -o check-mk-agent_{version}-1_all.deb -fJG \\
-    '{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/internal/domain-types/agent/actions/download_by_token/invoke' \\
-    --header 'Accept: application/octet-stream' \\
-    --header 'Authorization: CMK-TOKEN 0:[AGENT_DOWNLOAD_OTT]' \\
-    --data-urlencode 'os_type=linux_deb' && \\
-sudo dpkg -i check-mk-agent_{version}-1_all.deb"""
 
-LINUX_RPM_AGENT_INSTALL_CMD = """curl -o check-mk-agent_{version}-1.noarch.rpm -fJG  \\
-    '{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/internal/domain-types/agent/actions/download_by_token/invoke' \\
+def unix_agent_download_cmd(file_name: str, curl_args: str) -> str:
+    """Template of a curl download that prints the response body and fails unless it got HTTP 200.
+
+    Avoids $(...) for the Bourne shell of Solaris 10, and --fail-with-body for curl < 7.76.
+    """
+    return (
+        f"HTTP_CODE=`curl -o {file_name} -JG \\\n"
+        "    --write-out '%{{http_code}}' \\\n"
+        f"{curl_args}` && \\\n"
+        '[ "$HTTP_CODE" = 200 ] || \\\n'
+        f'{{{{ [ "$HTTP_CODE" = 200 ] || cat {file_name} 2>/dev/null; echo; rm -f {file_name}; false; }}}}'
+    )
+
+
+LINUX_DEBIAN_AGENT_INSTALL_CMD = (
+    unix_agent_download_cmd(
+        "check-mk-agent_{version}-1_all.deb",
+        """    '{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/internal/domain-types/agent/actions/download_by_token/invoke' \\
     --header 'Accept: application/octet-stream' \\
     --header 'Authorization: CMK-TOKEN 0:[AGENT_DOWNLOAD_OTT]' \\
-    --data-urlencode 'os_type=linux_rpm' && \\
+    --data-urlencode 'os_type=linux_deb'""",
+    )
+    + """ && \\
+sudo dpkg -i check-mk-agent_{version}-1_all.deb"""
+)
+
+LINUX_RPM_AGENT_INSTALL_CMD = (
+    unix_agent_download_cmd(
+        "check-mk-agent_{version}-1.noarch.rpm",
+        """    '{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/internal/domain-types/agent/actions/download_by_token/invoke' \\
+    --header 'Accept: application/octet-stream' \\
+    --header 'Authorization: CMK-TOKEN 0:[AGENT_DOWNLOAD_OTT]' \\
+    --data-urlencode 'os_type=linux_rpm'""",
+    )
+    + """ && \\
 sudo rpm -Uvh check-mk-agent_{version}-1.noarch.rpm"""
+)
 
 
 def build_agent_install_cmds(
@@ -98,6 +128,16 @@ def build_agent_install_cmds(
         linux_rpm=LINUX_RPM_AGENT_INSTALL_CMD.format(version=version),
     )
 
+
+# The placeholders the agent slideout fills in, in the browser, before it shows a
+# command. The templates in this module and in the commercial editions' twin use
+# them; tests pin the templates to these.
+HOST_NAME_MACRO: Final = "{{HOSTNAME}}"
+SITE_MACRO: Final = "{{SITE}}"
+SERVER_MACRO: Final = "{{SERVER}}"
+DOWNLOAD_TOKEN_PLACEHOLDER: Final = "[AGENT_DOWNLOAD_OTT]"
+REGISTRATION_TOKEN_PLACEHOLDER: Final = "[AGENT_REGISTRATION_OTT]"
+REGISTRATION_USER_FLAG: Final = "--user agent_registration"
 
 WINDOWS_AGENT_CTL_PATH = '"C:\\Program Files (x86)\\checkmk\\service\\cmk-agent-ctl.exe"'
 
@@ -140,6 +180,30 @@ SOLARIS_REGISTRATION_CMD = """sudo cmk-agent-ctl register \\
     --server {{SERVER}} \\
     --site {{SITE}} \\
     --user agent_registration"""
+
+KUBERNETES_HELM_INSTALL_CMD = """helm install checkmk oci://ghcr.io/checkmk/charts/checkmk-agent \\
+  --version "{chart_version}" \\
+  --values values.yaml \\
+  --set push.registrationToken=[AGENT_REGISTRATION_OTT] \\
+  --set-file push.siteCaCertificate=/path/to/site-ca.pem \\
+  --namespace checkmk-monitoring \\
+  --create-namespace"""
+
+KUBERNETES_VALUES = (
+    'clusterName: "{{HOSTNAME}}"\n'
+    'clusterHostName: "{{HOSTNAME}}"\n'
+    "push:\n"
+    "  enabled: true\n"
+    '  url: "https://{{SERVER}}/{{SITE}}"'
+)
+
+
+def build_kubernetes_helm_cmd(version: str) -> str:
+    base = Version.from_str(version).base
+    # A tilde range lets Helm pick the newest x.y.z chart instead of a moving tag.
+    # Daily builds carry no major.minor; the chart publishes those under a fixed tag.
+    chart_version = f"~{base.major}.{base.minor}.0" if base is not None else "0.0.0-master"
+    return KUBERNETES_HELM_INSTALL_CMD.format(chart_version=chart_version)
 
 
 def build_agent_registration_cmds() -> AgentRegistrationCmds:
@@ -205,6 +269,7 @@ class AgentCommands:
     registration_cmds: Callable[[], AgentRegistrationCmds]
     status_cmds: Callable[[], AgentStatusCmds]
     legacy_agent_url: Callable[[], str | None] = lambda: None
+    bakery_url: Callable[[], str | None] = lambda: None
     unbaked_fallback: Callable[[bool, str], UnbakedFallback | None] = lambda _available, _version: (
         None
     )
@@ -278,6 +343,7 @@ def get_agent_slideout(
     agent_install_cls: type[SetupAgentInstallCmds | ModeHostAgentInstallCmds],
     agent_registration_cls: type[SetupAgentRegistrationCmds | ModeHostAgentRegistrationCmds],
     agent_status_cls: type[SetupAgentStatusCmds | ModeHostAgentStatusCmds],
+    command_placeholders_cls: type[SetupCommandPlaceholders],
     unbaked_fallback_cls: type[SetupUnbakedFallback],
     version: str,
     baked_agents_available: bool,
@@ -295,6 +361,7 @@ def get_agent_slideout(
     agent_install_cls: type[SetupAgentInstallCmds | ModeHostAgentInstallCmds],
     agent_registration_cls: type[SetupAgentRegistrationCmds | ModeHostAgentRegistrationCmds],
     agent_status_cls: type[SetupAgentStatusCmds | ModeHostAgentStatusCmds],
+    command_placeholders_cls: type[ModeHostCommandPlaceholders],
     unbaked_fallback_cls: type[ModeHostUnbakedFallback],
     version: str,
     baked_agents_available: bool,
@@ -311,6 +378,7 @@ def get_agent_slideout(
     agent_install_cls: type,
     agent_registration_cls: type,
     agent_status_cls: type,
+    command_placeholders_cls: type,
     unbaked_fallback_cls: type,
     version: str,
     baked_agents_available: bool,
@@ -324,8 +392,24 @@ def get_agent_slideout(
         agent_install_cmds=agent_install_cls(**asdict(commands.install_cmds(version, hostname))),
         agent_registration_cmds=agent_registration_cls(**asdict(commands.registration_cmds())),
         agent_status_cmds=agent_status_cls(**asdict(commands.status_cmds())),
+        command_placeholders=command_placeholders_cls(
+            host_name=HOST_NAME_MACRO,
+            site=SITE_MACRO,
+            server=SERVER_MACRO,
+            download_token=DOWNLOAD_TOKEN_PLACEHOLDER,
+            registration_token=REGISTRATION_TOKEN_PLACEHOLDER,
+            registration_user_flag=REGISTRATION_USER_FLAG,
+        ),
         legacy_agent_url=commands.legacy_agent_url(),
+        kubernetes_helm_command=build_kubernetes_helm_cmd(version),
+        kubernetes_values=KUBERNETES_VALUES,
+        kubernetes_doc_url=doc_reference_url(
+            user.language,
+            DocReferenceUtm(campaign="inline_help", content="setup.monitoring_kubernetes"),
+            DocReference.KUBERNETES,
+        ),
         save_host=save_host,
         host_exists=host_exists,
         unbaked_fallback=None if fallback is None else unbaked_fallback_cls(**asdict(fallback)),
+        bakery_url=commands.bakery_url() if baked_agents_available else None,
     )

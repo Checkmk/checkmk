@@ -22,7 +22,6 @@ from cmk.shared_typing.main_menu import (
     NavItemBadgeEnum,
     NavItemIdEnum,
     NavItemShortcut,
-    NavItemType,
     NavItemVueApp,
     NavVueAppIdEnum,
 )
@@ -121,7 +120,6 @@ def register(mega_menu_registry: MainMenuRegistry) -> None:
             title=_l("Changes"),
             sort_index=17,
             shortcut=NavItemShortcut(key="n", alt=True),
-            type=NavItemType.configurable,
             get_item_instance=get_activate_changes_nav_item_instance,
             badge=NavItemBadge(
                 mode=NavItemBadgeEnum.num_pending_changes,

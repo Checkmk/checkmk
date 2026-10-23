@@ -173,16 +173,16 @@ def test_login_timeout_user_duration_checks() -> None:
     now = NOW
     user = UserId("alice")
     _time_out_user_from_ip(user, REMOTE_IP, now)
-    assert LoginTimeoutStore().is_timed_out(user, REMOTE_IP, now)
+    assert LoginTimeoutStore().timeout_status(user, REMOTE_IP, now)
 
     now += USER_TIMEOUT_DURATION - timedelta(seconds=1)
-    assert LoginTimeoutStore().is_timed_out(user, REMOTE_IP, now)
+    assert LoginTimeoutStore().timeout_status(user, REMOTE_IP, now)
 
     now += timedelta(seconds=1)
-    assert not LoginTimeoutStore().is_timed_out(user, REMOTE_IP, now)
+    assert not LoginTimeoutStore().timeout_status(user, REMOTE_IP, now)
 
     now += timedelta(seconds=1)
-    assert not LoginTimeoutStore().is_timed_out(user, REMOTE_IP, now)
+    assert not LoginTimeoutStore().timeout_status(user, REMOTE_IP, now)
 
 
 def test_login_timeout_ip_timeout_works() -> None:
@@ -192,16 +192,16 @@ def test_login_timeout_ip_timeout_works() -> None:
     _time_out_user_from_ip(UserId("bob"), REMOTE_IP, now)
 
     # A user is blocked by IP
-    assert LoginTimeoutStore().is_timed_out(new_user, REMOTE_IP, now)
+    assert LoginTimeoutStore().timeout_status(new_user, REMOTE_IP, now)
 
     now += IP_TIMEOUT_DURATION - timedelta(seconds=1)
-    assert LoginTimeoutStore().is_timed_out(new_user, REMOTE_IP, now)
+    assert LoginTimeoutStore().timeout_status(new_user, REMOTE_IP, now)
 
     now += timedelta(seconds=1)
-    assert not LoginTimeoutStore().is_timed_out(new_user, REMOTE_IP, now)
+    assert not LoginTimeoutStore().timeout_status(new_user, REMOTE_IP, now)
 
     now += timedelta(seconds=1)
-    assert not LoginTimeoutStore().is_timed_out(new_user, REMOTE_IP, now)
+    assert not LoginTimeoutStore().timeout_status(new_user, REMOTE_IP, now)
 
 
 @pytest.mark.parametrize(
@@ -216,7 +216,7 @@ def test_login_timeout_limits_enforced(attempts_for_alice: int, check_user_id: U
     for _ in range(attempts_for_alice):
         LoginTimeoutStore().record_failed_login(UserId("alice"), REMOTE_IP, NOW)
 
-    assert LoginTimeoutStore().is_timed_out(check_user_id, REMOTE_IP, NOW) is False
+    assert not LoginTimeoutStore().timeout_status(check_user_id, REMOTE_IP, NOW)
 
 
 def test_login_timeout_ip_timeout_require_unique_users() -> None:
@@ -227,7 +227,7 @@ def test_login_timeout_ip_timeout_require_unique_users() -> None:
 
     (ip_entry,) = _read_timeout_data()["ips"].values()
     assert ip_entry["attempts"] == ["alice"]
-    assert LoginTimeoutStore().is_timed_out(UserId("newuser"), REMOTE_IP, after_expiry) is False
+    assert not LoginTimeoutStore().timeout_status(UserId("newuser"), REMOTE_IP, after_expiry)
 
 
 @pytest.mark.parametrize(
@@ -254,7 +254,7 @@ def test_login_timeout_durations_not_reset_within_existing_timeout(
     _time_out_user_from_ip(retry_username, REMOTE_IP, NOW + duration / 2)
 
     after_expiry = NOW + duration + timedelta(seconds=1)
-    assert LoginTimeoutStore().is_timed_out(check_user_id, REMOTE_IP, after_expiry) is False
+    assert not LoginTimeoutStore().timeout_status(check_user_id, REMOTE_IP, after_expiry)
 
 
 def test_login_timeout_purges_old_data() -> None:
@@ -262,7 +262,7 @@ def test_login_timeout_purges_old_data() -> None:
     LoginTimeoutStore().record_failed_login(UserId("admin"), "10.0.0.47", NOW)
 
     later = NOW + ENTRY_STORAGE_LIFETIME + timedelta(seconds=1)
-    assert LoginTimeoutStore().is_timed_out(UserId("alice"), REMOTE_IP, later) is False
+    assert not LoginTimeoutStore().timeout_status(UserId("alice"), REMOTE_IP, later)
 
     registry = _read_timeout_data()
     assert registry["users"] == {}
@@ -273,15 +273,11 @@ def test_login_timeout_purges_old_data_unless_linked_to_active_timeout() -> None
     _time_out_user_from_ip(UserId("alice"), REMOTE_IP, NOW)
     _time_out_user_from_ip(UserId("bob"), REMOTE_IP, NOW)
     within_ip_duration = NOW + ENTRY_STORAGE_LIFETIME + timedelta(minutes=5)
-    assert (
-        LoginTimeoutStore().is_timed_out(UserId("newuser"), REMOTE_IP, within_ip_duration) is True
-    )
+    assert LoginTimeoutStore().timeout_status(UserId("newuser"), REMOTE_IP, within_ip_duration)
     assert _read_timeout_data()["ips"]
 
     after_ip_duration = NOW + IP_TIMEOUT_DURATION + timedelta(seconds=1)
-    assert (
-        LoginTimeoutStore().is_timed_out(UserId("newuser"), REMOTE_IP, after_ip_duration) is False
-    )
+    assert not LoginTimeoutStore().timeout_status(UserId("newuser"), REMOTE_IP, after_ip_duration)
 
     registry = _read_timeout_data()
     assert registry["users"] == {}

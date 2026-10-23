@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 @dataclass(frozen=True)
@@ -27,6 +27,7 @@ class BinarySmoke:
     expected_stdout: str = ".*"
     expected_stderr: str = ".*"
     path: str = ""  # site-relative directory; if empty, name is used directly (must be on PATH)
+    stdin: str | None = None
 
     def cmd_line(self, site: Site) -> list[str]:
         executable = site.root.joinpath(self.path, self.name).as_posix() if self.path else self.name
@@ -74,6 +75,12 @@ BIN_BINARIES: Sequence[BinarySmoke] = [
         expected_stdout=r"usage:.*cmk-migrate-extension-rulesets",
     ),
     BinarySmoke("cmk-passwd", args=["-h"], expected_stdout=r"usage:.*cmk-passwd"),
+    BinarySmoke(
+        "cmk-render-png-graphs",
+        stdin='{"texts": {"minimum": "", "maximum": "", "average": "", "last": "",'
+        ' "date_format": "", "caption": ""}, "temperature_unit": "celsius", "graphs": []}',
+        expected_stdout=r"^\[\]$",
+    ),
     BinarySmoke(
         "cmk-transform-inventory-trees",
         args=["-h"],
@@ -128,7 +135,7 @@ REPO_SCRIPTS: Sequence[RepoScript] = [
 )
 def test_binary_smoke(binary: BinarySmoke, site: Site) -> None:
     """Run binary in site context and verify it produces expected output."""
-    p = site.run(binary.cmd_line(site), check=False)
+    p = site.run(binary.cmd_line(site), check=False, input_=binary.stdin)
     assert re.search(binary.expected_stdout, p.stdout, re.DOTALL)
     assert re.search(binary.expected_stderr, p.stderr, re.DOTALL)
 
@@ -140,7 +147,7 @@ def test_binary_smoke(binary: BinarySmoke, site: Site) -> None:
 )
 def test_binary_smoke_pro(binary: BinarySmoke, site: Site) -> None:
     """Run pro+ binary in site context and verify it produces expected output."""
-    p = site.run(binary.cmd_line(site), check=False)
+    p = site.run(binary.cmd_line(site), check=False, input_=binary.stdin)
     assert re.search(binary.expected_stdout, p.stdout, re.DOTALL)
     assert re.search(binary.expected_stderr, p.stderr, re.DOTALL)
 
@@ -152,7 +159,7 @@ def test_binary_smoke_pro(binary: BinarySmoke, site: Site) -> None:
 )
 def test_binary_smoke_ultimate(binary: BinarySmoke, site: Site) -> None:
     """Run ultimate+ binary in site context and verify it produces expected output."""
-    p = site.run(binary.cmd_line(site), check=False)
+    p = site.run(binary.cmd_line(site), check=False, input_=binary.stdin)
     assert re.search(binary.expected_stdout, p.stdout, re.DOTALL)
     assert re.search(binary.expected_stderr, p.stderr, re.DOTALL)
 

@@ -15,7 +15,7 @@ import requests
 import urllib3
 from pydantic import BaseModel, ConfigDict, RootModel, ValidationError
 
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.plugins.kube.prometheus_api import parse_raw_response, Response, ResponseSuccess, Vector
 from cmk.plugins.lib import node_exporter
 

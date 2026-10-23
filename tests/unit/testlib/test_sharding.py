@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Unit tests for :mod:`tests.testlib.pytest_helpers.sharding`.
+"""Unit tests for :mod:`tests.testlib.system.shard_planning`.
 
 A wrong split does not fail loudly, it silently stops running tests, so the
 properties that matter are covered here: every test in exactly one shard, whole
@@ -14,7 +14,7 @@ from typing import override
 
 import pytest
 
-from tests.testlib.pytest_helpers.sharding import (
+from tests.testlib.system.shard_planning import (
     assign_modules,
     Durations,
     estimate,
@@ -171,7 +171,7 @@ def test_module_from_class_name(class_name: str, expected: str | None) -> None:
 
 
 def test_durations_from_report_sums_cases_per_module() -> None:
-    from tests.testlib.pytest_helpers.sharding import durations_from_report
+    from tests.testlib.system.shard_planning import durations_from_report
 
     report: JenkinsTestReport = {
         "suites": [

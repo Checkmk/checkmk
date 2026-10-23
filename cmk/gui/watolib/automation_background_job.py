@@ -9,15 +9,13 @@
 
 import ast
 import uuid
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import override
 
 from pydantic import BaseModel
 
-from cmk.automations.results import result_type_registry, SerializedResult
-from cmk.automations.types import AutomationID
 from cmk.ccc import store  # Some braindead "unit" test monkeypatch this like hell :-/
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Version
@@ -35,7 +33,8 @@ from cmk.gui.http import Request
 from cmk.gui.http import request as thread_local_request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
+from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
@@ -43,12 +42,16 @@ from cmk.gui.watolib.automations import (
     CheckmkAutomationGetStatusResponse,
     CheckmkAutomationRequest,
     cmk_version_of_remote_automation_source,
-    get_local_automation_failure_message,
-    MKAutomationException,
     RemoteAutomationGetStatusResponseRaw,
 )
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
-from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, folder_tree
+from cmk.gui.watolib.hosts_and_folders import (
+    collect_all_hosts,
+    FolderTree,
+    HostsAndFoldersConfig,
+)
+from cmk.livestatus_client import SiteConfigurations
+from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
 
 from .automation_commands import AutomationCommandRegistry
 
@@ -66,6 +69,10 @@ def register(
 class AutomationCheckmkAutomationStartRequest:
     api_request: CheckmkAutomationRequest
     user_permission_config: UserPermissionSerializableConfig
+    site_configs: SiteConfigurations
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
 
 
 class AutomationCheckmkAutomationStart(AutomationCommand[AutomationCheckmkAutomationStartRequest]):
@@ -84,6 +91,10 @@ class AutomationCheckmkAutomationStart(AutomationCommand[AutomationCheckmkAutoma
                 *ast.literal_eval(request.get_ascii_input_mandatory("request"))
             ),
             user_permission_config=UserPermissionSerializableConfig.from_global_config(config),
+            site_configs=config.sites,
+            wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
+            wato_host_attrs=config.wato_host_attrs,
+            tags=config.tags.get_dict_format(),
         )
 
     @override
@@ -102,6 +113,10 @@ class AutomationCheckmkAutomationStart(AutomationCommand[AutomationCheckmkAutoma
                         for_cmk_version=str(
                             cmk_version_of_remote_automation_source(thread_local_request)
                         ),
+                        site_configs=request.site_configs,
+                        wato_hide_folders_without_read_permissions=request.wato_hide_folders_without_read_permissions,
+                        wato_host_attrs=request.wato_host_attrs,
+                        tags=request.tags,
                     ),
                 ),
                 InitialStatusArgs(
@@ -124,6 +139,10 @@ class CheckmkAutomationJobArgs(BaseModel, frozen=True):
     api_request: CheckmkAutomationRequest
     user_permission_config: UserPermissionSerializableConfig
     for_cmk_version: str
+    site_configs: SiteConfigurations
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
 
 
 def checkmk_automation_job_entry_point(
@@ -131,12 +150,20 @@ def checkmk_automation_job_entry_point(
     args: CheckmkAutomationJobArgs,
 ) -> None:
     job = CheckmkAutomationBackgroundJob(args.job_id)
+    tree = FolderTree(
+        config=HostsAndFoldersConfig(
+            wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
+            wato_host_attrs=args.wato_host_attrs,
+            tags=TagConfig.from_config(args.tags),
+            sites=args.site_configs,
+        )
+    )
     job.execute_automation(
         job_interface=job_interface,
         api_request=args.api_request,
         user_permission_config=args.user_permission_config,
         for_cmk_version=Version.from_str(args.for_cmk_version),
-        collect_all_hosts=lambda: collect_all_hosts(folder_tree()),
+        collect_all_hosts=lambda: collect_all_hosts(tree),
     )
 
 
@@ -177,33 +204,6 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
     def gui_title(cls) -> str:
         return _("Checkmk automation")
 
-    @staticmethod
-    def _store_result(
-        *,
-        path: Path,
-        serialized_result: SerializedResult,
-        automation_cmd: AutomationID,
-        cmdline_cmd: Iterable[str],
-        debug: bool,
-        for_cmk_version: Version,
-    ) -> None:
-        try:
-            store.save_text_to_file(
-                path,
-                result_type_registry[automation_cmd]
-                .deserialize(serialized_result)
-                .serialize(for_cmk_version=for_cmk_version),
-            )
-        except SyntaxError as e:
-            msg = get_local_automation_failure_message(
-                command=automation_cmd,
-                cmdline=cmdline_cmd,
-                out=serialized_result,
-                exc=e,
-                debug=debug,
-            )
-            raise MKAutomationException(msg)
-
     def execute_automation(
         self,
         job_interface: BackgroundProcessInterface,
@@ -213,7 +213,10 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
         collect_all_hosts: Callable[[], Mapping[HostName, CollectedHostAttributes]],
     ) -> None:
         with job_interface.gui_context(
-            UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+            UserPermissions.from_serialized_config(
+                user_permission_config,
+                all_permissions(),
+            )
         ):
             self._execute_automation(job_interface, api_request, for_cmk_version, collect_all_hosts)
 
@@ -226,22 +229,16 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
     ) -> None:
         self._logger.info("Starting automation: %(command)s", {"command": api_request.command})
         self._logger.debug(api_request)
-        cmdline_cmd, serialized_result = check_mk_local_automation_serialized(
+        _cmdline, serialized_result = check_mk_local_automation_serialized(
             command=api_request.command,
             args=api_request.args,
             indata=api_request.indata,
             stdin_data=api_request.stdin_data,
             timeout=api_request.timeout,
+            for_cmk_version=str(for_cmk_version),
             debug=api_request.debug,
             collect_all_hosts=collect_all_hosts,
         )
         # This file will be read by the get-status request
-        self._store_result(
-            path=Path(job_interface.get_work_dir()) / "result.mk",
-            serialized_result=serialized_result,
-            automation_cmd=api_request.command,
-            cmdline_cmd=cmdline_cmd,
-            debug=api_request.debug,
-            for_cmk_version=for_cmk_version,
-        )
+        store.save_text_to_file(Path(job_interface.get_work_dir()) / "result.mk", serialized_result)
         job_interface.send_result_message(_("Finished."))

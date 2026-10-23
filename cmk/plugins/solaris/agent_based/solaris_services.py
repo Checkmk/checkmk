@@ -20,6 +20,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 class SolarisService(TypedDict):
@@ -192,10 +193,6 @@ check_plugin_solaris_services = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_solaris_services_summary(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_solaris_services_summary(params: Mapping[str, Any], section: Section) -> CheckResult:
     count = len(section)
     yield Result(state=State.OK, summary=f"{count} service{'' if count == 1 else 's'}")
@@ -222,7 +219,7 @@ check_plugin_solaris_services_summary = CheckPlugin(
     name="solaris_services_summary",
     service_name="SMF Services Summary",  # Service Management Facility
     sections=["solaris_services"],
-    discovery_function=discover_solaris_services_summary,
+    discovery_function=discover_one_service,
     check_function=check_solaris_services_summary,
     check_default_parameters={},
     check_ruleset_name="solaris_services_summary",

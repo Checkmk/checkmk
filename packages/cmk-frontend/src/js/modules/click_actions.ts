@@ -13,15 +13,15 @@
  * See cmk.gui.htmllib.generator:ClickAction for the server side and for how
  * to add a new click action.
  */
+import type { KnownClickAction } from 'cmk-shared-typing/typescript/legacy_frontend_hooks'
+
 import { call_ajax } from '@/modules/ajax'
 import { add_bookmark, update_vue_snapin_contents } from '@/modules/sidebar'
 
 type ClickActionArguments = { [key: string]: string }
 type ClickAction = (element: HTMLElement, options: ClickActionArguments) => void
 
-// See cmk.gui.htmllib.generator:KnownClickAction
-// The type on the Python side and the available keys in this dictionary MUST MATCH.
-const click_actions: { [name: string]: ClickAction } = {
+const click_actions: Record<KnownClickAction, ClickAction> = {
   add_bookmark: () => add_bookmark(),
   switch_master_state: (_element, options) => {
     call_ajax(options.url!, {
@@ -39,7 +39,7 @@ export function init_click_action_dispatcher() {
     const element = event.target.closest<HTMLElement>('*[data-cmk_on_click]')
     if (!element) return
     const action_name: string = element.dataset.cmk_on_click!
-    const click_action = click_actions[action_name]
+    const click_action = click_actions[action_name as KnownClickAction] as ClickAction | undefined
     if (click_action === undefined) {
       console.error(`Unknown click action: ${action_name}`)
       return

@@ -8,12 +8,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     HostLabel,
     HostLabelGenerator,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.kube import (
     check_with_time,
     kube_annotations_to_cmk_labels,
@@ -83,10 +82,6 @@ agent_section_kube_namespace_info_v1 = AgentSection(
 )
 
 
-def discovery_kube_namespace_info(section: NamespaceInfo) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_kube_namespace_info(now: float, section: NamespaceInfo) -> CheckResult:
     yield from check_info(
         {
@@ -99,6 +94,6 @@ def check_kube_namespace_info(now: float, section: NamespaceInfo) -> CheckResult
 check_plugin_kube_namespace_info = CheckPlugin(
     name="kube_namespace_info",
     service_name="Info",
-    discovery_function=discovery_kube_namespace_info,
+    discovery_function=discover_one_service,
     check_function=check_with_time(check_kube_namespace_info),
 )

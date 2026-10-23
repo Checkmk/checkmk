@@ -115,7 +115,7 @@ class BlobStorage:
                 client_id=ad_credentials["client_id"],
                 client_secret=client_secret,
             )
-        return assert_never(configured_credentials)  # type: ignore[unreachable]
+        assert_never(configured_credentials)
 
 
 class BlobStorageTarget(RemoteTarget[BlobStorageParams, BlobStorage]):

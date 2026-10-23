@@ -74,8 +74,12 @@ from cmk.gui.visuals.info._openapi._registration import (
 )
 from cmk.gui.wato._permissions import register as wato_permissions_register
 from cmk.gui.wato.pages.folders import folder_bulk_action_registry, folder_menu_entry_registry
-from cmk.gui.watolib.hosts_and_folders import host_action_menu_registry
+from cmk.gui.watolib.hosts_and_folders import FolderReader, host_action_menu_registry
 from cmk.gui.watolib.mode import mode_registry
+from cmk.maps.gui._permissions import register as maps_permissions_register
+from cmk.maps.gui.pagetype import MapPage
+from cmk.maps.rest_api import registration as api_maps
+from cmk.maps.rest_api.internal import registration as api_maps_internal
 
 
 def register_for_community() -> None:
@@ -99,8 +103,12 @@ def register_for_community() -> None:
     views_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
     inventory_register(endpoint_family_registry, versioned_endpoint_registry)
     dashboard_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
-    monitor_hosts_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
-    monitor_services_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
+    monitor_hosts_register_endpoints(
+        endpoint_family_registry, versioned_endpoint_registry, FolderReader
+    )
+    monitor_services_register_endpoints(
+        endpoint_family_registry, versioned_endpoint_registry, FolderReader
+    )
     bi_register(endpoint_registry)
     user_message_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
     agent_registration_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
@@ -112,6 +120,16 @@ def register_for_community() -> None:
     )
     # Has to happen after the central registration, which registers the agent endpoint family.
     agent_download_register_endpoints(endpoint_registry, versioned_endpoint_registry)
+    maps_permissions_register(permission_section_registry, permission_registry)
+    pagetypes_declare(MapPage)
+    api_maps.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
+    api_maps_internal.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
     availability_register(versioned_endpoint_registry, endpoint_family_registry)
     ldap_api_register(
         versioned_endpoint_registry=versioned_endpoint_registry,

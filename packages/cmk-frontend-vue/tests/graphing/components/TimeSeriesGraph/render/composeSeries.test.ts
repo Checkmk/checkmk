@@ -11,6 +11,10 @@ import {
   createM4CacheStore,
   withoutOffPlotNeighbours
 } from '@/graphing/components/TimeSeriesGraph/render/composeSeries'
+import type {
+  StackedColumn,
+  StackedSeries
+} from '@/graphing/components/TimeSeriesGraph/render/stacked'
 import type { Metric, ShadedRegion, TimeRange } from '@/graphing/components/TimeSeriesGraph/types'
 
 const STEP = 10
@@ -18,41 +22,64 @@ const DATA_RANGE: TimeRange = { start: 0, end: 100, step: STEP }
 const COLUMNS = 10
 const M4_BUCKETS = 4000
 
-function makeMetric(dataPoints: (number | null)[], render: Partial<Metric['render']> = {}): Metric {
+function makeMetric(
+  dataPoints: (number | null)[],
+  {
+    stack = null,
+    inverse = false,
+    hidden = false
+  }: { stack?: string | null; inverse?: boolean; hidden?: boolean } = {}
+): Metric {
   return {
     data_points: dataPoints,
-    render: { stack: null, inverse: false, hidden: false, ...render },
+    render:
+      stack === null
+        ? { shape: 'line', inverse, hidden }
+        : { shape: 'area', stack, inverse, hidden },
     metadata: { name: 'm', color: '#3366cc' }
   } as unknown as Metric
 }
 
-function compose(metrics: Metric[], dataRange: TimeRange = DATA_RANGE) {
+function compose(
+  metrics: Metric[],
+  dataRange: TimeRange = DATA_RANGE,
+  visibleTimeRange: [number, number] = [dataRange.start, dataRange.end]
+) {
   const cache = createM4CacheStore(M4_BUCKETS).ensure(metrics, dataRange)
   return composeSeries({
     metrics,
     cache,
-    visibleTimeRange: [dataRange.start, dataRange.end],
+    dataTimeRange: dataRange,
+    visibleTimeRange,
     columnCount: COLUMNS,
-    consolidation: 'max'
+    binEdges: null
   })
 }
 
 const finiteValues = (values: number[]): number[] =>
   values.filter((value) => Number.isFinite(value))
 
+function columnsOf(series: StackedSeries): StackedColumn[] {
+  if (series.kind !== 'area-stacked') {
+    throw new Error('expected an area series')
+  }
+  return series.columns
+}
+
 describe('composeSeries', () => {
-  test('routes a metric with no stack group to a line and a grouped one to a stacked area', () => {
-    const composed = compose([makeMetric([1, 2, 3]), makeMetric([1, 2, 3], { stack: 'g1' })])
-
-    expect(composed.stacks[0]!.kind).toBe('line')
-    expect(composed.stacks[1]!.kind).toBe('area-stacked')
-  })
-
   test('flanks the on-plot buckets with one off-plot neighbour on each side', () => {
     const composed = compose([makeMetric([1, 2, 3])])
 
     expect(composed.paddedBuckets[0]).toHaveLength(composed.bucketsOnPlot[0]!.length + 2)
     expect(withoutOffPlotNeighbours(composed.paddedBuckets[0]!)).toEqual(composed.bucketsOnPlot[0])
+  })
+
+  test('the on-plot stacks drop the flanking neighbours the padded stacks carry', () => {
+    const composed = compose([makeMetric([1, 2, 3], { stack: 'g1' })])
+
+    expect(columnsOf(composed.stacksOnPlot[0]!)).toEqual(
+      withoutOffPlotNeighbours(columnsOf(composed.stacks[0]!))
+    )
   })
 
   test('mirrors an inverse metric below the baseline', () => {
@@ -77,13 +104,11 @@ describe('composeSeries', () => {
       makeMetric([member], { stack: 'g1' })
     ])
 
-    const memberBands = withoutOffPlotNeighbours(composed.stacks[1]!.bands).filter(
-      (band) => !band.gap
-    )
-    expect(memberBands.length).toBeGreaterThan(0)
-    for (const band of memberBands) {
-      expect(band.lower).toBe(baseline)
-      expect(band.upper).toBe(baseline + member)
+    const memberVertices = columnsOf(composed.stacksOnPlot[1]!).flatMap((column) => column.vertices)
+    expect(memberVertices.length).toBeGreaterThan(0)
+    for (const vertex of memberVertices) {
+      expect(vertex.lower).toBe(baseline)
+      expect(vertex.upper).toBe(baseline + member)
     }
   })
 })
@@ -108,6 +133,26 @@ describe('composedValueDomain', () => {
 
     expect(yMin).toBe(0)
     expect(yMax).toBe(base + layer)
+  })
+
+  test('a bar series reaches down to zero', () => {
+    const bars: Metric = {
+      ...makeMetric([40, 40, 60, 60]),
+      render: { shape: 'bar', stack: null, aggregation: 'sum', inverse: false, hidden: false }
+    }
+    const fourSteps = { start: 0, end: 4 * STEP, step: STEP }
+    const cache = createM4CacheStore(M4_BUCKETS).ensure([bars], fourSteps)
+
+    const composed = composeSeries({
+      metrics: [bars],
+      cache,
+      dataTimeRange: fourSteps,
+      visibleTimeRange: [0, 4 * STEP],
+      columnCount: COLUMNS,
+      binEdges: [0, 2 * STEP, 4 * STEP]
+    })
+
+    expect(composedValueDomain([bars], composed)).toEqual([0, 120])
   })
 
   test('a hidden stack reference does not drag the domain down to zero', () => {
@@ -136,6 +181,20 @@ describe('composedValueDomain', () => {
     const [, yMax] = composedValueDomain(metrics, compose(metrics), [region])
 
     expect(yMax).toBeGreaterThanOrEqual(50)
+  })
+
+  test.each([
+    ['a line', null, [20, 80]],
+    ['an area down to its base', 'g1', [0, 80]]
+  ])('spans %s as drawn across a window narrower than one step', (_kind, stack, drawnExtent) => {
+    const fallingFromOneHundredToZeroAcrossTheThirdStep = [100, 100, 0, 0]
+    const metrics = [makeMetric(fallingFromOneHundredToZeroAcrossTheThirdStep, { stack })]
+    const fourSamples = { start: 0, end: 4 * STEP, step: STEP }
+    const insideTheThirdStep: [number, number] = [2 * STEP + 2, 2 * STEP + 8]
+
+    const domain = composedValueDomain(metrics, compose(metrics, fourSamples, insideTheThirdStep))
+
+    expect(domain).toEqual(drawnExtent)
   })
 
   test('a flat positive series anchors its floor at zero rather than at the data', () => {

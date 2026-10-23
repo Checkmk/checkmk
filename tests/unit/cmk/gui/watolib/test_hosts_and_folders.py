@@ -11,11 +11,12 @@ import shutil
 import sys
 import time
 import uuid
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from itertools import count
-from typing import cast, Literal
+from pathlib import Path
+from typing import cast, Final, Literal, override
 from unittest.mock import MagicMock, patch
 from zoneinfo import ZoneInfo
 
@@ -25,38 +26,64 @@ from pytest import MonkeyPatch
 from redis import ConnectionError as RedisConnectionError
 from redis import Redis
 from redis import TimeoutError as RedisTimeoutError
-from werkzeug.test import create_environ
 
 import cmk.ruleset_matcher.tags
 import cmk.utils.paths
+from cmk.automations.results import DeleteHostsResult
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
-from cmk.gui.config import get_default_config, make_config_object
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import Request
-from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser
+from cmk.gui.config import Config, get_default_config, make_config_object
+from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.logged_in import (
+    LoggedInNobody,
+    LoggedInSuperUser,
+    LoggedInUser,
+    UserDefaultConfig,
+)
 from cmk.gui.logged_in import user as logged_in_user
-from cmk.gui.search.matchers import MatchItem
+from cmk.gui.search.matchers import MatchItem, MatchItemConfig
+from cmk.gui.utils.host_relations import RelationLink, relations_or_empty
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.audit_log import AuditLogStore, make_audit_log_change_hook
-from cmk.gui.watolib.host_attributes import HostAttributes
+from cmk.gui.watolib.builtin_attributes import validate_host_parents, validate_host_relations
+from cmk.gui.watolib.config_domain_name import CORE as CORE_DOMAIN
+from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle
+from cmk.gui.watolib.configuration_bundles import (
+    create_config_bundle,
+    CreateBundleEntities,
+    CreateHost,
+)
+from cmk.gui.watolib.host_attributes import HostAttributes, HostContactGroupSpec
 from cmk.gui.watolib.host_match_item_generator import MatchItemGeneratorHosts
 from cmk.gui.watolib.hosts_and_folders import (
     all_folder_title_paths,
+    collect_all_hosts,
     EffectiveAttributes,
     Folder,
     folder_title_path,
     FolderTree,
     make_folder_tree,
+    may_read_host,
+    MirrorEntry,
+    plan_relation_mirror,
+    RelationMirrorBatch,
 )
-from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
-from cmk.livestatus_client import SiteConfigurations
+from cmk.gui.watolib.pending_changes import (
+    ChangeHook,
+    NoopPendingChangesStore,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.site_changes import ChangeSpec
+from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
+from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
+from cmk.utils.host_storage import PickleHostsStorage
 from cmk.utils.redis import disable_redis
-from cmk.web.utils.urls import HTTPVariable
+from tests.unit.cmk.gui.watolib.host_relations_fakes import refuse_relations_across_sites
 
 # Cheap in-memory acting user with all permissions. Avoids the expensive
 # with_admin_login fixture (which creates a real user on disk) for tests that
@@ -64,13 +91,71 @@ from cmk.web.utils.urls import HTTPVariable
 _SUPERUSER = LoggedInSuperUser()
 
 
-def _noop_pending_changes() -> PendingChanges:
+def _pending_changes(
+    *,
+    store: PendingChangesStore | None = None,
+    activation_sites: Iterable[SiteId] = (),
+    hooks: Sequence[ChangeHook] = (),
+) -> PendingChanges:
     return PendingChanges(
-        activation_sites=SiteConfigurations({}),
+        activation_sites=SiteConfigurations(
+            {site_id: _site_configuration(site_id) for site_id in activation_sites}
+        ),
         local_site=SiteId("NO_SITE"),
         acting_user=None,
-        store=NoopPendingChangesStore(),
-        hooks=(make_audit_log_change_hook(use_git=False),),
+        store=store or NoopPendingChangesStore(),
+        hooks=(make_audit_log_change_hook(use_git=False), *hooks),
+    )
+
+
+def _site_configuration(site_id: SiteId) -> SiteConfiguration:
+    return SiteConfiguration(
+        id=site_id,
+        alias=site_id,
+        socket=("local", None),
+        disable_wato=True,
+        disabled=False,
+        insecure=False,
+        url_prefix=f"/{site_id}/",
+        multisiteurl="",
+        persist=False,
+        replicate_ec=False,
+        replicate_mkps=False,
+        replication=None,
+        timeout=5,
+        user_login=True,
+        proxy=None,
+        user_attribute_sync_connections="all",
+        status_host=None,
+        message_broker_port=5672,
+        is_trusted=False,
+    )
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return _pending_changes()
+
+
+class _RecordingPendingChangesStore(PendingChangesStore):
+    def __init__(self, recorded: list[ChangeSpec]) -> None:
+        self._recorded = recorded
+
+    @override
+    def append(self, site_id: SiteId, entry: ChangeSpec) -> None:
+        self._recorded.append(entry)
+
+
+def _recording_pending_changes(recorded: list[ChangeSpec]) -> PendingChanges:
+    return _pending_changes(store=_RecordingPendingChangesStore(recorded))
+
+
+def _site_recording_pending_changes(
+    recorded: list[SiteId], activation_sites: Iterable[SiteId]
+) -> PendingChanges:
+    """Records which of ``activation_sites`` each change is marked for."""
+    return _pending_changes(
+        activation_sites=activation_sites,
+        hooks=(lambda event: recorded.extend(event.affected_sites),),
     )
 
 
@@ -90,8 +175,8 @@ def test_effective_attributes() -> None:
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def tree() -> Iterator[FolderTree]:
-    # Build the tree explicitly instead of using the request-global
-    # folder_tree(), so no Flask request context is needed at all.
+    # Build the tree explicitly from a crafted config, so no Flask request
+    # context is needed at all.
     # Computing effective attributes loads the users to determine the network
     # scan "run_as" default. Ensure the profile dir exists (usually done by
     # the load_config fixture).
@@ -319,18 +404,6 @@ def test_create_nested_folders(tree: FolderTree) -> None:
         folder2.save_folder_attributes()
 
         shutil.rmtree(os.path.dirname(folder1.wato_info_path()))
-
-
-def test_url_does_not_mutate_the_passed_variables(tree: FolderTree) -> None:
-    """A debug request used to append its marker to the caller's list."""
-    add_vars: list[HTTPVariable] = [("mode", "edit_host")]
-
-    root = tree.root_folder()
-    request = Request(create_environ(query_string="debug=1"))
-    first = root.url(request, add_vars)
-
-    assert add_vars == [("mode", "edit_host")]
-    assert root.url(request, add_vars) == first
 
 
 def test_eq_operation(tree: FolderTree) -> None:
@@ -830,6 +903,48 @@ def test_the_root_folder_is_titled_whatever_its_permissions_say(tree: FolderTree
         assert all_folder_title_paths(tree, _SUPERUSER)[""] == "Main"
 
 
+def _host_in_folder_a(tree: FolderTree) -> None:
+    three_levels(tree)
+    tree.folder("a").create_hosts(
+        [(HostName("web1"), {}, None)],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param("a", id="in the folder it is configured in"),
+        pytest.param(None, id="by its name alone"),
+    ],
+)
+def test_may_read_host_a_user_may_open(tree: FolderTree, path: str | None) -> None:
+    _host_in_folder_a(tree)
+
+    assert may_read_host(tree, HostName("web1"), path, _SUPERUSER)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param("b", id="another folder"),
+        pytest.param("nowhere", id="a folder this setup does not know"),
+    ],
+)
+def test_may_not_read_host_where_the_folder_does_not_hold_it(tree: FolderTree, path: str) -> None:
+    _host_in_folder_a(tree)
+
+    assert not may_read_host(tree, HostName("web1"), path, _SUPERUSER)
+
+
+def test_may_not_read_host_outside_the_contact_groups_of_its_permissions(tree: FolderTree) -> None:
+    _host_in_folder_a(tree)
+
+    assert not may_read_host(tree, HostName("web1"), "a", LoggedInNobody())
+
+
 def test_subfolder_creation(tree: FolderTree) -> None:
     folder = tree.root_folder()
     folder.create_subfolder(
@@ -850,7 +965,7 @@ def test_match_item_generator_hosts() -> None:
     assert list(
         MatchItemGeneratorHosts(
             HostName("hosts"),
-            lambda: {
+            lambda _tree: {
                 HostName("host"): {
                     "edit_url": "some_url",
                     "alias": "alias",
@@ -861,7 +976,9 @@ def test_match_item_generator_hosts() -> None:
                     "path": "",
                 },
             },
-        ).generate_match_items(UserPermissions({}, {}, {}, []))
+        ).generate_match_items(
+            UserPermissions({}, {}, {}, []), MatchItemConfig.from_config(Config())
+        )
     ) == [
         MatchItem(
             title="host",
@@ -870,6 +987,24 @@ def test_match_item_generator_hosts() -> None:
             match_texts=["host", "alias", "1.2.3.4", "5.6.7.8"],
         )
     ]
+
+
+def test_match_item_generator_hosts_finds_the_hosts_as_the_index_build_reads_them(
+    tree: FolderTree,
+) -> None:
+    """The index job builds its own tree, so it sees the hosts added since it started."""
+    tree.root_folder().create_hosts(
+        [(HostName("added"), {}, None)],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+
+    items = MatchItemGeneratorHosts(HostName("hosts"), collect_all_hosts).generate_match_items(
+        UserPermissions({}, {}, {}, []), MatchItemConfig.from_config(Config())
+    )
+
+    assert [item.title for item in items] == ["added"]
 
 
 @dataclass
@@ -1557,12 +1692,12 @@ def test_subfolder_cache_invalidated(tree: FolderTree) -> None:
     )
     subfolder.effective_attributes()
 
-    # WHEN cache is invalidated from folder_tree and attribute is updated
+    # WHEN cache is invalidated from the tree and attribute is updated
     tree.invalidate_caches()
     subfolder.attributes["alias"] = "other_alias"
 
     # THEN we read updated attribute
-    # There is a bug when invalidating cache from folder_tree(), not all
+    # There is a bug when invalidating cache from the tree, not all
     # subfolders are part of the tree
     with pytest.raises(AssertionError):
         assert subfolder.effective_attributes()["alias"] == "other_alias"
@@ -1593,40 +1728,1876 @@ def test_folder_attributes_for_base_config_without_bake_attribute(tree: FolderTr
     assert folder._folder_attributes_for_base_config() == {}  # noqa: SLF001
 
 
-def test_folder_attributes_for_base_config_defaults_to_pull_mode(tree: FolderTree) -> None:
+def test_folder_attributes_for_base_config_exports_bake_attribute(tree: FolderTree) -> None:
     folder = hosts_and_folders.Folder.new(
         tree=tree,
         name="baking",
         parent_folder=tree.root_folder(),
-        attributes=HostAttributes({"bake_agent_package": True}),
-    )
-
-    attributes = folder._folder_attributes_for_base_config()[folder.path_for_rule_matching()]  # noqa: SLF001
-    assert attributes["bake_agent_package"] is True
-    # the attribute's default value may or may not be filled in, depending on
-    # whether the edition under test registers the attribute
-    assert attributes.get("cmk_agent_connection", "pull-agent") == "pull-agent"
-
-
-def test_folder_attributes_for_base_config_exports_inherited_agent_connection(
-    tree: FolderTree,
-) -> None:
-    parent = hosts_and_folders.Folder.new(
-        tree=tree,
-        name="push_folder",
-        parent_folder=tree.root_folder(),
-        attributes=HostAttributes({"cmk_agent_connection": "push-agent"}),
-    )
-    folder = hosts_and_folders.Folder.new(
-        tree=tree,
-        name="baking",
-        parent_folder=parent,
         attributes=HostAttributes({"bake_agent_package": True}),
     )
 
     assert folder._folder_attributes_for_base_config() == {  # noqa: SLF001
-        folder.path_for_rule_matching(): {
-            "bake_agent_package": True,
-            "cmk_agent_connection": "push-agent",
-        },
+        folder.path_for_rule_matching(): {"bake_agent_package": True},
     }
+
+
+def _create_host(
+    folder: Folder,
+    name: str,
+    attributes: HostAttributes | None = None,
+    *,
+    acting_user: LoggedInUser = _SUPERUSER,
+) -> hosts_and_folders.Host:
+    folder.create_hosts(
+        [(HostName(name), attributes or HostAttributes(), [])],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=acting_user,
+    )
+    return folder.hosts()[HostName(name)]
+
+
+def _user_of_one_contact_group(
+    contact_group: str, *, sees_all_folders: bool = True
+) -> LoggedInUser:
+    """A user who may manage hosts and folders but has no blanket folder access, so that the
+    permission checks fall back to contact groups - which is where a host's differ from those of
+    its folder. Without ``sees_all_folders`` the user sees only the hosts of that group."""
+    user_ = LoggedInUser(
+        None,
+        UserPermissions({}, {}, {}, []),
+        defaults=UserDefaultConfig(
+            users={}, default_language="en", default_show_mode="default_show_less"
+        ),
+        explicitly_given_permissions=frozenset(
+            {"wato.use", "wato.edit", "wato.edit_hosts", "wato.manage_hosts"}
+            | ({"wato.manage_folders", "wato.see_all_folders"} if sees_all_folders else set())
+        ),
+    )
+    user_.attributes["contactgroups"] = [contact_group]
+    return user_
+
+
+def _relations_of(tree: FolderTree, host_name: HostName) -> Sequence[RelationLink]:
+    """What the tree says this host's relations are, rather than what one folder instance of it
+    is left holding in memory."""
+    host = tree.host(host_name)
+    assert host is not None
+    return relations_or_empty(host.attributes.get("relations", []))
+
+
+def _contact_groups(*names: str) -> HostContactGroupSpec:
+    return HostContactGroupSpec(
+        groups=list(names),
+        recurse_perms=False,
+        use=False,
+        use_for_services=False,
+        recurse_use=False,
+    )
+
+
+def _pair_split_over_two_folders(tree: FolderTree) -> tuple[Folder, Folder, Folder]:
+    """ "os1" and its counterpart "board", laid out so that a user of the contact group "cg" may
+    edit "board" but may not write the folder it lives in - a folder's contact groups are not a
+    host's.
+
+    Returns the folder both live under, the one holding "os1" and the one holding "board".
+    """
+    parent = tree.root_folder().create_subfolder(
+        "parent",
+        "Parent",
+        HostAttributes({"contactgroups": _contact_groups("cg")}),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    own = parent.create_subfolder(
+        "own",
+        "Own",
+        HostAttributes(),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    other = parent.create_subfolder(
+        "other",
+        "Other",
+        HostAttributes({"contactgroups": _contact_groups("another_cg")}),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    _create_host(own, "os1")
+    _create_host(
+        other,
+        "board",
+        HostAttributes(
+            {
+                "relations": [
+                    {"kind": "management", "direction": "parent", "host": HostName("os1")}
+                ],
+                "contactgroups": _contact_groups("cg"),
+            }
+        ),
+    )
+    # Re-resolved through the tree: creating "board" mirrored onto "os1" through the tree's own
+    # instance of its folder, not the one create_subfolder() handed out here.
+    tree.invalidate_caches()
+    return tree.folder(parent.path()), tree.folder(own.path()), tree.folder(other.path())
+
+
+def test_relation_counterpart_hosts_resolves_existing_and_unions(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    _create_host(root, "os2")
+
+    counterparts = hosts_and_folders._relation_counterpart_hosts(  # noqa: SLF001
+        tree,
+        [
+            {"kind": "management", "direction": "parent", "host": "os1"},
+            {"kind": "management", "direction": "parent", "host": "ghost"},
+        ],
+        [{"kind": "management", "direction": "parent", "host": "os2"}],
+    )
+
+    assert {host.name() for host in counterparts} == {HostName("os1"), HostName("os2")}
+
+
+def test_relation_counterpart_hosts_ignores_malformed(tree: FolderTree) -> None:
+    assert hosts_and_folders._relation_counterpart_hosts(tree, "not-a-list") == []  # noqa: SLF001
+
+
+def test_apply_edit_relations_flags_counterpart_site(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "os1", HostAttributes({"site": SiteId("remote")}))
+    board = _create_host(root, "board")
+
+    edit = board.apply_edit(
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+        None,
+        acting_user=_SUPERUSER,
+    )
+
+    assert edit.counterpart_hosts == [HostName("os1")]
+    assert board.site_id() in edit.affected_sites
+    assert SiteId("remote") in edit.affected_sites
+
+
+def test_apply_edit_removing_relation_flags_former_counterpart(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "os1", HostAttributes({"site": SiteId("remote")}))
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+
+    edit = board.apply_edit(HostAttributes(), None, acting_user=_SUPERUSER)
+
+    assert edit.counterpart_hosts == [HostName("os1")]
+    assert SiteId("remote") in edit.affected_sites
+
+
+def _related_pair_in(
+    folder: Folder, board_attributes: HostAttributes | None = None
+) -> hosts_and_folders.Host:
+    """``board`` in ``folder``, related to ``os1`` in the root folder, which is monitored on
+    site ``other``."""
+    _create_host(folder.tree.root_folder(), "os1", HostAttributes({"site": SiteId("other")}))
+    return _create_host(
+        folder,
+        "board",
+        HostAttributes(
+            {
+                **(board_attributes or {}),
+                "relations": [
+                    {"kind": "management", "direction": "parent", "host": HostName("os1")}
+                ],
+            }
+        ),
+    )
+
+
+def _subfolder(parent: Folder, name: str, attributes: HostAttributes | None = None) -> Folder:
+    return parent.create_subfolder(
+        name,
+        name,
+        attributes or HostAttributes(),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+
+
+def test_move_hosts_to_another_site_flags_the_counterpart_site(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _related_pair_in(root)
+    remote = _subfolder(root, "remote", HostAttributes({"site": SiteId("remote")}))
+    recorded: list[SiteId] = []
+
+    root.move_hosts(
+        [HostName("board")],
+        remote,
+        pprint_value=False,
+        pending_changes=_site_recording_pending_changes(recorded, [SiteId("other")]),
+        acting_user=_SUPERUSER,
+    )
+
+    assert SiteId("other") in recorded
+
+
+def test_move_hosts_within_a_site_leaves_the_counterpart_site_alone(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _related_pair_in(root)
+    same_site = _subfolder(root, "same_site")
+    recorded: list[SiteId] = []
+
+    root.move_hosts(
+        [HostName("board")],
+        same_site,
+        pprint_value=False,
+        pending_changes=_site_recording_pending_changes(recorded, [SiteId("other")]),
+        acting_user=_SUPERUSER,
+    )
+
+    assert SiteId("other") not in recorded
+
+
+def test_move_subfolder_to_another_site_flags_the_counterpart_site(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    boards = _subfolder(root, "boards")
+    _related_pair_in(boards)
+    remote = _subfolder(root, "remote", HostAttributes({"site": SiteId("remote")}))
+    recorded: list[SiteId] = []
+
+    root.move_subfolder_to(
+        boards,
+        remote,
+        pprint_value=False,
+        pending_changes=_site_recording_pending_changes(recorded, [SiteId("other")]),
+        acting_user=_SUPERUSER,
+    )
+
+    assert SiteId("other") in recorded
+
+
+def test_edit_folder_site_flags_the_counterpart_site(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    boards = _subfolder(root, "boards")
+    _related_pair_in(boards)
+    recorded: list[SiteId] = []
+
+    boards.edit(
+        "boards",
+        HostAttributes({"site": SiteId("remote")}),
+        pprint_value=False,
+        pending_changes=_site_recording_pending_changes(recorded, [SiteId("other")]),
+        acting_user=_SUPERUSER,
+    )
+
+    assert SiteId("other") in recorded
+
+
+def test_clean_site_attribute_flags_the_counterpart_site(tree: FolderTree) -> None:
+    board = _related_pair_in(tree.root_folder(), HostAttributes({"site": SiteId("remote")}))
+    recorded: list[SiteId] = []
+
+    board.clean_attributes(
+        ["site"],
+        pprint_value=False,
+        pending_changes=_site_recording_pending_changes(recorded, [SiteId("other")]),
+        acting_user=_SUPERUSER,
+    )
+
+    assert SiteId("other") in recorded
+
+
+def test_rename_relation_rewrites_the_link(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+
+    assert board.rename_relation(
+        HostName("os1"),
+        HostName("os2"),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    assert board.attributes["relations"] == [
+        {"kind": "management", "direction": "parent", "host": "os2"}
+    ]
+
+
+def test_rename_relation_leaves_an_unrelated_link_alone(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+
+    assert not board.rename_relation(
+        HostName("other"),
+        HostName("renamed"),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    assert board.attributes["relations"] == [
+        {"kind": "management", "direction": "parent", "host": "os1"}
+    ]
+
+
+def test_create_host_with_a_relation_writes_the_other_half(tree: FolderTree) -> None:
+    """The host it names has to end up holding the reverse row, and its core has to be told."""
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    recorded: list[ChangeSpec] = []
+
+    root.create_hosts(
+        [
+            (
+                HostName("board"),
+                HostAttributes(
+                    {
+                        "relations": [
+                            {"kind": "management", "direction": "parent", "host": HostName("os1")}
+                        ]
+                    }
+                ),
+                [],
+            )
+        ],
+        pprint_value=False,
+        pending_changes=_recording_pending_changes(recorded),
+        acting_user=_SUPERUSER,
+    )
+
+    assert _relations_of(tree, HostName("os1")) == [
+        {"kind": "management", "direction": "child", "host": "board"}
+    ]
+    # The counterpart alone: the new host is named by its own "create-host" change.
+    mirrored = next(entry for entry in recorded if entry["action_name"] == "mirror-relation")
+    assert set(mirrored["domain_settings"][CORE_DOMAIN]["hosts_to_update"]) == {HostName("os1")}
+
+
+def test_create_host_refuses_before_touching_a_counterpart_it_may_not_write(
+    tree: FolderTree,
+) -> None:
+    """A folder that would refuse the write has to say so before the counterpart is edited in
+    memory - otherwise whoever saves that folder next in the same request writes the very row the
+    user was just refused."""
+    _parent, own, _other = _pair_split_over_two_folders(tree)
+
+    with pytest.raises(MKUserError, match="board"):
+        own.create_hosts(
+            [
+                (
+                    HostName("os2"),
+                    HostAttributes(
+                        {
+                            "relations": [
+                                {
+                                    "kind": "management",
+                                    "direction": "child",
+                                    "host": HostName("board"),
+                                }
+                            ]
+                        }
+                    ),
+                    [],
+                )
+            ],
+            pprint_value=False,
+            pending_changes=_noop_pending_changes(),
+            acting_user=_user_of_one_contact_group("cg"),
+        )
+
+    assert _relations_of(tree, HostName("board")) == [
+        {"kind": "management", "direction": "parent", "host": "os1"}
+    ]
+
+
+def _folder_of(tree: FolderTree, name: str, contact_group: str) -> Folder:
+    return _subfolder(
+        tree.root_folder(), name, HostAttributes({"contactgroups": _contact_groups(contact_group)})
+    )
+
+
+def _refusal_of_board_of(host: str, folder: Folder, acting_user: LoggedInUser) -> str:
+    with pytest.raises(MKUserError) as refused:
+        _create_host(
+            folder,
+            "board",
+            HostAttributes(
+                {
+                    "relations": [
+                        {"kind": "management", "direction": "parent", "host": HostName(host)}
+                    ]
+                }
+            ),
+            acting_user=acting_user,
+        )
+    return str(refused.value)
+
+
+def test_create_hosts_refuses_every_entry_before_it_touches_a_counterpart(
+    tree: FolderTree,
+) -> None:
+    """Otherwise the counterpart of an earlier entry keeps a row about a host never created."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+
+    with pytest.raises(MKUserError, match="'ghost' does not exist"):
+        root.create_hosts(
+            [
+                (
+                    HostName(board),
+                    HostAttributes(
+                        {
+                            "relations": [
+                                {"kind": "management", "direction": "parent", "host": HostName(os)}
+                            ]
+                        }
+                    ),
+                    [],
+                )
+                for board, os in [("board1", "os1"), ("board2", "ghost")]
+            ],
+            pprint_value=False,
+            pending_changes=_noop_pending_changes(),
+            acting_user=_SUPERUSER,
+        )
+
+    assert "relations" not in os1.attributes
+
+
+def test_create_host_refuses_a_relation_to_a_host_that_does_not_exist(tree: FolderTree) -> None:
+    """A link to a free name would turn up on whichever host takes that name later."""
+    refusal = _refusal_of_board_of("ghost", tree.root_folder(), _SUPERUSER)
+
+    assert "'ghost' does not exist" in refusal
+    assert tree.host(HostName("board")) is None
+
+
+def test_relation_to_a_host_the_user_may_not_see_is_refused_like_a_missing_one(
+    tree: FolderTree,
+) -> None:
+    """The same answer for both, so trying names does not tell which hosts exist."""
+    _create_host(_folder_of(tree, "hidden", "another_cg"), "hidden-os")
+    own = _folder_of(tree, "own", "cg")
+    user_ = _user_of_one_contact_group("cg", sees_all_folders=False)
+
+    hidden = _refusal_of_board_of("hidden-os", own, user_)
+
+    assert hidden == _refusal_of_board_of("ghost", own, user_).replace("ghost", "hidden-os")
+    assert "relations" not in tree.load_host(HostName("hidden-os")).attributes
+
+
+def test_edit_keeps_a_stored_relation_to_a_host_that_is_gone(tree: FolderTree) -> None:
+    """Only a relation the save establishes needs its counterpart."""
+    board = _create_host(tree.root_folder(), "board")
+    gone: list[RelationLink] = [
+        {"kind": "management", "direction": "parent", "host": HostName("ghost")}
+    ]
+    board.attributes["relations"] = gone
+
+    _edit_relations(board, gone, alias="Board")
+
+    assert board.attributes["relations"] == gone
+
+
+def test_refusal_to_drop_a_relation_keeps_the_hidden_counterparts_folder_to_itself(
+    tree: FolderTree,
+) -> None:
+    _create_host(_folder_of(tree, "own", "cg"), "os1")
+    _create_host(
+        _folder_of(tree, "hidden", "another_cg"),
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+    tree.invalidate_caches()
+    os1 = tree.load_host(HostName("os1"))
+
+    with pytest.raises(MKUserError, match="'board' as well, which you cannot edit") as refused:
+        _edit_relations(
+            os1, [], acting_user=_user_of_one_contact_group("cg", sees_all_folders=False)
+        )
+
+    assert "Hidden" not in str(refused.value)
+    assert "another_cg" not in str(refused.value)
+
+
+def test_mirror_batch_refuses_a_counterpart_the_user_may_not_write_before_touching_it(
+    tree: FolderTree,
+) -> None:
+    """A host's contact groups are not its folder's: the user may write the folder and still not
+    the host in it. Refused while planning, so a bulk endpoint can fail that host alone."""
+    own = _folder_of(tree, "own", "cg")
+    os1 = _create_host(own, "os1")
+    _create_host(own, "board", HostAttributes({"contactgroups": _contact_groups("another_cg")}))
+
+    with pytest.raises(MKUserError, match="'board' as well, which you cannot edit"):
+        RelationMirrorBatch(own, acting_user=_user_of_one_contact_group("cg")).need_edit(
+            os1,
+            HostAttributes(
+                {
+                    "relations": [
+                        {"kind": "management", "direction": "child", "host": HostName("board")}
+                    ]
+                }
+            ),
+        )
+
+
+def test_mirror_batch_refuses_a_relation_on_a_host_locked_by_quick_setup(
+    tree: FolderTree,
+) -> None:
+    """Refused while planning, like apply_edit() refuses it, so a bulk caller fails it alone."""
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _host_locked_by_quick_setup(root, "board")
+
+    with pytest.raises(MKUserError, match="'board' is locked by Quick setup"):
+        RelationMirrorBatch(root, acting_user=_SUPERUSER).need_edit(
+            board,
+            HostAttributes(
+                {
+                    "relations": [
+                        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+                    ]
+                }
+            ),
+        )
+
+
+def _refuse_editing_board(
+    _folder_site_id: SiteId, host_name: HostName, _attributes: object, _sites: object
+) -> None:
+    if host_name == "board":
+        raise MKUserError(None, "The edition refuses 'board'.")
+
+
+def test_mirror_batch_refuses_a_counterpart_the_edition_refuses_before_touching_it(
+    tree: FolderTree,
+) -> None:
+    """Refused while planning, so a bulk caller fails that host alone."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    _create_host(root, "board")
+    root.validators = replace(root.validators, validate_edit_host=_refuse_editing_board)
+
+    with pytest.raises(MKUserError, match="The edition refuses 'board'"):
+        RelationMirrorBatch(root, acting_user=_SUPERUSER).need_edit(
+            os1,
+            HostAttributes(
+                {
+                    "relations": [
+                        {"kind": "management", "direction": "child", "host": HostName("board")}
+                    ]
+                }
+            ),
+        )
+
+
+def test_mirror_batch_refuses_a_site_the_edition_refuses_for_a_kept_relation(
+    tree: FolderTree,
+) -> None:
+    """Refused while planning, like apply_edit() refuses it, so a bulk caller fails it alone."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1", HostAttributes({"site": SiteId("site_a")}))
+    _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {
+                "site": SiteId("site_a"),
+                "relations": [
+                    {"kind": "management", "direction": "parent", "host": HostName("os1")}
+                ],
+            }
+        ),
+    )
+    root.validators = replace(root.validators, validate_host_relation=refuse_relations_across_sites)
+
+    with pytest.raises(MKUserError, match="Only hosts of the same customer"):
+        RelationMirrorBatch(root, acting_user=_SUPERUSER).need_edit(
+            os1, HostAttributes({**os1.attributes, "site": SiteId("site_b")})
+        )
+
+
+def test_create_asks_the_edition_about_the_folder_site_of_a_host_with_an_empty_site(
+    tree: FolderTree,
+) -> None:
+    """An empty site is the placeholder for the folder's one, as in Host.site_id()."""
+    folder = _subfolder(tree.root_folder(), "site_a", HostAttributes({"site": SiteId("site_a")}))
+    _create_host(folder, "board")
+    folder.validators = replace(
+        folder.validators, validate_host_relation=refuse_relations_across_sites
+    )
+
+    os1 = _create_host(
+        folder,
+        "os1",
+        HostAttributes(
+            {
+                "site": SiteId(""),
+                "relations": [
+                    {"kind": "management", "direction": "child", "host": HostName("board")}
+                ],
+            }
+        ),
+    )
+
+    assert os1.attributes["relations"] == [
+        {"kind": "management", "direction": "child", "host": HostName("board")}
+    ]
+
+
+def test_delete_subfolder_logs_no_change_for_a_pair_inside_it(tree: FolderTree) -> None:
+    """Both halves go away with the folder, so there is nothing to tell a core about - a change
+    naming hosts that no longer exist would only be noise."""
+    root = tree.root_folder()
+    pair = root.create_subfolder(
+        "pair",
+        "Pair",
+        HostAttributes(),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    _create_host(pair, "os1")
+    _create_host(
+        pair,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+    recorded: list[ChangeSpec] = []
+
+    root.delete_subfolder(
+        "pair",
+        pprint_value=False,
+        pending_changes=_recording_pending_changes(recorded),
+        acting_user=_SUPERUSER,
+    )
+
+    assert not [entry for entry in recorded if entry["action_name"] == "mirror-relation"]
+
+
+def test_delete_hosts_removes_the_relation_from_the_counterpart(
+    tree: FolderTree, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A relation is stored on both hosts, so a deleted host takes the other half with it -
+    and the counterpart's core has to be refreshed for it."""
+    # Deleting the host's files needs a site connection, which this test has nothing to say about.
+    monkeypatch.setattr(hosts_and_folders.Folder, "_delete_host_files", lambda *_a, **_kw: None)
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+    recorded: list[ChangeSpec] = []
+
+    root.delete_hosts(
+        [HostName("os1")],
+        automation=lambda *_args, **_kwargs: DeleteHostsResult(),
+        pprint_value=False,
+        debug=False,
+        pending_changes=_recording_pending_changes(recorded),
+        acting_user=_SUPERUSER,
+    )
+
+    assert "relations" not in board.attributes
+    deletion = next(entry for entry in recorded if entry["action_name"] == "delete-host")
+    assert set(deletion["domain_settings"][CORE_DOMAIN]["hosts_to_update"]) == {
+        HostName("os1"),
+        HostName("board"),
+    }
+
+
+def test_delete_hosts_removes_a_row_the_user_may_not_write(
+    tree: FolderTree, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Deleting one's own host is allowed, so the row naming it goes even where the user could
+    not have written it: the cleanup acts as the system, leaving no reference to a host that is
+    gone."""
+    monkeypatch.setattr(hosts_and_folders.Folder, "_delete_host_files", lambda *_a, **_kw: None)
+    _parent, own, other = _pair_split_over_two_folders(tree)
+
+    own.delete_hosts(
+        [HostName("os1")],
+        automation=lambda *_args, **_kwargs: DeleteHostsResult(),
+        pprint_value=False,
+        debug=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_user_of_one_contact_group("cg"),
+    )
+
+    assert "relations" not in other.hosts()[HostName("board")].attributes
+    assert _relations_of(tree, HostName("board")) == []
+
+
+def test_delete_hosts_keeps_a_row_in_a_locked_folder(
+    tree: FolderTree, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A lock is not a permission: a "hosts.mk" that is not Setup's to write keeps its row, which
+    validate_host_relations() reports and the export drops."""
+    monkeypatch.setattr(hosts_and_folders.Folder, "_delete_host_files", lambda *_a, **_kw: None)
+    _parent, own, other = _pair_split_over_two_folders(tree)
+    monkeypatch.setattr(hosts_and_folders.Folder, "locked_hosts", lambda self: self is not own)
+    hosts_mk = Path(other.filesystem_path()) / "hosts.mk"
+    stored = hosts_mk.read_text()
+
+    own.delete_hosts(
+        [HostName("os1")],
+        automation=lambda *_args, **_kwargs: DeleteHostsResult(),
+        pprint_value=False,
+        debug=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+
+    assert other.hosts()[HostName("board")].attributes["relations"] == [
+        {"kind": "management", "direction": "parent", "host": "os1"}
+    ]
+    assert hosts_mk.read_text() == stored
+
+
+def test_delete_subfolder_removes_the_relation_from_a_counterpart_outside_it(
+    tree: FolderTree,
+) -> None:
+    """A deleted folder takes every host in it with it, and each of those takes the other half of
+    its relations - which may well be stored outside the folder being deleted."""
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    boards = root.create_subfolder(
+        "boards",
+        "Boards",
+        HostAttributes(),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    _create_host(
+        boards,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+    assert _relations_of(tree, HostName("os1")) == [
+        {"kind": "management", "direction": "child", "host": "board"}
+    ]
+    recorded: list[ChangeSpec] = []
+
+    root.delete_subfolder(
+        "boards",
+        pprint_value=False,
+        pending_changes=_recording_pending_changes(recorded),
+        acting_user=_SUPERUSER,
+    )
+
+    # Read back through the tree: the folder is gone and its caches with it, so this is what the
+    # remaining "hosts.mk" says rather than what is left over in memory.
+    assert _relations_of(tree, HostName("os1")) == []
+    mirrored = next(entry for entry in recorded if entry["action_name"] == "mirror-relation")
+    assert set(mirrored["domain_settings"][CORE_DOMAIN]["hosts_to_update"]) == {
+        HostName("os1"),
+        HostName("board"),
+    }
+
+
+def test_delete_subfolder_removes_a_row_the_user_may_not_write(tree: FolderTree) -> None:
+    """Deleting a folder cleans up after its hosts the same way, wherever the counterparts are."""
+    parent, _own, other = _pair_split_over_two_folders(tree)
+
+    parent.delete_subfolder(
+        "own",
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_user_of_one_contact_group("cg"),
+    )
+
+    assert other.hosts()[HostName("board")].attributes.get("relations", []) == []
+    assert _relations_of(tree, HostName("board")) == []
+
+
+def test_edit_accepts_a_link_to_a_host_that_is_gone(tree: FolderTree) -> None:
+    """A counterpart may be deleted long after the link was stored. Refusing the save would leave
+    the host unsavable, so this is only reported as an invalid configuration."""
+    root = tree.root_folder()
+    board = _create_host(root, "board")
+
+    board.apply_edit(
+        HostAttributes(
+            {
+                "relations": [
+                    {"kind": "management", "direction": "parent", "host": HostName("ghost")}
+                ]
+            }
+        ),
+        None,
+        acting_user=_SUPERUSER,
+    )
+
+    assert board.attributes["relations"] == [
+        {"kind": "management", "direction": "parent", "host": "ghost"}
+    ]
+
+
+def test_edit_rejects_contradicting_relations(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    board = _create_host(root, "board")
+
+    with pytest.raises(MKUserError, match="cannot be linked to itself"):
+        board.apply_edit(
+            HostAttributes(
+                {
+                    "relations": [
+                        {"kind": "management", "direction": "parent", "host": HostName("board")}
+                    ]
+                }
+            ),
+            None,
+            acting_user=_SUPERUSER,
+        )
+
+
+def test_create_rejects_contradicting_relations(tree: FolderTree) -> None:
+    root = tree.root_folder()
+
+    with pytest.raises(MKUserError, match="cannot be linked to itself"):
+        _create_host(
+            root,
+            "board",
+            HostAttributes(
+                {
+                    "relations": [
+                        {"kind": "management", "direction": "parent", "host": HostName("board")}
+                    ]
+                }
+            ),
+        )
+
+
+def test_create_rejects_malformed_relations(tree: FolderTree) -> None:
+    root = tree.root_folder()
+
+    with pytest.raises(MKUserError, match="malformed"):
+        _create_host(
+            root,
+            "board",
+            HostAttributes({"relations": "not-a-list"}),  # type: ignore[typeddict-item]
+        )
+
+
+def test_edit_keeps_a_contradiction_the_counterpart_already_stored(tree: FolderTree) -> None:
+    """Mirroring re-states everything the counterpart stores, so one host's broken value must not
+    make an unrelated host unsavable."""
+    root = tree.root_folder()
+    board = _create_host(root, "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")},
+        {"kind": "management", "direction": "child", "host": HostName("os1")},
+    ]
+    os2 = _create_host(root, "os2")
+
+    board.set_relations_about(
+        os2.name(),
+        [{"kind": "management", "direction": "parent", "host": os2.name()}],
+        acting_user=_SUPERUSER,
+    )
+
+    assert {link["host"] for link in relations_or_empty(board.attributes["relations"])} == {
+        HostName("os1"),
+        HostName("os2"),
+    }
+
+
+def test_validate_host_relations_reports_a_host_that_is_gone(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    board = _create_host(root, "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+    ]
+
+    with pytest.raises(MKUserError, match="non-existing host 'os1'"):
+        validate_host_relations(board, acting_user=_SUPERUSER)
+
+
+@pytest.mark.parametrize(
+    "related_host_exists",
+    [
+        pytest.param(True, id="a host the user may not see"),
+        pytest.param(False, id="a host that is gone"),
+    ],
+)
+def test_validate_host_relations_tells_a_user_who_cannot_see_all_hosts_nothing_about_it(
+    tree: FolderTree, related_host_exists: bool
+) -> None:
+    """Either report would tell whether the host exists, and the user could not settle it."""
+    if related_host_exists:
+        _create_host(_folder_of(tree, "hidden", "another_cg"), "os1")
+    board = _create_host(_folder_of(tree, "open", "cg"), "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+    ]
+
+    validate_host_relations(
+        board, acting_user=_user_of_one_contact_group("cg", sees_all_folders=False)
+    )
+
+
+def test_validate_host_relations_passes_for_an_existing_host(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+
+    validate_host_relations(board, acting_user=_SUPERUSER)
+
+
+def test_validate_host_relations_reports_a_counterpart_without_its_half(tree: FolderTree) -> None:
+    """The way a hand written "hosts.mk" leaves it: the export shows the relation on both sides,
+    but the other host's dialog does not."""
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _create_host(root, "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+    ]
+
+    with pytest.raises(MKUserError, match="'os1' does not store its half"):
+        validate_host_relations(board, acting_user=_SUPERUSER)
+
+
+def test_validate_host_relations_reports_both_hosts_storing_the_board_half(
+    tree: FolderTree,
+) -> None:
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    board = _create_host(root, "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+    ]
+    os1.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("board")}
+    ]
+    root.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
+    tree.invalidate_caches()
+
+    with pytest.raises(
+        MKUserError,
+        match="'os1' also stores itself as 'Management board' of this host.*Saving keeps "
+        "this host as 'Management board' and makes 'os1' its 'OS host'",
+    ):
+        validate_host_relations(tree.load_host(HostName("board")), acting_user=_SUPERUSER)
+
+
+def test_validate_host_relations_reports_both_hosts_storing_the_os_half(
+    tree: FolderTree,
+) -> None:
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    board = _create_host(root, "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "child", "host": HostName("os1")}
+    ]
+    os1.attributes["relations"] = [
+        {"kind": "management", "direction": "child", "host": HostName("board")}
+    ]
+    root.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
+    tree.invalidate_caches()
+
+    with pytest.raises(
+        MKUserError,
+        match="'os1' also stores itself as 'OS host'.*Add the relation on the host that is the "
+        "'Management board'",
+    ):
+        validate_host_relations(tree.load_host(HostName("board")), acting_user=_SUPERUSER)
+
+
+def test_validate_host_relations_reports_an_os_half_the_board_does_not_store(
+    tree: FolderTree,
+) -> None:
+    root = tree.root_folder()
+    _create_host(root, "board")
+    os1 = _create_host(root, "os1")
+    os1.attributes["relations"] = [
+        {"kind": "management", "direction": "child", "host": HostName("board")}
+    ]
+
+    with pytest.raises(
+        MKUserError, match="the monitoring does not show it. Add it on 'board', or remove it here"
+    ):
+        validate_host_relations(os1, acting_user=_SUPERUSER)
+
+
+def test_validate_host_relations_reports_a_counterpart_whose_relations_cannot_be_read(
+    tree: FolderTree,
+) -> None:
+    """Not as one that stores nothing: adding the relation there would fail on the same value."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    board = _create_host(root, "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+    ]
+    os1.attributes["relations"] = cast("Sequence[RelationLink]", "not-a-list")
+    root.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
+    tree.invalidate_caches()
+
+    with pytest.raises(MKUserError, match="The relations of 'os1' are malformed"):
+        validate_host_relations(tree.load_host(HostName("board")), acting_user=_SUPERUSER)
+
+
+def test_validate_host_relations_passes_over_a_half_of_a_kind_it_does_not_know(
+    tree: FolderTree,
+) -> None:
+    """What a later version wrote next to the half is not for this one to judge."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+    os1.attributes["relations"] = [
+        *relations_or_empty(os1.attributes["relations"]),
+        {"kind": "peering", "direction": "symmetric", "host": HostName("board")},
+    ]
+    root.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
+    tree.invalidate_caches()
+
+    validate_host_relations(tree.load_host(HostName("board")), acting_user=_SUPERUSER)
+
+
+def test_validate_host_parents_reports_a_parent_that_is_gone(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    host = _create_host(root, "host", HostAttributes({"parents": [HostName("gw")]}))
+
+    with pytest.raises(MKUserError, match="non-existing host 'gw' as a parent"):
+        validate_host_parents(host)
+
+
+def test_validate_host_parents_passes_for_an_existing_parent(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "gw")
+    host = _create_host(root, "host", HostAttributes({"parents": [HostName("gw")]}))
+
+    validate_host_parents(host)
+
+
+def test_validate_host_relations_reports_a_malformed_value(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    board = _create_host(root, "board")
+    board.attributes["relations"] = "not-a-list"  # type: ignore[typeddict-item]
+
+    with pytest.raises(MKUserError, match="malformed"):
+        validate_host_relations(board, acting_user=_SUPERUSER)
+
+
+def test_set_relations_about_replaces_only_the_rows_of_that_pair(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    _create_host(root, "os2")
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {
+                "relations": [
+                    {"kind": "management", "direction": "parent", "host": HostName("os1")},
+                    {"kind": "management", "direction": "parent", "host": HostName("os2")},
+                ]
+            }
+        ),
+    )
+
+    assert (
+        board.set_relations_about(
+            HostName("os1"),
+            [{"kind": "management", "direction": "child", "host": HostName("os1")}],
+            acting_user=_SUPERUSER,
+        )
+        is not None
+    )
+    assert board.attributes["relations"] == [
+        {"kind": "management", "direction": "parent", "host": "os2"},
+        {"kind": "management", "direction": "child", "host": "os1"},
+    ]
+
+
+def test_set_relations_about_drops_the_attribute_with_its_last_row(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+
+    board.set_relations_about(HostName("os1"), (), acting_user=_SUPERUSER)
+
+    assert "relations" not in board.attributes
+
+
+def test_set_relations_about_does_not_write_the_hosts_mk(tree: FolderTree) -> None:
+    """Saving is up to the caller, so that a later failure leaves nothing half written."""
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+    stored = (Path(root.filesystem_path()) / "hosts.mk").read_text()
+
+    board.set_relations_about(HostName("os1"), (), acting_user=_SUPERUSER)
+
+    assert (Path(root.filesystem_path()) / "hosts.mk").read_text() == stored
+
+
+def test_edit_refuses_to_mirror_onto_relations_that_cannot_be_read(tree: FolderTree) -> None:
+    """Read as no relations, the value would be replaced by the one mirrored link."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    _create_host(root, "board")
+    os1.attributes["relations"] = cast("Sequence[RelationLink]", "not-a-list")
+    root.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
+    tree.invalidate_caches()
+    stored = (Path(root.filesystem_path()) / "hosts.mk").read_text()
+
+    with pytest.raises(MKUserError, match="The relations of 'os1' are malformed"):
+        _edit_relations(
+            tree.load_host(HostName("board")),
+            [{"kind": "management", "direction": "parent", "host": HostName("os1")}],
+        )
+
+    assert (Path(root.filesystem_path()) / "hosts.mk").read_text() == stored
+
+
+def test_set_relations_about_needs_write_permission_on_the_counterpart(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+
+    with pytest.raises(MKAuthException):
+        board.set_relations_about(HostName("os1"), (), acting_user=LoggedInNobody())
+
+
+def _host_locked_by_quick_setup(
+    folder: Folder, name: str, attributes: HostAttributes | None = None
+) -> hosts_and_folders.Host:
+    create_config_bundle(
+        folder.tree,
+        BundleId("qs-bundle"),
+        ConfigBundle(
+            title="",
+            comment="",
+            owned_by=None,
+            group="special_agents:aws",
+            program_id=PROGRAM_ID_QUICK_SETUP,
+        ),
+        CreateBundleEntities(
+            hosts=[CreateHost(folder=folder, name=HostName(name), attributes=attributes or {})]
+        ),
+        acting_user=_SUPERUSER,
+        user_permissions=UserPermissions({}, {}, {}, []),
+        pprint_value=False,
+        debug=False,
+        pending_changes=_noop_pending_changes(),
+    )
+    return folder.hosts()[HostName(name)]
+
+
+def test_edit_refuses_a_relation_on_a_host_locked_by_quick_setup(tree: FolderTree) -> None:
+    """Like the other half is refused onto such a host: Quick setup re-creates it on every edit
+    of its bundle, which would drop the relation without a trace."""
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _host_locked_by_quick_setup(root, "board")
+
+    with pytest.raises(MKUserError, match="'board' is locked by Quick setup"):
+        _edit_relations(
+            board, [{"kind": "management", "direction": "parent", "host": HostName("os1")}]
+        )
+
+    assert _relations_of(tree, HostName("os1")) == []
+
+
+def _hosts_mk(folder: Folder) -> Path:
+    return Path(folder.filesystem_path()) / "hosts.mk"
+
+
+def _pair_with_the_board_locked_by_quick_setup(
+    tree: FolderTree,
+) -> tuple[hosts_and_folders.Host, hosts_and_folders.Host]:
+    """Both halves stored and the board locked, as a site from before the lock holds them.
+
+    Written straight into the folder: Quick setup's own host creation bypasses the mirror and
+    passes no relations, and the lock refuses the relation on any other way in. Saving reloads
+    the folder's hosts, so the instances handed out are the ones the folder holds afterwards;
+    creating the bundle regenerates the tree's root folder, so ask the hosts for theirs.
+    """
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    board = _host_locked_by_quick_setup(root, "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+    ]
+    os1.attributes["relations"] = [
+        {"kind": "management", "direction": "child", "host": HostName("board")}
+    ]
+    root.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
+    return root.hosts()[HostName("os1")], root.hosts()[HostName("board")]
+
+
+def test_edit_drops_a_relation_from_a_host_locked_by_quick_setup(tree: FolderTree) -> None:
+    """Dropping one stores nothing on the host, so Quick setup has nothing to lose."""
+    _os1, board = _pair_with_the_board_locked_by_quick_setup(tree)
+
+    _edit_relations(board, [])
+
+    assert "relations" not in board.attributes
+    assert "relations" not in board.folder().hosts()[HostName("os1")].attributes
+    assert "'management'" not in _hosts_mk(board.folder()).read_text()
+
+
+def test_edit_drops_the_other_half_from_a_host_locked_by_quick_setup(tree: FolderTree) -> None:
+    os1, _board = _pair_with_the_board_locked_by_quick_setup(tree)
+
+    _edit_relations(os1, [])
+
+    assert "relations" not in os1.folder().hosts()[HostName("board")].attributes
+    assert "'management'" not in _hosts_mk(os1.folder()).read_text()
+
+
+def test_mirror_batch_lets_a_host_locked_by_quick_setup_drop_a_relation(
+    tree: FolderTree,
+) -> None:
+    _os1, board = _pair_with_the_board_locked_by_quick_setup(tree)
+
+    RelationMirrorBatch(board.folder(), acting_user=_SUPERUSER).need_edit(
+        board, HostAttributes({"relations": []})
+    )
+
+
+def test_delete_hosts_removes_the_relation_from_a_counterpart_locked_by_quick_setup(
+    tree: FolderTree, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(hosts_and_folders.Folder, "_delete_host_files", lambda *_a, **_kw: None)
+    _os1, board = _pair_with_the_board_locked_by_quick_setup(tree)
+
+    board.folder().delete_hosts(
+        [HostName("os1")],
+        automation=lambda *_args, **_kwargs: DeleteHostsResult(),
+        pprint_value=False,
+        debug=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+
+    assert "relations" not in board.folder().hosts()[HostName("board")].attributes
+    assert "'management'" not in _hosts_mk(board.folder()).read_text()
+
+
+def test_edit_keeps_saving_a_host_quick_setup_took_over_with_its_relations(
+    tree: FolderTree,
+) -> None:
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _host_locked_by_quick_setup(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+
+    _edit_relations(board, board.attributes["relations"], alias="still savable")
+
+    assert board.attributes["alias"] == "still savable"
+
+
+def test_set_relations_about_reports_nothing_when_the_pair_already_says_that(
+    tree: FolderTree,
+) -> None:
+    """Reconciliation re-states every pair on every save, so most of them are no-ops."""
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+
+    assert (
+        board.set_relations_about(
+            HostName("os1"),
+            [{"kind": "management", "direction": "parent", "host": HostName("os1")}],
+            acting_user=_SUPERUSER,
+        )
+        is None
+    )
+
+
+def test_the_mirrored_write_refreshes_both_cores(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+    recorded: list[ChangeSpec] = []
+    mirrored = board.set_relations_about(HostName("os1"), (), acting_user=_SUPERUSER)
+    assert mirrored is not None
+
+    board.add_relation_mirror_change(
+        mirrored, HostName("os1"), pending_changes=_recording_pending_changes(recorded)
+    )
+
+    change = next(entry for entry in recorded if entry["action_name"] == "mirror-relation")
+    assert change["object"] == board.object_ref()
+    assert set(change["domain_settings"][CORE_DOMAIN]["hosts_to_update"]) == {
+        HostName("board"),
+        HostName("os1"),
+    }
+
+
+def test_plan_relation_mirror_marks_an_unchanged_pair_as_unchanged() -> None:
+    """Still planned, so that the save settles it - but its counterpart is no precondition."""
+    mirror = plan_relation_mirror(
+        HostName("os1"),
+        [{"kind": "management", "direction": "child", "host": HostName("board")}],
+        [{"kind": "management", "direction": "child", "host": HostName("board")}],
+    )
+
+    assert mirror == {
+        HostName("board"): MirrorEntry(
+            links=[{"kind": "management", "direction": "parent", "host": HostName("os1")}],
+            changed=False,
+        )
+    }
+
+
+def test_plan_relation_mirror_states_a_changed_pair_whole() -> None:
+    """Not a diff: the counterpart of a pair that changed is told everything it has to hold."""
+    mirror = plan_relation_mirror(
+        HostName("os1"),
+        [{"kind": "management", "direction": "child", "host": HostName("board")}],
+        [
+            {"kind": "management", "direction": "child", "host": HostName("board")},
+            {"kind": "management", "direction": "parent", "host": HostName("board2")},
+        ],
+    )
+
+    assert mirror[HostName("board2")] == MirrorEntry(
+        links=[{"kind": "management", "direction": "child", "host": HostName("os1")}],
+        changed=True,
+    )
+
+
+def test_plan_relation_mirror_skips_a_self_link() -> None:
+    """Mirroring it would edit the host a second time, from inside its own save."""
+    assert (
+        plan_relation_mirror(
+            HostName("os1"),
+            [],
+            [{"kind": "management", "direction": "parent", "host": HostName("os1")}],
+        )
+        == {}
+    )
+
+
+def test_plan_relation_mirror_clears_a_counterpart_that_is_gone() -> None:
+    mirror = plan_relation_mirror(
+        HostName("os1"),
+        [{"kind": "management", "direction": "child", "host": HostName("board")}],
+        [],
+    )
+
+    assert mirror == {HostName("board"): MirrorEntry(links=[], changed=True)}
+
+
+def test_plan_relation_mirror_turns_a_flip_into_one_write() -> None:
+    """Both halves name the same pair, so the counterpart is written once - with the new end."""
+    mirror = plan_relation_mirror(
+        HostName("os1"),
+        [{"kind": "management", "direction": "child", "host": HostName("board")}],
+        [{"kind": "management", "direction": "parent", "host": HostName("board")}],
+    )
+
+    assert mirror == {
+        HostName("board"): MirrorEntry(
+            links=[{"kind": "management", "direction": "child", "host": HostName("os1")}],
+            changed=True,
+        )
+    }
+
+
+_LATER: Final[RelationLink] = {"kind": "later", "direction": "parent", "host": HostName("os1")}
+
+
+def _create_board_with_a_later_kind(root: Folder) -> hosts_and_folders.Host:
+    """A board whose relation to "os1" is of a kind a later version introduced."""
+    _create_host(root, "os1")
+    return _create_host(root, "board", HostAttributes({"relations": [_LATER]}))
+
+
+def test_clean_attributes_refuses_to_drop_a_relation(tree: FolderTree) -> None:
+    """Only Host.edit() knows how to take the other half with it."""
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+
+    with pytest.raises(MKUserError, match="stored on both hosts"):
+        board.clean_attributes(
+            ["relations"],
+            pprint_value=False,
+            pending_changes=_noop_pending_changes(),
+            acting_user=_SUPERUSER,
+        )
+
+
+def test_update_attributes_stores_a_relation_of_a_kind_this_version_cannot_place_once(
+    tree: FolderTree,
+) -> None:
+    board = _create_board_with_a_later_kind(tree.root_folder())
+
+    board.update_attributes(
+        HostAttributes({"alias": "iLO"}),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+
+    assert board.attributes["relations"] == [_LATER]
+
+
+def test_delete_hosts_removes_the_other_half_of_a_kind_this_version_cannot_place(
+    tree: FolderTree, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Deleting the host's files needs a site connection, which this test has nothing to say about.
+    monkeypatch.setattr(hosts_and_folders.Folder, "_delete_host_files", lambda *_a, **_kw: None)
+    root = tree.root_folder()
+    board = _create_board_with_a_later_kind(root)
+
+    root.delete_hosts(
+        [HostName("os1")],
+        automation=lambda *_args, **_kwargs: DeleteHostsResult(),
+        pprint_value=False,
+        debug=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+
+    assert "relations" not in board.attributes
+
+
+def _edit_relations(
+    host: hosts_and_folders.Host,
+    relations: Sequence[RelationLink],
+    *,
+    alias: str | None = None,
+    acting_user: LoggedInUser = _SUPERUSER,
+    pending_changes: PendingChanges | None = None,
+) -> None:
+    attributes = HostAttributes({"relations": list(relations)})
+    if alias is not None:
+        attributes["alias"] = alias
+    host.edit(
+        attributes,
+        None,
+        pprint_value=False,
+        pending_changes=pending_changes or _noop_pending_changes(),
+        acting_user=acting_user,
+    )
+
+
+def test_edit_stores_the_other_half(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    board = _create_host(root, "board")
+
+    _edit_relations(os1, [{"kind": "management", "direction": "child", "host": HostName("board")}])
+
+    assert os1.attributes["relations"] == [
+        {"kind": "management", "direction": "child", "host": "board"}
+    ]
+    assert board.attributes["relations"] == [
+        {"kind": "management", "direction": "parent", "host": "os1"}
+    ]
+
+
+def test_edit_removes_the_other_half(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+
+    _edit_relations(os1, [])
+
+    assert "relations" not in os1.attributes
+    assert "relations" not in board.attributes
+    assert "'management'" not in (Path(root.filesystem_path()) / "hosts.mk").read_text()
+
+
+def test_edit_flipping_the_direction_replaces_the_row_on_the_other_host(tree: FolderTree) -> None:
+    """The pair is re-stated, so the counterpart ends up with one row - not two contradicting."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+
+    _edit_relations(os1, [{"kind": "management", "direction": "parent", "host": HostName("board")}])
+
+    assert os1.attributes["relations"] == [
+        {"kind": "management", "direction": "parent", "host": "board"}
+    ]
+    assert board.attributes["relations"] == [
+        {"kind": "management", "direction": "child", "host": "os1"}
+    ]
+
+
+def test_edit_of_the_same_pair_lets_the_last_save_decide(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    board = _create_host(root, "board")
+
+    _edit_relations(os1, [{"kind": "management", "direction": "child", "host": HostName("board")}])
+    _edit_relations(board, [{"kind": "management", "direction": "child", "host": HostName("os1")}])
+
+    assert board.attributes["relations"] == [
+        {"kind": "management", "direction": "child", "host": "os1"}
+    ]
+    assert os1.attributes["relations"] == [
+        {"kind": "management", "direction": "parent", "host": "board"}
+    ]
+
+
+def test_edit_writes_a_shared_hosts_mk_once(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    _create_host(root, "board")
+
+    _edit_relations(os1, [{"kind": "management", "direction": "child", "host": HostName("board")}])
+
+    assert (Path(root.filesystem_path()) / "hosts.mk").read_text().count(
+        "'direction': 'child'"
+    ) == 1
+
+
+def test_edit_refuses_a_row_that_has_nothing_to_mirror_onto(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+
+    with pytest.raises(MKUserError, match="'ghost' does not exist"):
+        _edit_relations(
+            os1, [{"kind": "management", "direction": "child", "host": HostName("ghost")}]
+        )
+
+    assert "ghost" not in (Path(root.filesystem_path()) / "hosts.mk").read_text()
+
+
+def test_edit_reports_a_contradiction_about_the_host_being_saved(tree: FolderTree) -> None:
+    """Mirroring first would report the contradiction about the counterpart - the wrong host."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    _create_host(root, "board")
+
+    with pytest.raises(MKUserError, match="linked to 'board'"):
+        _edit_relations(
+            os1,
+            [
+                {"kind": "management", "direction": "child", "host": HostName("board")},
+                {"kind": "management", "direction": "parent", "host": HostName("board")},
+            ],
+        )
+
+
+def test_edit_refuses_before_it_touches_the_counterpart(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    board = _create_host(root, "board")
+
+    with pytest.raises(MKAuthException):
+        _edit_relations(
+            os1,
+            [{"kind": "management", "direction": "child", "host": HostName("board")}],
+            acting_user=LoggedInNobody(),
+        )
+
+    assert "relations" not in board.attributes
+
+
+def test_edit_refuses_a_counterpart_in_a_locked_folder_before_the_first_write(
+    tree: FolderTree,
+) -> None:
+    """Every host is mutated in memory first, so both "hosts.mk" files are still untouched."""
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    _locked_folder_with_a_board(root)
+    tree.invalidate_caches()
+    os1 = tree.load_host(HostName("os1"))
+    stored = (Path(root.filesystem_path()) / "hosts.mk").read_text()
+
+    with pytest.raises(MKUserError, match="board"):
+        _edit_relations(
+            os1, [{"kind": "management", "direction": "child", "host": HostName("board")}]
+        )
+
+    assert (Path(root.filesystem_path()) / "hosts.mk").read_text() == stored
+
+
+def test_edit_saves_although_it_cannot_settle_a_pair_with_a_locked_counterpart(
+    tree: FolderTree,
+) -> None:
+    """A pair this save does not change is settled only where the counterpart lets it - otherwise
+    a counterpart that was locked afterwards would make the host in front of the user unsavable
+    for good."""
+    root = tree.root_folder()
+    _locked_folder_with_a_board(root, host_name="os1")
+    tree.invalidate_caches()
+    board = _create_host(root, "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+    ]
+
+    _edit_relations(board, board.attributes["relations"], alias="still savable")
+
+    assert board.attributes["alias"] == "still savable"
+
+
+def test_edit_stores_the_missing_half_of_a_pair_it_does_not_change(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    board = _create_host(root, "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+    ]
+
+    _edit_relations(board, board.attributes["relations"], alias="Board")
+
+    assert os1.attributes["relations"] == [
+        {"kind": "management", "direction": "child", "host": "board"}
+    ]
+
+
+def test_edit_of_an_os_host_leaves_a_contradicting_half_alone(tree: FolderTree) -> None:
+    """Neither stores the half that counts, so neither copy may make itself the original."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    os_half: RelationLink = {"kind": "management", "direction": "child", "host": HostName("os1")}
+    board = _create_host(root, "board", HostAttributes({"relations": [os_half]}))
+    os1.attributes["relations"] = [
+        {"kind": "management", "direction": "child", "host": HostName("board")}
+    ]
+
+    _edit_relations(os1, os1.attributes["relations"], alias="OS")
+
+    assert board.attributes["relations"] == [os_half]
+
+
+def test_edit_settles_two_hosts_both_storing_the_board_half(tree: FolderTree) -> None:
+    """The monitoring shows neither until then, so any save of the two has to settle it."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    board = _create_host(root, "board")
+    os1.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("board")}
+    ]
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+    ]
+
+    _edit_relations(board, board.attributes["relations"], alias="Board")
+
+    assert os1.attributes["relations"] == [
+        {"kind": "management", "direction": "child", "host": "board"}
+    ]
+
+
+def test_edit_of_an_os_host_does_not_write_back_the_board_half_it_was_copied_from(
+    tree: FolderTree,
+) -> None:
+    """A half the board lost may be one somebody deleted with the board: a board created under
+    the same name later must not inherit it from an unrelated save of the OS host."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    board = _create_host(root, "board")
+    os1.attributes["relations"] = [
+        {"kind": "management", "direction": "child", "host": HostName("board")}
+    ]
+
+    _edit_relations(os1, os1.attributes["relations"], alias="OS")
+
+    assert "relations" not in board.attributes
+
+
+def test_edit_does_not_write_a_counterpart_that_already_agrees(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    _create_host(root, "board")
+    _edit_relations(os1, [{"kind": "management", "direction": "child", "host": HostName("board")}])
+    recorded: list[ChangeSpec] = []
+
+    _edit_relations(
+        os1,
+        os1.attributes["relations"],
+        alias="OS",
+        pending_changes=_recording_pending_changes(recorded),
+    )
+
+    assert [entry["action_name"] for entry in recorded] == ["edit-host"]
+
+
+def test_edit_refuses_to_drop_a_relation_to_a_counterpart_it_cannot_write(
+    tree: FolderTree,
+) -> None:
+    """Dropping this host's half alone would not get rid of the relation: the counterpart keeps
+    the primary one, which the monitoring shows and the next save writes back."""
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    _locked_folder_with_a_board(
+        root,
+        HostAttributes(
+            relations=[{"kind": "management", "direction": "parent", "host": HostName("os1")}]
+        ),
+    )
+    tree.invalidate_caches()
+    os1 = tree.load_host(HostName("os1"))
+    stored = (Path(root.filesystem_path()) / "hosts.mk").read_text()
+    assert "board" in stored
+
+    with pytest.raises(MKUserError, match="board"):
+        _edit_relations(os1, [])
+
+    assert (Path(root.filesystem_path()) / "hosts.mk").read_text() == stored
+
+
+def test_edit_does_not_mirror_a_contradiction_it_only_tolerates(tree: FolderTree) -> None:
+    """The contradiction is pre-existing on this host, so the save does not refuse it. Nor does
+    it settle the pair: this host holds both ends, not only the primary one, so the pair is left
+    to be reported."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    board = _create_host(root, "board")
+    os1.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("board")},
+        {"kind": "management", "direction": "child", "host": HostName("board")},
+    ]
+
+    _edit_relations(os1, os1.attributes["relations"], alias="still savable")
+
+    assert os1.attributes["alias"] == "still savable"
+    assert "relations" not in board.attributes
+
+
+def test_edit_ignores_a_self_link_it_tolerates(tree: FolderTree) -> None:
+    """Mirroring it would make the host its own counterpart and edit it a second time."""
+    os1 = _create_host(tree.root_folder(), "os1")
+    os1.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+    ]
+
+    _edit_relations(os1, os1.attributes["relations"])
+
+    assert os1.attributes["relations"] == [
+        {"kind": "management", "direction": "parent", "host": "os1"}
+    ]
+
+
+def _locked_folder_with_a_board(
+    root: Folder, attributes: HostAttributes | None = None, *, host_name: str = "board"
+) -> None:
+    """A folder holding ``host_name`` whose "hosts.mk" refuses to be written."""
+    locked = root.create_subfolder(
+        "locked",
+        "Locked",
+        HostAttributes(),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    _create_host(locked, host_name, attributes)
+    hosts_mk = Path(locked.filesystem_path()) / "hosts.mk"
+    hosts_mk.write_text(hosts_mk.read_text() + "\n_lock = True\n")
+    # Writing "hosts.mk" from the outside leaves the pickled copy in place, which the loader keeps
+    # reading while its timestamp is not older - so the folder would be read back unlocked.
+    PickleHostsStorage().remove(Path(locked.hosts_file_path_without_extension()))
+
+
+def test_edit_records_a_change_for_both_hosts(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    _create_host(root, "board")
+    recorded: list[ChangeSpec] = []
+
+    _edit_relations(
+        os1,
+        [{"kind": "management", "direction": "child", "host": HostName("board")}],
+        pending_changes=_recording_pending_changes(recorded),
+    )
+
+    assert {entry["action_name"] for entry in recorded} == {"edit-host", "mirror-relation"}

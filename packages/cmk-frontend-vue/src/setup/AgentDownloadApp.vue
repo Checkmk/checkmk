@@ -57,6 +57,18 @@ if (!props.is_push_mode && props.output.includes(noTlsSearchTerm)) {
   slideInButtonTitle.value = _t('Provide TLS connection')
 }
 
+const notRegisteredForHostSearchTerm = 'is not registered for this host'
+const isNotRegisteredForHost =
+  !props.is_push_mode && props.output.includes(notRegisteredForHostSearchTerm)
+if (isNotRegisteredForHost) {
+  slideInTitle.value = _t('Register Checkmk agent')
+  dialogTitle.value = _t('Agent not registered for this host')
+  dialogMessage.value = _t(
+    "The agent reachable at this host's IP address is not registered for this host. Check the host's IP address or register the agent for this host."
+  )
+  slideInButtonTitle.value = _t('Register agent')
+}
+
 const hideButtonTitle = _t('Ignore for this host')
 const siteServer = props.server_per_site.find((item) => item.site_id === props.site)?.server ?? ''
 const agentReceiverPort = ref(DEFAULT_AGENT_RECEIVER_PORT)
@@ -79,7 +91,9 @@ onMounted(async () => {
     :hide-button-title="hideButtonTitle"
     :close-button-title="_t('Close & run service discovery')"
     :agent-slideout="agent_slideout"
-    :is-not-registered="!is_push_mode && output.includes(notRegisteredSearchTerm)"
+    :is-not-registered="
+      (!is_push_mode && output.includes(notRegisteredSearchTerm)) || isNotRegisteredForHost
+    "
     :no-tls-provided="!is_push_mode && props.output.includes(noTlsSearchTerm)"
     :is-push-mode="is_push_mode ?? false"
     :site-id="site"

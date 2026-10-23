@@ -11,6 +11,8 @@ import type {
 } from '@/dashboard/types/dashboard'
 import type { ResponsiveGridWidget } from '@/dashboard/types/widget'
 
+import { makeContentProps as makeSharedContentProps } from '@tests/dashboard/contentProps'
+
 export const breakpointSettings: DashboardConstants['responsive_grid_breakpoints'] = {
   XS: { min_width: 280, columns: 4 },
   S: { min_width: 535, columns: 8 },
@@ -22,21 +24,10 @@ export const breakpointSettings: DashboardConstants['responsive_grid_breakpoints
 export const widgetConstraints: DashboardConstants['widgets'] = {}
 
 export function makeContentProps(id?: string): ContentProps {
-  return {
-    widget_id: id ?? 'test-widget',
-    general_settings: {
-      title: { text: 'Test', render_mode: 'with_background' },
-      render_background: true
-    },
-    content: { type: 'static_text', text: 'example' },
-    effectiveTitle: 'Test',
-    effective_filter_context: {
-      uses_infos: [],
-      filters: {},
-      restricted_to_single: []
-    },
-    dashboardKey: { owner: 'admin', name: 'test' }
-  }
+  return makeSharedContentProps(
+    { type: 'static_text' as const, text: 'example' },
+    { widget_id: id ?? 'test-widget', dashboardKey: { owner: 'admin', name: 'test' } }
+  )
 }
 
 export function makeLayoutWidget(

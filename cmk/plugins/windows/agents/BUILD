@@ -1,5 +1,9 @@
 exports_files(
     [
+        "ad_replication.bat",
+        "win_dhcp_pools.bat",
+        "win_license.bat",
+        "windows_broadcom_bonding.bat",
         "windows_multipath.ps1",
         "windows_tasks.ps1",
         "windows_updates.ps1",
@@ -15,4 +19,13 @@ filegroup(
         "windows_updates.ps1",
     ],
     tags = ["lint-with-psscriptanalyzer"],
+)
+
+filegroup(
+    name = "files",
+    srcs = glob(
+        ["*"],
+        exclude = ["BUILD"],
+    ),
+    visibility = ["//cmk/plugins:__pkg__"],
 )

@@ -41,7 +41,8 @@ PROXMOX_RULES: list[RuleSpec[Mapping[str, object]]] = [
         (
             "c7850d9b-847b-4ae6-b1a7-dc7b1d82a04e",
             "~^([0-9a-z\\/_-]*)\\/?(pve-firewall|pvestatd|pve-ha-crm|pve-ha-lrm|pvescheduler|pvefw-logger|proxmox-firewall|pve-lxc-syscalld).*$",
-            (1, 1, 1, 1),
+            # pvescheduler forks one child for replication and one for scheduled jobs
+            (1, 1, 3, 3),
             RuleConditionsSpec(),
             "Shipped rule to monitor basic Proxmox processes",
         ),
@@ -275,15 +276,6 @@ SHIPPED_RULES = {
             "options": {"description": 'Hosts with the tag "snmp-v1" must not use bulkwalk'},
         },
     ],
-    # All SNMP managment boards should use SNMP v2c if not specially tagged
-    "management_bulkwalk_hosts": [
-        {
-            "id": "59d84cde-ee3a-4f8d-8bec-fce35a2b0d15",
-            "condition": {},
-            "value": True,
-            "options": {"description": "All management boards use SNMPv2 and bulk walk"},
-        },
-    ],
     # Put all hosts and the contact group 'all'
     "host_contactgroups": [
         {
@@ -499,6 +491,8 @@ USE_NEW_DESCRIPTIONS_FOR_SETTING = {
         "statgrab_mem": True,
         "tplink_mem": True,
         "ups_bat_temp": True,
+        # Keep "Enviroment" by default, to not disrupt the service history
+        "ups_eaton_environment": False,
         "vms_diskstat_df": True,
         "wmic_process": True,
         "zfsget": True,

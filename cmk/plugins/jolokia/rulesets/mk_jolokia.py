@@ -20,6 +20,7 @@ from cmk.rulesets.v1.form_specs import (
     Float,
     Integer,
     List,
+    migrate_to_password,
     Password,
     SingleChoice,
     SingleChoiceElement,
@@ -34,7 +35,8 @@ def _migrate_instance_config(instance_config: dict[str, Any]) -> dict[str, Any]:
 
     Migrates:
     - "server": string/None -> ("ip_or_fqdn", string) or ("use_local_fqdn", None)
-    - "login": tuple -> dictionary with password wrapped for migration
+    - "login": tuple -> dictionary; the password is converted from the 2.5 storage format
+      (("password", ...) or ("store", ...)) to the format of the Password form spec
     """
     migrated = dict(instance_config)
 
@@ -49,45 +51,82 @@ def _migrate_instance_config(instance_config: dict[str, Any]) -> dict[str, Any]:
         login = migrated["login"]
         if isinstance(login, tuple) and len(login) == 3:
             user, password, mode = login
-            if isinstance(password, str):
-                password = ("cmk_postprocessed", "explicit_password", ("", password))
-            elif not isinstance(password, tuple):
-                raise TypeError(f"Cannot migrate jolokia login password format: {password!r}")
             migrated["login"] = {
                 "user": user,
-                "password": password,
+                "password": migrate_to_password(password),
                 "mode": mode,
             }
 
     return migrated
 
 
-def _migrate_to_agent_config(value: object) -> Mapping[str, object]:
-    """Migrate old ruleset format to new format with deployment field.
+def migrate(value: object) -> Mapping[str, object]:
+    """Migrate the 2.5 format to the current one.
 
-    Old format had Alternative at the top level:
+    The 2.5 format was an Alternative at the top level:
     - None: Do not deploy
-    - Dictionary: Deploy with configuration
+    - Dictionary: Deploy; the parameters of the main instance are top-level keys, additional
+      instances are a list under "instances"
 
-    New format has all parameters in a flat Dictionary with deployment field:
-    - {"deployment": "do_not_deploy"}
-    - {"deployment": "sync", ...config...}
+    The current format is a Dictionary with three mandatory keys: "deployment", "main_instance"
+    (a dictionary of the optional per-instance parameters) and "instances". Because every stored
+    rule carries all three keys, merging matching rules yields exactly the highest-priority rule.
     """
     match value:
         case None:
-            return {"deployment": "do_not_deploy"}
-        case {"deployment": str()} if isinstance(value, dict):
+            return {"deployment": "do_not_deploy", "main_instance": {}, "instances": []}
+        case dict() if "deployment" in value:
             return value
         case dict():
-            config = _migrate_instance_config(value)
-            if "instances" in config:
-                instances = config["instances"]
-                if isinstance(instances, list):
-                    config["instances"] = [_migrate_instance_config(inst) for inst in instances]
-
-            return {"deployment": "sync", **config}
+            instances = value.get("instances", [])
+            if not isinstance(instances, list):
+                raise ValueError(f"Cannot migrate jolokia agent config value: {value!r}")
+            return {
+                "deployment": "sync",
+                "main_instance": _migrate_instance_config(
+                    {k: v for k, v in value.items() if k != "instances"}
+                ),
+                "instances": [_migrate_instance_config(inst) for inst in instances],
+            }
         case _:
             raise ValueError(f"Cannot migrate jolokia agent config value: {value!r}")
+
+
+def _login_form(title: Title) -> Dictionary:
+    return Dictionary(
+        title=title,
+        elements={
+            "user": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("User ID for web login (if login required)"),
+                    prefill=DefaultValue("monitoring"),
+                ),
+            ),
+            "password": DictElement(
+                required=True,
+                parameter_form=Password(
+                    title=Title("Password for this user"),
+                ),
+            ),
+            "mode": DictElement(
+                required=True,
+                parameter_form=SingleChoice(
+                    title=Title("Login mode"),
+                    elements=[
+                        SingleChoiceElement(
+                            name="basic",
+                            # weblate-flags: read-only, vendor-name
+                            title=Title("HTTP Basic authentication"),
+                        ),
+                        # weblate-flags: read-only, vendor-name
+                        SingleChoiceElement(name="digest", title=Title("HTTP Digest")),
+                    ],
+                    prefill=DefaultValue("basic"),
+                ),
+            ),
+        },
+    )
 
 
 def _jolokia_instance_elements() -> Mapping[str, DictElement[Any]]:
@@ -206,40 +245,7 @@ def _jolokia_instance_elements() -> Mapping[str, DictElement[Any]]:
         ),
         "login": DictElement(
             required=False,
-            parameter_form=Dictionary(
-                title=Title("Optional login (if required)"),
-                elements={
-                    "user": DictElement(
-                        required=True,
-                        parameter_form=String(
-                            title=Title("User ID for web login (if login required)"),
-                            prefill=DefaultValue("monitoring"),
-                        ),
-                    ),
-                    "password": DictElement(
-                        required=True,
-                        parameter_form=Password(
-                            title=Title("Password for this user"),
-                        ),
-                    ),
-                    "mode": DictElement(
-                        required=True,
-                        parameter_form=SingleChoice(
-                            title=Title("Login mode"),
-                            elements=[
-                                SingleChoiceElement(
-                                    name="basic",
-                                    # weblate-flags: read-only, vendor-name
-                                    title=Title("HTTP Basic authentication"),
-                                ),
-                                # weblate-flags: read-only, vendor-name
-                                SingleChoiceElement(name="digest", title=Title("HTTP Digest")),
-                            ],
-                            prefill=DefaultValue("basic"),
-                        ),
-                    ),
-                },
-            ),
+            parameter_form=_login_form(Title("Optional login (if required)")),
         ),
         "suburi": DictElement(
             required=False,
@@ -336,7 +342,7 @@ def _form_spec_agent_config_mk_jolokia() -> Dictionary:
             " the requests Python library on the host running the plug-in <b>and</b> the"
             " WAR file on the JVMs."
         ),
-        migrate=_migrate_to_agent_config,
+        migrate=migrate,
         elements={
             "deployment": DictElement(
                 required=True,
@@ -355,9 +361,19 @@ def _form_spec_agent_config_mk_jolokia() -> Dictionary:
                     ],
                 ),
             ),
-            **_jolokia_instance_elements(),
+            "main_instance": DictElement(
+                required=True,
+                parameter_form=Dictionary(
+                    title=Title("Main instance"),
+                    help_text=Help(
+                        "The parameters of the JMX instance to monitor. They also serve as the "
+                        "defaults for the additional instances configured below."
+                    ),
+                    elements=_jolokia_instance_elements(),
+                ),
+            ),
             "instances": DictElement(
-                required=False,
+                required=True,
                 parameter_form=List(
                     title=Title("Monitor multiple JMX instances on the host"),
                     help_text=Help(

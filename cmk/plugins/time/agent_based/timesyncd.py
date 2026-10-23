@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="explicit-any"
 
 # Example output from agent:
 # <<<timesyncd>>>
@@ -295,7 +293,7 @@ def check_timesyncd(
         )
 
     # server is configured and can be resolved, but e.g. NTP blocked by firewall
-    if server is not None and all(item is None for item in [offset, stratum, jitter]):  # type: ignore[redundant-expr]
+    if all(item is None for item in [offset, stratum, jitter]):
         yield Result(state=State.CRIT, summary="Found no time server")
         return
 

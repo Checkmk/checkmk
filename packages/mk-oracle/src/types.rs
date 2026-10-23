@@ -28,7 +28,7 @@ pub struct AliasInfo {
     pub service_name: Option<ServiceName>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LocalInstance {
     pub name: InstanceName,
     pub home: PathBuf,
@@ -179,7 +179,7 @@ impl AsRef<str> for Sid {
     }
 }
 
-#[derive(PartialEq, From, Debug, Display, Clone, Default, Into, Hash, Eq)]
+#[derive(PartialEq, From, Debug, Display, Clone, Default, Into, Hash, Eq, PartialOrd, Ord)]
 pub struct PdbName(String);
 
 impl From<&str> for PdbName {

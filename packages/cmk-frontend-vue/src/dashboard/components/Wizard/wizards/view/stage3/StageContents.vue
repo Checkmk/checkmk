@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, toValue } from 'vue'
@@ -16,6 +17,7 @@ import ActionBar from '@/dashboard/components/Wizard/components/ActionBar.vue'
 import ActionButton from '@/dashboard/components/Wizard/components/ActionButton.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { UseWidgetVisualizationProps } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
+import { MAX_WIZARD_FORM_WIDTH } from '@/dashboard/components/Wizard/constants'
 import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
 import type { DashboardKey } from '@/dashboard/types/dashboard'
@@ -29,6 +31,8 @@ import type {
 const { _t } = usei18n()
 
 interface Stage3Props {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   widget_id: string
   content: EmbeddedViewContent | LinkedViewContent
@@ -69,6 +73,8 @@ const widgetContentProps = computed<ContentProps>(
       effectiveTitle: effectiveTitle.value,
       effective_filter_context: props.effective_filter_context,
       dashboardKey: props.dashboardKey,
+      tick: props.tick,
+      range: props.range,
       general_settings: visualizationProps.value.widgetGeneralSettings.value
     }) as ContentProps
 )
@@ -108,15 +114,17 @@ function saveWidget() {
   <ContentSpacer />
 
   <CmkCatalogPanel :title="_t('Widget settings')" variant="padded">
-    <WidgetVisualization
-      v-model:show-title="visualizationProps.showTitle.value"
-      v-model:show-title-background="visualizationProps.showTitleBackground.value"
-      v-model:show-widget-background="visualizationProps.showWidgetBackground.value"
-      v-model:title="visualizationProps.title.value"
-      v-model:title-url="visualizationProps.titleUrl.value"
-      v-model:title-url-enabled="visualizationProps.titleUrlEnabled.value"
-      v-model:title-url-validation-errors="visualizationProps.titleUrlValidationErrors.value"
-      :title-macros="titleMacros"
-    />
+    <div :style="`max-width: ${MAX_WIZARD_FORM_WIDTH}px`">
+      <WidgetVisualization
+        v-model:show-title="visualizationProps.showTitle.value"
+        v-model:show-title-background="visualizationProps.showTitleBackground.value"
+        v-model:show-widget-background="visualizationProps.showWidgetBackground.value"
+        v-model:title="visualizationProps.title.value"
+        v-model:title-url="visualizationProps.titleUrl.value"
+        v-model:title-url-enabled="visualizationProps.titleUrlEnabled.value"
+        v-model:title-url-validation-errors="visualizationProps.titleUrlValidationErrors.value"
+        :title-macros="titleMacros"
+      />
+    </div>
   </CmkCatalogPanel>
 </template>

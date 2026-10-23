@@ -9,7 +9,8 @@ from typing import Annotated, Literal, Self
 from pydantic import Discriminator
 
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
-from cmk.web.utils.autocompleter_config import AutocompleterConfig, DynamicParamsCallbackName
+from cmk.shared_typing.legacy_frontend_hooks import DynamicParamsCallbackName
+from cmk.web.utils.autocompleter_config import AutocompleterConfig
 
 from ..components import (
     Checkbox,

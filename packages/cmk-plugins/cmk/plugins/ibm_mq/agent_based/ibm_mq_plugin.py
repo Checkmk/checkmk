@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from collections.abc import Mapping
-from typing import Any
+from typing import TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -18,12 +15,19 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.ibm_mq.lib import ibm_mq_check_version
+from cmk.plugins.ibm_mq.lib import ibm_mq_check_version, VersionParams
 
 # <<<ibm_mq_plugin:sep(58)>>>
 # version|2.0.4
 # dspmq|OK
 # runmqsc|Not executable
+
+
+class PluginParams(TypedDict):
+    version: VersionParams
+
+
+DEFAULT_PARAMETERS: PluginParams = {"version": ("any", None)}
 
 
 def parse_ibm_mq_plugin(string_table: StringTable) -> dict[str, str]:
@@ -49,12 +53,14 @@ def check_tool(tool_name: str, parsed: dict[str, str]) -> Result:
     return Result(state=state, summary=f"{tool_name}: {text}")
 
 
-def check_ibm_mq_plugin(params: Mapping[str, Any], section: dict[str, str]) -> CheckResult:
+def check_ibm_mq_plugin(params: PluginParams, section: dict[str, str]) -> CheckResult:
     if not section:
         return
 
     actual_version = section.get("version")
-    version_state, version_summary = ibm_mq_check_version(actual_version, params, "Plugin version")
+    version_state, version_summary = ibm_mq_check_version(
+        actual_version, params["version"], "Plugin version"
+    )
     yield Result(state=State(version_state), summary=version_summary)
     yield check_tool("dspmq", section)
     yield check_tool("runmqsc", section)
@@ -72,5 +78,5 @@ check_plugin_ibm_mq_plugin = CheckPlugin(
     discovery_function=discover_ibm_mq_plugin,
     check_function=check_ibm_mq_plugin,
     check_ruleset_name="ibm_mq_plugin",
-    check_default_parameters={},
+    check_default_parameters=DEFAULT_PARAMETERS,
 )

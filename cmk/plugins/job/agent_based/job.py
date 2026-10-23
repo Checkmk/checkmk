@@ -268,6 +268,12 @@ def _check_completed_job(
         if value is None:
             continue
         label, render_func = _METRIC_SPECS[name]
+        if name == "real_time" and value < 0:
+            yield Result(
+                state=State.WARN,
+                summary=f"{label}: got negative value {value} (check your system time)",
+            )
+            continue
         yield from check_levels(
             value=value,
             metric_name=name,

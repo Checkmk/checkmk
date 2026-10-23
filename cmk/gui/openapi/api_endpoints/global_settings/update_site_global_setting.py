@@ -2,6 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
 from cmk.gui.i18n import _
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -20,6 +22,7 @@ from cmk.gui.watolib.global_settings import (
     add_global_settings_change,
     effective_site_value,
     global_settings_diff_text,
+    GlobalSettingsOrigin,
     load_configuration_settings,
     need_site_write_permission,
 )
@@ -30,7 +33,6 @@ from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
     ensure_changes_allowed,
     ensure_setup_access,
-    form_spec_of,
     global_settings_context_of,
     GlobalSettingVarName,
     load_configured_sites,
@@ -39,9 +41,10 @@ from ._utils import (
     site_global_setting_etag,
     SITE_RW_PERMISSIONS,
     SiteIdPathParam,
+    to_json,
     value_from_json,
-    value_to_json,
 )
+from .models.error_models import GlobalSettingValidation422
 from .models.request_models import UpdateGlobalSettingModel
 from .models.response_models import SiteGlobalSettingModel
 
@@ -60,21 +63,18 @@ def update_site_global_setting_v1(
     config_variable = config_variable_registry[varname]
     need_site_write_permission(config_variable)
     ensure_changes_allowed(api_context)
-    form_spec = form_spec_of(config_variable, site_id, api_context)
+    context = global_settings_context_of(site_id, api_context, edits_site_specific_value=True)
+    form_spec = config_variable.value_model(context)
 
     sites = load_configured_sites()
     site_globals = load_site_globals(sites, site_id)
-    old_value, was_default = effective_site_value(
+    old_value, old_origin = effective_site_value(
         site_globals, varname, global_settings=load_configuration_settings()
     )
     if api_context.etag.enabled:
-        api_context.etag.verify(
-            site_global_setting_etag(
-                site_id, varname, value_to_json(form_spec, old_value), was_default
-            )
-        )
+        api_context.etag.verify(site_global_setting_etag(site_id, varname, old_value, old_origin))
 
-    new_value = value_from_json(form_spec, body.value)
+    new_value = value_from_json(form_spec, varname, body.value)
     site_globals[varname] = new_value
     save_site_setting(site_id, sites, site_globals, api_context)
 
@@ -88,20 +88,23 @@ def update_site_global_setting_v1(
         pending_changes=make_pending_changes(api_context),
         diff_text=global_settings_diff_text(
             config_variable,
-            global_settings_context_of(site_id, api_context),
-            {} if was_default else {varname: old_value},
+            context,
+            {varname: old_value} if old_origin is GlobalSettingsOrigin.site else {},
             {varname: new_value},
         ),
     )
 
-    # The site now carries an override, so the value no longer comes from outside it.
-    json_value = value_to_json(form_spec, new_value)
+    spec, json_value = to_json(form_spec, new_value)
     return ApiResponse(
         body=SiteGlobalSettingModel(
-            site_id=site_id, varname=varname, value=json_value, is_default=False
+            site_id=site_id,
+            varname=varname,
+            value=json_value,
+            spec=spec,
+            origin=GlobalSettingsOrigin.site,
         ),
-        status_code=200,
-        etag=site_global_setting_etag(site_id, varname, json_value, False),
+        status_code=HTTPStatus.OK,
+        etag=site_global_setting_etag(site_id, varname, new_value, GlobalSettingsOrigin.site),
     )
 
 
@@ -114,5 +117,11 @@ ENDPOINT_UPDATE_SITE_GLOBAL_SETTING = VersionedEndpoint(
     behavior=EndpointBehavior(etag="both"),
     permissions=EndpointPermissions(required=SITE_RW_PERMISSIONS),
     doc=EndpointDoc(family=GLOBAL_SETTINGS_FAMILY.name),
-    versions={APIVersion.INTERNAL: EndpointHandler(handler=update_site_global_setting_v1)},
+    versions={
+        APIVersion.INTERNAL: EndpointHandler(
+            handler=update_site_global_setting_v1,
+            error_schemas={HTTPStatus.UNPROCESSABLE_ENTITY: GlobalSettingValidation422},
+            additional_status_codes=[HTTPStatus.UNPROCESSABLE_ENTITY],
+        )
+    },
 )

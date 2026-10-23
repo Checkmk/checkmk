@@ -5,36 +5,33 @@
 
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
-# mypy: disable-error-code="type-arg"
 
+import json
 import logging
 import os
 import queue
 from collections.abc import Generator, Iterator
+from typing import override
 
 import pytest
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc import tty
-
-# TODO: Can we remove the layer violation suppression?
-from cmk.checkengine.plugins import (  # astrein: disable=cmk-module-layer-violation
-    AgentBasedPlugins,
-)
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.livestatus_client.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
 )
-from tests.testlib import fake_site
+from tests.testlib.pytest_helpers import ide, registration
+from tests.testlib.unit import fake_site
 from tests.unit.mocks_and_helpers import DummyLicensingHandler
 
 logger = logging.getLogger(__name__)
 
-# This allows exceptions to be handled by IDEs (rather than just printing the results)
-# when pytest based tests are being run from inside the IDE
-# To enable this, set `_PYTEST_RAISE` to some value != '0' in your IDE
-PYTEST_RAISE = os.getenv("_PYTEST_RAISE", "0") != "0"
+
+def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:
+    registration.register_pytest_plugins(pluginmanager, ide)
 
 
 # Cleanup temporary directory created above
@@ -76,21 +73,6 @@ def fixture_fake_site(
 ) -> None:
     """Wrapper of multiple fixtures to immitate a site environment for testing"""
     return
-
-
-@pytest.hookimpl(tryfirst=True)
-def pytest_exception_interact(  # type: ignore[misc]
-    node: pytest.Item | pytest.Collector,
-    call: pytest.CallInfo,
-    report: pytest.CollectReport | pytest.TestReport,
-) -> None:
-    if not (excinfo := call.excinfo):
-        return
-
-    excp_ = excinfo.value
-    report.longrepr = node.repr_failure(excinfo)
-    if PYTEST_RAISE:
-        raise excp_
 
 
 @pytest.fixture
@@ -166,9 +148,9 @@ def clear_caches_per_function() -> Generator[None]:
 @pytest.fixture(scope="session")
 def agent_based_plugins(tmp_path_factory: pytest.TempPathFactory) -> Generator[AgentBasedPlugins]:
     # Local import to have faster pytest initialization
-    from cmk.base import config  # astrein: disable=cmk-module-layer-violation
+    from cmk.checkengine.plugin_backend import load_all_plugins
 
-    plugins = config.load_all_plugins()
+    plugins = load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
     assert not plugins.errors
     yield plugins
 
@@ -217,6 +199,32 @@ def prevent_security_event_file_logging() -> Iterator[queue.Queue[logging.LogRec
     """cmk.utils.log.security_event.log_security_event implicitly opens a file logger upon it's
     first call which we want to avoid in the unit test context."""
     yield from fake_site.prevent_security_event_file_logging()
+
+
+class _SecurityEventCollector(logging.Handler):
+    def __init__(self) -> None:
+        super().__init__()
+        self.events: list[fake_site.LoggedSecurityEvent] = []
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        logged = json.loads(record.getMessage())
+        self.events.append(fake_site.LoggedSecurityEvent(logged["summary"], logged["details"]))
+
+
+@pytest.fixture(name="security_events")
+def fixture_security_events() -> Iterator[list[fake_site.LoggedSecurityEvent]]:
+    """The events written to the security log while the test runs"""
+    collector = _SecurityEventCollector()
+    security_logger = logging.getLogger("cmk_security")
+    previous_level = security_logger.level
+    security_logger.addHandler(collector)
+    security_logger.setLevel(logging.INFO)
+    try:
+        yield collector.events
+    finally:
+        security_logger.removeHandler(collector)
+        security_logger.setLevel(previous_level)
 
 
 @pytest.fixture(name="monkeypatch_module", scope="module")

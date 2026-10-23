@@ -15,14 +15,13 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     FixedLevelsT,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 class LicenseUsage(pydantic.BaseModel):
@@ -66,11 +65,6 @@ def parse_splunk_license_usage(string_table: StringTable) -> LicenseUsage:
             validation_error = err
 
     raise SplunkLicenseUsageParsingError(f"Invalid input: {string_table}") from validation_error
-
-
-def discover_splunk_license_usage(section: LicenseUsage) -> DiscoveryResult:  # noqa: ARG001
-    """Runs empty discovery since there is only a single service."""
-    yield Service()
 
 
 type FloatLevels = FixedLevelsT[float]
@@ -133,7 +127,7 @@ agent_section_splunk_license_usage = AgentSection(
 check_plugin_splunk_license_usage = CheckPlugin(
     name="splunk_license_usage",
     service_name="Splunk License Usage",
-    discovery_function=discover_splunk_license_usage,
+    discovery_function=discover_one_service,
     check_function=check_splunk_license_usage,
     check_ruleset_name="splunk_license_usage",
     check_default_parameters=CheckParams(usage_bytes=("fixed", (80.0, 90.0))),

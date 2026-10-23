@@ -7,17 +7,18 @@
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 
+from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.inventory import load_tree
-from cmk.gui.painter.v0 import Cell, JoinCell
+from cmk.gui.painter import Cell, JoinCell
 from cmk.gui.type_defs import Row, Rows, ViewSpec
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
 from cmk.gui.visuals.filter import Filter
-from cmk.inventory.structured_data import ImmutableTree, SDKey, SDPath, SDValue
+from cmk.inventory.trees import ImmutableTree, SDKey, SDPath, SDValue
 
 from ..sorter import SorterEntry
 
@@ -72,7 +73,7 @@ def _add_inventory_data(rows: Rows) -> None:
 
         try:
             row["host_inventory"] = load_tree(
-                host_name=row["host_name"],
+                host_name=HostName(row["host_name"]),
                 raw_status_data_tree=row.get("host_structured_status", b""),
             )
         except Exception as e:

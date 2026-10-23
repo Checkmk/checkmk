@@ -1,0 +1,29 @@
+title: AWS v2 EBS: Disk IO
+agents: aws_v2
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors disk IO of AWS EBS.
+
+ It monitors the following metrics:
+
+ - Read IO
+
+ - Write IO
+
+ - Read troughput
+
+ - Write throughput
+
+ - Queue length
+
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS) v2}.
+
+item:
+ Name of the instance
+
+discovery:
+ One service is created for each volume if all required metrics
+ (ReadOps, WriteOps, ReadBytes, WriteBytes and QueueLength) are given.

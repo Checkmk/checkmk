@@ -9,7 +9,9 @@ import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type Ref, reactive, shallowRef } from 'vue'
 
-import type { GlobalSettingsScope, GlobalSettingsService, ReceivedValue } from './api'
+import type { ValidationMessages } from '@/form'
+
+import type { GlobalSettingsService, ReceivedValue } from './api'
 
 const { _t } = usei18n()
 
@@ -29,20 +31,25 @@ export function describeError(error: unknown, fallback: TranslatedString): Trans
 }
 
 export function applyReceived(variable: GlobalSettingsVariable, received: ReceivedValue): void {
-  variable.value = received.value
-  variable.modified = !received.isDefault
+  variable.current.value = received.value
+  variable.spec = received.spec
+  variable.current.explicit = received.origin === variable.current.type
 }
 
 export class EditorSession {
-  private readonly editing: { received: ReceivedValue | null; state: SessionState } = reactive({
+  private readonly editing: {
+    received: ReceivedValue | null
+    state: SessionState
+    validationMessages: ValidationMessages
+  } = reactive({
     received: null,
-    state: { type: 'busy' }
+    state: { type: 'busy' },
+    validationMessages: []
   })
 
   constructor(
     readonly variable: GlobalSettingsVariable,
     private readonly service: GlobalSettingsService,
-    private readonly scope: GlobalSettingsScope,
     private readonly requestClose: (session: EditorSession) => void
   ) {}
 
@@ -58,9 +65,13 @@ export class EditorSession {
     return this.editing.state.type === 'failed' ? this.editing.state.error : null
   }
 
+  get validationMessages(): ValidationMessages {
+    return this.editing.validationMessages
+  }
+
   async load(): Promise<void> {
     await this.runAction(_t('Loading failed'), async () => {
-      this.storeReceived(await this.service.load(this.scope, this.variable.name))
+      this.storeReceived(await this.service.load(this.variable.name))
     })
   }
 
@@ -70,9 +81,12 @@ export class EditorSession {
       return
     }
     await this.runAction(_t('Saving failed'), async () => {
-      this.storeReceived(
-        await this.service.save(this.scope, this.variable.name, value, received.etag)
-      )
+      const result = await this.service.save(this.variable.name, value, received.etag)
+      if (result.type === 'invalid') {
+        this.editing.validationMessages = result.validationMessages
+        return
+      }
+      this.storeReceived(result.received)
       this.requestClose(this)
     })
   }
@@ -83,8 +97,8 @@ export class EditorSession {
       return
     }
     await this.runAction(_t('Resetting failed'), async () => {
-      await this.service.reset(this.scope, this.variable.name, received.etag)
-      this.storeReceived(await this.service.load(this.scope, this.variable.name))
+      await this.service.reset(this.variable.name, received.etag)
+      this.storeReceived(await this.service.load(this.variable.name))
       this.requestClose(this)
     })
   }
@@ -94,6 +108,7 @@ export class EditorSession {
     action: () => Promise<void>
   ): Promise<void> {
     this.editing.state = { type: 'busy' }
+    this.editing.validationMessages = []
     try {
       await action()
       this.editing.state = { type: 'ready' }
@@ -114,10 +129,7 @@ export class EditorSession {
   }
 }
 
-export function useGlobalSettingsEditor(
-  service: GlobalSettingsService,
-  scope: GlobalSettingsScope
-): {
+export function useGlobalSettingsEditor(service: GlobalSettingsService): {
   session: Ref<EditorSession | null>
   openEditor: (variable: GlobalSettingsVariable) => Promise<void>
   closeEditor: () => void
@@ -131,7 +143,7 @@ export function useGlobalSettingsEditor(
   }
 
   async function openEditor(variable: GlobalSettingsVariable): Promise<void> {
-    const editorSession = new EditorSession(variable, service, scope, closeWhenCurrent)
+    const editorSession = new EditorSession(variable, service, closeWhenCurrent)
     session.value = editorSession
     await editorSession.load()
   }

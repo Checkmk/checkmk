@@ -4,5 +4,4 @@ members_required = 3
 tier = 1
 description = """
 - Security related issues
-- Includes the crypto abstraction
 """

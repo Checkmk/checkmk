@@ -304,6 +304,7 @@ _NOT_ELIGIBLE_SOURCES = (
     DiscoveryState.CLUSTERED_NEW,
     DiscoveryState.CLUSTERED_OLD,
     DiscoveryState.CLUSTERED_VANISHED,
+    DiscoveryState.CLUSTERED_IGNORED,
 )
 
 

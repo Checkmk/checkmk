@@ -16,6 +16,7 @@ Additional information about the parents and the parent scan can be found in the
 """
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any, assert_never
 
 from cmk.gui.background_job.job import BackgroundJob
@@ -34,7 +35,7 @@ from cmk.gui.parentscan.background_job import (
 )
 from cmk.gui.parentscan.rest_api.request_schemas import ParentScan
 from cmk.gui.parentscan.rest_api.response_schemas import BackgroundJobStatusObject
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.web.utils import permission_verification as permissions
 
 
@@ -42,7 +43,7 @@ from cmk.web.utils import permission_verification as permissions
     constructors.domain_type_action_href("parent_scan", "start"),
     "cmk/start",
     method="post",
-    additional_status_codes=[409],
+    additional_status_codes=[HTTPStatus.CONFLICT],
     request_schema=ParentScan,
     response_schema=BackgroundJobStatusObject,
     permissions_required=permissions.AllPerm(
@@ -76,7 +77,7 @@ def start_parent_scan_background_job(params: Mapping[str, Any]) -> Response:
             assert_never(other)
 
     parent_scan_job = ParentScanBackgroundJob()
-    tree = folder_tree()
+    tree = make_folder_tree(active_config)
     if (
         result := start_parent_scan(
             hosts=[tree.load_host(name) for name in body["host_names"]],
@@ -92,6 +93,9 @@ def start_parent_scan_background_job(params: Mapping[str, Any]) -> Response:
                 gateway_folder_path=gateway_folder_path,
             ),
             site_configs=active_config.sites,
+            wato_hide_folders_without_read_permissions=active_config.wato_hide_folders_without_read_permissions,
+            wato_host_attrs=active_config.wato_host_attrs,
+            tags=active_config.tags.get_dict_format(),
             pprint_value=active_config.wato_pprint_config,
             debug=active_config.debug,
             use_git=active_config.wato_use_git,

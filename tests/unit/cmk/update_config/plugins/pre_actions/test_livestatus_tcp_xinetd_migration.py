@@ -9,11 +9,11 @@ from pathlib import Path
 import pytest
 
 from cmk.gui.exceptions import MKUserError
+from cmk.update_config.internal import ConflictMode
 from cmk.update_config.plugins.lib.livestatus_tcp_xinetd_migration import _DEFAULT_XINETD_CONF
 from cmk.update_config.plugins.pre_actions.livestatus_tcp_xinetd_migration import (
     action,
 )
-from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 
 LOGGER = logging.getLogger("test")
 

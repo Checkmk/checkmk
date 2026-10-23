@@ -16,14 +16,13 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     FixedLevelsT,
     NoLevelsT,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.proxmox_ve.lib.node_info import NodeStatus, SectionNodeInfo, SubscriptionInfo
 
 
@@ -61,10 +60,6 @@ def parse_proxmox_ve_node_info(string_table: StringTable) -> SectionNodeInfo:
             next_due_date=raw.subscription.get("nextduedate"),
         ),
     )
-
-
-def discover_single(section: SectionNodeInfo) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _check_days_until_expiration(
@@ -148,7 +143,7 @@ agent_section_proxmox_ve_node_info = AgentSection(
 check_plugin_proxmox_ve_node_info = CheckPlugin(
     name="proxmox_ve_node_info",
     service_name="Proxmox VE Node Info",
-    discovery_function=discover_single,
+    discovery_function=discover_one_service,
     check_function=check_proxmox_ve_node_info,
     check_ruleset_name="proxmox_ve_node_info",
     check_default_parameters={

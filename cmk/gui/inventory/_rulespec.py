@@ -29,6 +29,7 @@ from cmk.gui.watolib.rulespecs import (
 )
 from cmk.ruleset_matcher.definition import RuleGroup
 
+from . import _label_picker
 from ._valuespecs import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
 
 
@@ -41,6 +42,7 @@ def register(
     rulespec_registry.register(InvParameterInvIf)
     rulespec_registry.register(InvParameterLnxSysctl)
     rulespec_registry.register(InvRetentionIntervals)
+    rulespec_registry.register(InvLabelPicker)
 
 
 class RulespecGroupInventory(RulespecGroup):
@@ -100,6 +102,27 @@ def _valuespec_active_checks_cmk_inv() -> Dictionary:
                 MonitoringState(
                     title=_("State when networking changes are detected"),
                     default_value=0,
+                ),
+            ),
+            (
+                "new_labels",
+                MonitoringState(
+                    title=_("State of picked labels not accepted yet"),
+                    default_value=1,
+                ),
+            ),
+            (
+                "vanished_labels",
+                MonitoringState(
+                    title=_("State of accepted labels no longer picked"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "changed_labels",
+                MonitoringState(
+                    title=_("State of picked labels with a changed value"),
+                    default_value=1,
                 ),
             ),
             (
@@ -361,4 +384,12 @@ InvRetentionIntervals = HostRulespec(
     match_type="all",
     name="inv_retention_intervals",
     valuespec=_valuespec_inv_retention_intervals,
+)
+
+
+InvLabelPicker = HostRulespec(
+    group=RulespecGroupInventory,
+    match_type="all",
+    name="inv_label_picker_configs",
+    valuespec=_label_picker.parameter_form,
 )

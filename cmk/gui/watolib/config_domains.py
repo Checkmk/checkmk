@@ -44,16 +44,25 @@ from cmk.gui.watolib import bakery, config_domain_name
 from cmk.gui.watolib.check_mk_automations import get_configuration, reload, restart
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    ACTIVATION_CORE_RESTART_TIMEOUT,
+    ActivationContext,
     ConfigDomainName,
     DomainRequest,
     finalize_specifically_set_settings,
     generate_hosts_to_update_settings,
     SerializedSettings,
 )
+from cmk.gui.watolib.hosts_and_folders import ACTIVATION_FOLDER_TREE
 from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 from cmk.livestatus_client import SiteConfigurations
-from cmk.utils.certs import cert_dir, CertManagementEvent, CN_TEMPLATE, RemoteSiteCertsStore, SiteCA
+from cmk.utils.certs import (
+    cert_dir,
+    CertManagementEvent,
+    CN_TEMPLATE,
+    RemoteSiteCertsStore,
+    SiteCA,
+)
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.security_event import log_security_event
@@ -121,7 +130,9 @@ class ConfigDomainCore(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         # Agents have to be baked from the new configuration, but before the core picks
         # it up, matching the point at which cmk/base used to do this.
         bakery.try_bake_agents_on_activation(
@@ -131,7 +142,10 @@ class ConfigDomainCore(ABCConfigDomain):
         )
 
         return {"restart": restart, "reload": reload}[active_config.wato_activation_method](
-            self._parse_settings(settings).hosts_to_update, debug=active_config.debug
+            self._parse_settings(settings).hosts_to_update,
+            tree=ctx.get(ACTIVATION_FOLDER_TREE),
+            timeout=ctx.get_or_none(ACTIVATION_CORE_RESTART_TIMEOUT),
+            debug=active_config.debug,
         ).config_warnings
 
     def _parse_settings(
@@ -182,7 +196,9 @@ class ConfigDomainGUI(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         warnings: ConfigurationWarnings = []
 
         if active_config.wato_use_git and shutil.which("git") is None:
@@ -257,6 +273,14 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         after: Mapping[SiteId, GlobalSettings],
     ) -> Iterator[None]:
         yield
+        local = omd_site()
+        if local in after:
+            cas_after = after[local]["trusted_certificate_authorities"]
+            cas_before = before[local]["trusted_certificate_authorities"]
+            if cas_after != cas_before:
+                # We need to activate this immediately to make syncs to distributed
+                # setup remote sites possible right after changing the option
+                self.update_trust_stores(cas_after)
         self._log_trust_changes(before, after)
 
     def _log_trust_changes(
@@ -307,31 +331,12 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             "ca-certificates_sitespecific.mk" if site_specific else "ca-certificates.mk"
         )
 
-    @override
-    def save(
-        self,
-        settings: GlobalSettings,
-        site_specific: bool = False,
-        custom_site_path: str | None = None,
-    ) -> None:
-        super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
-
-        # default_globals() is keyed by config variable, so the fallback has to be
-        # the *value* of our one variable, not the whole mapping.
-        current_config = settings.get(
-            "trusted_certificate_authorities",
-            self.default_globals()["trusted_certificate_authorities"],
-        )
-
-        # We need to activate this immediately to make syncs to distributed
-        # setup remote sites possible right after changing the option
-        #
+    def update_trust_stores(self, current_config: TrustedCertificateAuthorities) -> None:
         # Since this can be called from any Setup page it is not possible to report
         # errors to the user here. The self._update_trusted_cas() method logs the
         # errors - this must be enough for the moment.
-        if not site_specific and custom_site_path is None:
-            self._update_trusted_cas(current_config)
-            self.update_remote_sites_cas(current_config["trusted_cas"])
+        self._update_trusted_cas(current_config)
+        self.update_remote_sites_cas(current_config["trusted_cas"])
 
     @override
     def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
@@ -346,7 +351,9 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         return warnings
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         return []
 
     def _update_trusted_cas(
@@ -486,7 +493,9 @@ class ConfigDomainSiteCertificate(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         reload_stunnel()
         reload_agent_receiver()
 
@@ -619,7 +628,9 @@ class ConfigDomainOMD(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         current_settings = self._load_site_config()
 
         omd_settings = finalize_specifically_set_settings(

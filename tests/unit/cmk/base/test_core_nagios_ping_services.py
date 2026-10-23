@@ -19,7 +19,7 @@ from cmk.base.core.nagios._create_config import create_nagios_servicedefs, Nagio
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.utils import ip_lookup
-from tests.testlib.common.empty_config import EMPTY_CONFIG, EMPTY_NAGIOS_CORE_CONFIG
+from tests.testlib.unit.empty_config import EMPTY_CONFIG, EMPTY_NAGIOS_CORE_CONFIG
 
 
 def _nagios_ping_service(*, family: Literal[4, 6], ip: str, description: str) -> str:

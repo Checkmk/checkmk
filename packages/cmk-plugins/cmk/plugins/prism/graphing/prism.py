@@ -13,7 +13,7 @@ UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision
 
 metric_pd_exclusivesnapshot = metrics.Metric(
     name="pd_exclusivesnapshot",
-    title=Title("Usage"),
+    title=Title("Exclusive snapshot usage"),
     unit=UNIT_BYTES,
     color=metrics.Color.CYAN,
 )

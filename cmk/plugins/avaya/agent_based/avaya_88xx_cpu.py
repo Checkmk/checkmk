@@ -12,23 +12,18 @@ from typing import Any
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_value_store,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.avaya.lib import DETECT_AVAYA
 from cmk.plugins.lib.cpu_util import check_cpu_util
 
 
 def parse_avaya_88xx_cpu(string_table: StringTable) -> StringTable | None:
     return string_table or None
-
-
-def discover_avaya_88xx_cpu(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_avaya_88xx_cpu(params: Mapping[str, Any], section: StringTable) -> CheckResult:
@@ -56,7 +51,7 @@ snmp_section_avaya_88xx_cpu = SimpleSNMPSection(
 check_plugin_avaya_88xx_cpu = CheckPlugin(
     name="avaya_88xx_cpu",
     service_name="CPU utilization",
-    discovery_function=discover_avaya_88xx_cpu,
+    discovery_function=discover_one_service,
     check_function=check_avaya_88xx_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (90.0, 95.0)},

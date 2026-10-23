@@ -18,15 +18,13 @@ import { MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
 import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips.vue'
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
 import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
-import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
+import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { toNameItems, toTagItems } from '@/monitoring/shared/labels'
-import { useTimeSince } from '@/monitoring/shared/useTimeSince'
+import type { DisplayOptions } from '@/monitoring/shared/types'
 
-const props = defineProps<{ data: ServiceOverview }>()
+const props = defineProps<{ data: ServiceOverview; displayOptions: DisplayOptions }>()
 
 const { _t } = usei18n()
-
-const timeSince = useTimeSince()
 
 const checkAttempt = computed(
   () => `${props.data.current_attempt}/${props.data.max_check_attempts}`
@@ -36,11 +34,21 @@ const tagChips = computed(() => toTagItems(props.data.tags))
 const contactGroupChips = computed(() => toNameItems(props.data.contact_groups))
 
 const lastCheck = computed(() =>
-  props.data.last_check === null ? '–' : formatTimestamp(props.data.last_check)
+  props.data.last_check === null
+    ? '–'
+    : formatDisplayTimestamp(props.data.last_check, props.displayOptions)
+)
+
+const stateAge = computed(() =>
+  props.data.last_state_change === null
+    ? '–'
+    : formatDisplayTimestamp(props.data.last_state_change, props.displayOptions)
 )
 
 const nextCheck = computed(() =>
-  props.data.next_check === null ? '–' : formatTimestamp(props.data.next_check)
+  props.data.next_check === null
+    ? '–'
+    : formatDisplayTimestamp(props.data.next_check, props.displayOptions)
 )
 </script>
 
@@ -60,8 +68,8 @@ const nextCheck = computed(() =>
           class="monitoring-service-overview-tab__host-link"
           :href="data.legacy_host_status_link"
           target="_top"
-          :title="_t('Show details of host %{name}', { name: data.host_name })"
-          :aria-label="_t('Show details of host %{name}', { name: data.host_name })"
+          :title="_t('Show host state')"
+          :aria-label="_t('Show host state')"
         >
           <CmkIcon name="folder" size="small" />
         </a>
@@ -93,11 +101,11 @@ const nextCheck = computed(() =>
     <hr class="monitoring-service-overview-tab__divider" />
 
     <OverviewDetailList align="start">
-      <dt>{{ _t('Last check:') }}</dt>
+      <dt :title="_t('Age of the check')">{{ _t('Check age:') }}</dt>
       <dd>{{ lastCheck }}</dd>
 
-      <dt>{{ _t('State age:') }}</dt>
-      <dd>{{ timeSince(data.last_state_change) }}</dd>
+      <dt :title="_t('Age of the state')">{{ _t('State age:') }}</dt>
+      <dd>{{ stateAge }}</dd>
 
       <dt>{{ _t('Current check attempt:') }}</dt>
       <dd>{{ checkAttempt }}</dd>
@@ -113,10 +121,12 @@ const nextCheck = computed(() =>
       <dd><PluginOutput :output="data.summary" /></dd>
     </OverviewDetailList>
 
-    <CmkCatalogPanel :title="_t('Service details')" :open="false">
-      <pre v-if="data.long_output" class="monitoring-service-overview-tab__details-text">{{
-        data.long_output
-      }}</pre>
+    <CmkCatalogPanel :title="_t('Service details')">
+      <PluginOutput
+        v-if="data.long_output"
+        class="monitoring-service-overview-tab__details-text"
+        :output="data.long_output"
+      />
       <CmkParagraph v-else class="monitoring-service-overview-tab__details-empty">
         {{ _t('This check plugin reports no further details.') }}
       </CmkParagraph>
@@ -158,9 +168,9 @@ const nextCheck = computed(() =>
 }
 
 .monitoring-service-overview-tab__details-text {
-  margin: 0;
-  overflow-x: auto;
-  font-family: monospace;
+  display: block;
+  max-height: 20lh;
+  overflow-y: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }

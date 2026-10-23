@@ -6,10 +6,9 @@
 import json
 from collections.abc import Mapping
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Result, State
 from cmk.plugins.jenkins.agent_based.jenkins_instance import (
     check_jenkins_instance,
-    discover_jenkins_instance,
     parse_jenkins_instance,
 )
 
@@ -27,17 +26,6 @@ def test_parse_jenkins_instance() -> None:
         "quietingDown": False,
         "useSecurity": True,
     }
-
-    assert value == expected
-
-
-def test_discovery_jenkins_instance() -> None:
-    payload = _build_test_payload()
-    string_table = [[json.dumps(payload)]]
-    section = parse_jenkins_instance(string_table)
-
-    value = list(discover_jenkins_instance(section))
-    expected = [Service()]
 
     assert value == expected
 

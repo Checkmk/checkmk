@@ -13,12 +13,12 @@ from cmk.ccc.version import Edition
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 from cmk.gui.watolib.global_settings import save_global_settings_raw
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
 from cmk.gui.watolib.rulespecs import HostRulespec
 from cmk.livestatus_client import NetworkSocketDetails, SiteConfiguration, SiteConfigurations
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ExpiryVersion
 from cmk.update_config.plugins.actions import warn_unavailable_snmp_backend as action_module
 from cmk.update_config.plugins.actions.warn_unavailable_snmp_backend import (
     warn_unavailable_snmp_backend,
@@ -31,7 +31,7 @@ LOGGER = logging.getLogger("test")
 _RULESET_NAME = "snmp_backend_hosts"
 
 
-def _rulesets(rule_values: Sequence[object]) -> RulesetCollection:
+def _rulesets(tree: FolderTree, rule_values: Sequence[object]) -> RulesetCollection:
     ruleset = Ruleset(
         _RULESET_NAME,
         rulespec=HostRulespec(
@@ -42,7 +42,7 @@ def _rulesets(rule_values: Sequence[object]) -> RulesetCollection:
             ),
         ),
     )
-    folder = folder_tree().root_folder()
+    folder = tree.root_folder()
     for value in rule_values:
         rule = Rule.from_ruleset(folder, ruleset, ruleset.rulespec.valuespec.default_value())
         rule.value = value
@@ -50,42 +50,45 @@ def _rulesets(rule_values: Sequence[object]) -> RulesetCollection:
     return RulesetCollection({_RULESET_NAME: ruleset})
 
 
-@pytest.mark.usefixtures("request_context")
-def test_warns_about_globally_configured_inline_backend(caplog: pytest.LogCaptureFixture) -> None:
+def test_warns_about_globally_configured_inline_backend(
+    caplog: pytest.LogCaptureFixture, tree: FolderTree
+) -> None:
     with caplog.at_level(logging.WARNING):
         warn_unavailable_snmp_backend(
             Edition.COMMUNITY,
             {"snmp_backend_default": "inline"},
             SiteConfigurations({}),
-            _rulesets([]),
+            _rulesets(tree, []),
             LOGGER,
         )
 
     assert "Choose SNMP backend" in caplog.text
 
 
-@pytest.mark.usefixtures("request_context")
-def test_warns_about_inline_backend_rules(caplog: pytest.LogCaptureFixture) -> None:
+def test_warns_about_inline_backend_rules(
+    caplog: pytest.LogCaptureFixture, tree: FolderTree
+) -> None:
     with caplog.at_level(logging.WARNING):
         warn_unavailable_snmp_backend(
             Edition.COMMUNITY,
             {},
             SiteConfigurations({}),
-            _rulesets(["inline", "classic"]),
+            _rulesets(tree, ["inline", "classic"]),
             LOGGER,
         )
 
     assert "1 rule of" in caplog.text
 
 
-@pytest.mark.usefixtures("request_context")
-def test_warns_about_multiple_inline_backend_rules(caplog: pytest.LogCaptureFixture) -> None:
+def test_warns_about_multiple_inline_backend_rules(
+    caplog: pytest.LogCaptureFixture, tree: FolderTree
+) -> None:
     with caplog.at_level(logging.WARNING):
         warn_unavailable_snmp_backend(
             Edition.COMMUNITY,
             {},
             SiteConfigurations({}),
-            _rulesets(["inline", "inline"]),
+            _rulesets(tree, ["inline", "inline"]),
             LOGGER,
         )
 
@@ -125,56 +128,58 @@ def _sites_with_globals(site_globals: dict[str, object]) -> SiteConfigurations:
     return SiteConfigurations({SiteId("remote"): site})
 
 
-@pytest.mark.usefixtures("request_context")
-def test_warns_about_inline_backend_in_site_globals(caplog: pytest.LogCaptureFixture) -> None:
+def test_warns_about_inline_backend_in_site_globals(
+    caplog: pytest.LogCaptureFixture, tree: FolderTree
+) -> None:
     with caplog.at_level(logging.WARNING):
         warn_unavailable_snmp_backend(
             Edition.COMMUNITY,
             {},
             _sites_with_globals({"snmp_backend_default": "inline"}),
-            _rulesets([]),
+            _rulesets(tree, []),
             LOGGER,
         )
 
     assert "site specific global settings of site 'remote'" in caplog.text
 
 
-@pytest.mark.usefixtures("request_context")
-def test_silent_without_inline_backend_in_site_globals(caplog: pytest.LogCaptureFixture) -> None:
+def test_silent_without_inline_backend_in_site_globals(
+    caplog: pytest.LogCaptureFixture, tree: FolderTree
+) -> None:
     with caplog.at_level(logging.WARNING):
         warn_unavailable_snmp_backend(
             Edition.COMMUNITY,
             {},
             _sites_with_globals({"snmp_backend_default": "classic"}),
-            _rulesets([]),
+            _rulesets(tree, []),
             LOGGER,
         )
 
     assert not caplog.text
 
 
-@pytest.mark.usefixtures("request_context")
-def test_silent_without_inline_backend(caplog: pytest.LogCaptureFixture) -> None:
+def test_silent_without_inline_backend(caplog: pytest.LogCaptureFixture, tree: FolderTree) -> None:
     with caplog.at_level(logging.WARNING):
         warn_unavailable_snmp_backend(
             Edition.COMMUNITY,
             {"snmp_backend_default": "classic"},
             SiteConfigurations({}),
-            _rulesets(["classic"]),
+            _rulesets(tree, ["classic"]),
             LOGGER,
         )
 
     assert not caplog.text
 
 
-@pytest.mark.usefixtures("request_context")
-def test_silent_in_editions_shipping_the_inline_backend(caplog: pytest.LogCaptureFixture) -> None:
+def test_silent_in_editions_shipping_the_inline_backend(
+    caplog: pytest.LogCaptureFixture, tree: FolderTree
+) -> None:
     with caplog.at_level(logging.WARNING):
         warn_unavailable_snmp_backend(
             Edition.PRO,
             {"snmp_backend_default": "inline"},
             SiteConfigurations({}),
-            _rulesets(["inline"]),
+            _rulesets(tree, ["inline"]),
             LOGGER,
         )
 

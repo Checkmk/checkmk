@@ -41,7 +41,7 @@ from cmk.events.notify_types import (
     NotifyAnalysisInfo,
     NotifyPluginInfo,
 )
-from cmk.gui import forms, permissions, sites, userdb
+from cmk.gui import forms, sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.default_name import unique_clone_increment_suggestion
@@ -82,6 +82,7 @@ from cmk.gui.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.search.matchers import (
     ABCMatchItemGenerator,
     MatchItem,
+    MatchItemConfig,
     MatchItemGeneratorRegistry,
     MatchItems,
 )
@@ -94,8 +95,8 @@ from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, Users
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes, UserAttribute
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
 from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
@@ -148,7 +149,10 @@ from cmk.gui.watolib.check_mk_automations import (
 )
 from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, make_action_link
+from cmk.gui.watolib.hosts_and_folders import (
+    FolderTree,
+    make_folder_tree,
+)
 from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.notifications import (
@@ -173,7 +177,6 @@ from cmk.gui.watolib.sample_config import (
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import (
-    declare_notification_plugin_permissions,
     load_notification_scripts,
 )
 from cmk.gui.watolib.users import notification_script_choices
@@ -203,12 +206,19 @@ from cmk.utils.automation_config import LocalAutomationConfig
 from cmk.utils.statename import host_state_name, service_state_name
 from cmk.web.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import HTTPVariable, makeactionuri, makeuri, makeuri_contextless
+from cmk.web.utils.urls import (
+    HTTPVariable,
+    makeactionuri,
+    makeactionuri_contextless,
+    makeuri,
+    makeuri_contextless,
+)
 
 OPTIMIZE_NOTIFICATIONS_ENTRIES: dict[str, list[str]] = {
     _("Balance short-term spikes"): [
@@ -321,9 +331,9 @@ class NotificationRuleLinks(NamedTuple):
 
 class ABCNotificationsMode(ABCEventsMode[EventRule]):
     def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        # Set before the base class reads the request vars, so _from_vars can use it.
+        self._tree = make_folder_tree(ctx.config)
         super().__init__(edition, ctx)
-
-        declare_notification_plugin_permissions()
 
     @classmethod
     @override
@@ -331,10 +341,11 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
         cls,
         edition: Edition,
         sites: SiteConfigurations,
+        tree: FolderTree,
         service_levels: Sequence[tuple[int, str]],
     ) -> list[DictionaryEntry | tuple[str, ListChoice]]:
         return (
-            cls._generic_rule_match_conditions(edition, sites, service_levels)
+            cls._generic_rule_match_conditions(edition, sites, tree, service_levels)
             + cls._event_rule_match_conditions(flavour="notify")
             + cls._notification_rule_match_conditions(edition)
         )
@@ -527,6 +538,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             elements=self._rule_match_conditions(
                 self._edition,
                 config.sites,
+                self._tree,
                 config.mkeventd_service_levels,
             )
         )
@@ -775,7 +787,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
     def _actions_allowed(self, rule: EventRule) -> bool:
         # In case a notification plug-in does not exist anymore the permission is completely missing.
         permission_name = "notification_plugin.%s" % rule["notify_plugin"][0]
-        return permission_name not in permissions.permission_registry or user.may(permission_name)
+        return not user.permission_exists(permission_name) or user.may(permission_name)
 
     def _rule_links(
         self,
@@ -815,7 +827,9 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                 httpvars.append(("search", search))
             return make_confirm_delete_link(
                 i18n=_,
-                url=make_action_link(request, httpvars + back_mode),
+                url=makeactionuri_contextless(
+                    request, transactions.get(), httpvars + back_mode, filename="wato.py"
+                ),
                 title=_("Delete notification rule #%(nr)d") % {"nr": nr},
                 suffix=rule.get("description", ""),
             )
@@ -829,7 +843,9 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             ]
             if search := request.get_str_input("search", ""):
                 httpvars.append(("search", search))
-            return make_action_link(request, httpvars + back_mode)
+            return makeactionuri_contextless(
+                request, transactions.get(), httpvars + back_mode, filename="wato.py"
+            )
 
         def _edit_url() -> str:
             httpvars: list[HTTPVariable] = [
@@ -839,7 +855,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             ]
             if search := request.get_str_input("search", ""):
                 httpvars.append(("search", search))
-            return folder_preserving_link(request, httpvars + back_mode)
+            return makeuri_contextless(request, httpvars + back_mode, filename="wato.py")
 
         def _clone_url() -> str:
             httpvars: list[HTTPVariable] = [
@@ -851,7 +867,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                 httpvars.append(("search", search))
             return make_confirm_delete_link(
                 i18n=_,
-                url=folder_preserving_link(request, httpvars + back_mode),
+                url=makeuri_contextless(request, httpvars + back_mode, filename="wato.py"),
                 title=_("Clone & edit notification rule #%(nr)d") % {"nr": nr},
                 suffix=rule.get("description", ""),
                 confirm_button=_("Yes, clone & edit"),
@@ -911,13 +927,14 @@ class ModeNotifications(ABCNotificationsMode):
                                     title=_("Add notification rule"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
                                             [
                                                 ("mode", "notification_rule_quick_setup"),
                                                 ("back_mode", self.name()),
                                             ]
                                             + search_vars,
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -927,7 +944,7 @@ class ModeNotifications(ABCNotificationsMode):
                                     title=_("Parameters for notification methods"),
                                     icon_name=StaticIcon(IconNames.clipboard),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
                                             [
                                                 (
@@ -935,6 +952,7 @@ class ModeNotifications(ABCNotificationsMode):
                                                     ModeNotificationParametersOverview.name(),
                                                 )
                                             ],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -950,8 +968,10 @@ class ModeNotifications(ABCNotificationsMode):
                                     name="test_notifications",
                                     icon_name=StaticIcon(IconNames.analysis),
                                     item=make_simple_link(
-                                        folder_preserving_link(
-                                            request, [("mode", "test_notifications")]
+                                        makeuri_contextless(
+                                            request,
+                                            [("mode", "test_notifications")],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -961,8 +981,10 @@ class ModeNotifications(ABCNotificationsMode):
                                     title=_("Analyze recent notifications"),
                                     icon_name=StaticIcon(IconNames.analyze),
                                     item=make_simple_link(
-                                        folder_preserving_link(
-                                            request, [("mode", "analyze_notifications")]
+                                        makeuri_contextless(
+                                            request,
+                                            [("mode", "analyze_notifications")],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -995,12 +1017,10 @@ class ModeNotifications(ABCNotificationsMode):
             title=_("Fallback email address for notifications"),
             icon_name=StaticIcon(IconNames.configuration),
             item=make_simple_link(
-                folder_preserving_link(
+                makeuri_contextless(
                     request,
-                    [
-                        ("mode", "edit_configvar"),
-                        ("varname", "notification_fallback_email"),
-                    ],
+                    [("varname", "notification_fallback_email")],
+                    filename="global_settings.py",
                 )
             ),
         )
@@ -1009,12 +1029,10 @@ class ModeNotifications(ABCNotificationsMode):
             title=_("Failed notification horizon"),
             icon_name=StaticIcon(IconNames.configuration),
             item=make_simple_link(
-                folder_preserving_link(
+                makeuri_contextless(
                     request,
-                    [
-                        ("mode", "edit_configvar"),
-                        ("varname", "failed_notification_horizon"),
-                    ],
+                    [("varname", "failed_notification_horizon")],
+                    filename="global_settings.py",
                 )
             ),
         )
@@ -1023,12 +1041,10 @@ class ModeNotifications(ABCNotificationsMode):
             title=_("Notification log level"),
             icon_name=StaticIcon(IconNames.configuration),
             item=make_simple_link(
-                folder_preserving_link(
+                makeuri_contextless(
                     request,
-                    [
-                        ("mode", "edit_configvar"),
-                        ("varname", "notification_logging"),
-                    ],
+                    [("varname", "notification_logging")],
+                    filename="global_settings.py",
                 )
             ),
         )
@@ -1037,12 +1053,10 @@ class ModeNotifications(ABCNotificationsMode):
             title=_("Logging of the notification mechanics"),
             icon_name=StaticIcon(IconNames.configuration),
             item=make_simple_link(
-                folder_preserving_link(
+                makeuri_contextless(
                     request,
-                    [
-                        ("mode", "edit_configvar"),
-                        ("varname", "cmc_debug_notifications"),
-                    ],
+                    [("varname", "cmc_debug_notifications")],
+                    filename="global_settings.py",
                 )
             ),
         )
@@ -1078,7 +1092,7 @@ class ModeNotifications(ABCNotificationsMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if request.has_var("_show_user"):
             if transactions.check_transaction(request):
@@ -1124,13 +1138,13 @@ class ModeNotifications(ABCNotificationsMode):
 
     @override
     def page(self, config: Config) -> None:
-        self._show_overview()
+        self._show_overview(self._tree)
         self._show_rules(analyse=None, config=config)
 
-    def _show_overview(self) -> None:
+    def _show_overview(self, tree: FolderTree) -> None:
         html.vue_component(
             component_name="cmk-notification-overview",
-            data=asdict(_get_vue_data()),
+            data=asdict(_get_vue_data(tree)),
         )
 
     def _get_date(self, context: NotificationContext) -> str:
@@ -1290,7 +1304,7 @@ def _fallback_mail_contacts_configured() -> bool:
     return False
 
 
-def _get_vue_data() -> Notifications:
+def _get_vue_data(tree: FolderTree) -> Notifications:
     all_sites_count, sites_with_disabled_notifications = get_disabled_notifications_infos()
     total_send_notifications = _get_total_sent_notifications_last_seven_days()
     return Notifications(
@@ -1311,19 +1325,13 @@ def _get_vue_data() -> Notifications:
                 ),
                 setup_link=makeuri_contextless(
                     request,
-                    [
-                        ("varname", "notification_fallback_email"),
-                        ("mode", "edit_configvar"),
-                    ],
-                    filename="wato.py",
+                    [("varname", "notification_fallback_email")],
+                    filename="global_settings.py",
                 ),
                 do_not_show_again_link=makeuri_contextless(
                     request,
-                    [
-                        ("varname", "notification_fallback_email"),
-                        ("mode", "edit_configvar"),
-                    ],
-                    filename="wato.py",
+                    [("varname", "notification_fallback_email")],
+                    filename="global_settings.py",
                 ),
             )
             if not _fallback_mail_contacts_configured()
@@ -1387,11 +1395,11 @@ def _get_vue_data() -> Notifications:
         rule_sections=[
             RuleSection(
                 i18n=_("Optimize notifications"),
-                topics=_get_ruleset_infos(OPTIMIZE_NOTIFICATIONS_ENTRIES),
+                topics=_get_ruleset_infos(tree, OPTIMIZE_NOTIFICATIONS_ENTRIES),
             ),
             RuleSection(
                 i18n=_("Supporting rules"),
-                topics=_get_ruleset_infos(SUPPORT_NOTIFICATIONS_ENTRIES),
+                topics=_get_ruleset_infos(tree, SUPPORT_NOTIFICATIONS_ENTRIES),
             ),
         ],
         user_id=str(user.id),
@@ -1405,8 +1413,8 @@ def _get_total_sent_notifications_last_seven_days() -> int:
     return get_total_sent_notifications(from_timestamp=from_timestamp)
 
 
-def _get_ruleset_infos(entries: dict[str, list[str]]) -> list[RuleTopic]:
-    all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+def _get_ruleset_infos(tree: FolderTree, entries: dict[str, list[str]]) -> list[RuleTopic]:
+    all_rulesets = AllRulesets.load_all_rulesets(tree)
     rule_topic_list: list[RuleTopic] = []
     for section, ruleset in entries.items():
         rule_list: list[Rule] = []
@@ -1477,12 +1485,13 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                     title=_("Add notification rule"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
                                             [
                                                 ("mode", "notification_rule_quick_setup"),
                                                 ("back_mode", self.name()),
                                             ],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=False,
@@ -1498,8 +1507,10 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                     name="test_notifications",
                                     icon_name=StaticIcon(IconNames.analysis),
                                     item=make_simple_link(
-                                        folder_preserving_link(
-                                            request, [("mode", "test_notifications")]
+                                        makeuri_contextless(
+                                            request,
+                                            [("mode", "test_notifications")],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -1520,12 +1531,10 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                     title=_("Store notifications for rule analysis"),
                                     icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
-                                            [
-                                                ("mode", "edit_configvar"),
-                                                ("varname", "notification_backlog"),
-                                            ],
+                                            [("varname", "notification_backlog")],
+                                            filename="global_settings.py",
                                         )
                                     ),
                                 ),
@@ -1533,12 +1542,10 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                     title=_("Notification log level"),
                                     icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
-                                            [
-                                                ("mode", "edit_configvar"),
-                                                ("varname", "notification_logging"),
-                                            ],
+                                            [("varname", "notification_logging")],
+                                            filename="global_settings.py",
                                         )
                                     ),
                                 ),
@@ -1546,12 +1553,10 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                     title=_("Logging of the notification mechanics"),
                                     icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
-                                            [
-                                                ("mode", "edit_configvar"),
-                                                ("varname", "cmc_debug_notifications"),
-                                            ],
+                                            [("varname", "cmc_debug_notifications")],
+                                            filename="global_settings.py",
                                         )
                                     ),
                                 ),
@@ -1664,11 +1669,11 @@ class ModeAnalyzeNotifications(ModeNotifications):
 
         title = _("Overdue bulk notifications!") if only_ripe else _("Open bulk notifications")
         with table_element(title=title, limit=table_row_limit) as table:
-            for directory, age, interval, timeperiod, maxcount, uuids in bulks:
+            for directory, age, interval, timeperiod, maxcount, uuids, readable_id in bulks:
                 dirparts = directory.split("/")
                 contact = dirparts[-3]
                 method = dirparts[-2]
-                bulk_id = dirparts[-1].split(",", 2)[-1]
+                bulk_id = readable_id.split(",", 2)[-1]
                 table.row()
                 table.cell(_("Contact"), contact)
                 table.cell(_("Method"), method)
@@ -1779,7 +1784,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if request.has_var("_show_bulks") and transactions.check_transaction(request):
             self._show_bulks = bool(request.var("_show_bulks"))
@@ -1886,13 +1891,14 @@ class ModeTestNotifications(ModeNotifications):
                                     title=_("Add notification rule"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
                                             [
                                                 ("mode", "notification_rule_quick_setup"),
                                                 ("back_mode", self.name()),
                                             ]
                                             + search_vars,
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=False,
@@ -1908,8 +1914,10 @@ class ModeTestNotifications(ModeNotifications):
                                     name="analyze_notifications",
                                     icon_name=StaticIcon(IconNames.analyze),
                                     item=make_simple_link(
-                                        folder_preserving_link(
-                                            request, [("mode", "analyze_notifications")]
+                                        makeuri_contextless(
+                                            request,
+                                            [("mode", "analyze_notifications")],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -1930,7 +1938,9 @@ class ModeTestNotifications(ModeNotifications):
                                     title=_("Notifications"),
                                     icon_name=StaticIcon(IconNames.notifications),
                                     item=make_simple_link(
-                                        folder_preserving_link(request, [("mode", "notifications")])
+                                        makeuri_contextless(
+                                            request, [("mode", "notifications")], filename="wato.py"
+                                        )
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -1944,12 +1954,10 @@ class ModeTestNotifications(ModeNotifications):
                                     title=_("Notification log level"),
                                     icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
-                                            [
-                                                ("mode", "edit_configvar"),
-                                                ("varname", "notification_logging"),
-                                            ],
+                                            [("varname", "notification_logging")],
+                                            filename="global_settings.py",
                                         )
                                     ),
                                 ),
@@ -1957,12 +1965,10 @@ class ModeTestNotifications(ModeNotifications):
                                     title=_("Logging of the notification mechanics"),
                                     icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
-                                            [
-                                                ("mode", "edit_configvar"),
-                                                ("varname", "cmc_debug_notifications"),
-                                            ],
+                                            [("varname", "cmc_debug_notifications")],
+                                            filename="global_settings.py",
                                         )
                                     ),
                                 ),
@@ -1983,7 +1989,7 @@ class ModeTestNotifications(ModeNotifications):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if request.has_var("_show_user") and transactions.check_transaction(request):
             self._show_user_rules = bool(request.var("_show_user"))
@@ -2012,13 +2018,9 @@ class ModeTestNotifications(ModeNotifications):
         # TODO temp. solution to provide flashed message after quick setup
         if message := request.var("result"):
             # TODO Add notification rule number
-            html.javascript(
-                "cmk.wato.message(%s, %s, %s)"
-                % (
-                    json.dumps(message),
-                    json.dumps("success"),
-                    json.dumps("result"),
-                )
+            html.call_ts_function(
+                function_name="wato_message",
+                arguments={"message": message, "message_type": "success", "del_var": "result"},
             )
 
         self._render_test_notifications()
@@ -2314,9 +2316,10 @@ class ModeTestNotifications(ModeNotifications):
             cssclass="hot",
             form="form_test_notifications",
         )
-        html.javascript("""
-        document.getElementById('_test_host_notifications').addEventListener('click', cmk.utils.setButtonLoadingState);
-        """)
+        html.call_ts_function(
+            function_name="set_button_loading_state_on_click",
+            arguments={"button_id": "_test_host_notifications"},
+        )
         html.buttonlink(
             makeuri_contextless(request, [("mode", "test_notifications")], filename="wato.py"),
             _("Reset"),
@@ -2745,16 +2748,27 @@ class ModeTestNotifications(ModeNotifications):
             request.has_var("_test_service_notifications")
             or test_type == NotificationTestType.service
         ):
-            html.final_javascript(
-                'cmk.wato.toggle_test_notification_visibility("test_on_service", "test_on_host");'
+            html.call_ts_function(
+                function_name="toggle_test_notification_visibility",
+                arguments={"source": "test_on_service", "target": "test_on_host"},
             )
         elif request.has_var("_test_host_notifications") or test_type == NotificationTestType.host:
-            html.final_javascript(
-                'cmk.wato.toggle_test_notification_visibility("test_on_service", "test_on_host", true);'
+            html.call_ts_function(
+                function_name="toggle_test_notification_visibility",
+                arguments={
+                    "source": "test_on_service",
+                    "target": "test_on_host",
+                    "hide_options": True,
+                },
             )
         else:
-            html.final_javascript(
-                'cmk.wato.toggle_test_notification_visibility("test_on_host", "test_on_service", true);'
+            html.call_ts_function(
+                function_name="toggle_test_notification_visibility",
+                arguments={
+                    "source": "test_on_host",
+                    "target": "test_on_service",
+                    "hide_options": True,
+                },
             )
 
     def _save_test_notification_display_options(self) -> None:
@@ -2965,7 +2979,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
                                     title=_("Add notification rule"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
                                             [
                                                 ("mode", "user_notification_rule"),
@@ -2973,6 +2987,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
                                                 ("back_mode", self.name()),
                                             ]
                                             + search_vars,
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -3001,7 +3016,9 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         yield PageMenuEntry(
             title=_("Users"),
             icon_name=StaticIcon(IconNames.users),
-            item=make_simple_link(folder_preserving_link(request, [("mode", "users")])),
+            item=make_simple_link(
+                makeuri_contextless(request, [("mode", "users")], filename="wato.py")
+            ),
         )
 
 
@@ -3049,13 +3066,14 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
                                     title=_("Add rule"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
                                             [
                                                 ("mode", "notification_rule_p"),
                                                 ("back_mode", self.name()),
                                             ]
                                             + search_vars,
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -3187,6 +3205,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         return self._vs_notification_rule(
             self._user_id(),
             config.sites,
+            self._tree,
             config.mkeventd_service_levels,
         )
 
@@ -3194,6 +3213,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         self,
         userid: UserId | None,
         sites: SiteConfigurations,
+        tree: FolderTree,
         service_levels: Sequence[tuple[int, str]],
     ) -> Dictionary:
         if userid:
@@ -3469,7 +3489,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             title=_("Rule Properties"),
             elements=rule_option_elements()
             + section_override
-            + self._rule_match_conditions(self._edition, sites, service_levels)
+            + self._rule_match_conditions(self._edition, sites, tree, service_levels)
             + section_contacts
             + [
                 (
@@ -3646,7 +3666,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return self._back_mode()
@@ -4008,7 +4028,7 @@ class ModeNotificationParametersOverview(WatoMode):
                                     title=_("Define parameters for HTML email"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
                                             [
                                                 ("mode", "notification_parameters"),
@@ -4016,6 +4036,7 @@ class ModeNotificationParametersOverview(WatoMode):
                                                 ("back_mode", self.name()),
                                                 ("rule_folder", ""),
                                             ],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -4236,7 +4257,7 @@ class ABCNotificationParameterMode(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         self._parameters = self._load_parameters()
         if (method_parameters := self._parameters.get(self._method())) is None:
@@ -4365,13 +4386,14 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                                     title=_("Add parameter"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
                                             [
                                                 ("mode", "edit_notification_parameter"),
                                                 ("method", self._method()),
                                             ]
                                             + self._search_vars(),
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -4543,26 +4565,30 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
 
         delete_url = make_confirm_delete_link(
             i18n=_,
-            url=make_action_link(
+            url=makeactionuri_contextless(
                 request,
+                transactions.get(),
                 [
                     ("mode", listmode),
                     ("_delete", parameter_id),
                 ]
                 + additional_vars,
+                filename="wato.py",
             ),
             title=_("Delete notification parameter #%(nr)d") % {"nr": nr},
             suffix=parameter["general"].get("description", ""),
         )
-        drag_url = make_action_link(
+        drag_url = makeactionuri_contextless(
             request,
+            transactions.get(),
             [
                 ("mode", listmode),
                 ("_move", str(nr)),
             ]
             + additional_vars,
+            filename="wato.py",
         )
-        edit_url = folder_preserving_link(
+        edit_url = makeuri_contextless(
             request,
             [
                 ("mode", mode),
@@ -4570,14 +4596,16 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                 ("edit", str(nr)),
             ]
             + additional_vars,
+            filename="wato.py",
         )
-        clone_url = folder_preserving_link(
+        clone_url = makeuri_contextless(
             request,
             [
                 ("mode", mode),
                 ("clone", parameter_id),
             ]
             + additional_vars,
+            filename="wato.py",
         )
 
         return NotificationRuleLinks(
@@ -4639,7 +4667,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return self._back_mode()
@@ -4677,9 +4705,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
         return self._back_mode()
 
     def _validate_form_spec(self, data: RawDiskData | RawFrontendData) -> bool:
-        return isinstance(data, RawFrontendData) or (
-            isinstance(data, RawDiskData) and not self._new  # type: ignore[redundant-expr]
-        )
+        return isinstance(data, RawFrontendData) or not self._new
 
     @override
     def page(self, config: Config) -> None:
@@ -4781,13 +4807,9 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
         # TODO temp. solution to provide flashed message after quick setup
         if message := request.var("result"):
             # TODO Add notification rule number
-            html.javascript(
-                "cmk.wato.message(%s, %s, %s)"
-                % (
-                    json.dumps(message),
-                    json.dumps("success"),
-                    json.dumps("result"),
-                )
+            html.call_ts_function(
+                function_name="wato_message",
+                arguments={"message": message, "message_type": "success", "del_var": "result"},
             )
 
         search = request.get_str_input("search", "")
@@ -4811,7 +4833,9 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
 
 class MatchItemGeneratorNotificationParameter(ABCMatchItemGenerator):
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, _config: MatchItemConfig
+    ) -> MatchItems:
         for script_name, script_title in notification_script_choices():
             title = _("%(script_title)s") % {"script_title": script_title}
             yield MatchItem(

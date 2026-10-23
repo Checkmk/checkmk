@@ -7,25 +7,15 @@
 from collections.abc import Iterable, Mapping
 
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
-from cmk.graphing_engine import PerformanceData, Unit
+from cmk.graphing_engine import PerformanceData
 from cmk.gui import sites, visuals
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.graphing import (
-    ConvertibleUnitSpecification,
-    EvaluatedMetric,
-    get_temperature_unit,
-    unit_to_unit_format,
-    user_specific_unit,
-    user_specific_unit_from_unit_format,
-)
+from cmk.gui.graphing import EvaluatedMetric
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ColumnName, VisualContext
-from cmk.gui.unit_formatter import IECFormatter, NotationFormatter
-from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.livestatus_client import LivestatusResponse
+from cmk.web.utils.unit_formatter import IECFormatter, NotationFormatter
 from cmk.web.utils.urls import makeuri_contextless
 
 
@@ -62,18 +52,6 @@ def _table_query(
     return ["site"] + list(columns), rows
 
 
-def create_host_view_url(context: Mapping[str, str]) -> str:
-    return makeuri_contextless(
-        request,
-        [
-            ("view_name", "host"),
-            ("site", context["site"]),
-            ("host", context["host_name"]),
-        ],
-        filename="view.py",
-    )
-
-
 def create_service_view_url(context: Mapping[str, str]) -> str:
     return makeuri_contextless(
         request,
@@ -85,18 +63,6 @@ def create_service_view_url(context: Mapping[str, str]) -> str:
         ],
         filename="view.py",
     )
-
-
-def purge_metric_unit_for_js(unit: Unit) -> dict[str, object]:
-    return {
-        "bounds": {},
-        "unit": _formatter_for_js(
-            user_specific_unit_from_unit_format(
-                unit_to_unit_format(unit),
-                get_temperature_unit(user, active_config.default_temperature_unit),
-            ).formatter
-        ),
-    }
 
 
 def _scalar_bounds_for_js(performance_data: PerformanceData) -> Mapping[str, float]:
@@ -119,19 +85,12 @@ def purge_evaluated_metric_for_js(metric: EvaluatedMetric) -> dict[str, object]:
     }
 
 
-def _purge_unit_spec_for_js(
-    unit_spec: ConvertibleUnitSpecification,
-    temperature_unit: TemperatureUnit,
-) -> dict[str, object]:
-    return {"unit": _formatter_for_js(user_specific_unit(unit_spec, temperature_unit).formatter)}
-
-
 def _formatter_for_js(formatter: NotationFormatter) -> dict[str, object]:
     return {
         "formatter_type": formatter.js_formatter_name,
         "symbol": formatter.symbol,
-        "precision_type": formatter.precision.type,
-        "precision_digits": formatter.precision.digits,
+        "precision_type": formatter.precision_kind,
+        "precision_digits": formatter.digits,
         "stepping": "binary" if isinstance(formatter, IECFormatter) else None,
     }
 

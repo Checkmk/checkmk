@@ -8,9 +8,9 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import {
-  type UseLinkContent,
-  useLinkContent
-} from '@/dashboard/components/Wizard/components/WidgetVisualization/useLinkContent'
+  type UseContextualLink,
+  useContextualLink
+} from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
 import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
@@ -28,9 +28,9 @@ import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 type ToggleFunction = (value: boolean) => void
 
 const CONTENT_TYPE = 'inventory'
-export interface UseInventory
-  extends UseWidgetHandler, UseWidgetVisualizationOptions, UseLinkContent, UseValidate {
+export interface UseInventory extends UseWidgetHandler, UseWidgetVisualizationOptions, UseValidate {
   toggleTitleUrl: ToggleFunction
+  contextualLink: UseContextualLink<InventoryContent>
 
   //Validation
   titleUrlValidationErrors: Ref<string[]>
@@ -57,37 +57,26 @@ export const useInventory = async (
     titleMacros
   } = useWidgetVisualizationProps('$DEFAULT_TITLE$', editWidget?.general_settings, CONTENT_TYPE)
 
-  const currentLinkSpec =
-    editWidget?.content?.type === 'inventory' ? editWidget.content?.link_spec : undefined
-
-  const {
-    linkType,
-    linkTarget,
-    linkValidationError,
-    validate: validateLinkContent,
-    linkSpec
-  } = useLinkContent(currentLinkSpec)
+  const contextualLink = useContextualLink<InventoryContent>(
+    constants.widgets[CONTENT_TYPE]!.contextual_link!,
+    editWidget?.content?.type === CONTENT_TYPE ? editWidget.content.contextual_link : undefined
+  )
 
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
     const isTitleValid = validateTitle()
-    const isLinkValid = validateLinkContent()
+    const isLinkValid = contextualLink.validate()
 
     return isTitleValid && isLinkValid
   }
 
   const _generateContent = (): InventoryContent => {
-    const content: InventoryContent = {
+    return {
       type: CONTENT_TYPE,
-      path: inventoryPath.value ?? ''
+      path: inventoryPath.value ?? '',
+      contextual_link: contextualLink.contextualLink.value ?? { type: 'default' }
     }
-
-    if (linkSpec.value) {
-      content.link_spec = linkSpec.value
-    }
-
-    return content
   }
 
   const _computeWidgetProps = async (): Promise<WidgetProps> => {
@@ -114,7 +103,7 @@ export const useInventory = async (
   }
 
   watch(
-    [widgetGeneralSettings, inventoryPath, linkType, linkTarget, showWidgetBackground],
+    [widgetGeneralSettings, inventoryPath, contextualLink.contextualLink, showWidgetBackground],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -139,9 +128,7 @@ export const useInventory = async (
     toggleTitleUrl,
     titleMacros,
 
-    linkType,
-    linkTarget,
-    linkValidationError,
+    contextualLink,
 
     titleUrlValidationErrors,
     validate,

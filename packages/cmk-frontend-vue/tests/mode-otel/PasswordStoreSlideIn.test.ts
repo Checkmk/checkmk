@@ -8,28 +8,12 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/vue'
 import { flushPromises } from '@vue/test-utils'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import type { Catalog } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
 
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 
 import PasswordStoreSlideIn from '@/mode-otel/otel-configuration-steps/PasswordStoreSlideIn.vue'
-
-// The default client singleton captures `globalThis.fetch` at import time, before
-// server.listen() patches it. Re-create it with a lazy fetch wrapper so MSW can intercept.
-vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
-  const mod = await importOriginal<Record<string, unknown>>()
-  const createClientImpl = (await import('openapi-fetch')).default
-  return {
-    ...mod,
-    default: createClientImpl({
-      baseUrl: `${location.protocol}//${location.host}/api/internal`,
-      credentials: 'include',
-      headers: { Accept: 'application/json' },
-      fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
-    })
-  }
-})
 
 initializeComponentRegistry()
 
@@ -102,6 +86,7 @@ const ownedByContactGroupForm: FormSpec.CascadingSingleChoice = {
   input_hint: '',
   no_elements_text: '',
   layout: 'vertical',
+  button_group_size: 'medium',
   elements: [
     {
       name: 'contact_group',
@@ -151,10 +136,7 @@ const schemaWithCascadingOwner: Catalog = {
 const FORM_SPEC_URL = `${location.protocol}//${location.host}/api/internal/domain-types/form_spec/collections/:entity_type`
 const LIST_PASSWORDS_URL = `${location.protocol}//${location.host}/api/internal/domain-types/passwordstore_password/collections/:entity_type_specifier`
 
-const server = setupServer()
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }))
-afterAll(() => server.close())
+const server = useMswServer()
 
 function mockFormSpec(overrideDefaultValues: Record<string, unknown> = defaultValues) {
   server.use(
@@ -182,7 +164,6 @@ function mockListPasswords(existingIds: string[] = []) {
 describe('PasswordStoreSlideIn', () => {
   afterEach(() => {
     cleanup()
-    server.resetHandlers()
   })
 
   test('fetches the form spec from the passwordstore_password endpoint', async () => {

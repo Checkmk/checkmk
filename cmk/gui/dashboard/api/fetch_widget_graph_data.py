@@ -12,18 +12,14 @@ cannot reach any data the dashboard does not already show, and an edited widget 
 without the token going stale.
 """
 
-from typing import cast
+from http import HTTPStatus
 
-from cmk.gui.dashboard.exceptions import WidgetRenderError
-from cmk.gui.dashboard.graph_widget_discovery import discover_widget_graphs
-from cmk.gui.dashboard.token_util import (
-    disable_dashboard_token_by_id,
-    get_dashboard_widget_by_id,
-    impersonate_dashboard_token_issuer,
-    InvalidWidgetError,
+from cmk.gui.dashboard.graph_widget_discovery import (
+    discover_widget_graphs,
+    GraphWidgetContent,
+    is_graph_widget_content,
 )
-from cmk.gui.dashboard.type_defs import CombinedGraphDashletConfig, DashletConfig
-from cmk.gui.exceptions import MKMissingDataError, MKUserError
+from cmk.gui.graphing import get_temperature_unit
 from cmk.gui.graphing.openapi.fetch_graph_data import evaluate_built_graph_to_response
 from cmk.gui.graphing.openapi.models import (
     ApiCombinationMode,
@@ -31,9 +27,11 @@ from cmk.gui.graphing.openapi.models import (
     ApiTimeRange,
     GraphFetchResponse,
 )
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -43,18 +41,17 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.livestatus_client import MKLivestatusException
 
 from ._family import DASHBOARD_FAMILY
-from ._utils import validated_dashboard_token
+from ._widget_resolution import PERMISSIONS_WIDGET_QUERY, resolve_saved_widget
 from .model.widget_content.graph import CombinedGraphContent
+from .model.widget_source import SavedWidgetContent
 
 
 @api_model
 class WidgetGraphFetchRequest:
-    widget_id: str = api_field(
-        description="The ID of the widget of the token's dashboard to fetch the data for.",
-        example="widget_1",
+    source: SavedWidgetContent = api_field(
+        description="The widget of the token's dashboard to fetch the data for."
     )
     requested_time_range: ApiTimeRange = api_field(
         description="The time range (and step) to fetch data for. The returned range may differ.",
@@ -64,75 +61,44 @@ class WidgetGraphFetchRequest:
     )
 
 
-def _combination_mode(widget_config: DashletConfig) -> ApiCombinationMode | None:
+def _combination_mode(content: GraphWidgetContent) -> ApiCombinationMode | None:
     """How a combined graph widget folds its metrics; the other graph types do not combine.
 
     Taken from the widget configuration rather than the request: what the widget shows is the
     dashboard owner's decision, not the visitor's.
     """
-    if widget_config["type"] != CombinedGraphContent.internal_type():
-        return None
-    return cast(CombinedGraphDashletConfig, widget_config)["presentation"]
+    return content.presentation if isinstance(content, CombinedGraphContent) else None
 
 
 def fetch_widget_graph_data_v1(
     api_context: ApiContext, body: WidgetGraphFetchRequest
 ) -> GraphFetchResponse:
     """Fetch the data of a shared dashboard's graph widget over a requested time range"""
-    token, token_details = validated_dashboard_token(api_context.token)
-    user_permissions = api_context.config.user_permissions()
+    with resolve_saved_widget(api_context, body.source, is_graph_widget_content) as widget:
+        discovered = discover_widget_graphs(
+            widget.content.to_internal(),
+            widget.context,
+            debug=api_context.config.debug,
+            user_permissions=api_context.config.user_permissions(),
+        )
 
-    try:
-        with impersonate_dashboard_token_issuer(
-            token.issuer, token_details, user_permissions
-        ) as issuer:
-            dashboard = issuer.load_dashboard()
-            widget_config = get_dashboard_widget_by_id(dashboard, body.widget_id)
-            try:
-                discovered = discover_widget_graphs(
-                    widget_config,
-                    dashboard.get("context"),
-                    debug=api_context.config.debug,
-                    user_permissions=user_permissions,
-                )
-            except MKLivestatusException as exc:
-                raise ProblemException(
-                    status=503,
-                    title="Monitoring data source unavailable",
-                    detail=str(exc),
-                ) from exc
-            except (MKMissingDataError, MKUserError, WidgetRenderError) as exc:
-                raise ProblemException(
-                    status=404,
-                    title="No graph data available",
-                    detail=str(exc),
-                ) from exc
-
-            # The widget renders the first discovered graph, so that is the one to fetch.
-            if not discovered.graphs:
-                raise ProblemException(
-                    status=404,
-                    title="No graph data available",
-                    detail=discovered.no_data_message or "The widget has no graph to fetch.",
-                )
-
-            return evaluate_built_graph_to_response(
-                discovered.graphs[0].graph,
-                requested_time_range=body.requested_time_range,
-                consolidation_function=body.consolidation_function,
-                combination_mode=_combination_mode(widget_config),
-                temperature_unit=issuer.temperature_unit(
-                    api_context.config.default_temperature_unit
-                ),
+        # The widget renders the first discovered graph, so that is the one to fetch.
+        if not discovered.graphs:
+            raise ProblemException(
+                status=HTTPStatus.NOT_FOUND,
+                title="No graph data available",
+                detail=discovered.no_data_message or "The widget has no graph to fetch.",
             )
-    except InvalidWidgetError as exc:
-        if exc.disable_token:
-            disable_dashboard_token_by_id(token.token_id)
-        raise ProblemException(
-            status=404,
-            title="Widget not found",
-            detail=str(exc),
-        ) from exc
+
+        return evaluate_built_graph_to_response(
+            discovered.graphs[0].graph,
+            requested_time_range=body.requested_time_range,
+            consolidation_function=body.consolidation_function,
+            combination_mode=_combination_mode(widget.content),
+            temperature_unit=get_temperature_unit(
+                user, api_context.config.default_temperature_unit
+            ),
+        )
 
 
 ENDPOINT_FETCH_WIDGET_GRAPH_DATA = VersionedEndpoint(
@@ -141,8 +107,9 @@ ENDPOINT_FETCH_WIDGET_GRAPH_DATA = VersionedEndpoint(
         link_relation="cmk/fetch_dashboard_widget_graph_data",
         method="post",
     ),
-    permissions=EndpointPermissions(),
+    permissions=EndpointPermissions(required=PERMISSIONS_WIDGET_QUERY),
     doc=EndpointDoc(family=DASHBOARD_FAMILY.name),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=fetch_widget_graph_data_v1)},
     allowed_tokens={"dashboard"},
 )

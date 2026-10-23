@@ -3,7 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+import subprocess
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
+from pathlib import Path
 from typing import Literal
 from unittest.mock import MagicMock
 
@@ -11,6 +15,7 @@ import pytest
 
 from livestatus import MKLivestatusSocketError
 
+import cmk.utils.paths
 from cmk.graphing_engine import (
     AutoPrecision,
     ConsolidationFunction,
@@ -38,14 +43,14 @@ from cmk.graphing_engine import (
     Unit,
 )
 from cmk.gui.graphing import (
-    CommonGraphOptions,
     EvaluatedGraphs,
+    EvaluationOptions,
     FetchDiagnostics,
     QueryLimitReached,
 )
 from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from cmk.gui.graphing._graph_templates import _EvaluateTemplateGraphs
-from cmk.gui.graphing._unit_format import apply_temperature_unit, unit_to_unit_format
+from cmk.gui.graphing._user_specific_unit import user_unit_format
 from cmk.gui.graphing.openapi import fetch_graph_data as fetch_graph_data_module
 from cmk.gui.graphing.openapi._serialize import (
     api_consolidation_to_engine,
@@ -57,6 +62,7 @@ from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.utils.temperature_unit import TemperatureUnit
+from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
 
 
 @pytest.mark.parametrize(
@@ -84,23 +90,35 @@ def _api_context(temperature_unit: str = "celsius") -> ApiContext:
 def test_evaluated_to_response_surfaces_fetch_diagnostics() -> None:
     # A hit series cap becomes a warning; a per-query fetch error becomes an error entry.
     response = evaluated_to_response(
-        EvaluatedGraph(name="g", title="t", vertical_range=None, stacks=[], lines=[]),
-        fallback_time_range=TimeRange(start=0, end=60, step=10),
+        EvaluatedGraph(
+            name="g",
+            title="t",
+            time_range=TimeRange(start=0, end=30, step=10),
+            vertical_range=None,
+            stacks=[],
+            lines=[],
+        ),
         diagnostics=FetchDiagnostics(
-            limits_reached=[QueryLimitReached(metric_name="cpu", max_series=100, num_series=100)],
-            errors=["metric backend unavailable"],
+            limits_reached=[QueryLimitReached(metric_name="cpu", max_series=100)],
+            errors=["telemetry metrics unavailable"],
         ),
         temperature_unit=TemperatureUnit.CELSIUS,
     )
-    assert response.errors == ["metric backend unavailable"]
+    assert response.errors == ["telemetry metrics unavailable"]
     assert len(response.warnings) == 1
     assert "cpu" in response.warnings[0]
 
 
 def test_evaluated_to_response_has_no_diagnostics_by_default() -> None:
     response = evaluated_to_response(
-        EvaluatedGraph(name="g", title="t", vertical_range=None, stacks=[], lines=[]),
-        fallback_time_range=TimeRange(start=0, end=60, step=10),
+        EvaluatedGraph(
+            name="g",
+            title="t",
+            time_range=TimeRange(start=0, end=30, step=10),
+            vertical_range=None,
+            stacks=[],
+            lines=[],
+        ),
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.CELSIUS,
     )
@@ -128,12 +146,12 @@ def test_a_shaded_region_is_served_beside_the_metrics_not_among_them() -> None:
         EvaluatedGraph(
             name="g",
             title="t",
+            time_range=TimeRange(start=0, end=30, step=10),
             vertical_range=None,
             stacks=[],
             lines=[],
             regions=(_region(series, series),),
         ),
-        fallback_time_range=TimeRange(start=0, end=30, step=10),
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.CELSIUS,
     )
@@ -148,12 +166,12 @@ def test_a_region_open_at_the_top_is_served_without_an_upper_bound() -> None:
         EvaluatedGraph(
             name="g",
             title="t",
+            time_range=TimeRange(start=0, end=30, step=10),
             vertical_range=None,
             stacks=[],
             lines=[],
             regions=(_region(series, None),),
         ),
-        fallback_time_range=TimeRange(start=0, end=30, step=10),
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.CELSIUS,
     )
@@ -188,7 +206,7 @@ def test_fetch_graph_data_invalid_internal_raises_500() -> None:
     )
     with pytest.raises(ProblemException) as exc_info:
         fetch_graph_data_v1(_api_context(), request)
-    assert exc_info.value.code == 500
+    assert exc_info.value.code == HTTPStatus.INTERNAL_SERVER_ERROR
     assert "Failed to evaluate graph" in exc_info.value.detail
 
 
@@ -202,7 +220,7 @@ def test_fetch_graph_data_unknown_graph_kind_raises_500() -> None:
     )
     with pytest.raises(ProblemException) as exc_info:
         fetch_graph_data_v1(_api_context(), request)
-    assert exc_info.value.code == 500
+    assert exc_info.value.code == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 @pytest.mark.usefixtures("load_config")
@@ -220,7 +238,7 @@ def test_fetch_graph_data_livestatus_failure_raises_503(
     )
     with pytest.raises(ProblemException) as exc_info:
         fetch_graph_data_v1(_api_context(), request)
-    assert exc_info.value.code == 503
+    assert exc_info.value.code == HTTPStatus.SERVICE_UNAVAILABLE
     assert "connection refused" in exc_info.value.detail
 
 
@@ -237,20 +255,29 @@ def test_fetch_graph_data_multiple_internal_graphs_raises_500() -> None:
     )
     with pytest.raises(ProblemException) as exc_info:
         fetch_graph_data_v1(_api_context(), request)
-    assert exc_info.value.code == 500
+    assert exc_info.value.code == HTTPStatus.INTERNAL_SERVER_ERROR
     assert "Expected exactly one graph" in exc_info.value.detail
     assert "got 2" in exc_info.value.detail
 
 
 def _capture_request(
-    monkeypatch: pytest.MonkeyPatch, captured: dict[str, Mapping[str, object]]
+    monkeypatch: pytest.MonkeyPatch, captured: dict[str, EvaluationOptions]
 ) -> None:
     def _capture(
-        _graphs: Sequence[Mapping[str, object]], options: Mapping[str, object]
+        _graphs: Sequence[Mapping[str, object]], options: EvaluationOptions
     ) -> EvaluatedGraphs:
         captured["options"] = options
         return EvaluatedGraphs(
-            graphs=[EvaluatedGraph(name="g", title="t", vertical_range=None, stacks=[], lines=[])],
+            graphs=[
+                EvaluatedGraph(
+                    name="g",
+                    title="t",
+                    time_range=TimeRange(start=0, end=30, step=10),
+                    vertical_range=None,
+                    stacks=[],
+                    lines=[],
+                )
+            ],
             diagnostics=FetchDiagnostics(),
         )
 
@@ -261,7 +288,7 @@ def _capture_request(
 def test_fetch_graph_data_passes_combination_mode_into_options(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    captured: dict[str, Mapping[str, object]] = {}
+    captured: dict[str, EvaluationOptions] = {}
     _capture_request(monkeypatch, captured)
     fetch_graph_data_v1(
         _api_context(),
@@ -272,14 +299,33 @@ def test_fetch_graph_data_passes_combination_mode_into_options(
             combination_mode="stacked",
         ),
     )
-    assert captured["options"]["combination_mode"] == "stacked"
+    assert captured["options"].combination_mode == "stacked"
+
+
+@pytest.mark.usefixtures("load_config")
+def test_fetch_graph_data_asks_each_rrd_for_the_neighbours_of_the_archive_serving_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, EvaluationOptions] = {}
+    _capture_request(monkeypatch, captured)
+
+    fetch_graph_data_v1(
+        _api_context(),
+        GraphFetchRequest(
+            internal=serialize_graphs([Graph(name="g", title="t", kind="template")]),
+            requested_time_range=ApiTimeRange(start=100, end=160, step=10),
+            consolidation_function="avg",
+        ),
+    )
+
+    assert captured["options"].include_edge_neighbours
 
 
 @pytest.mark.usefixtures("load_config")
 def test_fetch_graph_data_omits_combination_mode_when_not_requested(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    captured: dict[str, Mapping[str, object]] = {}
+    captured: dict[str, EvaluationOptions] = {}
     _capture_request(monkeypatch, captured)
     fetch_graph_data_v1(
         _api_context(),
@@ -289,7 +335,7 @@ def test_fetch_graph_data_omits_combination_mode_when_not_requested(
             consolidation_function="avg",
         ),
     )
-    assert "combination_mode" not in captured["options"]
+    assert captured["options"].combination_mode is None
 
 
 def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
@@ -329,7 +375,6 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
             self,
             metrics: Sequence[MetricProtocol],
             *,
-            consolidation_function: ConsolidationFunction,  # noqa: ARG002
             time_range: TimeRange,
         ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
             return {
@@ -344,14 +389,11 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
             }
 
     [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(
-            consolidation_function=ConsolidationFunction.AVERAGE, time_range=time_range
-        ),
+        time_range,
         _FetchData(),
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,
-        fallback_time_range=time_range,
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.CELSIUS,
     )
@@ -370,8 +412,67 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
     # The legend renders the value with the unit of the metric the line bounds, as it does a
     # metric's own values - without it the raw number is all it can show.
     assert horizontal_line.unit == ApiUnitFormat.from_shared(
-        apply_temperature_unit(unit_to_unit_format(unit), TemperatureUnit.CELSIUS)[0]
+        user_unit_format(unit, TemperatureUnit.CELSIUS)[0]
     )
+
+
+def test_evaluated_to_response_keeps_a_metric_whose_rrd_holds_no_series() -> None:
+    """A metric with performance data but no time series serializes with null-valued points.
+
+    Dropping it instead would be indistinguishable from a graph with fewer metrics.
+    """
+    unit = Unit(notation=DecimalNotation("X"), precision=AutoPrecision(2))
+    metric = RRDMetric(
+        host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("m")
+    )
+    graph = Graph(
+        name="g",
+        title="My Graph",
+        kind="template",
+        lines=[
+            Line(
+                curve=Curve(
+                    quantity=metric,
+                    attributes=CurveAttributes(title="Line", unit=unit, color="#0000ff"),
+                ),
+                inverse=False,
+            )
+        ],
+    )
+    time_range = TimeRange(start=0, end=30, step=10)
+
+    class _FetchData:
+        diagnostics = FetchDiagnostics()
+
+        def __call__(
+            self,
+            metrics: Sequence[MetricProtocol],
+            *,
+            time_range: TimeRange,  # noqa: ARG002
+        ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
+            return {
+                rrd_metric: [
+                    FetchedData(
+                        performance_data=PerformanceData(value=5.0),
+                        time_series=None,
+                    )
+                ]
+                for rrd_metric in metrics
+                if isinstance(rrd_metric, RRDMetric)
+            }
+
+    [evaluated] = _EvaluateTemplateGraphs(
+        time_range,
+        _FetchData(),
+    )(graph).graphs
+    response = evaluated_to_response(
+        evaluated,
+        diagnostics=FetchDiagnostics(),
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
+
+    [line] = response.metrics
+    assert line.data_points == [None, None, None]
 
 
 def test_evaluated_to_response_converts_the_values_to_the_users_temperature_unit() -> None:
@@ -413,7 +514,6 @@ def test_evaluated_to_response_converts_the_values_to_the_users_temperature_unit
             self,
             metrics: Sequence[MetricProtocol],
             *,
-            consolidation_function: ConsolidationFunction,  # noqa: ARG002
             time_range: TimeRange,
         ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
             return {
@@ -428,14 +528,11 @@ def test_evaluated_to_response_converts_the_values_to_the_users_temperature_unit
             }
 
     [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(
-            consolidation_function=ConsolidationFunction.AVERAGE, time_range=time_range
-        ),
+        time_range,
         _FetchData(),
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,
-        fallback_time_range=time_range,
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.FAHRENHEIT,
     )
@@ -469,7 +566,7 @@ def test_evaluated_to_response_leaves_a_non_temperature_unit_alone() -> None:
             )
         ],
     )
-    time_range = TimeRange(start=0, end=30, step=10)
+    time_range = TimeRange(start=0, end=10, step=10)
 
     class _FetchData:
         diagnostics = FetchDiagnostics()
@@ -478,7 +575,6 @@ def test_evaluated_to_response_leaves_a_non_temperature_unit_alone() -> None:
             self,
             metrics: Sequence[MetricProtocol],
             *,
-            consolidation_function: ConsolidationFunction,  # noqa: ARG002
             time_range: TimeRange,
         ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
             return {
@@ -493,14 +589,11 @@ def test_evaluated_to_response_leaves_a_non_temperature_unit_alone() -> None:
             }
 
     [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(
-            consolidation_function=ConsolidationFunction.AVERAGE, time_range=time_range
-        ),
+        time_range,
         _FetchData(),
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,
-        fallback_time_range=time_range,
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.FAHRENHEIT,
     )
@@ -518,6 +611,7 @@ def test_evaluated_to_response_carries_the_attributes_of_the_fetched_series() ->
     evaluated = EvaluatedGraph(
         name="g",
         title="t",
+        time_range=TimeRange(start=0, end=30, step=10),
         vertical_range=None,
         stacks=[],
         lines=[
@@ -539,7 +633,6 @@ def test_evaluated_to_response_carries_the_attributes_of_the_fetched_series() ->
 
     response = evaluated_to_response(
         evaluated,
-        fallback_time_range=time_range,
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.CELSIUS,
     )
@@ -561,6 +654,7 @@ def test_evaluated_to_response_leaves_an_rrd_metric_without_attributes() -> None
     evaluated = EvaluatedGraph(
         name="g",
         title="t",
+        time_range=TimeRange(start=0, end=30, step=10),
         vertical_range=None,
         stacks=[],
         lines=[
@@ -578,10 +672,55 @@ def test_evaluated_to_response_leaves_an_rrd_metric_without_attributes() -> None
 
     response = evaluated_to_response(
         evaluated,
-        fallback_time_range=time_range,
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.CELSIUS,
     )
 
     [metric] = response.metrics
     assert metric.metadata.attributes == []
+
+
+def _init_setup_git_repo(config_dir: Path) -> None:
+    """Initialize a Setup GIT repo, then rewrite a tracked file to leave the tree dirty."""
+    tracked = config_dir / "multisite.d" / "wato" / "global.mk"
+    tracked.parent.mkdir(parents=True, exist_ok=True)
+    tracked.write_text("# committed\n")
+
+    def _git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=config_dir, check=True, capture_output=True)
+
+    _git("init", "-q")
+    _git("config", "user.email", "check_mk")
+    _git("config", "user.name", "check_mk")
+    _git("add", "-A")
+    _git("commit", "-q", "-m", "Initialized GIT for Checkmk")
+    tracked.write_text("# rewritten by cmk-update-config\n")
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_fetch_graph_data_does_not_commit_the_setup_git_repo(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    set_config: SetConfig,
+) -> None:
+    config_dir = cmk.utils.paths.default_config_dir
+    _init_setup_git_repo(config_dir)
+    body = json.dumps(
+        {
+            "internal": json.dumps(serialize_graphs([Graph(name="g", title="t", kind="template")])),
+            "requested_time_range": {"start": 0, "end": 60, "step": 10},
+            "consolidation_function": "avg",
+        }
+    )
+
+    with set_config(wato_use_git=True):
+        resp = aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/internal/domain-types/graph/actions/fetch_data/invoke",
+            params=body,
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+        )
+
+    assert resp.status_code == HTTPStatus.OK, resp.text
+    log = subprocess.run(
+        ["git", "log", "--format=%s"], cwd=config_dir, check=True, capture_output=True, text=True
+    ).stdout.splitlines()
+    assert log == ["Initialized GIT for Checkmk"]

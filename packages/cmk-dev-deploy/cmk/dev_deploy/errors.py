@@ -54,10 +54,6 @@ class FrontendError(DeployError):
     """Raised when the frontend dev server (Vite) fails to start or stop."""
 
 
-class IBazelError(DeployError):
-    """Raised when iBazel binary management fails."""
-
-
 class ManifestBuildError(DeployError):
     """Raised when manifest generation or rebuild fails."""
 

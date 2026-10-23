@@ -6,9 +6,13 @@
 
 export { default } from './TimeSeriesGraph.vue'
 export type {
+  AreaRender,
+  BarRender,
+  BinUnit,
   GraphOptions,
   HorizontalLine,
   LineInterpolator,
+  LineRender,
   Metric,
   MetricMetadata,
   MetricRender,

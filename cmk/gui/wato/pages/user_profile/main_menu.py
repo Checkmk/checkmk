@@ -20,7 +20,6 @@ from cmk.gui.theme.choices import theme_choices
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.userdb import remove_custom_attr, validate_start_url
 from cmk.gui.userdb.store import load_custom_attr, save_custom_attr
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.main_menu import (
     ChipModeEnum,
@@ -34,6 +33,7 @@ from cmk.shared_typing.main_menu import (
     NavItemTopicEntryChip,
     NavItemTopicEntryToggle,
 )
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.icons import IconNames
 from cmk.web.utils.urls import HTTPVariable, makeuri_contextless
 
@@ -165,6 +165,17 @@ def default_user_menu_topics(
             ),
         )
 
+    if user.may("general.edit_profile"):
+        entries.append(
+            NavItemTopicEntry(
+                id="oauth_tokens",
+                title=_("OAuth access tokens"),
+                url="user_oauth_tokens.py",
+                icon=DefaultIcon(id=IconNames.passwords),
+                sort_index=35,
+            ),
+        )
+
     entries.append(
         NavItemTopicEntry(
             id="logout",
@@ -228,7 +239,9 @@ class ModeAjaxCycleThemes(AjaxPage):
 
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token(ctx.request.get_json()["_csrf_token"])
+        check_csrf_token(
+            ctx.session, ctx.request, token=ctx.request.get_json()["_csrf_token"], i18n=_
+        )
         themes = [theme for theme, _title in theme_choices()]
         # TODO: avoid global theme if possible
         current_theme = theme.get()
@@ -251,7 +264,7 @@ class ModeAjaxChangesAction(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         body = ctx.request.get_json()
-        check_csrf_token(body["_csrf_token"])
+        check_csrf_token(ctx.session, ctx.request, token=body["_csrf_token"], i18n=_)
 
         action = body.get("action")
         if action not in self._VALID_ACTIONS:
@@ -266,7 +279,9 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
 
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token(ctx.request.get_json()["_csrf_token"])
+        check_csrf_token(
+            ctx.session, ctx.request, token=ctx.request.get_json()["_csrf_token"], i18n=_
+        )
         set_user_attribute(
             "ui_sidebar_position",
             None if _sidebar_position_id(_get_sidebar_position()) == "left" else "left",
@@ -280,7 +295,7 @@ class ModeAjaxSetStartURL(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         try:
-            check_csrf_token()
+            check_csrf_token(ctx.session, ctx.request, i18n=_)
             if ctx.request.var("name"):
                 name = ctx.request.get_str_input_mandatory("name")
                 if name == "welcome.py":

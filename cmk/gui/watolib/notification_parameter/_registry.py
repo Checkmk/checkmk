@@ -110,7 +110,7 @@ class NotificationParameterRegistry(Registry[NotificationParameter | Notificatio
             },
         )
 
-    def _parameter_form_spec(self, method: str) -> Dictionary | DictionaryExtended:
+    def parameter_form_spec(self, method: str) -> Dictionary | DictionaryExtended:
         instance = self._entries.get(method)
         if not instance:
             if any(method == script_name for script_name, _title in notification_script_choices()):
@@ -156,7 +156,7 @@ class NotificationParameterRegistry(Registry[NotificationParameter | Notificatio
                 value["parameter_properties"] = parameter_properties["method_parameters"]
             return value
 
-        param_form_spec = self._parameter_form_spec(method)
+        param_form_spec = self.parameter_form_spec(method)
 
         return TransformDataForLegacyFormatOrRecomposeFunction(
             from_disk=_add_method_key,

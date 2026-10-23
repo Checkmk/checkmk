@@ -12,14 +12,11 @@ import ast
 import json
 import logging
 import re
-import uuid
 from collections.abc import Callable, Collection, Iterable, Mapping, MutableMapping
 from datetime import datetime, UTC
 from typing import Any, Literal, NoReturn, override
 
 import marshmallow
-from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
-from cryptography.x509.oid import NameOID
 from marshmallow import fields as _fields
 from marshmallow import ValidationError
 from marshmallow.types import StrSequenceOrSet
@@ -27,10 +24,10 @@ from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKException, MKGeneralException
-from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.regex import regex, REGEX_ID
 from cmk.ccc.user import UserId
-from cmk.fields import base, Boolean, DateTime, validators
+from cmk.fields import base, Boolean, DateTime
 from cmk.gui import sites
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
@@ -45,11 +42,11 @@ from cmk.gui.watolib.groups_io import load_group_information
 from cmk.gui.watolib.host_attributes import ABCHostAttribute, all_host_attributes
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
-    folder_tree,
     Host,
     strip_hostname_whitespace_chars,
 )
-from cmk.gui.watolib.passwords import contact_group_choices, password_exists
+from cmk.gui.watolib.openapi_fields import folder_tree_of
+from cmk.gui.watolib.passwords import contact_group_choices, load_passwords, password_id_in_use
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import load_tag_config_read_only
 from cmk.licensing.basics.options import OptionName
@@ -201,8 +198,7 @@ class FolderField(base.String):
             folder_id = folder_id[:-1]
         return folder_id
 
-    @classmethod
-    def load_folder(cls, folder_id: str) -> Folder:
+    def _load_folder(self, folder_id: str) -> Folder:
         def _ishexdigit(hex_string: str) -> bool:
             try:
                 int(hex_string, 16)
@@ -210,13 +206,13 @@ class FolderField(base.String):
             except ValueError:
                 return False
 
-        tree = folder_tree()
+        tree = folder_tree_of(self)
         if folder_id == "/":
             folder = tree.root_folder()
         elif _ishexdigit(folder_id):
             folder = tree._by_id(folder_id)  # noqa: SLF001
         else:
-            folder_id = cls._normalize_folder(folder_id)
+            folder_id = self._normalize_folder(folder_id)
             folder = tree.folder(folder_id[1:])
 
         return folder
@@ -228,7 +224,7 @@ class FolderField(base.String):
         x = super()._deserialize(value, attr, data)
         assert isinstance(x, str), f"Expected a string value, got {value!r}"
         try:
-            return self.load_folder(x)
+            return self._load_folder(x)
         # I added MKGeneralException during a refactoring, but I did not check if it is needed.
         except MKException, MKGeneralException:
             if x:
@@ -618,7 +614,7 @@ class HostField(base.String):
     @override
     def _validate(self, value: HostAddress) -> None:
         super()._validate(value)
-        host = folder_tree().host(value)
+        host = folder_tree_of(self).host(value)
         self._confirm_user_has_permission(host)
 
         if (
@@ -760,7 +756,7 @@ class CustomHostAttributesAndTagGroups(ValueTypedDictSchema):
             self._raise_error(f"Attribute {host_attribute.name()!r} must be a string.")
 
         try:
-            host_attribute.validate_input(value, "")
+            host_attribute.validate_input(value, "", active_config)
 
         except MKUserError as exc:
             self._raise_error(f"{host_attribute.name()}: {str(exc)}")
@@ -776,135 +772,6 @@ class CustomHostAttributesAndTagGroups(ValueTypedDictSchema):
 def ensure_string(value: object) -> None:
     if not isinstance(value, str):
         raise ValidationError(f"Not a string, but a {type(value).__name__}")
-
-
-class HostnameOrIP(base.String):
-    default_error_messages = {
-        "too_short": "The length of {value!r} is less than the minimum {min!r}.",
-        "too_long": "The length of {value!r} is more than the maximum {max!r}.",
-        "should_exist": "Host not found: {host_name!r}",
-        "should_not_exist": "Host {host_name!r} already exists.",
-        "should_be_cluster": "Host {host_name!r} is not a cluster host, but needs to be.",
-        "should_not_be_cluster": "Host {host_name!r} may not be a cluster host, but is.",
-        "should_be_monitored": "Host {host_name!r} exists, but is not monitored.",
-        "should_not_be_monitored": "Host {host_name!r} exists, but should not be monitored.",
-    }
-
-    def __init__(
-        self,
-        description: str = "A host name or IP address",
-        example: str = "example.com",
-        required: bool = True,
-        strip: bool = True,
-        minlen: int = 1,
-        maxlen: int | None = None,
-        host_type_allowed: Literal[
-            "hostname_and_ipv4", "hostname_and_ipv6", "hostname_only", "ipv4", "ipv6"
-        ] = "hostname_and_ipv4",
-        presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
-        should_be_monitored: bool = False,
-        should_be_cluster: bool = False,
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(description=description, example=example, required=required, **kwargs)
-
-        self.strip = strip
-        self.minlen = minlen
-        self.maxlen = maxlen
-        self.host_type_allowed = host_type_allowed
-        self.presence = presence
-        self.should_be_monitored = should_be_monitored
-        self.should_be_cluster = should_be_cluster
-
-    @override
-    def _validate(self, value: str) -> None:
-        if self.strip:
-            value = value.strip()
-
-        super()._validate(value)
-
-        validate_results: dict[str, ValidationError | Literal["pass"]] = {
-            "hostname": self._validate_hostname(value),
-            "ipv4": self._validate_ip4(value),
-            "ipv6": self._validate_ip6(value),
-        }
-
-        validated_host_type_names = {k for k, v in validate_results.items() if v == "pass"}
-
-        match self.host_type_allowed:
-            case "hostname_and_ipv4":
-                if validated_host_type_names.difference({"ipv4", "hostname"}):
-                    self._raise_an_error(validate_results)
-
-            case "hostname_and_ipv6":
-                if validated_host_type_names.difference({"ipv6", "hostname"}):
-                    self._raise_an_error(validate_results)
-
-            case "hostname_only":
-                if validated_host_type_names.difference({"hostname"}):
-                    self._raise_an_error(validate_results)
-
-            case "ipv4":
-                if "ipv4" not in validated_host_type_names:
-                    self._raise_an_error(validate_results)
-
-            case "ipv6":
-                if "ipv6" not in validated_host_type_names:
-                    self._raise_an_error(validate_results)
-
-        if len(value) < self.minlen:
-            self.make_error("too_short", value=value, min=self.minlen)
-
-        if self.maxlen and len(value) > self.maxlen:
-            self.make_error("too_long", value=value, min=self.minlen)
-
-    def _raise_an_error(
-        self, validate_results: Mapping[str, ValidationError | Literal["pass"]]
-    ) -> None:
-        for val_error in {v for _, v in validate_results.items() if v != "pass"}:
-            raise val_error
-
-    def _validate_hostname(self, value: str) -> ValidationError | Literal["pass"]:
-        try:
-            if self.presence != "ignore" or self.should_be_cluster or self.should_be_monitored:
-                if host := folder_tree().host(HostName(value)):
-                    if self.presence == "should_not_exist":
-                        raise self.make_error("should_not_exist", host_name=value)
-
-                    if self.should_be_cluster and not host.is_cluster():
-                        raise self.make_error("should_be_cluster", host_name=value)
-
-                    if not self.should_be_cluster and host.is_cluster():
-                        raise self.make_error("should_not_be_cluster", host_name=value)
-
-                    if self.should_be_monitored and not host_is_monitored(value):
-                        raise self.make_error("should_be_monitored", host_name=value)
-
-                    if not self.should_be_monitored and host_is_monitored(value):
-                        raise self.make_error("should_not_be_monitored", host_name=value)
-                else:
-                    raise self.make_error("should_exist", host_name=value)
-
-            if not re.match("^(:?" + HOST_NAME_REGEXP + ")$", value):
-                raise self.make_error("pattern", value=value, pattern=HOST_NAME_REGEXP)
-
-        except ValidationError as ve:
-            return ve
-        return "pass"
-
-    def _validate_ip4(self, value: str) -> ValidationError | Literal["pass"]:
-        try:
-            validators.ValidateIPv4()(value)
-        except ValidationError as ve:
-            return ve
-        return "pass"
-
-    def _validate_ip6(self, value: str) -> ValidationError | Literal["pass"]:
-        try:
-            validators.ValidateIPv6()(value)
-        except ValidationError as ve:
-            return ve
-        return "pass"
 
 
 class SiteField(base.String):
@@ -990,6 +857,16 @@ class _CustomerField(base.String):
             validate=validate,
             **kwargs,
         )
+
+    @override
+    def _validate_missing(self, value: object) -> None:
+        if (
+            value is marshmallow.missing
+            and self._required
+            and version.edition(paths.omd_root) is version.Edition.ULTIMATEMT
+        ):
+            raise self.make_error("required")
+        super()._validate_missing(value)
 
     @override
     def _validate(self, value: str | None) -> None:
@@ -1158,11 +1035,10 @@ class PasswordIdent(base.String):
         if pattern.match(value) is None:
             raise self.make_error("pattern", name=value)
 
-        exists = password_exists(value, user)
-        if self._should_exist and not exists:
+        if self._should_exist and value not in load_passwords(user):
             raise self.make_error("should_exist", name=value)
 
-        if not self._should_exist and exists:
+        if not self._should_exist and password_id_in_use(value):
             raise self.make_error("should_not_exist", name=value)
 
 
@@ -1263,49 +1139,6 @@ class Timestamp(DateTime):
     ) -> float:
         val = super()._deserialize(value, attr, data, **kwargs)
         return datetime.timestamp(val)
-
-
-class X509ReqPEMFieldUUID(base.String):
-    default_error_messages = {
-        "malformed": "Malformed CSR",
-        "invalid": "Invalid CSR (signature and public key do not match)",
-        "no_cn": "CN is missing",
-        "cn_no_uuid": "CN {cn} is no valid version-4 UUID",
-    }
-
-    @override
-    def _validate(self, value: CertificateSigningRequest) -> None:
-        if not value.is_signature_valid:
-            raise self.make_error("invalid")
-        try:
-            cn = value.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
-            if isinstance(cn, bytes):
-                cn = cn.decode()
-        except IndexError:
-            raise self.make_error("no_cn")
-        try:
-            uuid.UUID(
-                cn,
-                version=4,
-            )
-        except ValueError:
-            raise self.make_error("cn_no_uuid", cn=cn)
-
-    @override
-    def _deserialize(
-        self, value: object, attr: str | None, data: Mapping[str, object] | None, **kwargs: Any
-    ) -> CertificateSigningRequest:
-        x = super()._deserialize(
-            value,
-            attr,
-            data,
-            **kwargs,
-        )
-        assert isinstance(x, str), f"Expected a string value, got {x!r}"
-        try:
-            return load_pem_x509_csr(x.encode())
-        except ValueError:
-            raise self.make_error("malformed")
 
 
 class UserRoleID(base.String):
@@ -1498,7 +1331,6 @@ __all__ = [
     "FOLDER_PATTERN",
     "GroupField",
     "HostField",
-    "HostnameOrIP",
     "MultiNested",
     "PasswordEditableBy",
     "PasswordIdent",
@@ -1509,5 +1341,4 @@ __all__ = [
     "Timestamp",
     "Username",
     "UserRoleID",
-    "X509ReqPEMFieldUUID",
 ]

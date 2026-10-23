@@ -27,6 +27,7 @@ from ._python_plugins import discover_modules as discover_modules
 from ._python_plugins import discover_plugins_from_modules as discover_plugins_from_modules
 from ._python_plugins import discover_submodules as discover_submodules
 from ._python_plugins import DiscoveredPlugins as DiscoveredPlugins
+from ._python_plugins import PluginConflict as PluginConflict
 from ._python_plugins import PluginLocation as PluginLocation
 from ._python_plugins import plugins_local_path as plugins_local_path
 from ._wellknown import AGENT_PLUGINS_FOLDER as AGENT_PLUGINS_FOLDER

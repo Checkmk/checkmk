@@ -51,12 +51,24 @@ async function selectTab(name: string) {
 
 /** Switch a package or shell variant in a toggle button group. */
 async function toggle(label: string) {
-  await fireEvent.click(screen.getByRole('button', { name: `Toggle ${label}` }))
+  await fireEvent.click(within(panel()).getByRole('button', { name: `Toggle ${label}` }))
+}
+
+/**
+ * The panel of the selected tab. Hidden panels stay mounted, so every DOM
+ * query has to be scoped to the visible one.
+ */
+function panel(): HTMLElement {
+  const visible = document.querySelector('[role="tabpanel"]:not([hidden])')
+  if (visible === null) {
+    throw new Error('no tab panel is visible')
+  }
+  return visible as HTMLElement
 }
 
 /** The `<li>` of a wizard step, addressed by its heading. */
 function step(heading: string): HTMLElement {
-  const element = screen.getByText(heading).closest('li')
+  const element = within(panel()).getByText(heading).closest('li')
   if (element === null) {
     throw new Error(`step "${heading}" is not inside an <li>`)
   }
@@ -64,21 +76,21 @@ function step(heading: string): HTMLElement {
 }
 
 function activeStepHeading(): string {
-  const current = document.querySelector('li[aria-current="step"]')
+  const current = panel().querySelector('li[aria-current="step"]')
   if (current === null) {
     throw new Error('no step is marked as current')
   }
   return current.querySelector('h1, h2, h3, h4, h5, h6')?.textContent?.trim() ?? ''
 }
 
-/** Text of every rendered code block, in document order. */
+/** Text of every code block in the visible panel, in document order. */
 function codeTexts(): string[] {
-  return [...document.querySelectorAll('pre code')].map((el) => el.textContent ?? '')
+  return [...panel().querySelectorAll('pre code')].map((el) => el.textContent ?? '')
 }
 
 async function generateToken() {
-  await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
-  await screen.findByText(/Successfully generated one-time token/)
+  await fireEvent.click(within(panel()).getByRole('button', { name: /generate one-time token/i }))
+  await within(panel()).findByText(/Successfully generated one-time token/)
 }
 
 describe('AgentSlideOutContent', () => {
@@ -89,8 +101,6 @@ describe('AgentSlideOutContent', () => {
 
   afterEach(() => {
     cleanup()
-    vi.restoreAllMocks()
-    vi.unstubAllGlobals()
   })
 
   test('offers the four platform tabs in a fixed order', () => {
@@ -116,7 +126,7 @@ describe('AgentSlideOutContent', () => {
     expect(step('Save host')).toBeInTheDocument()
     expect(step('Download and install')).toBeInTheDocument()
     expect(step('Register agent')).toBeInTheDocument()
-    expect(screen.queryByText('Test connection')).not.toBeInTheDocument()
+    expect(within(panel()).queryByText('Test connection')).not.toBeInTheDocument()
   })
 
   test('adds the Test connection step in push mode', () => {
@@ -169,6 +179,31 @@ describe('AgentSlideOutContent', () => {
     })
   })
 
+  test('keeps each platform on its own step', async () => {
+    mockTokenGeneration('download_token')
+    renderContent()
+    await generateToken()
+    await fireEvent.click(within(panel()).getByRole('button', { name: /next step/i }))
+    expect(activeStepHeading()).toBe('Register agent')
+
+    await selectTab('Windows')
+    expect(activeStepHeading()).toBe('Download and install')
+
+    await selectTab('Linux')
+    expect(activeStepHeading()).toBe('Register agent')
+  })
+
+  test('keeps a generated token when another platform is inspected', async () => {
+    mockTokenGeneration('download_token')
+    renderContent()
+    await generateToken()
+
+    await selectTab('Windows')
+    await selectTab('Linux')
+
+    expect(within(panel()).getByText(/Successfully generated one-time token/)).toBeInTheDocument()
+  })
+
   test('substitutes site macros and the download token into the install command', async () => {
     mockTokenGeneration('download_token')
     renderContent()
@@ -198,7 +233,9 @@ describe('AgentSlideOutContent', () => {
     await toggle('TGZ')
     await generateToken()
 
-    expect(screen.getByText(/extracts files directly into the root directory/)).toBeInTheDocument()
+    expect(
+      within(panel()).getByText(/extracts files directly into the root directory/)
+    ).toBeInTheDocument()
     expect(codeTexts().join('\n')).toContain('tgz-download')
     expect(codeTexts().join('\n')).toContain('tgz-extract')
   })
@@ -210,7 +247,9 @@ describe('AgentSlideOutContent', () => {
 
     await toggle('RPM')
 
-    expect(screen.queryByText(/Successfully generated one-time token/)).not.toBeInTheDocument()
+    expect(
+      within(panel()).queryByText(/Successfully generated one-time token/)
+    ).not.toBeInTheDocument()
   })
 
   test('offers the Windows shell variants and switches both commands', async () => {
@@ -265,14 +304,16 @@ describe('AgentSlideOutContent', () => {
     renderContent({ agentInstalled: true })
     await generateToken()
 
-    const fallback = screen
+    const fallback = within(panel())
       .getAllByText(/--user agent_registration/)
       .map((el) => el.closest('pre'))
       .at(-1)
     expect(fallback).not.toBeVisible()
 
     await fireEvent.click(
-      screen.getByText(/Troubleshooting registration issues/, { selector: 'button, div, span' })
+      within(panel()).getByText(/Troubleshooting registration issues/, {
+        selector: 'button, div, span'
+      })
     )
 
     expect(fallback).toBeVisible()
@@ -284,7 +325,7 @@ describe('AgentSlideOutContent', () => {
 
     await generateToken()
 
-    expect(screen.getByText(/uses the default port \(8000\)/)).toBeInTheDocument()
+    expect(within(panel()).getByText(/uses the default port \(8000\)/)).toBeInTheDocument()
   })
 
   test('shows the unbaked fallback commands instead of a download token', () => {
@@ -295,20 +336,22 @@ describe('AgentSlideOutContent', () => {
       }
     })
 
-    expect(screen.getByText(/Use the following command to download/)).toBeInTheDocument()
+    expect(within(panel()).getByText(/Use the following command to download/)).toBeInTheDocument()
     expect(codeTexts().join('\n')).toContain(
       `wget ${contentProps.siteServer}/${contentProps.siteId}/agent.rpm`
     )
     expect(
-      screen.queryByRole('button', { name: /generate one-time token/i })
+      within(panel()).queryByRole('button', { name: /generate one-time token/i })
     ).not.toBeInTheDocument()
   })
 
   test('offers a close-and-review action when saving the host failed', () => {
     renderContent({ saveHost: true, setupError: true })
 
-    expect(screen.getByRole('button', { name: /Close & review/ })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Save host & next step/ })).not.toBeInTheDocument()
+    expect(within(panel()).getByRole('button', { name: /Close & review/ })).toBeInTheDocument()
+    expect(
+      within(panel()).queryByRole('button', { name: /Save host & next step/ })
+    ).not.toBeInTheDocument()
   })
 
   test('submits the edit-host form when the host is saved', async () => {
@@ -316,7 +359,7 @@ describe('AgentSlideOutContent', () => {
     vi.stubGlobal('cmk', { page_menu: { form_submit: formSubmit } })
     renderContent({ saveHost: true, agentInstalled: true })
 
-    await fireEvent.click(screen.getByRole('button', { name: /Save host & next step/ }))
+    await fireEvent.click(within(panel()).getByRole('button', { name: /Save host & next step/ }))
 
     expect(formSubmit).toHaveBeenCalledWith('edit_host', 'save_and_edit')
   })
@@ -356,24 +399,27 @@ describe('AgentSlideOutContent', () => {
     renderContent({ agentInstalled: true, isPushMode: true })
     await generateToken()
 
-    await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
+    await fireEvent.click(within(panel()).getByRole('button', { name: /next step/i }))
 
     expect(codeTexts().join('\n')).toContain('linux-status')
   })
 
-  // TODO(CMK-38409): a failed registration token still renders the command with
-  // `--user agent_registration` silently left in place, and leaves the finish
-  // button enabled. Flipped by the token-error fix.
-  test('renders the un-tokenised command when token generation fails', async () => {
+  test('hides the registration command when token generation fails', async () => {
     mockFailingTokenGeneration()
     renderContent({ agentInstalled: true, isPushMode: false })
 
-    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
-    await screen.findByText(/Error generating one-time token/)
+    await fireEvent.click(within(panel()).getByRole('button', { name: /generate one-time token/i }))
+    await within(panel()).findByText(/Error generating one-time token/)
 
-    // The troubleshooting fallback is in the DOM in every case (CmkCollapsible
-    // uses v-show), so the bug is that the token command block renders as well.
-    expect(codeTexts().filter((text) => text.includes('linux-register'))).toHaveLength(2)
+    // The troubleshooting fallback stays in the DOM on purpose; what must be
+    // gone is the second, token-bearing command block.
+    expect(codeTexts().filter((text) => text.includes('linux-register'))).toHaveLength(1)
+    expect(
+      within(panel()).queryByText(/run this command on your Linux host/)
+    ).not.toBeInTheDocument()
+    expect(codeTexts().join('\n')).not.toContain('--ott 0:')
+    // Registering with the agent_registration user is a legitimate way out, so
+    // the step must stay finishable after a failed token.
     expect(
       within(step('Register agent')).getByRole('button', {
         name: new RegExp(contentProps.closeButtonTitle)
@@ -381,21 +427,257 @@ describe('AgentSlideOutContent', () => {
     ).toBeEnabled()
   })
 
-  // TODO(CMK-38409): with no baked Linux packages and no bakery fallback the
-  // legacy-agent link is unreachable, because `tabNeedsToken()` tests subtab
-  // existence rather than command emptiness. Flipped by the flavour builders.
-  test('renders empty code blocks instead of the legacy agent link', async () => {
-    mockTokenGeneration('download_token')
+  test('offers a retry after token generation failed', async () => {
+    mockFailingTokenGeneration()
+    renderContent({ agentInstalled: true, isPushMode: false })
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/Error generating one-time token/)
+
+    await fireEvent.click(screen.getByRole('button', { name: /try again/i }))
+
+    expect(screen.getByRole('button', { name: /generate one-time token/i })).toBeInTheDocument()
+  })
+
+  test('says why the registration command is hidden after a failed token', async () => {
+    mockFailingTokenGeneration()
+    renderContent({ agentInstalled: true, isPushMode: false })
+
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/Error generating one-time token/)
+
+    expect(
+      screen.getByText(/hidden until a token has been generated successfully/)
+    ).toBeInTheDocument()
+  })
+
+  test('stays finishable after retrying a failed token', async () => {
+    mockFailingTokenGeneration()
+    renderContent({ agentInstalled: true, isPushMode: false })
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/Error generating one-time token/)
+
+    await fireEvent.click(screen.getByRole('button', { name: /try again/i }))
+
+    expect(
+      within(step('Register agent')).getByRole('button', {
+        name: new RegExp(contentProps.closeButtonTitle)
+      })
+    ).toBeEnabled()
+  })
+
+  test('does not carry a failed attempt over to another platform', async () => {
+    mockFailingTokenGeneration()
+    renderContent()
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/Error generating one-time token/)
+
+    await selectTab('Windows')
+
+    expect(
+      within(step('Download and install')).getByRole('button', { name: /next step/i })
+    ).toBeDisabled()
+  })
+
+  test('does not carry a failed attempt over the previous button', async () => {
+    const post = mockTokenGeneration('download_token')
+    post.mockRejectedValueOnce(new Error('token generation failed'))
+    renderContent({ agentInstalled: true, isPushMode: false })
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/Error generating one-time token/)
+
+    // Back to the install step and forward again: the registration step has
+    // not been attempted since, so it must ask for a token as it did before.
+    await fireEvent.click(
+      within(step('Register agent')).getByRole('button', { name: /previous step/i })
+    )
+    await generateToken()
+    await fireEvent.click(
+      within(step('Download and install')).getByRole('button', { name: /next step/i })
+    )
+
+    expect(
+      within(step('Register agent')).getByRole('button', {
+        name: new RegExp(contentProps.closeButtonTitle)
+      })
+    ).toBeDisabled()
+  })
+
+  test('hides the install command when token generation fails', async () => {
+    mockFailingTokenGeneration()
+    renderContent()
+
+    await fireEvent.click(within(panel()).getByRole('button', { name: /generate one-time token/i }))
+    await within(panel()).findByText(/Error generating one-time token/)
+
+    expect(codeTexts().join('\n')).not.toContain('deb-install')
+    expect(codeTexts().join('\n')).not.toContain('[AGENT_DOWNLOAD_OTT]')
+  })
+
+  test('offers the legacy agent link when no packages are available', () => {
     renderContent({
       legacyAgentUrl: 'https://docs.example.test/legacy-agent',
       agentInstallCmds: { ...installCmds, linux_deb: '', linux_rpm: '', linux_tgz_download: '' }
     })
 
-    await generateToken()
+    expect(
+      within(panel()).getByRole('link', { name: /Install the legacy Checkmk agent/ })
+    ).toBeInTheDocument()
+    expect(codeTexts().join('\n')).not.toContain('-install')
+  })
+
+  test('asks for no download token when no command needs one', () => {
+    renderContent({
+      agentInstallCmds: {
+        ...installCmds,
+        linux_deb: 'deb-install {{SERVER}}/{{SITE}}',
+        linux_rpm: '',
+        linux_tgz_download: ''
+      }
+    })
 
     expect(
-      screen.queryByRole('link', { name: /Install the legacy Checkmk agent/ })
+      within(panel()).queryByRole('button', { name: /generate one-time token/i })
     ).not.toBeInTheDocument()
-    expect(codeTexts().some((text) => text.trim() === '')).toBe(true)
+    expect(codeTexts().join('\n')).toContain('deb-install')
+  })
+
+  test('offers a Kubernetes tab in push mode', () => {
+    renderContent({ isPushMode: true })
+
+    expect(screen.getByRole('tab', { name: 'Kubernetes' })).toBeInTheDocument()
+  })
+
+  test('hands out the Helm command with the generated registration token', async () => {
+    mockTokenGeneration('registration_token')
+    renderContent({ isPushMode: true })
+    await selectTab('Kubernetes')
+
+    await generateToken()
+
+    expect(codeTexts().join('\n')).toContain(`push.registrationToken=0:${TOKEN}`)
+  })
+
+  describe('with the Agent Bakery', () => {
+    const bakeryUrl = 'wato.py?mode=agents'
+
+    function mockAgentAvailability(available: boolean) {
+      const fetch = vi.fn().mockImplementation(
+        async () =>
+          new Response(JSON.stringify({ available }), {
+            headers: { 'Content-Type': 'application/json' }
+          })
+      )
+      vi.stubGlobal('fetch', fetch)
+      return fetch
+    }
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    test('asks whether the selected package is baked for this host', async () => {
+      const fetch = mockAgentAvailability(true)
+      renderContent({ bakeryUrl })
+
+      await within(panel()).findByRole('button', { name: /generate one-time token/i })
+
+      const url = new URL((fetch.mock.calls[0]![0] as Request).url)
+      expect(url.pathname).toMatch(/domain-types\/agent\/actions\/availability\/invoke$/)
+      expect(url.searchParams.get('host_name')).toBe(contentProps.hostName)
+      expect(url.searchParams.get('os_type')).toBe('windows_msi')
+    })
+
+    test('points to the Agent Bakery instead of a failing download command', async () => {
+      mockAgentAvailability(false)
+      renderContent({ bakeryUrl })
+
+      const link = await within(panel()).findByRole('link', { name: 'Open Agent Bakery' })
+
+      expect(link).toHaveAttribute('href', bakeryUrl)
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(
+        within(panel()).queryByRole('button', { name: /generate one-time token/i })
+      ).not.toBeInTheDocument()
+      expect(activeStepHeading()).toBe('Download and install')
+    })
+
+    test('hides a resolved download command once the agent is not baked', async () => {
+      mockTokenGeneration('download_token')
+      mockAgentAvailability(true)
+      renderContent({ bakeryUrl })
+      await selectTab('Windows')
+      await within(panel()).findByRole('button', { name: /generate one-time token/i })
+      await generateToken()
+      expect(codeTexts().join('\n')).toContain('ps-download')
+
+      mockAgentAvailability(false)
+      await toggle('Command Prompt')
+      await within(panel()).findByRole('link', { name: 'Open Agent Bakery' })
+
+      expect(codeTexts().join('\n')).not.toContain('cmd-download')
+    })
+
+    test('lets the user go on to registration without a baked agent', async () => {
+      mockAgentAvailability(false)
+      renderContent({ bakeryUrl })
+      await within(panel()).findByRole('link', { name: 'Open Agent Bakery' })
+
+      expect(
+        within(step('Download and install')).getByRole('button', { name: /next step/i })
+      ).toBeEnabled()
+    })
+
+    test('does not ask for a host that is not saved yet', async () => {
+      const fetch = mockAgentAvailability(false)
+      renderContent({ bakeryUrl, hostExists: false })
+
+      expect(
+        await within(panel()).findByRole('button', { name: /generate one-time token/i })
+      ).toBeInTheDocument()
+      expect(fetch).not.toHaveBeenCalled()
+    })
+
+    test('shows the download command once the agent was baked', async () => {
+      mockAgentAvailability(false)
+      renderContent({ bakeryUrl })
+      const checkAgain = await within(panel()).findByRole('button', { name: 'Check again' })
+
+      mockAgentAvailability(true)
+      await userEvent.click(checkAgain)
+
+      expect(
+        await within(panel()).findByRole('button', { name: /generate one-time token/i })
+      ).toBeInTheDocument()
+    })
+
+    test('tells that the agent is still not baked after checking again', async () => {
+      mockAgentAvailability(false)
+      renderContent({ bakeryUrl })
+
+      await userEvent.click(await within(panel()).findByRole('button', { name: 'Check again' }))
+
+      expect(
+        await within(panel()).findByText('Still no agent baked for this host.')
+      ).toBeInTheDocument()
+    })
+
+    test('keeps pointing to the Agent Bakery when checking again fails', async () => {
+      mockAgentAvailability(false)
+      renderContent({ bakeryUrl })
+      const checkAgain = await within(panel()).findByRole('button', { name: 'Check again' })
+
+      const fetch = vi.fn().mockRejectedValue(new Error('network down'))
+      vi.stubGlobal('fetch', fetch)
+      await userEvent.click(checkAgain)
+
+      expect(
+        await within(panel()).findByText('The check failed. Please try again.')
+      ).toBeInTheDocument()
+      expect(fetch).toHaveBeenCalled()
+      expect(within(panel()).getByRole('button', { name: 'Check again' })).toBeInTheDocument()
+      expect(
+        within(panel()).queryByRole('button', { name: /generate one-time token/i })
+      ).not.toBeInTheDocument()
+    })
   })
 })

@@ -15,14 +15,12 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
 from cmk.gui.search.quicksearch import (
     ABCQuicksearchConductor,
     get_url_builder,
     IncorrectLabelInputError,
 )
 from cmk.gui.type_defs import SearchQuery, SearchResultsByTopic
-from cmk.gui.utils.roles import UserPermissions
 from cmk.web.utils.icons import IconNames, StaticIcon
 
 from ._base import PageHandlers, SidebarSnapin
@@ -56,8 +54,8 @@ class QuicksearchSnapin(SidebarSnapin):
             "Interactive search field for direct access to monitoring instances (hosts, services, "
             "host and service groups).<br>You can use the following filters: <i>h:</i> Host,<br> "
             "<i>s:</i> Service, <i>hg:</i> Host group, <i>sg:</i> Service group,<br><i>ad:</i> "
-            "Address, <i>al:</i> Alias, <i>tg:</i> Host tag, <i>hl:</i> Host label, <i>sl:</i> "
-            "Service label"
+            "Address, <i>al:</i> Alias, <i>tg:</i> Host tag, <i>hf:</i> Host folder, <i>sf:</i> "
+            "Service folder, <i>hl:</i> Host label, <i>sl:</i> Service label"
         )
 
     @override
@@ -73,7 +71,7 @@ class QuicksearchSnapin(SidebarSnapin):
         )
         html.close_div()
         html.div("", id_="mk_side_clear")
-        html.javascript(f"cmk.quicksearch.register_search_field('{id_}');")
+        html.call_ts_function(function_name="register_search_field", arguments={"field": id_})
 
     @override
     def page_handlers(self) -> PageHandlers:
@@ -94,7 +92,7 @@ class QuicksearchSnapin(SidebarSnapin):
         try:
             search_objects = quicksearch_manager.determine_search_objects(
                 livestatus.lqencode(query),
-                UserPermissions.from_config(ctx.config, permission_registry),
+                ctx.user_permissions,
             )
             quicksearch_manager.conduct_search(search_objects)
 
@@ -129,8 +127,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
         quicksearch_manager = _build_quicksearch_manager_from_context(ctx)
 
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
-        search_url = quicksearch_manager.generate_search_url(query, user_permissions)
+        search_url = quicksearch_manager.generate_search_url(query, ctx.user_permissions)
 
         raise HTTPRedirect(search_url)
 

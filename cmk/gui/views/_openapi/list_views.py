@@ -3,25 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal
+from collections.abc import Iterable
+from typing import Annotated, Literal
 
 import cmk.web.utils.permission_verification as permissions
+from cmk.gui import visuals
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
     EndpointPermissions,
+    QueryParam,
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.gui.type_defs import VisualContext
-from cmk.gui.views.store import get_permitted_views
+from cmk.gui.type_defs import AnnotatedUserId, ViewName, ViewSpec, VisualContext
+from cmk.gui.views.store import get_all_views, get_permitted_views
 
 from ._family import VIEW_FAMILY
 
@@ -40,10 +44,13 @@ class ViewExtensions:
         description="Active filters in the format filter_id -> (variable -> value)"
     )
     is_mobile: bool = api_field(description='Whether the view option "mobile" is set or not.')
+    owner: AnnotatedUserId = api_field(
+        description="Owner of the view, an empty string for a built-in one."
+    )
 
 
 @api_model
-class ViewModel(DomainObjectModel):
+class ViewModel(TitledDomainObjectModel):
     domainType: Literal["view"] = api_field(description="The domain type of the object.")
     extensions: ViewExtensions = api_field(description="Parts of the configuration of this view.")
 
@@ -56,25 +63,53 @@ class ViewCollectionModel(DomainObjectCollectionModel):
     value: list[ViewModel] = api_field(description="A list of views.")
 
 
-def list_views_v1() -> ViewCollectionModel:
-    """List views."""
-    views = []
-    for view_name, view_spec in get_permitted_views().items():
-        dashboard_model = ViewModel(
-            id=view_name,
-            domainType="view",
-            title=str(view_spec.get("title", view_name)),  # convert lazy string
-            extensions=ViewExtensions(
-                data_source=view_spec["datasource"],
-                restricted_to_single=list(view_spec["single_infos"]),
-                filters=view_spec.get("context", {}),
-                is_mobile=view_spec.get("mobile", False),
+def list_views_v1(
+    api_context: ApiContext,
+    all_owners: Annotated[
+        bool,
+        QueryParam(
+            description=(
+                "List every copy of a view the user may open, one per owner, instead of the one "
+                "copy each view name resolves to. Several entries then share an ID."
             ),
-            links=[],
+            example="False",
+        ),
+    ] = False,
+) -> ViewCollectionModel:
+    """List views."""
+    specs: Iterable[tuple[ViewName, ViewSpec]]
+    if all_owners:
+        specs = (
+            (view_name, view_spec)
+            for view_name, copies in visuals.available_by_owner(
+                "views", get_all_views(), api_context.config.user_permissions()
+            ).items()
+            for view_spec in copies.values()
         )
-        views.append(dashboard_model)
+    else:
+        specs = get_permitted_views().items()
+    return ViewCollectionModel(
+        id="all",
+        domainType="view",
+        links=[],
+        value=[_view_model(view_name, view_spec) for view_name, view_spec in specs],
+    )
 
-    return ViewCollectionModel(id="all", domainType="view", links=[], value=views)
+
+def _view_model(view_name: ViewName, view_spec: ViewSpec) -> ViewModel:
+    return ViewModel(
+        id=view_name,
+        domainType="view",
+        title=str(view_spec.get("title", view_name)),  # convert lazy string
+        extensions=ViewExtensions(
+            data_source=view_spec["datasource"],
+            restricted_to_single=list(view_spec["single_infos"]),
+            filters=view_spec.get("context", {}),
+            is_mobile=view_spec.get("mobile", False),
+            owner=view_spec["owner"],
+        ),
+        links=[],
+    )
 
 
 ENDPOINT_LIST_VIEWS = VersionedEndpoint(

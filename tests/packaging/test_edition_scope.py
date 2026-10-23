@@ -19,7 +19,7 @@ import pytest
 
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils2 import check_output
-from tests.testlib.version import TypeCMKEdition
+from tests.testlib.common.version import TypeCMKEdition
 
 _ULTIMATE_AND_HIGHER = frozenset(
     {
@@ -48,11 +48,17 @@ class PluginDetails:
 
 _CMK_PLUGINS = [
     pytest.param(
+        awse := PluginDetails(
+            "aws_v2_extended", "//non-free/packages/cmk-plugins-nonfree:pkg_tar-aws_v2_extended"
+        ),
+        id=awse.name,
+    ),
+    pytest.param(
         aze := PluginDetails(
             "azure_v2_extended", "//non-free/packages/cmk-plugins-nonfree:pkg_tar-azure_v2_extended"
         ),
         id=aze.name,
-    )
+    ),
 ]
 
 

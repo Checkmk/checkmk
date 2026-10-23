@@ -32,7 +32,21 @@ interface LegendEntry {
   target: string | undefined
 }
 
-const props = defineProps<{ segments: StateSegment[]; total?: StateTotal | undefined }>()
+/** `small` thins the bar where a list repeats one per row. */
+export type StateCountBarSize = 'small' | 'medium'
+
+const props = withDefaults(
+  defineProps<{
+    segments: StateSegment[]
+    total?: StateTotal | undefined
+    size?: StateCountBarSize
+  }>(),
+  { total: undefined, size: 'medium' }
+)
+
+const slots = defineSlots<{
+  heading?: () => unknown
+}>()
 
 const { _t } = usei18n()
 
@@ -57,14 +71,15 @@ function toEntry(
   }
 }
 
-const legend = computed<LegendEntry[]>(() => {
-  const states = props.segments.map((segment) =>
-    toEntry(segment.label, segment.count, segment.color, segment)
-  )
-  return props.total === undefined
-    ? states
-    : [toEntry(props.total.label, totalCount.value, 'default', props.total), ...states]
-})
+const legend = computed<LegendEntry[]>(() =>
+  props.segments.map((segment) => toEntry(segment.label, segment.count, segment.color, segment))
+)
+
+const totalEntry = computed<LegendEntry | undefined>(() =>
+  props.total === undefined
+    ? undefined
+    : toEntry(props.total.label, totalCount.value, 'default', props.total)
+)
 
 const ariaLabel = computed<string>(() =>
   totalCount.value === 0
@@ -76,7 +91,19 @@ const ariaLabel = computed<string>(() =>
 </script>
 
 <template>
-  <div class="cmk-state-count-bar">
+  <div class="cmk-state-count-bar" :class="`cmk-state-count-bar--size-${size}`">
+    <div v-if="slots.heading || totalEntry" class="cmk-state-count-bar__header">
+      <slot name="heading" />
+      <component
+        :is="totalEntry.href === undefined ? 'span' : 'a'"
+        v-if="totalEntry"
+        class="cmk-state-count-bar__total-entry"
+        :href="totalEntry.href"
+        :target="totalEntry.target"
+      >
+        {{ totalEntry.label }}: {{ totalEntry.count }}
+      </component>
+    </div>
     <div class="cmk-state-count-bar__bar" role="img" :aria-label="ariaLabel">
       <template v-if="totalCount > 0">
         <div
@@ -116,13 +143,34 @@ const ariaLabel = computed<string>(() =>
   gap: var(--dimension-4);
 }
 
+.cmk-state-count-bar__header {
+  display: flex;
+  gap: var(--spacing);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cmk-state-count-bar__total-entry {
+  margin-left: auto;
+  color: var(--font-color);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
 .cmk-state-count-bar__bar {
   display: flex;
   gap: var(--dimension-2);
   width: 100%;
-  height: var(--dimension-6);
   overflow: hidden;
   border-radius: var(--border-radius);
+}
+
+.cmk-state-count-bar--size-medium .cmk-state-count-bar__bar {
+  height: var(--dimension-6);
+}
+
+.cmk-state-count-bar--size-small .cmk-state-count-bar__bar {
+  height: var(--dimension-4);
 }
 
 .cmk-state-count-bar__segment {
@@ -186,7 +234,8 @@ const ariaLabel = computed<string>(() =>
   height: var(--dimension-6);
 }
 
-a.cmk-state-count-bar__legend-entry:hover {
+a.cmk-state-count-bar__legend-entry:hover,
+a.cmk-state-count-bar__total-entry:hover {
   text-decoration: underline;
 }
 

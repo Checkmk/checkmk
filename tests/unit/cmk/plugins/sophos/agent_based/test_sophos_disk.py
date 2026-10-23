@@ -7,17 +7,8 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.sophos.agent_based.sophos_disk import (
-    check_sophos_disk,
-    discover_sophos_disk,
-    Params,
-    parse_sophos_disk,
-)
-
-
-def test_discover_sophos_disk_yields_single_service() -> None:
-    assert list(discover_sophos_disk(51)) == [Service()]
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
+from cmk.plugins.sophos.agent_based.sophos_disk import check_sophos_disk, Params, parse_sophos_disk
 
 
 @pytest.mark.parametrize(

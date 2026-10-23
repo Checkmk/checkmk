@@ -21,7 +21,8 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.huawei.lib import (
-    DETECT_HUAWEI_SWITCH,
+    HUARONG_ENTERPRISE,
+    HUAWEI_ENTERPRISE,
     huawei_item_dict_from_entities,
 )
 
@@ -79,9 +80,20 @@ def check_huawei_switch_fan(item: str, params: HuaweiFanParams, section: Section
 
 snmp_section_huawei_switch_fan = SimpleSNMPSection(
     name="huawei_switch_fan",
-    detect=DETECT_HUAWEI_SWITCH,
+    detect=HUAWEI_ENTERPRISE.switch_detect,
     fetch=SNMPTree(
-        base=".1.3.6.1.4.1.2011.5.25.31.1.1.10.1",
+        base=HUAWEI_ENTERPRISE.subtree("5.25.31.1.1.10.1"),
+        oids=[OIDEnd(), "5", "6"],
+    ),
+    parse_function=parse_huawei_switch_fan,
+)
+
+snmp_section_huawei_switch_fan_huarong = SimpleSNMPSection(
+    name="huawei_switch_fan_huarong",
+    parsed_section_name="huawei_switch_fan",
+    detect=HUARONG_ENTERPRISE.switch_detect,
+    fetch=SNMPTree(
+        base=HUARONG_ENTERPRISE.subtree("5.25.31.1.1.10.1"),
         oids=[OIDEnd(), "5", "6"],
     ),
     parse_function=parse_huawei_switch_fan,

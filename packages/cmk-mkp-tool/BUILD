@@ -31,7 +31,6 @@ py_library(
     data = [":py_typed"],
     imports = ["."],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//packages/cmk-ec:__pkg__",
         "//tests:__subpackages__",
@@ -91,13 +90,6 @@ py_wheel(
     version = "2.0.0",
     visibility = ["//visibility:public"],
     deps = [],
-)
-
-sh_library(
-    name = "helpers",
-    srcs = [
-        ".f12",
-    ],
 )
 
 py_requirements_test(

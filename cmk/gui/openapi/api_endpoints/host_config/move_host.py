@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.exceptions import MKAuthException
@@ -69,7 +70,7 @@ def move_host_v1(
 
     if target_folder is current_folder:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Invalid move action",
             detail="The host is already part of the specified target folder",
         )
@@ -87,7 +88,7 @@ def move_host_v1(
         )
     except MKAuthException:
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Permission denied",
             detail=f"You lack the permissions to move host {host.name()} to {folder_slug(target_folder)}.",
         )
@@ -96,7 +97,7 @@ def move_host_v1(
         body=serialize_host(
             host, api_context=api_context, compute_effective_attributes=False, compute_links=True
         ),
-        status_code=200,
+        status_code=HTTPStatus.OK,
         etag=host_etag(host),
     )
 
@@ -112,9 +113,9 @@ ENDPOINT_MOVE_HOST = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=move_host_v1,
-            additional_status_codes=[403],
+            additional_status_codes=[HTTPStatus.FORBIDDEN],
             status_descriptions={
-                403: "You lack the permissions to move the host to the target folder.",
+                HTTPStatus.FORBIDDEN: "You lack the permissions to move the host to the target folder.",
             },
         )
     },

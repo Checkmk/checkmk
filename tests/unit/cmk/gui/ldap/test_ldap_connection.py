@@ -6,12 +6,13 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterator
+from http import HTTPStatus
 
 import pytest
 from pytest_mock import MockerFixture
 
 from cmk.gui.ldap_integration.ldap_connector import LDAPUserConnector
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 # Mocking wato_audit.log as its contents are not used in these tests and accessing it causes flaky results.
@@ -301,7 +302,7 @@ def test_get_ldap_connection_doesnt_exist(clients: ClientRegistry) -> None:
     clients.LdapConnection.get(
         ldap_connection_id="LDAP_1",
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_get_ldap_connections(clients: ClientRegistry) -> None:
@@ -323,7 +324,7 @@ def test_create_ldap_connection_with_field_and_alias_in_request(
     clients.LdapConnection.create(
         ldap_data=ldap_api_schema(ldap_id="LDAP_1", include_mega_menu_icons=True),
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_create_ldap_connection_existing_id(clients: ClientRegistry) -> None:
@@ -331,7 +332,7 @@ def test_create_ldap_connection_existing_id(clients: ClientRegistry) -> None:
     clients.LdapConnection.create(
         ldap_data=ldap_api_schema(ldap_id="LDAP_1"),
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_create_ldap_connection_existing_non_sync_connection(
@@ -340,14 +341,16 @@ def test_create_ldap_connection_existing_non_sync_connection(
     clients.LdapConnection.create(
         ldap_data=ldap_api_schema(ldap_id="LDAP_1"),
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_delete_ldap_connection(clients: ClientRegistry) -> None:
     create_ldap_connections(clients)
     resp = clients.LdapConnection.get_all()
     assert len(resp.json["value"]) == 3
-    clients.LdapConnection.delete(ldap_connection_id="LDAP_1").assert_status_code(204)
+    clients.LdapConnection.delete(ldap_connection_id="LDAP_1").assert_status_code(
+        HTTPStatus.NO_CONTENT
+    )
     resp = clients.LdapConnection.get_all()
     assert len(resp.json["value"]) == 2
 
@@ -366,7 +369,7 @@ def test_delete_ldap_connection_invalid_etag(clients: ClientRegistry) -> None:
         ldap_connection_id="LDAP_1",
         etag="invalid_etag",
         expect_ok=False,
-    ).assert_status_code(412)
+    ).assert_status_code(HTTPStatus.PRECONDITION_FAILED)
 
 
 def test_edit_ldap_connection(clients: ClientRegistry) -> None:
@@ -402,7 +405,7 @@ def test_edit_ldap_connection_that_doesnt_exist(clients: ClientRegistry) -> None
         ldap_connection_id="LDAP_4",
         ldap_data=ldap_api_schema(ldap_id="LDAP_4"),
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_edit_ldap_connection_valid_etag(clients: ClientRegistry) -> None:
@@ -423,7 +426,7 @@ def test_edit_ldap_connection_invalid_etag(clients: ClientRegistry) -> None:
         ldap_data=ldap_api_schema(ldap_id="LDAP_3"),
         etag="invalid_etag",
         expect_ok=False,
-    ).assert_status_code(412)
+    ).assert_status_code(HTTPStatus.PRECONDITION_FAILED)
 
 
 def test_cant_create_with_the_same_suffix(clients: ClientRegistry) -> None:
@@ -451,7 +454,7 @@ def test_cant_create_with_the_same_suffix(clients: ClientRegistry) -> None:
             },
         },
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_cant_edit_to_use_the_same_suffix(clients: ClientRegistry) -> None:
@@ -493,7 +496,7 @@ def test_cant_edit_to_use_the_same_suffix(clients: ClientRegistry) -> None:
             },
         },
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_ldap_write_endpoints_reject_under_privileged_user(
@@ -529,16 +532,16 @@ def test_ldap_write_endpoints_reject_under_privileged_user(
     # create: a fresh id avoids the duplicate-id body validation that runs ahead of the gate.
     clients.LdapConnection.create(
         ldap_data=_body("LDAP_NEW", "suffix_new"), expect_ok=False
-    ).assert_status_code(403)
+    ).assert_status_code(HTTPStatus.FORBIDDEN)
     # edit/delete: target the seeded connection so path validation passes and the gate is hit.
     clients.LdapConnection.edit(
         ldap_connection_id="LDAP_EXISTING",
         ldap_data=_body("LDAP_EXISTING", "suffix_existing"),
         expect_ok=False,
-    ).assert_status_code(403)
+    ).assert_status_code(HTTPStatus.FORBIDDEN)
     clients.LdapConnection.delete(
         ldap_connection_id="LDAP_EXISTING", expect_ok=False
-    ).assert_status_code(403)
+    ).assert_status_code(HTTPStatus.FORBIDDEN)
 
 
 def test_update_ldap_suffixes_after_delete(clients: ClientRegistry) -> None:
@@ -557,7 +560,9 @@ def test_update_ldap_suffixes_after_delete(clients: ClientRegistry) -> None:
     )
 
     assert LDAPUserConnector.get_connection_suffixes() == {"suffix_1": "LDAP_1"}
-    clients.LdapConnection.delete(ldap_connection_id="LDAP_1").assert_status_code(204)
+    clients.LdapConnection.delete(ldap_connection_id="LDAP_1").assert_status_code(
+        HTTPStatus.NO_CONTENT
+    )
     assert not LDAPUserConnector.get_connection_suffixes()
 
 
@@ -792,6 +797,44 @@ def test_create_with_temperature_unit_from_group(
     )
 
 
+@pytest.mark.parametrize("visibility", ["show_all", "show_for_user_contacts_only"])
+def test_create_with_visibility_of_hosts_or_services_from_group(
+    clients: ClientRegistry, visibility: str
+) -> None:
+    groups_to_sync = [
+        {
+            "group_cn": "cmk_AD_admins",
+            "attribute_to_set": "visibility_of_hosts_or_services",
+            "value": visibility,
+        }
+    ]
+    resp = clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_1"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.32",
+                },
+            },
+            "sync_plugins": {
+                "groups_to_custom_user_attributes": {
+                    "state": "enabled",
+                    "handle_nested": True,
+                    "groups_to_sync": groups_to_sync,
+                },
+            },
+        }
+    )
+
+    assert (
+        resp.json["extensions"]["sync_plugins"]["groups_to_custom_user_attributes"][
+            "groups_to_sync"
+        ]
+        == groups_to_sync
+    )
+
+
 def _create_user_without_ldap_read_permissions(clients: ClientRegistry) -> None:
     clients.User.create(
         username="unprivileged",
@@ -811,11 +854,11 @@ def test_create_ldap_connection_no_read_permission_does_not_leak_existence(
     resp_existing = clients.LdapConnection.create(
         ldap_data=ldap_api_schema(ldap_id="LDAP_1"), expect_ok=False
     )
-    resp_existing.assert_status_code(403)
+    resp_existing.assert_status_code(HTTPStatus.FORBIDDEN)
     resp_missing = clients.LdapConnection.create(
         ldap_data=ldap_api_schema(ldap_id="LDAP_new"), expect_ok=False
     )
-    resp_missing.assert_status_code(403)
+    resp_missing.assert_status_code(HTTPStatus.FORBIDDEN)
     assert resp_existing.json["detail"] == resp_missing.json["detail"]
 
 
@@ -826,12 +869,14 @@ def test_object_endpoints_no_read_permission_do_not_leak_existence(
     create_ldap_connections(clients)
     _create_user_without_ldap_read_permissions(clients)
 
-    clients.LdapConnection.get(ldap_connection_id=ldap_id, expect_ok=False).assert_status_code(403)
+    clients.LdapConnection.get(ldap_connection_id=ldap_id, expect_ok=False).assert_status_code(
+        HTTPStatus.FORBIDDEN
+    )
     clients.LdapConnection.edit(
         ldap_connection_id=ldap_id,
         ldap_data=ldap_api_schema(ldap_id=ldap_id),
         expect_ok=False,
-    ).assert_status_code(403)
+    ).assert_status_code(HTTPStatus.FORBIDDEN)
     clients.LdapConnection.delete(ldap_connection_id=ldap_id, expect_ok=False).assert_status_code(
-        403
+        HTTPStatus.FORBIDDEN
     )

@@ -30,6 +30,12 @@ from cmk.agent_based.v2 import (
     State,
 )
 from cmk.plugins.oracle.agent_based.libinstance import GeneralError, Instance, InvalidData, Section
+from cmk.plugins.oracle.agent_based.liboracle import Error, Parsed
+from cmk.plugins.oracle.agent_based.oracle_asm_diskgroup import Section as AsmDiskgroupSection
+from cmk.plugins.oracle.agent_based.oracle_dataguard_stats import Section as DataguardSection
+from cmk.plugins.oracle.agent_based.oracle_jobs import Section as JobsSection
+from cmk.plugins.oracle.agent_based.oracle_rman import Section as RmanSection
+from cmk.plugins.oracle.agent_based.oracle_tablespaces import Section as TablespacesSection
 
 
 class _Params(TypedDict, total=True):
@@ -62,11 +68,50 @@ def _is_open(openmode: str) -> bool:
     return openmode in {"OPEN", "READ ONLY", "READ WRITE"}
 
 
-def discover_oracle_instance(section: Section) -> DiscoveryResult:
-    yield from (Service(item=item) for item in section)
+def discover_oracle_instance(
+    section_oracle_instance: Section | None,
+    section_oracle_dataguard_stats: DataguardSection | None = None,  # noqa: ARG001
+    section_oracle_asm_diskgroup: AsmDiskgroupSection | None = None,  # noqa: ARG001
+    section_oracle_jobs: JobsSection | None = None,  # noqa: ARG001
+    section_oracle_tablespaces: TablespacesSection | None = None,  # noqa: ARG001
+    section_oracle_rman: RmanSection | None = None,  # noqa: ARG001
+) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section_oracle_instance or {})
 
 
-def check_oracle_instance(item: str, params: _Params, section: Section) -> CheckResult:
+def check_oracle_instance(
+    item: str,
+    params: _Params,
+    section_oracle_instance: Section | None,
+    section_oracle_dataguard_stats: DataguardSection | None = None,
+    section_oracle_asm_diskgroup: AsmDiskgroupSection | None = None,
+    section_oracle_jobs: JobsSection | None = None,
+    section_oracle_tablespaces: TablespacesSection | None = None,
+    section_oracle_rman: RmanSection | None = None,
+) -> CheckResult:
+    if section_oracle_instance is not None:
+        yield from _check_instance(item, params, section_oracle_instance)
+    # These sections cannot discover a service from an error row: their items
+    # are not instance names. Their error rows are keyed by the instance name,
+    # which is this check's item.
+    yield from _check_section_error("Data Guard", item, section_oracle_dataguard_stats)
+    if section_oracle_asm_diskgroup is not None:
+        yield from _check_section_error(
+            "ASM diskgroup", item, section_oracle_asm_diskgroup.diskgroups
+        )
+    yield from _check_section_error("Jobs", item, section_oracle_jobs)
+    yield from _check_section_error("Tablespaces", item, section_oracle_tablespaces)
+    yield from _check_section_error("RMAN", item, section_oracle_rman)
+
+
+def _check_section_error(
+    what: str, item: str, section: Mapping[str, Parsed[object]] | None
+) -> CheckResult:
+    if section is not None and isinstance(error := section.get(item), Error):
+        yield Result(state=State.UNKNOWN, summary=f"{what} query failed: {error.message}")
+
+
+def _check_instance(item: str, params: _Params, section: Section) -> CheckResult:
     if isinstance((instance := section.get(item)), GeneralError | InvalidData):
         yield Result(state=State.CRIT, summary=instance.error)
         return
@@ -153,6 +198,14 @@ def _check_archive_log(instance: Instance, params: _Params) -> Iterable[Result]:
 check_plugin_oracle_instance = CheckPlugin(
     name="oracle_instance",
     service_name="ORA %s Instance",
+    sections=[
+        "oracle_instance",
+        "oracle_dataguard_stats",
+        "oracle_asm_diskgroup",
+        "oracle_jobs",
+        "oracle_tablespaces",
+        "oracle_rman",
+    ],
     discovery_function=discover_oracle_instance,
     check_function=check_oracle_instance,
     check_ruleset_name="oracle_instance",

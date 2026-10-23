@@ -12,14 +12,18 @@ import httpx2
 from starlette.types import Receive, Scope, Send
 
 from cmk.agent_receiver.lib.certs import serialize_to_pem
-from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_ISSUER_HEADER, INJECTED_UUID_HEADER
+from cmk.agent_receiver.lib.mtls_auth_validator import (
+    INJECTED_ISSUER_HEADER,
+    INJECTED_SERIAL_HEADER,
+    INJECTED_UUID_HEADER,
+)
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.crypto.keys import PrivateKey
 from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.relay_protocols.relays import RelayRegistrationResponse
 from cmk.relay_protocols.tasks import HEADERS, TaskCreateRequest, TaskCreateRequestSpec
 
-from .certs import generate_csr_pair, relay_ca_common_name
+from .certs import generate_csr_pair, relay_ca_common_name, UNREVOKED_SERIAL_NUMBER
 from .relay import random_relay_id
 from .relay_config_generator import RelayConfig
 from .site_mock import User
@@ -45,6 +49,13 @@ class AgentReceiverClient:
         # certificate; here we set the expected value directly since these methods are
         # also used against the in-process TestClient, which never presents a certificate.
         self._relay_issuer_cn = relay_ca_common_name(site_name)
+
+    def _relay_headers(self, relay_id: str) -> dict[str, str]:
+        return {
+            INJECTED_UUID_HEADER: relay_id,
+            INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
+            INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
+        }
 
     @contextmanager
     def with_client_ip(self, client_ip: str = "127.0.0.1", client_port: int = 0) -> Iterator[None]:
@@ -138,10 +149,7 @@ class AgentReceiverClient:
         csr_pair = generate_csr_pair(cn=relay_id)
         return self.client.post(
             f"/{self.site_name}/relays/{relay_id}/csr",
-            headers={
-                INJECTED_UUID_HEADER: relay_id,
-                INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-            },
+            headers=self._relay_headers(relay_id),
             json={
                 "csr": serialize_to_pem(csr_pair[1]),
             },
@@ -168,10 +176,7 @@ class AgentReceiverClient:
         """
         return self.client.get(
             f"/{self.site_name}/relays/{relay_id}/status",
-            headers={
-                INJECTED_UUID_HEADER: relay_id,
-                INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-            },
+            headers=self._relay_headers(relay_id),
         )
 
     def push_task(
@@ -194,10 +199,7 @@ class AgentReceiverClient:
             params = {"status": status}
         return self.client.get(
             f"/{self.site_name}/relays/{relay_id}/tasks",
-            headers={
-                INJECTED_UUID_HEADER: relay_id,
-                INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-            },
+            headers=self._relay_headers(relay_id),
             params=params,
         )
 
@@ -206,10 +208,7 @@ class AgentReceiverClient:
     ) -> httpx2.Response:
         return self.client.patch(
             f"/{self.site_name}/relays/{relay_id}/tasks/{task_id}",
-            headers={
-                INJECTED_UUID_HEADER: relay_id,
-                INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-            },
+            headers=self._relay_headers(relay_id),
             json={
                 "result_type": result_type,
                 "result_payload": result_payload,
@@ -236,10 +235,7 @@ class AgentReceiverClient:
     ) -> httpx2.Response:
         return self.client.post(
             f"/{self.site_name}/relays/{relay_id}/monitoring",
-            headers={
-                INJECTED_UUID_HEADER: relay_id,
-                INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-            },
+            headers=self._relay_headers(relay_id),
             json=monitoring_data.model_dump(mode="json"),
         )
 

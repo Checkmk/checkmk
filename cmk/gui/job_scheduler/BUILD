@@ -1,12 +1,12 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 
 py_library(
     name = "job_scheduler",
     srcs = glob(["**/*.py"]),
     imports = ["../../.."],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
@@ -16,6 +16,7 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui:session_context",
         "//cmk/gui/background_job/job",
+        "//cmk/gui/background_job/process",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:daemon",
         "//packages/cmk-ccc:exceptions",
@@ -32,4 +33,19 @@ py_library(
         requirement("setproctitle"),
         requirement("uvicorn"),
     ],
+)
+
+pkg_files(
+    name = "health_bin",
+    srcs = ["cmk-ui-job-scheduler-health"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "bin",
+    visibility = ["//cmk:__pkg__"],
+)
+
+sh_library(
+    name = "helpers",
+    srcs = ["cmk-ui-job-scheduler-health"],
 )

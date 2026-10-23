@@ -10,12 +10,13 @@ import json
 import socket
 import sys
 from base64 import b64encode
+from http import HTTPStatus
 from http.client import HTTPConnection
 from pathlib import Path
 from typing import Any
 
-from cmk.password_store.v1_unstable import dereference_secret
-from cmk.server_side_programs.v1_unstable import report_agent_crashes
+from cmk.password_store.v1 import dereference_secret
+from cmk.server_side_programs.v1 import report_agent_crashes
 
 __version__ = "3.0.0b1"
 
@@ -157,7 +158,7 @@ def main() -> int:
                 )
                 response = connection.getresponse()
 
-                if response.status != 200:
+                if response.status != HTTPStatus.OK:
                     sys.stderr.write(
                         "Could not fetch data from AppDynamics server. "
                         "HTTP %s: %s\n" % (response.status, response.reason)

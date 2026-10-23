@@ -7,6 +7,7 @@ import logging
 import re
 from collections.abc import Iterator
 from html import unescape
+from http import HTTPStatus
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 from urllib.parse import parse_qs, urlsplit
@@ -23,9 +24,11 @@ from cmk.gui.oauth.pages._authorize import _SCOPE_SELECTED_VARNAME, OAuthAuthori
 from cmk.gui.oauth.store._auth_code_store import AuthCodeRecord, AuthCodeStore
 from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.transaction_manager import TransactionManager
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import TransactionManager, transactions
 from cmk.utils.redis import disable_redis, get_redis_client
 
 _SESSION_USER = UserId("alice")
@@ -151,11 +154,17 @@ class TestOAuthAuthorizePage:
             query_string=_authorize_request(client_id=registered_client_id, state="xyz")
         ):
             flask_app.preprocess_request()
-            OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthAuthorizePage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             body = response.get_data(as_text=True)
             assert "<form" in body
             assert 'name="_authorize"' in body
@@ -167,11 +176,17 @@ class TestOAuthAuthorizePage:
 
         with flask_app.test_request_context(query_string=_authorize_request(client_id=client_id)):
             flask_app.preprocess_request()
-            OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthAuthorizePage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             body = response.get_data(as_text=True)
 
         assert "My Test App" in body
@@ -182,11 +197,17 @@ class TestOAuthAuthorizePage:
 
         with flask_app.test_request_context(query_string=_authorize_request(client_id=client_id)):
             flask_app.preprocess_request()
-            OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthAuthorizePage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             body = response.get_data(as_text=True)
 
         assert client_id in body
@@ -199,11 +220,17 @@ class TestOAuthAuthorizePage:
 
         with flask_app.test_request_context(query_string=_authorize_request(client_id=client_id)):
             flask_app.preprocess_request()
-            OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthAuthorizePage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             body = response.get_data(as_text=True)
 
         assert '<a href="http://evil.example">' not in body
@@ -217,11 +244,17 @@ class TestOAuthAuthorizePage:
             method="HEAD", query_string=_authorize_request(client_id=registered_client_id)
         ):
             flask_app.preprocess_request()
-            OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthAuthorizePage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
 
     @pytest.mark.parametrize("method", ["PUT", "DELETE"])
     def test_rejects_the_verbs_the_endpoint_does_not_define(
@@ -233,11 +266,17 @@ class TestOAuthAuthorizePage:
             method=method, query_string=_authorize_request(client_id=registered_client_id)
         ):
             flask_app.preprocess_request()
-            OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthAuthorizePage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 405
+            assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
 
     @pytest.mark.usefixtures("patch_theme")
     def test_consent_page_offers_the_wider_scope_too(
@@ -249,11 +288,17 @@ class TestOAuthAuthorizePage:
             query_string=_authorize_request(client_id=registered_client_id, scope="read")
         ):
             flask_app.preprocess_request()
-            OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthAuthorizePage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             body = response.get_data(as_text=True)
 
         assert _offered_and_selected_scopes(body) == {"read": True, "write": False}
@@ -279,11 +324,17 @@ class TestOAuthAuthorizePage:
             query_string=_authorize_request(client_id=registered_client_id, scope=requested_scope)
         ):
             flask_app.preprocess_request()
-            OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthAuthorizePage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             body = response.get_data(as_text=True)
 
         # Preselected as requested, so approving an untouched form grants what
@@ -311,8 +362,14 @@ class TestOAuthAuthorizePage:
             )
         ):
             flask_app.preprocess_request()
-            OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthAuthorizePage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))
@@ -332,8 +389,14 @@ class TestOAuthAuthorizePage:
             query_string=_authorize_request(client_id=registered_client_id),
         ):
             flask_app.preprocess_request()
-            OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthAuthorizePage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
             assert 'action="/oauth-heute/authorize"' in response.get_data(as_text=True)
@@ -350,11 +413,17 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
-                OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthAuthorizePage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             target_url = _extract_redirect_target(response.get_data(as_text=True))
 
         parts = urlsplit(target_url)
@@ -385,8 +454,14 @@ class TestOAuthAuthorizePage:
                 UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])),
                 pytest.raises(MKGeneralException, match="CSRF"),
             ):
-                OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthAuthorizePage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
         assert get_redis_client().keys() == []
@@ -401,11 +476,17 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
-                OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthAuthorizePage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             target_url = _extract_redirect_target(response.get_data(as_text=True))
 
         parts = urlsplit(target_url)
@@ -431,8 +512,14 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
-                OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthAuthorizePage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))
@@ -456,11 +543,17 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
-                OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthAuthorizePage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             body = response.get_data(as_text=True)
             assert 'http-equiv="refresh"' in body
 
@@ -478,8 +571,14 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
-                OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthAuthorizePage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))
@@ -520,11 +619,17 @@ class TestOAuthAuthorizePage:
             query_string=_authorize_request(**{"client_id": registered_client_id, **overrides})
         ):
             flask_app.preprocess_request()
-            OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthAuthorizePage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 400
+            assert response.status_code == HTTPStatus.BAD_REQUEST
 
     @pytest.mark.parametrize(
         "overrides, error",
@@ -567,11 +672,17 @@ class TestOAuthAuthorizePage:
             )
         ):
             flask_app.preprocess_request()
-            OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthAuthorizePage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
-            assert response.status_code == 200
+            assert response.status_code == HTTPStatus.OK
             target_url = _extract_redirect_target(response.get_data(as_text=True))
 
         query = parse_qs(urlsplit(target_url).query)
@@ -611,21 +722,17 @@ class TestOAuthAuthorizePage:
             query_string=_authorize_request(**{"client_id": registered_client_id, **overrides})
         ):
             flask_app.preprocess_request()
-            OAuthAuthorizePage(lambda: True).handle_page(
-                PageContext(config=Config(), request=request)
+            OAuthAuthorizePage().handle_page(
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                )
             )
 
         assert _logged_reason(security_log) == reason
-
-    def test_returns_404_when_disabled(self, flask_app: Flask) -> None:
-        # Answered before any parameter is looked at, so the request needs none.
-        with flask_app.test_request_context(query_string=_authorize_request(client_id=None)):
-            flask_app.preprocess_request()
-            OAuthAuthorizePage(lambda: False).handle_page(
-                PageContext(config=Config(), request=request)
-            )
-
-            assert response.status_code == 404
 
     @pytest.mark.usefixtures("clean_redis", "valid_transaction", "valid_csrf_token")
     def test_approve_persists_the_issued_code_bound_to_the_request(
@@ -643,8 +750,14 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
-                OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthAuthorizePage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))
@@ -692,8 +805,14 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
-                OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthAuthorizePage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))
@@ -726,8 +845,14 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
-                OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthAuthorizePage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))
@@ -755,8 +880,14 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
-                OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthAuthorizePage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))
@@ -776,8 +907,14 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
-                OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthAuthorizePage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
         assert get_redis_client().keys() == []
@@ -797,8 +934,14 @@ class TestOAuthAuthorizePage:
                 UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])),
                 disable_redis(),
             ):
-                OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthAuthorizePage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))
@@ -822,8 +965,14 @@ class TestOAuthAuthorizePage:
                 disable_redis(),
                 caplog.at_level(logging.ERROR, logger="cmk.web"),
             ):
-                OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthAuthorizePage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
         [logged] = [record for record in caplog.records if record.name == "cmk.web"]
@@ -841,8 +990,14 @@ class TestOAuthAuthorizePage:
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
-                OAuthAuthorizePage(lambda: True).handle_page(
-                    PageContext(config=Config(), request=request)
+                OAuthAuthorizePage().handle_page(
+                    PageContext(
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                    )
                 )
 
             target_url = _extract_redirect_target(response.get_data(as_text=True))

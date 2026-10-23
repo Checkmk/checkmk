@@ -4,6 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CmkError } from 'cmk-ui-library/lib/error.ts'
+import { networkAwareFetch } from 'cmk-ui-library/lib/networkAwareFetch'
+import { StaleSession } from 'cmk-ui-library/lib/staleSession'
 import type { MaybeRestApiCrashReport, MaybeRestApiError } from 'cmk-ui-library/lib/types'
 
 type FetchParams = Parameters<typeof fetch>
@@ -125,36 +127,7 @@ export async function cmkFetch(
   url: FetchParams[0],
   options: FetchParams[1]
 ): Promise<CmkFetchResponse> {
-  const response = await fetch(url, options)
+  const response = await networkAwareFetch(url, options)
+  StaleSession.check(response, url instanceof Request ? url.url : String(url))
   return new CmkFetchResponse(response, options)
-}
-
-/**
- * @deprecated Use the typed REST API client in `cmk-ui-library/lib/rest-api-client/client.ts` instead.
- *
- * This function is a thin wrapper around `cmkFetch` that pre-fills REST API
- * headers. It predates the typed OpenAPI-based client and should not be used
- * in new code. Existing callers have been kept for backwards-compatibility but
- * no new calls should be added.
- */
-export async function fetchRestAPIDeprecated<Payload>(
-  url: string,
-  method: string,
-  body?: Payload,
-  headers?: Record<string, string>
-) {
-  const params: RequestInit = {
-    method,
-    credentials: 'include',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      ...headers
-    }
-  }
-  if (body) {
-    params.body = JSON.stringify(body)
-  }
-  const response = await cmkFetch(url, params)
-  return response
 }

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.ccc.site import omd_site
 from cmk.checkengine.discovery import DiscoverySettings
 from cmk.gui.logged_in import user
@@ -17,6 +19,7 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.endpoint_link import path_to_endpoint
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.user_sites import activation_sites
@@ -28,7 +31,6 @@ from cmk.gui.watolib.bulk_discovery import (
     prepare_hosts_for_discovery,
     start_bulk_discovery,
 )
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.web.utils import permission_verification as permissions
 
 from ._family import SERVICE_DISCOVERY_FAMILY
@@ -67,7 +69,7 @@ def execute_bulk_discovery_v1(
         update_changed_service_parameters=options.update_service_parameters,
     )
     hosts_to_discover = prepare_hosts_for_discovery(
-        make_folder_tree(api_context.config), body.hostnames, api_context.config.sites
+        folder_tree_of_request(api_context), body.hostnames, api_context.config.sites
     )
     if (
         result := start_bulk_discovery(
@@ -84,13 +86,17 @@ def execute_bulk_discovery_v1(
             activation_site_configs=activation_sites(api_context.config.sites),
             local_site=omd_site(),
             acting_user=user.id,
+            site_configs=api_context.config.sites,
+            wato_hide_folders_without_read_permissions=api_context.config.wato_hide_folders_without_read_permissions,
+            wato_host_attrs=api_context.config.wato_host_attrs,
+            tags=api_context.config.tags.get_dict_format(),
         )
     ).is_error():
         raise result.error
 
     return ApiResponse(
         body=None,
-        status_code=303,
+        status_code=HTTPStatus.SEE_OTHER,
         headers={
             "Location": path_to_endpoint(
                 family=BACKGROUND_JOB_FAMILY.name,
@@ -114,9 +120,9 @@ ENDPOINT_EXECUTE_BULK_DISCOVERY = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=execute_bulk_discovery_v1,
-            additional_status_codes=[303],
+            additional_status_codes=[HTTPStatus.SEE_OTHER],
             status_descriptions={
-                303: (
+                HTTPStatus.SEE_OTHER: (
                     "The bulk discovery job has been started in the background. "
                     "Redirecting to the 'Get background job status snapshot' endpoint."
                 ),

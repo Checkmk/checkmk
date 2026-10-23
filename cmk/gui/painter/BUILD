@@ -1,35 +1,14 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 
 py_library(
-    name = "v1",
+    name = "painter",
     srcs = [
-        "v1/helpers.py",
-        "v1/painter_lib.py",
-        "v1/painters.py",
-    ],
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//cmk/gui:auth_core",
-        "//cmk/gui:core_toolkit",
-        "//cmk/gui:page_toolkit",
-        "//cmk/gui:painter_options",
-        "//packages/cmk-ccc:plugin-registry",
-        "//packages/cmk-web/cmk/web/utils",
-    ],
-)
-
-py_library(
-    name = "v0_base",
-    srcs = [
-        "v0/__init__.py",
-        "v0/base.py",
-        "v0/helpers.py",
-        "v0/host_tag_painters.py",
-        "v0/registry.py",
+        "__init__.py",
+        "base.py",
+        "helpers.py",
+        "host_tag_painters.py",
+        "legacy.py",
+        "registry.py",
     ],
     imports = ["../../.."],
     visibility = [
@@ -38,7 +17,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        ":v1",
         "//cmk/gui:auth_core",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
@@ -52,21 +30,22 @@ py_library(
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-livestatus-client",
+        "//packages/cmk-ruleset-matcher",
         "//packages/cmk-web/cmk/web/utils",
     ],
 )
 
 py_library(
-    name = "v0_impl",
-    srcs = ["v0/painters.py"],
+    name = "painters",
+    srcs = ["painters.py"],
     imports = ["../../.."],
     visibility = [
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
-        ":v0_base",
-        ":v1",
+        ":painter",
         "//cmk/gui:auth_core",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
@@ -75,10 +54,12 @@ py_library(
         "//cmk/gui:painter_options",
         "//cmk/gui:visual_link",
         "//cmk/gui/graphing",
+        "//cmk/gui/utils:base",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/utils",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-web/cmk/web/utils",
     ],

@@ -25,6 +25,7 @@ from cmk.graphing_engine import (
     Line,
     MetricName,
     MinimalRange,
+    NonConvertibleUnit,
     RRDMetric,
     Rule,
     ScalarKind,
@@ -33,6 +34,7 @@ from cmk.graphing_engine import (
     SINotation,
     Stack,
     StandardScientificNotation,
+    StrictPrecision,
     TimeNotation,
     TimeRange,
     TimeSeries,
@@ -50,14 +52,14 @@ from cmk.gui.graphing import (
     user_first_day_of_week,
 )
 from cmk.gui.graphing._frontend import (
-    derive_y_axis_unit,
     resolve_default_time_range_seconds,
     value_axis_width_px,
 )
-from cmk.gui.graphing._graph_codec import community_graph_codec
+from cmk.gui.graphing._graph_codec import COMMUNITY_GRAPH_CODEC
 from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from cmk.gui.type_defs import GraphTimerange, PainterParameters, SizePT
 from cmk.gui.userdb.user_attributes import StartOfWeekUserAttribute
+from cmk.gui.utils.graph_refresh import GRAPH_REFRESH_INTERVALS_SECONDS
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import DropdownChoice
 from cmk.shared_typing.cmk_time_series_graph import (
@@ -205,7 +207,10 @@ def test_stored_time_range_seconds_for_a_painter_without_parameters() -> None:
 
 def test_global_time_picker_props() -> None:
     refresh = GlobalTimePickerRefresh(
-        interval_seconds=60, starts_live=True, reloads_page_content=True
+        interval_seconds=60,
+        interval_choices_seconds=[30, 60, 90],
+        starts_live=True,
+        reloads_page_content=True,
     )
 
     props = global_time_picker_props(
@@ -230,7 +235,10 @@ def test_global_time_picker_props_without_preferences() -> None:
         3600,
         first_day_of_week=None,
         refresh=GlobalTimePickerRefresh(
-            interval_seconds=None, starts_live=False, reloads_page_content=False
+            interval_seconds=None,
+            interval_choices_seconds=[30, 60, 90],
+            starts_live=False,
+            reloads_page_content=False,
         ),
     )
 
@@ -243,6 +251,13 @@ def test_global_time_picker_refresh_leaves_a_page_paused_and_self_contained() ->
 
     assert refresh.starts_live is False
     assert refresh.reloads_page_content is False
+
+
+@pytest.mark.usefixtures("request_context")
+def test_global_time_picker_refresh_offers_the_intervals_a_profile_can_preselect() -> None:
+    refresh = global_time_picker_refresh()
+
+    assert refresh.interval_choices_seconds == list(GRAPH_REFRESH_INTERVALS_SECONDS)
 
 
 def test_global_time_picker_refresh_falls_back_to_the_user_preference(
@@ -346,53 +361,11 @@ def test_data_attribute_internal_round_trips_to_the_same_graph() -> None:
     )
 
     assert result.options.header.title == "My Graph"
-    [restored] = community_graph_codec().deserialize_graphs(json.loads(result.internal))
+    [restored] = [
+        COMMUNITY_GRAPH_CODEC.deserialize_graph(serialized)
+        for serialized in json.loads(result.internal)["graphs"]
+    ]
     assert restored == graph
-
-
-def test_derive_y_axis_unit_takes_the_unit_of_the_first_stack_member() -> None:
-    graph = Graph(
-        name="mygraph",
-        title="My Graph",
-        kind="template",
-        stacks=[
-            Stack(
-                members=[
-                    Curve(
-                        quantity=_RRD, attributes=CurveAttributes(title="m", unit=_UNIT, color="#m")
-                    )
-                ],
-                inverse=False,
-            )
-        ],
-    )
-    assert derive_y_axis_unit(graph) == UnitFormat(
-        notation="decimal", symbol="X", precision=Precision(type="auto", digits=2)
-    )
-
-
-def test_derive_y_axis_unit_falls_back_to_a_line_when_there_are_no_stacks() -> None:
-    graph = Graph(
-        name="mygraph",
-        title="My Graph",
-        kind="template",
-        lines=[
-            Line(
-                curve=Curve(
-                    quantity=_RRD, attributes=CurveAttributes(title="l", unit=_UNIT, color="#l")
-                ),
-                inverse=False,
-            )
-        ],
-    )
-    y_axis_unit = derive_y_axis_unit(graph)
-    assert y_axis_unit is not None
-    assert y_axis_unit.symbol == "X"
-
-
-def test_derive_y_axis_unit_is_none_for_a_graph_with_no_curves() -> None:
-    graph = Graph(name="mygraph", title="Empty", kind="template")
-    assert derive_y_axis_unit(graph) is None
 
 
 def test_value_axis_width_is_sent_in_pixels_only_when_set_explicitly() -> None:
@@ -438,15 +411,21 @@ def _one_curve_graph(*, vertical_range: VerticalRange | None = None) -> Graph:
 
 
 def test_the_shell_axis_keeps_the_unit_the_graph_names_over_the_one_its_curves_imply() -> None:
-    named = UnitFormat(
-        notation="si", symbol="W", precision=Precision(type="strict", digits=0), convertible=False
-    )
+    named = NonConvertibleUnit(notation=SINotation("W"), precision=StrictPrecision(0))
     result = to_cmk_time_series_graph(
         BuiltGraph(graph=_one_curve_graph(), specification=None, y_axis_unit=named),
         size=_SIZE,
         temperature_unit=TemperatureUnit.CELSIUS,
     )
-    assert result.options.y_axis == YAxis(unit=named, explicit_range=None)
+    assert result.options.y_axis == YAxis(
+        unit=UnitFormat(
+            notation="si",
+            symbol="W",
+            precision=Precision(type="strict", digits=0),
+            convertible=False,
+        ),
+        explicit_range=None,
+    )
 
 
 def test_the_shell_axis_is_pinned_by_the_graphs_own_fixed_range() -> None:
@@ -481,7 +460,7 @@ def test_the_shell_axis_ignores_a_minimal_range_which_only_widens_the_drawn_exte
 
 
 _RANGE = TimeRange(start=0, end=120, step=60)
-_REQUESTED = TimeRange(start=0, end=300, step=60)
+_TIME_RANGE = TimeRange(start=0, end=300, step=60)
 
 
 def _curve(
@@ -490,7 +469,6 @@ def _curve(
     color: str = "#112233",
     values: Sequence[float | None] = (1.0, 2.0),
     attributes: dict[str, dict[str, str]] | None = None,
-    time_range: TimeRange = _RANGE,
 ) -> EvaluatedCurve:
     return EvaluatedCurve(
         id=name,
@@ -500,7 +478,7 @@ def _curve(
             color=color,
         ),
         value=None,
-        time_series=TimeSeries(time_range=time_range, values=list(values)),
+        time_series=TimeSeries(time_range=_RANGE, values=list(values)),
         series_attributes=attributes or {},
     )
 
@@ -511,6 +489,7 @@ def _graph(
     return EvaluatedGraph(
         name="graph",
         title="Graph",
+        time_range=_TIME_RANGE,
         vertical_range=None,
         stacks=list(stacks),
         lines=list(lines),
@@ -532,7 +511,6 @@ def test_the_curves_carry_their_title_colour_data_and_attributes() -> None:
                 )
             ]
         ),
-        fallback_time_range=_REQUESTED,
     )
 
     assert spec["curves"] == [
@@ -546,27 +524,10 @@ def test_the_curves_carry_their_title_colour_data_and_attributes() -> None:
     ]
 
 
-def test_the_time_range_is_the_one_the_first_curve_came_back_with() -> None:
-    spec = evaluated_to_graph_spec(
-        _graph(
-            lines=[
-                EvaluatedLine(curve=_curve("a"), inverse=False),
-                EvaluatedLine(
-                    curve=_curve("b", time_range=TimeRange(start=0, end=600, step=300)),
-                    inverse=False,
-                ),
-            ]
-        ),
-        fallback_time_range=_REQUESTED,
-    )
+def test_the_graph_spec_spans_the_time_range_of_the_evaluated_graph() -> None:
+    spec = evaluated_to_graph_spec(_graph())
 
-    assert (spec["start_time"], spec["end_time"], spec["step"]) == (0, 120, 60)
-
-
-def test_a_graph_without_curves_reports_the_requested_range() -> None:
-    spec = evaluated_to_graph_spec(_graph(), fallback_time_range=_REQUESTED)
-
-    assert (spec["start_time"], spec["end_time"], spec["step"], spec["curves"]) == (0, 300, 60, [])
+    assert (spec["start_time"], spec["end_time"], spec["step"]) == (0, 300, 60)
 
 
 def test_an_attribute_group_the_source_left_empty_is_still_reported() -> None:
@@ -582,7 +543,6 @@ def test_an_attribute_group_the_source_left_empty_is_still_reported() -> None:
                 )
             ]
         ),
-        fallback_time_range=_REQUESTED,
     )
 
     assert spec["curves"][0]["attributes"] == {
@@ -602,7 +562,6 @@ def test_an_attribute_group_the_graph_spec_does_not_report_is_left_out() -> None
                 )
             ]
         ),
-        fallback_time_range=_REQUESTED,
     )
 
     assert spec["curves"][0]["attributes"] == {"resource": {"host.name": "heute"}}
@@ -610,9 +569,7 @@ def test_an_attribute_group_the_graph_spec_does_not_report_is_left_out() -> None
 
 def test_the_shell_axis_takes_the_users_temperature_unit() -> None:
     # The axis labels have to agree with the converted values the fetch serves.
-    celsius = UnitFormat(
-        notation="decimal", symbol="°C", precision=Precision(type="auto", digits=2)
-    )
+    celsius = Unit(notation=DecimalNotation("°C"), precision=AutoPrecision(2))
     result = to_cmk_time_series_graph(
         BuiltGraph(
             graph=_one_curve_graph(vertical_range=FixedRange(lower=0.0, upper=100.0)),

@@ -433,13 +433,6 @@ package_wheel(
     whl = "wheel",
 )
 
-sh_library(
-    name = "helpers",
-    srcs = [
-        ".f12",
-    ],
-)
-
 py_requirements_test(
     name = "requirements-test",
     libs = _ALL + [":wheel_only_files"],

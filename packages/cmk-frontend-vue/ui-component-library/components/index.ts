@@ -15,7 +15,6 @@ import UclIcons from '../foundations/Icons/UclIcons.vue'
 import { pages as globalSettingsPages } from '../global-settings'
 import { pages as graphingPages } from '../graphing'
 import { pages as monitoringPages } from '../monitoring'
-import { pages as networkFlowPages } from '../network-flow'
 import { pages as telemetryMetricsPages } from '../telemetry-metrics'
 import { pages as twoFactorAuthPages } from '../two-factor-authentication'
 import UclCmkBadge from './basic-elements/CmkBadge/UclCmkBadge.vue'
@@ -35,6 +34,7 @@ import UclCmkAccordionStepPanel from './content-organization/CmkAccordionStepPan
 import UclCmkCatalogPanel from './content-organization/CmkCatalogPanel/UclCmkCatalogPanel.vue'
 import UclCmkCollapsible from './content-organization/CmkCollapsible/UclCmkCollapsible.vue'
 import UclCmkFlyout from './content-organization/CmkFlyout/UclCmkFlyout.vue'
+import UclCmkResizeHandle from './content-organization/CmkResizeHandle/UclCmkResizeHandle.vue'
 import UclCmkScrollContainer from './content-organization/CmkScrollContainer/UclCmkScrollContainer.vue'
 import UclCmkSlideIn from './content-organization/CmkSlideIn/UclCmkSlideIn.vue'
 import UclCmkSlideInDialog from './content-organization/CmkSlideInDialog/UclCmkSlideInDialog.vue'
@@ -60,7 +60,6 @@ import UclCmkDatePicker from './form-elements/date-time/UclCmkDatePicker.vue'
 import UclCmkDateTimePicker from './form-elements/date-time/UclCmkDateTimePicker.vue'
 import UclCmkTimePicker from './form-elements/date-time/UclCmkTimePicker.vue'
 import UclCmkTimeRangePicker from './form-elements/date-time/UclCmkTimeRangePicker.vue'
-import UclCmkTimeRangeTooltip from './form-elements/date-time/UclCmkTimeRangeTooltip.vue'
 import UclCmkFilterDisplayItem from './form-elements/filter/UclCmkFilterDisplayItem.vue'
 import UclCmkFilterInputItem from './form-elements/filter/UclCmkFilterInputItem.vue'
 import UclCmkFilterSelection from './form-elements/filter/UclCmkFilterSelection.vue'
@@ -81,7 +80,8 @@ import UclCmkParagraph from './foundation-elements/typography/UclCmkParagraph.vu
 import UclArrowDown from './graphics/ArrowDown/UclArrowDown.vue'
 import UclCmkBreadcrumb from './navigation/CmkBreadcrumb/UclCmkBreadcrumb.vue'
 import UclCmkLinkCard from './navigation/CmkLinkCard/UclCmkLinkCard.vue'
-import UclCmkAlertBox from './system-feedback/CmkAlertBox/UclCmkAlertBox.vue'
+import UclCmkAlert from './system-feedback/CmkAlert/UclCmkAlert.vue'
+import UclCmkAsyncContent from './system-feedback/CmkAsyncContent/UclCmkAsyncContent.vue'
 import UclCmkCopy from './system-feedback/CmkCopy/UclCmkCopy.vue'
 import UclCmkErrorBoundary from './system-feedback/CmkErrorBoundary/UclCmkErrorBoundary.vue'
 import UclCmkHelpText from './system-feedback/CmkHelpText/UclCmkHelpText.vue'
@@ -89,10 +89,12 @@ import UclCmkInlineValidation from './system-feedback/CmkInlineValidation/UclCmk
 import UclCmkLoading from './system-feedback/CmkLoading/UclCmkLoading.vue'
 import UclCmkPaste from './system-feedback/CmkPaste/UclCmkPaste.vue'
 import UclCmkPerfometer from './system-feedback/CmkPerfometer/UclCmkPerfometer.vue'
+import UclCmkPointerTooltip from './system-feedback/CmkPointerTooltip/UclCmkPointerTooltip.vue'
 import UclCmkPopup from './system-feedback/CmkPopup/UclCmkPopup.vue'
 import UclCmkPopupDialog from './system-feedback/CmkPopupDialog/UclCmkPopupDialog.vue'
 import UclCmkSkeleton from './system-feedback/CmkSkeleton/UclCmkSkeleton.vue'
 import UclCmkStateCountBar from './system-feedback/CmkStateCountBar/UclCmkStateCountBar.vue'
+import UclCmkSurfaceNotice from './system-feedback/CmkSurfaceNotice/UclCmkSurfaceNotice.vue'
 import UclCmkTooltip from './system-feedback/CmkTooltip/UclCmkTooltip.vue'
 import UclStateTag from './system-feedback/StateTag/UclStateTag.vue'
 import UclCmkProgressCircle from './system-feedback/progress/UclCmkProgressCircle.vue'
@@ -120,6 +122,7 @@ const contentOrganizationPages = [
   new Page('CmkCatalogPanel', UclCmkCatalogPanel),
   new Page('CmkCollapsible', UclCmkCollapsible),
   new Page('CmkFlyout', UclCmkFlyout),
+  new Page('CmkResizeHandle', UclCmkResizeHandle),
   new Page('CmkScrollContainer', UclCmkScrollContainer),
   new Page('CmkSlideIn', UclCmkSlideIn),
   new Page('CmkSlideInDialog', UclCmkSlideInDialog),
@@ -147,8 +150,7 @@ const formElementsPages = [
     new Page('CmkTimePicker', UclCmkTimePicker),
     new Page('CmkDatePicker', UclCmkDatePicker),
     new Page('CmkDateTimePicker', UclCmkDateTimePicker),
-    new Page('CmkTimeRangePicker', UclCmkTimeRangePicker),
-    new Page('CmkTimeRangeTooltip', UclCmkTimeRangeTooltip)
+    new Page('CmkTimeRangePicker', UclCmkTimeRangePicker)
   ]),
   new Folder('Filters', [
     new Page('CmkFilterInputItem', UclCmkFilterInputItem),
@@ -188,7 +190,8 @@ const navigationPages = [
 ]
 
 const systemFeedbackPages = [
-  new Page('CmkAlertBox', UclCmkAlertBox),
+  new Page('CmkAlert', UclCmkAlert),
+  new Page('CmkAsyncContent', UclCmkAsyncContent),
   new Page('CmkCopy', UclCmkCopy),
   new Page('CmkErrorBoundary', UclCmkErrorBoundary),
   new Page('CmkHelpText', UclCmkHelpText),
@@ -198,14 +201,16 @@ const systemFeedbackPages = [
   new Page('CmkPerfometer', UclCmkPerfometer),
   new Page('CmkPopup', UclCmkPopup),
   new Page('CmkPopupDialog', UclCmkPopupDialog),
+  new Page('CmkPointerTooltip', UclCmkPointerTooltip),
   new Folder('Progress', [
     new Page('CmkProgressbar', UclCmkProgressbar),
     new Page('CmkProgressCircle', UclCmkProgressCircle)
   ]),
   new Page('CmkSkeleton', UclCmkSkeleton),
   new Page('CmkStateCountBar', UclCmkStateCountBar),
+  new Page('CmkSurfaceNotice', UclCmkSurfaceNotice),
   new Page('StateTag', UclStateTag),
-  new Page('CmkTooltip', UclCmkTooltip)
+  new Page('CmkTooltip', UclCmkTooltip, { status: 'updated', statusSince: '2026-10-13' })
 ]
 export const roots = [
   new Folder('Foundations', foundationsPages, true),
@@ -229,9 +234,8 @@ export const roots = [
     new Folder('Form Spec Elements', formSpecPages),
     new Folder('Global settings', globalSettingsPages),
     new Folder('Graphing', graphingPages),
-    new Folder('Metric backend', telemetryMetricsPages),
+    new Folder('Telemetry metrics', telemetryMetricsPages),
     new Folder('Monitoring', monitoringPages),
-    new Folder('Network flow', networkFlowPages),
     new Folder('Two Factor Authentication', twoFactorAuthPages)
   ])
 ]

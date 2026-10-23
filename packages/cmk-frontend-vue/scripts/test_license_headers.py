@@ -33,7 +33,6 @@ FILES_IGNORED = {
     Path(".editorconfig"),
     Path("eslint.config.mjs"),
     Path("gettext.config.js"),
-    Path(".f12"),
     Path(".gitignore"),
     Path(".gitattributes"),
     Path(".prettierignore"),
@@ -45,7 +44,6 @@ FILES_IGNORED = {
     Path("ui-component-library/index.html"),
     Path("env.d.ts"),
     Path("ui-component-library/public/mockServiceWorker.js"),  # auto generated
-    Path("cmk-frontend-vue.txt"),  # generated inside CI
 }
 
 ENTERPRISE_LICENSED_FILES_FORM_SPECS = {
@@ -130,7 +128,8 @@ def check(suffix: str, abs_path: Path, rel_path: Path) -> bool:
         return CHECKER[suffix].check(
             abs_path,
             HEADER_CEE
-            if rel_path.is_relative_to(Path("src/telemetry-metrics-custom-query"))
+            if "nonfree" in rel_path.parts
+            or rel_path.is_relative_to(Path("src/telemetry-metrics-custom-query"))
             or rel_path.is_relative_to(Path("src/telemetry-metrics"))
             or rel_path in ENTERPRISE_LICENSED_FILES_FORM_SPECS
             else HEADER,
@@ -142,9 +141,14 @@ def check(suffix: str, abs_path: Path, rel_path: Path) -> bool:
 def test_license_headers() -> None:
     package_root = Path(__file__).resolve().parent.parent
     problems = []
-    # cmk-ui-library has no scripts/ of its own (kept minimal on purpose); its files
+    # The Vue packages bundled here have no header check of their own; their files
     # follow the same header rules and are checked from here.
-    roots = [package_root, (package_root.parent / "cmk-ui-library").resolve()]
+    roots = [
+        package_root,
+        (package_root.parent / "cmk-ui-library").resolve(),
+        (package_root.parent / "cmk-profiling/frontend").resolve(),
+        (package_root.parent / "cmk-profiling/tests/frontend").resolve(),
+    ]
     for current_root, (root, _dirs, files) in ((pr, rf) for pr in roots for rf in pr.walk()):
         relative_root = root.relative_to(current_root)
 

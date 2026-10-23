@@ -151,7 +151,13 @@ icacls '$runtime_path' /grant '*${current_user_sid}:(OI)(CI)F' /T /C | Out-Null
         Write-Host $output_before -ForegroundColor Red
         Write-Error "FAIL: expected the refusal and no data from admin run before restricting permissions"
     }
-    Write-Host "OK: root can't exec non-root code" -ForegroundColor Green
+    # Only the parenthesised SID is asserted: which principal gets named
+    # depends on whether the DACL or the owner check refuses first.
+    if ($output_before -notmatch '\(S-1-[\d-]+\)') {
+        Write-Host $output_before -ForegroundColor Red
+        Write-Error "FAIL: the refusal does not name the offending principal as 'Name (SID)'"
+    }
+    Write-Host "OK: root can't exec non-root code, and the refusal names the principal" -ForegroundColor Green
 
     $sql_output_before = Get-Content $admin_sql_out_before -Raw
     $sql_rows_before = $sql_output_before -split "`n" | Where-Object { $_ -match '\|' -and $_ -notmatch '\|FAILURE\|' }

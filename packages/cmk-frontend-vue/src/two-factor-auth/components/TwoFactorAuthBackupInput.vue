@@ -73,11 +73,11 @@ defineExpose({
 }
 
 .two-factor-auth-backup-input__input--error {
-  border-color: var(--inline-error-border-color);
+  border-color: var(--status-border-color-error);
 }
 
 .two-factor-auth-backup-input__input--error:focus {
-  border-color: var(--inline-error-border-color);
+  border-color: var(--status-border-color-error);
   background-color: var(--ux-theme-5);
 }
 

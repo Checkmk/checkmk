@@ -24,15 +24,14 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     contains,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 @dataclass
@@ -69,10 +68,6 @@ def parse_cisco_asa_failover(string_table: StringTable) -> Section | None:
         )
     except KeyError:
         return None
-
-
-def discovery_cisco_asa_failover(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 _STATE_NAMES = {
@@ -154,7 +149,7 @@ snmp_section_cisco_asa_failover = SimpleSNMPSection(
 check_plugin_cisco_asa_failover = CheckPlugin(
     name="cisco_asa_failover",
     service_name="Failover state",
-    discovery_function=discovery_cisco_asa_failover,
+    discovery_function=discover_one_service,
     check_function=check_cisco_asa_failover,
     check_default_parameters={
         "primary": "active",

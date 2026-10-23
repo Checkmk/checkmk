@@ -13,7 +13,10 @@ description:
  than given upper levels or lower than the given lower levels.
  Otherwise it returns {OK}.
 
- This check uses the PowerNet-MIB.
+ This check uses the PowerNet-MIB. It reads the airIRRC objects of older
+ InRow units as well as the generic cooling unit status table of newer
+ units (e.g. InRow ACRC301S), which do not provide the airIRRC objects
+ anymore.
 
 discovery:
  One service is created.

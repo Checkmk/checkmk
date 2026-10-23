@@ -122,7 +122,7 @@ def test_collect_connector_parameters_spec_by_prefix() -> None:
         name="test",
         title="Test",
         description="desc",
-        form_spec=lambda: form_specs.Dictionary(elements={}),
+        form_spec=lambda _folder_choices: form_specs.Dictionary(elements={}),
     )
     module = _make_module("test_module", [], connector_params_test=spec)
     collector.add_from_module(

@@ -6,25 +6,17 @@
 
 import pytest
 
-from cmk.agent_based.v2 import (
-    CheckResult,
-    Metric,
-    Result,
-    Service,
-    State,
-    StringTable,
-)
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
 from cmk.plugins.acme.agent_based.acme_sbc_snmp import (
     check_acme_sbc_snmp,
-    discover_acme_sbc_snmp,
     ParamsT,
     parse_acme_sbc_snmp,
     Section,
 )
 
-SECTION_1 = [[".1.3.6.1.4.1.9148.3.2.1.1.3.0", "100"], [".1.3.6.1.4.1.9148.3.2.1.1.4.0 2", "2"]]
-SECTION_2 = [[".1.3.6.1.4.1.9148.3.2.1.1.3.0", "75"], [".1.3.6.1.4.1.9148.3.2.1.1.4.0 2", "6"]]
-SECTION_3 = [[".1.3.6.1.4.1.9148.3.2.1.1.3.0", "50"], [".1.3.6.1.4.1.9148.3.2.1.1.4.0 2", "4"]]
+SECTION_1 = [["100", "2"]]
+SECTION_2 = [["75", "6"]]
+SECTION_3 = [["50", "4"]]
 
 
 @pytest.mark.parametrize(
@@ -37,10 +29,6 @@ SECTION_3 = [[".1.3.6.1.4.1.9148.3.2.1.1.3.0", "50"], [".1.3.6.1.4.1.9148.3.2.1.
 )
 def test_parse_acme_sbc_snmp(string_table: StringTable, expected: Section) -> None:
     assert parse_acme_sbc_snmp(string_table) == expected
-
-
-def test_discover_acme_sbc_snmp() -> None:
-    assert list(discover_acme_sbc_snmp(Section(score="0", status="0"))) == [Service()]
 
 
 @pytest.mark.parametrize(

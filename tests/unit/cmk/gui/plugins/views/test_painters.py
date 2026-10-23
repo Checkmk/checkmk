@@ -7,6 +7,9 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import datetime
+import html
+import json
+import re
 from collections.abc import Sequence
 from functools import partial
 from pathlib import Path
@@ -15,24 +18,38 @@ from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
+from werkzeug.test import create_environ
 
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import sites
-from cmk.gui.config import active_config
-from cmk.gui.http import request
-from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import all_painters
-from cmk.gui.painter.v0.painters import _paint_custom_notes
+from cmk.gui.config import Config
+from cmk.gui.display_options import DisplayOptions
+from cmk.gui.http import Request, request, Response
+from cmk.gui.logged_in import LoggedInUser, user, UserDefaultConfig
+from cmk.gui.painter import PainterConfig, PainterContext
+from cmk.gui.painter.helpers import RenderLink
+from cmk.gui.painter.painters import _paint_custom_notes
+from cmk.gui.painter_options import PainterOptions
+from cmk.gui.theme import make_theme
 from cmk.gui.type_defs import ColumnSpec, Row
+from cmk.gui.utils.host_relations import (
+    dump_resolved_relations,
+    RELATIONS_CUSTOM_VARIABLE,
+    ResolvedRelation,
+)
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.page_edit_view import painters_of_datasource
 from cmk.gui.visual_link import render_link_to_view
-from cmk.inventory.structured_data import deserialize_tree
+from cmk.inventory.serialization import deserialize_tree
+from cmk.livestatus_client import SiteConfigurations
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIconName
+from cmk.web.utils.request_cache import RequestCache
+from tests.testlib.unit.fake_site import no_site_configuration
 
 
 @pytest.fixture(name="live")
@@ -70,287 +87,9 @@ def fixture_livestatus_test_config(
     return live
 
 
-@pytest.mark.usefixtures("load_config")
-def test_registered_painters() -> None:
-    painters = all_painters(active_config.tags.tag_groups).keys()
-    expected_painters = {
-        "aggr_acknowledged",
-        "aggr_assumed_state",
-        "aggr_group",
-        "aggr_hosts",
-        "aggr_hosts_services",
-        "aggr_icons",
-        "aggr_in_downtime",
-        "aggr_name",
-        "aggr_output",
-        "aggr_real_state",
-        "aggr_state",
-        "aggr_state_num",
-        "aggr_treestate",
-        "aggr_treestate_boxed",
-        "aggr_treestate_frozen_diff",
-        "alert_stats_crit",
-        "alert_stats_ok",
-        "alert_stats_problem",
-        "alert_stats_unknown",
-        "alert_stats_warn",
-        "alias",
-        "check_manpage",
-        "comment_author",
-        "comment_comment",
-        "comment_entry_type",
-        "comment_expires",
-        "comment_id",
-        "comment_time",
-        "comment_what",
-        "crash_host",
-        "crash_item",
-        "crash_service_name",
-        "crash_check_type",
-        "crash_exception",
-        "crash_ident",
-        "crash_time",
-        "crash_type",
-        "crash_source",
-        "crash_version",
-        "downtime_author",
-        "downtime_comment",
-        "downtime_duration",
-        "downtime_end_time",
-        "downtime_entry_time",
-        "downtime_fixed",
-        "downtime_id",
-        "downtime_origin",
-        "downtime_start_time",
-        "downtime_type",
-        "downtime_what",
-        "event_application",
-        "event_comment",
-        "event_contact",
-        "event_contact_groups",
-        "event_count",
-        "event_effective_contact_groups",
-        "event_facility",
-        "event_first",
-        "event_history_icons",
-        "event_host",
-        "event_host_in_downtime",
-        "event_icons",
-        "event_id",
-        "event_ipaddress",
-        "event_last",
-        "event_match_groups",
-        "event_owner",
-        "event_phase",
-        "event_pid",
-        "event_priority",
-        "event_rule_id",
-        "event_sl",
-        "event_state",
-        "event_text",
-        "hg_alias",
-        "hg_name",
-        "hg_num_hosts_down",
-        "hg_num_hosts_pending",
-        "hg_num_hosts_unreach",
-        "hg_num_hosts_up",
-        "hg_num_services",
-        "hg_num_services_crit",
-        "hg_num_services_ok",
-        "hg_num_services_pending",
-        "hg_num_services_unknown",
-        "hg_num_services_warn",
-        "history_addinfo",
-        "history_line",
-        "history_time",
-        "history_what",
-        "history_what_explained",
-        "history_who",
-        "host",
-        "host_acknowledged",
-        "host_address",
-        "host_address_families",
-        "host_address_family",
-        "host_addresses",
-        "host_addresses_additional",
-        "host_attempt",
-        "host_black",
-        "host_check_age",
-        "host_check_command",
-        "host_check_command_expanded",
-        "host_check_duration",
-        "host_check_interval",
-        "host_check_latency",
-        "host_check_type",
-        "host_childs",
-        "host_comments",
-        "host_contact_groups",
-        "host_contacts",
-        "host_custom_notes",
-        "host_custom_variable",
-        "host_custom_vars",
-        "host_docker_node",
-        "host_filename",
-        "host_flapping",
-        "host_graphs",
-        "host_group_memberlist",
-        "host_icons",
-        "host_in_downtime",
-        "host_in_notifper",
-        "host_ipv4_address",
-        "host_ipv6_address",
-        "host_is_active",
-        "host_is_stale",
-        "host_kubernetes_cluster",
-        "host_kubernetes_daemonset",
-        "host_kubernetes_deployment",
-        "host_kubernetes_namespace",
-        "host_kubernetes_node",
-        "host_kubernetes_statefulset",
-        "host_labels",
-        "host_last_notification",
-        "host_next_check",
-        "host_next_notification",
-        "host_normal_interval",
-        "host_notes_url",
-        "host_notification_number",
-        "host_notification_postponement_reason",
-        "host_notifications_enabled",
-        "host_notifper",
-        "host_parents",
-        "host_perf_data",
-        "host_plugin_output",
-        "host_pnpgraph",
-        "host_retry_interval",
-        "host_servicelevel",
-        "host_services",
-        "host_specific_metric",
-        "host_staleness",
-        "host_state",
-        "host_state_age",
-        "host_state_onechar",
-        "host_tag_address_family",
-        "host_tag_agent",
-        "host_tag_piggyback",
-        "host_tag_snmp_ds",
-        "host_tags",
-        "host_tags_with_titles",
-        "host_with_state",
-        "hostgroup_hosts",
-        "log_attempt",
-        "log_command",
-        "log_comment",
-        "log_contact_name",
-        "log_date",
-        "log_details_history",
-        "log_icon",
-        "log_lineno",
-        "log_message",
-        "log_options",
-        "log_plugin_output",
-        "log_state",
-        "log_state_info",
-        "log_state_type",
-        "log_time",
-        "log_type",
-        "log_what",
-        "num_problems",
-        "num_services",
-        "num_services_crit",
-        "num_services_ok",
-        "num_services_pending",
-        "num_services_unknown",
-        "num_services_warn",
-        "perfometer",
-        "service_custom_variable",
-        "service_description",
-        "service_discovery_check",
-        "service_discovery_service",
-        "service_discovery_state",
-        "service_display_name",
-        "service_graphs",
-        "service_icons",
-        "service_labels",
-        "service_specific_metric",
-        "service_state",
-        "service_tags",
-        "service_tags_with_titles",
-        "sg_alias",
-        "sg_name",
-        "sg_num_services",
-        "sg_num_services_crit",
-        "sg_num_services_ok",
-        "sg_num_services_pending",
-        "sg_num_services_unknown",
-        "sg_num_services_warn",
-        "sg_services",
-        "site_icon",
-        "sitealias",
-        "sitename_plain",
-        "svc_acknowledged",
-        "svc_attempt",
-        "svc_check_age",
-        "svc_check_cache_info",
-        "svc_check_command",
-        "svc_check_command_expanded",
-        "svc_check_duration",
-        "svc_check_interval",
-        "svc_check_latency",
-        "svc_check_period",
-        "svc_check_type",
-        "svc_comments",
-        "svc_contact_groups",
-        "svc_contacts",
-        "svc_custom_notes",
-        "svc_custom_vars",
-        "svc_flapping",
-        "svc_group_memberlist",
-        "svc_in_downtime",
-        "svc_in_notifper",
-        "svc_is_active",
-        "svc_is_stale",
-        "svc_last_notification",
-        "svc_last_time_ok",
-        "svc_long_plugin_output",
-        "svc_metrics",
-        "svc_next_check",
-        "svc_next_notification",
-        "svc_normal_interval",
-        "svc_notes_url",
-        "svc_notification_number",
-        "svc_notification_postponement_reason",
-        "svc_notifications_enabled",
-        "svc_notifper",
-        "svc_perf_data",
-        "svc_perf_val01",
-        "svc_perf_val02",
-        "svc_perf_val03",
-        "svc_perf_val04",
-        "svc_perf_val05",
-        "svc_perf_val06",
-        "svc_perf_val07",
-        "svc_perf_val08",
-        "svc_perf_val09",
-        "svc_perf_val10",
-        "svc_plugin_output",
-        "svc_pnpgraph",
-        "svc_retry_interval",
-        "svc_servicelevel",
-        "svc_staleness",
-        "svc_state_age",
-        "wato_folder_abs",
-        "wato_folder_plain",
-        "wato_folder_rel",
-    }
-
-    # Depending on the sandbox of this test there might be
-    # more painters created by invenory_ui plug-ins.
-    assert {p for p in painters if not p.startswith("inv")} == expected_painters
-
-
 @pytest.fixture(name="service_painter_idents")
 def fixture_service_painter_names() -> list[str]:
-    return sorted(painters_of_datasource("services", UserPermissions({}, {}, {}, [])).keys())
+    return sorted(painters_of_datasource("services").keys())
 
 
 @pytest.mark.usefixtures("request_context", "patch_theme")
@@ -368,18 +107,185 @@ def test_service_painters(
             _test_painter(painter_ident, live)
 
 
-def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
-    _set_expected_queries(painter_ident, live)
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_host_custom_attributes_leave_out_the_host_relations() -> None:
+    """The relations have a column of their own, which only names hosts the user may see."""
+    (cell,) = _view_of(ColumnSpec(name="host_custom_vars"), "hosts").row_cells
+    relations = dump_resolved_relations(
+        [ResolvedRelation(kind="management", direction="parent", host="hidden-board", site="s")]
+    )
+    row = {"host_custom_variables": {"OWNER": "team-a", RELATIONS_CUSTOM_VARIABLE: relations}}
 
-    name, params = _painter_name_spec(painter_ident)
+    _tdclass, content = cell.render(
+        row,
+        partial(render_link_to_view, request=request, user_permissions=_NO_PERMISSIONS),
+        user,
+    )
 
-    view = View(
+    assert "team-a" in str(content)
+    assert "hidden-board" not in str(content)
+    assert "hidden-board" not in str(cell.render_for_csv_export(row, user))
+    assert "hidden-board" not in str(cell.render_for_json_export(row, user))
+    assert "hidden-board" not in str(cell.painter().group_by(row, cell, cell.painter_context()))
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_host_docker_node_groups_containers_by_their_node(live: MockLiveStatusConnection) -> None:
+    groups = _docker_node_groups(
+        live,
+        {
+            "web": "Container running on node node1",
+            "db": "Container running on node node1",
+            "cache": "Container running on node node2",
+        },
+    )
+
+    assert groups["web"] == groups["db"] != groups["cache"]
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_host_docker_node_ignores_what_follows_the_node_in_the_status_output(
+    live: MockLiveStatusConnection,
+) -> None:
+    groups = _docker_node_groups(
+        live,
+        {
+            "broken": "Container exited on node node1(!!), Error: OCI runtime failed(!!)",
+            "duplicate": "Found data from multiple Docker nodes - see service details for more"
+            " information",
+        },
+    )
+
+    assert groups == {"broken": "node1", "duplicate": ""}
+
+
+def _docker_node_groups(
+    live: MockLiveStatusConnection, status_outputs: dict[str, str]
+) -> dict[str, object]:
+    live.add_table(
+        "services",
+        [
+            {
+                "host_name": host_name,
+                "check_command": "check_mk-docker_container_status",
+                "service_plugin_output": output,
+            }
+            for host_name, output in status_outputs.items()
+        ],
+    )
+    live.expect_query(
+        "GET services\nColumns: host_name service_plugin_output\n"
+        "Filter: check_command = check_mk-docker_container_status"
+    )
+    (cell,) = _view_of(ColumnSpec(name="host_docker_node"), "hosts").row_cells
+    painter = cell.painter()
+    assert painter.row_extender is not None
+    # Each container runs another image, so the labels differ from row to row.
+    rows: Sequence[Row] = [
+        {
+            "host_name": host_name,
+            "host_labels": {"cmk/docker_object": "container", "cmk/docker_image": host_name},
+        }
+        for host_name in status_outputs
+    ]
+    with live(expect_status_query=False):
+        rows = painter.row_extender(rows)
+    return {row["host_name"]: painter.group_by(row, cell, cell.painter_context()) for row in rows}
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_svc_pnpgraph_embeds_a_graph_for_a_service_with_metrics(
+    live: MockLiveStatusConnection,
+) -> None:
+    assert _embedded_service_graphs(live, perf_data="x=5", metrics=["x"])
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_svc_pnpgraph_embeds_no_graph_for_a_service_without_perfdata(
+    live: MockLiveStatusConnection,
+) -> None:
+    # Also holds if the painter leaves out the empty graph group altogether.
+    assert _embedded_service_graphs(live, perf_data="", metrics=[]) == []
+
+
+def _embedded_service_graphs(
+    live: MockLiveStatusConnection, *, perf_data: str, metrics: list[str]
+) -> list[object]:
+    """The graphs of every ``cmk-graph-group`` element the service graphs cell renders."""
+    # The engine resolves the metric names with this query, the painter reads the row.
+    live.add_table(
+        "services",
+        [
+            {
+                "host_name": "abc",
+                "description": "Interface 3",
+                "perf_data": perf_data,
+                "metrics": metrics,
+                "check_command": "check_mk-foo",
+            }
+        ],
+    )
+    live.expect_query(
+        "GET services\nColumns: host_name description perf_data metrics check_command\n"
+        "Filter: host_name = abc\nFilter: description = Interface 3\nAnd: 2"
+    )
+    row = {
+        **_service_row(),
+        "service_perf_data": perf_data,
+        "service_metrics": metrics,
+        "service_check_command": "check_mk-foo",
+    }
+    (cell,) = _view_of(ColumnSpec(name="svc_pnpgraph"), "services").row_cells
+
+    with live(expect_status_query=False):
+        _tdclass, content = cell.render(
+            row,
+            partial(render_link_to_view, request=request, user_permissions=_NO_PERMISSIONS),
+            user,
+        )
+
+    return [
+        graph
+        for match in re.finditer(r'<cmk-graph-group data="([^"]*)"', str(content))
+        for graph in json.loads(html.unescape(match.group(1)))["graphs"]
+    ]
+
+
+_NO_PERMISSIONS = UserPermissions({}, {}, {}, [])
+
+
+def _painter_context_of_the_fake_site() -> PainterContext:
+    painter_request = Request(create_environ())
+    return PainterContext(
+        config=PainterConfig.from_config(
+            Config(sites=SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()}))
+        ),
+        request=painter_request,
+        painter_options=PainterOptions(
+            Config(),
+            painter_request,
+            LoggedInUser(
+                None,
+                _NO_PERMISSIONS,
+                defaults=UserDefaultConfig(
+                    users={}, default_language="en", default_show_mode="default"
+                ),
+            ),
+        ),
+        theme=make_theme(validate_choices=False),
+        url_renderer=RenderLink(painter_request, Response(), DisplayOptions()),
+        user_permissions=_NO_PERMISSIONS,
+    )
+
+
+def _view_of(column: ColumnSpec, datasource: str) -> View:
+    return View(
         view_name="",
         view_spec={
             "group_painters": [],
-            "painters": [ColumnSpec(name=name, parameters=params)],
+            "painters": [column],
             "sorters": [],
-            "datasource": "services",
+            "datasource": datasource,
             "browser_reload": 30,
             "column_headers": "pergroup",
             "description": "",
@@ -406,14 +312,23 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
             "main_menu_search_terms": [],
         },
         context={},
-        user_permissions=(user_permissions := UserPermissions({}, {}, {}, [])),
+        painter_context=_painter_context_of_the_fake_site(),
+        request_cache=RequestCache(Config()),
     )
+
+
+def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
+    _set_expected_queries(painter_ident, live)
+
+    name, params = _painter_name_spec(painter_ident)
+
+    view = _view_of(ColumnSpec(name=name, parameters=params), "services")
 
     row = _service_row()
     for cell in view.row_cells:
         _tdclass, content = cell.render(
             row,
-            partial(render_link_to_view, request=request, user_permissions=user_permissions),
+            partial(render_link_to_view, request=request, user_permissions=_NO_PERMISSIONS),
             user,
         )
         assert isinstance(content, str | HTML)
@@ -1302,12 +1217,6 @@ def _painter_name_spec(painter_ident):
 
 
 def _set_expected_queries(painter_ident, live):
-    if painter_ident == "inv":
-        # TODO: Why is it querying twice?
-        live.expect_query(
-            "GET hosts\nColumns: host_name\nLocaltime: 1523811000\nOutputFormat: json\nKeepAlive: on\nResponseHeader: fixed16"
-        )
-        return
     if painter_ident in ("service_graphs", "svc_pnpgraph", "host_graphs", "host_pnpgraph"):
         # Every graph painter renders through the engine, which resolves the metric names
         # during the render. The row carries a service_description, so the host painters
@@ -1316,18 +1225,6 @@ def _set_expected_queries(painter_ident, live):
             "GET services\nColumns: host_name description perf_data metrics check_command\n"
             "Filter: host_name = abc\nFilter: description = Interface 3\nAnd: 2"
         )
-        return
-    if painter_ident == "svc_long_plugin_output":
-        # The size limit comes from the cached site states, not a per-render query.
-        live.add_table(
-            "status",
-            [
-                {
-                    "max_long_output_size": 2000,
-                }
-            ],
-        )
-        return
 
 
 def _load_notes_into_files(notes_dirs: list[Path], notes: list[dict[str, object]]) -> list[str]:
@@ -1400,7 +1297,6 @@ def _load_notes_into_files(notes_dirs: list[Path], notes: list[dict[str, object]
         ),
     ],
 )
-@pytest.mark.usefixtures("request_context")
 def test_paint_custom_notes(
     notes_type: Literal["host", "service"],
     notes_dir: Path,
@@ -1413,7 +1309,11 @@ def test_paint_custom_notes(
         f.write("<hr>".join(notes))
 
     assert notes_file.read_text() == str(
-        _paint_custom_notes(notes_type, row, config=active_config)[1]
+        _paint_custom_notes(
+            notes_type,
+            row,
+            site_configs=SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()}),
+        )[1]
     )
 
 
@@ -1632,7 +1532,6 @@ def test_paint_custom_notes(
         ),
     ],
 )
-@pytest.mark.usefixtures("request_context")
 def test_paint_custom_notes_file_inclusion_and_html_tags(
     object_type: Literal["host", "service"],
     host_name: str,
@@ -1649,7 +1548,11 @@ def test_paint_custom_notes_file_inclusion_and_html_tags(
         "host_address": "127.0.0.1",
     }
 
-    displayed_custom_notes = _paint_custom_notes(object_type, row, config=active_config)[1]
+    displayed_custom_notes = _paint_custom_notes(
+        object_type,
+        row,
+        site_configs=SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()}),
+    )[1]
     assert isinstance(displayed_custom_notes, HTML)
 
     notes_as_string = str(displayed_custom_notes)

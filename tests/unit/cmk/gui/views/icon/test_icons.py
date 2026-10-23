@@ -9,61 +9,18 @@ from typing import Literal
 
 import pytest
 
-import cmk.gui.views
 from cmk.gui.config import active_config
 from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec, Row
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.views import legacy_plugins
 from cmk.gui.views.icon import (
     Icon,
-    icon_and_action_registry,
     IconConfig,
 )
 from cmk.gui.views.icon import registry as icon_registry
 from cmk.gui.views.icon.base import IconSpec as IconSpecUnion
 from cmk.ruleset_matcher.tags import TagID
 from cmk.web.utils.icons import DynamicIconName
-
-
-def test_builtin_icons_and_actions() -> None:
-    expected_icons_and_actions = [
-        "action_menu",
-        "aggregation_checks",
-        "aggregations",
-        "check_manpage",
-        "check_period",
-        "crashed_check",
-        "custom_action",
-        "download_agent_output",
-        "download_snmp_walk",
-        "icon_image",
-        "inventory",
-        "inventory_history",
-        "logwatch",
-        "mkeventd",
-        "network_topology",
-        "notes",
-        "parent_child_topology",
-        "perfgraph",
-        "prediction",
-        "reschedule",
-        "rule_editor",
-        "stars",
-        "status_acknowledged",
-        "status_active_checks",
-        "status_comments",
-        "status_downtimes",
-        "status_flapping",
-        "status_notification_period",
-        "status_notifications_enabled",
-        "status_passive_checks",
-        "status_service_period",
-        "status_stale",
-        "wato",
-    ]
-
-    cmk.gui.views.register_legacy_icons()
-    builtin_icons = sorted(icon_and_action_registry.keys())
-    assert builtin_icons == sorted(expected_icons_and_actions)
 
 
 def test_legacy_icon_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -76,10 +33,10 @@ def test_legacy_icon_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
         "toplevel": True,
     }
     monkeypatch.setattr(
-        cmk.gui.views, "icon_and_action_registry", registry := icon_registry.IconRegistry()
+        legacy_plugins, "icon_and_action_registry", registry := icon_registry.IconRegistry()
     )
-    monkeypatch.setitem(cmk.gui.views.multisite_icons_and_actions, "legacy", icon)
-    cmk.gui.views.register_legacy_icons()
+    monkeypatch.setitem(legacy_plugins.multisite_icons_and_actions, "legacy", icon)
+    legacy_plugins.register_legacy_icons()
     user_permissions = UserPermissions({}, {}, {}, [])
 
     registered_icon = registry["legacy"]
@@ -127,10 +84,10 @@ def test_legacy_icon_plugin_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "paint": lambda: "bla",
     }
     monkeypatch.setattr(
-        cmk.gui.views, "icon_and_action_registry", registry := icon_registry.IconRegistry()
+        legacy_plugins, "icon_and_action_registry", registry := icon_registry.IconRegistry()
     )
-    monkeypatch.setitem(cmk.gui.views.multisite_icons_and_actions, "legacy", icon)
-    cmk.gui.views.register_legacy_icons()
+    monkeypatch.setitem(legacy_plugins.multisite_icons_and_actions, "legacy", icon)
+    legacy_plugins.register_legacy_icons()
 
     registered_icon = registry["legacy"]
     assert registered_icon.toplevel is False

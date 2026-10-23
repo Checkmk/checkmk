@@ -5,11 +5,14 @@
 
 
 from cmk.agent_based.v2 import InventoryPlugin, InventoryResult, TableRow
-from cmk.plugins.oracle.agent_based.liboracle import SectionPerformance
+from cmk.plugins.oracle.agent_based.liboracle import Ok, SectionPerformance
 
 
 def inventorize_oracle_performance(section: SectionPerformance) -> InventoryResult:
-    for entry, entryinfo in section.items():
+    for entry, result in section.items():
+        if not isinstance(result, Ok):
+            continue
+        entryinfo = result.value
         if "SGA_info" in entryinfo:
             sga_data = entryinfo["SGA_info"]
             yield TableRow(

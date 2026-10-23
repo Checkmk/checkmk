@@ -9,14 +9,13 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     LevelsT,
     render,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 from .detect import DETECT_CISCO_SMA
 
@@ -51,14 +50,10 @@ def check_disk_io_utilization(params: Params, section: float) -> CheckResult:
     )
 
 
-def discover_disk_io_utilization(section: float) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 check_plugin_disk_io_utilization = CheckPlugin(
     name="disk_io_utilization",
     service_name="Disk IO Utilization",
-    discovery_function=discover_disk_io_utilization,
+    discovery_function=discover_one_service,
     check_function=check_disk_io_utilization,
     check_default_parameters=Params(upper_levels=("fixed", (80.0, 90.0))),
     check_ruleset_name="generic_percentage_value",

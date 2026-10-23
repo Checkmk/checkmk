@@ -8,7 +8,7 @@ from typing import Literal
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 
 
@@ -34,7 +34,7 @@ class CommentExtensionsModel:
 
 
 @api_model
-class CommentObjectModel(DomainObjectModel):
+class CommentObjectModel(TitledDomainObjectModel):
     domainType: Literal["comment"] = api_field(description="The domain type of the object.")
     extensions: CommentExtensionsModel = api_field(
         description="The attributes of a service/host comment."

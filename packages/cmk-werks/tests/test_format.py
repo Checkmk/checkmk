@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.werks.flavor.cmk import V1_DEFAULTS
 from cmk.werks.tool import parse_werk
 from cmk.werks.tool.format import format_as_markdown_werk
 from cmk.werks.tool.parse import parse_werk_v2, WerkV2ParseResult
@@ -75,7 +76,7 @@ LI: ...with...
 LI: ...entries!
 
 """
-    parsed = parse_werk(text, "1234")
+    parsed = parse_werk(text, "1234", v1_defaults=V1_DEFAULTS)
     assert parsed.metadata == {
         "id": "1234",
         "class": "fix",

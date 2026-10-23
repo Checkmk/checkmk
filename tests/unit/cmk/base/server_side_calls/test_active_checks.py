@@ -15,7 +15,7 @@ import cmk.ccc.debug
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher_utils.secrets import StoredSecrets
 from cmk.discover_plugins import PluginLocation
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
@@ -108,6 +108,8 @@ def test_get_active_service_data_respects_finalizer(
         finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
         ip_lookup_failed=False,
         for_relay=False,
+        relay_supported_active_checks=frozenset({"httpv2", "cert", "icmp"}),
+        site_side_only_active_checks=frozenset({"cmk_inv"}),
     )
 
     (service,) = active_check.get_active_service_data("my_active_check", [{}])
@@ -134,10 +136,122 @@ def test_get_active_service_data_raises_for_relay(
         finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
         ip_lookup_failed=False,
         for_relay=True,
+        relay_supported_active_checks=frozenset({"httpv2", "cert", "icmp"}),
+        site_side_only_active_checks=frozenset({"cmk_inv"}),
     )
 
     with pytest.raises(NotSupportedError):
         active_check.get_active_service_data("my_active_check", [{}])
+
+
+@pytest.mark.parametrize("plugin_name", ["httpv2", "cert"])
+def test_get_active_service_data_relay_supported_check_does_not_raise(
+    monkeypatch: pytest.MonkeyPatch,
+    plugin_name: str,
+) -> None:
+    monkeypatch.setitem(password_store.hack.HACK_CHECKS, plugin_name, False)
+    plugin_store = {
+        PluginLocation(f"{__name__}", f"active_check_{plugin_name}"): ActiveCheckConfig(
+            name=plugin_name,
+            parameter_parser=lambda p: p,
+            commands_function=lambda *_: [
+                ActiveCheckCommand(
+                    service_description=f"{plugin_name} service",
+                    command_arguments=(),
+                ),
+            ],
+        )
+    }
+    active_check = ActiveCheck(
+        plugin_store,
+        HostName("myhost"),
+        HOST_CONFIG,
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
+        oauth2_connections={},
+        service_name_finalizer=str,
+        secrets_config=StoredSecrets(
+            path=Path("/pw/store"),
+            secrets={},
+        ),
+        finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
+        ip_lookup_failed=False,
+        for_relay=True,
+        relay_supported_active_checks=frozenset({"httpv2", "cert", "icmp"}),
+        site_side_only_active_checks=frozenset({"cmk_inv"}),
+    )
+
+    # These are relay-supported active checks, so dispatch must not raise.
+    (service,) = active_check.get_active_service_data(plugin_name, [{}])
+    assert service.plugin_name == plugin_name
+
+
+def test_get_active_service_data_cmk_inv_is_site_side_and_does_not_raise(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setitem(password_store.hack.HACK_CHECKS, "cmk_inv", False)
+    plugin_store = {
+        PluginLocation(f"{__name__}", "active_check_cmk_inv"): ActiveCheckConfig(
+            name="cmk_inv",
+            parameter_parser=lambda p: p,
+            commands_function=lambda *_: [
+                ActiveCheckCommand(
+                    service_description="Check_MK HW/SW Inventory",
+                    command_arguments=(),
+                ),
+            ],
+        )
+    }
+    active_check = ActiveCheck(
+        plugin_store,
+        HostName("myhost"),
+        HOST_CONFIG,
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
+        oauth2_connections={},
+        service_name_finalizer=str,
+        secrets_config=StoredSecrets(path=Path("/pw/store"), secrets={}),
+        finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
+        ip_lookup_failed=False,
+        for_relay=True,
+        relay_supported_active_checks=frozenset({"httpv2", "cert", "icmp"}),
+        site_side_only_active_checks=frozenset({"cmk_inv"}),
+    )
+
+    # cmk_inv is NOT in the supported set, yet it is a site-side exception:
+    # the gate must not reject it (the relay config writer drops it instead).
+    (service,) = active_check.get_active_service_data("cmk_inv", [{}])
+    assert service.plugin_name == "cmk_inv"
+
+
+def test_relay_host_with_fallback_ip_gets_the_dns_fallback_backstop() -> None:
+    active_check = ActiveCheck(
+        TEST_PLUGIN_STORE,
+        HostName("myhost"),
+        HOST_CONFIG,
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
+        oauth2_connections={},
+        service_name_finalizer=str,
+        secrets_config=StoredSecrets(path=Path("/pw/store"), secrets={}),
+        finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
+        ip_lookup_failed=True,
+        for_relay=True,
+        relay_supported_active_checks=frozenset({"my_active_check"}),
+        site_side_only_active_checks=frozenset(),
+    )
+
+    (service,) = active_check.get_active_service_data("my_active_check", [{}])
+    assert service.command == (
+        "/path/to/check_always_crit",
+        (
+            "'Unexpected Error: Unresolved DNS fallback IP 0.0.0.0 from the CMK site reached the"
+            " Relay, a Dyn DNS was expected instead.'"
+        ),
+    )
 
 
 def argument_function_with_exception(*args: object, **kwargs: object) -> Never:  # noqa: ARG001
@@ -323,6 +437,8 @@ def test_get_active_service_data(  # type: ignore[misc]
         finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
         ip_lookup_failed=False,
         for_relay=False,
+        relay_supported_active_checks=frozenset({"httpv2", "cert", "icmp"}),
+        site_side_only_active_checks=frozenset({"cmk_inv"}),
     )
 
     services = active_check.get_active_service_data(*active_check_rule)
@@ -373,6 +489,8 @@ def test_get_active_service_data_password_with_hack(
         finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
         ip_lookup_failed=False,
         for_relay=False,
+        relay_supported_active_checks=frozenset({"httpv2", "cert", "icmp"}),
+        site_side_only_active_checks=frozenset({"cmk_inv"}),
     )
 
     assert active_check.get_active_service_data(
@@ -425,6 +543,8 @@ def test_get_active_service_data_password_without_hack() -> None:
         finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
         ip_lookup_failed=False,
         for_relay=False,
+        relay_supported_active_checks=frozenset({"httpv2", "cert", "icmp"}),
+        site_side_only_active_checks=frozenset({"cmk_inv"}),
     )
 
     assert active_check.get_active_service_data(
@@ -504,6 +624,8 @@ def test_test_get_active_service_data_crash_with_debug(  # type: ignore[misc]
         finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
         ip_lookup_failed=False,
         for_relay=False,
+        relay_supported_active_checks=frozenset({"httpv2", "cert", "icmp"}),
+        site_side_only_active_checks=frozenset({"cmk_inv"}),
     )
 
     with pytest.raises(
@@ -629,6 +751,8 @@ def test_get_active_service_data_warnings(  # type: ignore[misc]
         finder=lambda executable, module: f"/path/to/{executable}",  # noqa: ARG005
         ip_lookup_failed=False,
         for_relay=False,
+        relay_supported_active_checks=frozenset({"httpv2", "cert", "icmp"}),
+        site_side_only_active_checks=frozenset({"cmk_inv"}),
     )
 
     services = active_check_config.get_active_service_data(*active_check_rule)

@@ -17,13 +17,12 @@ import typing
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_value_store,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.mcafee import libgateway
 
 
@@ -38,10 +37,6 @@ class Params(typing.TypedDict, total=False):
 
 
 ValueStore = typing.MutableMapping[str, typing.Any]
-
-
-def discover_webgateway(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def parse_webgateway(string_table: StringTable) -> Section | None:
@@ -109,7 +104,7 @@ snmp_section_skyhigh_security_webgateway = SimpleSNMPSection(
 check_plugin_mcafee_webgateway = CheckPlugin(
     name="mcafee_webgateway",
     sections=["webgateway"],
-    discovery_function=discover_webgateway,
+    discovery_function=discover_one_service,
     check_function=check_webgateway,
     service_name="Web gateway statistics",
     check_ruleset_name="mcafee_web_gateway",

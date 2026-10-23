@@ -70,7 +70,8 @@ def _transform_from_disk(
         case "cmk_postprocessed", "explicit_proxy", str(url):
             return "url", url
 
-    raise ValueError(value)
+    # The value is not part of the message, since it may contain credentials
+    raise ValueError(f"Unknown proxy configuration of type {type(value).__name__}")
 
 
 def _transform_to_disk(
@@ -90,7 +91,8 @@ def _transform_to_disk(
         case "url", str(url):
             return "cmk_postprocessed", "explicit_proxy", url
 
-    raise ValueError(value)
+    # The value is not part of the message, since it may contain credentials
+    raise ValueError(f"Unknown proxy configuration of type {type(value).__name__}")
 
 
 def recompose(

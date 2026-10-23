@@ -377,6 +377,68 @@ describe('a mirrored value axis', () => {
   })
 })
 
+describe('a value axis tight around data far from zero', () => {
+  const TIGHT_DOMAINS: Array<[string, number, number]> = [
+    ['below one', 0.19, 0.21],
+    ['above one', 1.19, 1.21],
+    ['at a thousand', 1000.19, 1000.21]
+  ]
+
+  test.each(TIGHT_DOMAINS)('%s: draws at least two labels inside the domain', (_, min, max) => {
+    const { axes, group, yScale } = setupPercent()
+
+    axes.prepareValueDomain(min, max)
+    axes.drawValueAxis({ showLabels: true })
+
+    const [domainMin, domainMax] = yScale.domain() as [number, number]
+    const positions = drawnTickPositions(group, AXIS_CLASSES.valueAxis)
+    expect(positions.length).toBeGreaterThanOrEqual(2)
+    expect(Math.min(...positions)).toBeGreaterThanOrEqual(domainMin)
+    expect(Math.max(...positions)).toBeLessThanOrEqual(domainMax)
+  })
+
+  test.each(TIGHT_DOMAINS)('%s: gives every label its own text', async (_, min, max) => {
+    const { axes, group } = setupPercent()
+
+    axes.prepareValueDomain(min, max)
+    axes.drawValueAxis({ showLabels: true })
+
+    const texts = (await drawnValueAxisTicks(group)).map((tick) => tick.text)
+    expect(new Set(texts).size).toBe(texts.length)
+  })
+
+  test('an IEC axis keeps its binary steps when tight around data', () => {
+    const { axes, group } = setupIec()
+
+    axes.prepareValueDomain(1000 * ONE_MIB, 1004 * ONE_MIB)
+    axes.drawValueAxis({ showLabels: true })
+
+    expectBinaryAlignment(drawnTickPositions(group, AXIS_CLASSES.valueAxis))
+  })
+})
+
+describe('valueResolution', () => {
+  test('is the step between consecutive drawn labels', () => {
+    const { axes, group } = setupPercent()
+
+    axes.prepareValueDomain(0.19, 0.21)
+    axes.drawValueAxis({ showLabels: true })
+
+    const positions = drawnTickPositions(group, AXIS_CLASSES.valueAxis)
+    expect(positions[1]! - positions[0]!).toBeCloseTo(axes.valueResolution(), 12)
+  })
+
+  test('is finer for a narrow domain than for a wide one', () => {
+    const { axes: wideAxes } = setupPercent()
+    const { axes: narrowAxes } = setupPercent()
+
+    wideAxes.prepareValueDomain(0, 100)
+    narrowAxes.prepareValueDomain(0.19, 0.21)
+
+    expect(narrowAxes.valueResolution()).toBeLessThan(wideAxes.valueResolution())
+  })
+})
+
 describe('valueTickLabels', () => {
   test('reports the labels an IEC axis draws, for sizing the margin that holds them', () => {
     const { axes } = setupIec()

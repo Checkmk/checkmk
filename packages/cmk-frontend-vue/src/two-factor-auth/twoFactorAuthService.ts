@@ -12,6 +12,17 @@ function getCurrentPageUrl(): string {
   return path
 }
 
+export type AuthFailureReason = 'invalid_code' | 'timed_out' | 'locked'
+
+export class AuthFailureError extends Error {
+  constructor(
+    message: string,
+    public reason: AuthFailureReason
+  ) {
+    super(message)
+  }
+}
+
 export async function verifyCode(
   code: string,
   mode: 'totp_credentials' | 'backup_codes',
@@ -31,8 +42,13 @@ export async function verifyCode(
   })
 
   if (!response.ok) {
-    throw new Error(
-      `Invalid ${mode === 'totp_credentials' ? 'authenticator code' : 'backup code'}. Please try again.`
+    const body: { message?: string; reason?: AuthFailureReason } = await response
+      .json()
+      .catch(() => ({}))
+    throw new AuthFailureError(
+      body.message ??
+        `Invalid ${mode === 'totp_credentials' ? 'authenticator code' : 'backup code'}. Please try again.`,
+      body.reason ?? 'invalid_code'
     )
   }
 

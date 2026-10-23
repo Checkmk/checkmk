@@ -8,7 +8,7 @@ from typing import Literal
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 
 
@@ -27,7 +27,7 @@ class HostGroupExtensions:
 
 
 @api_model
-class HostGroupModel(DomainObjectModel):
+class HostGroupModel(TitledDomainObjectModel):
     domainType: Literal["host_group_config"] = api_field(
         description="The domain type of the object.",
     )

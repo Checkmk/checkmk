@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from cmk.server_side_calls.v1 import Secret
+from cmk.server_side_calls.v1 import EnvProxy, NoProxy, Secret
+from cmk.server_side_calls.v1 import URLProxy as V1URLProxy
 
 
 @dataclass(frozen=True)
@@ -31,3 +32,4 @@ class OAuth2Connection:
     tenant_id: str
     authority: str
     connector_type: str
+    proxy: V1URLProxy | EnvProxy | NoProxy = field(default_factory=EnvProxy)

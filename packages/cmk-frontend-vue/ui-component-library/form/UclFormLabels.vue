@@ -21,7 +21,7 @@ const labelSource = ref<LabelSources>('explicit')
 
 const autocompleter: Autocompleter = {
   data: { ident: 'label', params: { world: 'config' } },
-  fetch_method: 'ajax_vs_autocomplete'
+  fetch_method: 'rest_autocomplete'
 }
 
 const spec = computed<Labels>(() => ({
@@ -47,34 +47,28 @@ const data = ref<StringMapping>({
 })
 
 async function interceptor({ request }: { request: Request }) {
-  const jsonData = (await request.formData()).get('request')
-  const query = JSON.parse(jsonData as string).value
-  const userProvided: Array<[string, string]> = []
+  const { value: query } = (await request.json()) as { value: string }
+  const userProvided: Array<string> = []
   if (/^[^:]+:.+$/.test(query)) {
-    userProvided.push([query, query])
+    userProvided.push(query)
   }
   return HttpResponse.json({
-    result: {
-      choices: [
-        ...userProvided,
-        ['cmk/check_mk_server:yes', 'cmk/check_mk_server:yes'],
-        ['cmk/os_family:linux', 'cmk/os_family:linux'],
-        ['cmk/os_name:Ubuntu', 'cmk/os_name:Ubuntu'],
-        ['cmk/os_platform:ubuntu', 'cmk/os_platform:ubuntu'],
-        ['cmk/os_type:linux', 'cmk/os_type:linux'],
-        ['cmk/os_version:22.04', 'cmk/os_version:22.04'],
-        ['cmk/site:heute_cl', 'cmk/site:heute_cl']
-      ].filter((key) => key[0]?.includes(query))
-    },
-    result_code: 0,
-    severity: 'success'
+    choices: [
+      ...userProvided,
+      'cmk/check_mk_server:yes',
+      'cmk/os_family:linux',
+      'cmk/os_name:Ubuntu',
+      'cmk/os_platform:ubuntu',
+      'cmk/os_type:linux',
+      'cmk/os_version:22.04',
+      'cmk/site:heute_cl'
+    ]
+      .filter((key) => key.includes(query))
+      .map((key) => ({ id: key, value: key }))
   })
 }
 const { mockLoaded } = useMswWorker([
-  http.post(
-    new RegExp(`${location.protocol}//${location.host}/ajax_vs_autocomplete.py`),
-    interceptor
-  )
+  http.post('*/api/internal/objects/autocomplete/:ident', interceptor)
 ])
 </script>
 

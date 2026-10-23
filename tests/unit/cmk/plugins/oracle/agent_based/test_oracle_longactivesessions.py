@@ -40,7 +40,6 @@ INFO = [
 def test_discovery() -> None:
     assert list(discover_oracle_longactivesessions(parse_oracle_longactivesessions(INFO))) == [
         Service(item="orcl"),
-        Service(item="orcl"),
         Service(item="orcl1"),
     ]
 
@@ -48,10 +47,10 @@ def test_discovery() -> None:
 _FAILURE_INFO = [["orcl", "FAILURE", "ORA-00942: table or view does not exist"]]
 
 
-def test_discovery_skips_failure_row() -> None:
-    assert not list(
+def test_discovery_failure_row() -> None:
+    assert list(
         discover_oracle_longactivesessions(parse_oracle_longactivesessions(_FAILURE_INFO))
-    )
+    ) == [Service(item="orcl")]
 
 
 def test_check_failure_row_surfaces_error() -> None:
@@ -89,27 +88,5 @@ def test_check() -> None:
         Result(
             state=State.OK,
             notice="Session (sid,serial,proc) TUX12C1 Yet Another Serial Number 0 active for 8 minutes 20 seconds from another machine osuser yet another osuser program 5800 sql_id 0 ",
-        ),
-    ]
-
-
-_LEGACY_ERROR_INFO = [["orcl", "ORA-01017:", "invalid username/password"]]
-
-
-def test_discovery_skips_legacy_error_row() -> None:
-    assert not list(
-        discover_oracle_longactivesessions(parse_oracle_longactivesessions(_LEGACY_ERROR_INFO))
-    )
-
-
-def test_check_legacy_error_row_surfaces_error() -> None:
-    assert list(
-        check_oracle_longactivesessions(
-            "orcl", {"levels": (500, 1000)}, parse_oracle_longactivesessions(_LEGACY_ERROR_INFO)
-        )
-    ) == [
-        Result(
-            state=State.UNKNOWN,
-            summary='Found error in agent output "ORA-01017: invalid username/password"',
         ),
     ]

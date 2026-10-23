@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.site import SiteId
@@ -46,7 +47,7 @@ def update_master_control_v1(
     changes = body.to_changes()
     if changes:
         apply_master_control_changes(sites.live(), site_id, changes)
-    return ApiResponse(body=None, status_code=204)
+    return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT)
 
 
 ENDPOINT_UPDATE_MASTER_CONTROL = VersionedEndpoint(
@@ -63,7 +64,7 @@ ENDPOINT_UPDATE_MASTER_CONTROL = VersionedEndpoint(
         APIVersion.V1: EndpointHandler(
             handler=update_master_control_v1,
             status_descriptions={
-                204: "The master control commands have been sent to Livestatus. "
+                HTTPStatus.NO_CONTENT: "The master control commands have been sent to Livestatus. "
                 + LIVESTATUS_GENERIC_EXPLANATION
             },
         )

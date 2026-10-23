@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
+from http import HTTPStatus
 from typing import get_args, get_type_hints
 
 import pytest
@@ -13,22 +13,36 @@ from cmk.gui.config import Config
 from cmk.gui.dashboard import DashletConfig, get_all_dashboards
 from cmk.gui.dashboard.api._utils import INTERNAL_TO_API_TYPE_NAME
 from cmk.gui.dashboard.api.model.constants import RESPONSIVE_GRID_BREAKPOINTS
-from cmk.gui.dashboard.api.model.widget import WidgetTitle
-from cmk.gui.dashboard.api.model.widget_content import _CONTENT_TYPES
+from cmk.gui.dashboard.api.model.widget import RelativeGridWidgetResponse, WidgetTitle
+from cmk.gui.dashboard.api.model.widget_content import (
+    _CONTENT_TYPES,
+    content_from_internal,
+    NotSupportedContent,
+)
 from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
-from cmk.gui.dashboard.api.model.widget_content.network_flow import NetworkFlowDonutContent
-from cmk.gui.dashboard.type_defs import NetworkFlowDonutDashletConfig
+from cmk.gui.dashboard.api.model.widget_content.graph import EmbeddedCustomGraphContent
+from cmk.gui.dashboard.api.model.widget_content.url import URLContent
+from cmk.gui.dashboard.dashlet.dashlets.custom_url import URLDashletConfig
+from cmk.gui.dashboard.type_defs import EmbeddedCustomGraphDashletConfig
 from cmk.gui.openapi.framework.model import ApiOmitted
-from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
 from cmk.gui.views.icon.registry import all_icons
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import ClientRegistry
-from tests.testlib.unit.gui.dashboard_api_test_helper import (
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry, Response
+from tests.unit.cmk.gui.helpers.dashboard_api_test_helper import (
+    admin_roles_without,
     check_widget_create,
     create_dashboard_payload,
     create_widget,
 )
+
+_INHERITED = {
+    "type": "inherited",
+    "location": {"type": "views", "name": "searchhost", "owner": None},
+    "include_context": True,
+    "include_time_range": True,
+    "show_filter_form": False,
+}
 
 
 @pytest.mark.parametrize(
@@ -63,16 +77,23 @@ def test_widget_title_from_internal_sanitizes_title_url(
         assert result.url == expected_url
 
 
-def test_donut_content_defaults_of_a_stored_widget() -> None:
-    """A donut stored before these options existed keeps the table and no comparison."""
-    config: NetworkFlowDonutDashletConfig = {
-        "type": "network_flow_donut",
-        "dimension": "applications",
-        "limit_to": 6,
-    }
-    content = NetworkFlowDonutContent.from_internal(config)
-    assert content.legend_mode == "table"
-    assert content.show_delta is False
+def test_stored_widget_of_an_unknown_type_is_not_supported() -> None:
+    config: DashletConfig = {"type": "notification_analysis", "position": (1, 1), "size": (10, 10)}
+
+    widget = RelativeGridWidgetResponse.from_internal(config)
+
+    assert (widget.content, widget.filter_context.uses_infos) == (
+        NotSupportedContent(type="not_supported", original_type="notification_analysis"),
+        [],
+    )
+
+
+def test_url_content_defaults_of_a_stored_widget() -> None:
+    """A URL widget stored before the query parameter options existed includes nothing."""
+    config: URLDashletConfig = {"type": "url", "url": "https://example.com"}
+    content = URLContent.from_internal(config)
+    assert content.include_context is False
+    assert content.include_time_range is False
 
 
 @pytest.mark.parametrize(
@@ -97,16 +118,54 @@ def test_widget_title_url_scheme_validation(
         expect_ok=not should_fail,
     )
     if should_fail:
-        assert resp.status_code == 400, f"Expected 400 for {title_url}, got {resp.status_code}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400 for {title_url}, got {resp.status_code}"
+        )
         field_error = resp.json["fields"]["body.widgets.test_widget.general_settings.title.url"]
         assert "invalid url" in field_error["msg"].lower(), (
             f"Expected error message to mention 'Invalid URL' for {title_url}, "
             f"got: {field_error['msg']}"
         )
     else:
-        assert resp.status_code == 201, (
+        assert resp.status_code == HTTPStatus.CREATED, (
             f"Expected 201 for {title_url}, got {resp.status_code} {resp.body!r}"
         )
+
+
+def test_create_embedded_custom_graph_widget_is_unsupported(clients: ClientRegistry) -> None:
+    widget = create_widget(
+        {
+            "type": "embedded_custom_graph",
+            "timerange": {"type": "predefined", "value": "last_25_hours"},
+            "definition": {},
+        }
+    )
+
+    resp = clients.DashboardClient.create_relative_grid_dashboard(
+        create_dashboard_payload("test_dashboard", {"test_widget": widget}),
+        expect_ok=False,
+    )
+
+    assert resp.status_code == HTTPStatus.BAD_REQUEST, resp.body
+    assert (
+        resp.json["fields"]["body.widgets.test_widget.content.embedded_custom_graph"]["msg"]
+        == "Value error, Widget is not supported by this edition"
+    )
+
+
+def test_embedded_custom_graph_content_without_its_edition_has_empty_definition() -> None:
+    # e.g. after a downgrade: the stored definition cannot be rendered here, and stays stored
+    config = EmbeddedCustomGraphDashletConfig(
+        type="embedded_custom_graph",
+        timerange="25h",
+        graph_render_options={},
+        definition={"version": 2, "graph_options": {}, "data_sources": []},
+    )
+
+    content = content_from_internal(config)
+
+    assert isinstance(content, EmbeddedCustomGraphContent)
+    assert content.definition == {}
 
 
 @pytest.mark.parametrize("widget_api_model", _CONTENT_TYPES)
@@ -133,7 +192,7 @@ def test_widget_api_model_has_valid_type_mapping(widget_api_model: BaseWidgetCon
 def test_show_dashboard_constants(clients: ClientRegistry) -> None:
     resp = clients.ConstantClient.get_dashboard()
 
-    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.OK, f"Expected 200, got {resp.status_code} {resp.body!r}"
     assert len(resp.json["extensions"]["widgets"]) > 0, (
         "Expected at least one widget to be returned"
     )
@@ -156,6 +215,38 @@ def test_show_dashboard_constants(clients: ClientRegistry) -> None:
         )
 
 
+def test_dashboard_constants_tell_the_link_options_of_a_widget(clients: ClientRegistry) -> None:
+    widgets = clients.ConstantClient.get_dashboard().json["extensions"]["widgets"]
+
+    assert widgets["host_stats"]["contextual_link"] == {
+        "modes": ["default", "inherited", "custom"],
+        "filters": ["siteopt", "wato_folder", "hoststate", "opthostgroup"],
+        "filter_keys": {},
+        "single_infos": [],
+    }
+    assert "contextual_link" not in widgets["event_stats"]
+
+
+def test_dashboard_metadata_tells_what_a_dashboard_is_restricted_to(
+    clients: ClientRegistry,
+) -> None:
+    payload = create_dashboard_payload("host_dashboard", {})
+    payload["filter_context"] = {
+        "restricted_to_single": ["host"],
+        "filters": {},
+        "mandatory_context_filters": [],
+    }
+    clients.DashboardClient.create_relative_grid_dashboard(payload)
+
+    dashboards = clients.DashboardClient.list_dashboard_metadata().json["value"]
+
+    assert [
+        dashboard["extensions"]["restricted_to_single"]
+        for dashboard in dashboards
+        if dashboard["extensions"]["name"] == "host_dashboard"
+    ] == [["host"]]
+
+
 def test_dashboard_constants_responsive_breakpoints_make_sense(clients: ClientRegistry) -> None:
     """Check that the configured breakpoints and widget constraints make sense."""
     resp = clients.ConstantClient.get_dashboard()
@@ -172,6 +263,19 @@ def test_dashboard_constants_responsive_breakpoints_make_sense(clients: ClientRe
             )
 
 
+@pytest.mark.parametrize("widget_type", ["embedded_view", "linked_view"])
+def test_view_widgets_allow_a_minimum_height_of_two_rows(
+    clients: ClientRegistry, widget_type: str
+) -> None:
+    resp = clients.ConstantClient.get_dashboard()
+    responsive_constraints = resp.json["extensions"]["widgets"][widget_type]["layout"]["responsive"]
+
+    assert {
+        breakpoint_id: constraints["minimum_size"]["rows"]
+        for breakpoint_id, constraints in responsive_constraints.items()
+    } == dict.fromkeys(RESPONSIVE_GRID_BREAKPOINTS, 2)
+
+
 @pytest.mark.usefixtures("mock_livestatus")
 def test_show_dashboard(clients: ClientRegistry) -> None:
     # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
@@ -179,21 +283,25 @@ def test_show_dashboard(clients: ClientRegistry) -> None:
 
     # main builtin dashboard should always be present
     resp = clients.DashboardClient.get_relative_grid_dashboard("main")
-    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.OK, f"Expected 200, got {resp.status_code} {resp.body!r}"
     # check that we got the correct dashboard
     assert resp.json["id"] == "main", "Expected dashboard ID to be 'main'"
 
 
 def test_show_non_existent_dashboard(clients: ClientRegistry) -> None:
     resp = clients.DashboardClient.get_relative_grid_dashboard("non_existent" * 4, expect_ok=False)
-    assert resp.status_code == 404, f"Expected 404, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.NOT_FOUND, (
+        f"Expected 404, got {resp.status_code} {resp.body!r}"
+    )
 
 
 def test_create_empty_dashboard(clients: ClientRegistry) -> None:
     resp = clients.DashboardClient.create_relative_grid_dashboard(
         create_dashboard_payload("test_dashboard", {})
     )
-    assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.CREATED, (
+        f"Expected 201, got {resp.status_code} {resp.body!r}"
+    )
     assert resp.json["id"] == "test_dashboard", (
         "Expected created dashboard ID to be 'test_dashboard'"
     )
@@ -207,7 +315,7 @@ def test_clone_relative_dashboard(clients: ClientRegistry) -> None:
     resp = clients.DashboardClient.clone_as_relative_grid_dashboard(
         {"reference_dashboard_id": "test_dashboard", "dashboard_id": "clone_dashboard"}
     )
-    assert resp.status_code == 201, f"Expected 201, got {resp.status_code}"
+    assert resp.status_code == HTTPStatus.CREATED, f"Expected 201, got {resp.status_code}"
     assert resp.json["id"] == "clone_dashboard", (
         "Expected cloned dashboard ID to be 'clone_dashboard'"
     )
@@ -223,7 +331,7 @@ def test_edit_relative_grid_layout(clients: ClientRegistry) -> None:
         dashboard_id,
         create_dashboard_payload(new_dashboard_id, {}),
     )
-    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.OK, f"Expected 200, got {resp.status_code} {resp.body!r}"
     assert resp.json["id"] == new_dashboard_id
 
 
@@ -239,7 +347,9 @@ def test_edit_id_in_use(clients: ClientRegistry) -> None:
         create_dashboard_payload(dashboard_2, {}),
         expect_ok=False,
     )
-    assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+        f"Expected 400, got {resp.status_code} {resp.body!r}"
+    )
     assert resp.json["title"] == "Dashboard ID already in use"
 
 
@@ -250,7 +360,9 @@ def test_create_dashboard_with_invalid_id(clients: ClientRegistry, dashboard_id:
     resp = clients.DashboardClient.create_relative_grid_dashboard(
         create_dashboard_payload(dashboard_id, {}), expect_ok=False
     )
-    assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+        f"Expected 400, got {resp.status_code} {resp.body!r}"
+    )
     assert resp.json["fields"]["body.id"]["msg"] == "String should match pattern '^[a-zA-Z0-9_]+$'"
 
 
@@ -260,7 +372,9 @@ def test_create_dashboard_with_invalid_widget_type(clients: ClientRegistry) -> N
         {"test_widget": create_widget({"type": "not_a_real_type"})},
     )
     resp = clients.DashboardClient.create_relative_grid_dashboard(payload, expect_ok=False)
-    assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+        f"Expected 400, got {resp.status_code} {resp.body!r}"
+    )
 
 
 def test_delete_dashboard(clients: ClientRegistry) -> None:
@@ -270,9 +384,13 @@ def test_delete_dashboard(clients: ClientRegistry) -> None:
     )
 
     resp = clients.DashboardClient.delete(dashboard_id)
-    assert resp.status_code == 204, f"Expected 204, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.NO_CONTENT, (
+        f"Expected 204, got {resp.status_code} {resp.body!r}"
+    )
     resp = clients.DashboardClient.get_relative_grid_dashboard(dashboard_id, expect_ok=False)
-    assert resp.status_code == 404, f"Expected 404, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.NOT_FOUND, (
+        f"Expected 404, got {resp.status_code} {resp.body!r}"
+    )
 
 
 def test_compute_widget_titles(clients: ClientRegistry) -> None:
@@ -304,7 +422,7 @@ def test_compute_widget_titles(clients: ClientRegistry) -> None:
             },
         }
     )
-    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.OK, f"Expected 200, got {resp.status_code} {resp.body!r}"
     titles = resp.json["extensions"]["titles"]
     assert titles["widget-1"] == "Widget 1", "Expected title for widget-1 to be 'Widget 1'"
     assert titles["widget-2"] == "Time series graph: custom"
@@ -314,7 +432,9 @@ class TestDashboardMetadata:
     def test_list_dashboard_metadata(self, clients: ClientRegistry) -> None:
         resp = clients.DashboardClient.list_dashboard_metadata()
 
-        assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.OK, (
+            f"Expected 200, got {resp.status_code} {resp.body!r}"
+        )
         assert len(resp.json["value"]) > 0, "Expected at least one dashboard to be returned"
 
         first_dashboard = resp.json["value"][0]
@@ -323,7 +443,9 @@ class TestDashboardMetadata:
     def test_show_dashboard_metadata(self, clients: ClientRegistry) -> None:
         resp = clients.DashboardClient.show_dashboard_metadata("main", owner="")
 
-        assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.OK, (
+            f"Expected 200, got {resp.status_code} {resp.body!r}"
+        )
 
 
 class TestDashboardIcon:
@@ -335,7 +457,9 @@ class TestDashboardIcon:
         resp = clients.DashboardClient.create_relative_grid_dashboard(
             create_dashboard_payload("test_dashboard_with_icon", {}, icon_config=icon_config)
         )
-        assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.CREATED, (
+            f"Expected 201, got {resp.status_code} {resp.body!r}"
+        )
         assert resp.json["extensions"]["general_settings"]["menu"]["icon"] == icon_config, (
             "Expected icon to be set"
         )
@@ -348,7 +472,9 @@ class TestDashboardIcon:
         resp = clients.DashboardClient.create_relative_grid_dashboard(
             create_dashboard_payload("test_dashboard_with_icon", {}, icon_config=icon_config)
         )
-        assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.CREATED, (
+            f"Expected 201, got {resp.status_code} {resp.body!r}"
+        )
         assert resp.json["extensions"]["general_settings"]["menu"]["icon"] == icon_config, (
             "Expected icon to be set"
         )
@@ -366,16 +492,62 @@ class TestPerformanceGraphContent:
             },
         )
 
-
-@pytest.mark.parametrize("widget_type", ["host_stats", "service_stats", "event_stats"])
-class TestStatsContent:
-    def test_create(self, clients: ClientRegistry, widget_type: str) -> None:
-        check_widget_create(
-            clients,
-            {
-                "type": widget_type,
-            },
+    def test_keeps_the_legend_style(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "performance_graph",
+                            "timerange": {"type": "predefined", "value": "last_25_hours"},
+                            "graph_render_options": {
+                                "show_legend": True,
+                                "legend_style": "extended",
+                            },
+                            "source": "active_sessions",
+                        }
+                    )
+                },
+            )
         )
+        widget = next(iter(resp.json["extensions"]["widgets"].values()))
+        assert widget["content"]["graph_render_options"]["legend_style"] == "extended"
+
+    def test_rejects_an_unknown_legend_style(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "performance_graph",
+                            "timerange": {"type": "predefined", "value": "last_25_hours"},
+                            "graph_render_options": {"legend_style": "huge"},
+                            "source": "active_sessions",
+                        }
+                    )
+                },
+            ),
+            expect_ok=False,
+        )
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        {"type": "host_stats", "contextual_link": {"type": "default"}},
+        {"type": "service_stats", "contextual_link": {"type": "default"}},
+        {"type": "event_stats"},
+    ],
+    ids=["host_stats", "service_stats", "event_stats"],
+)
+class TestStatsContent:
+    def test_create(self, clients: ClientRegistry, content: dict[str, object]) -> None:
+        check_widget_create(clients, content)
 
 
 class TestUserMessagesContent:
@@ -408,7 +580,9 @@ class TestSidebarElementContent:
             ),
             expect_ok=False,
         )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert resp.json["fields"]["body.widgets.test_widget.content.sidebar_element.name"][
             "msg"
         ].startswith("Value error, Value 'non_existent_element' is not allowed, valid options are:")
@@ -421,8 +595,30 @@ class TestURLContent:
             {
                 "type": "url",
                 "url": "https://example.com",
+                "include_context": False,
+                "include_time_range": False,
             },
         )
+
+    def test_keeps_the_query_parameter_options(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "url",
+                            "url": "https://example.com",
+                            "include_context": True,
+                            "include_time_range": True,
+                        }
+                    )
+                },
+            )
+        )
+        widget = next(iter(resp.json["extensions"]["widgets"].values()))
+        assert widget["content"]["include_context"] is True
+        assert widget["content"]["include_time_range"] is True
 
     @pytest.mark.parametrize(
         "url,should_fail",
@@ -451,6 +647,8 @@ class TestURLContent:
                         {
                             "type": "url",
                             "url": url,
+                            "include_context": False,
+                            "include_time_range": False,
                         }
                     )
                 },
@@ -458,13 +656,15 @@ class TestURLContent:
             expect_ok=not should_fail,
         )
         if should_fail:
-            assert resp.status_code == 400, f"Expected 400 for {url}, got {resp.status_code}"
+            assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+                f"Expected 400 for {url}, got {resp.status_code}"
+            )
             field_error = resp.json["fields"]["body.widgets.test_widget.content.url.url"]
             assert "invalid url" in field_error["msg"].lower(), (
                 f"Expected error message to mention 'Invalid URL' for {url}, got: {field_error['msg']}"
             )
         else:
-            assert resp.status_code == 201, (
+            assert resp.status_code == HTTPStatus.CREATED, (
                 f"Expected 201 for {url}, got {resp.status_code} {resp.body!r}"
             )
 
@@ -486,7 +686,9 @@ class TestStaticTextContent:
                 "text": "This is a static text widget",
             }
         )
-        assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.OK, (
+            f"Expected 200, got {resp.status_code} {resp.body!r}"
+        )
         assert set(resp.json["value"]) == {"filter_context"}
         assert resp.json["value"]["filter_context"]["uses_infos"] == []
 
@@ -516,7 +718,9 @@ class TestLinkedViewContent:
             ),
             expect_ok=False,
         )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert (
             resp.json["fields"]["body.widgets.test_widget.content.linked_view.view_name"]["msg"]
             == "Value error, View does not exist or you don't have permission to see it."
@@ -616,7 +820,9 @@ class TestEmbeddedViewContent:
         resp = clients.DashboardClient.edit_relative_grid_dashboard(
             dashboard_id, payload, expect_ok=False
         )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert (
             resp.json["fields"]["body.widgets.test_widget.content.embedded_view.datasource"]["msg"]
             == "Datasource does not match the embedded view definition."
@@ -637,7 +843,9 @@ class TestEmbeddedViewContent:
             },
         )
         resp = clients.DashboardClient.create_relative_grid_dashboard(payload, expect_ok=False)
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert resp.json["fields"]["body.widgets.test_widget.content.embedded_view.datasource"][
             "msg"
         ].startswith(
@@ -659,7 +867,9 @@ class TestEmbeddedViewContent:
             },
         )
         resp = clients.DashboardClient.create_relative_grid_dashboard(payload, expect_ok=False)
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert resp.json["fields"][
             "body.widgets.test_widget.content.embedded_view.restricted_to_single.0"
         ]["msg"].startswith(
@@ -680,9 +890,24 @@ class TestNotSupportedContent:
             ),
             expect_ok=False,
         )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert (
             resp.json["fields"]["body.widgets.test_widget.content.not_supported"]["msg"]
+            == "Value error, Cannot use unsupported content type."
+        )
+
+    def test_compute_widget_attributes(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.compute_widget_attributes(
+            {"type": "not_supported", "original_type": "notification_analysis"},
+            expect_ok=False,
+        )
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
+        assert (
+            resp.json["fields"]["body.content.not_supported"]["msg"]
             == "Value error, Cannot use unsupported content type."
         )
 
@@ -692,17 +917,6 @@ def _payload_with_share(dashboard_id: str, share: object) -> dict[str, object]:
     visibility = payload["general_settings"]["visibility"]  # type: ignore[index]
     visibility["share"] = share
     return payload
-
-
-def _admin_roles_without(
-    config: Config, *permissions: str
-) -> dict[str, BuiltInUserRole | CustomUserRole]:
-    roles = copy.deepcopy(config.roles)
-    admin_permissions = dict(roles["admin"].get("permissions", {}))
-    for permission in permissions:
-        admin_permissions[permission] = False
-    roles["admin"]["permissions"] = admin_permissions
-    return roles
 
 
 @pytest.fixture(name="contact_groups")
@@ -725,17 +939,21 @@ class TestSharePermissionEnforcement:
         resp = clients.DashboardClient.create_relative_grid_dashboard(
             _payload_with_share("shared_with_all", {"type": "with_all_users"})
         )
-        assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.CREATED, (
+            f"Expected 201, got {resp.status_code} {resp.body!r}"
+        )
 
     def test_share_with_all_users_denied_without_permission(
         self, clients: ClientRegistry, set_config: SetConfig, load_config: Config
     ) -> None:
-        with set_config(roles=_admin_roles_without(load_config, "general.publish_dashboards")):
+        with set_config(roles=admin_roles_without(load_config, "general.publish_dashboards")):
             resp = clients.DashboardClient.create_relative_grid_dashboard(
                 _payload_with_share("shared_with_all_denied", {"type": "with_all_users"}),
                 expect_ok=False,
             )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert (
             "You are not allowed to share dashboards with all users."
             in resp.json["fields"]["body.general_settings.visibility.share"]["msg"]
@@ -751,7 +969,7 @@ class TestSharePermissionEnforcement:
         own, _foreign = contact_groups
         # Without the foreign-groups permission, sharing with an own group still works.
         with set_config(
-            roles=_admin_roles_without(load_config, "general.publish_dashboards_to_foreign_groups")
+            roles=admin_roles_without(load_config, "general.publish_dashboards_to_foreign_groups")
         ):
             resp = clients.DashboardClient.create_relative_grid_dashboard(
                 _payload_with_share(
@@ -759,7 +977,9 @@ class TestSharePermissionEnforcement:
                     {"type": "with_contact_groups", "contact_groups": [own]},
                 )
             )
-        assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.CREATED, (
+            f"Expected 201, got {resp.status_code} {resp.body!r}"
+        )
 
     def test_share_with_foreign_contact_group_denied_without_foreign_permission(
         self,
@@ -770,7 +990,7 @@ class TestSharePermissionEnforcement:
     ) -> None:
         _own, foreign = contact_groups
         with set_config(
-            roles=_admin_roles_without(load_config, "general.publish_dashboards_to_foreign_groups")
+            roles=admin_roles_without(load_config, "general.publish_dashboards_to_foreign_groups")
         ):
             resp = clients.DashboardClient.create_relative_grid_dashboard(
                 _payload_with_share(
@@ -779,7 +999,9 @@ class TestSharePermissionEnforcement:
                 ),
                 expect_ok=False,
             )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert (
             "not a member of"
             in resp.json["fields"]["body.general_settings.visibility.share"]["msg"]
@@ -796,7 +1018,9 @@ class TestSharePermissionEnforcement:
                 {"type": "with_contact_groups", "contact_groups": [foreign]},
             )
         )
-        assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.CREATED, (
+            f"Expected 201, got {resp.status_code} {resp.body!r}"
+        )
 
     def test_share_with_contact_groups_denied_without_any_group_permission(
         self,
@@ -807,7 +1031,7 @@ class TestSharePermissionEnforcement:
     ) -> None:
         own, _foreign = contact_groups
         with set_config(
-            roles=_admin_roles_without(
+            roles=admin_roles_without(
                 load_config,
                 "general.publish_dashboards_to_groups",
                 "general.publish_dashboards_to_foreign_groups",
@@ -820,7 +1044,9 @@ class TestSharePermissionEnforcement:
                 ),
                 expect_ok=False,
             )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert (
             "You are not allowed to share dashboards with contact groups."
             in resp.json["fields"]["body.general_settings.visibility.share"]["msg"]
@@ -830,7 +1056,7 @@ class TestSharePermissionEnforcement:
         self, clients: ClientRegistry, set_config: SetConfig, load_config: Config
     ) -> None:
         with set_config(
-            roles=_admin_roles_without(load_config, "general.publish_dashboards_to_sites")
+            roles=admin_roles_without(load_config, "general.publish_dashboards_to_sites")
         ):
             resp = clients.DashboardClient.create_relative_grid_dashboard(
                 _payload_with_share(
@@ -839,8 +1065,275 @@ class TestSharePermissionEnforcement:
                 ),
                 expect_ok=False,
             )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
         assert (
             "You are not allowed to share dashboards with users of sites."
             in resp.json["fields"]["body.general_settings.visibility.share"]["msg"]
         )
+
+
+def _write_stats_widget(
+    clients: ClientRegistry, widget_type: str, contextual_link: dict[str, object]
+) -> Response:
+    return clients.DashboardClient.create_relative_grid_dashboard(
+        create_dashboard_payload(
+            "test_dashboard",
+            {
+                "test_widget": create_widget(
+                    {"type": widget_type, "contextual_link": contextual_link}
+                )
+            },
+        ),
+        expect_ok=False,
+    )
+
+
+def _written_link(clients: ClientRegistry) -> dict[str, object]:
+    widgets = clients.DashboardClient.get_relative_grid_dashboard("test_dashboard").json[
+        "extensions"
+    ]["widgets"]
+    contextual_link: dict[str, object] = next(iter(widgets.values()))["content"]["contextual_link"]
+    return contextual_link
+
+
+@pytest.mark.parametrize("widget_type", ["host_stats", "service_stats"])
+def test_an_inherited_link_round_trips(clients: ClientRegistry, widget_type: str) -> None:
+    _write_stats_widget(clients, widget_type, _INHERITED)
+
+    assert _written_link(clients) == _INHERITED
+
+
+def test_a_link_to_a_forbidden_target_is_rejected_on_write(clients: ClientRegistry) -> None:
+    response = _write_stats_widget(
+        clients,
+        "host_stats",
+        {**_INHERITED, "location": {"type": "views", "name": "no_such_view", "owner": None}},
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST, (
+        f"Expected 400, got {response.status_code} {response.body!r}"
+    )
+    assert (
+        response.json["fields"][
+            "body.widgets.test_widget.content.host_stats.contextual_link.inherited.location"
+        ]["msg"]
+        == "View 'no_such_view' does not exist or you don't have permission to see it."
+    )
+
+
+def test_a_widget_without_its_link_is_rejected_on_write(clients: ClientRegistry) -> None:
+    response = clients.DashboardClient.create_relative_grid_dashboard(
+        create_dashboard_payload(
+            "test_dashboard", {"test_widget": create_widget({"type": "host_stats"})}
+        ),
+        expect_ok=False,
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST, (
+        f"Expected 400, got {response.status_code} {response.body!r}"
+    )
+    assert "body.widgets.test_widget.content.host_stats.contextual_link" in response.json["fields"]
+
+
+def test_a_link_to_the_writers_own_dashboard_round_trips_its_owner(
+    clients: ClientRegistry, with_automation_user: tuple[UserId, str]
+) -> None:
+    clients.DashboardClient.create_relative_grid_dashboard(create_dashboard_payload("target", {}))
+    link = {
+        **_INHERITED,
+        "location": {"type": "dashboards", "name": "target", "owner": with_automation_user[0]},
+    }
+
+    _write_stats_widget(clients, "host_stats", link)
+
+    assert _written_link(clients) == link
+
+
+def test_a_link_to_a_private_dashboard_of_another_user_is_accepted_with_edit_foreign(
+    clients: ClientRegistry, with_automation_user: tuple[UserId, str]
+) -> None:
+    clients.User.create(
+        username="harry",
+        fullname="harry",
+        customer=None,
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+        roles=["user"],
+    )
+    clients.DashboardClient.set_credentials("harry", "supersecretish")
+    clients.DashboardClient.create_relative_grid_dashboard(create_dashboard_payload("target", {}))
+    clients.DashboardClient.set_credentials(*with_automation_user)
+    link = {**_INHERITED, "location": {"type": "dashboards", "name": "target", "owner": "harry"}}
+
+    response = _write_stats_widget(clients, "host_stats", link)
+
+    assert response.status_code == HTTPStatus.CREATED, response.body
+    assert _written_link(clients) == link
+
+
+def test_an_unchanged_link_to_a_target_gone_since_does_not_block_a_save(
+    clients: ClientRegistry, with_automation_user: tuple[UserId, str]
+) -> None:
+    clients.DashboardClient.create_relative_grid_dashboard(create_dashboard_payload("target", {}))
+    link = {
+        **_INHERITED,
+        "location": {"type": "dashboards", "name": "target", "owner": with_automation_user[0]},
+    }
+    linked_widget = create_widget({"type": "host_stats", "contextual_link": link})
+    clients.DashboardClient.create_relative_grid_dashboard(
+        create_dashboard_payload("test_dashboard", {"test_widget": linked_widget})
+    )
+    clients.DashboardClient.delete("target")
+
+    response = clients.DashboardClient.edit_relative_grid_dashboard(
+        "test_dashboard",
+        create_dashboard_payload(
+            "test_dashboard",
+            {"test_widget": linked_widget, "other_widget": create_widget({"type": "event_stats"})},
+        ),
+        expect_ok=False,
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.body
+
+
+def test_a_link_changed_to_a_forbidden_target_is_rejected_on_edit(clients: ClientRegistry) -> None:
+    _write_stats_widget(clients, "host_stats", _INHERITED)
+    forbidden = {**_INHERITED, "location": {"type": "views", "name": "no_such_view", "owner": None}}
+
+    response = clients.DashboardClient.edit_relative_grid_dashboard(
+        "test_dashboard",
+        create_dashboard_payload(
+            "test_dashboard",
+            {"test_widget": create_widget({"type": "host_stats", "contextual_link": forbidden})},
+        ),
+        expect_ok=False,
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST, (
+        f"Expected 400, got {response.status_code} {response.body!r}"
+    )
+    assert (
+        response.json["fields"][
+            "body.widgets.test_widget.content.host_stats.contextual_link.inherited.location"
+        ]["msg"]
+        == "View 'no_such_view' does not exist or you don't have permission to see it."
+    )
+
+
+def test_a_link_to_the_built_in_copy_round_trips_its_empty_owner(clients: ClientRegistry) -> None:
+    link = {**_INHERITED, "location": {"type": "views", "name": "searchhost", "owner": ""}}
+
+    _write_stats_widget(clients, "host_stats", link)
+
+    assert _written_link(clients) == link
+
+
+def test_a_link_to_a_copy_of_another_owner_is_rejected_on_write(clients: ClientRegistry) -> None:
+    response = _write_stats_widget(
+        clients,
+        "host_stats",
+        {**_INHERITED, "location": {"type": "views", "name": "searchhost", "owner": "nobody"}},
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST, (
+        f"Expected 400, got {response.status_code} {response.body!r}"
+    )
+    assert (
+        response.json["fields"][
+            "body.widgets.test_widget.content.host_stats.contextual_link.inherited.location"
+        ]["msg"]
+        == "View 'searchhost' of 'nobody' does not exist or you don't have permission to see it."
+    )
+
+
+def _custom(
+    *filter_ids: str, location: dict[str, object] | None = None, title: str = "Problems"
+) -> dict[str, object]:
+    return {
+        "type": "custom",
+        "links": [
+            {
+                "title": title,
+                "location": location or {"type": "views", "name": "searchhost", "owner": None},
+                "filters": [{"filter_id": filter_id} for filter_id in filter_ids],
+                "include_context": True,
+                "include_time_range": False,
+                "show_filter_form": False,
+            }
+        ],
+    }
+
+
+@pytest.mark.parametrize(
+    "widget_type,link",
+    [
+        pytest.param("host_stats", _custom("siteopt", "hoststate"), id="host"),
+        pytest.param("service_stats", _custom("hoststate", "svcstate"), id="service"),
+    ],
+)
+def test_a_custom_link_round_trips(
+    clients: ClientRegistry, widget_type: str, link: dict[str, object]
+) -> None:
+    _write_stats_widget(clients, widget_type, link)
+
+    assert _written_link(clients) == link
+
+
+@pytest.mark.parametrize(
+    "link",
+    [
+        pytest.param({"type": "custom", "links": []}, id="no links"),
+        pytest.param(_custom("svcstate"), id="a service filter on a host widget"),
+        pytest.param(_custom("host"), id="a host name on an aggregate widget"),
+        pytest.param(_custom(title=" "), id="a blank title"),
+    ],
+)
+def test_an_invalid_custom_link_is_rejected_on_write(
+    clients: ClientRegistry, link: dict[str, object]
+) -> None:
+    response = _write_stats_widget(clients, "host_stats", link)
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST, (
+        f"Expected 400, got {response.status_code} {response.body!r}"
+    )
+
+
+@pytest.mark.parametrize(
+    "link,field,msg",
+    [
+        pytest.param(
+            _custom("hoststate", "hoststate"),
+            "custom.links.0.filters.1",
+            "The filter 'hoststate' is listed more than once.",
+            id="a filter carried twice",
+        ),
+        pytest.param(
+            _custom(location={"type": "views", "name": "no_such_view", "owner": None}),
+            "custom.links.0.location",
+            "View 'no_such_view' does not exist or you don't have permission to see it.",
+            id="a forbidden target",
+        ),
+    ],
+)
+def test_an_invalid_custom_link_names_the_offending_field(
+    clients: ClientRegistry, link: dict[str, object], field: str, msg: str
+) -> None:
+    response = _write_stats_widget(clients, "host_stats", link)
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST, (
+        f"Expected 400, got {response.status_code} {response.body!r}"
+    )
+    assert (
+        response.json["fields"][
+            f"body.widgets.test_widget.content.host_stats.contextual_link.{field}"
+        ]["msg"]
+        == msg
+    )
+
+
+def test_an_explicit_default_reads_back_as_default(clients: ClientRegistry) -> None:
+    _write_stats_widget(clients, "host_stats", {"type": "default"})
+
+    assert _written_link(clients) == {"type": "default"}

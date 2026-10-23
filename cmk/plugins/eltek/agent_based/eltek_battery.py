@@ -21,6 +21,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.eltek.lib import DETECT_ELTEK
 from cmk.plugins.lib.elphase import check_elphase, ElPhase
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
@@ -69,10 +70,6 @@ def parse_eltek_battery(string_table: StringTable) -> Section | None:
 #   '----------------------------------------------------------------------'
 
 
-def discover_eltek_battery(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_eltek_battery(section: Section) -> CheckResult:
     map_status = {
         "0": (State.OK, "normal"),
@@ -96,7 +93,7 @@ snmp_section_eltek_battery = SimpleSNMPSection(
 check_plugin_eltek_battery = CheckPlugin(
     name="eltek_battery",
     service_name="Battery Breaker Status",
-    discovery_function=discover_eltek_battery,
+    discovery_function=discover_one_service,
     check_function=check_eltek_battery,
 )
 

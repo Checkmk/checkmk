@@ -35,7 +35,7 @@ def _valuespec_disk_usage(property: str, reclaimable: bool) -> DictElement:  # n
         "total": DictElement(
             required=False,
             parameter_form=SimpleLevels(
-                title=Title(  # astrein: disable=localization-checker
+                title=Title(  # astrein: disable=localization
                     f"Total number of {property} upper levels"
                 ),
                 form_spec_template=Integer(),
@@ -46,7 +46,7 @@ def _valuespec_disk_usage(property: str, reclaimable: bool) -> DictElement:  # n
         "active": DictElement(
             required=False,
             parameter_form=SimpleLevels(
-                title=Title(  # astrein: disable=localization-checker
+                title=Title(  # astrein: disable=localization
                     f"Total number of active {property} upper levels"
                 ),
                 form_spec_template=Integer(),
@@ -70,7 +70,7 @@ def _valuespec_disk_usage(property: str, reclaimable: bool) -> DictElement:  # n
     return DictElement(
         required=False,
         parameter_form=Dictionary(
-            title=Title(f"{property.capitalize()} "),  # astrein: disable=localization-checker
+            title=Title(f"{property.capitalize()} "),  # astrein: disable=localization
             elements=elements,
         ),
     )

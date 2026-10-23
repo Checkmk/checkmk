@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { ref, toValue } from 'vue'
@@ -44,6 +45,8 @@ import { type UseSiteOverview, useSiteOverview } from './SiteOverview/composable
 const { _t } = usei18n()
 
 interface Stage2Props {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   hostFilterType: ElementSelection
 
@@ -134,23 +137,31 @@ const isUnrestricted = props.dashboardFeatures === DashboardFeatures.UNRESTRICTE
     v-if="selectedWidget === Graph.HOST_STATE && isUnrestricted"
     v-model:handler="handler[Graph.HOST_STATE] as unknown as UseHostState"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
   />
 
   <HostStateSummary
     v-if="selectedWidget === Graph.HOST_STATE_SUMMARY && isUnrestricted"
     v-model:handler="handler[Graph.HOST_STATE_SUMMARY] as unknown as UseHostStateSummary"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
   />
 
   <HostStatistics
     v-if="selectedWidget === Graph.HOST_STATS"
     v-model:handler="handler[Graph.HOST_STATS] as unknown as UseHostStatistics"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
   />
 
   <SiteOverview
     v-if="selectedWidget === Graph.SITE_OVERVIEW && isUnrestricted"
     v-model:handler="handler[Graph.SITE_OVERVIEW] as unknown as UseSiteOverview"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
   />
 </template>

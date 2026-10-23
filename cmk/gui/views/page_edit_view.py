@@ -12,29 +12,35 @@
 import ast
 import datetime as dt
 import string
-from collections.abc import Iterator, Mapping, Sequence
-from typing import Any, Literal, NamedTuple, overload, override, TypedDict
+from collections.abc import Iterator, Mapping, Sequence, Set
+from functools import partial
+from typing import Any, Literal, NamedTuple, overload, override, TypedDict, TypeIs
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard.type_defs import ViewDashletConfig
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.http import request, response
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
-from cmk.gui.painter.v0 import all_painters, Cell, Painter
-from cmk.gui.painter.v0.helpers import RenderLink
+from cmk.gui.painter import all_painters, Cell, InternalPainter, PainterConfig, PainterContext
+from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
     ColumnTypes,
+    ContextFilterConfig,
+    ContextualLinkEntryConfig,
+    ContextualLinkTargetType,
+    FilterName,
+    InfoName,
     InventoryJoinMacrosSpec,
     PainterName,
     PainterParameters,
@@ -48,9 +54,12 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import (
+    AjaxDropdownChoice,
     CascadingDropdown,
     CascadingDropdownChoice,
+    Checkbox,
     Dictionary,
+    DictionaryModel,
     DropdownChoice,
     DropdownChoiceEntries,
     DropdownChoiceEntry,
@@ -71,15 +80,50 @@ from cmk.gui.views.inventory import (
     OrderedColumnDisplayHintsOfView,
     TableWithView,
 )
+from cmk.gui.visuals.filter import filter_registry
+from cmk.gui.visuals.filter.drilldowns import AuxTagKey, FilterKey, LabelKey, TagGroupKey
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
-from cmk.inventory.structured_data import SDPath
+from cmk.inventory.trees import SDPath
+from cmk.ruleset_matcher.tags import TagConfig
+from cmk.web.utils.autocompleter_config import AutocompleterConfig, AutocompleterParams
 from cmk.web.utils.icons import DynamicIconName
 
+from .drilldown_filters import (
+    drilldown_filters,
+    exceeded_aux_tag_limits,
+    filled_single_infos,
+    filter_key,
+)
 from .layout import layout_registry
 from .sorter import all_sorters, ParameterizedSorter, Sorter
-from .store import get_all_views
+from .store import get_all_views, get_permitted_views
 from .view_choices import view_choices
+
+# Inherited: carries the clicked row's object; custom: the filters the user picks.
+type _InheritedDrilldownChoice = Literal["drilldown_views", "drilldown_dashboards"]
+_INHERITED_DRILLDOWN_TARGETS: Mapping[_InheritedDrilldownChoice, ContextualLinkTargetType] = {
+    "drilldown_views": "views",
+    "drilldown_dashboards": "dashboards",
+}
+_INHERITED_DRILLDOWN_CHOICES: Mapping[ContextualLinkTargetType, _InheritedDrilldownChoice] = {
+    target: choice for choice, target in _INHERITED_DRILLDOWN_TARGETS.items()
+}
+
+type _CustomDrilldownChoice = Literal["custom_drilldown_views", "custom_drilldown_dashboards"]
+_CUSTOM_DRILLDOWN_TARGETS: Mapping[_CustomDrilldownChoice, ContextualLinkTargetType] = {
+    "custom_drilldown_views": "views",
+    "custom_drilldown_dashboards": "dashboards",
+}
+_CUSTOM_DRILLDOWN_CHOICES: Mapping[ContextualLinkTargetType, _CustomDrilldownChoice] = {
+    target: choice for choice, target in _CUSTOM_DRILLDOWN_TARGETS.items()
+}
+_DRILLDOWN_TITLES = {
+    "drilldown_views": _l("Drill down to view (inherited)"),
+    "drilldown_dashboards": _l("Drill down to dashboard (inherited)"),
+    "custom_drilldown_views": _l("Drill down to view (custom)"),
+    "custom_drilldown_dashboards": _l("Drill down to dashboard (custom)"),
+}
 
 
 def page_edit_view(ctx: PageContext) -> None:
@@ -97,12 +141,20 @@ def page_edit_view(ctx: PageContext) -> None:
     visuals.page_edit_visual(
         "views",
         get_all_views(),
-        UserPermissions.from_config(ctx.config, permission_registry),
+        ctx.user_permissions,
         ctx.config,
-        custom_field_handler=render_view_config,
-        create_handler=create_view_from_valuespec,
+        custom_field_handler=partial(_render_editable_view_config, config=ctx.config),
+        create_handler=partial(_create_editable_view, config=ctx.config),
         info_handler=get_view_infos,
     )
+
+
+def _render_editable_view_config(view_spec: ViewSpec, *, config: Config) -> None:
+    render_view_config(view_spec, allow_browser_reload=True, config=config)
+
+
+def _create_editable_view(old_view: ViewSpec, view: ViewSpec, *, config: Config) -> ViewSpec:
+    return create_view_from_valuespec(old_view, view, allow_browser_reload=True, config=config)
 
 
 def view_editor_options() -> list[
@@ -117,7 +169,7 @@ def view_editor_options() -> list[
     ]
 
 
-def view_editor_general_properties(ds_name: str) -> Dictionary:
+def view_editor_general_properties(ds_name: str, *, allow_browser_reload: bool) -> Dictionary:
     return Dictionary(
         title=_("View properties"),
         render="form",
@@ -140,14 +192,20 @@ def view_editor_general_properties(ds_name: str) -> Dictionary:
                     default_value=["user_sortable"],
                 ),
             ),
-            (
-                "browser_reload",
-                Integer(
-                    title=_("Automatic page reload"),
-                    unit=_("seconds"),
-                    minvalue=0,
-                    help=_('Set to "0" to disable the automatic reload.'),
-                ),
+            *(
+                [
+                    (
+                        "browser_reload",
+                        Integer(
+                            title=_("Automatic page reload"),
+                            unit=_("seconds"),
+                            minvalue=0,
+                            help=_('Set to "0" to disable the automatic reload.'),
+                        ),
+                    )
+                ]
+                if allow_browser_reload
+                else []
             ),
             (
                 "row_limit",
@@ -264,15 +322,35 @@ def view_inventory_join_macros(
 
 
 def view_editor_column_spec(
-    ident: str, ds_name: str, user_permissions: UserPermissions
+    ident: str, ds_name: str, painter_context: PainterContext, *, with_drilldown: bool = False
 ) -> Dictionary:
+    """The columns of the view editor.
+
+    With drill-down, each column's value is a pair of its spec and its drill-down link.
+    """
+    drilldown_choices = (
+        _drilldown_link_choices(
+            ds_name, painter_context.user_permissions, painter_context.config.tags
+        )
+        if with_drilldown
+        else []
+    )
     choices = [
-        _get_common_vs_column_choice(ds_name, user_permissions, add_custom_column_title=True)
+        _get_common_vs_column_choice(
+            ds_name,
+            painter_context,
+            add_custom_column_title=True,
+            drilldown_choices=drilldown_choices,
+        )
     ]
-    if join_vs_column_choice := _get_join_vs_column_choice(ds_name, user_permissions):
+    if join_vs_column_choice := _get_join_vs_column_choice(
+        ds_name, painter_context, drilldown_choices=drilldown_choices
+    ):
         choices.append(join_vs_column_choice)
 
-    if join_inv_vs_column_choice := _get_join_inv_vs_column_choice(ds_name, user_permissions):
+    if join_inv_vs_column_choice := _get_join_inv_vs_column_choice(
+        ds_name, painter_context, drilldown_choices=drilldown_choices
+    ):
         choices.append(join_inv_vs_column_choice)
 
     return _view_editor_spec(
@@ -282,11 +360,12 @@ def view_editor_column_spec(
         vs_column=CascadingDropdown(choices=choices),
         allow_empty=False,
         empty_text=_("Please add at least one column to your view."),
+        with_drilldown=with_drilldown,
     )
 
 
 def view_editor_grouping_spec(
-    ident: str, ds_name: str, user_permissions: UserPermissions
+    ident: str, ds_name: str, painter_context: PainterContext
 ) -> Dictionary:
     return _view_editor_spec(
         ds_name=ds_name,
@@ -295,7 +374,7 @@ def view_editor_grouping_spec(
         vs_column=CascadingDropdown(
             choices=[
                 _get_common_vs_column_choice(
-                    ds_name, user_permissions, add_custom_column_title=False
+                    ds_name, painter_context, add_custom_column_title=False
                 )
             ]
         ),
@@ -312,15 +391,16 @@ class _VSColumnChoice(NamedTuple):
 
 def _get_common_vs_column_choice(
     ds_name: str,
-    user_permissions: UserPermissions,
+    painter_context: PainterContext,
     add_custom_column_title: bool,
+    drilldown_choices: Sequence[CascadingDropdownChoice] = (),
 ) -> _VSColumnChoice:
-    painters = painters_of_datasource(ds_name, user_permissions)
+    painters = painters_of_datasource(ds_name)
 
-    elements = [_get_vs_column_dropdown(ds_name, "painter", painters, user_permissions)]
+    elements = [_get_vs_column_dropdown(ds_name, "painter", painters, painter_context)]
     if add_custom_column_title:
         elements.append(_get_vs_column_title())
-    elements.extend(_get_vs_link_or_tooltip_elements(painters, user_permissions))
+    elements.extend(_get_vs_link_or_tooltip_elements(painters, painter_context, drilldown_choices))
 
     return _VSColumnChoice(
         column_type="column",
@@ -337,9 +417,11 @@ def _get_vs_column_title() -> tuple[str, TextInput]:
 
 
 def _get_join_vs_column_choice(
-    ds_name: str, user_permissions: UserPermissions
+    ds_name: str,
+    painter_context: PainterContext,
+    drilldown_choices: Sequence[CascadingDropdownChoice] = (),
 ) -> None | _VSColumnChoice:
-    if not (join_painters := join_painters_of_datasource(ds_name, user_permissions)):
+    if not (join_painters := join_painters_of_datasource(ds_name)):
         return None
 
     return _VSColumnChoice(
@@ -352,7 +434,7 @@ def _get_join_vs_column_choice(
                 "service name of the service you want to show the data for."
             ),
             elements=[
-                _get_vs_column_dropdown(ds_name, "join_painter", join_painters, user_permissions),
+                _get_vs_column_dropdown(ds_name, "join_painter", join_painters, painter_context),
                 (
                     "join_value",
                     TextOrRegExp(
@@ -372,14 +454,16 @@ def _get_join_vs_column_choice(
                 ),
                 _get_vs_column_title(),
             ]
-            + _get_vs_link_or_tooltip_elements(join_painters, user_permissions),
+            + _get_vs_link_or_tooltip_elements(join_painters, painter_context, drilldown_choices),
             optional_keys=["link_spec", "tooltip"],
         ),
     )
 
 
 def _get_join_inv_vs_column_choice(
-    ds_name: str, user_permissions: UserPermissions
+    ds_name: str,
+    painter_context: PainterContext,
+    drilldown_choices: Sequence[CascadingDropdownChoice] = (),
 ) -> _VSColumnChoice | None:
     if not _is_inventory_datasource(ds_name):
         return None
@@ -448,7 +532,8 @@ def _get_join_inv_vs_column_choice(
         column_type="join_inv_column",
         title=_("Joined inventory column"),
         vs=Dictionary(
-            elements=elements + _get_vs_link_or_tooltip_elements({}, user_permissions),
+            elements=elements
+            + _get_vs_link_or_tooltip_elements({}, painter_context, drilldown_choices),
             optional_keys=["link_spec", "tooltip"],
         ),
     )
@@ -504,14 +589,14 @@ def _get_inventory_column_infos(
 def _get_vs_column_dropdown(
     ds_name: str,
     painter_type: str,
-    painters: Mapping[str, Painter],
-    user_permissions: UserPermissions,
+    painters: Mapping[str, InternalPainter],
+    painter_context: PainterContext,
 ) -> tuple[str, ValueSpec]:
     return (
         "painter_spec",
         CascadingDropdown(
             title=_("Column"),
-            choices=_painter_choices_with_params(painters, user_permissions),
+            choices=_painter_choices_with_params(painters, painter_context),
             no_preselect_title="",
             render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
             render_sub_vs_request_vars={
@@ -523,15 +608,19 @@ def _get_vs_column_dropdown(
 
 
 def _get_vs_link_or_tooltip_elements(
-    painters: Mapping[str, Painter],
-    user_permissions: UserPermissions,
+    painters: Mapping[str, InternalPainter],
+    painter_context: PainterContext,
+    drilldown_choices: Sequence[CascadingDropdownChoice] = (),
 ) -> list[tuple[str, ValueSpec]]:
     return [
         (
             "link_spec",
             CascadingDropdown(
                 title=_("Link"),
-                choices=_column_link_choices(user_permissions),
+                choices=[
+                    *_column_link_choices(painter_context.user_permissions),
+                    *drilldown_choices,
+                ],
                 orientation="horizontal",
             ),
         ),
@@ -539,19 +628,101 @@ def _get_vs_link_or_tooltip_elements(
             "tooltip",
             DropdownChoice(
                 title=_("Tooltip"),
-                choices=_painter_choices(painters, user_permissions),
+                choices=_painter_choices(painters, painter_context),
             ),
         ),
     ]
 
 
+type _RawVSDrilldownFilter = FilterName | tuple[FilterName, str]
+
+
+def _raw_filter_name(raw: _RawVSDrilldownFilter) -> FilterName:
+    return raw if isinstance(raw, str) else raw[0]
+
+
+class _RawVSCustomDrilldown(TypedDict):
+    target: VisualName
+    filters: list[_RawVSDrilldownFilter]
+    include_context: bool
+    include_time_range: bool
+
+
+type _RawVSLinkSpec = (
+    tuple[VisualTypeName, VisualName]
+    | tuple[_InheritedDrilldownChoice, VisualName]
+    | tuple[_CustomDrilldownChoice, _RawVSCustomDrilldown]
+)
+
+
 class _RawVSColumnSpecOptional(TypedDict, total=False):
-    link_spec: tuple[VisualTypeName, VisualName]
+    link_spec: _RawVSLinkSpec
     tooltip: ColumnName
 
 
+def _is_inherited_drilldown(
+    link_spec: _RawVSLinkSpec,
+) -> TypeIs[tuple[_InheritedDrilldownChoice, VisualName]]:
+    return link_spec[0] in _INHERITED_DRILLDOWN_TARGETS
+
+
+def _is_custom_drilldown(
+    link_spec: _RawVSLinkSpec,
+) -> TypeIs[tuple[_CustomDrilldownChoice, _RawVSCustomDrilldown]]:
+    return link_spec[0] in _CUSTOM_DRILLDOWN_TARGETS
+
+
+def _drilldown_link(link_spec: _RawVSLinkSpec | None) -> ContextualLinkEntryConfig | None:
+    if link_spec is None:
+        return None
+    if _is_inherited_drilldown(link_spec):
+        target_type, name = _INHERITED_DRILLDOWN_TARGETS[link_spec[0]], link_spec[1]
+        # Like a new inherited link in the wizard, it carries the context and the time range.
+        return ContextualLinkEntryConfig(
+            title=name,
+            location=(target_type, name),
+            filters=[],
+            include_context=True,
+            include_time_range=True,
+            show_filter_form=False,
+        )
+    if _is_custom_drilldown(link_spec):
+        target_type, custom = _CUSTOM_DRILLDOWN_TARGETS[link_spec[0]], link_spec[1]
+        # The editor offers no title, owner or filter form, so it saves the defaults.
+        return ContextualLinkEntryConfig(
+            title=custom["target"],
+            location=(target_type, custom["target"]),
+            filters=[
+                ContextFilterConfig(filter_id=raw)
+                if isinstance(raw, str)
+                else ContextFilterConfig(filter_id=raw[0], key=raw[1])
+                for raw in custom["filters"]
+            ],
+            include_context=custom["include_context"],
+            include_time_range=custom["include_time_range"],
+            show_filter_form=False,
+        )
+    return None
+
+
+def _drilldown_link_spec(link: ContextualLinkEntryConfig) -> _RawVSLinkSpec:
+    target_type, name = link["location"][0], link["location"][1]
+    if not link["filters"]:
+        return _INHERITED_DRILLDOWN_CHOICES[target_type], name
+    return _CUSTOM_DRILLDOWN_CHOICES[target_type], _RawVSCustomDrilldown(
+        target=name,
+        filters=[
+            (config["filter_id"], config["key"]) if "key" in config else config["filter_id"]
+            for config in link["filters"]
+        ],
+        include_context=link["include_context"],
+        include_time_range=link["include_time_range"],
+    )
+
+
 class _RawVSColumnSpec(_RawVSColumnSpecOptional):
-    painter_spec: PainterName | tuple[PainterName, PainterParameters]
+    # None until a column is chosen, e.g. in the ListOf template for "Add column"
+    painter_spec: PainterName | tuple[PainterName, PainterParameters] | None
     column_title: str
 
 
@@ -564,6 +735,13 @@ class _RawVSJoinInvColumnSpec(_RawVSColumnSpecOptional):
     column_title: str
 
 
+type _RawVSColumn = (
+    tuple[Literal["column"], _RawVSColumnSpec]
+    | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
+    | tuple[Literal["join_inv_column"], _RawVSJoinInvColumnSpec]
+)
+
+
 def _view_editor_spec(
     *,
     ident: str,
@@ -572,44 +750,45 @@ def _view_editor_spec(
     vs_column: ValueSpec,
     allow_empty: bool,
     empty_text: str | None,
+    with_drilldown: bool = False,
 ) -> Dictionary:
     # Note: for ident == "grouping" we always have "column" type,
     # ie. there aren't any "join_column"s.
 
-    def _from_vs(
-        value: (
-            tuple[Literal["column"], _RawVSColumnSpec]
-            | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
-            | tuple[Literal["join_inv_column"], _RawVSJoinInvColumnSpec]
-        ),
-    ) -> ColumnSpec:
+    def _from_vs(value: _RawVSColumn) -> ColumnSpec | _RawVSColumn:
         if value[0] == "column":
-            column_type, inner_value = value
-            return ColumnSpec(
-                _column_type=column_type,
-                name=_get_name(inner_value),
-                parameters=_get_params(inner_value),
-                column_title=inner_value.get("column_title", ""),
-                link_spec=_get_link_spec(inner_value),
-                tooltip=inner_value.get("tooltip"),
-            )
+            return _from_vs_column(value, join_value=None)
 
         if value[0] == "join_column":
-            join_column_type, inner_value = value
-            return ColumnSpec(
-                _column_type=join_column_type,
-                name=_get_name(inner_value),
-                parameters=_get_params(inner_value),
-                join_value=inner_value["join_value"],
-                column_title=inner_value["column_title"],
-                link_spec=_get_link_spec(inner_value),
-                tooltip=inner_value.get("tooltip"),
-            )
+            return _from_vs_column(value, join_value=value[1]["join_value"])
 
         if value[0] == "join_inv_column":
             return _from_vs_join_inv_column(*value)
 
         raise ValueError
+
+    def _from_vs_column(
+        value: (
+            tuple[Literal["column"], _RawVSColumnSpec]
+            | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
+        ),
+        *,
+        join_value: ColumnName | None,
+    ) -> ColumnSpec | _RawVSColumn:
+        column_type, inner_value = value
+        # An unchosen painter stays raw, so that validation reports it at its dropdown
+        if (painter_spec := inner_value["painter_spec"]) is None:
+            return value
+        name, parameters = _split_painter_spec(painter_spec)
+        return ColumnSpec(
+            _column_type=column_type,
+            name=name,
+            parameters=parameters,
+            join_value=join_value,
+            column_title=inner_value.get("column_title", ""),
+            link_spec=_get_link_spec(inner_value),
+            tooltip=inner_value.get("tooltip"),
+        )
 
     def _from_vs_join_inv_column(
         column_type: Literal["join_inv_column"],
@@ -633,25 +812,25 @@ def _view_editor_spec(
             tooltip=inner_value.get("tooltip"),
         )
 
-    def _get_name(value: _RawVSColumnSpec) -> PainterName:
-        return ps[0] if isinstance((ps := value["painter_spec"]), tuple) else ps
-
-    def _get_params(value: _RawVSColumnSpec) -> PainterParameters:
-        return ps[1] if isinstance((ps := value["painter_spec"]), tuple) else PainterParameters()
+    def _split_painter_spec(
+        painter_spec: PainterName | tuple[PainterName, PainterParameters],
+    ) -> tuple[PainterName, PainterParameters]:
+        if isinstance(painter_spec, tuple):
+            return painter_spec
+        return painter_spec, PainterParameters()
 
     def _get_link_spec(value: _RawVSColumnSpec | _RawVSJoinInvColumnSpec) -> VisualLinkSpec | None:
-        return None if (ls := value.get("link_spec")) is None else VisualLinkSpec.from_raw(ls)
-
-    def _to_vs(
-        column_spec: ColumnSpec | None,
-    ) -> (
-        tuple[Literal["column"], _RawVSColumnSpec]
-        | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
-        | tuple[Literal["join_inv_column"], _RawVSJoinInvColumnSpec]
-        | None
-    ):
-        if column_spec is None:
+        if (
+            (ls := value.get("link_spec")) is None
+            or _is_inherited_drilldown(ls)
+            or _is_custom_drilldown(ls)
+        ):
             return None
+        return VisualLinkSpec.from_raw(ls)
+
+    def _to_vs(column_spec: ColumnSpec | _RawVSColumn | None) -> _RawVSColumn | None:
+        if column_spec is None or isinstance(column_spec, tuple):
+            return column_spec
 
         if (column_type := column_spec.column_type) == "column":
             raw_vs = _RawVSColumnSpec(
@@ -701,15 +880,36 @@ def _view_editor_spec(
 
     def _get_painter_spec(
         column_spec: ColumnSpec,
-    ) -> PainterName | tuple[PainterName, PainterParameters]:
-        if column_spec.parameters is None:
-            return column_spec.name  # type: ignore[unreachable]
+    ) -> tuple[PainterName, PainterParameters]:
         return (column_spec.name, column_spec.parameters)
 
-    vs_column = Transform(
-        valuespec=vs_column,
-        from_valuespec=_from_vs,
-        to_valuespec=_to_vs,
+    def _from_vs_with_drilldown(
+        value: _RawVSColumn,
+    ) -> tuple[ColumnSpec | _RawVSColumn, ContextualLinkEntryConfig | None]:
+        return _from_vs(value), _drilldown_link(value[1].get("link_spec"))
+
+    def _to_vs_with_drilldown(
+        value: tuple[ColumnSpec | _RawVSColumn, ContextualLinkEntryConfig | None] | None,
+    ) -> _RawVSColumn | None:
+        if value is None:
+            return None
+        column_spec, link = value
+        if (raw := _to_vs(column_spec)) is not None and link is not None:
+            raw[1]["link_spec"] = _drilldown_link_spec(link)
+        return raw
+
+    vs_column = (
+        Transform(
+            valuespec=vs_column,
+            from_valuespec=_from_vs_with_drilldown,
+            to_valuespec=_to_vs_with_drilldown,
+        )
+        if with_drilldown
+        else Transform(
+            valuespec=vs_column,
+            from_valuespec=_from_vs,
+            to_valuespec=_to_vs,
+        )
     )
 
     return Dictionary(
@@ -753,11 +953,202 @@ def _column_link_choices(user_permissions: UserPermissions) -> list[CascadingDro
     ]
 
 
+def _drilldown_link_choices(
+    ds_name: str, user_permissions: UserPermissions, tags: TagConfig
+) -> list[CascadingDropdownChoice]:
+    """Inherited drill-downs need host or service rows, custom ones a filter the row can value."""
+    data_source = data_source_registry[ds_name]()
+    object_infos = {info for info in ("host", "service") if info in data_source.infos}
+    choices: list[CascadingDropdownChoice] = []
+    if object_infos:
+        choices += [
+            (
+                choice,
+                f"{_DRILLDOWN_TITLES[choice]}:",
+                DropdownChoice(
+                    choices=_fillable_targets(
+                        target_type,
+                        _permitted_target_single_infos(target_type, user_permissions),
+                        object_infos,
+                        user_permissions,
+                    ),
+                    sorted=True,
+                ),
+            )
+            for choice, target_type in _INHERITED_DRILLDOWN_TARGETS.items()
+        ]
+    choices += [
+        (
+            choice,
+            f"{_DRILLDOWN_TITLES[choice]}:",
+            _custom_drilldown_valuespec(target_type, filters, tags, user_permissions),
+        )
+        for choice, target_type in _CUSTOM_DRILLDOWN_TARGETS.items()
+        if (filters := drilldown_filters(data_source, target_type))
+    ]
+    return choices
+
+
+def _fillable_targets(
+    target_type: ContextualLinkTargetType,
+    target_single_infos: Mapping[VisualName, SingleInfos],
+    infos: Set[InfoName],
+    user_permissions: UserPermissions,
+) -> DropdownChoiceEntries:
+    fillable = {
+        name for name, single_infos in target_single_infos.items() if set(single_infos) <= infos
+    }
+    if target_type == "views":
+        return [choice for choice in view_choices() if choice[0] in fillable]
+    dashboard_type = visual_type_registry["dashboards"]()
+    return [
+        choice
+        for choice in dashboard_type.choices(dashboard_type.visuals(), user_permissions)
+        if choice[0] in fillable
+    ]
+
+
+def _permitted_target_single_infos(
+    target_type: ContextualLinkTargetType, user_permissions: UserPermissions
+) -> dict[VisualName, SingleInfos]:
+    if target_type == "views":
+        return {name: view["single_infos"] for name, view in get_permitted_views().items()}
+    dashboard_type = visual_type_registry["dashboards"]()
+    return {
+        name: dashboard["single_infos"]
+        for name, dashboard in dashboard_type.permitted_visuals(
+            dashboard_type.visuals(), user_permissions
+        ).items()
+    }
+
+
+def _custom_drilldown_valuespec(
+    target_type: ContextualLinkTargetType,
+    filters: Sequence[FilterName],
+    tags: TagConfig,
+    user_permissions: UserPermissions,
+) -> Dictionary:
+    target_single_infos = _permitted_target_single_infos(target_type, user_permissions)
+    targets = _fillable_targets(
+        target_type, target_single_infos, filled_single_infos(filters), user_permissions
+    )
+    return Dictionary(
+        elements=[
+            ("target", DropdownChoice(title=_("Target page"), choices=targets, sorted=True)),
+            (
+                "filters",
+                ListOf(
+                    valuespec=CascadingDropdown(
+                        choices=[
+                            (
+                                filter_name,
+                                _filter_title(filter_name),
+                                _filter_key_valuespec(filter_key(filter_name), tags),
+                            )
+                            for filter_name in filters
+                        ],
+                        orientation="horizontal",
+                    ),
+                    title=_("Filters of the clicked element"),
+                    add_label=_("Add filter"),
+                    # Distinct from the default placeholder of the enclosing column list.
+                    magic="@!!",
+                    allow_empty=False,
+                    empty_text=_("Please add at least one filter."),
+                    validate=_validate_filters,
+                ),
+            ),
+            (
+                "include_context",
+                Checkbox(label=_("Include dashboard and widget filters"), default_value=True),
+            ),
+            (
+                "include_time_range",
+                Checkbox(label=_("Include current time range"), default_value=True),
+            ),
+        ],
+        optional_keys=[],
+        validate=partial(_validate_named_target, target_single_infos),
+    )
+
+
+def _validate_named_target(
+    target_single_infos: Mapping[VisualName, SingleInfos], value: DictionaryModel, varprefix: str
+) -> None:
+    if value["include_context"]:
+        return
+    filter_names = [_raw_filter_name(raw) for raw in value["filters"]]
+    if not set(target_single_infos.get(value["target"], ())) <= filled_single_infos(filter_names):
+        raise MKUserError(
+            f"{varprefix}_p_filters",
+            _(
+                "The target page shows a single object. Without the dashboard and widget filters,"
+                " add a filter that identifies it."
+            ),
+        )
+
+
+def _filter_title(filter_name: FilterName) -> str:
+    """Prefixed with its info's title, as in the filter menu."""
+    filter_ = filter_registry[filter_name]
+    return f"{visual_info_registry[filter_.info]().title}: {str(filter_.title).strip()}"
+
+
+class _LabelKeyAutocompleterConfig(AutocompleterConfig):
+    def __init__(self, *, object_type: Literal["host", "service"]) -> None:
+        super().__init__(ident="label_key")
+        self._object_type = object_type
+
+    @property
+    @override
+    def params(self) -> AutocompleterParams:
+        return {"object_type": self._object_type, **super().params}
+
+
+def _filter_key_valuespec(key: FilterKey | None, tags: TagConfig) -> ValueSpec | None:
+    """The label key, tag group or auxiliary tag a filter needs, if any."""
+    match key:
+        case LabelKey(object_type=object_type):
+            return AjaxDropdownChoice(
+                title=_("Label key"),
+                autocompleter=_LabelKeyAutocompleterConfig(object_type=object_type),
+                validate=_validate_label_key,
+            )
+        case TagGroupKey():
+            return DropdownChoice(title=_("Tag group"), choices=tags.get_tag_group_choices())
+        case AuxTagKey():
+            return DropdownChoice(title=_("Auxiliary tag"), choices=tags.aux_tag_list.get_choices())
+        case None:
+            return None
+
+
+def _validate_label_key(value: str | None, varprefix: str) -> None:
+    if not value:
+        raise MKUserError(varprefix, _("Please enter a label key."))
+    # A label is parsed as key:value, so a colon would end the key early.
+    if ":" in value:
+        raise MKUserError(varprefix, _("A label key must not contain a colon."))
+
+
+def _validate_filters(value: Sequence[object], varprefix: str) -> None:
+    if len(set(value)) != len(value):
+        raise MKUserError(
+            varprefix,
+            _("Add each filter only once, and a label or tag filter only once per key."),
+        )
+    for max_count in exceeded_aux_tag_limits(
+        _raw_filter_name(raw) for raw in value if isinstance(raw, str | tuple)
+    ):
+        raise MKUserError(
+            varprefix, _("Add up to %(count)d auxiliary tags.") % {"count": max_count}
+        )
+
+
 def view_editor_sorter_specs(
     ident: str,  # noqa: ARG001
     ds_name: str,
     painters: Sequence[ColumnSpec],
-    user_permissions: UserPermissions,
+    painter_context: PainterContext,
 ) -> Dictionary:
     def _sorter_choices(
         ds_name: str, painters: Sequence[ColumnSpec]
@@ -766,7 +1157,7 @@ def view_editor_sorter_specs(
         unsupported_columns: list[ColumnName] = datasource.unsupported_columns
         registered_painters = all_painters(active_config.tags.tag_groups)
 
-        for name, p in sorters_of_datasource(ds_name, user_permissions).items():
+        for name, p in sorters_of_datasource(ds_name).items():
             if any(column in p.columns for column in unsupported_columns):
                 continue
             # Sorters may provide a third element: That Dictionary will be displayed after the
@@ -774,13 +1165,13 @@ def view_editor_sorter_specs(
             if isinstance(p, ParameterizedSorter):
                 yield (
                     name,
-                    get_sorter_plugin_title_for_choices(p, registered_painters, user_permissions),
+                    get_sorter_plugin_title_for_choices(p, registered_painters, painter_context),
                     p.vs_parameters(active_config, painters),
                 )
             else:
                 yield (
                     name,
-                    get_sorter_plugin_title_for_choices(p, registered_painters, user_permissions),
+                    get_sorter_plugin_title_for_choices(p, registered_painters, painter_context),
                 )
 
     return Dictionary(
@@ -819,15 +1210,22 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
     def page(self, ctx: PageContext) -> PageResult:
         api_request = request.get_request()
 
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        painter_context = PainterContext(
+            config=PainterConfig.from_config(ctx.config),
+            request=ctx.request,
+            painter_options=PainterOptions.get_instance(),
+            theme=theme,
+            url_renderer=RenderLink(ctx.request, response, display_options),
+            user_permissions=ctx.user_permissions,
+        )
         if api_request["painter_type"] == "painter":
-            painters = painters_of_datasource(api_request["ds_name"], user_permissions)
+            painters = painters_of_datasource(api_request["ds_name"])
         elif api_request["painter_type"] == "join_painter":
-            painters = join_painters_of_datasource(api_request["ds_name"], user_permissions)
+            painters = join_painters_of_datasource(api_request["ds_name"])
         else:
             raise NotImplementedError
 
-        vs = CascadingDropdown(choices=_painter_choices_with_params(painters, user_permissions))
+        vs = CascadingDropdown(choices=_painter_choices_with_params(painters, painter_context))
         sub_vs = self._get_sub_vs(vs, ast.literal_eval(api_request["choice_id"]))
         value = ast.literal_eval(api_request["encoded_value"])
 
@@ -844,7 +1242,27 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         raise MKGeneralException("Invaild choice")
 
 
-def render_view_config(view_spec: ViewSpec, general_properties: bool = True) -> None:
+def _link_with_offered_filters(
+    link: ContextualLinkEntryConfig | None, data_source: ABCDataSource
+) -> ContextualLinkEntryConfig | None:
+    """Without the filters no longer offered, None if none is left: the editor can't show them."""
+    if link is None or not link["filters"]:
+        return link
+    offered = drilldown_filters(data_source, link["location"][0])
+    if not (filters := [f for f in link["filters"] if f["filter_id"] in offered]):
+        return None
+    return {**link, "filters": filters}
+
+
+def render_view_config(
+    view_spec: ViewSpec,
+    general_properties: bool = True,
+    *,
+    allow_browser_reload: bool,
+    config: Config,
+    column_links: Mapping[int, ContextualLinkEntryConfig] | None = None,
+) -> None:
+    """Render the view editor's fields; with column_links, a column may also drill down."""
     value = _transform_view_to_valuespec_value(view_spec)
 
     # TODO: This and the modification of the view_spec should not be here. Find a better place
@@ -857,7 +1275,9 @@ def render_view_config(view_spec: ViewSpec, general_properties: bool = True) -> 
     value["datasource"] = ds_name
 
     if general_properties:
-        view_editor_general_properties(ds_name).render_input("view", value.get("view"))
+        view_editor_general_properties(
+            ds_name, allow_browser_reload=allow_browser_reload
+        ).render_input("view", value.get("view"))
 
     if _is_inventory_datasource(ds_name):
         view_inventory_join_macros(
@@ -865,16 +1285,38 @@ def render_view_config(view_spec: ViewSpec, general_properties: bool = True) -> 
             [h.table.columns for h in inv_display_hints if isinstance(h.table, TableWithView)],
         ).render_input("macros", value.get("inventory_join_macros"))
 
-    user_permissions = UserPermissions.from_config(active_config, permission_registry)
-    vs_columns = view_editor_column_spec("columns", ds_name, user_permissions)
-    vs_columns.render_input("columns", value["columns"])
+    painter_context = PainterContext(
+        config=PainterConfig.from_config(config),
+        request=request,
+        painter_options=PainterOptions.get_instance(),
+        theme=theme,
+        url_renderer=RenderLink(request, response, display_options),
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
+    )
+    if column_links is None:
+        vs_columns = view_editor_column_spec("columns", ds_name, painter_context)
+        vs_columns.render_input("columns", value["columns"])
+    else:
+        vs_columns = view_editor_column_spec(
+            "columns", ds_name, painter_context, with_drilldown=True
+        )
+        data_source = data_source_registry[ds_name]()
+        vs_columns.render_input(
+            "columns",
+            {
+                "columns": [
+                    (column, _link_with_offered_filters(column_links.get(index), data_source))
+                    for index, column in enumerate(value["columns"]["columns"])
+                ]
+            },
+        )
 
     vs_sorting = view_editor_sorter_specs(
-        "sorting", ds_name, value["columns"]["columns"], user_permissions
+        "sorting", ds_name, value["columns"]["columns"], painter_context
     )
     vs_sorting.render_input("sorting", value["sorting"])
 
-    vs_grouping = view_editor_grouping_spec("grouping", ds_name, user_permissions)
+    vs_grouping = view_editor_grouping_spec("grouping", ds_name, painter_context)
     vs_grouping.render_input("grouping", value["grouping"])
 
 
@@ -950,7 +1392,38 @@ def _update_view_with_valuespec_values(
 #
 # old_view is the old view dict which might be loaded from storage.
 # view is the new dict object to be updated.
-def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](old_view: T, view: T) -> T:
+def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
+    old_view: T, view: T, *, allow_browser_reload: bool, config: Config
+) -> T:
+    view, _column_links = _create_view_from_valuespec(
+        old_view,
+        view,
+        allow_browser_reload=allow_browser_reload,
+        config=config,
+        with_drilldown=False,
+    )
+    return view
+
+
+def create_embedded_view_from_valuespec(
+    old_view: ViewSpec, view: ViewSpec, *, allow_browser_reload: bool, config: Config
+) -> tuple[ViewSpec, dict[int, ContextualLinkEntryConfig]]:
+    """Like create_view_from_valuespec, where a column may also drill down.
+
+    The drill-down links come by painter index, beside the view they have no place in.
+    """
+    return _create_view_from_valuespec(
+        old_view,
+        view,
+        allow_browser_reload=allow_browser_reload,
+        config=config,
+        with_drilldown=True,
+    )
+
+
+def _create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
+    old_view: T, view: T, *, allow_browser_reload: bool, config: Config, with_drilldown: bool
+) -> tuple[T, dict[int, ContextualLinkEntryConfig]]:
     ds_name = old_view.get("datasource") or request.get_ascii_input_mandatory("datasource")
     view["datasource"] = ds_name
 
@@ -959,12 +1432,36 @@ def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](old_view: T, vi
         vs.validate_value(attrs, ident)
         _update_view_with_valuespec_values(view, ident, attrs)
 
-    user_permissions = UserPermissions.from_config(active_config, permission_registry)
-    update_view("view", view_editor_general_properties(ds_name))
-    update_view("columns", view_editor_column_spec("columns", ds_name, user_permissions))
-    update_view("grouping", view_editor_grouping_spec("grouping", ds_name, user_permissions))
+    painter_context = PainterContext(
+        config=PainterConfig.from_config(config),
+        request=request,
+        painter_options=PainterOptions.get_instance(),
+        theme=theme,
+        url_renderer=RenderLink(request, response, display_options),
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
+    )
     update_view(
-        "sorting", view_editor_sorter_specs("sorting", ds_name, view["painters"], user_permissions)
+        "view", view_editor_general_properties(ds_name, allow_browser_reload=allow_browser_reload)
+    )
+
+    vs_columns = view_editor_column_spec(
+        "columns", ds_name, painter_context, with_drilldown=with_drilldown
+    )
+    columns = vs_columns.from_html_vars("columns")
+    vs_columns.validate_value(columns, "columns")
+    column_links: dict[int, ContextualLinkEntryConfig] = {}
+    if with_drilldown:
+        column_links = {
+            index: link
+            for index, (_column, link) in enumerate(columns["columns"])
+            if link is not None
+        }
+        columns = {"columns": [column for column, _link in columns["columns"]]}
+    _update_view_with_valuespec_values(view, "columns", columns)
+
+    update_view("grouping", view_editor_grouping_spec("grouping", ds_name, painter_context))
+    update_view(
+        "sorting", view_editor_sorter_specs("sorting", ds_name, view["painters"], painter_context)
     )
 
     if _is_inventory_datasource(ds_name):
@@ -978,17 +1475,17 @@ def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](old_view: T, vi
 
     view["modified_at"] = dt.datetime.now(dt.UTC).isoformat()
 
-    return view
+    return view, column_links
 
 
 def _painter_choices(
-    painters: Mapping[str, Painter], user_permissions: UserPermissions
+    painters: Mapping[str, InternalPainter], painter_context: PainterContext
 ) -> DropdownChoiceEntries:
-    return [(c[0], c[1]) for c in _painter_choices_with_params(painters, user_permissions)]
+    return [(c[0], c[1]) for c in _painter_choices_with_params(painters, painter_context)]
 
 
 def _painter_choices_with_params(
-    painters: Mapping[str, Painter], user_permissions: UserPermissions
+    painters: Mapping[str, InternalPainter], painter_context: PainterContext
 ) -> list[CascadingDropdownChoice]:
     registered_painters = all_painters(active_config.tags.tag_groups)
     return sorted(
@@ -996,9 +1493,9 @@ def _painter_choices_with_params(
             (
                 name,
                 _get_painter_plugin_title_for_choices(
-                    painter, registered_painters, user_permissions
+                    painter, registered_painters, painter_context
                 ),
-                painter.parameters if painter.parameters else None,
+                painter.parameters(painter_context),
             )
             for name, painter in painters.items()
         ),
@@ -1007,20 +1504,22 @@ def _painter_choices_with_params(
 
 
 def _get_painter_plugin_title_for_choices(
-    plugin: Painter,
-    registered_painters: Mapping[str, type[Painter]],
-    user_permissions: UserPermissions,
+    plugin: InternalPainter,
+    registered_painters: Mapping[str, InternalPainter],
+    painter_context: PainterContext,
 ) -> str:
-    dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters, user_permissions)
-    return f"{_get_info_title(plugin)}: {plugin.list_title(dummy_cell)}"
+    dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters, painter_context, None)
+    return (
+        f"{_get_info_title(plugin)}: {plugin.list_title(dummy_cell, dummy_cell.painter_context())}"
+    )
 
 
 def get_sorter_plugin_title_for_choices(
     plugin: Sorter,
-    registered_painters: Mapping[str, type[Painter]],
-    user_permissions: UserPermissions,
+    registered_painters: Mapping[str, InternalPainter],
+    painter_context: PainterContext,
 ) -> str:
-    dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters, user_permissions)
+    dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters, painter_context, None)
     title: str
     title = plugin.title(dummy_cell) if callable(plugin.title) else plugin.title
     return f"{_get_info_title(plugin)}: {title}"
@@ -1062,7 +1561,7 @@ def _dummy_view_spec() -> ViewSpec:
     )
 
 
-def _get_info_title(plugin: Painter | Sorter) -> str:
+def _get_info_title(plugin: InternalPainter | Sorter) -> str:
     # TODO: Cleanup the special case for sites. How? Add an info for it?
     if plugin.columns == ["site"]:
         return _("Site")
@@ -1075,40 +1574,36 @@ def _get_info_title(plugin: Painter | Sorter) -> str:
     )
 
 
-def infos_needed_by_plugin(plugin: Painter | Sorter, add_columns: list | None = None) -> set[str]:
+def infos_needed_by_plugin(
+    plugin: InternalPainter | Sorter, add_columns: list | None = None
+) -> set[str]:
     if add_columns is None:
         add_columns = []
 
     return {c.split("_", 1)[0] for c in plugin.columns if c != "site" and c not in add_columns}
 
 
-def sorters_of_datasource(ds_name: str, user_permissions: UserPermissions) -> Mapping[str, Sorter]:
-    return _allowed_for_datasource(all_sorters(active_config), ds_name, user_permissions)
+def sorters_of_datasource(ds_name: str) -> Mapping[str, Sorter]:
+    return _allowed_for_datasource(all_sorters(active_config.tags.tag_groups), ds_name)
 
 
-def painters_of_datasource(
-    ds_name: str, user_permissions: UserPermissions
-) -> Mapping[str, Painter]:
-    return _allowed_for_datasource(
-        all_painters(active_config.tags.tag_groups), ds_name, user_permissions
-    )
+def painters_of_datasource(ds_name: str) -> Mapping[str, InternalPainter]:
+    return _allowed_for_datasource(all_painters(active_config.tags.tag_groups), ds_name)
 
 
-def join_painters_of_datasource(
-    ds_name: str, user_permissions: UserPermissions
-) -> Mapping[str, Painter]:
+def join_painters_of_datasource(ds_name: str) -> Mapping[str, InternalPainter]:
     datasource = data_source_registry[ds_name]()
     if datasource.join is None:
         return {}  # no joining with this datasource
 
     # Get the painters allowed for the join "source" and "target"
-    painters = painters_of_datasource(ds_name, user_permissions)
+    painters = painters_of_datasource(ds_name)
     join_painters_unfiltered = _allowed_for_datasource(
-        all_painters(active_config.tags.tag_groups), datasource.join[0], user_permissions
+        all_painters(active_config.tags.tag_groups), datasource.join[0]
     )
 
     # Filter out painters associated with the "join source" datasource
-    join_painters: dict[str, Painter] = {}
+    join_painters: dict[str, InternalPainter] = {}
     for key, val in join_painters_unfiltered.items():
         if key not in painters:
             join_painters[key] = val
@@ -1118,45 +1613,29 @@ def join_painters_of_datasource(
 
 @overload
 def _allowed_for_datasource(
-    collection: Mapping[str, type[Painter]], ds_name: str, user_permissions: UserPermissions
-) -> Mapping[str, Painter]: ...
+    collection: Mapping[str, InternalPainter], ds_name: str
+) -> Mapping[str, InternalPainter]: ...
 
 
 @overload
 def _allowed_for_datasource(
-    collection: Mapping[str, Sorter], ds_name: str, user_permissions: UserPermissions
+    collection: Mapping[str, Sorter], ds_name: str
 ) -> Mapping[str, Sorter]: ...
 
 
 # Filters a list of sorters or painters and decides which of
 # those are available for a certain data source
 def _allowed_for_datasource(
-    collection: Mapping[str, type[Painter]] | Mapping[str, Sorter],
+    collection: Mapping[str, InternalPainter] | Mapping[str, Sorter],
     ds_name: str,
-    user_permissions: UserPermissions,
-) -> Mapping[str, Sorter | Painter]:
+) -> Mapping[str, Sorter | InternalPainter]:
     datasource: ABCDataSource = data_source_registry[ds_name]()
     infos_available: set[str] = set(datasource.infos)
     add_columns: list[ColumnName] = datasource.add_columns
     unsupported_columns: list[ColumnName] = datasource.unsupported_columns
 
-    allowed: dict[str, Sorter | Painter] = {}
-    plugin: Sorter | Painter
-    for name, instance in collection.items():
-        if isinstance(instance, Sorter):
-            plugin = instance
-        elif issubclass(instance, Painter):
-            plugin = instance(
-                config=active_config,
-                request=request,
-                painter_options=PainterOptions.get_instance(),
-                theme=theme,
-                url_renderer=RenderLink(request, response, display_options),
-                user_permissions=user_permissions,
-            )
-        else:
-            raise TypeError(f"Unexpected instance type ({type(instance)}): {instance}")
-
+    allowed: dict[str, Sorter | InternalPainter] = {}
+    for name, plugin in collection.items():
         if any(column in plugin.columns for column in unsupported_columns):
             continue
         infos_needed = infos_needed_by_plugin(plugin, add_columns)

@@ -235,7 +235,7 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                             elements=[
                                 CascadingSingleChoiceElement(
                                     name=name,
-                                    title=Title(name),  # astrein: disable=localization-checker
+                                    title=Title(name),  # astrein: disable=localization
                                     parameter_form=FixedValue(value=value, label=Label("")),
                                 )
                                 for value, name in SyslogFacility.NAMES.items()
@@ -254,7 +254,7 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                             elements=[
                                 CascadingSingleChoiceElement(
                                     name=name,
-                                    title=Title(name),  # astrein: disable=localization-checker
+                                    title=Title(name),  # astrein: disable=localization
                                     parameter_form=FixedValue(value=value, label=Label("")),
                                 )
                                 for value, name in SyslogPriority.NAMES.items()
@@ -269,7 +269,7 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                             elements=[
                                 CascadingSingleChoiceElement(
                                     name=_format_service_level(value),
-                                    title=Title(name),  # astrein: disable=localization-checker
+                                    title=Title(name),  # astrein: disable=localization
                                     parameter_form=FixedValue(value=value, label=Label("")),
                                 )
                                 for value, name in _load_service_levels()
@@ -376,7 +376,7 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                             elements=[
                                 CascadingSingleChoiceElement(
                                     name=name,
-                                    title=Title(name),  # astrein: disable=localization-checker
+                                    title=Title(name),  # astrein: disable=localization
                                     parameter_form=FixedValue(value=value, label=Label("")),
                                 )
                                 for value, name in SyslogFacility.NAMES.items()
@@ -391,7 +391,7 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                             elements=[
                                 CascadingSingleChoiceElement(
                                     name=_format_service_level(value),
-                                    title=Title(name),  # astrein: disable=localization-checker
+                                    title=Title(name),  # astrein: disable=localization
                                     parameter_form=FixedValue(value=value, label=Label("")),
                                 )
                                 for value, name in _load_service_levels()

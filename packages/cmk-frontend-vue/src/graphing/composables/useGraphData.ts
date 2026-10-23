@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { AddTo, CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, computed, readonly, ref, watch } from 'vue'
@@ -16,7 +17,7 @@ import {
 } from '../components/TimeSeriesGraph/interaction/timeBounds'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../components/consolidation'
 import type { RequestedTimeRange } from '../types'
-import { withEdgeNeighbours } from '../utils/timeRange'
+import { type FetchWindowPlanner, planFetchWindowByWidth } from '../utils/timeRange'
 
 // The fetch endpoint only needs the self-contained definition (the graph kind is embedded in
 // `internal`); a caller holding a full render shell additionally contributes its header title to
@@ -55,6 +56,8 @@ interface CurrentRequest {
   requestedTimeRange: RequestedTimeRange
 }
 
+export type GraphFetchResponse = components['schemas']['GraphFetchResponse']
+
 export interface FetchedGraph {
   // The evaluated title: a plug-in's title expression (e.g. the number of CPU cores) is only
   // substituted once there is data, so the header takes it from here, not from the definition.
@@ -82,18 +85,8 @@ export type GraphDataFetcher = (
   params: GraphFetchParams
 ) => Promise<FetchedGraph>
 
-export const fetchGraphDataByDefinition: GraphDataFetcher = async (definition, params) => {
-  const fetched = unwrap(
-    await client.POST('/domain-types/graph/actions/fetch_data/invoke', {
-      params: { header: { 'Content-Type': 'application/json' } },
-      body: {
-        internal: definition.internal,
-        requested_time_range: params.fetchWindow,
-        consolidation_function: params.consolidationFunction,
-        combination_mode: params.combinationMode
-      }
-    })
-  )
+/** The graph a fetch endpoint answers, in the shape the graph hosts draw. */
+export function fetchedGraphOf(fetched: GraphFetchResponse): FetchedGraph {
   return {
     title: fetched.title,
     metrics: fetched.metrics,
@@ -105,26 +98,29 @@ export const fetchGraphDataByDefinition: GraphDataFetcher = async (definition, p
   }
 }
 
-// The renderer decimates to one M4 bucket per plotted column (TimeSeriesGraph.vue) and draws into a
-// DPR-scaled bitmap, so a single sample per column collapses each bucket's min/max and loses the
-// detail between samples. Requesting several samples per column keeps that detail. RRD serves this
-// for free — RRDConsolidate never returns finer than the RRA step — while query backends honour the
-// step literally, bounding a request at ~4x the plotted width in points.
-const SAMPLES_PER_PLOTTED_COLUMN = 4
-
-function computeStep(start: number, end: number, canvasWidth: number): number {
-  return Math.max(60, Math.ceil((end - start) / (canvasWidth * SAMPLES_PER_PLOTTED_COLUMN)))
-}
+export const fetchGraphDataByDefinition: GraphDataFetcher = async (definition, params) =>
+  fetchedGraphOf(
+    unwrap(
+      await client.POST('/domain-types/graph/actions/fetch_data/invoke', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body: {
+          internal: definition.internal,
+          requested_time_range: params.fetchWindow,
+          consolidation_function: params.consolidationFunction,
+          combination_mode: params.combinationMode
+        }
+      })
+    )
+  )
 
 // Graph discovery (matching templates to a service) happens backend-only: the caller already
 // receives the self-contained `internal` definitions via the initial page props
 // (see build_template_graphs -> to_cmk_time_series_graph in cmk/gui/views/graph.py). This
 // composable only re-fetches evaluated data for those definitions as the requested range changes.
 export interface GraphDataOptions {
-  /** Supplied by callers whose requested range is derived rather than chosen by the user, so the
-   *  neighbour steps a fetch adds may not reach outside the navigable axis. */
   getFetchBounds?: () => NavigableBounds
   fetchGraph?: GraphDataFetcher
+  planFetchWindow?: FetchWindowPlanner
 }
 
 export function useGraphData(
@@ -144,6 +140,7 @@ export function useGraphData(
   reload: () => void
 } {
   const fetchGraph = options.fetchGraph ?? fetchGraphDataByDefinition
+  const planFetchWindow = options.planFetchWindow ?? planFetchWindowByWidth
 
   const graphsRef = ref<ResolvedGraph[]>([])
   const errorRef = ref<string | null>(null)
@@ -168,7 +165,7 @@ export function useGraphData(
   }
 
   // Step of the most recently requested load; a resize only re-fetches when the
-  // width-derived step actually changes.
+  // planned step actually changes.
   let lastRequestedStep: number | null = null
 
   let loadToken = 0
@@ -191,13 +188,12 @@ export function useGraphData(
 
   function currentRequest(): CurrentRequest {
     const range = getRequestedTimeRange()
-    const step = computeStep(range.start, range.end, getCanvasWidth())
-    lastRequestedStep = step
+    const window = planFetchWindow(range, getCanvasWidth())
+    lastRequestedStep = window.step
     const requestedTimeRange = { start: range.start, end: range.end }
-    const padded = withEdgeNeighbours({ ...requestedTimeRange, step })
     const bounds = options.getFetchBounds?.()
     return {
-      fetchWindow: bounds === undefined ? padded : clippedToNavigableTime(padded, bounds),
+      fetchWindow: bounds === undefined ? window : clippedToNavigableTime(window, bounds),
       requestedTimeRange
     }
   }
@@ -345,8 +341,7 @@ export function useGraphData(
       void loadAllGraphs()
       return
     }
-    const range = getRequestedTimeRange()
-    if (computeStep(range.start, range.end, width) !== lastRequestedStep) {
+    if (planFetchWindow(getRequestedTimeRange(), width).step !== lastRequestedStep) {
       debouncedLoadAllGraphs()
     }
   })

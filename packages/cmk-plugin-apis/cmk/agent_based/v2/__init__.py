@@ -11,10 +11,6 @@ aware of when migrating your plug-in to this API version.
 
 Note that changes are expressed in relation to the API version 1.
 
-You can find a script in `doc/treasures/migration_helpers/` that
-will do most of the migration for you. This script is not officially
-supported, so use at your own risk.
-
 `type_defs` module is dissolved
 *******************************
 The `type_defs` module has been dissolved.

@@ -5,18 +5,19 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { getLocalTimeZone } from '@internationalized/date'
 import { scaleLinear, scaleTime } from 'd3-scale'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import type { TimeInterval, TimeRangeCommitKind } from '../../types'
-import type { Metric, RequestedTimeRange, TimeRange } from '../TimeSeriesGraph'
+import { drawnBinEdges } from '../../utils/bins'
+import type { BinUnit, Metric, RequestedTimeRange, TimeRange } from '../TimeSeriesGraph'
 import { drawData } from '../TimeSeriesGraph/render'
 import {
   composeSeries,
   composedValueDomain,
   createM4CacheStore
 } from '../TimeSeriesGraph/render/composeSeries'
-import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../consolidation'
 import {
   type BrushMode,
   clampMove,
@@ -30,20 +31,17 @@ import {
 } from './geometry'
 import { formatOverviewExtent, formatWindowPreview } from './utils'
 
-const props = withDefaults(
-  defineProps<{
-    metrics: Metric[] // coarse overview series
-    domain: TimeInterval // strip extent
-    dataDomain: TimeRange
-    window: { start: number; end: number }
-    minSpan: number | null
-    width: number // figure width (px)
-    plotLeft: number // track left inset (= renderer MARGIN.left)
-    plotWidth: number // track width (= plot width)
-    consolidationFn?: ConsolidationFn
-  }>(),
-  { consolidationFn: DEFAULT_CONSOLIDATION_FN }
-)
+const props = defineProps<{
+  metrics: Metric[] // coarse overview series
+  domain: TimeInterval // strip extent
+  dataDomain: TimeRange
+  window: { start: number; end: number }
+  minSpan: number | null
+  width: number // figure width (px)
+  plotLeft: number // track left inset (= renderer MARGIN.left)
+  plotWidth: number // track width (= plot width)
+  binUnit: BinUnit | null
+}>()
 
 const emit = defineEmits<{
   'update:requestedTimeRange': [RequestedTimeRange, TimeRangeCommitKind]
@@ -51,10 +49,10 @@ const emit = defineEmits<{
 
 const DRAG_THRESHOLD_PX = 4
 
-const STRIP_TOP = 9
+const STRIP_TOP = 4
 const STRIP_H = 32
 const STRIP_BOTTOM = STRIP_TOP + STRIP_H
-const BAR_Y = 45
+const BAR_Y = STRIP_BOTTOM + 4
 const BAR_H = 8
 const TRACK_TOP = STRIP_TOP
 const TRACK_H = BAR_Y + BAR_H - TRACK_TOP
@@ -100,9 +98,13 @@ function drawWaveform(): void {
   const composed = composeSeries({
     metrics: props.metrics,
     cache: m4CacheStore.ensure(props.metrics, props.dataDomain),
+    dataTimeRange: props.dataDomain,
     visibleTimeRange: [props.domain.start, props.domain.end],
     columnCount: Math.max(1, Math.floor(props.plotWidth)),
-    consolidation: props.consolidationFn
+    binEdges:
+      props.binUnit === null
+        ? null
+        : drawnBinEdges(props.binUnit, props.domain, props.plotWidth, getLocalTimeZone())
   })
   const [yMin, yMax] = composedValueDomain(props.metrics, composed)
 
@@ -138,7 +140,7 @@ onMounted(drawWaveform)
 // The selection window moves over the waveform without changing it, so a drag redraws the
 // scrims below and leaves the canvas alone.
 watch(
-  () => [props.metrics, props.domain, props.dataDomain, props.plotWidth, props.consolidationFn],
+  () => [props.metrics, props.domain, props.dataDomain, props.plotWidth, props.binUnit],
   drawWaveform
 )
 
@@ -454,7 +456,7 @@ onBeforeUnmount(() => {
    take pointer events for its grab cursor, and unfilled rects take none. */
 .graphing-graph-brush__track {
   fill: transparent;
-  stroke: var(--graphing-brush-track-stroke);
+  stroke: var(--border-color-subtle);
   shape-rendering: crispedges;
   cursor: grab;
 }
@@ -480,13 +482,13 @@ onBeforeUnmount(() => {
 }
 
 .graphing-graph-brush__bar {
-  fill: var(--color-corporate-green-50);
-  stroke: var(--graphing-brush-bar-stroke);
+  fill: var(--success);
+  stroke: var(--interactive-accent-strong);
   cursor: grab;
 }
 
 .graphing-graph-brush__bar:hover {
-  fill: color-mix(in srgb, var(--color-corporate-green-50) 70%, var(--white));
+  fill: color-mix(in srgb, var(--success) 70%, var(--white));
 }
 
 .graphing-graph-brush--dragging .graphing-graph-brush__track,
@@ -497,7 +499,7 @@ onBeforeUnmount(() => {
 }
 
 .graphing-graph-brush__edge {
-  stroke: var(--toggle-button-group-border-color);
+  stroke: var(--border-color-default);
   stroke-width: 1;
   stroke-opacity: 0.5;
   shape-rendering: crispedges;
@@ -505,13 +507,13 @@ onBeforeUnmount(() => {
 }
 
 .graphing-graph-brush__handle {
-  fill: var(--toggle-button-group-inactive-bg-color);
-  stroke: var(--toggle-button-group-border-color);
+  fill: var(--background-base);
+  stroke: var(--border-color-default);
   cursor: ew-resize;
 }
 
 .graphing-graph-brush__handle:hover {
-  fill: color-mix(in srgb, var(--toggle-button-group-inactive-bg-color) 70%, var(--white));
+  fill: color-mix(in srgb, var(--background-base) 70%, var(--white));
 }
 
 .graphing-graph-brush__grip {
@@ -521,19 +523,8 @@ onBeforeUnmount(() => {
 }
 
 .graphing-graph-brush__range {
-  fill: var(--font-color);
+  fill: var(--font-color-strong);
   font-size: var(--font-size-normal);
-  opacity: 0.7;
   pointer-events: none;
-}
-
-body[data-theme='facelift'] .graphing-graph-brush {
-  --graphing-brush-track-stroke: var(--color-mid-grey-10);
-  --graphing-brush-bar-stroke: var(--color-corporate-green-70);
-}
-
-body[data-theme='modern-dark'] .graphing-graph-brush {
-  --graphing-brush-track-stroke: var(--color-mid-grey-90);
-  --graphing-brush-bar-stroke: var(--color-corporate-green-50);
 }
 </style>

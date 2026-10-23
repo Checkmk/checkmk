@@ -65,9 +65,15 @@ contribute them to the marketplace instead.
 
 Before a commit do a sanity check of your changes and run the linters and formatters.
 
-### Files that must never be committed
-
 Ensure the following paths are NOT part of any commit (check `git status` /
 `git diff --cached` before committing and unstage them if they appear):
 
 - `tests/qa-test-data` (submodule — never update its pinned commit)
+
+Format every commit message as:
+
+- title line of at most 50 characters
+- body lines hard-wrapped to at most 72 characters each
+- after a blank line, the trailer `Jira-Ref: CMK-12345`, only if the key is
+  known from the context (never invent one; if unsure, ask the user; if
+  there is no ticket, omit it)

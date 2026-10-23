@@ -85,13 +85,7 @@ const qualityTooltipOpen = ref<boolean>(false)
             <CmkIcon name="info-circle" size="small" />
           </button>
         </CmkTooltipTrigger>
-        <CmkTooltipContent
-          side="top"
-          align="center"
-          as-child
-          :avoid-collisions="true"
-          class="ai-quality-badge__tooltip-popup"
-        >
+        <CmkTooltipContent side="top" align="center" variant="content" :avoid-collisions="true">
           <div class="ai-quality-badge__tooltip-content">
             {{
               _t(
@@ -162,22 +156,10 @@ const qualityTooltipOpen = ref<boolean>(false)
   cursor: pointer;
 }
 
-.ai-quality-badge__tooltip-popup {
-  z-index: var(--z-index-tooltip-offset);
-}
-
 .ai-quality-badge__tooltip-content {
   max-width: 240px;
-  padding: var(--dimension-5);
-  border-radius: var(--border-radius);
-  background-color: var(--default-tooltip-background-color);
-  color: var(--default-tooltip-text-color);
-  font-weight: var(--font-weight-default);
   white-space: normal;
   text-align: left;
-  box-shadow:
-    0 4px 6px rgb(0 0 0 / 10%),
-    0 2px 4px rgb(0 0 0 / 6%);
 }
 
 .ai-quality-badge__ring-badge {
@@ -209,28 +191,14 @@ const qualityTooltipOpen = ref<boolean>(false)
 }
 
 .ai-quality-badge--high {
-  --ai-quality-color: var(--success);
+  --ai-quality-color: var(--status-text-color-success-on-tint);
 }
 
 .ai-quality-badge--medium {
-  --ai-quality-color: var(--color-warning);
+  --ai-quality-color: var(--status-text-color-warning-strong);
 }
 
 .ai-quality-badge--low {
-  --ai-quality-color: var(--color-dark-red-40);
-}
-
-body[data-theme='facelift'] {
-  .ai-quality-badge--high {
-    --ai-quality-color: var(--color-corporate-green-70);
-  }
-
-  .ai-quality-badge--medium {
-    --ai-quality-color: var(--color-yellow-70);
-  }
-
-  .ai-quality-badge--low {
-    --ai-quality-color: var(--color-dark-red-50);
-  }
+  --ai-quality-color: var(--status-text-color-error-soft);
 }
 </style>

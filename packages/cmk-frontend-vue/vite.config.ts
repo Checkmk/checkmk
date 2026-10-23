@@ -10,6 +10,9 @@ import { type RollupLog } from 'rollup'
 import { type Plugin, type UserConfig, defineConfig } from 'vite'
 import VueDevTools from 'vite-plugin-vue-devtools'
 
+import { testProjects } from '../cmk-ui-library/vitest.shared'
+import isolatedTests from './vitest.isolated.json'
+
 // Workaround for https://github.com/vitejs/vite/issues/21955
 // should be removed once the issue is closed
 function bazelManifestPathFix(): Plugin {
@@ -33,11 +36,6 @@ function bazelManifestPathFix(): Plugin {
     }
   }
 }
-
-// CI hands over the CPU budget of its container. os.availableParallelism() does
-// not see a cgroup quota, and where that quota lives is CI's concern rather than
-// this config's. Unset elsewhere so vitest keeps its own default.
-const maxWorkers = Number(process.env.VITEST_MAX_WORKERS) || undefined
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
@@ -63,10 +61,17 @@ export default defineConfig(({ command }) => {
     resolve: {
       alias: {
         '@': path.resolve('./src'),
+        // Test-only file of cmk-ui-library, kept out of its package; must precede the
+        // package alias, which would claim it first.
+        'cmk-ui-library/vitest.msw': path.resolve('../cmk-ui-library/vitest.msw.ts'),
         'cmk-ui-library': path.resolve('./node_modules/cmk-ui-library'),
         '@ucl': path.resolve('./ui-component-library'),
-        // This is only a temporary hack to allow resolving icons and the demo css. Do not use this in new code!
-        '~cmk-frontend': path.resolve('../cmk-frontend/dist')
+        '@tests': path.resolve('./tests'),
+        // Temporary hack to resolve icons and the demo css; under vitest only theme images resolve.
+        // Do not use this in new code!
+        '~cmk-frontend': path.resolve(
+          process.env.VITEST ? '../cmk-frontend/src' : '../cmk-frontend/dist'
+        )
       },
       // cmk-ui-library is a source workspace package compiled by this vite build; make
       // sure it uses this package's vue instance.
@@ -136,9 +141,12 @@ export default defineConfig(({ command }) => {
         // enable jest-like global test APIs
         globals: true,
         environment: 'jsdom',
+        restoreMocks: true,
+        clearMocks: true,
+        unstubGlobals: true,
         pool: 'threads',
-        ...(maxWorkers === undefined ? {} : { maxWorkers }),
-        setupFiles: ['tests/setup-tests.ts'],
+        setupFiles: ['../cmk-ui-library/vitest.shared-setup.ts', 'tests/setup-tests.ts'],
+        projects: process.env.VITEST ? testProjects(isolatedTests) : undefined,
         reporters: process.env.XML_OUTPUT_FILE // variable set by bazel
           ? [
               [
@@ -161,7 +169,7 @@ export default defineConfig(({ command }) => {
       server: {
         strictPort: true,
         fs: {
-          allow: ['.', '../cmk-frontend/', '../cmk-ui-library/']
+          allow: ['.', '../cmk-frontend/', '../cmk-profiling/', '../cmk-ui-library/']
         },
         proxy: {
           // dev server proxies whole checkmk to inject js resources and support auto hot reloading

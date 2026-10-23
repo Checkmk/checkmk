@@ -15,6 +15,7 @@ void main() {
             cmd        : "scripts/lint.sh",
             output_file: "lint.log",
             container_name: "ubuntu-2404-${container_safe_branch_name}-latest",
+            disable_hot_cache: true,
         ]);
         archiveArtifacts(
             allowEmptyArchive: false,

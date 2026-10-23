@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from functools import cached_property
 from typing import assert_never, override, TypedDict
 
 from cmk.gui.autocompleters import autocompleter_registry
@@ -14,8 +15,10 @@ from cmk.rulesets.internal.form_specs import (
     MultipleChoiceExtended,
     MultipleChoiceExtendedLayout,
 )
+from cmk.rulesets.v1.form_specs import MultipleChoiceElement
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
+from ._autocompleter import to_vue_autocompleter
 from ._base import FormSpecVisitor
 from ._type_defs import (
     DefaultValue,
@@ -47,9 +50,15 @@ _FallbackModel = Sequence[TransportFormat]
 class MultipleChoiceVisitor(
     FormSpecVisitor[MultipleChoiceExtended, _ParsedValueModel, _FallbackModel]
 ):
+    @cached_property
+    def _elements(self) -> Autocompleter | Sequence[MultipleChoiceElement]:
+        # Resolved per visitor, so that dynamic choices are current
+        elements = self.form_spec.elements
+        return elements() if callable(elements) else elements
+
     def _get_elements(self) -> _FallbackModel:
-        if isinstance(self.form_spec.elements, Autocompleter):
-            autocompleter_ident = self.form_spec.elements.data.ident
+        if isinstance(self._elements, Autocompleter):
+            autocompleter_ident = self._elements.data.ident
             autocompleter_fn = autocompleter_registry[autocompleter_ident]
             return [
                 {"name": name, "title": title}
@@ -61,7 +70,7 @@ class MultipleChoiceVisitor(
                 "name": element.name,
                 "title": element.title.localize(translate_to_current_language),
             }
-            for element in self.form_spec.elements
+            for element in self._elements
         ]
 
     def _get_valid_choices(self) -> set[str]:
@@ -115,16 +124,16 @@ class MultipleChoiceVisitor(
     ]:
         title, help_text = get_title_and_help(self.form_spec)
 
-        if isinstance(self.form_spec.elements, Autocompleter):
+        if isinstance(self._elements, Autocompleter):
             elements = []
-            autocompleter = _to_vue_autocompleter(self.form_spec.elements)
+            autocompleter = to_vue_autocompleter(self._elements)
         else:
             elements = [
                 shared_type_defs.MultipleChoiceElement(
                     name=element.name,
                     title=element.title.localize(translate_to_current_language),
                 )
-                for element in self.form_spec.elements
+                for element in self._elements
             ]
             autocompleter = None
 
@@ -180,22 +189,3 @@ class MultipleChoiceVisitor(
         # str() coerces str subclasses (e.g. StrEnum members supplied as
         # element.name) back to a plain str so disk repr() round-trips cleanly.
         return [str(v["name"]) for v in parsed_value]
-
-
-def _to_vue_autocompleter(autocompleter: Autocompleter) -> shared_type_defs.Autocompleter:
-    return shared_type_defs.Autocompleter(
-        data=shared_type_defs.AutocompleterData(
-            ident=autocompleter.data.ident,
-            params=shared_type_defs.AutocompleterParams(
-                show_independent_of_context=autocompleter.data.params.show_independent_of_context,
-                strict=autocompleter.data.params.strict,
-                escape_regex=autocompleter.data.params.escape_regex,
-                world=autocompleter.data.params.world,
-                context=autocompleter.data.params.context,
-                input_hint=autocompleter.data.params.input_hint,
-            ),
-        ),
-        fetch_method=shared_type_defs.FetchMethod(autocompleter.fetch_method.value)
-        if autocompleter.fetch_method
-        else None,
-    )

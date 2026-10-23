@@ -9,13 +9,12 @@ from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
 from cmk.agent_based.v2.render import percent
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.fortinet.lib import DETECT_FORTIMAIL
 
 Section = Mapping[str, float]
@@ -27,10 +26,6 @@ def parse_fortimail_disk_usage(string_table: StringTable) -> Section | None:
     {'disk_usage': 13.0}
     """
     return {"disk_usage": float(string_table[0][0])} if string_table else None
-
-
-def discover_fortimail_disk_usage(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_fortimail_disk_usage(
@@ -61,7 +56,7 @@ snmp_section_fortimail_disk_usage = SimpleSNMPSection(
 check_plugin_fortimail_disk_usage = CheckPlugin(
     name="fortimail_disk_usage",
     service_name="Disk usage",
-    discovery_function=discover_fortimail_disk_usage,
+    discovery_function=discover_one_service,
     check_function=check_fortimail_disk_usage,
     check_default_parameters={"disk_usage": (80.0, 90.0)},
     check_ruleset_name="fortimail_disk_usage",

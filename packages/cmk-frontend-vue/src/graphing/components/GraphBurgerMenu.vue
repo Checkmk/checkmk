@@ -4,16 +4,26 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 
 import type { BurgerMenuCallable, BurgerMenuGroup } from '../types'
 import { BOTTOM_SCREEN_MARGIN } from './constants'
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Graph menu'), [
+  { combo: ['ArrowDown'], description: _t('Open menu and move between entries') },
+  { combo: ['ArrowUp'], description: _t('Open menu and move between entries') },
+  { combo: ['Home'], description: _t('Jump to first entry') },
+  { combo: ['End'], description: _t('Jump to last entry') },
+  { combo: ['Tab'], description: _t('Close menu') },
+  { combo: ['Escape'], description: _t('Close menu') }
+])
 
 interface BurgerMenuProps {
   ariaLabel?: string | undefined
@@ -26,9 +36,12 @@ const { groups = [], ariaLabel, scrollable = true } = defineProps<BurgerMenuProp
 const emit = defineEmits<{ doAction: [onClick: BurgerMenuCallable] }>()
 
 const isOpen = ref(false)
+let itemIndexFocusedOnOpen = 0
 const containerRef = ref<HTMLElement | null>(null)
-const triggerRef = ref<HTMLButtonElement | null>(null)
-const dropdownMaxHeight = ref<number | null>(null)
+const triggerRef = ref<InstanceType<typeof CmkButton> | null>(null)
+
+const flippedUp = ref(false)
+const dropdownMaxHeight = ref<string | undefined>(undefined)
 
 function getItemButtons(): HTMLButtonElement[] {
   return containerRef.value
@@ -45,9 +58,22 @@ function focusItemAt(index: number) {
   items[wrappedIndex]!.focus()
 }
 
+function openMenu(itemIndexToFocus: number) {
+  itemIndexFocusedOnOpen = itemIndexToFocus
+  isOpen.value = true
+}
+
 function closeMenu() {
   isOpen.value = false
   triggerRef.value?.focus()
+}
+
+function toggleMenu() {
+  if (isOpen.value) {
+    isOpen.value = false
+  } else {
+    openMenu(0)
+  }
 }
 
 function onDocumentClick(e: MouseEvent) {
@@ -65,8 +91,7 @@ function onDocumentKeydown(e: KeyboardEvent) {
 function onTriggerKeydown(e: KeyboardEvent) {
   if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
     e.preventDefault()
-    isOpen.value = true
-    void nextTick(() => focusItemAt(e.key === 'ArrowDown' ? 0 : -1))
+    openMenu(e.key === 'ArrowDown' ? 0 : -1)
   }
 }
 
@@ -100,19 +125,27 @@ function onDropdownKeydown(e: KeyboardEvent) {
 }
 
 function updateDropdownMaxHeight() {
-  if (!scrollable || !containerRef.value) {
-    dropdownMaxHeight.value = null
+  if (!containerRef.value) {
     return
   }
-  dropdownMaxHeight.value =
-    window.innerHeight - containerRef.value.getBoundingClientRect().bottom - BOTTOM_SCREEN_MARGIN
+  const anchorRect = containerRef.value.getBoundingClientRect()
+  const spaceBelow = window.innerHeight - anchorRect.bottom
+  const spaceAbove = anchorRect.top
+  flippedUp.value = spaceBelow < 200 && spaceAbove > spaceBelow
+
+  if (!scrollable) {
+    dropdownMaxHeight.value = undefined
+    return
+  }
+  const available = (flippedUp.value ? spaceAbove : spaceBelow) - BOTTOM_SCREEN_MARGIN
+  dropdownMaxHeight.value = `${Math.max(0, available)}px`
 }
 
 watch(isOpen, (open) => {
   if (open) {
     updateDropdownMaxHeight()
     window.addEventListener('resize', updateDropdownMaxHeight)
-    void nextTick(() => focusItemAt(0))
+    void nextTick(() => focusItemAt(itemIndexFocusedOnOpen))
   } else {
     window.removeEventListener('resize', updateDropdownMaxHeight)
   }
@@ -127,8 +160,8 @@ onUnmounted(() => {
 })
 
 function doAction(onClick: BurgerMenuCallable) {
+  closeMenu()
   emit('doAction', onClick)
-  isOpen.value = false
 }
 
 const isEmpty = computed(() => !groups?.length)
@@ -136,33 +169,31 @@ const isEmpty = computed(() => !groups?.length)
 
 <template>
   <div ref="containerRef" class="graphing-graph-burger-menu">
-    <button
+    <CmkButton
       ref="triggerRef"
-      class="graphing-graph-burger-menu__trigger"
-      :class="{ 'graphing-graph-burger-menu__trigger_open': isOpen }"
+      variant="optional"
+      size="iconOnly"
       :aria-expanded="isOpen"
       :aria-haspopup="true"
       :aria-label="ariaLabel"
       :disabled="isEmpty"
-      :aria-disabled="isEmpty"
-      :title="isEmpty ? _t('No action available') : ''"
-      tabindex="0"
-      @click="isOpen = !isOpen"
+      :title="isEmpty ? _t('No action available') : undefined"
+      @click="toggleMenu"
       @keydown="onTriggerKeydown"
     >
       <CmkMultitoneIcon name="burger-menu" primary-color="font" size="small" />
-    </button>
+    </CmkButton>
 
     <div
       v-if="isOpen"
       class="graphing-graph-burger-menu__dropdown"
-      :class="{ 'graphing-graph-burger-menu__dropdown_scrollable': scrollable }"
-      :style="
-        scrollable && dropdownMaxHeight !== null
-          ? { maxHeight: `${dropdownMaxHeight}px` }
-          : undefined
-      "
+      :class="{
+        'graphing-graph-burger-menu__dropdown_scrollable': scrollable,
+        'graphing-graph-burger-menu__dropdown_flipped': flippedUp
+      }"
+      :style="{ maxHeight: dropdownMaxHeight }"
       role="menu"
+      :aria-label="ariaLabel"
       @keydown="onDropdownKeydown"
     >
       <ul
@@ -205,101 +236,93 @@ const isEmpty = computed(() => !groups?.length)
   position: relative;
 }
 
-.graphing-graph-burger-menu__trigger {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin: 0;
-  padding: 0;
-  border: var(--dimension-1) solid var(--button-form-border-color);
-  border-radius: var(--border-radius);
-  background: var(--color-midnight-grey-100);
-  font-size: 16px;
-  cursor: pointer;
-  color: inherit;
-  opacity: 0.7;
-
-  &:hover {
-    opacity: 1;
-    background: rgb(0 0 0 / 6%);
-  }
-
-  &:focus-visible {
-    opacity: 1;
-    outline: revert;
-  }
-}
-
-.graphing-graph-burger-menu__trigger_open {
-  border-radius: var(--border-radius) var(--border-radius) 0 var(--border-radius);
-}
-
 .graphing-graph-burger-menu__dropdown {
   position: absolute;
-  top: calc(100% - 1px);
-  right: 10px;
+  top: calc(100% + var(--dimension-1));
+  right: 0;
   z-index: 100;
+  box-sizing: border-box;
   min-width: 200px;
-  border-radius: var(--border-radius) 0 var(--border-radius) var(--border-radius);
-  border: var(--dimension-1) solid var(--button-form-border-color);
-  background-color: var(--ux-theme-5);
+  border: var(--dimension-1) solid var(--ux-theme-6);
+  border-radius: 0 0 var(--dimension-4) var(--dimension-4);
+  background-color: var(--ux-theme-3);
   color: var(--font-color);
   font-size: var(--font-size-normal);
   font-weight: var(--font-weight-default);
   white-space: nowrap;
-  padding: var(--dimension-4);
-  box-shadow:
-    0 2px 8px rgb(0 0 0 / 12%),
-    0 0 0 1px rgb(0 0 0 / 6%);
+}
+
+.graphing-graph-burger-menu__dropdown_flipped {
+  top: auto;
+  bottom: calc(100% + var(--dimension-1));
+  border-radius: var(--dimension-4) var(--dimension-4) 0 0;
 }
 
 .graphing-graph-burger-menu__dropdown_scrollable {
   overflow-y: auto;
 }
 
+/* Placed by the layout engine to handle scroll, resize and zoom without a JS listener. */
+@supports (anchor-name: --x) and (anchor-scope: all) {
+  .graphing-graph-burger-menu {
+    anchor-name: --graphing-graph-burger-menu-anchor;
+
+    /* Confine the anchor name so each menu tethers to its own trigger, not a single shared one. */
+    anchor-scope: --graphing-graph-burger-menu-anchor;
+  }
+
+  .graphing-graph-burger-menu__dropdown {
+    position: fixed;
+    position-anchor: --graphing-graph-burger-menu-anchor;
+    inset: auto;
+    inset-block-start: calc(anchor(bottom) + var(--dimension-1));
+    inset-inline-end: anchor(right);
+    block-size: fit-content;
+  }
+
+  .graphing-graph-burger-menu__dropdown_flipped {
+    inset-block: auto calc(anchor(top) + var(--dimension-1));
+  }
+}
+
 .graphing-graph-burger-menu__group {
   list-style-type: none;
   padding-left: 0 !important;
   margin: 0;
-  &:not(:last-child) {
-    padding-bottom: var(--dimension-6);
-  }
+}
+
+.graphing-graph-burger-menu__group-heading,
+.graphing-graph-burger-menu__item-button {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 40px;
+  padding: var(--dimension-5) var(--dimension-6);
 }
 
 .graphing-graph-burger-menu__group-heading {
   font-weight: var(--font-weight-bold);
-  padding-bottom: var(--dimension-4);
-}
-
-.graphing-graph-burger-menu__item {
-  padding-bottom: var(--dimension-3);
-  &:hover {
-    color: var(--default-select-hover-color);
-  }
 }
 
 .graphing-graph-burger-menu__item-button {
-  display: flex;
-  align-items: center;
   width: 100%;
-  padding: 0;
   border: none;
+  border-radius: var(--dimension-3);
   margin: 0;
   background: none;
   color: inherit;
   font-size: inherit;
+  font-weight: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background-color: var(--ux-theme-5);
+  }
 
   &:focus-visible {
     outline: revert;
-    color: var(--default-select-hover-color);
-  }
-}
-
-body[data-theme='facelift'] {
-  .graphing-graph-burger-menu__trigger {
-    background-color: var(--color-daylight-grey-50);
   }
 }
 </style>

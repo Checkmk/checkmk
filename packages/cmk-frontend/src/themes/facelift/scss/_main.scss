@@ -50,6 +50,7 @@ textarea {
   padding: 3px;
   margin-top: 0;
   font-family: $font-family-default;
+  font-feature-settings: $font-feature-settings-default;
   vertical-align: middle;
   background-color: $white;
   border: none;
@@ -1333,17 +1334,23 @@ tr.hidden {
   background-color: transparent;
 }
 
-// Firefox ignores the ::-webkit-scrollbar rules; give it the same colors via
-// scrollbar-color, which also stops it from tinting the dragged thumb with the
-// system accent color. This must stay Firefox-only (@supports -moz-appearance):
-// in Chromium a non-auto scrollbar-color disables the styling above.
+// Firefox ignores the ::-webkit-scrollbar rules and derives the hover and active
+// thumb colors from scrollbar-color. This must stay Firefox-only (@supports
+// -moz-appearance): in Chromium a non-auto scrollbar-color disables the styling above.
 @supports (-moz-appearance: none) {
   * {
-    scrollbar-color: $scrollbar-color transparent;
+    scrollbar-color: $scrollbar-color-firefox transparent;
   }
 }
 
 div#row_info {
+  // #data_container is min-width: min-content, so a full width block would push the
+  // right aligned count out of view as soon as the table overflows horizontally.
+  // Shrink to the text and keep it stuck to the edge of the scroll port instead.
+  position: sticky;
+  right: $spacing;
+  width: fit-content;
+  margin-left: auto;
   padding-bottom: $spacing-half;
   font-weight: $font-weight-default;
   text-align: right;

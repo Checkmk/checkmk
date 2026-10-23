@@ -21,7 +21,7 @@ metric_mem_low_wat = metrics.Metric(
 )
 metric_memused_couchbase_bucket = metrics.Metric(
     name="memused_couchbase_bucket",
-    title=Title("Memory used"),
+    title=Title("Bucket memory used"),
     unit=UNIT_BYTES,
     color=metrics.Color.LIGHT_GREEN,
 )

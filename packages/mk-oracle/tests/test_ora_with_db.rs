@@ -26,8 +26,9 @@ use crate::common::tools::{
     make_endpoint_tns_admin_dir, make_mini_config, make_mini_config_cdb_root,
     make_mini_config_custom_instance, make_mini_config_custom_instance_with_tns_admin,
     make_mini_config_pdb, make_mini_config_pdb_builtin_then_custom,
-    make_mini_config_pdb_custom_then_builtin, make_mini_config_with_sid,
-    platform::add_runtime_to_path, role_spec, ORA_ENDPOINT_ENV_VAR, ORA_ENDPOINT_ENV_VAR_SECONDARY,
+    make_mini_config_pdb_custom_then_builtin, make_mini_config_performance,
+    make_mini_config_with_sid, platform::add_runtime_to_path, role_spec, ORA_ENDPOINT_ENV_VAR,
+    ORA_ENDPOINT_ENV_VAR_SECONDARY,
 };
 use mk_oracle::config::authentication::{AuthType, Authentication, Role, SqlDbEndpoint};
 use mk_oracle::config::defines::defaults::SECTION_SEPARATOR;
@@ -1237,15 +1238,34 @@ mod cdb {
                 );
                 assert!(line[0].starts_with(get_sid(endpoint).as_str()));
             });
-            // CMK-37362: if this fails on a supported release, that release needs the
-            // per-PDB execution the legacy plug-in used.
-            let root_prefix = format!("{}.CDB$ROOT|", get_sid(endpoint));
-            assert!(
-                rows.iter()
-                    .any(|r| r.contains("|PGA_info|") && !r.starts_with(&root_prefix)),
-                "no per-PDB PGA_info rows: {rows:?}"
-            );
         }
+    }
+
+    /// CMK-37362: `v$pgastat` yields a container's rows only inside that
+    /// container, so the section has to run once per container. That pass lives
+    /// in the emit pipeline and not in the SQL, hence `generate_data` instead of
+    /// `connect_and_query`, which only ever queries the root.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_performance_pga_info_per_pdb() {
+        add_runtime_to_path();
+        let Ok(endpoint) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR) else {
+            return;
+        };
+        let config = make_mini_config_performance(&endpoint);
+        let env = Env::default();
+        let output = generate_data(&config, &env).await.unwrap().join("\n");
+
+        let root_prefix = format!("{}.CDB$ROOT|", get_sid(&endpoint));
+        if !output.contains(&root_prefix) {
+            // Non-CDB endpoint: there is no container to run the section in.
+            return;
+        }
+        assert!(
+            output
+                .lines()
+                .any(|l| l.contains("|PGA_info|") && !l.starts_with(&root_prefix)),
+            "no per-PDB PGA_info rows: {output}"
+        );
     }
 
     #[test]

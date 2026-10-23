@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
+import re
 from collections import Counter
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -20,24 +19,25 @@ from cmk.graphing.v1 import translations as translations_api
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
-from cmk.gui.graphing import GraphFromAPI, graphing_plugins, PerfometerFromAPI
+from cmk.graphing_engine import ApiGraph, ApiPerfometer
+from cmk.gui.graphing._plugins import graphing_plugins
 
 
 def test_graphing_plugins_load_without_errors() -> None:
-    discovered_graphing_plugins = graphing_plugins()
+    discovered_graphing_plugins = graphing_plugins().discovered
     assert not discovered_graphing_plugins.errors
     assert discovered_graphing_plugins.plugins
 
 
 def test_translations_to_be_standalone() -> None:
-    by_module: dict[str, Counter] = {}
-    for plugin_location, plugin in graphing_plugins().plugins.items():
+    by_module: dict[str, Counter[Literal["translations", "rest"]]] = {}
+    for plugin_location, plugin in graphing_plugins().discovered.plugins.items():
         counter = by_module.setdefault(plugin_location.module, Counter())
         match plugin:
             case translations_api.Translation():
                 counter.update(["translations"])
             case _:
-                counter.update(["others"])
+                counter.update(["rest"])
     for module, counter in by_module.items():
         if counter["translations"]:
             assert not counter["rest"], (
@@ -60,7 +60,7 @@ def test_growth_and_trend_translations_scale_mb_per_day_to_bytes_per_day() -> No
     every translation of them must rename and scale by 1 MiB. See SUP-29835."""
     offenders = [
         f"{location.module}: translation {plugin.name!r} maps {raw_name!r} via {op!r}"
-        for location, plugin in graphing_plugins().plugins.items()
+        for location, plugin in graphing_plugins().discovered.plugins.items()
         if isinstance(plugin, translations_api.Translation)
         for raw_name, op in plugin.translations.items()
         if raw_name in _SIZE_TREND_RAW_METRICS
@@ -179,9 +179,7 @@ class _MetricNamesInModule:
 
     def add_from_plugin(
         self,
-        plugin: (
-            metrics_v1.Metric | PerfometerFromAPI | GraphFromAPI | translations_api.Translation
-        ),
+        plugin: (metrics_v1.Metric | ApiPerfometer | ApiGraph | translations_api.Translation),
     ) -> None:
         match plugin:
             case metrics_v1.Metric():
@@ -294,7 +292,7 @@ def test__MetricNamesInModule_bundles(
 def _metric_names_by_module(
     plugins: Mapping[
         PluginLocation,
-        metrics_v1.Metric | PerfometerFromAPI | GraphFromAPI | translations_api.Translation,
+        metrics_v1.Metric | ApiPerfometer | ApiGraph | translations_api.Translation,
     ],
 ) -> Mapping[str, _MetricNamesInModule]:
     metric_names_by_module: dict[str, _MetricNamesInModule] = {}
@@ -309,7 +307,9 @@ def _metric_names_by_module(
 def test_bundles() -> None:
     offenders = [
         (module, metric_names, bundles)
-        for module, metric_names in _metric_names_by_module(graphing_plugins().plugins).items()
+        for module, metric_names in _metric_names_by_module(
+            graphing_plugins().discovered.plugins
+        ).items()
         if (bundles := metric_names.bundles)
         and (len(bundles) > 1 or set(metric_names.from_metrics) != set(bundles[0]))
     ]
@@ -329,216 +329,34 @@ def test_bundles() -> None:
         )
 
 
-_ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Active": {"docker_active", "mem_lnx_active"},
-    "Age": {"age", "kube_info_age"},
-    "Active connections": {
-        "active",
-        "active_connections",
-        "aws_active_connections",
-        "fw_connections_active",
-    },
-    "Allocatable": {
-        "kube_memory_allocatable",
-        "kube_pod_allocatable",
-        "kube_cpu_allocatable",
-    },
-    "Allocated space": {"mem_lnx_vmalloc_used", "allocated_size"},
-    "Average consumption": {"aws_dynamodb_consumed_wcu", "aws_dynamodb_consumed_rcu"},
-    "Average latency": {"latency_ave", "average_latency_s"},
-    "Average usage": {
-        "aws_dynamodb_consumed_rcu_perc",
-        "aws_dynamodb_consumed_wcu_perc",
-    },
-    "Cluster utilization": {
-        "kube_cpu_cluster_allocatable_utilization",
-        "kube_memory_cluster_allocatable_utilization",
-    },
-    "Connection time": {"aws_route53_connection_time", "connection_time"},
-    "Failed connections": {"connections_failed_rate", "failed_connections"},
-    "GPU utilization": {"esx_gpu_utilization", "gpu_utilization"},
-    "Fan speed": {"fan_perc", "fan", "fan_speed"},
-    "HTTP 500 errors": {"http_5xx", "aws_http_500_rate"},
-    "Harddrive uncorrectable errors": {
-        "harddrive_uncorrectable_erros",
-        "harddrive_uncorrectable_errors",
-    },
-    "Limits": {"kube_cpu_limit", "kube_memory_limit"},
-    "Limits utilization": {
-        "kube_cpu_limit_utilization",
-        "kube_memory_limit_utilization",
-    },
-    "Maximum single-request consumption": {
-        "aws_dynamodb_maximum_consumed_wcu",
-        "aws_dynamodb_maximum_consumed_rcu",
-    },
-    "Memory used": {"memused_couchbase_bucket", "memory_used"},
-    "Minimum single-request consumption": {
-        "aws_dynamodb_minimum_consumed_rcu",
-        "aws_dynamodb_minimum_consumed_wcu",
-    },
-    "New connections": {"new_connections", "aws_new_connections"},
-    "Number of Go routines": {"bazel_cache_status_num_goroutines", "bazel_cache_go_go_goroutines"},
-    "Node utilization": {
-        "kube_cpu_node_allocatable_utilization",
-        "kube_memory_node_allocatable_utilization",
-    },
-    "Nodes": {"number_of_nodes", "aws_elasticache_nodes"},
-    "Non-compliant devices": {
-        "mobileiron_non_compliant",
-        "mobileiron_non_compliant_summary",
-    },
-    "Power usage": {"power_usage", "power_usage_percentage"},
-    "Pressure": {"pressure_pa", "pressure"},
-    "Rate of metrics received": {"perf_data_count_rate", "metrics_count_rate"},
-    "Queue length": {"queue", "queue_length"},
-    "Read latency": {"db_read_latency_s", "read_latency"},
-    "Read operations": {"disk_read_ios", "read_ops"},
-    "Requests": {"kube_memory_request", "kube_cpu_request", "aws_cloudfront_requests"},
-    "Requests per second": {"requests", "requests_per_sec", "requests_per_second"},
-    "Requests utilization": {
-        "kube_memory_request_utilization",
-        "kube_cpu_request_utilization",
-    },
-    "Reserved space": {"reserved_size", "reserved"},
-    "Running containers": {
-        "docker_running_containers",
-        "kube_node_container_count_running",
-    },
-    "Shared memory": {"mem_esx_shared", "mem_lnx_shmem"},
-    "Smoke": {"smoke_perc", "smoke_ppm"},
-    "Storage space used": {"storage_used", "storage_percent"},
-    "Streams": {"streams", "num_streams"},
-    "Swap used": {"swap_used", "swap_used_percent"},
-    "System": {"system", "system_size"},
-    "Total devices": {"ap_devices_total", "mobileiron_devices_total"},
-    "Total size": {"fs_size", "elasticsearch_size"},
-    "Total virtual memory": {"mem_lnx_total_total", "mem_total_virtual_in_bytes"},
-    "Usage": {"kube_cpu_usage", "pd_exclusivesnapshot", "kube_memory_usage"},
-    "Used licenses": {"licenses", "license_percentage"},
-    "Used virtual memory": {"pagefile_used_percent", "pagefile_used"},
-    "Used virtual memory (averaged)": {
-        "pagefile_used_percent_avg",
-        "pagefile_used_avg",
-    },
-    "User": {"user", "num_user"},
-    "Utilization": {"cisco_sma_queue_utilization", "generic_util"},
-    "Write latency": {"write_latency", "db_write_latency_s"},
-    "Write operations": {"write_ops_s", "disk_write_ios"},
-}
+def _normalized_title(title: str) -> str:
+    return re.sub(r"[\s_-]+", " ", title).strip().casefold()
 
 
-def test_duplicate_metric_titles_new() -> None:
-    # CMK-26844
-    metric_names_by_title: dict[str, set[str]] = {}
-    for plugin in graphing_plugins().plugins.values():
-        if isinstance(plugin, metrics_v1.Metric):
-            metric_names_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
+def _names_sharing_a_title(titled_names: Iterable[tuple[str, str]]) -> Mapping[str, Sequence[str]]:
+    names_by_title: dict[str, list[str]] = {}
+    for name, title in titled_names:
+        names_by_title.setdefault(_normalized_title(title), []).append(name)
+    return {title: sorted(names) for title, names in names_by_title.items() if len(names) > 1}
 
-    duplicate_metric_titles = {t: mns for t, mns in metric_names_by_title.items() if len(mns) > 1}
 
-    new = {}
-    for t, duplicates in duplicate_metric_titles.items():
-        if (allowed := _ALLOWED_DUPLICATE_METRIC_TITLES.get(t)) is None:
-            new[t] = duplicates
-            continue
-
-        if duplicates != allowed:
-            new[t] = duplicates.difference(allowed)
-    assert not new, "Found new duplicate titles:\n" + "\n".join(
-        [f"- {t}: {', '.join(mns)}" for t, mns in new.items()]
+def test_metric_titles_are_unique() -> None:
+    assert not _names_sharing_a_title(
+        (plugin.name, plugin.title.localize(str))
+        for plugin in graphing_plugins().discovered.plugins.values()
+        if isinstance(plugin, metrics_v1.Metric)
     )
 
 
-def test_duplicate_metric_titles_fixed() -> None:
-    # CMK-26844
-    metric_names_by_title: dict[str, set[str]] = {}
-    for plugin in graphing_plugins().plugins.values():
-        if isinstance(plugin, metrics_v1.Metric):
-            metric_names_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
-
-    duplicate_metric_titles = {t: mns for t, mns in metric_names_by_title.items() if len(mns) > 1}
-
-    already_fixed = {}
-    for t, allowed in _ALLOWED_DUPLICATE_METRIC_TITLES.items():
-        if (duplicates := duplicate_metric_titles.get(t)) is None:
-            already_fixed[t] = allowed
-            continue
-
-        if allowed != duplicates:
-            already_fixed[t] = allowed.difference(duplicates)
-
-    assert not already_fixed, "Found already fixed duplicate titles:\n" + "\n".join(
-        [f"- {t}: {', '.join(gps)}" for t, gps in already_fixed.items()]
-    )
-
-
-_ALLOWED_DUPLICATE_GRAPH_TITLES = {
-    "Access point statistics": {"access_point_statistics2", "access_point_statistics"},
-    "Active sessions": {"active_sessions", "active_sessions_with_peak_value"},
-    "Bandwidth": {"bandwidth_translated", "bandwidth"},
-    "Capacity usage": {"capacity_usage_2", "capacity_usage"},
-    "Disk latency": {"disk_latency", "disk_rw_latency"},
-    "Huge pages": {"huge_pages_2", "huge_pages"},
-    "Packets": {"packets_1", "packets_2", "packets_3"},
-    "Traffic": {"traffic", "read_write_data"},
-    "VMalloc address space": {"vmalloc_address_space_2", "vmalloc_address_space_1"},
-}
-
-
-def test_duplicate_graph_titles_new() -> None:
-    # CMK-26844
-    graphs_by_title: dict[str, set[str]] = {}
-    for plugin in graphing_plugins().plugins.values():
+def test_graph_titles_are_unique() -> None:
+    assert not _names_sharing_a_title(
+        (plugin.name, plugin.title.localize(str))
+        for plugin in graphing_plugins().discovered.plugins.values()
         if isinstance(
             plugin,
             graphs_v1.Graph
             | graphs_v1.Bidirectional
             | graphs_v2_unstable.Graph
             | graphs_v2_unstable.Bidirectional,
-        ):
-            graphs_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
-
-    duplicate_graph_titles = {t: gps for t, gps in graphs_by_title.items() if len(gps) > 1}
-
-    new = {}
-    for t, duplicates in duplicate_graph_titles.items():
-        if (allowed := _ALLOWED_DUPLICATE_GRAPH_TITLES.get(t)) is None:
-            new[t] = duplicates
-            continue
-
-        if duplicates != allowed:
-            new[t] = duplicates.difference(allowed)
-
-    assert not new, "Found new duplicate titles:\n" + "\n".join(
-        [f"- {t}: {', '.join(gps)}" for t, gps in new.items()]
-    )
-
-
-def test_duplicate_graph_titles_fixed() -> None:
-    # CMK-26844
-    graphs_by_title: dict[str, set[str]] = {}
-    for plugin in graphing_plugins().plugins.values():
-        if isinstance(
-            plugin,
-            graphs_v1.Graph
-            | graphs_v1.Bidirectional
-            | graphs_v2_unstable.Graph
-            | graphs_v2_unstable.Bidirectional,
-        ):
-            graphs_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
-
-    duplicate_graph_titles = {t: gps for t, gps in graphs_by_title.items() if len(gps) > 1}
-
-    already_fixed = {}
-    for t, allowed in _ALLOWED_DUPLICATE_GRAPH_TITLES.items():
-        if (duplicates := duplicate_graph_titles.get(t)) is None:
-            already_fixed[t] = allowed
-            continue
-
-        if allowed != duplicates:
-            already_fixed[t] = allowed.difference(duplicates)
-
-    assert not already_fixed, "Found already fixed duplicate titles:\n" + "\n".join(
-        [f"- {t}: {', '.join(gps)}" for t, gps in already_fixed.items()]
+        )
     )

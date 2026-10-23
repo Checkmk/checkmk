@@ -10,16 +10,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
-
-
-def discover_symantec_av_progstate(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def check_symantec_av_progstate(section: StringTable) -> CheckResult:
@@ -41,6 +36,6 @@ agent_section_symantec_av_progstate = AgentSection(
 check_plugin_symantec_av_progstate = CheckPlugin(
     name="symantec_av_progstate",
     service_name="AV Program Status",
-    discovery_function=discover_symantec_av_progstate,
+    discovery_function=discover_one_service,
     check_function=check_symantec_av_progstate,
 )

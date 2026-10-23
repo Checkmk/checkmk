@@ -2,10 +2,10 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, field
 from http import HTTPStatus
-from typing import Self
+from typing import cast, Self
 
 from werkzeug.datastructures import ETags
 
@@ -15,7 +15,7 @@ from cmk.gui.customer import is_provider_site
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.openapi.restful_objects.constructors import ETagHash, hash_of_dict
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.token_auth import AuthToken
 from cmk.gui.type_defs import (
@@ -105,6 +105,7 @@ class ApiConfig:
     multisite_users: Mapping[str, UserSpec]
     default_user_profile: UserSpec
     user_connections: Sequence[ConfigurableUserConnectionSpec]
+    user_localizations: Mapping[str, Mapping[str, str]]
 
     @classmethod
     def from_config(cls, config: Config) -> Self:
@@ -132,12 +133,13 @@ class ApiConfig:
             multisite_users=config.multisite_users,
             default_user_profile=config.default_user_profile,
             user_connections=config.user_connections,
+            user_localizations=config.user_localizations,
         )
 
     def user_permissions(self) -> UserPermissions:
         return UserPermissions(
             roles=self.roles,
-            permissions=permission_registry,
+            permissions=all_permissions(),
             user_roles={
                 UserId(user_id): user["roles"] for user_id, user in self.multisite_users.items()
             },
@@ -157,6 +159,22 @@ class ApiContext:
     # user id - a None user id maps to several identities with opposite permissions.
     user: LoggedInUser
     token: AuthToken | None
+    _shared: dict[Callable[[ApiContext], object], object] = field(
+        default_factory=dict, init=False, repr=False, compare=False
+    )
+
+    def shared[T](self, build: Callable[[ApiContext], T]) -> T:
+        """The request's instance of the value the build function creates.
+
+        It is built on first use and shared by everything handling the request that passes the
+        same function: the validators of the request and the endpoint handler. The framework is
+        meant to be decoupled from watolib and the other application packages, so a per-request
+        application object, like the Setup folder tree, is provided this way instead of as a
+        field of the context.
+        """
+        if build not in self._shared:
+            self._shared[build] = build(self)
+        return cast(T, self._shared[build])
 
     @classmethod
     def new(

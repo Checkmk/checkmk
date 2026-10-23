@@ -14,13 +14,12 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_rate,
     get_value_store,
     LevelsT,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def parse_mongodb_asserts(string_table: StringTable) -> Mapping[str, int]:
@@ -31,10 +30,6 @@ agent_section_mongodb_asserts = AgentSection(
     name="mongodb_asserts",
     parse_function=parse_mongodb_asserts,
 )
-
-
-def discover_mongodb_asserts(section: Mapping[str, int]) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _check_mongodb_asserts(
@@ -66,7 +61,7 @@ def check_mongodb_asserts(params: Mapping[str, Any], section: Mapping[str, int])
 check_plugin_mongodb_asserts = CheckPlugin(
     name="mongodb_asserts",
     service_name="MongoDB Asserts",
-    discovery_function=discover_mongodb_asserts,
+    discovery_function=discover_one_service,
     check_function=check_mongodb_asserts,
     check_default_parameters={},
     check_ruleset_name="mongodb_asserts",

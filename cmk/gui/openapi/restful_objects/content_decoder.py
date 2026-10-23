@@ -6,7 +6,8 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 
-import http.client
+from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any
 
 from marshmallow import Schema
@@ -19,7 +20,9 @@ from cmk.gui.openapi.utils import (
 )
 
 
-def json_decoder(request: Request, request_schema: type[Schema] | None) -> dict[str, Any] | None:
+def json_decoder(
+    request: Request, request_schema: type[Schema] | None, context: Mapping[str, object]
+) -> dict[str, Any] | None:
     if not request_schema:
         return None
 
@@ -28,7 +31,9 @@ def json_decoder(request: Request, request_schema: type[Schema] | None) -> dict[
     if request.get_data(cache=True):
         json_data = request.json or {}
 
-    return request_schema().load(json_data)
+    schema = request_schema()
+    schema.context.update(context)
+    return schema.load(json_data)
 
 
 def binary_decoder(request: Request) -> bytes | None:
@@ -36,7 +41,9 @@ def binary_decoder(request: Request) -> bytes | None:
     return bytes(data) if data else None
 
 
-def gzip_decoder(request: Request, request_schema: type[Schema] | None) -> Any:  # noqa: ARG001
+def gzip_decoder(
+    request: Request, _request_schema: type[Schema] | None, _context: Mapping[str, object]
+) -> Any:
     tgz = binary_decoder(request)
     try:
         assert isinstance(tgz, bytes)
@@ -44,19 +51,24 @@ def gzip_decoder(request: Request, request_schema: type[Schema] | None) -> Any: 
 
     except (tar_archive.UnpackedArchiveTooLargeError, tar_archive.SecurityViolation) as err:
         raise RestAPIRequestDataValidationException(
-            title=http.client.responses[400],
+            title=HTTPStatus.BAD_REQUEST.phrase,
             detail=str(err),
         )
     except Exception:
         raise RestAPIRequestDataValidationException(
-            title=http.client.responses[400],
+            title=HTTPStatus.BAD_REQUEST.phrase,
             detail="Payload is not a valid .tar.gz file",
         )
 
     return tgz
 
 
-def decode(content_type: str, request: Request, request_schema: type[Schema] | None) -> Any:
+def decode(
+    content_type: str,
+    request: Request,
+    request_schema: type[Schema] | None,
+    context: Mapping[str, object],
+) -> Any:
     registered_decoders = {
         "application/json": json_decoder,
         "application/gzip": gzip_decoder,
@@ -70,4 +82,4 @@ def decode(content_type: str, request: Request, request_schema: type[Schema] | N
 
     concrete_decoder = registered_decoders[content_type]
 
-    return concrete_decoder(request, request_schema)
+    return concrete_decoder(request, request_schema, context)

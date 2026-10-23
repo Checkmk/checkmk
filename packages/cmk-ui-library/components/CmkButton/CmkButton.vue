@@ -51,6 +51,7 @@ defineEmits(['click'])
     :role="isDisabled ? 'link' : undefined"
     :tabindex="isDisabled ? 0 : undefined"
     :aria-disabled="isDisabled"
+    :download="props.download"
     :title="titleText"
     :aria-busy="props.running"
     @click="
@@ -164,8 +165,11 @@ defineEmits(['click'])
   aspect-ratio: 1;
 }
 
+/* `:any-link` outweighs `body.main a:link`, which would colour the text of a link button. */
 .cmk-button--variant-primary,
-.cmk-button--variant-success {
+.cmk-button--variant-primary:any-link,
+.cmk-button--variant-success,
+.cmk-button--variant-success:any-link {
   color: var(--button-primary-text-color);
   background-color: var(--default-button-primary-color);
   border: 1px solid var(--button-primary-border-color);
@@ -183,7 +187,8 @@ defineEmits(['click'])
   }
 }
 
-.cmk-button--variant-secondary {
+.cmk-button--variant-secondary,
+.cmk-button--variant-secondary:any-link {
   background-color: var(--default-button-secondary-color);
   border: 1px solid var(--button-secondary-border-color);
   color: var(--button-secondary-text-color);
@@ -205,7 +210,8 @@ defineEmits(['click'])
   }
 }
 
-.cmk-button--variant-optional {
+.cmk-button--variant-optional,
+.cmk-button--variant-optional:any-link {
   background-color: var(--default-button-optional-color);
   border: 1px solid var(--button-optional-border-color);
   color: var(--button-optional-text-color);
@@ -227,7 +233,8 @@ defineEmits(['click'])
   }
 }
 
-.cmk-button--variant-info {
+.cmk-button--variant-info,
+.cmk-button--variant-info:any-link {
   background-color: var(--default-button-info-color);
   border: 1px solid var(--button-info-border-color);
   color: var(--button-info-text-color);
@@ -245,7 +252,8 @@ defineEmits(['click'])
   }
 }
 
-.cmk-button--variant-danger {
+.cmk-button--variant-danger,
+.cmk-button--variant-danger:any-link {
   background-color: var(--default-button-danger-color);
   border: 1px solid var(--button-danger-border-color);
   color: var(--button-danger-text-color);
@@ -263,7 +271,8 @@ defineEmits(['click'])
   }
 }
 
-.cmk-button--variant-warning {
+.cmk-button--variant-warning,
+.cmk-button--variant-warning:any-link {
   background-color: var(--default-button-warning-color);
   border: 1px solid var(--button-warning-border-color);
   color: var(--button-warning-text-color);
@@ -281,7 +290,8 @@ defineEmits(['click'])
   }
 }
 
-.cmk-button--variant-text {
+.cmk-button--variant-text,
+.cmk-button--variant-text:any-link {
   background-color: transparent;
   border: 1px solid transparent;
   color: inherit;
@@ -299,7 +309,8 @@ defineEmits(['click'])
   }
 }
 
-.cmk-button--variant-ai {
+.cmk-button--variant-ai,
+.cmk-button--variant-ai:any-link {
   position: relative;
   overflow: hidden;
   background-color: var(--default-button-optional-color);

@@ -15,10 +15,9 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Result, State
 from cmk.plugins.ucs_bladecenter.agent_based.ucs_c_rack_server_faultinst import (
     check_ucs_c_rack_server_faultinst,
-    discover_ucs_c_rack_server_faultinst,
     parse_ucs_c_rack_server_faultinst,
 )
 
@@ -163,22 +162,6 @@ def test_parse_ucs_c_rack_server_faultinst_single_fault() -> None:
     assert parsed["Affected DN"] == ["rack-unit-1/psu-2"]
 
 
-def test_discover_ucs_c_rack_server_faultinst(parsed_data: dict[str, list[str]]) -> None:
-    """Test discovery of UCS fault instance service."""
-    items = list(discover_ucs_c_rack_server_faultinst(parsed_data))
-
-    assert len(items) == 1
-    assert items[0] == Service()
-
-
-def test_discover_ucs_c_rack_server_faultinst_empty_data() -> None:
-    """Test discovery with empty data."""
-    items = list(discover_ucs_c_rack_server_faultinst({}))
-
-    assert len(items) == 1
-    assert items[0] == Service()
-
-
 def test_check_ucs_c_rack_server_faultinst_multiple_severities(
     parsed_data: dict[str, list[str]],
 ) -> None:
@@ -288,19 +271,6 @@ def test_check_ucs_c_rack_server_faultinst_critical_present() -> None:
             summary="Severity: critical, Description: Critical fault, Cause: cause2, Code: F002, Affected DN: dn2",
         ),
     ]
-
-
-def test_ucs_c_rack_server_faultinst_discovery() -> None:
-    """Test discovery of UCS rack server fault instances."""
-    # Pattern 3: Empty special agent data (no faults)
-    string_table: list[list[str]] = []
-
-    parsed = parse_ucs_c_rack_server_faultinst(string_table)
-    result = list(discover_ucs_c_rack_server_faultinst(parsed))
-
-    # Should always discover one service with no item
-    assert len(result) == 1
-    assert result[0] == Service()
 
 
 def test_ucs_c_rack_server_faultinst_no_faults() -> None:

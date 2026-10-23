@@ -17,9 +17,13 @@ import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/F
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
 import TableForm from '@/dashboard/components/Wizard/components/TableForm/TableForm.vue'
 import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/TableFormRow.vue'
-import type { CombinedGraphContentPresentation } from '@/dashboard/components/Wizard/types'
+import type {
+  CombinedGraphContentPresentation,
+  GraphLegendStyle
+} from '@/dashboard/components/Wizard/types'
 
 import ColorSelector from '../ColorSelector/ColorSelector.vue'
+import GraphLegendOptions from './GraphLegendOptions.vue'
 
 const { _t } = usei18n()
 
@@ -45,6 +49,7 @@ const color = defineModel<string>('color', { required: false, default: undefined
 const timestamp = defineModel<boolean>('timestamp', { required: true })
 const roundMargin = defineModel<boolean>('roundMargin', { required: true })
 const graphLegend = defineModel<boolean>('graphLegend', { required: true })
+const graphLegendStyle = defineModel<GraphLegendStyle>('graphLegendStyle', { required: true })
 
 const clickToPlacePin = defineModel<boolean>('clickToPlacePin', { required: true })
 const showBurgerMenu = defineModel<boolean>('showBurgerMenu', { required: true })
@@ -137,9 +142,16 @@ const displayPresentation = computed(() => presentation.value !== undefined)
         <div>
           <CmkCheckbox v-model:model-value="roundMargin" :label="_t('Margin round the graph')" />
         </div>
-        <div>
-          <CmkCheckbox v-model:model-value="graphLegend" :label="_t('Graph legend')" />
-        </div>
+      </FieldComponent>
+    </TableFormRow>
+
+    <TableFormRow>
+      <FieldDescription>{{ _t('Legend') }}</FieldDescription>
+      <FieldComponent>
+        <GraphLegendOptions
+          v-model:show-legend="graphLegend"
+          v-model:legend-style="graphLegendStyle"
+        />
       </FieldComponent>
     </TableFormRow>
 

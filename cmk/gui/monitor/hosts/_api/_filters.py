@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 import re
 from collections.abc import Callable, Mapping
 from typing import Annotated, Literal
@@ -13,7 +14,6 @@ from pydantic import AfterValidator, PlainValidator, StringConstraints
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label
 from cmk.livestatus_client import lqencode, quote_dict
 from cmk.livestatus_client.expressions import LqSafe
@@ -48,7 +48,23 @@ type TimestampOp = Literal["lt", "lte", "gt", "gte"]
 
 type LabelField = Literal["labels", "tags"]
 
-type NameListField = Literal["contacts", "contact_groups"]
+type NameListField = Literal["contacts", "contact_groups", "groups"]
+
+type StringField = Literal["name", "alias", "address", "contacts"]
+
+type BooleanField = Literal[
+    "acknowledged",
+    "in_downtime",
+    "notifications_enabled",
+    "has_comments",
+    "active_checks_disabled",
+    "passive_checks_disabled",
+    "in_notification_period",
+    "in_service_period",
+    "in_check_period",
+    "is_flapping",
+    "stale",
+]
 
 type NumericField = Literal[
     "num_services",
@@ -65,9 +81,7 @@ class StringCondition:
     type: Literal["condition"] = api_field(
         description="Node type discriminator", example="condition"
     )
-    field: Literal["name", "alias", "address", "contacts"] = api_field(
-        description="String host field to filter on", example="name"
-    )
+    field: StringField = api_field(description="String host field to filter on", example="name")
     op: StringOp = api_field(description="String match operation", example="contains")
     value: str = api_field(
         description="Value to match against the field", example="web", pattern=_NO_NEWLINES_REGEX
@@ -118,7 +132,7 @@ class SiteChoiceCondition:
     field: Literal["site_id"] = api_field(description="Site field", example="site_id")
     op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
     value: Annotated[
-        list[Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_exist)]],
+        list[SiteId],
         MinLen(1),
         AfterValidator(validate_uniqueness),
     ] = api_field(description="Site IDs to match", example=["local"])
@@ -161,19 +175,9 @@ class BooleanCondition:
     type: Literal["condition"] = api_field(
         description="Node type discriminator", example="condition"
     )
-    field: Literal[
-        "acknowledged",
-        "in_downtime",
-        "notifications_enabled",
-        "has_comments",
-        "active_checks_disabled",
-        "passive_checks_disabled",
-        "in_notification_period",
-        "in_service_period",
-        "in_check_period",
-        "is_flapping",
-        "stale",
-    ] = api_field(description="Host boolean field to filter on", example="acknowledged")
+    field: BooleanField = api_field(
+        description="Host boolean field to filter on", example="acknowledged"
+    )
     op: Literal["eq"] = api_field(description="Equality operation", example="eq")
     value: bool = api_field(description="Boolean value to compare against", example=False)
 
@@ -184,7 +188,9 @@ class LabelChoiceCondition:
         description="Node type discriminator", example="condition"
     )
     field: LabelField = api_field(description="Key/value host field to filter on", example="labels")
-    op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
+    op: Literal["one_of", "all_of"] = api_field(
+        description="Set membership operation", example="all_of"
+    )
     value: Annotated[
         list[Annotated[str, StringConstraints(pattern=_NO_NEWLINES_REGEX)]],
         MinLen(1),
@@ -192,8 +198,9 @@ class LabelChoiceCondition:
         AfterValidator(validate_label_pairs),
     ] = api_field(
         description=(
-            "Pairs to match, each written as 'key:value'. A host matches when it carries any "
-            "one of them. The first colon separates the two halves, so a value may contain "
+            "Pairs to match, each written as 'key:value'. With 'all_of' a host matches only "
+            "when it carries every pair, with 'one_of' when it carries any one of them. The "
+            "first colon separates the two halves, so a value may contain "
             "colons. A trailing '*' matches by prefix: 'key:va*' takes every value of that key "
             "starting with 'va', 'ke*' every key starting with 'ke', whatever its value."
         ),
@@ -275,15 +282,30 @@ class NotNode:
 type FilterNode = AndNode | OrNode | NotNode | ConditionNode
 
 
-def extract_site_scope(
-    node: FilterNode, all_site_ids: frozenset[SiteId]
-) -> tuple[FilterNode | None, list[SiteId] | None]:
-    """Split off the tree's 'site_id' condition, if any, as a site scope restriction.
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class SiteScopedFilter:
+    node: FilterNode | None
+    sites: frozenset[SiteId] | None
+    exclude_sites: bool
 
-    Site ID isn't a real Livestatus column, so it can't contribute a filter line; it's pushed
-    down into which sites get queried instead. Only a single 'site_id' condition is supported,
-    optionally wrapped with a 'not' condition. If a site condition is combined with the rest of
-    the tree with anything but an 'and' condition, a `ValueError` is raised.
+    def site_scope(self, all_site_ids: frozenset[SiteId]) -> list[SiteId] | None:
+        """The sites to query, or `None` for every site.
+
+        Named sites are kept even if not in `all_site_ids`; excluded ones are taken from it.
+        """
+        if self.sites is None:
+            return None
+        return list(all_site_ids - self.sites if self.exclude_sites else self.sites)
+
+
+def scope_filter_by_site(node: FilterNode) -> SiteScopedFilter:
+    """Split the tree's 'site_id' condition, if any, off the rest of the tree.
+
+    'site_id' is not a Livestatus column; it restricts which sites are queried instead.
+
+    Only a single 'site_id' condition is supported, optionally wrapped with a 'not' condition.
+    If a site condition is combined with the rest of the tree with anything but an 'and'
+    condition, a `ValueError` is raised.
 
     Additional details:
 
@@ -349,13 +371,10 @@ def extract_site_scope(
     residual = walk(node, and_only=True)
 
     if not found:
-        return residual, None
+        return SiteScopedFilter(node=residual, sites=None, exclude_sites=False)
 
     condition, negated = found[0]
-    extracted_site_ids = {SiteId(site_id) for site_id in condition.value}
-    site_ids = list(all_site_ids - extracted_site_ids if negated else extracted_site_ids)
-
-    return residual, site_ids
+    return SiteScopedFilter(node=residual, sites=frozenset(condition.value), exclude_sites=negated)
 
 
 def _no_folders() -> Mapping[str, str]:
@@ -484,8 +503,11 @@ def _accumulate_filters(
         case LabelChoiceCondition():
             filters.extend(_label_choice_filters(node.field, node.value))
 
-            if len(node.value) > 1:
-                filters.append(f"Or: {len(node.value)}")
+            match node.op:
+                case "one_of" if len(node.value) > 1:
+                    filters.append(f"Or: {len(node.value)}")
+                case "all_of" if len(node.value) > 1:
+                    filters.append(f"And: {len(node.value)}")
 
         case NameChoiceCondition():
             filters.extend(_name_choice_filters(node.field, node.value))

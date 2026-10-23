@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
-from cmk.agent_receiver.relay.lib.shared_types import Serial
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.relay_protocols.monitoring_data import PayloadType
 
 # The token the core expects in the header. Mapped explicitly rather than derived
@@ -33,6 +33,7 @@ class ForwardMonitoringDataHandler:
     def process(
         self,
         *,
+        relay_id: RelayID,
         payload: bytes,
         host: str,
         config_serial: Serial,
@@ -44,6 +45,7 @@ class ForwardMonitoringDataHandler:
             f"payload_type:{_HEADER_TOKEN[payload_type]};"
             f"payload_size:{len(payload)};"
             f"config_serial:{config_serial};"
+            f"relay_id:{relay_id};"
             f"start_timestamp:{timestamp};"
             f"host_by_name:{host};"
             f"service_description:{service};"

@@ -6,9 +6,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { renderDate } from 'cmk-ui-library/lib/renderTime'
 import { computed } from 'vue'
 
-import StatusMessage, { type StatusType } from '../StatusMessage.vue'
+import StatusMessage from '../StatusMessage.vue'
 
 const { _t } = usei18n()
 
@@ -27,7 +28,6 @@ const props = defineProps<SharingStatusProps>()
 const emit = defineEmits<SharingStatusEmits>()
 
 type SharingData = {
-  status: StatusType
   text: TranslatedString
   linkedText: TranslatedString
 }
@@ -35,29 +35,26 @@ type SharingData = {
 const sharedData = computed((): SharingData => {
   if (props.sharingState === 'paused') {
     return {
-      status: 'WARNING',
-      text: _t('Sharing'),
+      text: _t('Public sharing'),
       linkedText: _t('paused')
     }
   }
 
   if (props.sharingState === 'disabled') {
     return {
-      status: 'DANGER',
-      text: _t('Sharing'),
+      text: _t('Public sharing'),
       linkedText: _t('disabled')
     }
   }
 
   if (!props.sharedUntil) {
     return {
-      status: 'OK',
-      text: _t('Sharing'),
+      text: _t('Public sharing'),
       linkedText: _t('active')
     }
   }
 
-  const getDate = () => (props.sharedUntil ? props.sharedUntil.toISOString().split('T')[0]! : '')
+  const getDate = () => (props.sharedUntil ? renderDate(props.sharedUntil) : '')
 
   const daysUntilExpired: number = Math.ceil(
     (props.sharedUntil.getTime() - new Date().getTime()) / (1000 * 3600 * 24)
@@ -65,39 +62,34 @@ const sharedData = computed((): SharingData => {
 
   if (daysUntilExpired > 7) {
     return {
-      status: 'OK',
-      text: _t('Sharing until'),
+      text: _t('Public sharing until'),
       linkedText: untranslated(getDate())
     }
   }
 
   if (daysUntilExpired > 1) {
     return {
-      status: 'WARNING',
-      text: _t('Sharing'),
+      text: _t('Public sharing'),
       linkedText: _t('expires in %{days} days', { days: daysUntilExpired })
     }
   }
 
   if (daysUntilExpired === 1) {
     return {
-      status: 'WARNING',
-      text: _t('Sharing'),
+      text: _t('Public sharing'),
       linkedText: _t('expires in 1 day')
     }
   }
 
   if (daysUntilExpired === 0) {
     return {
-      status: 'WARNING',
-      text: _t('Sharing'),
+      text: _t('Public sharing'),
       linkedText: _t('expires today')
     }
   }
 
   return {
-    status: 'DANGER',
-    text: _t('Sharing expired on'),
+    text: _t('Public sharing expired on'),
     linkedText: untranslated(getDate())
   }
 })
@@ -105,7 +97,6 @@ const sharedData = computed((): SharingData => {
 
 <template>
   <StatusMessage
-    :status="sharedData.status"
     :text="sharedData.text"
     :linked-text="sharedData.linkedText"
     @click="emit('openSharingSettings')"

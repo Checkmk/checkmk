@@ -3,15 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .bakery_api.v1 import (
-    register,
-    WindowsConfigContent,
-    WindowsConfigGenerator,
-    WindowsGlobalConfigEntry,
-)
+from typing import Literal
+
+from .bakery_api.v1 import register, WindowsConfigGenerator, WindowsGlobalConfigEntry
 
 
-def get_win_script_async_windows_config(conf: WindowsConfigContent) -> WindowsConfigGenerator:
+def get_win_script_async_windows_config(
+    conf: Literal["sequential", "parallel"],
+) -> WindowsConfigGenerator:
     yield WindowsGlobalConfigEntry(name="async_script_execution", content=conf)
 
 

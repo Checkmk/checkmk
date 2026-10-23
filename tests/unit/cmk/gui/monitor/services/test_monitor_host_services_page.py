@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator
+from collections.abc import Mapping
 from urllib.parse import parse_qs, urlparse
 
 import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.ccc.user import UserId
-from cmk.gui import login
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
@@ -30,44 +28,60 @@ from cmk.gui.monitor.services._pages._monitor_host_services import (
 )
 from cmk.gui.page_menu import PageMenu, PageMenuEntry, PageMenuLink
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
-from tests.testlib.gui.users import create_and_destroy_user
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 
 
-@pytest.fixture(name="user_without_permissions")
-def fixture_user_without_permissions(load_config: Config) -> Iterator[UserId]:
-    with create_and_destroy_user(
-        automation=False, role="no_permissions", config=load_config
-    ) as created:
-        user_id = created[0]
-        with login.TransactionIdContext(
-            user_id,
-            UserPermissions(
-                load_config.roles, permission_registry, {user_id: ["no_permissions"]}, []
-            ),
-        ):
-            yield user_id
+class _SetupGrantingAll:
+    """Setup's folders, knowing no folder and letting the user open every host."""
+
+    def title_of(self, _path: str) -> str | None:
+        return None
+
+    def all_titles(self) -> Mapping[str, str]:
+        return {}
+
+    def may_read_host(self, _host_name: str, _path: str | None) -> bool:
+        return True
 
 
 @pytest.mark.usefixtures("user_without_permissions")
 def test_page_denied_without_legacy_view_permission() -> None:
     page = MonitorHostServicesPage(
-        MonitorCommands(monitor_command_registry), DowntimeRecurrences(), HostMenus()
+        MonitorCommands(monitor_command_registry),
+        DowntimeRecurrences(),
+        HostMenus(),
+        setup_folders=lambda _config, _user: _SetupGrantingAll(),
     )
 
     with pytest.raises(MKAuthException):
-        page.page(PageContext(config=Config(), request=request))
+        page.page(
+            PageContext(
+                config=Config(),
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+            )
+        )
 
 
 def _breadcrumb_of(host: str = "web-1", site: str = "local") -> Breadcrumb:
-    ctx = PageContext(config=Config(), request=request)
+    ctx = PageContext(
+        config=Config(),
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+    )
     return _make_breadcrumb(
         ctx,
         HostName(host),
         SiteId(site),
         _host_url(ctx, HostName(host), SiteId(site)),
-        UserPermissions.from_config(ctx.config, permission_registry),
+        ctx.user_permissions,
     )
 
 
@@ -128,9 +142,10 @@ def test_row_actions_link_the_parameters_of_the_service_in_the_row() -> None:
     config = Config()
     config.wato_enabled = True
 
-    assert [(action.ident, action.url) for action in _row_actions(config, HostName("web-1"))] == [
-        ("parameters", "wato.py?mode=object_parameters&host=web-1&service={service}")
-    ]
+    assert [
+        (action.ident, action.url)
+        for action in _row_actions(config, HostName("web-1"), setup_access=lambda: True)
+    ] == [("parameters", "wato.py?mode=object_parameters&host=web-1&service={service}")]
 
 
 @pytest.mark.usefixtures("with_user_login")
@@ -138,7 +153,7 @@ def test_row_actions_are_dropped_where_setup_is_off() -> None:
     config = Config()
     config.wato_enabled = False
 
-    assert _row_actions(config, HostName("web-1")) == []
+    assert _row_actions(config, HostName("web-1"), setup_access=lambda: True) == []
 
 
 @pytest.mark.usefixtures("user_without_permissions")
@@ -146,7 +161,15 @@ def test_row_actions_are_dropped_without_the_rulesets_permission() -> None:
     config = Config()
     config.wato_enabled = True
 
-    assert _row_actions(config, HostName("web-1")) == []
+    assert _row_actions(config, HostName("web-1"), setup_access=lambda: True) == []
+
+
+@pytest.mark.usefixtures("with_user_login")
+def test_row_actions_are_dropped_for_a_host_the_user_may_not_open_in_setup() -> None:
+    config = Config()
+    config.wato_enabled = True
+
+    assert _row_actions(config, HostName("web-1"), setup_access=lambda: False) == []
 
 
 def _build_page_menu(breadcrumb: Breadcrumb | None = None) -> PageMenu:

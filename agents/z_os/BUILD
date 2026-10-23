@@ -5,7 +5,6 @@ filegroup(
         exclude = [
             "BUILD",
             "**/OWNERS",
-            "**/.f12",
         ],
     ),
     visibility = ["//visibility:public"],

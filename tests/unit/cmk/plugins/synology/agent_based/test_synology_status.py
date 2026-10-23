@@ -18,13 +18,6 @@ def test_parsing() -> None:
     assert section == synology_status.Section(system=0, power=1)
 
 
-def test_discovery() -> None:
-    section = synology_status.parse(SECTION_TABLE)
-    assert section is not None
-    services = list(synology_status.discovery(section))
-    assert len(services) == 1
-
-
 @pytest.mark.parametrize("state, expected", [(1, State.OK), (0, State.CRIT)])
 def test_result_state(state: int, expected: State) -> None:
     section = synology_status.Section(system=state, power=state)

@@ -7,15 +7,14 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def parse_orion_backup(string_table: StringTable) -> StringTable | None:
@@ -31,10 +30,6 @@ snmp_section_orion_backup = SimpleSNMPSection(
         oids=["2", "3"],
     ),
 )
-
-
-def discover_orion_backup(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_orion_backup(section: StringTable) -> CheckResult:
@@ -55,6 +50,6 @@ def check_orion_backup(section: StringTable) -> CheckResult:
 check_plugin_orion_backup = CheckPlugin(
     name="orion_backup",
     service_name="Backup",
-    discovery_function=discover_orion_backup,
+    discovery_function=discover_one_service,
     check_function=check_orion_backup,
 )

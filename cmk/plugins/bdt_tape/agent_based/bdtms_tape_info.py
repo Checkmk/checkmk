@@ -8,18 +8,13 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     contains,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
-
-
-def discover_bdtms_tape_info(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def check_bdtms_tape_info(section: StringTable) -> CheckResult:
@@ -45,6 +40,6 @@ snmp_section_bdtms_tape_info = SimpleSNMPSection(
 check_plugin_bdtms_tape_info = CheckPlugin(
     name="bdtms_tape_info",
     service_name="Tape Library Info",
-    discovery_function=discover_bdtms_tape_info,
+    discovery_function=discover_one_service,
     check_function=check_bdtms_tape_info,
 )

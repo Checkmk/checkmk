@@ -11,10 +11,11 @@ import argparse
 import re
 import sys
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 
 import requests
 
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 __version__ = "3.0.0b1"
 
@@ -97,7 +98,7 @@ def _fetch_and_output_data(args: argparse.Namespace) -> int:
         sys.stderr.write("Connection timed out")
         return 1
 
-    if response.status_code != 200:
+    if response.status_code != HTTPStatus.OK:
         sys.stderr.write(f"{url}: {response.reason}")
         return 1
 

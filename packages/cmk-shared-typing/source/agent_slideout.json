@@ -10,10 +10,15 @@
     "agent_status_cmds": {
       "$ref": "#/$defs/agent_status_cmds"
     },
+    "command_placeholders": { "$ref": "#/$defs/command_placeholders" },
     "host_name": { "type": "string" },
     "all_agents_url": { "type": "string" },
     "user_settings_url": { "type": "string" },
+    "bakery_url": { "type": "string" },
     "legacy_agent_url": { "type": "string" },
+    "kubernetes_helm_command": { "type": "string" },
+    "kubernetes_values": { "type": "string" },
+    "kubernetes_doc_url": { "type": "string" },
     "save_host": { "type": "boolean" },
     "host_exists": { "type": "boolean" },
     "unbaked_fallback": {
@@ -24,12 +29,39 @@
     "agent_install_cmds",
     "agent_registration_cmds",
     "agent_status_cmds",
+    "command_placeholders",
     "host_name",
     "all_agents_url",
     "user_settings_url",
+    "kubernetes_helm_command",
+    "kubernetes_values",
+    "kubernetes_doc_url",
     "save_host"
   ],
   "$defs": {
+    "command_placeholders": {
+      "description": "The placeholders in the command templates the slideout fills in.",
+      "type": "object",
+      "properties": {
+        "host_name": { "type": "string" },
+        "site": { "type": "string" },
+        "server": { "type": "string" },
+        "download_token": { "type": "string" },
+        "registration_token": { "type": "string" },
+        "registration_user_flag": {
+          "description": "Asks for the registration user. A token replaces it, as no placeholder is left for one.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "host_name",
+        "site",
+        "server",
+        "download_token",
+        "registration_token",
+        "registration_user_flag"
+      ]
+    },
     "unbaked_fallback": {
       "type": "object",
       "properties": {

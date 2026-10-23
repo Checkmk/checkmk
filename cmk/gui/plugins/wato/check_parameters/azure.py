@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable
 from typing import Any
@@ -23,7 +22,6 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Float,
     Integer,
-    Migrate,
     MonitoringState,
     Percentage,
     TextInput,
@@ -102,7 +100,8 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_agent_info(False),
-        title=lambda: _("Azure agent info (deprecated)"),
+        title=lambda: _("Azure agent info"),
+        is_deprecated=True,
     )
 )
 
@@ -285,52 +284,25 @@ def _item_spec_azure_vms() -> TextInput:
     return TextInput(title=_("VM name"))
 
 
-# the migration is introduced in 2.2.0b1
-def migrate_map_states(params: dict[str, Any]) -> dict[str, Any]:
-    map_provisioning = params.pop("map_provisioning_states", None)
-    map_power = params.pop("map_power_states", None)
-
-    if map_provisioning:
-        for state in ("succeeded", "failed"):
-            params[state] = map_provisioning.get(state, 1)
-
-    if map_power:
-        for state in (
-            "starting",
-            "running",
-            "stopping",
-            "stopped",
-            "deallocating",
-            "deallocated",
-            "unknown",
-        ):
-            params[state] = map_power.get(state, 1)
-
-    return params
-
-
-def _parameter_valuespec_azure_vms() -> Migrate:
-    return Migrate(
-        Dictionary(
-            help=_(
-                "To obtain the data required for this check, please configure"
-                ' the data source program "Microsoft Azure".'
-            ),
-            title=_("Map provisioning and power states"),
-            elements=[
-                ("succeeded", MonitoringState(title="Provisioning state succeeded")),
-                ("updating", MonitoringState(title="Provisioning state updating", default_value=1)),
-                ("failed", MonitoringState(title="Provisioning state failed", default_value=2)),
-                ("starting", MonitoringState(title="Power state starting")),
-                ("running", MonitoringState(title="Power state running")),
-                ("stopping", MonitoringState(title="Power state stopping", default_value=1)),
-                ("stopped", MonitoringState(title="Power state stopped", default_value=1)),
-                ("deallocating", MonitoringState(title="Power state deallocating")),
-                ("deallocated", MonitoringState(title="Power state deallocated")),
-                ("unknown", MonitoringState(title=_("Power state unknown"), default_value=3)),
-            ],
+def _parameter_valuespec_azure_vms() -> Dictionary:
+    return Dictionary(
+        help=_(
+            "To obtain the data required for this check, please configure"
+            ' the data source program "Microsoft Azure".'
         ),
-        migrate=migrate_map_states,
+        title=_("Map provisioning and power states"),
+        elements=[
+            ("succeeded", MonitoringState(title="Provisioning state succeeded")),
+            ("updating", MonitoringState(title="Provisioning state updating", default_value=1)),
+            ("failed", MonitoringState(title="Provisioning state failed", default_value=2)),
+            ("starting", MonitoringState(title="Power state starting")),
+            ("running", MonitoringState(title="Power state running")),
+            ("stopping", MonitoringState(title="Power state stopping", default_value=1)),
+            ("stopped", MonitoringState(title="Power state stopped", default_value=1)),
+            ("deallocating", MonitoringState(title="Power state deallocating")),
+            ("deallocated", MonitoringState(title="Power state deallocated")),
+            ("unknown", MonitoringState(title=_("Power state unknown"), default_value=3)),
+        ],
     )
 
 
@@ -341,7 +313,8 @@ rulespec_registry.register(
         item_spec=_item_spec_azure_vms,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_vms,
-        title=lambda: _("Azure virtual machines (deprecated)"),
+        title=lambda: _("Azure virtual machines"),
+        is_deprecated=True,
     )
 )
 
@@ -457,7 +430,8 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_vms_summary,
-        title=lambda: _("Azure virtual machines summary (deprecated)"),
+        title=lambda: _("Azure virtual machines summary"),
+        is_deprecated=True,
     )
 )
 
@@ -583,7 +557,8 @@ rulespec_registry.register(
         item_spec=_item_spec_azure_virtualnetworkgateways,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_virtualnetworkgateways,
-        title=lambda: _("Azure VNet gateway (deprecated)"),
+        title=lambda: _("Azure VNet gateway"),
+        is_deprecated=True,
     )
 )
 
@@ -625,7 +600,8 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Azure DB storage")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_storage,
-        title=lambda: _("Azure DB storage (deprecated)"),
+        title=lambda: _("Azure DB storage"),
+        is_deprecated=True,
     )
 )
 
@@ -648,7 +624,8 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("QPS")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_qps,
-        title=lambda: _("Azure Traffic Manager QPS (deprecated)"),
+        title=lambda: _("Azure Traffic Manager QPS"),
+        is_deprecated=True,
     )
 )
 
@@ -678,7 +655,8 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Probe State")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_probe_state,
-        title=lambda: _("Azure Traffic Manager probe state (deprecated)"),
+        title=lambda: _("Azure Traffic Manager probe state"),
+        is_deprecated=True,
     )
 )
 
@@ -705,7 +683,8 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Load Balancer Health")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_health,
-        title=lambda: _("Azure Load Balancer health (deprecated)"),
+        title=lambda: _("Azure Load Balancer health"),
+        is_deprecated=True,
     )
 )
 
@@ -727,7 +706,8 @@ rulespec_registry.register(
         check_group_name="azure_vm_burst_cpu_credits",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_vm_burst_cpu_credits,
-        title=lambda: _("Azure VM burst CPU credits (deprecated)"),
+        title=lambda: _("Azure VM burst CPU credits"),
+        is_deprecated=True,
     )
 )
 
@@ -771,6 +751,7 @@ rulespec_registry.register(
         check_group_name="azure_vm_disk",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_vm_disk,
-        title=lambda: _("Azure VM disk (deprecated)"),
+        title=lambda: _("Azure VM disk"),
+        is_deprecated=True,
     )
 )

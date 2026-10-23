@@ -11,12 +11,13 @@ import argparse
 import sys
 import urllib.parse
 from collections.abc import Iterable, Sequence
+from http import HTTPStatus
 from xml.etree import ElementTree as etree
 
 import requests
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import vcrtrace
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1 import vcrtrace
 
 PASSWORD_OPTION = "password"
 
@@ -46,7 +47,7 @@ class InnovaphoneConnection:
             sys.stderr.write(f"ERROR while connecting to {url}: {e}\n")
             return None
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             sys.stderr.write(
                 f"ERROR while processing request [{response.status_code}]: {response.reason}\n"
             )

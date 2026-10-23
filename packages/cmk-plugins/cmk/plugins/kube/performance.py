@@ -18,7 +18,7 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from cmk.plugins.kube import common
 from cmk.plugins.kube.schemata import section
-from cmk.server_side_programs.v1_unstable import Storage
+from cmk.server_side_programs.v1 import Storage
 
 AGENT_NAME: Final = "agent_kube"
 

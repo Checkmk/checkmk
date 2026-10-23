@@ -5,10 +5,11 @@
 
 # mypy: disable-error-code="no-any-return"
 
+import json
 import time
 from collections.abc import Iterable, Sequence
 from datetime import datetime
-from typing import Literal, override, Protocol
+from typing import assert_never, Literal, override, Protocol
 
 import cmk.ccc.version as cmk_version
 from cmk.bi.trees import CompiledAggrLeaf, CompiledAggrRule, CompiledAggrTree
@@ -81,7 +82,7 @@ from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.utils import paths
 from cmk.utils.servicename import ServiceName
 from cmk.web.utils import escaping
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri, makeuri_contextless
@@ -982,8 +983,9 @@ def command_acknowledge_render(what: str) -> None:  # noqa: ARG001
         oninput=f"cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['{submit_id}']);",
     )
     if request.get_str_input("_ack_comment"):
-        html.final_javascript(
-            f"cmk.forms.enable_submit_buttons_on_nonempty_input(document.getElementById('ack_comment'), ['{submit_id}']);"
+        html.call_ts_function(
+            function_name="enable_submit_buttons_on_nonempty_input",
+            arguments={"input_id": "ack_comment", "button_ids": [submit_id]},
         )
 
     html.close_div()
@@ -1081,8 +1083,8 @@ def command_acknowledge_render(what: str) -> None:  # noqa: ARG001
 def _action_defaults_url() -> str:
     return makeuri_contextless(
         request,
-        [("mode", "edit_configvar"), ("varname", "acknowledge_problems")],
-        filename="wato.py",
+        [("varname", "acknowledge_problems")],
+        filename="global_settings.py",
     )
 
 
@@ -1195,7 +1197,7 @@ CommandAcknowledge = Command(
     confirm_button=_l("Yes, acknowledge"),
     cancel_button=_l("No, discard"),
     deny_button=_l("No, adjust settings"),
-    deny_js_function='function () { cmk.page_menu.toggle_popup("popup_command_acknowledge"); }',
+    deny_popup_id="popup_command_acknowledge",
     icon_name=DynamicIconName("ack"),
     is_shortcut=True,
     is_suggested=True,
@@ -1450,7 +1452,7 @@ class CommandGroupDowntimes(CommandGroup):
 
 
 class RecurringDowntimes(Protocol):
-    def choices(self) -> Choices: ...
+    def choices(self) -> list[Choice]: ...
 
     def recurrences(self) -> Sequence[DowntimeRecurrence]: ...
 
@@ -1462,7 +1464,7 @@ class RecurringDowntimes(Protocol):
 
 
 class NoRecurringDowntimes:
-    def choices(self) -> Choices:
+    def choices(self) -> list[Choice]:
         return [("0", "never")]
 
     def recurrences(self) -> Sequence[DowntimeRecurrence]:
@@ -1496,7 +1498,7 @@ class CommandScheduleDowntimes(Command):
             confirm_button=_l("Yes, schedule"),
             cancel_button=_l("No, discard"),
             deny_button=_l("No, adjust settings"),
-            deny_js_function='function() { cmk.page_menu.toggle_popup("popup_command_schedule_downtimes"); }',
+            deny_popup_id="popup_command_schedule_downtimes",
             icon_name=DynamicIconName("downtime"),
             is_shortcut=True,
             is_suggested=True,
@@ -1564,8 +1566,12 @@ class CommandScheduleDowntimesForm:
             oninput="cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['_down_host', '_down_service']);",
         )
         if request.get_str_input("_down_comment"):
-            html.final_javascript(
-                "cmk.forms.enable_submit_buttons_on_nonempty_input(document.getElementById('down_comment'), ['_down_host', '_down_service']);"
+            html.call_ts_function(
+                function_name="enable_submit_buttons_on_nonempty_input",
+                arguments={
+                    "input_id": "down_comment",
+                    "button_ids": ["_down_host", "_down_service"],
+                },
             )
         html.close_div()
 
@@ -1654,11 +1660,10 @@ class CommandScheduleDowntimesForm:
                 continue
             if is_first_rendered:
                 is_first_rendered = False
-                html.final_javascript(
-                    f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d", local_end_time)}");'
-                )
-                html.final_javascript(
-                    f'cmk.utils.update_time("time__down_to_time","{time.strftime("%H:%M", local_end_time)}");'
+                duration_options += self._render_update_time(
+                    "date__down_to_date", time.strftime("%Y-%m-%d", local_end_time)
+                ) + self._render_update_time(
+                    "time__down_to_time", time.strftime("%H:%M", local_end_time)
                 )
                 css_class += ["active"]
 
@@ -1673,11 +1678,19 @@ class CommandScheduleDowntimesForm:
             )
         return duration_options
 
+    @staticmethod
+    def _render_update_time(target: str, value: str) -> HTML:
+        return HTMLWriter.render_div(
+            "",
+            data_cmk_call_ts_function="update_time",
+            data_cmk_call_ts_arguments=json.dumps({"target": target, "time": value}),
+        )
+
     def _get_presets_url(self) -> str:
         return makeuri_contextless(
             request,
-            [("mode", "edit_configvar"), ("varname", "user_downtime_timeranges")],
-            filename="wato.py",
+            [("varname", "user_downtime_timeranges")],
+            filename="global_settings.py",
         )
 
     def _get_onclick(
@@ -1798,15 +1811,6 @@ class CommandScheduleDowntimesForm:
             else:
                 start_time = self._custom_start_time()
                 end_time = self._custom_end_time(start_time)
-
-            if recurring_number == 8 and not 1 <= time.localtime(start_time).tm_mday <= 28:
-                raise MKUserError(
-                    None,
-                    _(
-                        "The start of a recurring downtime can only be set for "
-                        "days 1-28 of a month."
-                    ),
-                )
 
             comment = self._comment()
             delayed_duration = self._flexible_option()
@@ -2162,13 +2166,10 @@ def _find_all_leaves(
             entries += _find_all_leaves(n)
         return entries
 
-    # place holders
-    return []  # type: ignore[unreachable]
+    assert_never(node)
 
 
-def _local_time_if_representable(timestamp: float | None) -> time.struct_time | None:
-    if timestamp is None:
-        return None
+def _local_time_if_representable(timestamp: float) -> time.struct_time | None:
     try:
         return time.localtime(timestamp)
     except OverflowError, OSError, ValueError:
@@ -2177,7 +2178,7 @@ def _local_time_if_representable(timestamp: float | None) -> time.struct_time | 
 
 def time_interval_end(
     time_value: int | Literal["next_day", "next_week", "next_month", "next_year"], start_time: float
-) -> float | None:
+) -> float:
     now = time.localtime(start_time)
     if isinstance(time_value, int):
         return start_time + time_value
@@ -2203,7 +2204,7 @@ def time_interval_end(
         return time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, now.tm_isdst))
     if time_value == "next_year":
         return time.mktime((now.tm_year, 12, 31, 23, 59, 59, 0, 0, now.tm_isdst)) + 1
-    return None  # type: ignore[unreachable]
+    assert_never(time_value)
 
 
 def command_remove_downtime_render(what: str) -> None:  # noqa: ARG001

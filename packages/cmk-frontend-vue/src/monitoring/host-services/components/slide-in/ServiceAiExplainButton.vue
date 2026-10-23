@@ -4,10 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { ExplainThisIssueData } from 'cmk-shared-typing/typescript/ai_button'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
+import { requestAiExplanation } from '@/monitoring/host-services/aiExplain'
 import type { ServiceOverview } from '@/monitoring/shared/api/types'
 
 const { _t } = usei18n()
@@ -16,31 +16,14 @@ const props = defineProps<{
   overview: ServiceOverview
 }>()
 
-const SERVICE_STATES: Record<ServiceOverview['state'], ExplainThisIssueData['service_state']> = {
-  OK: 'OK',
-  WARN: 'Warning',
-  CRIT: 'Critical',
-  UNKNOWN: 'Unknown',
-  PENDING: 'Pending'
-}
-
-const HOST_STATES: Record<ServiceOverview['host_state'], ExplainThisIssueData['host_state']> = {
-  UP: 'Up',
-  DOWN: 'Down',
-  UNREACHABLE: 'Unreachable',
-  // The AI explain schema has no pending host state; a never-checked host is treated as up,
-  // matching classic's ``explain_with_ai_icon.py`` fallback for an unrecognized host state.
-  PENDING: 'Up'
-}
-
 function explainThis(): void {
-  const detail: ExplainThisIssueData = {
-    host_name: props.overview.host_name,
-    service_name: props.overview.name,
-    service_state: SERVICE_STATES[props.overview.state],
-    host_state: HOST_STATES[props.overview.host_state]
-  }
-  document.dispatchEvent(new CustomEvent('cmk-ai-explain-button', { detail }))
+  requestAiExplanation({
+    hostName: props.overview.host_name,
+    hostState: props.overview.host_state,
+    serviceName: props.overview.name,
+    serviceState: props.overview.state,
+    stale: props.overview.stale
+  })
 }
 
 defineExpose({ explainThis })
@@ -49,6 +32,7 @@ defineExpose({ explainThis })
 <template>
   <CmkButton
     variant="ai"
+    size="medium"
     :icon="{ name: 'sparkle' }"
     data-testid="service-ai-explain-button"
     @click="explainThis"

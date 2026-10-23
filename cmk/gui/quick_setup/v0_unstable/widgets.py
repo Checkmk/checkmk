@@ -21,6 +21,14 @@ class Text(Widget):
 
 
 @dataclass(frozen=True, kw_only=True)
+class Code(Widget):
+    widget_type: str = field(default="code", init=False)
+    code: str
+    title: str = ""
+    download_filename: str | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
 class NoteText(Widget):
     widget_type: str = field(default="note_text", init=False)
     text: str = ""

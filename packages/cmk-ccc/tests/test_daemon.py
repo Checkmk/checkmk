@@ -12,12 +12,13 @@ from cmk.ccc import daemon, store
 from cmk.ccc.exceptions import MKGeneralException
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def cleanup_locks() -> Iterator[None]:
     yield
     store.release_all_locks()
 
 
+@pytest.mark.usefixtures("cleanup_locks")
 def test_pid_file_lock_context_manager(tmp_path: Path) -> None:
     pid_file = tmp_path / "test.pid"
     assert not store.have_lock(pid_file)
@@ -27,6 +28,7 @@ def test_pid_file_lock_context_manager(tmp_path: Path) -> None:
     assert not store.have_lock(pid_file)
 
 
+@pytest.mark.usefixtures("cleanup_locks")
 def test_pid_file_lock_context_manager_exception(tmp_path: Path) -> None:
     pid_file = tmp_path / "test.pid"
     assert not store.have_lock(pid_file)

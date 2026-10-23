@@ -7,19 +7,14 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.stormshield.lib import DETECT_STORMSHIELD
-
-
-def discover_stormshield_info(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_stormshield_info(section: StringTable) -> CheckResult:
@@ -49,6 +44,6 @@ snmp_section_stormshield_info = SimpleSNMPSection(
 check_plugin_stormshield_info = CheckPlugin(
     name="stormshield_info",
     service_name="Stormshield Info",
-    discovery_function=discover_stormshield_info,
+    discovery_function=discover_one_service,
     check_function=check_stormshield_info,
 )

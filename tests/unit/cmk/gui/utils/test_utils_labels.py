@@ -6,8 +6,9 @@
 import pytest
 
 from cmk.gui import sites
+from cmk.gui.config import Config
 from cmk.gui.utils.labels import _get_labels_from_livestatus, Label, LabelType
-from cmk.gui.visuals._autocompleters import label_autocompleter
+from cmk.gui.visuals._autocompleters import label_autocompleter, label_key_autocompleter
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
@@ -251,3 +252,41 @@ def test_label_autocompleter_scopes_query_by_object_type(
 
     returned_label_ids = {choice_id for choice_id, _choice_text in choices}
     assert returned_label_ids == expected_choices
+
+
+@pytest.mark.usefixtures("request_context")
+def test_label_key_autocompleter_lists_the_keys_of_host_labels(
+    live: MockLiveStatusConnection,
+) -> None:
+    with live(expect_status_query=False):
+        live.expect_query("GET hosts\nCache: reload\nColumns: labels")
+        choices = label_key_autocompleter(config=Config(), value="", params={"object_type": "host"})
+
+    assert [key for key, _title in choices] == [
+        "cmk/check_mk_server",
+        "cmk/docker_object",
+        "cmk/os_family",
+        "cmk/site",
+    ]
+
+
+@pytest.mark.parametrize(
+    "value, keys",
+    [
+        pytest.param("team", ["team"], id="a key no host has"),
+        pytest.param("cmk/os", ["cmk/os", "cmk/os_family"], id="a new key within a known one"),
+        pytest.param("linux", ["linux"], id="no key whose value matches"),
+        pytest.param("OS", ["OS", "cmk/os_family"], id="known key, case-insensitive"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_label_key_autocompleter_offers_the_typed_key_before_matching_keys(
+    value: str, keys: list[str], live: MockLiveStatusConnection
+) -> None:
+    with live(expect_status_query=False):
+        live.expect_query("GET hosts\nCache: reload\nColumns: labels")
+        choices = label_key_autocompleter(
+            config=Config(), value=value, params={"object_type": "host"}
+        )
+
+    assert [key for key, _title in choices] == keys

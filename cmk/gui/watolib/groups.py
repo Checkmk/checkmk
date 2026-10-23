@@ -40,7 +40,10 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopic,
     HostContactGroupSpec,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree
+from cmk.gui.watolib.hosts_and_folders import (
+    find_usages_of_contact_group_in_hosts_and_folders,
+    FolderTree,
+)
 from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.timeperiods import load_timeperiods
@@ -78,9 +81,10 @@ def add_group(
     if name in groups:
         raise MKUserError("name", _("Sorry, there is already a group with that name"))
 
+    scope = _group_change_scope(extra_info)
     _set_group(all_groups, group_type, name, extra_info, pprint_value)
     _add_group_change(
-        extra_info,
+        scope,
         "edit-%sgroups" % group_type,
         _l("Create new %(group_type)s group %(name)s") % {"group_type": group_type, "name": name},
         pending_changes=pending_changes,
@@ -103,6 +107,8 @@ def edit_group(
         raise MKUserError("name", _("Unknown group: %(name)s") % {"name": name})
 
     old_group_backup = copy.deepcopy(groups[name])
+    old_scope = _group_change_scope(old_group_backup)
+    new_scope = _group_change_scope(extra_info)
 
     _set_group(all_groups, group_type, name, extra_info, pprint_value)
     customer = customer_api()
@@ -111,7 +117,7 @@ def edit_group(
         new_customer = customer.get_customer_id(extra_info)
         if old_customer != new_customer:
             _add_group_change(
-                old_group_backup,
+                old_scope,
                 "edit-%sgroups" % group_type,
                 _l("Removed %(group_type)sgroup %(name)s from customer %(customer)s")
                 % {
@@ -122,7 +128,7 @@ def edit_group(
                 pending_changes=pending_changes,
             )
             _add_group_change(
-                extra_info,
+                new_scope,
                 "edit-%sgroups" % group_type,
                 _l(
                     "Moved %(group_type)sgroup %(name)s to customer %(customer)s. Additional properties may have changed."
@@ -136,7 +142,7 @@ def edit_group(
             )
         else:
             _add_group_change(
-                old_group_backup,
+                old_scope,
                 "edit-%sgroups" % group_type,
                 _l("Updated properties of %(group_type)sgroup %(name)s")
                 % {"group_type": group_type, "name": name},
@@ -144,7 +150,7 @@ def edit_group(
             )
     else:
         _add_group_change(
-            extra_info,
+            new_scope,
             "edit-%sgroups" % group_type,
             _l("Updated properties of %(group_type)s group %(name)s")
             % {"group_type": group_type, "name": name},
@@ -162,6 +168,7 @@ def delete_group(
     name: GroupName,
     group_type: GroupType,
     *,
+    tree: FolderTree,
     pprint_value: bool,
     pending_changes: PendingChanges,
 ) -> None:
@@ -176,7 +183,7 @@ def delete_group(
         )
 
     # Check if still used
-    usages = find_usages_of_group(name, group_type)
+    usages = find_usages_of_group(tree, name, group_type)
     if usages:
         raise GroupInUseException(
             None,
@@ -185,25 +192,28 @@ def delete_group(
         )
 
     # Delete group
-    group = groups.pop(name)
+    scope = _group_change_scope(groups.pop(name))
     save_group_information(all_groups, pprint_value)
     _add_group_change(
-        group,
+        scope,
         "edit-%sgroups" % group_type,
         _l("Deleted %(group_type)s group %(name)s") % {"group_type": group_type, "name": name},
         pending_changes=pending_changes,
     )
 
 
+def _group_change_scope(group: GroupSpec) -> ChangeScope:
+    sites = customer_api().customer_group_sites(group)
+    return ChangeScope.all_activation_sites() if sites is None else ChangeScope.sites(sites)
+
+
 def _add_group_change(
-    group: GroupSpec,
+    scope: ChangeScope,
     action_name: str,
     text: LazyString,
     *,
     pending_changes: PendingChanges,
 ) -> None:
-    sites = customer_api().customer_group_sites(group)
-    scope = ChangeScope.all_activation_sites() if sites is None else ChangeScope.sites(sites)
     pending_changes.add(
         Change(
             action_name=action_name,
@@ -255,24 +265,29 @@ def _set_group(
         hooks.call("contactgroups-saved", all_groups)
 
 
-def find_usages_of_group(name: GroupName, group_type: GroupType) -> list[tuple[str, str]]:
+def find_usages_of_group(
+    tree: FolderTree, name: GroupName, group_type: GroupType
+) -> list[tuple[str, str]]:
     usages = []
     if group_type == "contact":
-        usages = find_usages_of_contact_group(name)
+        usages = find_usages_of_contact_group(tree, name)
     elif group_type == "host":
-        usages = find_usages_of_host_group(name)
+        usages = find_usages_of_host_group(tree, name)
     elif group_type == "service":
-        usages = find_usages_of_service_group(name)
+        usages = find_usages_of_service_group(tree, name)
     return usages
 
 
-def find_usages_of_contact_group(name: GroupName) -> list[tuple[str, str]]:
+def find_usages_of_contact_group(tree: FolderTree, name: GroupName) -> list[tuple[str, str]]:
     """Check if a group is currently in use and cannot be deleted
     Returns a list of occurrances.
     """
     global_config = load_configuration_settings()
 
-    used_in = _find_usages_of_group_in_rules(name, ["host_contactgroups", "service_contactgroups"])
+    used_in = _find_usages_of_group_in_rules(
+        tree, name, ["host_contactgroups", "service_contactgroups"]
+    )
+    used_in += find_usages_of_contact_group_in_hosts_and_folders(name, tree.root_folder())
     for finder in contact_group_usage_finder_registry.values():
         used_in += finder(name, global_config)
 
@@ -283,17 +298,19 @@ def _used_in_notification_rule(name: str, rule: EventRule) -> bool:
     return name in rule.get("contact_groups", []) or name in rule.get("match_contactgroups", [])
 
 
-def find_usages_of_host_group(name: GroupName) -> list[tuple[str, str]]:
-    return _find_usages_of_group_in_rules(name, ["host_groups"])
+def find_usages_of_host_group(tree: FolderTree, name: GroupName) -> list[tuple[str, str]]:
+    return _find_usages_of_group_in_rules(tree, name, ["host_groups"])
 
 
-def find_usages_of_service_group(name: GroupName) -> list[tuple[str, str]]:
-    return _find_usages_of_group_in_rules(name, ["service_groups"])
+def find_usages_of_service_group(tree: FolderTree, name: GroupName) -> list[tuple[str, str]]:
+    return _find_usages_of_group_in_rules(tree, name, ["service_groups"])
 
 
-def _find_usages_of_group_in_rules(name: GroupName, varnames: list[str]) -> list[tuple[str, str]]:
+def _find_usages_of_group_in_rules(
+    tree: FolderTree, name: GroupName, varnames: list[str]
+) -> list[tuple[str, str]]:
     used_in = []
-    rulesets = AllRulesets.load_all_rulesets(folder_tree())
+    rulesets = AllRulesets.load_all_rulesets(tree)
     for varname in varnames:
         ruleset = rulesets.get(varname)
         for _folder, _rulenr, rule in ruleset.get_rules():
@@ -301,8 +318,10 @@ def _find_usages_of_group_in_rules(name: GroupName, varnames: list[str]) -> list
                 used_in.append(
                     (
                         "{}: {}".format(_("Rule set"), ruleset.title()),
-                        folder_preserving_link(
-                            request, [("mode", "edit_ruleset"), ("varname", varname)]
+                        makeuri_contextless(
+                            request,
+                            [("mode", "edit_ruleset"), ("varname", varname)],
+                            filename="wato.py",
                         ),
                     )
                 )
@@ -541,7 +560,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
         return DualListChoice(choices=cg_choices, rows=20, size=100)
 
     @override
-    def validate_input(self, value: HostContactGroupSpec, varprefix: str) -> None:
+    def validate_input(self, value: HostContactGroupSpec, varprefix: str, config: Config) -> None:
         if not isinstance(value, dict):
             raise MKUserError(self.name(), "Unknown format.")
         self.load_data()

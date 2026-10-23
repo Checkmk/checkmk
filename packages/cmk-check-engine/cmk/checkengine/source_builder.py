@@ -38,11 +38,36 @@ from cmk.checkengine.sources._sources import (
 from cmk.checkengine.subclass_discovery import discover, get_default_identifier
 from cmk.ruleset_matcher.tags import ComputedDataSources, TagID
 from cmk.server_side_calls_backend import SpecialAgentCommandLine
-from cmk.utils.ip_lookup import IPStackConfig
+from cmk.utils.ip_lookup import IPStackConfig, is_fallback_ip
 
 
 def _discover_optional_sources() -> Mapping[str, type[OptionalSource[Sized]]]:
     return discover(cmk.checkengine.sources, OptionalSource, get_default_identifier)
+
+
+# The macros that carry the host address into a command line.  All of them are
+# built from `get_host_attributes()`, so each may hold the unspecified address.
+# `$_HOSTADDRESSES_4$` and its siblings are deliberately absent: additional
+# addresses are always configured explicitly and are never a fallback.
+_HOST_ADDRESS_MACROS: Final = (
+    "$HOSTADDRESS$",
+    "$HOST_ADDRESS_4$",
+    "$_HOSTADDRESS_4$",
+    "$HOST_ADDRESS_6$",
+    "$_HOSTADDRESS_6$",
+    "<IP>",  # legacy spelling
+)
+
+
+def _references_host_address(command_line_template: str) -> bool:
+    """Would expanding this command line insert the host address?
+
+    Unlike a special agent -- whose command line a plug-in assembles out of
+    sight -- a datasource program is a template the user wrote, and we hold it
+    before expansion.  So we can tell the two apart instead of assuming the
+    worst for both.
+    """
+    return any(macro in command_line_template for macro in _HOST_ADDRESS_MACROS)
 
 
 class SourceBuilder:
@@ -79,7 +104,15 @@ class SourceBuilder:
         self.host_name: Final = host_name
         self.host_ip_family: Final = host_ip_family
         self._source_config: Final = source_config
-        self.ipaddress: Final = ipaddress
+        # The unspecified addresses 0.0.0.0 and :: are how the IP lookup spells
+        # "this host has no usable address" (see cmk.utils.ip_lookup).  They are
+        # not destinations -- on Linux they reach the local system -- so the
+        # sources that need an address must see "no address" here and emit a
+        # MissingIPSource.  Normalizing at this boundary rather than in the
+        # callers is what keeps a new entry point from routing around it.
+        self.ipaddress: Final = (
+            None if ipaddress is not None and is_fallback_ip(ipaddress) else ipaddress
+        )
         self.ip_stack_config: Final = ip_stack_config
         self.simulation_mode: Final = simulation_mode
         self.max_age_agent: Final = self._max_age_agent(
@@ -137,6 +170,17 @@ class SourceBuilder:
         self._initialize_snmp_based()
         self._initialize_mgmt_boards()
 
+    @property
+    def _needs_address_but_has_none(self) -> bool:
+        """The host is configured with an address family but has no usable one.
+
+        This is not the same as a NO_IP host, which is configured to have no
+        address at all and whose address-independent sources must keep running.
+        Here the user asked for IPv4, IPv6 or dual stack and neither an explicit
+        address nor a lookup produced one.
+        """
+        return self.ip_stack_config is not IPStackConfig.NO_IP and self.ipaddress is None
+
     @staticmethod
     def _max_age_snmp(
         simulation_mode: bool,
@@ -177,7 +221,7 @@ class SourceBuilder:
             per_agent_idx: dict[str, int] = {}
             for agentname, agent_data in self.special_agent_command_lines:
                 idx = per_agent_idx[agentname] = per_agent_idx.get(agentname, -1) + 1
-                yield SpecialAgentSource(
+                source = SpecialAgentSource(
                     self._source_config,
                     self.host_name,
                     self.ipaddress,
@@ -188,6 +232,15 @@ class SourceBuilder:
                     file_cache_path_base=self._file_cache_path_base,
                     file_cache_path_relative=self._file_cache_path_relative,
                     source_idx=None if totals[agentname] == 1 else idx,
+                )
+                # We cannot tell whether this agent's command line uses
+                # $HOSTADDRESS$, and the unspecified address would send it to
+                # the local system.  Report the missing address under the
+                # agent's own ident so it stays visible per agent.
+                yield (
+                    MissingIPSource(self.host_name, None, source.source_info().ident)
+                    if self._needs_address_but_has_none
+                    else source
                 )
 
         special_agents = tuple(make_special_agents())
@@ -307,13 +360,21 @@ class SourceBuilder:
 
     def _add_agent(self) -> None:
         if self.datasource_programs:
+            program = self.datasource_programs[0]
+            if self._needs_address_but_has_none and _references_host_address(program):
+                # The command line is macro-expanded lazily, so it would receive
+                # the unspecified address and run against the local system.  A
+                # program that never mentions the address cannot do that, and is
+                # left alone.
+                self._add(MissingIPSource(self.host_name, None, "agent"))
+                return
             self._add(
                 ProgramSource(
                     self._source_config,
                     self.host_name,
                     self.host_ip_family,
                     self.ipaddress,
-                    program=self.datasource_programs[0],
+                    program=program,
                     max_age=self.max_age_agent,
                     file_cache_path_base=self._file_cache_path_base,
                     file_cache_path_relative=self._tcp_cache_path_relative,

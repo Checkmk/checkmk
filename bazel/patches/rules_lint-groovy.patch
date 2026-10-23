@@ -1,40 +1,40 @@
 diff --git a/format/private/format.sh b/format/private/format.sh
-index 7d4d7fa..3d0dd66 100755
+index 1bd0dda..4af96e2 100755
 --- a/format/private/format.sh
 +++ b/format/private/format.sh
-@@ -124,6 +124,7 @@ function ls-files {
-       'F#') patterns=('*.fs') ;;
+@@ -132,6 +132,7 @@ function ls-files {
        'Go') patterns=('*.go') ;;
+       'Go Module') patterns=('go.mod' 'go.work') ;;
        'GraphQL') patterns=('*.graphql' '*.gql' '*.graphqls') ;;
 +      'Groovy') patterns=('*.groovy' '*.gvy' '*.gy' '*.gsh' 'Jenkinsfile') ;;
        'HTML') patterns=('*.html' '*.hta' '*.htm' '*.html.hl' '*.inc' '*.xht' '*.xhtml') ;;
        'JSON') patterns=('.all-contributorsrc' '.arcconfig' '.auto-changelog' '.c8rc' '.htmlhintrc' '.imgbotconfig' '.nycrc' '.tern-config' '.tern-project' '.watchmanconfig' 'Pipfile.lock' 'composer.lock' 'deno.lock' 'flake.lock' 'mcmod.info' '*.json' '*.4DForm' '*.4DProject' '*.avsc' '*.geojson' '*.gltf' '*.har' '*.ice' '*.JSON-tmLanguage' '*.jsonl' '*.mcmeta' '*.tfstate' '*.tfstate.backup' '*.topojson' '*.webapp' '*.webmanifest' '*.yy' '*.yyp') ;;
        'JSON with Comments') patterns=( '*.jsonc' '*.code-snippets' '*.code-workspace' '*.sublime-build' '*.sublime-commands' '*.sublime-completions' '*.sublime-keymap' '*.sublime-macro' '*.sublime-menu' '*.sublime-mousemap' '*.sublime-project' '*.sublime-settings' '*.sublime-theme' '*.sublime-workspace' '*.sublime_metrics' '*.sublime_session' '.babelrc' '.devcontainer.json' '.eslintrc.json' '.jscsrc' '.jshintrc' '.jslintrc' '.swcrc' 'api-extractor.json' 'devcontainer.json' 'jsconfig.json' 'language-configuration.json' 'tsconfig.json' 'tslint.json') ;;
 diff --git a/format/private/formatter_binary.bzl b/format/private/formatter_binary.bzl
-index 57d373a..b2b1f6a 100644
+index d5bbdf2..1b0c64e 100644
 --- a/format/private/formatter_binary.bzl
 +++ b/format/private/formatter_binary.bzl
-@@ -32,6 +32,7 @@ TOOLS = {
+@@ -33,6 +33,7 @@ TOOLS = {
      "Rust": "rustfmt",
      "XML": "prettier",
      "Gherkin": "prettier",
 +    "Groovy": "groovy-format",
      "F#": "fantomas",
      "C#": "csharpier",
- }
-@@ -51,6 +52,7 @@ BUILTIN_TOOL_LABELS = {
+     "Pkl": "pkl",
+@@ -54,6 +55,7 @@ BUILTIN_TOOL_LABELS = {
  CHECK_FLAGS = {
      "buildifier": "-mode=check",
      "cue-fmt": "fmt --check",
 +    "groovy-format": "",
      "swiftformat": "--lint",
-     "prettier": "--check",
+     "prettier": "--check --log-level=warn",
      "ruff": "format --check --force-exclude --diff",
-@@ -76,6 +78,7 @@ FIX_FLAGS = {
+@@ -82,6 +84,7 @@ FIX_FLAGS = {
      "buildifier": "-mode=fix",
      "cue-fmt": "fmt",
      "djlint": "--format-css --format-js --reformat",
 +    "groovy-format": "--format",
      "swiftformat": "",
-     "prettier": "--write",
+     "prettier": "--write --log-level=warn",
      # Force exclusions in the configuration file to be honored even when file paths are supplied

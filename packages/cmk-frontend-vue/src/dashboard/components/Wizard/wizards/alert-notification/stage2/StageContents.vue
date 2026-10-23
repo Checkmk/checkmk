@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import { useFilterDefinitions } from 'cmk-ui-library/components/filter'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -52,6 +53,8 @@ import {
 const { _t } = usei18n()
 
 interface Stage2Props {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   hostFilterType: ElementSelection
   serviceFilterType: ElementSelection
@@ -135,23 +138,31 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
     v-if="selectedWidget === Graph.ALERT_OVERVIEW"
     v-model:handler="handler[Graph.ALERT_OVERVIEW] as unknown as UseAlertOverview"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
   />
 
   <AlertTimeline
     v-if="selectedWidget === Graph.ALERT_TIMELINE"
     v-model:handler="handler[Graph.ALERT_TIMELINE] as unknown as UseAlertTimeline"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
   />
 
   <NotificationTimeline
     v-if="selectedWidget === Graph.NOTIFICATION_TIMELINE"
     v-model:handler="handler[Graph.NOTIFICATION_TIMELINE] as unknown as UseNotificationTimeline"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
   />
 
   <PercentageOfServiceProblems
     v-if="selectedWidget === Graph.PROBLEM_GRAPH"
     v-model:handler="handler[Graph.PROBLEM_GRAPH] as unknown as UsePercentageOfServiceProblems"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
   />
 </template>

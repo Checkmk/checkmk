@@ -3,18 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type ZonedDateTime } from '@internationalized/date'
-
 export function pad2(n: number): string {
   return String(n).padStart(2, '0')
-}
-
-export function isoDate(zdt: ZonedDateTime): string {
-  return `${zdt.year}-${pad2(zdt.month)}-${pad2(zdt.day)}`
-}
-
-export function isoTime(zdt: ZonedDateTime): string {
-  return `${pad2(zdt.hour)}:${pad2(zdt.minute)}:${pad2(zdt.second)}`
 }
 
 export function stepLabel(step: number): string {

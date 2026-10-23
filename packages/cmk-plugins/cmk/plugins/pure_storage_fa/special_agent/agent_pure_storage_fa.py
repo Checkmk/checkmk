@@ -17,13 +17,14 @@ import logging
 import sys
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from http import HTTPStatus
 from typing import NamedTuple, override
 
 import requests
 import urllib3
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
-from cmk.server_side_programs.v1_unstable import (
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option, Secret
+from cmk.server_side_programs.v1 import (
     HostnameValidationAdapter,
     report_agent_crashes,
     vcrtrace,
@@ -227,7 +228,7 @@ class PureStorageFlashArray:
             _LOGGER.exception("Login failed")
             raise AuthError
 
-        if login_response.status_code != 200:
+        if login_response.status_code != HTTPStatus.OK:
             _LOGGER.error(
                 "Login failed: %(reason)s (%(status_code)s)",
                 {
@@ -246,7 +247,7 @@ class PureStorageFlashArray:
             _LOGGER.exception("Getting API version failed")
             raise APIVersionError
 
-        if api_version_response.status_code != 200:
+        if api_version_response.status_code != HTTPStatus.OK:
             _LOGGER.error(
                 "Getting API version failed: %(reason)s (%(status_code)s)",
                 {
@@ -279,7 +280,7 @@ class PureStorageFlashArray:
             _LOGGER.exception("Collecting '%(section_name)s' failed", {"section_name": spec.name})
             raise SectionError
 
-        if section_response.status_code != 200:
+        if section_response.status_code != HTTPStatus.OK:
             _LOGGER.error(
                 "Collecting '%(section_name)s' failed: %(reason)s (%(status_code)s)",
                 {
@@ -334,8 +335,9 @@ def agent_pure_storage_fa(args: argparse.Namespace) -> int:
         except SectionError:
             if args.debug:
                 return 1
+            continue
 
-        sys.stdout.write(f"<<<pure_storage_fa_{spec.name}:sep(0)>>>\n{json.dumps(data)}\n")  # type: ignore[possibly-undefined]
+        sys.stdout.write(f"<<<pure_storage_fa_{spec.name}:sep(0)>>>\n{json.dumps(data)}\n")
 
     return 0
 

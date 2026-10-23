@@ -33,7 +33,6 @@ py_library(
         "cmk/dev_deploy/execution/step_registry.py",
         "cmk/dev_deploy/frontend/__init__.py",
         "cmk/dev_deploy/frontend/frontend_supervisor.py",
-        "cmk/dev_deploy/frontend/ibazel_manager.py",
         "cmk/dev_deploy/manifest/__init__.py",
         "cmk/dev_deploy/manifest/deps.py",
         "cmk/dev_deploy/manifest/reader.py",
@@ -61,6 +60,7 @@ py_library(
     ],
     imports = ["."],
     visibility = ["//visibility:public"],
+    deps = ["//bazel/tools/devserver:bazel_devserver"],
 )
 
 py_cmk_test(
@@ -75,6 +75,9 @@ py_cmk_test(
 
 py_requirements_test(
     name = "requirements-test",
+    known_undeclared = [
+        "bazel-devserver",  # //bazel/tools/devserver, run from the checkout like this tool
+    ],
     libs = [
         ":cmk-dev-deploy",
     ],

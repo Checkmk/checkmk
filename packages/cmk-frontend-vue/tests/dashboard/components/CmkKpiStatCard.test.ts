@@ -405,15 +405,6 @@ test('labels both ends of the displayed range', () => {
   )
 })
 
-test('delta.fromCaller: an undefined override stays empty, not a series-derived fallback', () => {
-  // Without fromCaller this same series would produce a series-derived delta (see
-  // "compares the current value against the average..." above) - fromCaller must
-  // suppress that fallback instead of silently swapping in the wrong delta.
-  const { container } = renderCard({ delta: { fromCaller: true } })
-
-  expect(deltaOf(container)).toBeNull()
-})
-
 function cardOf(container: Element): HTMLElement {
   return container.querySelector('.db-cmk-kpi-stat-card')!
 }
@@ -450,6 +441,38 @@ test('hovering anywhere on the card swaps the value and shows the hovered time',
   expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent('10.0')
   expect(deltaOf(container)).toBeNull()
   expect(hoverNoteOf(container)).not.toBeNull()
+})
+
+test('a hovered sample the formatter renders without a unit shows none', async () => {
+  const { container } = renderCard({ value: '1.50', unit: 'K' })
+  mockSvgWidth(container)
+
+  await fireEvent.pointerMove(cardOf(container), { clientX: 0 })
+
+  expect(container.querySelector('.db-cmk-kpi-stat-card__unit')).toBeNull()
+})
+
+test('a hovered percentage shows its % as the unit, like the headline', async () => {
+  const { container } = renderCard({
+    value: '42.0',
+    unit: '%',
+    formatValue: (value) => `${value.toFixed(1)}%`
+  })
+  mockSvgWidth(container)
+
+  await fireEvent.pointerMove(cardOf(container), { clientX: 0 })
+
+  expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent(/^10\.0$/)
+  expect(container.querySelector('.db-cmk-kpi-stat-card__unit')).toHaveTextContent('%')
+})
+
+test('a hovered sample keeps the unit without a formatter of its own', async () => {
+  const { container } = renderCard({ formatValue: undefined })
+  mockSvgWidth(container)
+
+  await fireEvent.pointerMove(cardOf(container), { clientX: 0 })
+
+  expect(container.querySelector('.db-cmk-kpi-stat-card__unit')).toHaveTextContent('GB')
 })
 
 test('never snaps to a null sample', async () => {

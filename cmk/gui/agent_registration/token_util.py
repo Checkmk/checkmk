@@ -5,6 +5,7 @@
 import contextlib
 import datetime as dt
 from collections.abc import Generator
+from http import HTTPStatus
 
 from dateutil.relativedelta import relativedelta
 from pydantic_core import ErrorDetails
@@ -72,7 +73,7 @@ def reject_if_cluster_host(host: Host) -> None:
     """
     if host.is_cluster():
         raise ProblemException(
-            status=405,
+            status=HTTPStatus.METHOD_NOT_ALLOWED,
             title="Cannot register cluster hosts",
             detail="This host is a cluster host. Register its nodes instead.",
         )
@@ -84,6 +85,8 @@ def issue_agent_registration_token(
     comment: str = "",
     token_store: TokenStore | None = None,
     connection_mode: HostAgentConnectionMode | None = None,
+    *,
+    agent_updates_permitted: bool | None,
 ) -> AuthToken:
     """Issues a new agent registration token."""
     if token_store is None:
@@ -108,6 +111,7 @@ def issue_agent_registration_token(
             comment=comment,
             host_name=host.name(),
             connection_mode=connection_mode,
+            agent_updates_permitted=agent_updates_permitted,
         ),
         issuer=user.ident,
         now=now,

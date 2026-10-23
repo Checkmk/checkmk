@@ -29,9 +29,10 @@ use std::sync::LazyLock;
 /// Group 2: the SID name (e.g. `TEST19`)
 const SID_MASK: &str = r"^(asm_pmon_|ora_pmon_|xe_pmon_|db_pmon_)(.+)";
 
-/// Retrieves local Oracle SIDs, sorted in ascending order.
-/// On Windows: the instance registry (SOFTWARE\Oracle), which lists installed
-/// instances rather than running ones.
+/// Retrieves local Oracle SIDs, sorted in ascending order and without
+/// duplicates: two homes can name the same default SID.
+/// On Windows: the instance registry (SOFTWARE\Oracle plus the Oracle
+/// services), which lists installed instances rather than running ones.
 /// On Unix: only SIDs with a running PMON process.
 /// Note: oratab plays no part in discovery. Two other places do read it on
 /// Unix: `setup::detect_host_runtime`, to search for a host Oracle client, and
@@ -53,6 +54,7 @@ pub fn get_local_sid_names() -> Vec<String> {
     };
 
     names.sort();
+    names.dedup();
     names
 }
 

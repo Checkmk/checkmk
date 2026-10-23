@@ -37,10 +37,11 @@ from typing import Any, Final, Literal, override, Required, TypedDict
 import requests
 from pydantic import BaseModel, RootModel
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.azure_v2.lib import (
     compute_unique_name_hash,
     get_params_from_azure_id,
+    get_resource_type_abbreviation,
     RESOURCE_TYPE_ABBREVIATIONS,
     short_resource_type,
 )
@@ -67,7 +68,12 @@ from cmk.plugins.azure_v2.special_agent.azure_metrics import (
     Intervals,
     OPTIONAL_METRICS,
 )
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1 import (
+    configure_logging,
+    report_agent_crashes,
+    Storage,
+    vcrtrace,
+)
 
 type ResourceId = str
 
@@ -80,10 +86,6 @@ LOGGER = logging.getLogger(f"agent_{AGENT}")
 NOW = datetime.datetime.now(tz=datetime.UTC)
 
 SECRET_OPTION = "secret"
-
-
-class ResourceTypeNotKnownError(RuntimeError):
-    pass
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -398,7 +400,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="""Only monitor subscriptions that have the specified TAG.
               To require multiple tags, provide the option more than once.""",
     )
-    group_subscription.add_argument(
+    group_subscription.add_argument(  # astrein: disable=argparse-nargs
         "--subscriptions-require-tag-value",
         default=[],
         metavar=("TAG", "VALUE"),
@@ -448,7 +450,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="""Only monitor resources that have the specified TAG.
               To require multiple tags, provide the option more than once.""",
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--require-tag-value",
         default=[],
         metavar=("TAG", "VALUE"),
@@ -473,6 +475,15 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         action="append",
         help="The services to monitor",
         dest="services",
+    )
+    parser.add_argument(
+        "--otel-resource-type",
+        default=[],
+        action="append",
+        metavar="RESOURCE_TYPE",
+        help="""Azure resource type for which an OpenTelemetry collector delivers metrics.
+             To specify multiple resource types, provide the option more than once.""",
+        dest="otel_resource_types",
     )
     parser.add_argument(
         "--unique-hostnames",
@@ -561,7 +572,7 @@ class ExplicitConfig:
     def __init__(self, raw_list: Sequence[str]) -> None:
         super().__init__()
         self.groups: dict = {}
-        self.current_group = None
+        self.current_group: GroupConfig | None = None
         for item in raw_list:
             if "=" not in item:
                 raise ValueError("must be in <key>=<value> format: %r" % item)
@@ -579,7 +590,7 @@ class ExplicitConfig:
             return
         if self.current_group is None:
             raise RuntimeError("missing arg: group=<name>")
-        self.current_group.add_key(key, value)  # type: ignore[unreachable]
+        self.current_group.add_key(key, value)
 
     def is_configured(self, resource: AzureResource) -> bool:
         if self.fetchall:
@@ -927,20 +938,13 @@ class AzureResource(_AzureEntity):
     @override
     def _unique_name(self) -> str:
         resource_type = self.info.get("type", "")
-        fetched = FetchedResource.from_type(resource_type)
-
-        if fetched is None:
-            raise ResourceTypeNotKnownError(
-                f"Unsupported resource type for unique name generation: {resource_type}"
-            )
-
         return self._compute_unique_name(
             (
                 self.subscription.id,
                 self.group,
                 self.info["type"],
             ),
-            fetched.abbreviation,
+            get_resource_type_abbreviation(resource_type) or short_resource_type(resource_type),
         )
 
     @override
@@ -1434,6 +1438,120 @@ def _collect_async_metrics_tasks(
     return tasks
 
 
+# Cosmos DB speaks several database API,
+# Accounts using these APIs keep databases and containers under other resource types which the agent does not list.
+_UNSUPPORTED_COSMOSDB_CAPABILITIES = frozenset({"EnableCassandra", "EnableGremlin", "EnableTable"})
+
+
+async def get_cosmosdb_containers(
+    api_client: BaseAsyncApiClient, cosmosdb_account: AzureResource
+) -> Mapping[str, Sequence[str]] | None:
+    """Container names per database; None for account APIs without a known resource layout."""
+    account_uri = (
+        f"resourceGroups/{cosmosdb_account.info['group']}/providers/"
+        f"Microsoft.DocumentDB/databaseAccounts/{cosmosdb_account.name}"
+    )
+    params = {"api-version": "2025-04-15"}
+    account_info = await api_client.get_async(account_uri, params=params)
+    capabilities = {
+        capability["name"]
+        for capability in account_info.get("properties", {}).get("capabilities", [])
+    }
+    if capabilities & _UNSUPPORTED_COSMOSDB_CAPABILITIES:
+        return None
+
+    databases_path, containers_path = (
+        ("mongodbDatabases", "collections")
+        if account_info.get("kind") == "MongoDB"
+        else ("sqlDatabases", "containers")
+    )
+
+    databases = await api_client.get_async(
+        f"{account_uri}/{databases_path}", key="value", params=params
+    )
+
+    async def container_names(database_name: str) -> tuple[str, list[str]]:
+        containers = await api_client.get_async(
+            f"{account_uri}/{databases_path}/{database_name}/{containers_path}",
+            key="value",
+            params=params,
+        )
+        return database_name, [container["name"] for container in containers]
+
+    return dict(
+        await asyncio.gather(*(container_names(database["name"]) for database in databases))
+    )
+
+
+def _cosmosdb_database_resource(
+    account: AzureResource,
+    database_name: str,
+    unique_hostnames_config: UniqueHostnamesConfig,
+) -> AzureResource:
+    database = AzureResource(
+        {
+            "id": database_name,
+            "name": f"{account.name}_{database_name}",
+            "type": FetchedResource.COSMOSDB_DATABASE.type,
+            "location": account.info.get("location"),
+            "group": account.info.get("group"),
+        },
+        TagsImportPatternOption.import_all,
+        account.subscription,
+        unique_hostnames_config,
+    )
+    database.labels["cosmosdb_account"] = account.name
+    return database
+
+
+def _is_listed_cosmosdb_container(
+    containers: Mapping[str, Sequence[str]], database_name: str, container_name: str | None
+) -> bool:
+    if (listed := containers.get(database_name)) is None:
+        return False
+    return container_name is None or container_name in listed
+
+
+def build_cosmosdb_databases(
+    account: AzureResource,
+    containers: Mapping[str, Sequence[str]] | None,
+    metrics: Iterable[Mapping[str, Any]],
+    unique_hostnames_config: UniqueHostnamesConfig,
+) -> Sequence[AzureResource]:
+    databases: dict[str, AzureResource] = {}
+
+    def database(name: str) -> AzureResource:
+        if name not in databases:
+            databases[name] = _cosmosdb_database_resource(account, name, unique_hostnames_config)
+        return databases[name]
+
+    if containers is not None:
+        for database_name, container_names in containers.items():
+            database(database_name).info["specific_info"] = {"containers": list(container_names)}
+
+    for metric in metrics:
+        if not (metadata := metric.get("metadata_mapping")):
+            LOGGER.error("Skipping metric without metadata: %(metric)s", {"metric": metric})
+            continue
+        if any(value == "<empty>" for value in metadata.values()):
+            # aggregated over a whole dimension, belongs to no single database
+            continue
+        if not (database_name := metadata.get("databasename")):
+            LOGGER.error(
+                "Skipping metric without database name in metadata: %(metric)s",
+                {"metric": metric},
+            )
+            continue
+        if containers is not None and not _is_listed_cosmosdb_container(
+            containers, database_name, metadata.get("collectionname")
+        ):
+            # Azure Monitor keeps reporting deleted databases and containers by internal id
+            continue
+        database(database_name).metrics.append(metric)
+
+    return list(databases.values())
+
+
 async def process_cosmosdb(
     api_client: BaseAsyncApiClient,
     resource: AzureResource,
@@ -1441,13 +1559,9 @@ async def process_cosmosdb(
     args: argparse.Namespace,
 ) -> list[AzureResource]:
     resource.labels["cosmosdb_account"] = resource.name
-    resources = [resource]  # always include the main cosmosdb account resource
 
-    # to collect cosmos databases (will become piggybacked hosts)
-    # we query a cosmos db account metrics with a dimension filter 'DatabaseName = *'
-    # so that we obtain *every* database inside the account (together with their metrics)
-
-    tasks = _collect_async_metrics_tasks(
+    err = IssueCollector()
+    metric_tasks = _collect_async_metrics_tasks(
         COSMOS_DATABASE_METRICS,
         subscription,
         resource.info["location"],
@@ -1455,78 +1569,36 @@ async def process_cosmosdb(
         resource.info["type"],
         api_client,
         args,
-        err := IssueCollector(),
+        err,
     )
 
-    cosmosdb_databases: dict[str, AzureResource] = {}  # db_name : resource
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-    for result in results:
+    # async collect both containers AND the metrics for the containers
+    containers, *metric_results = await asyncio.gather(
+        get_cosmosdb_containers(api_client, resource),
+        *metric_tasks,
+        return_exceptions=True,
+    )
+
+    # check exceptions over containers
+    if isinstance(containers, BaseException):
+        if args.debug:
+            raise containers
+        err.add("exception", "cosmosdb container listing", str(containers))
+        LOGGER.error("Listing cosmosdb containers failed: %(error)s", {"error": containers})
+        containers = None
+
+    # now let's see which metrics we got
+    metrics: list[Mapping[str, Any]] = []
+    for result in metric_results:
         if isinstance(result, BaseException):
             if args.debug:
                 raise result
             err.add("exception", "cosmosdb metric collection", str(result))
-            # TODO: Is this code really executed *within* an exception handler? It doesn't look like
-            # that...
-            LOGGER.exception(result)  # noqa: LOG004
+            LOGGER.error("Collecting cosmosdb metrics failed: %(error)s", {"error": result})
             continue
 
-        # resource id is always the cosmos account
-        # metrics contain the database name (and other information) in the metadata mapping
-        for resource_id, metrics in result.items():
-            for metric in metrics:
-                if not (metadata := metric.get("metadata_mapping")):
-                    # this should never happen because of the dimension filter we use '<SomeDimension> = *'
-                    LOGGER.error("Skipping metric without metadata: %(metric)s", {"metric": metric})
-                    continue
-
-                if any(value == "<empty>" for value in metadata.values()):
-                    # we can safely ignore metrics with dimensions set to <empty>,
-                    # these are "grouped" metrics, and, as of now, we are not interested in
-                    # these aggregations and we also keep the agent output cleaner
-                    continue
-
-                if not (database_name := metadata.get("databasename")):
-                    # this should never happen because of the dimension filter,
-                    # right now we should always have the database name in the metadata
-                    LOGGER.error(
-                        "Skipping metric without database name in metadata: %(metric)s",
-                        {"metric": metric},
-                    )
-                    continue
-
-                if (db_resource := cosmosdb_databases.get(database_name)) is not None:
-                    LOGGER.info(
-                        "\n\n\nFound metric for existing database: %(database_name)s, metric: %(metric)s",
-                        {"database_name": database_name, "metric": metric},
-                    )
-                    # db already present, just append the metric
-                    db_resource.metrics.append(metric)
-                    continue
-
-                # create a new resource for the database
-                db_resource_info = {
-                    "id": database_name,  # id = name of the database
-                    # name: <cosmosdb account name>_<database name>
-                    "name": f"{resource.name}_{database_name}",
-                    # fake type to fake the section (last part after /),
-                    # this will also be the label "entity"
-                    "type": "Microsoft.DocumentDB/databaseAccounts/cosmos_database",
-                    # data from cosmos account:
-                    "location": resource.info.get("location"),
-                    "group": resource.info.get("group"),
-                }
-
-                db_resource = AzureResource(
-                    db_resource_info,
-                    TagsImportPatternOption.import_all,
-                    resource.subscription,
-                    args.unique_hostnames_config,
-                )
-                db_resource.metrics.append(metric)
-                db_resource.labels["cosmosdb_account"] = resource.name
-
-                cosmosdb_databases[database_name] = db_resource
-                resources.append(db_resource)
+        for resource_metrics in result.values():
+            metrics.extend(resource_metrics)
 
     if err:
         LOGGER.error(
@@ -1537,7 +1609,10 @@ async def process_cosmosdb(
         agent_info_section.add(err.dumpinfo())
         agent_info_section.write()
 
-    return resources
+    databases = build_cosmosdb_databases(
+        resource, containers, metrics, args.unique_hostnames_config
+    )
+    return [resource, *databases]
 
 
 class AzureAsyncCache(DataCache):
@@ -1721,6 +1796,10 @@ class UsageDetailsCache(AzureAsyncCache):
                     await asyncio.sleep(retry_after + 1)
 
 
+# The Azure portal allows splitting metrics into at most 50 time series.
+DIMENSION_TIME_SERIES_LIMIT = 50
+
+
 @dataclass(frozen=True, kw_only=True)
 class CacheMetricsGroupDefinition:
     interval: Intervals
@@ -1729,6 +1808,56 @@ class CacheMetricsGroupDefinition:
     metrics: Sequence[AzureMetric]
     resource_type: str
     region: str
+
+
+def _get_available_metrics_from_exception(
+    desired_names: str, api_error: ApiError, resource_type: str
+) -> str | None:
+    match = re.match(
+        r"Failed to find metric configuration for provider.*Valid metrics: ([\w,]*)",
+        api_error.args[0],
+    )
+    if not match:
+        raise api_error
+
+    available_names = match.groups()[0]
+    retry_names = set(desired_names.split(",")) & set(available_names.split(","))
+    if not retry_names:
+        LOGGER.debug(
+            "None of the expected metrics are available for %(resource_type)s",
+            {"resource_type": resource_type},
+        )
+        return None
+
+    return ",".join(sorted(retry_names))
+
+
+async def _get_metrics_batch(
+    api_client: BaseAsyncApiClient,
+    region: str,
+    resource_ids: Sequence[str],
+    params: Mapping[str, str],
+) -> Sequence[Mapping[str, Any]]:
+    regional_url = api_client.build_regional_url(region, "/metrics:getBatch")
+
+    async def _query_metrics(specific_params: Mapping[str, str]) -> Sequence[Mapping[str, Any]]:
+        return await api_client.request_async(
+            "POST",
+            full_uri=regional_url,
+            body={"resourceids": resource_ids},
+            params=specific_params,
+            key="values",
+        )
+
+    query = {**params, "api-version": "2023-10-01"}
+    try:
+        return await _query_metrics(query)
+    except ApiError as exc:
+        if retry_names := _get_available_metrics_from_exception(
+            query["metricnames"], exc, query["metricnamespace"]
+        ):
+            return await _query_metrics({**query, "metricnames": retry_names})
+        return []
 
 
 class MetricCache(AzureAsyncCache):
@@ -1796,51 +1925,6 @@ class MetricCache(AzureAsyncCache):
     def cache_interval(self) -> int:
         return self.timedelta.seconds
 
-    @staticmethod
-    def _get_available_metrics_from_exception(
-        desired_names: str, api_error: ApiError, resource_type: str
-    ) -> str | None:
-        match = re.match(
-            r"Failed to find metric configuration for provider.*Valid metrics: ([\w,]*)",
-            api_error.args[0],
-        )
-        if not match:
-            raise api_error
-
-        available_names = match.groups()[0]
-        retry_names = set(desired_names.split(",")) & set(available_names.split(","))
-        if not retry_names:
-            LOGGER.debug(
-                "None of the expected metrics are available for %(resource_type)s",
-                {"resource_type": resource_type},
-            )
-            return None
-
-        return ",".join(sorted(retry_names))
-
-    async def _get_metrics(self, api_client, region, resource_ids, params):
-        regional_url = api_client.build_regional_url(region, "/metrics:getBatch")
-
-        async def _query_metrics(specific_params):
-            return await api_client.request_async(
-                "POST",
-                full_uri=regional_url,
-                body={"resourceids": resource_ids},
-                params=specific_params,
-                key="values",
-            )
-
-        params["api-version"] = "2023-10-01"
-        try:
-            return await _query_metrics(params)
-        except ApiError as exc:
-            if retry_names := self._get_available_metrics_from_exception(
-                params["metricnames"], exc, params["metricnamespace"]
-            ):
-                params["metricnames"] = retry_names
-                return await _query_metrics(params)
-            return []
-
     @override
     async def get_live_data(self, *args: Any) -> Any:
         mgmt_client: BaseAsyncApiClient = args[0]
@@ -1860,16 +1944,17 @@ class MetricCache(AzureAsyncCache):
         }
 
         if self.group_metrics_definitions.dimension_filters:
-            # build the filter for the azure getBatch api
-            filter = " and ".join(  # noqa: A001
+            params["filter"] = " and ".join(
                 f"{df.name} eq '{df.value}'"
                 for df in self.group_metrics_definitions.dimension_filters
             )
-            params["filter"] = filter
+            # Without "top" Azure returns at most 10 time series per request, in no stable order.
+            params["top"] = str(DIMENSION_TIME_SERIES_LIMIT)
+            params["orderby"] = f"{self.group_metrics_definitions.aggregation} desc"
 
-        raw_metrics = []
+        raw_metrics: list[Mapping[str, Any]] = []
         for chunk in _chunks(resource_ids):
-            raw_metrics += await self._get_metrics(mgmt_client, region, chunk, params)
+            raw_metrics += await _get_metrics_batch(mgmt_client, region, chunk, params)
 
         metrics: defaultdict[str, list] = defaultdict(list)
 
@@ -2050,6 +2135,281 @@ def get_resource_host_labels_section(
         labels["tenant_name"] = tenant_name
 
     return AzureLabelsSection(resource.piggytarget, labels=labels, tags=resource_tags)
+
+
+def get_otel_only_resources(
+    selected_resources: Sequence[AzureResource],
+    otel_resource_types: Iterable[str],
+    monitored_services: Iterable[str],
+) -> list[AzureResource]:
+    otel_types_lower = {t.lower() for t in otel_resource_types} - {
+        s.lower() for s in monitored_services
+    }
+    return [
+        resource
+        for resource in selected_resources
+        if resource.info["type"].lower() in otel_types_lower
+    ]
+
+
+def get_otel_identity_labels_section(resource: AzureResource) -> _Section:
+    # The metric backend routes an OTel series to the host whose identity labels all equal
+    # the attributes the Azure receiver sets on the series.
+    # The receiver sets the resource group in lower case.
+    # A label value cannot contain a colon, the fetcher decodes "%3A" and "%25".
+    identity = {
+        "cmk/metrics_identity/resource/azuremonitor.tenant_id": resource.subscription.tenant_id,
+        "cmk/metrics_identity/resource/azuremonitor.subscription_id": resource.subscription.id,
+        "cmk/metrics_identity/data_point/resource_group": resource.group,
+        "cmk/metrics_identity/data_point/type": resource.info["type"],
+        "cmk/metrics_identity/data_point/name": resource.name,
+    }
+    section = _Section("labels", [resource.piggytarget], separator=0, options=[])
+    section.add(
+        json.dumps(
+            {
+                label: value.replace("%", "%25").replace(":", "%3A")
+                for label, value in identity.items()
+                if value
+            }
+        )
+    )
+    return section
+
+
+_METRICS_REPORT_WINDOW = datetime.timedelta(days=1)
+_METRICS_REPORT_CACHE_INTERVAL = 60 * 60 * 24
+_NO_METRICS_REPORT_CACHE_INTERVAL = 5 * 60
+_METRIC_NAMES_PER_QUERY = 20
+
+
+def _has_metric_values(resource_metrics: Mapping[str, Any]) -> bool:
+    return any(
+        value is not None
+        for metric in resource_metrics.get("value", [])
+        for timeseries in metric.get("timeseries", [])
+        for data_point in timeseries.get("data", [])
+        for key, value in data_point.items()
+        if key != "timeStamp"
+    )
+
+
+async def _get_metric_names(api_client: BaseAsyncApiClient, resource_id: str) -> list[str]:
+    _empty, _subscriptions, _subscription_id, resource_path = resource_id.split("/", 3)
+    definitions = await api_client.request_async(
+        "GET",
+        uri_end=f"{resource_path}/providers/Microsoft.Insights/metricDefinitions",
+        params={"api-version": "2023-10-01"},
+        key="value",
+    )
+    return [definition["name"]["value"] for definition in definitions]
+
+
+async def _get_resources_reporting_metrics(
+    api_client: BaseAsyncApiClient,
+    region: str,
+    resource_type: str,
+    metric_names: Sequence[str],
+    resource_ids: Sequence[str],
+    now: datetime.datetime,
+) -> Mapping[str, bool]:
+    """Tell which resources reported metric values in the last 24 hours
+
+    The callers must make sure that:
+      - all resource IDs are of one type, in one region and in one subscription,
+        because getBatch is a regional call for one subscription
+      - there is at least one resource ID
+      - now is in UTC, because it is formatted with a literal "Z"
+
+    The keys of the result are the resource IDs in lower case:
+      - True: Azure sent values for the resource
+      - False: Azure answered for the resource, but sent no values
+      - no key: Azure did not answer for the resource, so it is unknown
+    """
+    params = {
+        "starttime": (now - _METRICS_REPORT_WINDOW).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "endtime": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "interval": "PT1H",
+        # A metric has values only in the aggregations it supports, so ask for all of them.
+        "aggregation": "average,total,count,maximum,minimum",
+        "metricnamespace": resource_type,
+    }
+    reported: dict[str, bool] = {}
+    for names in _chunks(metric_names, _METRIC_NAMES_PER_QUERY):
+        # A resource with values in earlier metric names is not asked again.
+        if not (to_ask := [r for r in resource_ids if not reported.get(r.lower())]):
+            break
+        for ids in _chunks(to_ask):
+            values = await _get_metrics_batch(
+                api_client, region, ids, {**params, "metricnames": ",".join(names)}
+            )
+            for resource_metrics in values:
+                if not resource_metrics.get("value"):
+                    continue
+                resource_id = resource_metrics["resourceid"].lower()
+                reported[resource_id] = _has_metric_values(resource_metrics)
+    return reported
+
+
+class MetricNamesCache(AzureAsyncCache):
+    """Metric names of one subscription and resource type, kept for a day
+
+    One file per type, "<subscription[:6]>_<resource_type>_metric_names" with "/" in
+    the type replaced by "_". The names are taken from one resource of the type.
+    """
+
+    def __init__(
+        self,
+        *,
+        subscription: str,
+        resource_type: str,
+        cache_id: str,
+        debug: bool = False,
+    ) -> None:
+        self._resource_type = resource_type
+        super().__init__(
+            host_name=cache_id,
+            agent=f"agent_{AGENT}",
+            key=f"{subscription[:6]}_{resource_type.replace('/', '_')}_metric_names",
+            debug=debug,
+        )
+
+    @property
+    @override
+    def cache_interval(self) -> int:
+        return _METRICS_REPORT_CACHE_INTERVAL
+
+    @override
+    async def get_live_data(self, *args: Any) -> Sequence[str]:
+        api_client: BaseAsyncApiClient = args[0]
+        resource_id: str = args[1]
+        if not (metric_names := await _get_metric_names(api_client, resource_id)):
+            raise ApiErrorMissingData(f"No metric definitions for {self._resource_type}")
+        return metric_names
+
+
+class MetricsReportCache:
+    """Answers of one subscription, region and resource type
+
+    One file per group, "<subscription[:6]>_<region>_<resource_type>_reported"
+    with "/" in the type replaced by "_", for example
+    "4db893_westeurope_Microsoft.Network_publicIPAddresses_reported":
+
+        {"/subscriptions/.../pip-a": [true, 1791458622.4],
+         "/subscriptions/.../pip-b": [false, 1791458622.4]}
+
+    The values are: Azure sent metric values for the resource, and the time of the answer.
+    An answer with values is kept for a day. An answer without values is kept for a short
+    time only, so that a resource gets its host soon after Azure has values for it.
+    Failed questions are not kept.
+    """
+
+    def __init__(
+        self, *, subscription: str, region: str, resource_type: str, cache_id: str, debug: bool
+    ) -> None:
+        self._region = region
+        self._resource_type = resource_type
+        self._debug = debug
+        self._metric_names = MetricNamesCache(
+            subscription=subscription, resource_type=resource_type, cache_id=cache_id, debug=debug
+        )
+        self._storage = Storage(cache_id, f"agent_{AGENT}")
+        self._key = (
+            f"{MetricCache.get_cache_key_prefix(resource_type, region, subscription)}_reported"
+        )
+
+    def _read(self, now: datetime.datetime) -> dict[str, tuple[bool, float]]:
+        try:
+            answers = {}
+            for resource_id, (has_values, answered_at) in json.loads(
+                self._storage.read(self._key, "{}")
+            ).items():
+                max_age = (
+                    _METRICS_REPORT_CACHE_INTERVAL
+                    if has_values
+                    else _NO_METRICS_REPORT_CACHE_INTERVAL
+                )
+                if 0 <= now.timestamp() - answered_at < max_age:
+                    answers[resource_id] = (has_values, answered_at)
+            return answers
+        except AttributeError, TypeError, ValueError:
+            # A file in an old or a wrong format: all resources are asked again.
+            return {}
+
+    async def get_data(
+        self, api_client: BaseAsyncApiClient, resource_ids: Sequence[str], now: datetime.datetime
+    ) -> Mapping[str, bool]:
+        """Return the known answers. Azure is asked only for the resources without an answer."""
+        answers = self._read(now)
+        if unanswered := [r for r in resource_ids if r.lower() not in answers]:
+            try:
+                metric_names = await self._metric_names.get_data(api_client, unanswered[0])
+                reported = await _get_resources_reporting_metrics(
+                    api_client, self._region, self._resource_type, metric_names, unanswered, now
+                )
+            except Exception as exc:
+                if self._debug:
+                    raise
+                LOGGER.warning(
+                    "Cannot tell if %(type)s resources in %(region)s report metrics: %(error)s",
+                    {"type": self._resource_type, "region": self._region, "error": exc},
+                )
+            else:
+                for resource_id, has_values in reported.items():
+                    answers[resource_id] = (has_values, now.timestamp())
+                self._storage.write(self._key, json.dumps(answers))
+        return {resource_id: has_values for resource_id, (has_values, _) in answers.items()}
+
+
+async def filter_otel_resources_reporting_metrics(
+    api_client: BaseAsyncApiClient,
+    resources: Sequence[AzureResource],
+    subscription_id: str,
+    cache_id: str,
+    now: datetime.datetime,
+    debug: bool,
+) -> tuple[list[AzureResource], IssueCollector]:
+    """Drop the resources that reported no metric values in the last 24 hours
+
+    A resource gets no host when the question cannot be answered.
+    """
+    to_ask: defaultdict[tuple[str, str], list[str]] = defaultdict(list)
+    for resource in resources:
+        if region := resource.info.get("location"):
+            to_ask[(resource.info["type"], region)].append(resource.info["id"])
+
+    reports = await asyncio.gather(
+        *(
+            MetricsReportCache(
+                subscription=subscription_id,
+                region=region,
+                resource_type=resource_type,
+                cache_id=cache_id,
+                debug=debug,
+            ).get_data(api_client, ids, now)
+            for (resource_type, region), ids in to_ask.items()
+        )
+    )
+    answers = {r: has_values for report in reports for r, has_values in report.items()}
+    issues = IssueCollector()
+    kept = []
+    for resource in resources:
+        resource_id = resource.info["id"].lower()
+        if answers.get(resource_id):
+            kept.append(resource)
+            continue
+        if resource_id in answers:
+            reason = "Azure has no metric values for it in the last 24 hours"
+        elif not resource.info.get("location"):
+            reason = "it has no region, so Azure cannot be asked for its metric values"
+        else:
+            reason = "cannot tell if Azure has metric values for it"
+        issues.add(
+            "info",
+            "OpenTelemetry resources",
+            f"No host for {resource.name} ({resource.info['type']}): {reason}",
+        )
+    return kept, issues
 
 
 def write_resource_groups_sections(resource_groups: Mapping[str, AzureResourceGroup]) -> None:
@@ -2433,6 +2793,10 @@ async def process_vault(
         "protectionStatus",
         "policyName",
         "isArchiveEnabled",
+        "isScheduledForDeferredDelete",
+        "deferredDeleteTimeInUTC",
+        # The API docs say softDeleteRetentionPeriodInDays, but the API sends this name.
+        "softDeleteRetentionPeriod",
     )
 
     response = await api_client.get_async(
@@ -2482,7 +2846,8 @@ def _unknown_resource_health_data(resource: AzureResource) -> Mapping[str, objec
 
 
 def _get_resource_health_sections(
-    resource_health_view: Sequence[ResourceHealth], resources: Mapping[ResourceId, AzureResource]
+    resource_health_view: Sequence[ResourceHealth],
+    resources: Mapping[ResourceId, AzureResource],
 ) -> Sequence[AzureSection]:
     health_section: defaultdict[str, list[str]] = defaultdict(list)
 
@@ -2575,13 +2940,22 @@ async def _test_connection(args: argparse.Namespace) -> int:
 def _gather_sections_from_resources(
     resources: list[AzureResource],
     monitored_groups: Mapping[str, AzureResourceGroup],
-) -> Sequence[AzureSection]:
-    sections: list[AzureSection] = []
+    otel_resource_types: Iterable[str],
+    section_name: str | None = None,
+) -> Sequence[_Section]:
+    otel_types_lower = {t.lower() for t in otel_resource_types}
+    sections: list[_Section] = []
     for resource in resources:
-        section = AzureResourceSection(resource)
+        section = (
+            AzureSection(section_name, [resource.piggytarget])
+            if section_name
+            else AzureResourceSection(resource)
+        )
         section.add(resource.dumpinfo())
         sections.append(section)
         sections.append(get_resource_host_labels_section(resource, monitored_groups))
+        if resource.info["type"].lower() in otel_types_lower:
+            sections.append(get_otel_identity_labels_section(resource))
 
     return sections
 
@@ -2593,7 +2967,7 @@ async def process_bulk_resources(
     monitored_services: set[str],
     monitored_resources: Mapping[ResourceId, AzureResource],
     subscription: AzureSubscription,  # noqa: ARG001
-) -> Sequence[AzureSection]:
+) -> Sequence[_Section]:
     tasks = set()
     if FetchedResource.VIRTUAL_MACHINES.type in monitored_services:
         tasks.add(_collect_virtual_machines_resources(mgmt_client, monitored_resources))
@@ -2615,7 +2989,9 @@ async def process_bulk_resources(
 
         processed_resources.extend(resources_async)
 
-    return _gather_sections_from_resources(processed_resources, groups_with_monitored_resources)
+    return _gather_sections_from_resources(
+        processed_resources, groups_with_monitored_resources, args.otel_resource_types
+    )
 
 
 # TODO: test
@@ -2625,7 +3001,8 @@ async def process_single_resources(
     subscription: AzureSubscription,
     groups_with_monitored_resources: Mapping[str, AzureResourceGroup],
     monitored_resources: Mapping[ResourceId, AzureResource],
-) -> Sequence[AzureSection]:
+    otel_resources: list[AzureResource],
+) -> Sequence[_Section]:
     processed_resources: list[AzureResource] = []
     tasks: set[Coroutine[Any, Any, AzureResource] | Coroutine[Any, Any, list[AzureResource]]] = (
         set()
@@ -2666,7 +3043,18 @@ async def process_single_resources(
             assert isinstance(resource_async, list)
             processed_resources.extend(resource_async)
 
-    return _gather_sections_from_resources(processed_resources, groups_with_monitored_resources)
+    return [
+        *_gather_sections_from_resources(
+            processed_resources, groups_with_monitored_resources, args.otel_resource_types
+        ),
+        # one section name for all types, so that no plugin of a resource type reads them
+        *_gather_sections_from_resources(
+            otel_resources,
+            groups_with_monitored_resources,
+            args.otel_resource_types,
+            section_name="otel_resource",
+        ),
+    ]
 
 
 async def process_resources(
@@ -2686,16 +3074,31 @@ async def process_resources(
         for r in selected_resources
         if r.info["type"].lower() in monitored_services_lower
     }
-    resources_groups = {r.group for r in monitored_resources_by_id.values()}
+    # metrics must be gathered before the actual section writing
+    # (which happens in the concurrent tasks below)
+    (otel_resources, otel_issues), _ = await asyncio.gather(
+        filter_otel_resources_reporting_metrics(
+            mgmt_client,
+            get_otel_only_resources(
+                selected_resources, args.otel_resource_types, monitored_services
+            ),
+            subscription.id,
+            args.cache_id,
+            NOW,
+            args.debug,
+        ),
+        process_metrics(mgmt_client, subscription, monitored_resources_by_id, args),
+    )
+    if otel_issues:
+        agent_info_section = AzureSection("agent_info")
+        agent_info_section.add(otel_issues.dumpinfo())
+        agent_info_section.write()
+    resources_groups = {r.group for r in [*monitored_resources_by_id.values(), *otel_resources]}
     groups_with_monitored_resources = {
         group_name: group
         for group_name, group in monitored_groups.items()
         if group_name in resources_groups
     }
-
-    # metrics must be gathered before the actual section writing
-    # (which happens in the concurrent tasks below)
-    await process_metrics(mgmt_client, subscription, monitored_resources_by_id, args)
 
     tasks = {
         process_resource_health(
@@ -2718,6 +3121,7 @@ async def process_resources(
             subscription,
             groups_with_monitored_resources,
             monitored_resources_by_id,
+            otel_resources,
         ),
     }
 
@@ -2948,10 +3352,8 @@ async def main_async(args: argparse.Namespace, selector: Selector) -> int:
 
 
 def _setup_logging(verbose: int) -> None:
-    logging.basicConfig(  # astrein: disable=logging-formatter
-        level={0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}.get(verbose, logging.DEBUG),
-        format="%(levelname)s %(asctime)s %(name)s - %(funcName)s: %(message)s",
-        force=True,
+    configure_logging(
+        {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}.get(verbose, logging.DEBUG)
     )
 
     if verbose == 2:

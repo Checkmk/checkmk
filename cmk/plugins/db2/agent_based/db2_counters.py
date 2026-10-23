@@ -52,7 +52,8 @@ def parse_db2_counters(string_table: StringTable) -> Section:
             else:
                 key = line[0]
             dbs.setdefault(key, {"TIMESTAMP": timestamp})
-            dbs[key][line[1]] = line[2]
+            if len(line) > 2:
+                dbs[key][line[1]] = line[2]
 
     # The timestamp is still used for legacy reasons
     # The instance specific timestamp is now available in the dbs
@@ -87,7 +88,10 @@ def _check_db2_counters(
     wrapped = False
     timestamp: int = db.get("TIMESTAMP", default_timestamp)  # type: ignore[assignment]
     for counter, label in db2_counters_map.items():
-        db_counter: str = db[counter]  # type: ignore[assignment]
+        db_counter: str | None = db.get(counter)  # type: ignore[assignment]
+        if db_counter is None:
+            yield Result(state=State.UNKNOWN, summary=f"{label}: no value reported")
+            continue
         try:
             value = float(db_counter)
         except ValueError:

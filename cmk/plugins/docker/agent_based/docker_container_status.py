@@ -19,6 +19,7 @@ from cmk.agent_based.v2 import (
     HostLabel,
     HostLabelGenerator,
     IgnoreResults,
+    render,
     Result,
     Service,
     State,
@@ -257,8 +258,7 @@ def check_docker_container_status(section: Section) -> CheckResult:
     status = section.get("Status", "unknown")
     cur_state = {"running": State.OK, "unknown": State.UNKNOWN}.get(status, State.CRIT)
 
-    # Please adjust PainterHostDockerNode if info is changed here
-    # 5019 node = output.split()[-1]
+    # The GUI parses the node from this text, see cmk/gui/painter/painters.py
     info = "Container %s" % status
     node_name = section.get("NodeName")
     if node_name:
@@ -330,8 +330,18 @@ def check_docker_container_status_uptime(
     op_status = section_docker_container_status["Status"]
     if op_status == "running":
         utc_start = date_parser.parse(started_str)
-        uptime_sec = (datetime.datetime.now(tz=datetime.UTC) - utc_start).total_seconds()
-        yield from uptime.check(params, uptime.Section(int(uptime_sec), None))
+        uptime_sec = int((datetime.datetime.now(tz=datetime.UTC) - utc_start).total_seconds())
+        if uptime_sec < 0:
+            yield Result(
+                state=State.UNKNOWN,
+                summary=(
+                    f"Cannot determine uptime: container start time {started_str} is"
+                    f" {render.timespan(-uptime_sec)} in the future"
+                    " (check the clock synchronization)"
+                ),
+            )
+            return
+        yield from uptime.check(params, uptime.Section(uptime_sec, None))
     else:
         yield Result(state=State.OK, summary="Operational state: %s" % op_status)
 

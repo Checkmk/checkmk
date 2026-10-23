@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -73,7 +73,7 @@ const dashboard = ref<HTMLElement | null>(null)
 
 const {
   dashboardState,
-  getWidgetReadingOrder,
+  getMeasuredLayout,
   getAbsoluteLayout,
   getLayoutZIndex,
   getAnchorPosition,
@@ -193,19 +193,17 @@ watch(enterMissingRuntimeFiltersAction, async () => {
 })
 
 defineExpose({
-  /** The widget IDs in reading order, or null while the grid has not been measured yet. */
-  getWidgetReadingOrder
+  getMeasuredLayout
 })
 </script>
 
 <template>
   <div>
-    <CmkAlertBox
+    <CmkAlert
       v-if="enterMissingRuntimeFiltersAction !== null"
       class="db-relative-grid__missing-filters-dialog"
-    >
-      {{ _t('Runtime filters are required to load data.') }}
-    </CmkAlertBox>
+      :text="_t('Runtime filters are required to load data.')"
+    />
     <div id="dashboard" ref="dashboard" class="dashboard dashboard_main">
       <div
         v-for="spec of contentProps"

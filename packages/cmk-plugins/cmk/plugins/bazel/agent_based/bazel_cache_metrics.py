@@ -15,16 +15,15 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_rate,
     get_value_store,
     GetRateError,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 Section = Mapping[str, int]
 
@@ -59,10 +58,6 @@ def parse_bazel_cache(string_table: StringTable) -> Section:
         for key, value in json.loads(string_table[0][0]).items()
         if key in _KEYS_TO_PARSE
     }
-
-
-def discover_bazel_cache(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_bazel_cache_impl(
@@ -223,6 +218,6 @@ agent_section_bazel_cache = AgentSection(
 check_plugin_bazel_cache = CheckPlugin(
     name="bazel_cache_metrics",
     service_name="Bazel Cache Metrics",
-    discovery_function=discover_bazel_cache,
+    discovery_function=discover_one_service,
     check_function=check_bazel_cache,
 )

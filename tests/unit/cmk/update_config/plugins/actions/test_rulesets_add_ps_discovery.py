@@ -17,6 +17,8 @@ from cmk.update_config.plugins.actions.rulesets_add_ps_discovery import (
     add_ps_discovery_rules,
     EVENT_CONSOLE_RULE_ID,
     overwrite_default_ec_rule,
+    overwrite_default_proxmox_levels,
+    PROXMOX_BASIC_PROCESSES_RULE_ID,
     PS_DISCOVERY_RULE_NAME,
     rule_present,
 )
@@ -99,6 +101,43 @@ def test_overwrite_keeps_customized_event_console_rule(tree: FolderTree) -> None
 
     rule = ruleset.get_rule_by_id(EVENT_CONSOLE_RULE_ID)
     assert rule.value["match"] == customized
+
+
+def _shipped_proxmox_default_params() -> object:
+    rule = next(
+        r for r in INVENTORY_PROCESS_DISCOVERY_RULES if r["id"] == PROXMOX_BASIC_PROCESSES_RULE_ID
+    )
+    return rule["value"]["default_params"]
+
+
+def _make_ruleset_with_proxmox_levels(
+    tree: FolderTree, levels: tuple[int, int, int, int]
+) -> Ruleset:
+    ruleset = Ruleset(PS_DISCOVERY_RULE_NAME, rulespec=_PS_DISCOVERY_RULESPEC)
+    folder = tree.root_folder()
+    rule = Rule.from_ruleset(folder, ruleset, ruleset.rulespec.valuespec.default_value())
+    rule.id = PROXMOX_BASIC_PROCESSES_RULE_ID
+    rule.value = {"default_params": {"cpu_rescale_max": True, "levels": levels}}
+    ruleset.append_rule(folder, rule)
+    return ruleset
+
+
+def test_overwrite_migrates_untouched_proxmox_levels_to_shipped_default(tree: FolderTree) -> None:
+    ruleset = _make_ruleset_with_proxmox_levels(tree, (1, 1, 1, 1))
+
+    overwrite_default_proxmox_levels(logging.getLogger(), ruleset)
+
+    rule = ruleset.get_rule_by_id(PROXMOX_BASIC_PROCESSES_RULE_ID)
+    assert rule.value["default_params"] == _shipped_proxmox_default_params()
+
+
+def test_overwrite_keeps_customized_proxmox_levels(tree: FolderTree) -> None:
+    ruleset = _make_ruleset_with_proxmox_levels(tree, (1, 1, 5, 10))
+
+    overwrite_default_proxmox_levels(logging.getLogger(), ruleset)
+
+    rule = ruleset.get_rule_by_id(PROXMOX_BASIC_PROCESSES_RULE_ID)
+    assert rule.value["default_params"]["levels"] == (1, 1, 5, 10)
 
 
 def test_update_with_all_preexisting_adds_nothing(tree: FolderTree) -> None:

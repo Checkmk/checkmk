@@ -10,6 +10,10 @@ import { type Ref, ref, watch } from 'vue'
 import type { GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
 import { useTimeRange } from '@/dashboard/components/TimeRange/useTimeRange'
 import {
+  type UseGraphLegend,
+  useGraphLegend
+} from '@/dashboard/components/Wizard/components/GraphRenderOptions/useGraphLegend'
+import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
@@ -27,7 +31,7 @@ import { type UseAdditionalOptions, useAdditionalOptions } from './useAdditional
 
 const CONTENT_TYPE = 'average_scatterplot'
 export interface UseScatterplot
-  extends UseWidgetHandler, UseWidgetVisualizationOptions, UseAdditionalOptions {
+  extends UseWidgetHandler, UseWidgetVisualizationOptions, UseAdditionalOptions, UseGraphLegend {
   timeRange: Ref<GraphTimerange>
   widgetProps: Ref<WidgetProps>
 }
@@ -67,6 +71,11 @@ export const useScatterplot = async (
     currentContent?.median_color
   )
 
+  const { graphLegend, graphLegendStyle } = useGraphLegend(
+    currentContent ?? undefined,
+    currentContent === null
+  )
+
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
@@ -81,7 +90,9 @@ export const useScatterplot = async (
       metric_color: metricColor.value === 'default' ? 'default' : metricColor.value.toUpperCase(),
       average_color:
         averageColor.value === 'default' ? 'default' : averageColor.value.toUpperCase(),
-      median_color: medianColor.value === 'default' ? 'default' : medianColor.value.toUpperCase()
+      median_color: medianColor.value === 'default' ? 'default' : medianColor.value.toUpperCase(),
+      show_legend: graphLegend.value,
+      legend_style: graphLegendStyle.value
     }
   }
 
@@ -109,7 +120,15 @@ export const useScatterplot = async (
   }
 
   watch(
-    [timeRange, widgetGeneralSettings, metricColor, averageColor, medianColor],
+    [
+      timeRange,
+      widgetGeneralSettings,
+      metricColor,
+      averageColor,
+      medianColor,
+      graphLegend,
+      graphLegendStyle
+    ],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -131,6 +150,9 @@ export const useScatterplot = async (
     metricColor,
     averageColor,
     medianColor,
+
+    graphLegend,
+    graphLegendStyle,
 
     titleUrlValidationErrors,
     titleMacros,

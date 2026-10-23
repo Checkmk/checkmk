@@ -211,6 +211,9 @@ void voteGerrit(Map args) {
 /// @extra_build_params: entries specific to one job, e.g. TEST_FILTER. They take
 ///     part in build matching, so a cached build from a run with different values
 ///     does not get reused.
+/// @extra_build_params_no_check: entries specific to one job that do not change
+///     what the job does, e.g. CIPARAM_SKIP_QA_SUBMODULE. They are not part of
+///     build matching, so a cached build from a run without them still gets reused.
 /// @force_build: only where a cache hit is a problem, which is the package. The
 ///     test jobs are already distinct through their own parameters.
 void triggerCascadeJob(Map args) {
@@ -232,7 +235,7 @@ void triggerCascadeJob(Map args) {
             CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
             CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
             CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,
-        ],
+        ] + (args.extra_build_params_no_check ?: [:]),
         no_remove_others: true, // do not delete other files in the dest dir
         download: false,    // use copyArtifacts to avoid nested directories
     );
@@ -322,6 +325,13 @@ Map cascadeJobSpecs(Map args) {
     /// Sharding off: exactly what this cascade did before, one job on the marker.
     /// The switch is the SHARD_COUNT job parameter, so turning sharding on or off
     /// is a checkmk_ci change and needs no change here and no rebase of open chains.
+
+    /// No medium-chain test needs tests/qa-test-data; skip the checkout to save
+    /// the ~95s/shard it costs to fetch the submodule. Does not change what the
+    /// job does, so it belongs in build_params_no_check, not build_params: a
+    /// cached build from before this param existed is still a valid match.
+    def skip_qa_submodule = [CIPARAM_SKIP_QA_SUBMODULE: true];
+
     if (args.singlesite_shards < 2) {
         /// limiting reruns; 50 ~ 10% of total singlesite test-cases
         specs["${singlesite_job} [marker]".toString()] = markerSpec(
@@ -348,6 +358,7 @@ Map cascadeJobSpecs(Map args) {
                 /// different runtimes being reused into this split.
                 SHARD_BUILD_BASED_ON: args.shard_durations_build,
             ],
+            build_params_no_check: skip_qa_submodule,
             start_delay: shard == 0 ? 0 : args.package_visibility_delay,
         ];
     }
@@ -377,7 +388,7 @@ void main() {
     /// Run the whole single site suite instead of only the tests carrying the
     /// medium_test_chain marker, split over this many pods. Each shard builds its
     /// own site, so the cost is N site setups against roughly 1/N of the runtime.
-    /// The split is computed in pytest, see tests/testlib/pytest_helpers/sharding.py.
+    /// The split is computed in pytest, see tests/testlib/system/shard_planning.py.
     ///
     /// A job parameter so the number can be tuned from checkmk_ci without a change
     /// here. The fallback keeps this working before that parameter is deployed.
@@ -513,7 +524,7 @@ void main() {
                 );
                 println("Cascade entries:");
                 job_specs.each { label, spec ->
-                    println("  ${label}: ${spec.build_params}");
+                    println("  ${label}: ${spec.build_params} (no_check: ${spec.build_params_no_check})");
                 }
             }
 
@@ -555,6 +566,7 @@ void main() {
                         disable_signing: disable_signing,
                         fake_artifacts: fake_artifacts,
                         extra_build_params: spec.build_params,
+                        extra_build_params_no_check: spec.build_params_no_check,
                     );
                 }
             }]

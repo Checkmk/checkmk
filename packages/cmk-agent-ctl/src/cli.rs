@@ -88,6 +88,39 @@ pub enum Mode {
     /// Only possible for non-imported connections. To renew imported connections,
     /// please `proxy-register` and import again.
     RenewCertificate(RenewCertificateOpts),
+
+    /// Update the agent of this host from the Checkmk site it is registered with
+    ///
+    /// The package the site offers is downloaded, verified unless
+    /// --skip-signatures is given, write it in the spool directory for the
+    /// installer and trigger installation. The installer runs as root in a unit
+    /// of its own.
+    Update(UpdateOpts),
+
+    /// Install an agent package the `update` mode spooled
+    ///
+    /// The privileged step of an agent update: a socket-activated systemd unit
+    /// runs this command as root for one package, with the request and the
+    /// answer on its standard input and output. Not meant to be called by
+    /// hand. The package is installed only if one of its signatures matches a
+    /// signature key of the update configuration. The outcome is reported
+    /// through the exit code only.
+    #[cfg(unix)]
+    InstallAgent,
+}
+
+#[derive(Parser)]
+pub struct UpdateOpts {
+    /// Only report which agent package the site has for this host, and change nothing
+    #[arg(long)]
+    pub check_only: bool,
+
+    /// Spool the package without checking its signature
+    #[arg(long, short = 'G', conflicts_with = "check_only")]
+    pub skip_signatures: bool,
+
+    #[clap(flatten)]
+    pub client_opts: ClientOpts,
 }
 
 #[derive(Parser)]
@@ -326,6 +359,47 @@ impl Cli {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The update options of `cmk-agent-ctl update <args>`.
+    fn update_opts(args: &[&str]) -> UpdateOpts {
+        let Mode::Update(opts) =
+            Cli::parse_from([&["cmk-agent-ctl", "update"], args].concat()).mode
+        else {
+            panic!("expected the update mode");
+        };
+        opts
+    }
+
+    #[test]
+    fn test_update_checks_signatures_unless_told_not_to() {
+        assert!(!update_opts(&[]).skip_signatures);
+    }
+
+    #[test]
+    fn test_update_skips_signatures_on_request() {
+        assert!(update_opts(&["--skip-signatures"]).skip_signatures);
+        assert!(update_opts(&["-G"]).skip_signatures);
+    }
+
+    /// A check downloads nothing, so there is nothing for it to skip the
+    /// signature of: the combination is refused instead of silently ignored.
+    #[test]
+    fn test_update_refuses_to_skip_signatures_of_a_check() {
+        assert!(Cli::try_parse_from(["cmk-agent-ctl", "update", "--check-only", "-G"]).is_err());
+    }
+
+    /// The bakery writes `cmk-agent-ctl install-agent` into the installer unit
+    /// it bakes, so the spelling of the mode and its empty argument list are a
+    /// contract with that unit.
+    #[cfg(unix)]
+    #[test]
+    fn test_install_agent_takes_no_arguments() {
+        assert!(matches!(
+            Cli::parse_from(["cmk-agent-ctl", "install-agent"]).mode,
+            Mode::InstallAgent
+        ));
+        assert!(Cli::try_parse_from(["cmk-agent-ctl", "install-agent", "--package"]).is_err());
+    }
 
     #[test]
     fn test_logging_level() {

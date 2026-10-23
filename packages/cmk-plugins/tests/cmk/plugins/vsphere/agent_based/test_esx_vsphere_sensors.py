@@ -7,68 +7,11 @@
 from collections.abc import Mapping, Sequence
 from typing import Final, Never
 
-import pytest
-
-from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.agent_based.v2 import Result, State
 from cmk.plugins.vsphere.agent_based.esx_vsphere_sensors import (
     check_esx_vsphere_sensors,
-    discover_esx_vsphere_sensors,
     parse_esx_vsphere_sensors,
 )
-
-
-@pytest.mark.parametrize(
-    "string_table, expected_discoveries",
-    [
-        (
-            [
-                [
-                    "VMware Rollup Health State",
-                    "",
-                    "0",
-                    "system",
-                    "0",
-                    "",
-                    "red",
-                    "Red",
-                    "Sensor is operating under critical conditions",
-                ],
-                [
-                    "Power Domain 1 Power Unit 0 - Redundancy lost",
-                    "",
-                    "0",
-                    "power",
-                    "0",
-                    "",
-                    "yellow",
-                    "Yellow",
-                    "Sensor is operating under conditions that are non-critical",
-                ],
-                [
-                    "Power Supply 2 Power Supply 2 0: Power Supply AC lost - Assert",
-                    "",
-                    "0",
-                    "power",
-                    "0",
-                    "",
-                    "red",
-                    "Red",
-                    "Sensor is operating under critical conditions",
-                ],
-                ["Dummy sensor", "", "", "", "", "", "green", "all is good", "the sun is shining"],
-            ],
-            [Service()],
-        ),
-    ],
-)
-def test_discover_esx_vsphere_sensors(
-    string_table: StringTable, expected_discoveries: Sequence[Service]
-) -> None:
-    """Test discovery function for esx_vsphere_sensors check."""
-    parsed = parse_esx_vsphere_sensors(string_table)
-    result = list(discover_esx_vsphere_sensors(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
-
 
 _PARAMS: Mapping[str, Sequence[Never]] = {"rules": []}
 

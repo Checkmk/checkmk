@@ -191,6 +191,24 @@ def load_config(paths: Paths) -> ConfigFromWATO:
     )
 
 
+# TODO: GUI stuff, used only in cmk.gui.mkeventd.wato.hostname_translation_of_site()
+def load_config_to_activate(paths: Paths) -> ConfigFromWATO:
+    """The configuration the EC uses after activating the changes, apart from the rule packs.
+    Unlike in load_config(), the main configuration file comes last, just like its copy in the
+    active config dir, so its settings override the ones of WATO. The files with the rule packs,
+    i.e. the rules.mk files and the rule packs of MKPs, aren't loaded at all: Loading them is
+    expensive, and save_active_config() replaces the rules.mk files anyway.
+    """
+    return _load_config(
+        [
+            path
+            for path in sorted(paths.config_dir.value.glob("**/*.mk"))
+            if path.name != "rules.mk" and not path.is_relative_to(paths.mkp_rule_pack_dir.value)
+        ]
+        + [paths.main_config_file.value]
+    )
+
+
 # Used only by ourselves in by cmk.ec.main.load_configuration()
 def load_active_config(settings: Settings) -> ConfigFromWATO:
     """The EC itself only uses (active) rule packs from the active config dir. Active rule packs

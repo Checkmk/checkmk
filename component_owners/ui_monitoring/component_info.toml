@@ -3,7 +3,17 @@ display_name = "UI - Monitoring"
 has_support_component = true
 members_required = 4
 tier = 1
-product_managers = ["mathieu.sobrero@checkmk.com"]
+product_managers = ["monika.hiegeist@checkmk.com"]
 description = """
-- This includes Status GUI (Views, ...)
+The Status GUI, i.e. everything used to display monitoring data.
+
+Belongs here:
+- Legacy views and their building blocks: data sources, painters,
+  sorters, filters and the view editor
+- The visuals framework (e.g. filters, sharing) used by views
+- The mobile GUI
+- The new monitoring pages (Views 3.0), such as "All hosts" and
+  "Services of a host"
+- Monitoring table dashboard widget (the table itself, not the dashboard)
+- Customization and sharing of the new monitoring pages
 """

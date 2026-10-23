@@ -2,6 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -25,13 +27,13 @@ from cmk.gui.watolib.sites import load_site_globals
 from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
     ensure_setup_access,
-    form_spec_of,
+    global_settings_context_of,
     GlobalSettingVarName,
     load_configured_sites,
     site_global_setting_etag,
     SITE_RO_PERMISSIONS,
     SiteIdPathParam,
-    value_to_json,
+    to_json,
 )
 from .models.response_models import SiteGlobalSettingModel
 
@@ -49,18 +51,21 @@ def show_site_global_setting_v1(
     config_variable = config_variable_registry[varname]
     need_site_read_permission(config_variable)
     sites = load_configured_sites()
-    value, is_default = effective_site_value(
+    value, origin = effective_site_value(
         load_site_globals(sites, site_id),
         varname,
         global_settings=load_configuration_settings(),
     )
-    json_value = value_to_json(form_spec_of(config_variable, site_id, api_context), value)
+    form_spec = config_variable.value_model(
+        global_settings_context_of(site_id, api_context, edits_site_specific_value=True)
+    )
+    spec, json_value = to_json(form_spec, value)
     return ApiResponse(
         body=SiteGlobalSettingModel(
-            site_id=site_id, varname=varname, value=json_value, is_default=is_default
+            site_id=site_id, varname=varname, value=json_value, spec=spec, origin=origin
         ),
-        status_code=200,
-        etag=site_global_setting_etag(site_id, varname, json_value, is_default),
+        status_code=HTTPStatus.OK,
+        etag=site_global_setting_etag(site_id, varname, value, origin),
     )
 
 

@@ -7,12 +7,12 @@ py_library(
     srcs = glob(["**/*.py"]),
     imports = ["../.."],
     deps = [
-        "//tests/testlib/common:repo",
+        "//tests/testlib/common",
         requirement("docker"),
         requirement("requests"),
         requirement("jinja2"),
-        "//tests/testlib",
-        "//tests/testlib/pytest_helpers",
+        "//tests/testlib/system",
+        "//tests/testlib/system:shard_planning",
     ],
 )
 

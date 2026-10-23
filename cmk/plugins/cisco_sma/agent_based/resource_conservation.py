@@ -9,14 +9,13 @@ from enum import Enum
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 from .detect import DETECT_CISCO_SMA
 
@@ -49,10 +48,6 @@ def _check_resource_conservation(section: ResourceConservation | None) -> CheckR
     yield Result(state=state, summary=summary)
 
 
-def _discover_resource_conservation(section: ResourceConservation | None) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def _parse_resource_conservation(string_table: StringTable) -> ResourceConservation | None:
     if not string_table or not string_table[0]:
         return None
@@ -79,6 +74,6 @@ snmp_section_resource_conservation = SimpleSNMPSection(
 check_plugin_resource_conservation = CheckPlugin(
     name="cisco_sma_resource_conservation",
     service_name="Resource conservation",
-    discovery_function=_discover_resource_conservation,
+    discovery_function=discover_one_service,
     check_function=_check_resource_conservation,
 )

@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="572" font-family="Helvetica, Arial, sans-serif" viewBox="0 0 760 572" role="img" aria-label="One event loop coordinates; helper processes do the monitoring work" font-size="13">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs>
+<marker id="glance-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M0 0L10 5L0 10z" fill="#6b7280">
+</path>
+</marker>
+</defs>
+<text x="24" y="34" font-size="15" font-weight="600" fill="#111827">One event loop coordinates; helper processes do the monitoring work</text>
+<text x="24" y="54" font-size="11.5" fill="#4b5563">The cmk-relay daemon at run time: where each part runs</text>
+<g>
+<rect x="24" y="72" width="520" height="436" rx="8" fill="none" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="40" y="96" font-weight="600" fill="#111827">cmk-relay daemon · PID 1 in its container</text>
+</g>
+<g>
+<rect x="40" y="108" width="488" height="248" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="56" y="132" font-weight="600" fill="#111827">Main thread · one asyncio event loop</text>
+</g>
+<g fill="none" stroke="#6b7280" stroke-width="1.25">
+<path d="M184 244H220" marker-end="url(#glance-arrow)">
+</path>
+<path d="M348 226H366V192H384" marker-start="url(#glance-arrow)" marker-end="url(#glance-arrow)">
+</path>
+<path d="M348 262H366V296H384" marker-start="url(#glance-arrow)" marker-end="url(#glance-arrow)">
+</path>
+<path d="M512 192H568" marker-start="url(#glance-arrow)" marker-end="url(#glance-arrow)">
+</path>
+<path d="M512 296H568" marker-start="url(#glance-arrow)" marker-end="url(#glance-arrow)">
+</path>
+<path d="M168 476V524H568" marker-end="url(#glance-arrow)">
+</path>
+</g>
+<g>
+<rect x="56" y="200" width="128" height="88" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="120" y="224" text-anchor="middle" font-weight="600" fill="#111827">Schedulers</text>
+<text x="120" y="240" text-anchor="middle" font-size="11.5" fill="#111827">4 timer loops</text>
+<text x="120" y="256" text-anchor="middle" font-size="11.5" fill="#111827">put new work on</text>
+<text x="120" y="272" text-anchor="middle" font-size="11.5" fill="#111827">the main queue</text>
+</g>
+<g>
+<rect x="220" y="200" width="128" height="88" rx="8" fill="#2563eb" fill-opacity="0.12" stroke="#2563eb" stroke-width="2">
+</rect>
+<text x="284" y="224" text-anchor="middle" font-weight="600" fill="#111827">Main loop</text>
+<text x="284" y="240" text-anchor="middle" font-size="11.5" fill="#111827">routes each item</text>
+<text x="284" y="256" text-anchor="middle" font-size="11.5" fill="#111827">to a pool or a</text>
+<text x="284" y="272" text-anchor="middle" font-size="11.5" fill="#111827">processor</text>
+</g>
+<g>
+<rect x="384" y="148" width="128" height="88" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="448" y="172" text-anchor="middle" font-weight="600" fill="#111827">Processors</text>
+<text x="448" y="188" text-anchor="middle" font-size="11.5" fill="#111827">6 loops talking</text>
+<text x="448" y="204" text-anchor="middle" font-size="11.5" fill="#111827">to the site and</text>
+<text x="448" y="220" text-anchor="middle" font-size="11.5" fill="#111827">to the disk</text>
+</g>
+<g>
+<rect x="384" y="252" width="128" height="88" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="448" y="276" text-anchor="middle" font-weight="600" fill="#111827">Pool workers</text>
+<text x="448" y="292" text-anchor="middle" font-size="11.5" fill="#111827">a loop and a</text>
+<text x="448" y="308" text-anchor="middle" font-size="11.5" fill="#111827">stderr drain per</text>
+<text x="448" y="324" text-anchor="middle" font-size="11.5" fill="#111827">helper process</text>
+</g>
+<g>
+<rect x="40" y="372" width="488" height="120" rx="8" fill="none" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="56" y="396" font-weight="600" fill="#111827">Threads</text>
+</g>
+<g>
+<rect x="56" y="404" width="224" height="72" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="168" y="424" text-anchor="middle" font-weight="600" fill="#111827">Log listeners</text>
+<text x="168" y="440" text-anchor="middle" font-size="11.5" fill="#111827">take records off a queue</text>
+<text x="168" y="456" text-anchor="middle" font-size="11.5" fill="#111827">and write them to stdout</text>
+</g>
+<g>
+<rect x="296" y="404" width="216" height="72" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="404" y="424" text-anchor="middle" font-weight="600" fill="#111827">Thread pool</text>
+<text x="404" y="440" text-anchor="middle" font-size="11.5" fill="#111827">gzips crash reports</text>
+<text x="404" y="456" text-anchor="middle" font-size="11.5" fill="#111827">before upload</text>
+</g>
+<g>
+<rect x="568" y="148" width="168" height="88" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="652" y="172" text-anchor="middle" font-weight="600" fill="#111827">Checkmk site</text>
+<text x="652" y="188" text-anchor="middle" font-size="11.5" fill="#111827">HTTPS + mutual TLS</text>
+<text x="652" y="204" text-anchor="middle" font-size="11.5" fill="#111827">polled for tasks,</text>
+<text x="652" y="220" text-anchor="middle" font-size="11.5" fill="#111827">receives results</text>
+</g>
+<g>
+<rect x="568" y="252" width="168" height="224" rx="8" fill="none" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="584" y="274" font-weight="600" fill="#111827">Helper processes</text>
+</g>
+<g>
+<rect x="584" y="284" width="136" height="48" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="652" y="304" text-anchor="middle" font-weight="600" fill="#111827">Fetchers</text>
+<text x="652" y="320" text-anchor="middle" font-size="11.5" fill="#111827">scheduled fetches</text>
+</g>
+<g>
+<rect x="584" y="348" width="136" height="48" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="652" y="368" text-anchor="middle" font-weight="600" fill="#111827">Ad-hoc fetchers</text>
+<text x="652" y="384" text-anchor="middle" font-size="11.5" fill="#111827">site&#x27;s requests</text>
+</g>
+<g>
+<rect x="584" y="412" width="136" height="48" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="652" y="432" text-anchor="middle" font-weight="600" fill="#111827">Checkhelpers</text>
+<text x="652" y="448" text-anchor="middle" font-size="11.5" fill="#111827">active checks</text>
+</g>
+<g>
+<rect x="568" y="500" width="168" height="48" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="652" y="520" text-anchor="middle" font-weight="600" fill="#111827">stdout</text>
+<text x="652" y="536" text-anchor="middle" font-size="11.5" fill="#111827">the container&#x27;s log</text>
+</g>
+</svg>

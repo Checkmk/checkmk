@@ -7,52 +7,46 @@
 
 import copy
 import time
-from collections.abc import Sequence
 from dataclasses import replace
-from typing import Literal, override
+from typing import Literal
 
 from cmk.ccc.user import UserId
-from cmk.gui.config import active_config
 from cmk.gui.graphing import (
     DEFAULT_INTERACTION,
-    default_time_range_seconds,
     EngineDisplayOptions,
     get_temperature_unit,
     GraphDisplayConfigHTML,
     GraphRenderOptions,
     render_engine_graph_group,
+    resolve_default_time_range_seconds,
     resolve_size,
     STATIC_INTERACTION,
     stored_time_range_seconds,
     TemplateGraphSpecification,
     vs_graph_render_options,
 )
-from cmk.gui.http import Request, Response, response
+from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter.v0 import Cell, Painter
+from cmk.gui.painter import Cell, InternalPainter, PainterContext
 from cmk.gui.painter_options import (
     PainterOption,
     PainterOptionRegistry,
     PainterOptions,
 )
 from cmk.gui.type_defs import (
-    ColumnName,
     ColumnSpec,
     PainterParameters,
     Row,
     ViewName,
     ViewSpec,
-    VisualLinkSpec,
 )
-from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     MigrateNotUpdated,
     Timerange,
-    Transform,
 )
 from cmk.gui.view_utils import (
     CellSpec,
@@ -97,20 +91,7 @@ _GRAPH_VIEWS = {
             "description": _l(
                 "Shows all graphs including time range selections of a collection of services."
             ),
-            "group_painters": [
-                ColumnSpec(
-                    name="sitealias",
-                    link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
-                ),
-                ColumnSpec(
-                    name="host_with_state",
-                    link_spec=VisualLinkSpec(type_name="views", name="host"),
-                ),
-                ColumnSpec(
-                    name="service_description",
-                    link_spec=VisualLinkSpec(type_name="views", name="service"),
-                ),
-            ],
+            "group_painters": [],
             "hidden": True,
             "hidebutton": False,
             "layout": "boxed_graph",
@@ -145,16 +126,7 @@ _GRAPH_VIEWS = {
             "description": _l(
                 "Shows host graphs including time range selections of a collection of hosts."
             ),
-            "group_painters": [
-                ColumnSpec(
-                    name="sitealias",
-                    link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
-                ),
-                ColumnSpec(
-                    name="host_with_state",
-                    link_spec=VisualLinkSpec(type_name="views", name="host"),
-                ),
-            ],
+            "group_painters": [],
             "hidden": True,
             "hidebutton": False,
             "layout": "boxed_graph",
@@ -187,11 +159,10 @@ def _paint_time_graph_cmk(
     cell: Cell,
     *,
     debug: bool,
-    user: LoggedInUser,  # noqa: ARG001
-    request: Request,
-    response: Response,
+    mobile: bool,
     painter_options: PainterOptions,
     temperature_unit: TemperatureUnit,
+    default_duration: int,
     require_historic_metrics: bool = True,
 ) -> tuple[Literal[""], HTML | str]:
     # Load the graph render options from
@@ -219,12 +190,11 @@ def _paint_time_graph_cmk(
         painter_parameters=painter_params, stored_by_the_view=cell.has_painter_params()
     )
     if duration is None:
-        duration = default_time_range_seconds()
+        duration = default_duration
     raw_time_range: tuple[int, int] = (now - duration, now)
 
     # The engine takes its interactions as an explicit argument rather than off the display
     # config, so a mobile render has to hand it the static one.
-    mobile = is_mobile(request, response)
     if mobile:
         graph_size = (27.0, 18.0)
         display_config = display_config.model_copy(
@@ -311,14 +281,14 @@ def _vs_graph_render_options_for_views() -> MigrateNotUpdated:
     return vs_graph_render_options(exclude=_LEGACY_ONLY_RENDER_OPTIONS, with_inline_title=False)
 
 
-def cmk_time_graph_params() -> MigrateNotUpdated:
+def cmk_time_graph_params(context: PainterContext) -> MigrateNotUpdated:
     elements = [
         (
             "set_default_time_range",
             DropdownChoice(
                 title=_("Set default time range"),
                 choices=[
-                    (entry["duration"], entry["title"]) for entry in active_config.graph_timeranges
+                    (entry["duration"], entry["title"]) for entry in context.config.graph_timeranges
                 ],
             ),
         ),
@@ -349,127 +319,111 @@ def _migrate_old_graph_render_options(value: PainterParameters | None) -> Painte
     return value
 
 
-class PainterServiceGraphs(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "service_graphs"
+def _render_service_graphs(
+    row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_time_graph_cmk(
+        row,
+        cell,
+        mobile=context.url_renderer.is_mobile(),
+        painter_options=context.painter_options,
+        debug=context.config.debug,
+        temperature_unit=get_temperature_unit(acting_user, context.config.default_temperature_unit),
+        default_duration=resolve_default_time_range_seconds(
+            context.config.graph_timeranges, acting_user.get_attribute("graph_default_time_range")
+        ),
+    )
 
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Service graphs with display options")
 
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return [
+def _export_for_python_service_graphs(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    raise PythonExportError
+
+
+def _export_for_csv_service_graphs(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str | HTML:
+    raise CSVExportError
+
+
+def _export_for_json_service_graphs(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    raise JSONExportError
+
+
+def make_service_graphs_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="service_graphs",
+        title=_l("Service graphs with display options"),
+        columns=[
             "host_name",
             "service_description",
             "service_perf_data",
             "service_metrics",
             "service_check_command",
-        ]
-
-    @property
-    @override
-    def printable(self) -> str:
-        return "time_graph"
-
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        # No pnp_timerange: the engine takes its time range from the global time picker.
-        return ["graph_render_options"]
-
-    @property
-    @override
-    def parameters(self) -> MigrateNotUpdated:
-        return cmk_time_graph_params()
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return _paint_time_graph_cmk(
-            row,
-            cell,
-            user=user,
-            request=self.request,
-            response=response,
-            painter_options=self._painter_options,
-            debug=self.config.debug,
-            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
-        )
-
-    @override
-    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
-        raise PythonExportError
-
-    @override
-    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
-        raise CSVExportError
-
-    @override
-    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
-        raise JSONExportError
+        ],
+        printable="time_graph",
+        painter_options=["graph_render_options"],
+        parameters=cmk_time_graph_params,
+        render=_render_service_graphs,
+        export_for_python=_export_for_python_service_graphs,
+        export_for_csv=_export_for_csv_service_graphs,
+        export_for_json=_export_for_json_service_graphs,
+    )
 
 
-class PainterHostGraphs(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "host_graphs"
+def _render_host_graphs(
+    row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_time_graph_cmk(
+        row,
+        cell,
+        mobile=context.url_renderer.is_mobile(),
+        painter_options=context.painter_options,
+        debug=context.config.debug,
+        temperature_unit=get_temperature_unit(acting_user, context.config.default_temperature_unit),
+        default_duration=resolve_default_time_range_seconds(
+            context.config.graph_timeranges, acting_user.get_attribute("graph_default_time_range")
+        ),
+        # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
+        # also render the graphs if there are no historic metrics available (but perf data is)
+        require_historic_metrics="service_description" not in row,
+    )
 
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Host graphs with display options")
 
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_name", "host_perf_data", "host_metrics", "host_check_command"]
+def _export_for_python_host_graphs(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    raise PythonExportError
 
-    @property
-    @override
-    def printable(self) -> str:
-        return "time_graph"
 
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        # No pnp_timerange: the engine takes its time range from the global time picker.
-        return ["graph_render_options"]
+def _export_for_csv_host_graphs(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str | HTML:
+    raise CSVExportError
 
-    @property
-    @override
-    def parameters(self) -> MigrateNotUpdated:
-        return cmk_time_graph_params()
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return _paint_time_graph_cmk(
-            row,
-            cell,
-            user=user,
-            request=self.request,
-            response=response,
-            painter_options=self._painter_options,
-            debug=self.config.debug,
-            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
-            # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
-            # also render the graphs if there are no historic metrics available (but perf data is)
-            require_historic_metrics="service_description" not in row,
-        )
+def _export_for_json_host_graphs(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    raise JSONExportError
 
-    @override
-    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
-        raise PythonExportError
 
-    @override
-    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
-        raise CSVExportError
-
-    @override
-    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
-        raise JSONExportError
+def make_host_graphs_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_graphs",
+        title=_l("Host graphs with display options"),
+        columns=["host_name", "host_perf_data", "host_metrics", "host_check_command"],
+        printable="time_graph",
+        painter_options=["graph_render_options"],
+        parameters=cmk_time_graph_params,
+        render=_render_host_graphs,
+        export_for_python=_export_for_python_host_graphs,
+        export_for_csv=_export_for_csv_host_graphs,
+        export_for_json=_export_for_json_host_graphs,
+    )
 
 
 class PainterOptionGraphRenderOptions(PainterOption):
@@ -491,128 +445,109 @@ class PainterOptionPNPTimerange(PainterOption):
         )
 
 
-class PainterSvcPnpgraph(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "svc_pnpgraph"
+def _render_svc_pnpgraph(
+    row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_time_graph_cmk(
+        row,
+        cell,
+        mobile=context.url_renderer.is_mobile(),
+        painter_options=context.painter_options,
+        debug=context.config.debug,
+        temperature_unit=get_temperature_unit(acting_user, context.config.default_temperature_unit),
+        default_duration=resolve_default_time_range_seconds(
+            context.config.graph_timeranges, acting_user.get_attribute("graph_default_time_range")
+        ),
+    )
 
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Service graphs")
 
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return [
+def _export_for_python_svc_pnpgraph(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    raise PythonExportError
+
+
+def _export_for_csv_svc_pnpgraph(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str | HTML:
+    raise CSVExportError
+
+
+def _export_for_json_svc_pnpgraph(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    raise JSONExportError
+
+
+def make_svc_pnpgraph_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_pnpgraph",
+        title=_l("Service graphs"),
+        columns=[
             "host_name",
             "service_description",
             "service_perf_data",
             "service_metrics",
             "service_check_command",
-        ]
-
-    @property
-    @override
-    def printable(self) -> str:
-        return "time_graph"
-
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        # No pnp_timerange: the engine takes its time range from the global time picker.
-        return []
-
-    @property
-    @override
-    def parameters(self) -> Transform:
-        return cmk_time_graph_params()
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return _paint_time_graph_cmk(
-            row,
-            cell,
-            user=user,
-            request=self.request,
-            response=response,
-            painter_options=self._painter_options,
-            debug=self.config.debug,
-            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
-        )
-
-    @override
-    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
-        raise PythonExportError
-
-    @override
-    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
-        raise CSVExportError
-
-    @override
-    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
-        raise JSONExportError
+        ],
+        printable="time_graph",
+        painter_options=[],
+        parameters=cmk_time_graph_params,
+        render=_render_svc_pnpgraph,
+        export_for_python=_export_for_python_svc_pnpgraph,
+        export_for_csv=_export_for_csv_svc_pnpgraph,
+        export_for_json=_export_for_json_svc_pnpgraph,
+    )
 
 
-class PainterHostPnpgraph(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "host_pnpgraph"
+def _render_host_pnpgraph(
+    row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_time_graph_cmk(
+        row,
+        cell,
+        mobile=context.url_renderer.is_mobile(),
+        painter_options=context.painter_options,
+        debug=context.config.debug,
+        temperature_unit=get_temperature_unit(acting_user, context.config.default_temperature_unit),
+        default_duration=resolve_default_time_range_seconds(
+            context.config.graph_timeranges, acting_user.get_attribute("graph_default_time_range")
+        ),
+    )
 
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Host graph")
 
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return _("Graph")
+def _export_for_python_host_pnpgraph(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    raise PythonExportError
 
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_name", "host_perf_data", "host_metrics", "host_check_command"]
 
-    @property
-    @override
-    def printable(self) -> str:
-        return "time_graph"
+def _export_for_csv_host_pnpgraph(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str | HTML:
+    raise CSVExportError
 
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        # No pnp_timerange: the engine takes its time range from the global time picker.
-        return []
 
-    @property
-    @override
-    def parameters(self) -> Transform:
-        return cmk_time_graph_params()
+def _export_for_json_host_pnpgraph(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    raise JSONExportError
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return _paint_time_graph_cmk(
-            row,
-            cell,
-            user=user,
-            request=self.request,
-            response=response,
-            painter_options=self._painter_options,
-            debug=self.config.debug,
-            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
-        )
 
-    @override
-    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
-        raise PythonExportError
-
-    @override
-    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
-        raise CSVExportError
-
-    @override
-    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
-        raise JSONExportError
+def make_host_pnpgraph_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_pnpgraph",
+        title=_l("Host graph"),
+        short_title=_l("Graph"),
+        columns=["host_name", "host_perf_data", "host_metrics", "host_check_command"],
+        printable="time_graph",
+        painter_options=[],
+        parameters=cmk_time_graph_params,
+        render=_render_host_pnpgraph,
+        export_for_python=_export_for_python_host_pnpgraph,
+        export_for_csv=_export_for_csv_host_pnpgraph,
+        export_for_json=_export_for_json_host_pnpgraph,
+    )
 
 
 def cmk_graph_url(row: Row, what: str, *, request: Request) -> str:

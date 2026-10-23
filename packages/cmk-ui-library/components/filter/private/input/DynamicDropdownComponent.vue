@@ -64,7 +64,7 @@ watch(currentValue, async (newValue) => {
 })
 
 const autocompleter: Autocompleter = {
-  fetch_method: 'ajax_vs_autocomplete',
+  fetch_method: 'rest_autocomplete',
   data: props.component.autocompleter
 }
 </script>

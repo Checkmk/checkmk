@@ -28,7 +28,12 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _, localize_or_none, translate_to_current_language
+from cmk.gui.i18n import (
+    _,
+    get_current_language,
+    localize_or_none,
+    translate_to_current_language,
+)
 from cmk.gui.log import logger
 from cmk.gui.valuespec import (
     DEF_VALUE,
@@ -467,8 +472,11 @@ class Rulespec:
 
     @property
     def has_valuespec(self) -> bool:
-        # Right now, a Valuespec is always present
-        # Will be refactored later on
+        # Some form specs cannot be converted to a valuespec
+        try:
+            self.valuespec
+        except NotImplementedError:
+            return False
         return True
 
     @property
@@ -491,12 +499,10 @@ class Rulespec:
 
     @property
     def title(self) -> str | None:
-        return self._localized_title()
+        return self._localized_title(get_current_language())
 
-    # Request-scoped so a cached title can never outlive the language it was
-    # localized for.
     @request_memoize(maxsize=None)
-    def _localized_title(self) -> str | None:
+    def _localized_title(self, _language: str) -> str | None:
         if self._title:
             plain_title: str | None = self._title()
         else:
@@ -1062,12 +1068,16 @@ def _wrap_form_spec_in_timespecific[ModelT](
     The given form_spec will be transformed to a list of form specs,
     whereas each element can be set to a specific timeperiod.
     """
-    form_spec = form_spec_callable()
-    if isinstance(form_spec, TimeSpecific):
-        # Legacy check parameters registered through register_check_parameters() already
-        # have their form_spec wrapped in TimeSpecific.
-        return form_spec_callable
-    return lambda: TimeSpecific(parameter_form=form_spec)
+
+    def wrapped() -> FormSpec:
+        form_spec = form_spec_callable()
+        if isinstance(form_spec, TimeSpecific):
+            # Legacy check parameters registered through register_check_parameters() already
+            # have their form_spec wrapped in TimeSpecific.
+            return form_spec
+        return TimeSpecific(parameter_form=form_spec)
+
+    return wrapped
 
 
 class ManualCheckParameterRulespec(HostRulespec):
@@ -1127,11 +1137,19 @@ class ManualCheckParameterRulespec(HostRulespec):
 
         # Optional keys
         self._parameter_valuespec = parameter_valuespec
+        self._parameter_form_spec_definition = form_spec_definition
         self._rule_value_item_valuespec = item_spec
 
     @property
     def check_group_name(self) -> str:
         return self._check_group_name
+
+    @property
+    def parameter_value_model(self) -> ValueSpec | FormSpec[Any]:
+        if self._parameter_form_spec_definition is not None:
+            return self._parameter_form_spec_definition.value()
+        assert self._parameter_valuespec is not None
+        return _wrap_valuespec_in_timeperiod_valuespec(self._parameter_valuespec())
 
     def _rulespec_valuespec(self) -> ValueSpec:
         """Wraps the parameter together with the other needed valuespecs
@@ -1186,10 +1204,9 @@ class ManualCheckParameterRulespec(HostRulespec):
         if form_spec_definition is None:
             return None
 
-        parameter_fs = form_spec_definition.value()
-
-        return FormSpecDefinition(
-            lambda: FSTuple(
+        def wrapped() -> FormSpec:
+            parameter_fs = form_spec_definition.value()
+            return FSTuple(
                 title=parameter_fs.title,
                 elements=[
                     _get_check_type_group_choice(
@@ -1201,9 +1218,9 @@ class ManualCheckParameterRulespec(HostRulespec):
                     self._compute_item_form_spec(form_spec_definition.item),
                     parameter_fs,
                 ],
-            ),
-            form_spec_definition.item,
-        )
+            )
+
+        return FormSpecDefinition(wrapped, form_spec_definition.item)
 
     def _compute_item_form_spec(self, form_spec: Callable[[], FormSpec] | None) -> FormSpec:
         """Not used as condition, only for the rule value valuespec"""
@@ -1226,7 +1243,7 @@ def _get_check_type_group_choice(
                 elements.append(
                     SingleChoiceElementExtended[str](
                         name=str(checkname),
-                        title=Title(  # astrein: disable=localization-checker
+                        title=Title(  # astrein: disable=localization
                             f"{checkname} - {check['title']}"
                         ),
                     )

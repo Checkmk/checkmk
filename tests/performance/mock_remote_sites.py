@@ -20,7 +20,8 @@ number of remote sites without the resource cost of real OMD sites:
     ``_get_config_sync_file_info``.
   - ``receive-config-sync``: unpacks the sync archive into the mock site's
     state directory and applies deletions, like a real remote.
-  - ``activate-changes``: returns no warnings; optionally sleeps to emulate
+  - ``activate-changes-start`` / ``activate-changes-get-status``: the job
+    reports no warnings; it optionally stays active for a while to emulate
     remote activation time.
   - ``create-broker-certs`` / ``store-broker-certs``: serves a real CSR and
     accepts the signed certificates, like a real remote message broker setup.
@@ -44,10 +45,12 @@ import tarfile
 import threading
 import time
 import urllib.parse
+import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
 from email.parser import BytesParser
 from email.policy import HTTP as HTTP_POLICY
+from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import override
@@ -57,7 +60,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 
-from tests.testlib.version import CMKVersion
+from tests.testlib.common.version import CMKVersion
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +93,7 @@ class _MockSiteState:
         self.state_dir = state_dir
         self.config_generation = 0
         self.lock = threading.Lock()
+        self.activation_ends: dict[str, float] = {}
         state_dir.mkdir(parents=True, exist_ok=True)
 
     def file_infos(self) -> dict[str, tuple[int, int, str | None, str | None]]:
@@ -132,7 +136,7 @@ class _AutomationHTTPHandler(BaseHTTPRequestHandler):
     def log_message(self, format: str, *args: object) -> None:
         logger.debug("mock-http: %s", format % args)
 
-    def _respond(self, body: bytes, status: int = 200) -> None:
+    def _respond(self, body: bytes, status: int = HTTPStatus.OK) -> None:
         self.send_response(status)
         self.send_header("Content-Type", "text/plain; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
@@ -173,12 +177,12 @@ class _AutomationHTTPHandler(BaseHTTPRequestHandler):
         parts = parsed.path.strip("/").split("/")
         # expected paths: <site_id>/check_mk/login.py | <site_id>/check_mk/automation.py
         if len(parts) < 3 or parts[1] != "check_mk":
-            self._respond(b"Unknown path", status=404)
+            self._respond(b"Unknown path", status=HTTPStatus.NOT_FOUND)
             return
         site_id, page = parts[0], parts[2]
         state = self.server.sites.get(site_id)
         if state is None:
-            self._respond(b"Unknown site", status=404)
+            self._respond(b"Unknown site", status=HTTPStatus.NOT_FOUND)
             return
 
         if page == "login.py":
@@ -194,12 +198,12 @@ class _AutomationHTTPHandler(BaseHTTPRequestHandler):
             return
 
         if page != "automation.py":
-            self._respond(b"Unknown page", status=404)
+            self._respond(b"Unknown page", status=HTTPStatus.NOT_FOUND)
             return
 
         params = self._read_request_params()
         if params.get("secret") != _LOGIN_SECRET:
-            self._respond(b"Invalid automation secret.", status=401)
+            self._respond(b"Invalid automation secret.", status=HTTPStatus.UNAUTHORIZED)
             return
 
         command = query.get("command", "")
@@ -208,7 +212,7 @@ class _AutomationHTTPHandler(BaseHTTPRequestHandler):
             self._respond(self._execute(state, command, params).encode())
         except Exception:
             logger.exception("mock site %s: command %s failed", site_id, command)
-            self._respond(b"Mock remote site error", status=500)
+            self._respond(b"Mock remote site error", status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def _execute(self, state: _MockSiteState, command: str, params: dict[str, object]) -> str:
         if command == "get-config-sync-state":
@@ -222,11 +226,27 @@ class _AutomationHTTPHandler(BaseHTTPRequestHandler):
             state.apply_sync(sync_archive, to_delete)
             return repr(True)
 
-        if command == "activate-changes":
-            if self.server.activate_delay:
-                time.sleep(self.server.activate_delay)
-            # domain name -> list of warnings
-            return repr({})
+        if command == "activate-changes-start":
+            job_id = f"activate-changes-remote-{uuid.uuid4()}"
+            with state.lock:
+                state.activation_ends[job_id] = time.monotonic() + self.server.activate_delay
+            return repr(job_id)
+
+        if command == "activate-changes-get-status":
+            with state.lock:
+                activation_end = state.activation_ends[str(params["job_id"])]
+            is_active = time.monotonic() < activation_end
+            return repr(
+                {
+                    "state": "running" if is_active else "finished",
+                    "is_active": is_active,
+                    "exception": [],
+                    "traceback": "",
+                    "crash_id": "",
+                    # domain name -> list of warnings
+                    "warnings": {},
+                }
+            )
 
         if command == "create-broker-certs":
             return repr({"csr": _create_csr_pem(state.site_id)})

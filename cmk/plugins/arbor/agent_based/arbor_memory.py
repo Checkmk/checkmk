@@ -13,12 +13,11 @@ from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 from .lib import DETECT_PEAKFLOW_SP, DETECT_PEAKFLOW_TMS, DETECT_PRAVAIL
 
@@ -70,10 +69,6 @@ snmp_section_arbor_memory_peakflow_pravail = SimpleSNMPSection(
 )
 
 
-def discover_arbor_memory(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_arbor_memory(params: Mapping[str, Any], section: Section) -> CheckResult:
     yield from check_levels_v1(
         section.ram,
@@ -92,7 +87,7 @@ def check_arbor_memory(params: Mapping[str, Any], section: Section) -> CheckResu
 check_plugin_arbor_memory = CheckPlugin(
     name="arbor_memory",
     service_name="Memory",
-    discovery_function=discover_arbor_memory,
+    discovery_function=discover_one_service,
     check_function=check_arbor_memory,
     check_ruleset_name="memory_arbor",
     check_default_parameters={

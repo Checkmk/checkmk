@@ -3,6 +3,7 @@ packages:
     - 'bazel/tools'
     - 'packages/cmk-frontend'
     - 'packages/cmk-frontend-vue'
+    - 'packages/cmk-profiling'
     - 'packages/cmk-shared-typing'
     - 'packages/cmk-ui-library'
     - 'packages/cmk-werks'

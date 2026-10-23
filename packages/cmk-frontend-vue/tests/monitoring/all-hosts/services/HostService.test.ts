@@ -7,8 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { visibleHostFields } from '@/monitoring/all-hosts/columns'
 import { HostService } from '@/monitoring/all-hosts/services/HostService'
-import type { HostEntry, HostsResponse } from '@/monitoring/shared/api/types'
+import type { HostEntry, HostState, HostsResponse } from '@/monitoring/shared/api/types'
 import { DEFAULT_BATCH_SIZE } from '@/monitoring/shared/constants'
+import { RowsNotLoadedError } from '@/monitoring/shared/services/MonitoringService'
 
 import { makeKeyShortcutService } from '../../shared/services/testHelpers'
 
@@ -32,6 +33,7 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
     num_services_unknown: 0,
     num_services_pending: 0,
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=host-1',
+    num_relations: 0,
     ...overrides
   }
 }
@@ -77,7 +79,7 @@ describe('HostService', () => {
         limit: DEFAULT_BATCH_SIZE,
         sort: [{ id: 'name', desc: false }],
         searchQuery: '',
-        fields: visibleHostFields({})
+        fields: []
       },
       expect.any(AbortSignal)
     )
@@ -97,7 +99,7 @@ describe('HostService', () => {
         limit: DEFAULT_BATCH_SIZE,
         sort: [],
         searchQuery: 'web01',
-        fields: visibleHostFields({})
+        fields: []
       },
       expect.any(AbortSignal)
     )
@@ -122,7 +124,7 @@ describe('HostService', () => {
         limit: DEFAULT_BATCH_SIZE,
         sort: [],
         searchQuery: 'web01',
-        fields: visibleHostFields({})
+        fields: []
       },
       expect.any(AbortSignal)
     )
@@ -145,7 +147,25 @@ describe('HostService', () => {
       await vi.advanceTimersByTimeAsync(0)
 
       expect(fetchHosts).toHaveBeenLastCalledWith(
-        expect.objectContaining({ fields: visibleHostFields({ address: false }) }),
+        expect.objectContaining({ fields: visibleHostFields({ address: false }, ['address']) }),
+        expect.any(AbortSignal)
+      )
+    })
+
+    it('reads the fields a row needs whichever columns are shown', async () => {
+      const fetchHosts = vi.fn().mockResolvedValue(makeHostsResponse([], 0, 0))
+      service = new HostService({ fetchHosts }, makeKeyShortcutService(), {
+        columns: [...COLUMNS],
+        rowFields: ['setup_access']
+      })
+      await vi.advanceTimersByTimeAsync(0)
+
+      service.updateColumnVisibility({ address: false })
+      service.updateSearch('web01')
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(fetchHosts).toHaveBeenLastCalledWith(
+        expect.objectContaining({ fields: ['setup_access'] }),
         expect.any(AbortSignal)
       )
     })
@@ -163,10 +183,108 @@ describe('HostService', () => {
 
       expect(fetchHosts).toHaveBeenCalledTimes(2)
       expect(fetchHosts).toHaveBeenLastCalledWith(
-        expect.objectContaining({ fields: visibleHostFields({}) }),
+        expect.objectContaining({ fields: visibleHostFields({}, ['address']) }),
         expect.any(AbortSignal)
       )
     })
+  })
+
+  it('exports the loaded hosts in the shown columns, in table order', async () => {
+    const fetchHosts = vi
+      .fn()
+      .mockResolvedValue(
+        makeHostsResponse([makeHost(), makeHost({ name: 'host-2', address: '10.0.0.2' })], 2, 2)
+      )
+    service = new HostService({ fetchHosts }, makeKeyShortcutService(), {
+      columns: [
+        { accessorKey: 'name', header: 'Host' },
+        { accessorKey: 'address', header: 'IP address' },
+        { accessorKey: 'alias', header: 'Host alias' }
+      ]
+    })
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.updateColumnVisibility({ alias: false })
+
+    expect(await (await service.export()).file('csv').text()).toBe(
+      '"name";"address"\n"host-1";"10.0.0.1"\n"host-2";"10.0.0.2"\n'
+    )
+  })
+
+  it('exports the hosts of a fetch still in flight, not the rows shown before it', async () => {
+    let resolveFiltered: (response: HostsResponse) => void = () => {}
+    const fetchHosts = vi
+      .fn()
+      .mockResolvedValueOnce(makeHostsResponse([makeHost()], 1, 2))
+      .mockReturnValueOnce(
+        new Promise<HostsResponse>((resolve) => {
+          resolveFiltered = resolve
+        })
+      )
+    service = new HostService({ fetchHosts }, makeKeyShortcutService(), {
+      columns: [{ accessorKey: 'name', header: 'Host' }]
+    })
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.updateFilters({
+      type: 'condition',
+      field: 'state',
+      op: 'one_of',
+      value: ['DOWN'] as HostState[]
+    })
+    const exported = service.export()
+    resolveFiltered(makeHostsResponse([makeHost({ name: 'host-2', state: 'DOWN' })], 1, 2))
+
+    expect(await (await exported).file('csv').text()).toBe('"name"\n"host-2"\n')
+  })
+
+  it('exports the hosts of a delayed refresh still to run, not the rows shown before it', async () => {
+    const fetchHosts = vi
+      .fn()
+      .mockResolvedValueOnce(makeHostsResponse([makeHost()], 1, 1))
+      .mockResolvedValueOnce(makeHostsResponse([makeHost({ name: 'host-2' })], 1, 1))
+    service = new HostService({ fetchHosts }, makeKeyShortcutService(), {
+      columns: [{ accessorKey: 'name', header: 'Host' }]
+    })
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.refresh(1500)
+    const exported = service.export()
+    await vi.advanceTimersByTimeAsync(1500)
+
+    expect(await (await exported).file('csv').text()).toBe('"name"\n"host-2"\n')
+  })
+
+  it('stops an export that waits for a delayed refresh once the service is destructed', async () => {
+    const fetchHosts = vi.fn().mockResolvedValue(makeHostsResponse([makeHost()], 1, 1))
+    service = new HostService({ fetchHosts }, makeKeyShortcutService())
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.refresh(1500)
+    const exported = service.export()
+    service.destruct()
+
+    await expect(exported).rejects.toThrow(RowsNotLoadedError)
+  })
+
+  it('stops an export that waits for a fetch once the service is destructed', async () => {
+    const fetchHosts = vi
+      .fn()
+      .mockResolvedValueOnce(makeHostsResponse([makeHost()], 1, 1))
+      .mockReturnValueOnce(new Promise<HostsResponse>(() => {}))
+    service = new HostService({ fetchHosts }, makeKeyShortcutService())
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.updateFilters({
+      type: 'condition',
+      field: 'state',
+      op: 'one_of',
+      value: ['DOWN'] as HostState[]
+    })
+    const exported = service.export()
+    service.destruct()
+
+    await expect(exported).rejects.toThrow(RowsNotLoadedError)
   })
 
   it('offers the configured limits and starts at the smallest one', async () => {

@@ -12,14 +12,17 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noEmit": true,
-    "moduleResolution": "node",
-    "esModuleInterop": false,
-    "module": "CommonJS",
-    "allowJs": false,
+    "module": "Preserve",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": "./",
+    "allowJs": false,
     "paths": {
-      "@/*": ["./src/js/*"]
+      "@/*": ["./src/js/*"],
+      "cmk-shared-typing/*": [
+        "./node_modules/cmk-shared-typing/*",
+        "../../bazel-bin/packages/cmk-frontend/node_modules/cmk-shared-typing/*"
+      ]
     }
   },
   "include": ["./src/**/*"],

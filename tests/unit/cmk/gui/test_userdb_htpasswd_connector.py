@@ -16,7 +16,7 @@ from cmk.gui.user_connection_config_types import HtpasswdUserConnectionConfig
 from cmk.gui.userdb import CheckCredentialsResult, htpasswd
 
 
-@pytest.fixture(name="htpasswd_file", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture(name="htpasswd_file")
 def htpasswd_file_fixture(tmp_path: Path, monkeypatch: MonkeyPatch) -> Path:
     htpasswd_file_path = tmp_path / "htpasswd"
     # HtpasswdUserConnector will use this path:
@@ -70,6 +70,7 @@ def test_truncation_error() -> None:
         (UserId("bärnd"), Password("A" * 100), False),
     ],
 )
+@pytest.mark.usefixtures("htpasswd_file")
 def test_user_connector_verify_password(
     uid: UserId, password: Password, expect: CheckCredentialsResult
 ) -> None:
@@ -100,6 +101,7 @@ def test_user_connector_verify_password(
         (UserId("locked_legacy_hash"), Password("cmk")),
     ],
 )
+@pytest.mark.usefixtures("htpasswd_file")
 def test_user_connector_verify_password_locked_users(
     uid: UserId,
     password: Password,

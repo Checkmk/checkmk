@@ -8,12 +8,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.kube import COLLECTOR_SERVICE_NAME
 from cmk.plugins.kube.schemata.section import OpenShiftEndpoint, PrometheusResult, ResultType
 
@@ -27,10 +26,6 @@ agent_section_prometheus_debug_v1 = AgentSection(
     parsed_section_name="prometheus_debug",
     parse_function=parse,
 )
-
-
-def discover(section: OpenShiftEndpoint) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 SEVERITY = {
@@ -75,6 +70,6 @@ check_plugin_openshift_queries = CheckPlugin(
     name="openshift_queries",
     service_name=COLLECTOR_SERVICE_NAME,
     sections=["prometheus_debug"],
-    discovery_function=discover,
+    discovery_function=discover_one_service,
     check_function=check,
 )

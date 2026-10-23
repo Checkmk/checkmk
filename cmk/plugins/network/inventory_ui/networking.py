@@ -5,7 +5,7 @@
 
 from collections.abc import Iterable
 
-from cmk.inventory_ui.v1_unstable import (
+from cmk.inventory_ui.v1 import (
     AgeNotation,
     Alignment,
     BackgroundColor,

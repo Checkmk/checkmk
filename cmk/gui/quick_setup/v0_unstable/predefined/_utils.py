@@ -22,7 +22,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
 )
 from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import special_agent_discovery_preview
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
 from cmk.livestatus_client import SiteConfiguration
 from cmk.rulesets.v1.form_specs import Dictionary
 
@@ -135,8 +135,7 @@ def normalize_folder_path_str(folder_path: str) -> str:
     return folder_path
 
 
-def existing_folder_from_path(sanitized_folder_path: str) -> Folder | None:
-    tree = folder_tree()
+def existing_folder_from_path(tree: FolderTree, sanitized_folder_path: str) -> Folder | None:
     if sanitized_folder_path == "":
         return tree.root_folder()
     if sanitized_folder_path in tree.all_folders():

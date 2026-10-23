@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.agent_based.v2 import IgnoreResultsError, Result, Service, State
+from cmk.agent_based.v2 import IgnoreResultsError, Result, State
 from cmk.plugins.synology.agent_based import synology_update
 from cmk.plugins.synology.agent_based.synology_update import Params
 
@@ -23,13 +23,6 @@ DEFAULT_PARAMS = Params(
 def test_parsing() -> None:
     section = synology_update.parse(SECTION_TABLE)
     assert section == synology_update.Section(version="nana batman", status=0)
-
-
-def test_discovery() -> None:
-    section = synology_update.parse(SECTION_TABLE)
-    assert section is not None
-    service = list(synology_update.discovery(section))[0]
-    assert service == Service()
 
 
 @pytest.mark.parametrize("cmk_state", [State.OK, State.WARN, State.CRIT])

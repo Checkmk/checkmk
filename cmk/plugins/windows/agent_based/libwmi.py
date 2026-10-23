@@ -18,7 +18,9 @@ from cmk.agent_based.v2 import (
     get_rate,
     get_value_store,
     LevelsT,
+    Result,
     Service,
+    State,
     StringTable,
 )
 
@@ -41,6 +43,10 @@ from cmk.agent_based.v2 import (
 #   |                     |_|   \__,_|_|  |___/\___|                       |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
+class WMIInvalidFrequencyError(Exception):
+    pass
 
 
 class WMIQueryTimeoutError(Exception):
@@ -215,8 +221,6 @@ WMISection = Mapping[str, WMITable]
 def parse_wmi_table(
     string_table: StringTable,
     key: str = "Name",
-    # Needed in check_legacy_includes/wmi.py
-    table_type: type[WMITable] = WMITable,
 ) -> WMISection:
     parsed: MutableMapping[str, WMITable] = {}
     info_iter = iter(string_table)
@@ -251,7 +255,6 @@ def parse_wmi_table(
                 key,
                 timestamp,
                 frequency,
-                table_type,
             )
 
             # read table content
@@ -273,8 +276,6 @@ def _prepare_wmi_table(
     key: str | None,
     timestamp: int | None,
     frequency: int | None,
-    # Needed in check_legacy_includes/wmi.py
-    table_type: type[WMITable],
 ) -> tuple[bool, WMITable]:
     # Possibilities:
     # #1 Agent provides extra column for WMIStatus; since 1.5.0p14
@@ -317,7 +318,7 @@ def _prepare_wmi_table(
 
     current_table = parsed.setdefault(
         tablename,
-        table_type(
+        WMITable(
             tablename,
             header,
             key,
@@ -347,7 +348,9 @@ def get_wmi_time(table: WMITable, row: str | int, *, raise_on_timeout: bool = Fa
     assert timestamp is not None
     if not frequency:
         frequency = 1
-    return float(timestamp) / float(frequency)
+    if not (ticks_per_second := float(frequency)):
+        raise WMIInvalidFrequencyError(f"the host reported a counter frequency of {frequency}")
+    return float(timestamp) / ticks_per_second
 
 
 def discover_wmi_table_instances(
@@ -519,11 +522,6 @@ def check_wmi_raw_persec(
     levels_lower: LevelsT | None = None,
     render_func: Callable[[float], str] | None = None,
 ) -> CheckResult:
-    if table is None:
-        # This case may be when a check was discovered with a table which subsequently disappeared again.
-        # We expect to get `None` in this case.
-        return  # type: ignore[unreachable]
-
     if row == "":
         row = 0
 
@@ -533,10 +531,16 @@ def check_wmi_raw_persec(
     except KeyError:
         return
 
+    try:
+        sample_time = get_wmi_time(table, row)
+    except WMIInvalidFrequencyError as exc:
+        yield Result(state=State.UNKNOWN, summary=f"{label}: cannot compute a rate, {exc}")
+        return
+
     rate = get_rate(
         get_value_store(),
         f"{column}_{table.name}",
-        get_wmi_time(table, row),
+        sample_time,
         int(value),
         raise_overflow=True,
     )

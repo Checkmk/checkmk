@@ -5,29 +5,13 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, expect, test, vi } from 'vitest'
+import { afterEach, expect, test } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
 import CustomServiceSelect from '@/mode-alerts/CustomServiceSelect.vue'
 import type { ServiceNameMatch } from '@/mode-alerts/types'
-
-// The default client singleton captures `globalThis.fetch` at import time, before
-// server.listen() patches it. Re-create it with a lazy fetch wrapper so MSW can intercept.
-vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
-  const mod = await importOriginal<Record<string, unknown>>()
-  const createClientImpl = (await import('openapi-fetch')).default
-  return {
-    ...mod,
-    default: createClientImpl({
-      baseUrl: `${location.protocol}//${location.host}/api/internal`,
-      credentials: 'include',
-      headers: { Accept: 'application/json' },
-      fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
-    })
-  }
-})
 
 const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/service/collections/all`
 
@@ -39,7 +23,7 @@ const DISCOVERED: Array<[string, string]> = [
 
 let sentPattern: string | null = null
 
-const server = setupServer(
+useMswServer(
   http.post(ENDPOINT, async ({ request }) => {
     const body = (await request.json()) as {
       query: { expr: Array<{ left: string; right: string }> }
@@ -56,13 +40,10 @@ const server = setupServer(
   })
 )
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   cleanup()
   sentPattern = null
-  server.resetHandlers()
 })
-afterAll(() => server.close())
 
 function renderSelect(matchType: ServiceNameMatch = 'exact') {
   const serviceName = ref<string | null>(null)

@@ -9,12 +9,11 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 from .detect import DETECT_CISCO_SMA
@@ -48,14 +47,10 @@ def _check_dns_requests(params: Params, section: DNSRequests) -> CheckResult:
     )
 
 
-def _discover_dns_requests(section: DNSRequests) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 check_plugin_dns_requests = CheckPlugin(
     name="cisco_sma_dns_requests",
     service_name="DNS Requests",
-    discovery_function=_discover_dns_requests,
+    discovery_function=discover_one_service,
     check_function=_check_dns_requests,
     check_ruleset_name="cisco_sma_dns_requests",
     check_default_parameters={

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "__Dummy__",
+  "type": "object",
+  "properties": {
+    "critical_state": { "$ref": "#/$defs/maps_critical_state" }
+  },
+  "$defs": {
+    "maps_critical_state": {
+      "title": "MapsCriticalState",
+      "description": "The states the problems-only filter of Checkmk Maps counts as critical.",
+      "type": "string",
+      "enum": ["CRITICAL", "DOWN", "UNREACHABLE"]
+    }
+  }
+}

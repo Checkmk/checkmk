@@ -9,11 +9,12 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
-    CascadingSingleChoiceElementExtended,
-)
 from cmk.gui.form_specs.unstable.validators import ModelT
-from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended
+from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceElementExtended,
+    CascadingSingleChoiceLayout,
+    SingleChoiceElementExtended,
+)
 from cmk.rulesets.v1 import Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -22,7 +23,6 @@ from cmk.rulesets.v1.form_specs import (
     InputHint,
     SingleChoice,
 )
-from cmk.shared_typing.vue_formspec_components import CascadingSingleChoiceLayout
 
 
 @dataclass(frozen=True, kw_only=True)

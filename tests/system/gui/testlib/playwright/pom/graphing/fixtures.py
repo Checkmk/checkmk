@@ -10,6 +10,7 @@
 Registered for discovery in ``tests/system/gui/conftest.py``.
 """
 
+import time
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from typing import Final, NamedTuple
@@ -20,6 +21,7 @@ from playwright.sync_api import Page
 from tests.system.gui.testlib.playwright.pom.graphing.dashboard_graph_widget import (
     DashboardGraphWidget,
 )
+from tests.system.gui.testlib.playwright.pom.graphing.global_time_picker import GlobalTimePicker
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphSurface
 from tests.system.gui.testlib.playwright.pom.graphing.service_graphs_hover_popup import (
     ServiceGraphsHoverPopup,
@@ -36,8 +38,7 @@ from tests.system.gui.testlib.playwright.pom.monitor.service_search import Servi
 from tests.system.gui.testlib.playwright.pom.monitor.services_of_host import ServicesOfHostPage
 from tests.system.gui.testlib.playwright.timeouts import TIMEOUT_SLOW_DASHBOARD_LOAD_MS
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.graphing import InjectedRrd
-from tests.testlib.site import ADMIN_USER, Site
+from tests.testlib.system.site import ADMIN_USER, Site
 
 # Several multi-series graphs on one page, which the "every graph" and tooltip tests need.
 SERVICE_WITH_GRAPHS = "Memory"
@@ -65,38 +66,6 @@ GRAPH_COLLECTION_SIZE: Final = 2
 def fixture_graph_hosts_with_varying_data(linux_hosts: list[str]) -> list[str]:
     """Hosts whose real agent data yields graphs with varying values."""
     return linux_hosts
-
-
-@pytest.fixture(name="graph_hosts_high_density", scope="module")
-def fixture_graph_hosts_high_density(test_site: Site) -> list[str]:
-    """Monitored hosts/services with high-density graph data.
-
-    For performance/loading/legend/tooltip cases: a graph near the engine's
-    ceiling (~1M points) and/or many series (200+ metrics). `inject_rrd` covers
-    the point-count dimension (it writes one series); the many-series dimension
-    needs a host carrying many real metrics.
-    """
-    pytest.skip("graph_hosts_high_density is scaffolding: seed a high-density monitored service.")
-
-
-@pytest.fixture(name="graph_rrd_with_gaps", scope="module")
-def fixture_graph_rrd_with_gaps(test_site: Site) -> InjectedRrd:
-    """An RRD with missing samples; inject via `graphing.inject_rrd` (GAPS)."""
-    pytest.skip("graph_rrd_with_gaps is scaffolding: bind inject_rrd to a monitored service.")
-
-
-@pytest.fixture(name="graph_rrd_dst_boundary", scope="module")
-def fixture_graph_rrd_dst_boundary(test_site: Site) -> InjectedRrd:
-    """An RRD whose rendered window crosses a DST transition.
-
-    DST is a timezone/window concern, not a data shape: set the user timezone to
-    a DST-observing zone (e.g. Europe/Berlin) and inject `VARYING` data starting
-    at `graphing.DST_FALL_BACK_BERLIN_UTC`, bound to a monitored service.
-    Use the fall-back instant: it makes local 02:00-02:59 occur twice, which is
-    what the "no duplicate X-axis labels" regression (Werk #14830) needs;
-    spring-forward only skips the hour and would not exercise it.
-    """
-    pytest.skip("graph_rrd_dst_boundary is scaffolding: see docstring.")
 
 
 class RrdMetric(NamedTuple):
@@ -157,12 +126,63 @@ def _as_admin_user(test_site: Site) -> Iterator[None]:
         session.headers["Authorization"] = automation_auth
 
 
+class UserGraphPin:
+    """The graph pin the site stores for the user the browser logs in as.
+
+    Read and written as that user: the pin is kept per user, and the site's own session acts
+    as `AUTOMATION_USER`, whose pin the page never shows.
+    """
+
+    def __init__(self, site: Site) -> None:
+        self._site = site
+
+    def read(self) -> int | None:
+        with _as_admin_user(self._site):
+            return self._site.openapi.graph.get_pin()
+
+    def write(self, pin_time: int | None) -> None:
+        with _as_admin_user(self._site):
+            self._site.openapi.graph.set_pin(pin_time)
+
+
+@pytest.fixture(name="admin_graph_pin")
+def fixture_admin_graph_pin(test_site: Site) -> Iterator[UserGraphPin]:
+    """The user's graph pin, cleared before the test and again after it.
+
+    Cleared up front as well: a page reads the pin once, as it opens, and hides its "Add pin"
+    handle over a point that is already pinned. A pin left behind by an aborted run would
+    otherwise decide what the next test gets to click.
+    """
+    graph_pin = UserGraphPin(test_site)
+    graph_pin.write(None)
+    try:
+        yield graph_pin
+    finally:
+        graph_pin.write(None)
+
+
+# Inside every window the service page can open on: its presets all end at the present.
+_STORED_PIN_AGE_SECONDS: Final = 300
+
+
+@pytest.fixture(name="stored_graph_pin")
+def fixture_stored_graph_pin(admin_graph_pin: UserGraphPin) -> int:
+    """A pin stored for the user shortly before the present, ahead of any page being opened."""
+    pin_time = int(time.time()) - _STORED_PIN_AGE_SECONDS
+    admin_graph_pin.write(pin_time)
+    return pin_time
+
+
 @contextmanager
 def _custom_graph(
-    test_site: Site, name: str, title: str, data_sources: Sequence[Mapping[str, object]]
+    test_site: Site,
+    name: str,
+    title: str,
+    data_sources: Sequence[Mapping[str, object]],
+    public: bool = False,
 ) -> Iterator[str]:
     with _as_admin_user(test_site):
-        test_site.openapi.custom_graph.create(name, title, data_sources)
+        test_site.openapi.custom_graph.create(name, title, data_sources, public=public)
     try:
         yield name
     finally:
@@ -180,6 +200,9 @@ def fixture_saved_custom_graph(
 
     Created over the REST API rather than through the designer, so the tests that read a
     saved graph do not fail on a broken designer.
+
+    Published to all users: it is created as the REST admin, but on the cloud edition the
+    browser logs in as a different (SSO) user, who would not see a private graph.
     """
     data_source = test_site.openapi.custom_graph.rrd_metric_data_source(
         "A",
@@ -187,7 +210,9 @@ def fixture_saved_custom_graph(
         rrd_metric_source.service_name,
         rrd_metric_source.metrics[0].name,
     )
-    with _custom_graph(test_site, "e2e_saved_graph", "E2E saved graph", [data_source]) as name:
+    with _custom_graph(
+        test_site, "e2e_saved_graph", "E2E saved graph", [data_source], public=True
+    ) as name:
         yield name
 
 
@@ -328,9 +353,14 @@ def fixture_scatterplot_widget(
     tests judge, and waiting here would turn a failure to render into a fixture timeout
     instead of a failed assertion naming it.
 
+    The dashboard's time picker drives the widget, and its default window can be younger than
+    the hosts' data, so the picker is set to today: the window the widget is configured with.
+
     Depends on `javascript_errors` so its listener is attached before this navigates.
     """
-    yield DashboardGraphWidget(LinuxHostsDashboard(dashboard_page.page), SCATTERPLOT_WIDGET_TITLE)
+    dashboard = LinuxHostsDashboard(dashboard_page.page)
+    GlobalTimePicker(dashboard.main_area).select_quick_range("Today")
+    yield DashboardGraphWidget(dashboard, SCATTERPLOT_WIDGET_TITLE)
 
 
 def _open_combined_graphs(
@@ -393,6 +423,7 @@ _ACTION_MENU_DASHBOARD_ID: Final = "e2e_action_menu_dashboard"
 _ACTION_MENU_DASHBOARD_TITLE: Final = "E2E action menu dashboard"
 _ACTION_MENU_WIDGET_TIMERANGE: Final = {"type": "graph", "duration": 14400}
 _ACTION_MENU_WIDGET_SIZE: Final = {"width": 40, "height": 20}
+_ACTION_MENU_RENDER_OPTIONS: Final = {"show_controls": True}
 _KNOWN_GOOD_METRIC_NAME: Final = "mem_used"
 
 
@@ -447,7 +478,7 @@ def _action_menu_widget_content(
             {
                 "type": "custom_graph",
                 "timerange": _ACTION_MENU_WIDGET_TIMERANGE,
-                "graph_render_options": {},
+                "graph_render_options": _ACTION_MENU_RENDER_OPTIONS,
                 "custom_graph": saved_custom_graph,
             },
             None,
@@ -457,7 +488,7 @@ def _action_menu_widget_content(
             {
                 "type": "single_timeseries",
                 "timerange": _ACTION_MENU_WIDGET_TIMERANGE,
-                "graph_render_options": {},
+                "graph_render_options": _ACTION_MENU_RENDER_OPTIONS,
                 "metric": metric_name,
                 "color": "default_metric",
             },
@@ -468,7 +499,7 @@ def _action_menu_widget_content(
             {
                 "type": "problem_graph",
                 "timerange": _ACTION_MENU_WIDGET_TIMERANGE,
-                "graph_render_options": {},
+                "graph_render_options": _ACTION_MENU_RENDER_OPTIONS,
             },
             None,
         )

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import http.client as http_client
-from collections.abc import Callable
 from typing import override
 
 from cmk.gui.http import request, response
@@ -34,15 +33,8 @@ class OAuthIntrospectPage(Page):
     metadata document and not proxied publicly (see _oauth_well_known.py).
     """
 
-    def __init__(self, enabled: Callable[[], bool]) -> None:
-        self._enabled = enabled
-
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        if not self._enabled():
-            response.status_code = http_client.NOT_FOUND
-            return None
-
         if request.request_method != "POST":
             response.status_code = http_client.METHOD_NOT_ALLOWED
             return None

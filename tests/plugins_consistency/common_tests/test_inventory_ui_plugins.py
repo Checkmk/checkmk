@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.discover_plugins import discover_all_plugins, PluginGroup
-from cmk.inventory_ui.v1_unstable import entry_point_prefixes
+from cmk.inventory_ui.v1 import entry_point_prefixes
 
 
 def test_inventory_ui_plugins_are_loadable() -> None:

@@ -8,23 +8,25 @@ from pathlib import Path
 
 from cmk.werks.tool import parse_werk
 
-from ..config import RuntimeConfiguration
 from ..constants import NON_WERK_FILES_IN_WERK_FOLDER
+from ..flavor import current_version
+from ..flavor_registry import get_flavor, load_config
 from ..format import format_as_markdown_werk
 
 
 def main(repo_root: Path) -> None:
-    rc = RuntimeConfiguration(repo_root)
-    version_to_be_burned = rc.get_defines_make_version()
-
     werk_dir: Path = repo_root / ".werks"
+    flavor = get_flavor(load_config(werk_dir / "config", repo_root).flavor)
+    version_to_be_burned = current_version(flavor, repo_root)
 
     count = 0
     for werk_file in werk_dir.iterdir():
         if werk_file.name in NON_WERK_FILES_IN_WERK_FOLDER:
             continue
         try:
-            parsed = parse_werk(werk_file.read_text(), werk_file.name)
+            parsed = parse_werk(
+                werk_file.read_text(), werk_file.name, v1_defaults=flavor.v1_defaults
+            )
         except Exception as e:
             raise RuntimeError(f"file {werk_file} can not be parsed as werk") from e
 

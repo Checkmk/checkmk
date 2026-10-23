@@ -73,8 +73,8 @@ HOST_CONFIG = HostConfig(
                     "8080",
                     "--user",
                     "userID",
-                    "--password",
-                    Secret(23).unsafe(),
+                    "--password-id",
+                    Secret(23),
                     "--mode",
                     "basic",
                 ]
@@ -98,8 +98,8 @@ HOST_CONFIG = HostConfig(
                     "8080",
                     "--user",
                     "userID",
-                    "--password",
-                    Secret(id=1).unsafe(),
+                    "--password-id",
+                    Secret(id=1),
                     "--mode",
                     "basic",
                 ]

@@ -13,10 +13,9 @@ from pathlib import Path
 
 from omdlib.admin_mail import ADMIN_MAIL
 from omdlib.agent_receiver import AGENT_RECEIVER, AGENT_RECEIVER_PORT
-from omdlib.ai_control_plane import AI_CONTROL_PLANE
 from omdlib.automation_helper import AUTOMATION_HELPER
 from omdlib.autostart import AUTOSTART
-from omdlib.config_api import Config, Hook, PortHook
+from omdlib.config_api import Config, Error, Hook, PortHook
 from omdlib.core import CORE, update_cmk_core_config
 from omdlib.jaeger import (
     TRACE_JAEGER_ADMIN_PORT,
@@ -37,9 +36,11 @@ from omdlib.livestatus import (
     LIVESTATUS_TCP_PORT,
     LIVESTATUS_TCP_TLS,
 )
+from omdlib.maps import MAPS
 from omdlib.mcp import MCP_SERVER, MCP_TRACE_FORWARD
 from omdlib.mkeventd import MKEVENTD, MKEVENTD_SNMPTRAP, MKEVENTD_SYSLOG, MKEVENTD_SYSLOG_TCP
 from omdlib.multisite import MULTISITE_AUTHORISATION, MULTISITE_COOKIE_AUTH
+from omdlib.nagvis import NAGVIS
 from omdlib.opentelemetry import (
     OPENTELEMETRY_COLLECTOR,
     OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT,
@@ -55,6 +56,7 @@ from omdlib.rabbitmq import (
 from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites
 from omdlib.system_apache import (
+    APACHE_FORWARDED_HEADERS,
     APACHE_MODE,
     APACHE_TCP_ADDR,
     APACHE_TCP_PORT,
@@ -146,7 +148,7 @@ _HOOKS: Sequence[Hook | PortHook] = [
     ADMIN_MAIL,
     AGENT_RECEIVER,
     AGENT_RECEIVER_PORT,
-    AI_CONTROL_PLANE,
+    APACHE_FORWARDED_HEADERS,
     APACHE_MODE,
     APACHE_TCP_ADDR,
     APACHE_TCP_PORT,
@@ -160,6 +162,7 @@ _HOOKS: Sequence[Hook | PortHook] = [
     LIVESTATUS_TCP_PER_SOURCE,
     LIVESTATUS_TCP_PORT,
     LIVESTATUS_TCP_TLS,
+    MAPS,
     MCP_SERVER,
     MCP_TRACE_FORWARD,
     MKEVENTD,
@@ -168,6 +171,7 @@ _HOOKS: Sequence[Hook | PortHook] = [
     MKEVENTD_SYSLOG_TCP,
     MULTISITE_AUTHORISATION,
     MULTISITE_COOKIE_AUTH,
+    NAGVIS,
     OPENTELEMETRY_COLLECTOR,
     OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT,
     PIGGYBACK_HUB,
@@ -286,7 +290,7 @@ def _config_set(
     config: Config,
     hook_name: str,
     omd_path: Path = Path("/omd/"),
-) -> None:
+) -> Error | None:
     site_home = Path(SitePaths.from_site_name(site_name).home)
 
     hook = get_hook(hook_name)
@@ -303,9 +307,10 @@ def _config_set(
         hook.activation(site_name, site_home, config)
     except Exception:
         traceback.print_exc()
-        return
+        return Error(f"Failed to activate {hook_name}.")
 
     os.environ["CONFIG_" + hook_name] = config[hook_name]
+    return None
 
 
 def _build_site_configs(omd_path: Path = Path("/omd")) -> _SiteConfigs:
@@ -348,12 +353,14 @@ def config_set_value(
     hook_name: str,
     value: str,
     save: bool = True,
-) -> None:
+) -> Error | None:
     config[hook_name] = value
-    _config_set(site_name, config, hook_name)
+    error = _config_set(site_name, config, hook_name)
 
     if hook_name in ["CORE", "MKEVENTD", "PNP4NAGIOS"]:
         update_cmk_core_config(config)
 
     if save:
         save_site_conf(SitePaths.from_site_name(site_name).home, config)
+
+    return error

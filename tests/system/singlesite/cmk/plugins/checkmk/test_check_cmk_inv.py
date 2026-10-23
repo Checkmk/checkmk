@@ -9,7 +9,7 @@ import pytest
 
 import cmk.base.check_cmk_inv
 from tests.system.singlesite.linux_test_host import create_linux_test_host
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def test_inventory_as_check(site: Site, request: pytest.FixtureRequest) -> None:

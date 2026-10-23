@@ -7,15 +7,14 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.dell.lib import DETECT_CHASSIS
 
 
@@ -30,10 +29,6 @@ def savefloat(f: str) -> float:
         return float(f)
     except TypeError, ValueError:
         return 0.0
-
-
-def discover_dell_chassis_power(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_dell_chassis_power(section: StringTable) -> CheckResult:
@@ -70,6 +65,6 @@ snmp_section_dell_chassis_power = SimpleSNMPSection(
 check_plugin_dell_chassis_power = CheckPlugin(
     name="dell_chassis_power",
     service_name="Chassis Power",
-    discovery_function=discover_dell_chassis_power,
+    discovery_function=discover_one_service,
     check_function=check_dell_chassis_power,
 )

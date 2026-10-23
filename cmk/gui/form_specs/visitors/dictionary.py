@@ -5,12 +5,13 @@
 
 import ast
 from collections.abc import Mapping, Sequence
-from typing import override
+from typing import assert_never, override
 
 from cmk.gui.i18n import _
 from cmk.rulesets.internal.form_specs import (
     DictGroupExtended,
     DictionaryExtended,
+    DictionaryGroupLayout,
 )
 from cmk.rulesets.v1.form_specs import NoGroup
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
@@ -142,7 +143,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
 
             else:
                 layout = (
-                    shared_type_defs.DictionaryGroupLayout(dict_element.group.layout.value)
+                    _to_shared_layout(dict_element.group.layout)
                     if isinstance(dict_element.group, DictGroupExtended)
                     else shared_type_defs.DictionaryGroupLayout.horizontal
                 )
@@ -230,3 +231,13 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
                     continue
                 disk_values[key] = static_value.value
         return disk_values
+
+
+def _to_shared_layout(layout: DictionaryGroupLayout) -> shared_type_defs.DictionaryGroupLayout:
+    match layout:
+        case DictionaryGroupLayout.horizontal:
+            return shared_type_defs.DictionaryGroupLayout.horizontal
+        case DictionaryGroupLayout.vertical:
+            return shared_type_defs.DictionaryGroupLayout.vertical
+        case _:
+            assert_never(layout)

@@ -38,14 +38,14 @@ class Dict2CatalogConverter:
                     if len(header) == 2:
                         use_headers.append(
                             (
-                                Title(header[0]),  # astrein: disable=localization-checker
+                                Title(header[0]),  # astrein: disable=localization
                                 list(header[1]),
                             )
                         )
                     elif len(header) == 3:
                         use_headers.append(
                             (
-                                Title(header[0]),  # astrein: disable=localization-checker
+                                Title(header[0]),  # astrein: disable=localization
                                 list(header[2]),
                             )
                         )

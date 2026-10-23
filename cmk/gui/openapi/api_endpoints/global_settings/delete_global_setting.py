@@ -2,6 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
 from cmk.ccc.site import omd_site
 from cmk.gui.i18n import _
 from cmk.gui.openapi.framework import (
@@ -22,6 +24,7 @@ from cmk.gui.watolib.global_settings import (
     affected_sites,
     effective_value,
     global_settings_diff_text,
+    GlobalSettingsOrigin,
     load_configuration_settings,
     need_write_permission,
     save_global_settings,
@@ -32,13 +35,11 @@ from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
     ensure_changes_allowed,
     ensure_setup_access,
-    form_spec_of,
     global_setting_etag,
     global_settings_context_of,
     GlobalSettingVarName,
     make_pending_changes,
     RW_PERMISSIONS,
-    value_to_json,
 )
 
 
@@ -56,20 +57,17 @@ def delete_global_setting_v1(
     ensure_changes_allowed(api_context)
     if not config_variable.allow_reset():
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Cannot reset configuration variable",
             detail=f"The configuration variable {varname!r} cannot be reset to its default value.",
         )
 
-    form_spec = form_spec_of(config_variable, omd_site(), api_context)
     settings = dict(load_configuration_settings())
-    old_value, was_default = effective_value(settings, varname)
+    old_value, old_origin = effective_value(settings, varname)
     if api_context.etag.enabled:
-        api_context.etag.verify(
-            global_setting_etag(varname, value_to_json(form_spec, old_value), was_default)
-        )
+        api_context.etag.verify(global_setting_etag(varname, old_value, old_origin))
 
-    if was_default:
+    if old_origin is not GlobalSettingsOrigin.global_:
         # Nothing to remove, the variable is already at its factory setting. Reporting a
         # success without recording a change keeps DELETE idempotent.
         return
@@ -86,7 +84,7 @@ def delete_global_setting_v1(
         pending_changes=make_pending_changes(api_context),
         diff_text=global_settings_diff_text(
             config_variable,
-            global_settings_context_of(omd_site(), api_context),
+            global_settings_context_of(omd_site(), api_context, edits_site_specific_value=False),
             {varname: old_value},
             {},
         ),

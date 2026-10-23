@@ -5,14 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
 import type { CmkWizardStepProps } from 'cmk-ui-library/components/CmkWizard'
 import { getWizardContext } from 'cmk-ui-library/components/CmkWizard/utils.ts'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { ref, watch } from 'vue'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
+import { computed, ref, watch } from 'vue'
 
 import { getRelayCollection } from '@/mode-relay/relay-client'
 
@@ -28,6 +29,12 @@ const context = getWizardContext()
 const loading = ref(true)
 const registrationSuccess = ref(false)
 const unexpectedErrorMessage = ref('')
+
+const errorText = computed(() =>
+  unexpectedErrorMessage.value
+    ? untranslated(unexpectedErrorMessage.value)
+    : _t("Registration failed and Relay couldn't be saved.")
+)
 
 async function verifyRegistration() {
   loading.value = true
@@ -77,21 +84,14 @@ watch(
         <a :href="props.documentationUrl" target="_blank">{{ _t('User Guide') }}</a>
         {{ _t(' for help with troubleshooting.') }}
       </CmkParagraph>
-      <CmkAlertBox v-if="loading" variant="loading">
-        {{ _t('Verifying the registration...') }}
-      </CmkAlertBox>
+      <CmkAlert v-if="loading" variant="loading" :text="_t('Verifying the registration...')" />
 
-      <CmkAlertBox v-else-if="registrationSuccess" variant="success">
-        {{ _t('Relay registered and saved successfully!') }}
-      </CmkAlertBox>
-      <CmkAlertBox v-else variant="error">
-        <template v-if="unexpectedErrorMessage">
-          {{ unexpectedErrorMessage }}
-        </template>
-        <template v-else>
-          {{ _t("Registration failed and Relay couldn't be saved.") }}
-        </template>
-      </CmkAlertBox>
+      <CmkAlert
+        v-else-if="registrationSuccess"
+        variant="success"
+        :text="_t('Relay registered and saved successfully!')"
+      />
+      <CmkAlert v-else variant="error" :text="errorText" />
     </template>
 
     <template #actions>

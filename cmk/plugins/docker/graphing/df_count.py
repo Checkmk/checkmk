@@ -9,7 +9,7 @@ UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision
 
 metric_docker_active = metrics.Metric(
     name="docker_active",
-    title=Title("Active"),
+    title=Title("Active Docker objects"),
     unit=UNIT_COUNTER,
     color=metrics.Color.YELLOW,
 )

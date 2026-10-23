@@ -3,21 +3,38 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
 /**
  * Rewrites the command templates of the agent slideout for display.
  *
  * The producing ends are `cmk/gui/agent_commands.py` and, for the commercial
- * editions, `cmk/gui/nonfree/pro/agent_commands.py`. The welcome slide-in
+ * editions, `cmk/gui/nonfree/pro/agent_commands.py`; the page hands over the
+ * placeholders those templates use. The welcome slide-in
  * (`src/welcome/components/first-host/`) builds its commands in the frontend
  * and still substitutes `[AGENT_DOWNLOAD_OTT]` on its own.
  */
+import type { CommandPlaceholders } from 'cmk-shared-typing/typescript/agent_slideout'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+
+import type { CommandBlock } from './types'
 
 /** What a command is for. Decides which `{{SERVER}}` and which token applies. */
 export type CommandScope = 'download' | 'registration'
 
 /** A one-time token as produced by `GenerateToken`. */
 export type TokenValue = string | null | Error
+
+/** Why a command can or cannot be shown. */
+export type TokenState = 'not-required' | 'ready' | 'missing' | 'failed'
+
+export interface RenderedCommand {
+  text: string
+  tokenState: TokenState
+}
+
+/** Whether the command can be shown as it stands. */
+export function isResolved(state: TokenState): boolean {
+  return state === 'ready' || state === 'not-required'
+}
 
 export interface HostMacros {
   hostName: string
@@ -26,15 +43,9 @@ export interface HostMacros {
   downloadServer: string
   /** `{{SERVER}}` for registration commands: `<host>:<agent-receiver-port>`. */
   registrationServer: string
+  /** The placeholders the templates carry, as the page hands them over. */
+  placeholders: CommandPlaceholders
 }
-
-const DOWNLOAD_TOKEN_MACRO = '[AGENT_DOWNLOAD_OTT]'
-
-/**
- * The registration command asks for the `agent_registration` user by default;
- * a generated token replaces that flag rather than a placeholder.
- */
-const REGISTRATION_USER_FLAG = '--user agent_registration'
 
 export function substituteMacros(
   cmd: string | undefined,
@@ -45,40 +56,112 @@ export function substituteMacros(
     return ''
   }
   const server = scope === 'registration' ? macros.registrationServer : macros.downloadServer
+  const { placeholders } = macros
   return cmd
-    .replace(/{{HOSTNAME}}/g, macros.hostName)
-    .replace(/{{SITE}}/g, macros.siteId)
-    .replace(/{{SERVER}}/g, server)
+    .replaceAll(placeholders.host_name, macros.hostName)
+    .replaceAll(placeholders.site, macros.siteId)
+    .replaceAll(placeholders.server, server)
 }
 
-/** Whether the command cannot be run without a one-time token. */
-export function requiresToken(cmd: string | undefined, scope: CommandScope): boolean {
+/**
+ * Whether the command cannot be run without a one-time token. A registration
+ * done by `cmk-agent-ctl` asks for the registration user, which a token
+ * replaces; any other registration (e.g. a Helm value) carries a placeholder.
+ */
+export function requiresToken(
+  cmd: string | undefined,
+  scope: CommandScope,
+  placeholders: CommandPlaceholders
+): boolean {
   if (!cmd) {
     return false
   }
   return scope === 'registration'
-    ? cmd.includes(REGISTRATION_USER_FLAG)
-    : cmd.includes(DOWNLOAD_TOKEN_MACRO)
+    ? cmd.includes(placeholders.registration_user_flag) ||
+        cmd.includes(placeholders.registration_token)
+    : cmd.includes(placeholders.download_token)
 }
 
 /**
- * Substitute the one-time token. An empty token counts as no token: replacing
- * the placeholder with nothing would turn a working command into a broken one.
+ * Whether a token can be substituted into a command. An empty token counts as
+ * no token: replacing the placeholder with nothing would turn a working
+ * command into a broken one.
  */
+export function isTokenUsable(token: TokenValue): token is string {
+  return !!token && !(token instanceof Error)
+}
+
 export function applyToken(
   cmd: string | undefined,
   scope: CommandScope,
-  token: TokenValue
-): string {
+  token: TokenValue,
+  placeholders: CommandPlaceholders
+): RenderedCommand {
   if (!cmd) {
-    return ''
+    return { text: '', tokenState: 'not-required' }
   }
-  if (!token || token instanceof Error) {
-    return cmd
+  if (!requiresToken(cmd, scope, placeholders)) {
+    return { text: cmd, tokenState: 'not-required' }
+  }
+  if (!isTokenUsable(token)) {
+    return { text: cmd, tokenState: token instanceof Error ? 'failed' : 'missing' }
   }
   // Substitute every occurrence, like the macros above: a command with two
   // authorized downloads would otherwise keep the second placeholder.
-  return scope === 'registration'
-    ? cmd.replaceAll(REGISTRATION_USER_FLAG, `--ott 0:${token}`)
-    : cmd.replaceAll(DOWNLOAD_TOKEN_MACRO, token)
+  const text =
+    scope === 'registration'
+      ? cmd
+          .replaceAll(placeholders.registration_user_flag, `--ott 0:${token}`)
+          .replaceAll(placeholders.registration_token, `0:${token}`)
+      : cmd.replaceAll(placeholders.download_token, token)
+  return { text, tokenState: 'ready' }
+}
+
+export interface RenderedBlock {
+  title?: TranslatedString
+  warning?: TranslatedString
+  text: string
+}
+
+export interface RenderedBlocks {
+  blocks: RenderedBlock[]
+  /**
+   * The worst state among the commands. Not resolved means at least one still
+   * carries an unsatisfied placeholder, so none of them is shown.
+   */
+  tokenState: TokenState
+}
+
+/** Resolve a set of command blocks for display. */
+export function renderBlocks(
+  blocks: CommandBlock[],
+  scope: CommandScope,
+  macros: HostMacros,
+  token: TokenValue = null
+): RenderedBlocks {
+  const rendered = blocks.map((block) =>
+    applyToken(substituteMacros(block.command, scope, macros), scope, token, macros.placeholders)
+  )
+  const states = rendered.map((command) => command.tokenState)
+  return {
+    blocks: blocks.map((block, index) => ({
+      ...(block.title === undefined ? {} : { title: block.title }),
+      ...(block.warning === undefined ? {} : { warning: block.warning }),
+      text: rendered[index]!.text
+    })),
+    tokenState:
+      states.find((state) => state === 'failed') ??
+      states.find((state) => state === 'missing') ??
+      states.find((state) => state === 'ready') ??
+      'not-required'
+  }
+}
+
+/** Whether any of these commands cannot be run without a one-time token. */
+export function blocksNeedToken(
+  blocks: CommandBlock[],
+  scope: CommandScope,
+  placeholders: CommandPlaceholders
+): boolean {
+  return blocks.some((block) => requiresToken(block.command, scope, placeholders))
 }

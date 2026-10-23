@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import pytest
 from werkzeug.test import create_environ
 
@@ -15,8 +16,12 @@ from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato._search_permissions import SetupPermissionsHandler
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 
 
@@ -30,11 +35,6 @@ def _noop_pending_changes() -> PendingChanges:
     )
 
 
-@pytest.fixture(name="config")
-def fixture_config() -> Config:
-    return Config()
-
-
 @pytest.fixture(name="http_request")
 def fixture_http_request() -> Request:
     return Request(create_environ())
@@ -42,8 +42,8 @@ def fixture_http_request() -> Request:
 
 class TestPermissionHandler:
     @pytest.fixture(name="created_host_url")
-    def fixture_created_host_url(self) -> str:
-        folder = folder_tree().root_folder()
+    def fixture_created_host_url(self, tree: FolderTree) -> str:
+        folder = tree.root_folder()
         folder.create_hosts(
             [(HostName("host"), {}, [])],
             pprint_value=False,
@@ -57,7 +57,14 @@ class TestPermissionHandler:
         self, config: Config, http_request: Request, test_edition: Edition
     ) -> None:
         permissions_handler = SetupPermissionsHandler(
-            test_edition, PageContext(config=config, request=http_request)
+            test_edition,
+            PageContext(
+                config=config,
+                request=http_request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(config, all_permissions()),
+            ),
         )
         for category in permissions_handler._category_permissions:  # noqa: SLF001
             assert permissions_handler.may_see_category(category)
@@ -67,7 +74,14 @@ class TestPermissionHandler:
         self, config: Config, http_request: Request, test_edition: Edition
     ) -> None:
         permissions_handler = SetupPermissionsHandler(
-            test_edition, PageContext(config=config, request=http_request)
+            test_edition,
+            PageContext(
+                config=config,
+                request=http_request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(config, all_permissions()),
+            ),
         )
         visibility_check = permissions_handler.get_visibility_check("setup")
         assert not visibility_check("wato.py?folder=&mode=service_groups")
@@ -77,7 +91,14 @@ class TestPermissionHandler:
         self, config: Config, http_request: Request, test_edition: Edition
     ) -> None:
         permissions_handler = SetupPermissionsHandler(
-            test_edition, PageContext(config=config, request=http_request)
+            test_edition,
+            PageContext(
+                config=config,
+                request=http_request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(config, all_permissions()),
+            ),
         )
         visibility_check = permissions_handler.get_visibility_check("setup")
         assert visibility_check("wato.py?folder=&mode=service_groups")
@@ -93,7 +114,14 @@ class TestPermissionHandler:
         from cmk.gui.http import request
 
         permissions_handler = SetupPermissionsHandler(
-            test_edition, PageContext(config=config, request=request)
+            test_edition,
+            PageContext(
+                config=config,
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(config, all_permissions()),
+            ),
         )
         visibility_check = permissions_handler.get_visibility_check("setup")
         assert visibility_check(created_host_url)
@@ -110,7 +138,14 @@ class TestPermissionHandler:
         # context. This is because the host and folders code relies heavily on adapting the global
         # request proxy.
         permissions_handler = SetupPermissionsHandler(
-            test_edition, PageContext(config=config, request=http_request)
+            test_edition,
+            PageContext(
+                config=config,
+                request=http_request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(config, all_permissions()),
+            ),
         )
         visibility_check = permissions_handler.get_visibility_check("setup")
         assert not visibility_check(created_host_url)

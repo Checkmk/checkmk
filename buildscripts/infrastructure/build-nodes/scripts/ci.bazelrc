@@ -2,6 +2,13 @@ common --config=ci
 # In the CI we have bazel-remote and the disk cache will be thrown away after the build
 common:linux --disk_cache=
 common:linux --repository_cache=/tmp/shared_repository_cache
+# Keep the repo contents cache next to it on the same mount, which outlives the runners: every job
+# on a node then symlinks its external repos to one extracted copy instead of copying each of them
+# into its own output base. Pods that do not mount it get a throwaway directory. linux-sandbox gives
+# actions an empty /tmp (--incompatible_sandbox_hermetic_tmp), where those symlinks would dangle:
+# mount the cache in. The directory always exists by then, as Bazel keeps both caches there.
+common:linux --repo_contents_cache=/tmp/shared_repository_cache/contents
+common:linux --sandbox_add_mount_pair=/tmp/shared_repository_cache
 
 # Configure gazelle to use the /root/.cache/go/pkg/mod folder for downloaded artifacts.
 common --repo_env=GOMODCACHE=/root/.cache

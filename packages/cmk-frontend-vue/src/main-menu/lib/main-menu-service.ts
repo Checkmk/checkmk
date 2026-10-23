@@ -13,11 +13,18 @@ import type {
   NavItemTopic,
   NavItemTopicEntry,
   NavItems,
-  NavLinkItem
+  NavLinkItem,
+  NavToggleItem
 } from 'cmk-shared-typing/typescript/main_menu'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { type KeyShortcut, KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { ServiceBase } from 'cmk-ui-library/lib/service/base'
 import { type Ref, ref } from 'vue'
+
+import {
+  isAnyCheatSheetVisible,
+  subscribeAnyCheatSheetVisible
+} from '@/lib/keyboard-cheat-sheet/cheatSheetKey'
 
 import { MainMenuApiClient } from './main-menu-api-client'
 import type {
@@ -29,16 +36,21 @@ import type {
   OnUserPopupMessagesCallback,
   UnackIncompWerksResult,
   UserHintMessages,
+  UserMessagesResult,
   UserPopupMessageRef
 } from './type-defs'
 
+const { _t } = usei18n()
+
 export class MainMenuService extends ServiceBase {
   public currentItem: Ref<NavItem | null> = ref<NavItem | null>(null)
-  public showKeyHints: Ref<boolean> = ref<boolean>(false)
+  /** Shown together with the keyboard cheat sheet, of this frame or the content frame. */
+  public showKeyHints: Ref<boolean> = ref<boolean>(isAnyCheatSheetVisible())
   protected showAllTopic = ref<{ id: string; topic: NavItemTopic } | null>(null)
   protected showMoreActive: { [key: string]: Ref<boolean> } = {}
-  protected userMessageTrigger: UserHintMessages | null = null
-  protected unackIncompWerksTrigger: UnackIncompWerksResult | null = null
+  protected userMessageTrigger: Ref<UserHintMessages | null> = ref<UserHintMessages | null>(null)
+  protected unackIncompWerksTrigger: Ref<UnackIncompWerksResult | null> =
+    ref<UnackIncompWerksResult | null>(null)
   protected userPopupMessages: UserPopupMessageRef[] = []
   protected itemBadge: { [key: string]: Ref<MenuItemBadge | null> } = {}
   protected api: MainMenuApiClient = new MainMenuApiClient()
@@ -50,21 +62,40 @@ export class MainMenuService extends ServiceBase {
     shortCutService: KeyShortcutService
   ) {
     super('main-menu-service', shortCutService)
+    subscribeAnyCheatSheetVisible((visible) => {
+      this.showKeyHints.value = visible
+    })
     this.init()
   }
 
-  public toggleKeyHints() {
-    this.showKeyHints.value = !this.showKeyHints.value
+  public getNavShortCutInfo(shortcut: NavItemShortcut): string {
+    return KeyShortcutService.getShortCutInfo(this.toKeyShortcut(shortcut))
   }
 
-  public getNavShortCutInfo(shortcut: NavItemShortcut): string {
-    const sc: KeyShortcut = {
+  public getNavShortCutCombo(shortcut: NavItemShortcut): string[] {
+    return KeyShortcutService.getShortCutCombo(this.toKeyShortcut(shortcut))
+  }
+
+  public registerToggleShortcut(item: NavToggleItem, toggle: () => void): () => void {
+    const id = this.shortCutService.on(
+      {
+        ...this.toKeyShortcut(item.shortcut),
+        preventDefault: item.shortcut.prevent_default || false,
+        scope: _t('Main menu'),
+        description: untranslated(item.title)
+      },
+      toggle
+    )
+    return () => this.shortCutService.remove([id])
+  }
+
+  private toKeyShortcut(shortcut: NavItemShortcut): KeyShortcut {
+    return {
       key: [shortcut.key],
       alt: shortcut.alt,
       ctrl: shortcut.ctrl,
       shift: shortcut.shift
     }
-    return KeyShortcutService.getShortCutInfo(sc)
   }
 
   public isAnyNavItemActive() {
@@ -76,7 +107,6 @@ export class MainMenuService extends ServiceBase {
   }
 
   public navigate(id: NavItemIdEnum) {
-    this.showKeyHints.value = false
     const item = this.getItemById(id)
 
     if (item.type === 'item') {
@@ -177,8 +207,8 @@ export class MainMenuService extends ServiceBase {
   public triggerHeader(mode: HeaderTriggerModeEnum): string | null {
     switch (mode) {
       case 'unack-incomp-werks':
-        if (this.unackIncompWerksTrigger && this.unackIncompWerksTrigger.count > 0) {
-          return this.unackIncompWerksTrigger.text
+        if (this.unackIncompWerksTrigger.value && this.unackIncompWerksTrigger.value.count > 0) {
+          return this.unackIncompWerksTrigger.value.text
         }
         return null
       default:
@@ -189,8 +219,8 @@ export class MainMenuService extends ServiceBase {
   public chipEntry(mode: ChipModeEnum): string | null {
     switch (mode) {
       case 'user-messages-hint':
-        if (this.userMessageTrigger && this.userMessageTrigger.count > 0) {
-          return `${this.userMessageTrigger.count} ${this.userMessageTrigger.text}`
+        if (this.userMessageTrigger.value && this.userMessageTrigger.value.count > 0) {
+          return `${this.userMessageTrigger.value.count} ${this.userMessageTrigger.value.text}`
         }
         return null
       default:
@@ -214,14 +244,23 @@ export class MainMenuService extends ServiceBase {
   }
 
   protected async updateUserMessages() {
-    const res = await this.api.getUserMessages()
+    let res: UserMessagesResult
+    try {
+      res = await this.api.getUserMessages()
+    } catch (error) {
+      console.error('Could not load the user messages', error)
+      this.resetNavItemBadge('user')
+      return
+    }
 
-    this.userMessageTrigger = res.hint_messages
-    if (this.userMessageTrigger.count > 0) {
+    this.userMessageTrigger.value = res.hint_messages
+    if (this.userMessageTrigger.value.count > 0) {
       this.setNavItemBadge('user', {
-        content: this.userMessageTrigger.count.toString(),
+        content: this.userMessageTrigger.value.count.toString(),
         color: 'danger'
       })
+    } else {
+      this.resetNavItemBadge('user')
     }
 
     this.userPopupMessages = res.popup_messages.map((msg) => {
@@ -239,13 +278,20 @@ export class MainMenuService extends ServiceBase {
   }
 
   protected async updateUnacknowledgedIncompatibleWerks() {
-    this.unackIncompWerksTrigger = await this.api.getUnacknowledgedIncompatibleWerks()
-    if (this.unackIncompWerksTrigger.count === 0) {
+    try {
+      this.unackIncompWerksTrigger.value = await this.api.getUnacknowledgedIncompatibleWerks()
+    } catch (error) {
+      console.error('Could not load the unacknowledged incompatible werks', error)
+      this.resetNavItemBadge('help')
+      return
+    }
+
+    if (this.unackIncompWerksTrigger.value.count === 0) {
       this.setNavItemBadge('help', null)
     } else {
       this.setNavItemBadge('help', {
         color: 'danger',
-        content: this.unackIncompWerksTrigger.count.toString()
+        content: this.unackIncompWerksTrigger.value.count.toString()
       })
     }
   }
@@ -275,7 +321,9 @@ export class MainMenuService extends ServiceBase {
             ctrl: item.shortcut.ctrl || false,
             alt: item.shortcut.alt || false,
             shift: item.shortcut.shift || false,
-            preventDefault: item.shortcut.prevent_default || false
+            preventDefault: item.shortcut.prevent_default || false,
+            scope: _t('Main menu'),
+            description: untranslated(item.title)
           },
           () => {
             if (this.isNavItemActive(item.id)) {
@@ -288,18 +336,16 @@ export class MainMenuService extends ServiceBase {
       }
     }
 
-    this.registerShortCut({ key: ['k'], alt: true }, () => {
-      this.toggleKeyHints()
-    })
-    this.registerShortCut({ key: ['Escape'] }, () => {
+    const scope = _t('Main menu')
+    this.registerShortCut({ key: ['Escape'], scope, description: _t('Close menu') }, () => {
       if (this.isAnyNavItemActive()) {
         this.close()
       }
     })
-    this.registerShortCut({ key: ['ArrowDown'] }, () => {
+    this.registerShortCut({ key: ['ArrowDown'], scope, description: _t('Next entry') }, () => {
       this.focusAdjacentEntry(1)
     })
-    this.registerShortCut({ key: ['ArrowUp'] }, () => {
+    this.registerShortCut({ key: ['ArrowUp'], scope, description: _t('Previous entry') }, () => {
       this.focusAdjacentEntry(-1)
     })
     this.enableShortCuts()

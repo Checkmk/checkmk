@@ -14,12 +14,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 class Section(NamedTuple):
@@ -40,10 +39,6 @@ agent_section_datadog_events = AgentSection(
 )
 
 
-def discover_datadog_events(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_datadog_events(section: Section) -> CheckResult:
     """
     >>> list(check_datadog_events(Section(4)))
@@ -60,6 +55,6 @@ def check_datadog_events(section: Section) -> CheckResult:
 check_plugin_datadog_events = CheckPlugin(
     name="datadog_events",
     service_name="Datadog Events",
-    discovery_function=discover_datadog_events,
+    discovery_function=discover_one_service,
     check_function=check_datadog_events,
 )

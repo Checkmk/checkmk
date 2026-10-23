@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -18,7 +17,6 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     Integer,
-    Migrate,
     Percentage,
     TextInput,
     Tuple,
@@ -87,18 +85,15 @@ def _multipath_lower_levels() -> Alternative:
     )
 
 
-def _parameter_valuespec_multipath() -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            help=_(
-                "This rules sets the expected number of active paths for a multipath LUN "
-                "on Linux and Solaris hosts"
-            ),
-            elements=[
-                ("levels", _multipath_lower_levels()),
-            ],
+def _parameter_valuespec_multipath() -> Dictionary:
+    return Dictionary(
+        help=_(
+            "This rules sets the expected number of active paths for a multipath LUN "
+            "on Linux and Solaris hosts"
         ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
+        elements=[
+            ("levels", _multipath_lower_levels()),
+        ],
     )
 
 

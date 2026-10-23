@@ -36,11 +36,12 @@ import pprint
 import re
 import sys
 from collections.abc import Iterator, Mapping, Sequence
+from http import HTTPStatus
 from typing import Final
 
 import requests
 
-from cmk.server_side_programs.v1_unstable import vcrtrace
+from cmk.server_side_programs.v1 import configure_logging, vcrtrace
 
 LOGGER = logging.getLogger(__name__)
 
@@ -111,10 +112,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
 
 def setup_logging(verbose: bool) -> None:
-    logging.basicConfig(  # astrein: disable=logging-formatter
-        level=logging.DEBUG if verbose else logging.ERROR,
-        format="%(levelname)s: %(message)s",
-    )
+    configure_logging(logging.DEBUG if verbose else logging.ERROR)
 
 
 class FritzConnection:
@@ -158,7 +156,7 @@ def _get_response(
         response.raise_for_status()
         return response
     except requests.exceptions.HTTPError:
-        if response.status_code != 500:  # type: ignore[possibly-undefined]
+        if response.status_code != HTTPStatus.INTERNAL_SERVER_ERROR:  # type: ignore[possibly-undefined]
             raise
 
     # old URL can not be found, select other base url in the hope that the other

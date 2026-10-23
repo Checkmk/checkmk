@@ -36,7 +36,7 @@ def main() -> None:
     args = _parse_args()
 
     try:
-        ownership = load_ownership(_tracked_python_files(args.repo_root))
+        ownership = load_ownership(args.repo_root, _tracked_python_files(args.repo_root))
     except OwnershipUnavailableError as exc:
         raise SystemExit(str(exc))
     try:
@@ -63,7 +63,8 @@ def _nothing_to_measure(component: str, owned: Sequence[Path]) -> str:
         return f"Component {component!r} owns no Python file, so there is nothing to measure."
     return (
         f"Component {component!r} owns {len(owned)} Python file(s), none of which the coverage "
-        "run measures: each is either testonly to Bazel, untracked, or compiled by no py rule. "
+        "run measures: each is either testonly to Bazel, tagged exclude-from-test-coverage, "
+        "untracked, or compiled by no py rule. "
         "There is nothing to measure."
     )
 

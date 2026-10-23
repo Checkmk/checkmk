@@ -428,7 +428,7 @@ check_plugin_jolokia_metrics_bea_sess = CheckPlugin(
 def inventory_jolokia_metrics_cache(metrics, info):
     parsed = jolokia_metrics_parse(info)
     metrics_set = set(metrics)
-    for inst, vals in [x for x in parsed.items() if x[1] is not None]:  # type: ignore[redundant-expr]
+    for inst, vals in parsed.items():
         for cache, cache_vars in vals.get("CacheStatistics", {}).items():
             if metrics_set.intersection(cache_vars) == metrics_set:
                 yield f"{inst} {cache}", {}

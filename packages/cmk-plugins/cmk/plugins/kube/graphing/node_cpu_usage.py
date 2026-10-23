@@ -9,25 +9,25 @@ UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""))
 
 metric_kube_cpu_usage = metrics.Metric(
     name="kube_cpu_usage",
-    title=Title("Usage"),
+    title=Title("CPU usage"),
     unit=UNIT_NUMBER,
     color=metrics.Color.CYAN,
 )
 metric_kube_cpu_request = metrics.Metric(
     name="kube_cpu_request",
-    title=Title("Requests"),
+    title=Title("CPU requests"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BLUE,
 )
 metric_kube_cpu_limit = metrics.Metric(
     name="kube_cpu_limit",
-    title=Title("Limits"),
+    title=Title("CPU limits"),
     unit=UNIT_NUMBER,
     color=metrics.Color.GREEN,
 )
 metric_kube_cpu_allocatable = metrics.Metric(
     name="kube_cpu_allocatable",
-    title=Title("Allocatable"),
+    title=Title("Allocatable CPU"),
     unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.network.agent_based import ucd_cpu_util as ucu
 
 FREEZE_TIME = "1970-01-01 00:01:00Z"
@@ -27,10 +27,6 @@ STRING_TABLE = [
 def _section() -> ucu.Section:
     assert (section := ucu.parse_ucd_cpu_util(STRING_TABLE)) is not None
     return section
-
-
-def test_discovery() -> None:
-    assert list(ucu.discover_ucd_cpu_util(_section())) == [Service()]
 
 
 def test_check() -> None:

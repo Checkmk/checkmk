@@ -4,10 +4,65 @@
   "title": "trial_mode_selection_props",
   "properties": {
     "save_url": { "type": "string" },
+    "verification_url": { "type": "string" },
     "logout_url": { "type": "string" },
     "verify_online_url": { "type": "string" },
     "verify_offline_url": { "type": "string" },
-    "user_name": { "type": "string" }
+    "start_monitoring_url": {
+      "type": "string",
+      "description": "Page the dialog leaves for on \"Start monitoring\"."
+    },
+    "initial_screen": {
+      "title": "InitialScreen",
+      "enum": ["choice", "verification"],
+      "description": "Screen the dialog opens on."
+    },
+    "user_name": { "type": "string" },
+    "edition_title": { "type": "string" },
+    "trial_end_timestamp": {
+      "type": "number",
+      "description": "Unix timestamp in seconds."
+    },
+    "trial_length_days": {
+      "type": "number",
+      "description": "Days a trial runs for."
+    },
+    "free_services_limit": {
+      "type": "number",
+      "description": "Services the free edition monitors once the trial has ended."
+    },
+    "verification_domain": {
+      "type": "string",
+      "description": "Domain the site must reach to verify a trial."
+    },
+    "license_verification_reprompt_hours": {
+      "type": "integer",
+      "description": "Hours after a postponed license verification until the dialog reappears."
+    },
+    "unverified_trial_reprompt_hours": {
+      "type": "integer",
+      "description": "Hours after an unverified trial until the dialog reappears, at the soonest."
+    },
+    "offline": {
+      "type": "boolean",
+      "description": "The site cannot reach the Checkmk servers."
+    }
   },
-  "required": ["save_url", "logout_url", "verify_online_url", "verify_offline_url", "user_name"]
+  "required": [
+    "save_url",
+    "verification_url",
+    "logout_url",
+    "verify_online_url",
+    "verify_offline_url",
+    "start_monitoring_url",
+    "initial_screen",
+    "user_name",
+    "edition_title",
+    "trial_end_timestamp",
+    "trial_length_days",
+    "free_services_limit",
+    "verification_domain",
+    "license_verification_reprompt_hours",
+    "unverified_trial_reprompt_hours"
+  ]
 }

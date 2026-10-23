@@ -1,0 +1,36 @@
+@startuml
+skinparam componentStyle rectangle
+
+package "Browser" {
+    component "Classic view\n(HTML)" as classic_html
+    component "Monitoring page\n(Vue application)" as vue_apps
+}
+
+package "GUI" {
+    package "Classic views" {
+        component "views" as views
+        component "visuals, painters,\nsorters, layouts,\ncommands, icons" as building_blocks
+        component "data_source" as data_source
+    }
+    package "Monitoring pages (cmk.gui.monitor)" {
+        component "page" as pages
+        component "internal REST API" as api
+        component "repositories" as repos
+        component "Livestatus\nimplementation" as impl
+    }
+}
+
+database "Livestatus" as livestatus
+
+classic_html --> views
+views --> building_blocks
+views --> data_source
+data_source --> livestatus
+
+vue_apps --> pages : mounted by
+vue_apps --> api : JSON
+api --> repos
+impl ..|> repos
+impl --> livestatus
+api ..> building_blocks : icons,\ncommands
+@enduml

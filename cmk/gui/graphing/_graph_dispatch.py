@@ -10,51 +10,55 @@ from typing import override, Protocol
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.graphing_engine import (
+    ApiGraph,
     ConsolidationFunction,
     EvaluatedGraph,
     FetchDataProtocol,
     Graph,
+    GraphRequest,
+    MetricName,
+    RequestedGraph,
+    RequestedMetric,
     TimeRange,
 )
 
 from ._decoding import ensure_type
-from ._from_api import GraphFromAPI
 from ._graph_codec import GraphCodec
 from ._source import FetchDiagnostics
 
+_METRIC_PREFIX = "METRIC_"
 
-def legacy_graph_id(graph: Graph, registered_graphs: Sequence[GraphFromAPI]) -> str:
+
+def legacy_graph_id(graph: Graph, registered_graphs: Sequence[ApiGraph]) -> str:
     """The graph id a built graph is addressed by in the specifications legacy stores and replays.
 
     A fallback single-metric graph must carry the "METRIC_" prefix legacy stores it under; without
     it the legacy recipe lookup finds neither a plug-in nor the metric.
     """
-    if graph.name.startswith("METRIC_") or any(
+    if graph.name.startswith(_METRIC_PREFIX) or any(
         registered.name == graph.name for registered in registered_graphs
     ):
         return graph.name
-    return f"METRIC_{graph.name}"
+    return f"{_METRIC_PREFIX}{graph.name}"
 
 
-def _consolidation_function_of(options: Mapping[str, object]) -> ConsolidationFunction:
-    return ensure_type(options["consolidation_function"], ConsolidationFunction)
+def metric_name_of(graph_id: str) -> MetricName:
+    return MetricName(graph_id.removeprefix(_METRIC_PREFIX))
 
 
-def _time_range_of(options: Mapping[str, object]) -> TimeRange:
-    return ensure_type(options["time_range"], TimeRange)
+def graph_request_of(graph_id: str) -> GraphRequest:
+    if graph_id.startswith(_METRIC_PREFIX):
+        return RequestedMetric(metric_name_of(graph_id))
+    return RequestedGraph(graph_id)
 
 
 @dataclass(frozen=True, kw_only=True)
-class CommonGraphOptions:
-    consolidation_function: ConsolidationFunction
+class EvaluationOptions:
     time_range: TimeRange
-
-    @classmethod
-    def from_request_options(cls, options: Mapping[str, object]) -> CommonGraphOptions:
-        return cls(
-            consolidation_function=_consolidation_function_of(options),
-            time_range=_time_range_of(options),
-        )
+    consolidation_function: ConsolidationFunction
+    destination: str | None
+    combination_mode: str | None = None
+    include_edge_neighbours: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -84,13 +88,7 @@ class GraphDispatcher:
     codec: GraphCodec
     # How to make this graph type's evaluation for the options of a request: that is where it
     # deserializes the common options and whatever else it alone needs from them.
-    make_evaluate: Callable[[Mapping[str, object]], DispatchedEvaluateProtocol]
-
-    def serialize(self, graph: Graph) -> Mapping[str, object]:
-        return self.codec.serialize_graph(graph)
-
-    def deserialize(self, graph: Mapping[str, object]) -> Graph:
-        return self.codec.deserialize_graph(graph)
+    make_evaluate: Callable[[EvaluationOptions], DispatchedEvaluateProtocol]
 
 
 class GraphDispatcherRegistry(Registry[GraphDispatcher]):
@@ -103,20 +101,16 @@ graph_dispatcher_registry = GraphDispatcherRegistry()
 
 
 def serialize_graphs(graphs: Sequence[Graph]) -> Mapping[str, object]:
-    return {"graphs": [graph_dispatcher_registry[graph.kind].serialize(graph) for graph in graphs]}
-
-
-def _deserialized_graphs(internal: Mapping[str, object]) -> Sequence[Graph]:
-    graphs = []
-    for serialized in ensure_type(internal["graphs"], list):
-        graph = ensure_type(serialized, dict)
-        graphs.append(graph_dispatcher_registry[ensure_type(graph["kind"], str)].deserialize(graph))
-    return graphs
+    return {
+        "graphs": [
+            graph_dispatcher_registry[graph.kind].codec.serialize_graph(graph) for graph in graphs
+        ]
+    }
 
 
 def evaluate_built_graphs(
     graphs: Sequence[Graph],
-    options: Mapping[str, object],
+    options: EvaluationOptions,
 ) -> EvaluatedGraphs:
     evaluated_graphs: list[EvaluatedGraph] = []
     diagnostics = FetchDiagnostics()
@@ -132,8 +126,11 @@ def evaluate_built_graphs(
 
 def evaluate_graphs(
     internal: Mapping[str, object],
-    options: Mapping[str, object],
+    options: EvaluationOptions,
 ) -> EvaluatedGraphs:
-    # The entry point of a definition that came off the wire; a caller that still holds the built
-    # graphs evaluates them directly.
-    return evaluate_built_graphs(_deserialized_graphs(internal), options)
+    graphs = []
+    for serialized in ensure_type(internal["graphs"], list):
+        graph = ensure_type(serialized, dict)
+        dispatcher = graph_dispatcher_registry[ensure_type(graph["kind"], str)]
+        graphs.append(dispatcher.codec.deserialize_graph(graph))
+    return evaluate_built_graphs(graphs, options)

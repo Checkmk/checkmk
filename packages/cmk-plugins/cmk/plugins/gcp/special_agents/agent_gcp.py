@@ -39,9 +39,9 @@ from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
 from googleapiclient.http import HttpRequest
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.gcp.lib.constants import Extractors
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 __version__ = "3.0.0b1"
 
@@ -1305,7 +1305,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         help="date when agent was executed in iso format",
         required=False,
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--services",
         nargs="+",
         action="extend",

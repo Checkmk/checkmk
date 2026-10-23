@@ -8,7 +8,14 @@ from http import HTTPStatus
 
 from fastapi.testclient import TestClient
 
-from cmk.relay_protocols.tasks import AdHocActiveCheckTask, TaskStatus
+from cmk.relay_protocols.tasks import (
+    AdHocActiveCheckTask,
+    AdHocPasswordStore,
+    AdHocSiteStores,
+    ResultType,
+    TaskResponse,
+    TaskStatus,
+)
 from cmk.testlib.agent_receiver.clients import RelayClient, SiteClient
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 
@@ -53,7 +60,8 @@ def test_report_the_result_of_an_ad_hoc_active_check(
     Test steps:
     1. Create an ad-hoc active-check task and let the relay poll it
     2. Report a result for it
-    3. Verify the task is finished and carries the reported output
+    3. Verify the task is finished and carries the reported output, both for the
+       relay and for the site that polls the task for its result
     """
     relay_id = str(uuid.uuid4())
     site.set_scenario(relay_id)
@@ -72,4 +80,43 @@ def test_report_the_result_of_an_ad_hoc_active_check(
     assert response.status_code == HTTPStatus.ACCEPTED, response.text
     updated = relay.get_task_list().tasks[0]
     assert updated.status is TaskStatus.FINISHED
+    assert updated.result_type is ResultType.OK
     assert updated.result_payload == frame
+
+    site_response = site_client.get_task(relay_id, task_id)
+    assert site_response.status_code == HTTPStatus.OK, site_response.text
+    polled = TaskResponse.model_validate(site_response.json())
+    assert polled.status is TaskStatus.FINISHED
+    assert polled.result_type is ResultType.OK
+    assert polled.result_payload == frame
+
+
+def test_site_stores_of_an_ad_hoc_active_check_reach_the_relay_unchanged(
+    test_client: TestClient,
+    site: SiteMock,
+) -> None:
+    """The receiver passes a check's site stores through as they are.
+
+    A check run from the service discovery page carries Setup's pending passwords
+    and CA bundle inline; they are in no relay configuration. The relay can only
+    use them if the receiver stores and re-emits them byte for byte.
+    """
+    relay_id = str(uuid.uuid4())
+    site.set_scenario(relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(site.push_config([relay_id]))
+    task = AdHocActiveCheckTask(
+        host="myhost",
+        command="check_httpv2 --auth-pw-pwstore uuid1:tmp/check_mk/passwords_adhoc_1",
+        site_stores=AdHocSiteStores(
+            ca_bundle="-----BEGIN CERTIFICATE-----\nMIIB...\n-----END CERTIFICATE-----\n",
+            passwords=AdHocPasswordStore(
+                path="tmp/check_mk/passwords_adhoc_1", values={"uuid1": "s3cret"}
+            ),
+        ),
+    )
+
+    SiteClient(test_client, site.site_name).create_task(relay_id, task)
+
+    [stored] = relay.get_task_list().tasks
+    assert stored.spec == task

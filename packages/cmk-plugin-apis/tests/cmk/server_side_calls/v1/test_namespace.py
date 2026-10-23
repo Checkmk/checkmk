@@ -9,7 +9,7 @@
 |                                                         |
 | The extend of the Check API is well documented, and the |
 | result of careful negotiation. It should not be changed |
-| light heartedly!                                        |
+| light heartedly and MUST NOT BE CHANGED ONCE RELEASED!  |
 +---------------------------------------------------------+
 """
 
@@ -34,7 +34,6 @@ from cmk.server_side_calls import v1
                 "IPv6Config",
                 "noop_parser",
                 "NoProxy",
-                "repeated_flag",
                 "replace_macros",
                 "Secret",
                 "SpecialAgentCommand",

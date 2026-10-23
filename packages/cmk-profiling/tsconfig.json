@@ -1,0 +1,9 @@
+{
+  "extends": "cmk-ui-library/tsconfig.vue-base.json",
+  "include": ["env.d.ts", "frontend/**/*"],
+  "compilerOptions": {
+    "paths": {
+      "*": ["./node_modules/*", "../../bazel-bin/packages/cmk-profiling/node_modules/*"]
+    }
+  }
+}

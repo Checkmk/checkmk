@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -14,26 +11,23 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersEnvironment,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Integer, Migrate
+from cmk.gui.valuespec import Dictionary, Integer
 
 
-def _parameter_valuespec_epower_single() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        Dictionary(
-            help=_("Levels for the electrical power consumption of a device "),
-            elements=[
-                (
-                    "levels",
-                    SimpleLevels(
-                        title=_("Upper levels"),
-                        spec=Integer,
-                        unit="W",
-                    ),
+def _parameter_valuespec_epower_single() -> Dictionary:
+    return Dictionary(
+        help=_("Levels for the electrical power consumption of a device "),
+        elements=[
+            (
+                "levels",
+                SimpleLevels(
+                    title=_("Upper levels"),
+                    spec=Integer,
+                    unit="W",
                 ),
-            ],
-            required_keys=["levels"],
-        ),
-        migrate=lambda x: {"levels": x} if isinstance(x, tuple) else x,
+            ),
+        ],
+        required_keys=["levels"],
     )
 
 

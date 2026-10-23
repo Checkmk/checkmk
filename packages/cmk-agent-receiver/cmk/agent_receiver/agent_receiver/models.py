@@ -6,10 +6,11 @@
 
 import re
 import socket
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Literal, override, Self
+from http import HTTPStatus
+from typing import Literal, Self
 
 from fastapi import HTTPException
 from pydantic import BaseModel, field_validator, GetCoreSchemaHandler, UUID4
@@ -42,15 +43,6 @@ class CsrField:
 
 class CertificateRenewalBody(BaseModel, frozen=True):
     csr: CsrField
-
-
-class PairingBody(BaseModel, frozen=True):
-    csr: str
-
-
-class PairingResponse(BaseModel, frozen=True):
-    root_cert: str
-    client_cert: str
 
 
 class RenewCertResponse(BaseModel, frozen=True):
@@ -124,33 +116,17 @@ def _is_valid_hostname_or_ip(uri: str) -> bool:
     return _is_valid_host_name(uri) or _is_valid_ipv4_address(uri) or _is_valid_ipv6_address(uri)
 
 
-class RegistrationWithHNBody(BaseModel, frozen=True):
-    uuid: UUID4
-    host_name: str
-
-    @field_validator("host_name")
-    @classmethod
-    def valid_hostname(cls, v: str) -> str:
-        if not _is_valid_hostname_or_ip(v):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid host name: '{v}'",
-            )
-        return v
-
-
-class RegisterExistingBody(RegistrationWithHNBody, frozen=True):
+class RegisterExistingBody(BaseModel, frozen=True):
     uuid: UUID4
     csr: CsrField
     host_name: str
 
     @field_validator("host_name")
     @staticmethod
-    @override
     def valid_hostname(v: str) -> str:
         if not _is_valid_hostname_or_ip(v):
             raise HTTPException(
-                status_code=400,
+                status_code=HTTPStatus.BAD_REQUEST,
                 detail=f"Invalid host name: '{v}'",
             )
         return v
@@ -161,10 +137,23 @@ class ConnectionMode(Enum):
     PUSH = "push-agent"
 
 
+class AgentUpdateAuthorization(Enum):
+    AUTHORIZED = "authorized"
+    NOT_PERMITTED = "not_permitted"
+    UNAVAILABLE = "unavailable"
+
+
+class UUIDRegistration(BaseModel, frozen=True):
+    """The registration file that the site writes when it links a UUID"""
+
+    agent_updates_permitted: bool | None = None
+
+
 class RegisterExistingResponse(BaseModel, frozen=True):
     root_cert: str
     agent_cert: str
     connection_mode: ConnectionMode
+    agent_update_authorization: AgentUpdateAuthorization
 
 
 class RegisterNewBody(BaseModel, frozen=True):
@@ -192,6 +181,7 @@ class RegisterNewOngoingResponseSuccess(BaseModel, frozen=True):
     status: Literal["Success"] = "Success"
     agent_cert: str
     connection_mode: ConnectionMode
+    agent_update_authorization: AgentUpdateAuthorization
 
 
 class RequestForRegistration(BaseModel, frozen=True):
@@ -229,3 +219,34 @@ class RegistrationStatusV2ResponseRegistered(BaseModel, frozen=True):
     status: Literal["Registered"] = "Registered"
     hostname: str
     connection_mode: ConnectionMode
+
+
+class LegacyRegistration(BaseModel, frozen=True):
+    host_name: str
+    host_secret: str
+
+
+class UpdateStatusRequest(BaseModel, frozen=True):
+    platform: str
+    installed_aghash: str
+    last_error: str | None = None
+    legacy_registration: LegacyRegistration | None = None
+
+
+class AgentPackageSignature(BaseModel, frozen=True):
+    certificate: str
+    signature: str
+
+
+class TargetAgent(BaseModel, frozen=True):
+    aghash: str
+    signatures: Sequence[AgentPackageSignature]
+
+
+class UpdateStatusResponse(BaseModel, frozen=True):
+    target_agent: TargetAgent | None = None
+
+
+class DownloadRequest(BaseModel, frozen=True):
+    platform: str
+    aghash: str

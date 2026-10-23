@@ -4,9 +4,5 @@
 	compress
 	delaycompress
 	notifempty
-	create 640 ###SITE### ###SITE### 
-	sharedscripts
-	postrotate
-		###ROOT###/etc/init.d/apache reload
-	endscript
+	copytruncate
 }

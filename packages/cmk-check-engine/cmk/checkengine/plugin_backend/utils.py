@@ -68,17 +68,17 @@ def validate_function_arguments(
     present_params = list(parameters)
 
     if expected_params == present_params:
-        return _validate_optional_section_annotation(
+        _validate_optional_section_annotation(
             parameters=parameters,
             type_label=type_label,
         )
+        return
     _raise_appropriate_type_error(
         expected_params=expected_params,
         present_params=present_params,
         type_label=type_label,
         has_item=has_item,
     )
-    return None  # type: ignore[unreachable]
 
 
 def _raise_appropriate_type_error(

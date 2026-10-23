@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.site import omd_site
@@ -79,13 +80,13 @@ def show_service_discovery_result_v1(
         snapshot = job_snapshot(host, api_context.config.sites, debug=api_context.config.debug)
     except MKAutomationException:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Error running automation",
             detail="Could not retrieve the service discovery result",
         )
     logs = snapshot.status.loginfo
     raise ProblemException(
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
         title="Error running automation",
         detail="Could not retrieve the service discovery result",
         ext=EXT(
@@ -113,7 +114,7 @@ ENDPOINT_SHOW_SERVICE_DISCOVERY_RESULT = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=show_service_discovery_result_v1,
-            additional_status_codes=[400],
+            additional_status_codes=[HTTPStatus.BAD_REQUEST],
         )
     },
 )

@@ -15,6 +15,7 @@ from cmk.gui.form_specs import (
     RawFrontendData,
     VisitorOptions,
 )
+from cmk.rulesets.internal.form_specs import MultipleChoiceExtended
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DefaultValue, MultipleChoice, MultipleChoiceElement
 
@@ -156,3 +157,17 @@ def test_strenum_member_from_frontend_normalizes() -> None:
     assert isinstance(disk_value, list)
     assert disk_value == ["RED"]
     assert all(type(v) is str for v in disk_value)
+
+
+def test_lazy_elements_are_resolved_on_every_visit() -> None:
+    available = ["a"]
+    spec = MultipleChoiceExtended(
+        elements=lambda: [MultipleChoiceElement(name=n, title=Title("Choice")) for n in available]
+    )
+    options = VisitorOptions(migrate_values=True, mask_values=False)
+
+    assert get_visitor(spec, options).to_disk(RawDiskData(["b"])) == []
+
+    available.append("b")
+
+    assert get_visitor(spec, options).to_disk(RawDiskData(["b"])) == ["b"]

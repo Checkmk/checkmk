@@ -28,9 +28,6 @@ export interface EventConsoleConfig {
   resourceAttribute: string
 }
 
-export const GRPC_DEFAULT_PORT = 4317
-export const HTTP_DEFAULT_PORT = 4318
-
 export interface ResolvedEndpoint {
   address: string
   port: number

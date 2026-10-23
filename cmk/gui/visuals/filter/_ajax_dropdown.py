@@ -10,6 +10,7 @@ from typing import Literal, override
 
 import cmk.livestatus_client as livestatus
 from cmk.gui import query_filters, sites
+from cmk.gui.config import RequestCacheConfig
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import (
@@ -21,10 +22,12 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.web.utils.autocompleter_config import AutocompleterConfig
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.speaklater import LazyString
 
 from ._base import Filter, FilterGroup
 from .components import Checkbox, DynamicDropdown, FilterComponent, HorizontalGroup
+from .drilldowns import Drilldown
 
 
 class AjaxDropdownFilter(Filter):
@@ -43,6 +46,7 @@ class AjaxDropdownFilter(Filter):
         is_show_more: bool = False,
         validate_value: Callable[[str, str], None] | None = None,
         group: FilterGroup | None = None,
+        drilldown: Drilldown | None = None,
     ) -> None:
         self.query_filter = query_filter
         self.autocompleter = autocompleter
@@ -58,6 +62,7 @@ class AjaxDropdownFilter(Filter):
             description=description,
             is_show_more=is_show_more,
             group=group,
+            drilldown=drilldown,
         )
 
     @override
@@ -73,7 +78,9 @@ class AjaxDropdownFilter(Filter):
         return {self.query_filter.request_vars[0]: row[self.query_filter.column]}
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         dropdown = DynamicDropdown(
             id=self.query_filter.request_vars[0],
             autocompleter=self.autocompleter,
@@ -117,6 +124,7 @@ class FilterGroupCombo(AjaxDropdownFilter):
         query_filter: query_filters.TextQuery,
         description: None | str | LazyString = None,
         group: FilterGroup | None = None,
+        drilldown: Drilldown | None = None,
     ) -> None:
         self.query_filter = query_filter
         self.group_type = group_type
@@ -130,6 +138,7 @@ class FilterGroupCombo(AjaxDropdownFilter):
             link_columns=[group_type + "group_name"],
             description=description,
             group=group,
+            drilldown=drilldown,
         )
 
     @override
@@ -146,7 +155,9 @@ class FilterGroupCombo(AjaxDropdownFilter):
         return {}
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         # TODO: This should be part of the general options query
         if current_value := value.get(self.query_filter.request_vars[0]):
             group_type = "contact" if self.group_type.endswith("_contact") else self.group_type

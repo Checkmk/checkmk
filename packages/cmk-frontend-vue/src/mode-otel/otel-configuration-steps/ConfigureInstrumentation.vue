@@ -16,8 +16,6 @@ import {
   type AuthConfig,
   type EndpointConfig,
   type EventConsoleConfig,
-  GRPC_DEFAULT_PORT,
-  HTTP_DEFAULT_PORT,
   resolveEndpoint
 } from './otelTypes'
 
@@ -37,12 +35,16 @@ const props = defineProps<{
   httpEventConsole: EventConsoleConfig | null
   grpcEndpointOverride?: string | null
   httpEndpointOverride?: string | null
+  grpcDefaultPort: number
+  httpDefaultPort: number
 }>()
 
 const activeTab = ref('collector')
 
 const snippetInput = computed<CollectorSnippetInput>(() => ({
   siteName: props.siteName,
+  httpDefaultPort: props.httpDefaultPort,
+  grpcDefaultPort: props.grpcDefaultPort,
   httpInfo: props.httpEnabled
     ? props.httpEndpointOverride
       ? {
@@ -101,9 +103,9 @@ const sdkEndpointDisplay = computed(() => {
 
   const endpoint = useHttp ? props.httpEndpoint : props.grpcEnabled ? props.grpcEndpoint : null
   if (endpoint === null) {
-    return `<host>:${HTTP_DEFAULT_PORT}`
+    return `<host>:${props.httpDefaultPort}`
   }
-  const defaultPort = useHttp ? HTTP_DEFAULT_PORT : GRPC_DEFAULT_PORT
+  const defaultPort = useHttp ? props.httpDefaultPort : props.grpcDefaultPort
   const resolved = resolveEndpoint(endpoint, defaultPort)
   if (resolved === null) {
     return `<host>:${defaultPort}`

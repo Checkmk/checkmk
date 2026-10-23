@@ -10,28 +10,85 @@ import {
   FlexRender,
   type Header,
   type HeaderGroup,
+  type SortingState,
   type Table
 } from '@tanstack/vue-table'
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { type CSSProperties, inject } from 'vue'
+import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
+import { type CSSProperties, computed, inject, onMounted, useTemplateRef } from 'vue'
 
 import type { FilterField } from '@/monitoring/shared/api/types'
 
-import { COLUMN_LAYOUT_KEY, TABLE_BORDER_SPACING_PX } from './MonitoringTableContext'
+import {
+  COLUMN_LAYOUT_KEY,
+  type HeaderFitWidths,
+  TABLE_BORDER_SPACING_PX
+} from './MonitoringTableContext'
 import FilterDropdown from './filter/FilterDropdown.vue'
 import type { ColumnFilterValue, SortDirection } from './filter/types'
+import { headerFitWidth } from './headerFit'
 
 const { _t } = usei18n()
 
 const borderSpacing = TABLE_BORDER_SPACING_PX
 
+// Named once: the hit area's tooltip and the checkbox's accessible name have to agree.
+const selectAllLabel = computed(() => _t('Select all rows'))
+
 defineProps<{
   headerGroups: HeaderGroup<T>[]
   disabled?: boolean
 }>()
+
+const emit = defineEmits<{
+  (event: 'fit-widths', value: HeaderFitWidths): void
+}>()
+
+const thead = useTemplateRef<HTMLElement>('thead')
+let reportedFitWidths: HeaderFitWidths = {}
+
+function measureFitWidths(): void {
+  if (!thead.value) {
+    return
+  }
+  // A column keeps what it last needed while it is hidden or not laid out, so it fits its header
+  // right away when it shows up again, before anything resizes.
+  const widths: HeaderFitWidths = { ...reportedFitWidths }
+  for (const cell of thead.value.querySelectorAll<HTMLElement>('th[data-fit-header]')) {
+    // Only the standalone label fills its cell; in the other header variants the measurement would
+    // grow with the column and keep it from ever shrinking back.
+    const label = cell.querySelector<HTMLElement>('.monitoring-table-header__label--standalone')
+    const width = label ? headerFitWidth(cell, label) : null
+    if (width !== null) {
+      widths[cell.dataset.fitHeader!] = width
+    }
+  }
+  if (!sameWidths(widths, reportedFitWidths)) {
+    reportedFitWidths = widths
+    emit('fit-widths', widths)
+  }
+}
+
+function sameWidths(a: HeaderFitWidths, b: HeaderFitWidths): boolean {
+  const keys = Object.keys(a)
+  return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key])
+}
+
+const { observe } = useResizeObserver(measureFitWidths)
+observe(thead)
+
+onMounted(() => {
+  // measure before the observer's first async delivery.
+  measureFitWidths()
+  // A cut label keeps its box when the web font arrives, so the observer does not see its text
+  // getting wider.
+  if ('fonts' in document) {
+    void document.fonts.ready.then(measureFitWidths)
+  }
+})
 
 function filterValue(column: Column<T, unknown>): ColumnFilterValue<FilterField> | undefined {
   return column.getFilterValue() as ColumnFilterValue<FilterField> | undefined
@@ -44,12 +101,56 @@ function setFilterValue(
   column.setFilterValue(node)
 }
 
-function setSort(column: Column<T, unknown>, direction: SortDirection): void {
+function primarySort(column: Column<T, unknown>): SortDirection {
+  return column.getSortIndex() === 0 ? column.getIsSorted() : false
+}
+
+function extendedSort(column: Column<T, unknown>): SortDirection {
+  return column.getSortIndex() > 0 ? column.getIsSorted() : false
+}
+
+function sortedAheadOf(table: Table<T>, column: Column<T, unknown>): string[] {
+  const sorting = table.getState().sorting
+  const index = column.getSortIndex()
+  return (index < 0 ? sorting : sorting.slice(0, index)).map((entry) => {
+    const sortedColumn = table.getColumn(entry.id)
+    return sortedColumn ? columnLabel(sortedColumn) : entry.id
+  })
+}
+
+function sortPosition(table: Table<T>, column: Column<T, unknown>): number | null {
+  const index = column.getSortIndex()
+  return table.getState().sorting.length > 1 && index >= 0 ? index + 1 : null
+}
+
+function withDirection(sorting: SortingState, columnId: string, desc: boolean): SortingState {
+  return sorting.map((entry) => (entry.id === columnId ? { ...entry, desc } : entry))
+}
+
+function setSort(table: Table<T>, column: Column<T, unknown>, direction: SortDirection): void {
   if (direction === false) {
     column.clearSorting()
     return
   }
-  column.toggleSorting(direction === 'desc')
+  const desc = direction === 'desc'
+  if (column.getSortIndex() === 0) {
+    table.setSorting((sorting) => withDirection(sorting, column.id, desc))
+    return
+  }
+  table.setSorting([{ id: column.id, desc }])
+}
+
+function extendSort(table: Table<T>, column: Column<T, unknown>, direction: SortDirection): void {
+  if (direction === false) {
+    column.clearSorting()
+    return
+  }
+  const desc = direction === 'desc'
+  table.setSorting((sorting) =>
+    column.getSortIndex() < 0
+      ? [...sorting, { id: column.id, desc }]
+      : withDirection(sorting, column.id, desc)
+  )
 }
 
 function columnLabel(column: Column<T, unknown>): string {
@@ -57,14 +158,30 @@ function columnLabel(column: Column<T, unknown>): string {
 }
 
 function filterButtonLabel(column: Column<T, unknown>, isActive: boolean): string {
-  const columnTitle = (
+  const columnTitle = columnLabel(column)
+  return isActive
+    ? _t('Filter %{column} (active)', { column: columnTitle })
+    : _t('Filter %{column}', { column: columnTitle })
+}
+
+function headerTitle(column: Column<T, unknown>): string {
+  return (
     column.columnDef.meta?.headerTitle?.toString() ??
     column.columnDef.header?.toString() ??
     ''
   ).trim()
-  return isActive
-    ? _t('Filter %{column} (active)', { column: columnTitle })
-    : _t('Filter %{column}', { column: columnTitle })
+}
+
+function showTitleIfHidden(event: MouseEvent, column: Column<T, unknown>): void {
+  const target = event.currentTarget as HTMLElement
+  const label = target.querySelector<HTMLElement>('.monitoring-table-header__label') ?? target
+  const title = headerTitle(column)
+  const isTruncated = label.scrollWidth > label.clientWidth
+  if (title !== '' && (isTruncated || title !== label.textContent?.trim())) {
+    target.title = title
+  } else {
+    target.removeAttribute('title')
+  }
 }
 
 function helpLabel(column: Column<T, unknown>): string {
@@ -168,7 +285,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
 </script>
 
 <template>
-  <thead>
+  <thead ref="thead">
     <tr v-for="headerGroup in headerGroups" :key="headerGroup.id">
       <th
         v-for="header in headerGroup.headers"
@@ -185,6 +302,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
         ]"
         :style="[columnStyle(header.column.columnDef), stickyStyle(header.column.id)]"
         :aria-sort="ariaSortFor(header.column.getIsSorted())"
+        :data-fit-header="header.column.columnDef.meta?.fitHeader ? header.column.id : undefined"
       >
         <div
           class="monitoring-table-header__cell-content"
@@ -196,11 +314,12 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             v-if="!header.isPlaceholder && header.column.columnDef.meta?.selectColumn"
             class="monitoring-table-header__select"
             :style="contentStyle(header.column.columnDef)"
+            :title="selectAllLabel"
             @click="toggleSelectAll(header.getContext().table)"
           >
             <CmkCheckbox
               :allow-indeterminate="true"
-              :aria-label="_t('Select all rows')"
+              :aria-label="selectAllLabel"
               :model-value="selectAllModel(header.getContext().table)"
               @update:model-value="setSelectAll(header.getContext().table, $event)"
               @click.stop
@@ -211,11 +330,8 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             type="button"
             class="monitoring-table-header__header-button"
             :style="contentStyle(header.column.columnDef)"
-            :title="
-              header.column.columnDef.meta?.headerTitle?.toString() ??
-              header.column.columnDef.header?.toString()
-            "
             :disabled="disabled"
+            @mouseenter="showTitleIfHidden($event, header.column)"
             @click="header.column.getToggleSortingHandler()?.($event)"
           >
             <span class="monitoring-table-header__label">
@@ -224,13 +340,19 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
 
             <CmkMultitoneIcon
               v-if="header.column.getIsSorted() !== false"
-              name="dashlet-resize"
+              name="arrow-down"
               class="monitoring-table-header__sort-icon"
               :rotate="header.column.getIsSorted() === 'asc' ? 180 : 0"
               primary-color="font"
               aria-hidden="true"
               size="xsmall"
             />
+            <span
+              v-if="sortPosition(header.getContext().table, header.column) !== null"
+              class="monitoring-table-header__sort-position"
+              aria-hidden="true"
+              >{{ sortPosition(header.getContext().table, header.column) }}</span
+            >
           </button>
           <span
             v-else-if="!header.isPlaceholder && header.column.columnDef.meta?.headerHelp"
@@ -249,10 +371,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             v-else-if="!header.isPlaceholder"
             class="monitoring-table-header__label monitoring-table-header__label--standalone"
             :style="labelStyle(header.column.columnDef)"
-            :title="
-              header.column.columnDef.meta?.headerTitle?.toString() ??
-              header.column.columnDef.header?.toString()
-            "
+            @mouseenter="showTitleIfHidden($event, header.column)"
           >
             <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
           </span>
@@ -267,9 +386,12 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             anchor="th"
             :heading="_t('Filter')"
             :sortable="header.column.getCanSort()"
-            :sort="header.column.getIsSorted()"
+            :sort="primarySort(header.column)"
+            :extended-sort="extendedSort(header.column)"
+            :extends-sort-of="sortedAheadOf(header.getContext().table, header.column)"
             :model-value="filterValue(header.column)"
-            @update:sort="setSort(header.column, $event)"
+            @update:sort="setSort(header.getContext().table, header.column, $event)"
+            @update:extended-sort="extendSort(header.getContext().table, header.column, $event)"
             @update:model-value="setFilterValue(header.column, $event)"
           >
             <template #trigger="{ toggle, isOpen, isActive, panelId }">
@@ -440,6 +562,8 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
   color: inherit;
   cursor: pointer;
   border-radius: 0;
+  width: var(--dimension-8);
+  justify-content: center;
 
   &:focus-visible {
     outline: 1px solid var(--success);
@@ -465,7 +589,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
 .monitoring-table-header__filter-dot {
   position: absolute;
   top: var(--dimension-3);
-  right: 0;
+  right: var(--dimension-3);
   width: var(--dimension-3);
   height: var(--dimension-3);
   border-radius: 50%;
@@ -474,5 +598,11 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
 
 .monitoring-table-header__sort-icon {
   flex-shrink: 0;
+}
+
+.monitoring-table-header__sort-position {
+  flex-shrink: 0;
+  margin-left: calc(-1 * var(--dimension-2));
+  font-size: var(--font-size-small);
 }
 </style>

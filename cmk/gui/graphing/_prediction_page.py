@@ -12,6 +12,7 @@ from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.graphing_engine import build_prediction_graph, Direction, PredictionGraphContext
 from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import MetricName as EngineMetricName
 from cmk.graphing_engine import ServiceName as EngineServiceName
@@ -20,10 +21,9 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request as request_
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
 from cmk.gui.sites import live
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperature_unit import TemperatureUnit
@@ -38,12 +38,8 @@ from ._graph_display_config import (
     resolve_size,
 )
 from ._plugins import registered_metrics
-from ._prediction_graphs import (
-    build_prediction_graph,
-    PredictionGraphContext,
-)
+from ._prediction_graphs import PREDICTION_KIND, prediction_texts
 from ._prediction_query import PredictionQuerier, PredictionQuerierProtocol
-from ._prediction_source import Direction
 from ._user_specific_unit import get_temperature_unit
 
 
@@ -175,6 +171,9 @@ def _graph_group_data(
                         ),
                         title=prediction.title,
                         metrics=metrics,
+                        kind=PREDICTION_KIND,
+                        texts=prediction_texts(),
+                        localizer=translate_to_current_language,
                     ),
                     specification=None,
                 ),
@@ -206,12 +205,11 @@ class PredictionPage:
         site_id = SiteId(request_.get_str_input_mandatory("site"))
         requested_metric = request_.var("dsname")
 
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         make_header(
             html,
             title=_("Prediction for %(host_name)s - %(service_name)s")
             % {"host_name": host_name, "service_name": service_name},
-            breadcrumb=self.make_service_breadcrumb(host_name, service_name, user_permissions),
+            breadcrumb=self.make_service_breadcrumb(host_name, service_name, ctx.user_permissions),
             debug=ctx.config.debug,
             lang=user.language,
             inject_js_profiling_code=ctx.config.inject_js_profiling_code,

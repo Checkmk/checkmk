@@ -24,16 +24,36 @@ _INSTANCES_SETTINGS = {
 @pytest.mark.parametrize(
     "old, expected",
     [
-        pytest.param(None, {"deployment": ("do_not_deploy", None)}, id="do_not_deploy"),
+        pytest.param(
+            None,
+            {"deployment": ("do_not_deploy", None), "instances_settings": ("no_config", None)},
+            id="do_not_deploy",
+        ),
+        pytest.param(
+            {},
+            {"deployment": ("sync", None), "instances_settings": ("no_config", None)},
+            id="old_without_config",
+        ),
         pytest.param(
             {"instances_settings": _INSTANCES_SETTINGS},
-            {"deployment": ("sync", None), "instances_settings": _INSTANCES_SETTINGS},
+            {"deployment": ("sync", None), "instances_settings": ("settings", _INSTANCES_SETTINGS)},
             id="old_config",
         ),
         pytest.param(
-            {"deployment": ("cached", 300.0), "instances_settings": _INSTANCES_SETTINGS},
-            {"deployment": ("cached", 300.0), "instances_settings": _INSTANCES_SETTINGS},
-            id="already_migrated",
+            {
+                "deployment": ("cached", 300.0),
+                "instances_settings": ("settings", _INSTANCES_SETTINGS),
+            },
+            {
+                "deployment": ("cached", 300.0),
+                "instances_settings": ("settings", _INSTANCES_SETTINGS),
+            },
+            id="already_migrated_with_settings",
+        ),
+        pytest.param(
+            {"deployment": ("cached", 300.0)},
+            {"deployment": ("cached", 300.0)},
+            id="already_migrated_without_settings",
         ),
     ],
 )

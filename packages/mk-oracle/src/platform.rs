@@ -100,7 +100,13 @@ pub fn get_local_instances() -> Result<Vec<LocalInstance>> {
 
 pub fn home_key(home: &Path) -> PathBuf {
     if cfg!(windows) {
-        PathBuf::from(home.to_string_lossy().to_lowercase())
+        let lowercased = home.to_string_lossy().to_lowercase();
+        let trimmed = lowercased.trim_end_matches('\\');
+        PathBuf::from(if trimmed.ends_with(':') {
+            lowercased.as_str() // usually "C:\"
+        } else {
+            trimmed
+        })
     } else {
         home.to_path_buf()
     }
@@ -130,40 +136,172 @@ pub mod registry {
     use anyhow::Result;
 
     #[cfg(windows)]
-    pub fn get_instances(custom_branch: Option<String>) -> Result<Vec<LocalInstance>> {
-        use winreg::{enums::*, RegKey};
+    const ORACLE_BRANCH: &str = r"SOFTWARE\Oracle";
 
-        let custom_branch = custom_branch.unwrap_or_else(|| "SOFTWARE\\Oracle".to_string());
+    /// Reading these keys does not need admin rights, unlike asking the
+    /// service control manager.
+    #[cfg(windows)]
+    const SERVICES_BRANCH: &str = r"SYSTEM\CurrentControlSet\Services";
 
-        // Open the branch, e.g. HKEY_LOCAL_MACHINE\SOFTWARE
-        let handle = RegKey::predef(HKEY_LOCAL_MACHINE);
-        let oracle = handle.open_subkey(custom_branch)?;
+    #[cfg(any(windows, test))]
+    const SERVICE_PREFIXES: [&str; 2] = ["OracleASMService", "OracleService"];
 
-        let instances: Vec<LocalInstance> = oracle
-            .enum_keys()
-            .filter_map(|k| k.ok())
-            .filter_map(|k| {
-                if let Ok(candidate) = oracle.open_subkey(k) {
-                    let values = ["ORACLE_HOME", "ORACLE_BASE", "ORACLE_SID"]
-                        .iter()
-                        .map(|&key| candidate.get_value(key).unwrap_or_default())
-                        .collect::<Vec<String>>();
+    /// The binary both `OracleService*` and `OracleASMService*` run.
+    #[cfg(any(windows, test))]
+    const INSTANCE_BINARY: &str = "oracle.exe";
 
-                    if values.iter().all(|v| !v.is_empty()) {
-                        Some(LocalInstance {
-                            name: InstanceName::from(values[2].as_str()),
-                            home: PathBuf::from(values[0].as_str()),
-                            base: Some(PathBuf::from(values[1].as_str())),
-                        })
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
+    /// Returns the SID of an instance service: `OracleServiceORCL` gives
+    /// `ORCL`, `OracleASMService+ASM` gives `+ASM`. Every other Oracle
+    /// service, such as the listener or the job scheduler, gives `None`.
+    #[cfg(any(windows, test))]
+    fn sid_from_service_name(service: &str) -> Option<&str> {
+        SERVICE_PREFIXES
+            .iter()
+            .find_map(|prefix| {
+                service
+                    .get(..prefix.len())
+                    .filter(|head| head.eq_ignore_ascii_case(prefix))
+                    .and_then(|_| service.get(prefix.len()..))
             })
-            .collect::<Vec<LocalInstance>>();
-        Ok(instances)
+            .filter(|sid| !sid.is_empty())
+    }
+
+    /// Returns the `ORACLE_HOME` of a service `ImagePath`, which looks like
+    /// `"<home>\bin\oracle.exe" <SID>`, where the quotes and the SID may be
+    /// missing. Anchoring on `\bin\` rather than on the quotes also gets the
+    /// home out of an unquoted path with spaces, and requiring the binary to
+    /// be `bin\oracle.exe` keeps a service that only shares the name prefix
+    /// from becoming an instance. A path that does not match is rejected
+    /// instead of guessed at: a wrong home would send every later client
+    /// lookup to the wrong installation, while a rejected one only leaves the
+    /// SID to the home keys.
+    #[cfg(any(windows, test))]
+    fn home_from_image_path(image_path: &str) -> Option<PathBuf> {
+        const BIN_DIR: &str = r"\bin\";
+
+        let lowercased = image_path.to_ascii_lowercase();
+        let bin = lowercased.rfind(BIN_DIR)?;
+        // To be sure it is Oracle, not smth strange
+        if !lowercased[bin + BIN_DIR.len()..].starts_with(INSTANCE_BINARY) {
+            return None;
+        }
+        let home = image_path[..bin].trim().trim_start_matches('"');
+        (!home.is_empty()).then(|| PathBuf::from(home))
+    }
+
+    /// Returns one entry per SID.
+    ///
+    /// Both sources can name a SID twice: an upgrade leaves the old home's
+    /// `ORACLE_SID` in place, and a SID served by an `OracleService` and an
+    /// `OracleASMService` alike has two service keys. The first entry of a SID
+    /// wins, and services come first: the service knows the home the instance
+    /// really runs from, so a home key is used only for a SID that has no
+    /// service. `InstanceName` upper-cases, which makes the comparison case
+    /// insensitive, as Oracle treats SIDs.
+    #[cfg(any(windows, test))]
+    fn merge_instances(
+        home_keys: Vec<LocalInstance>,
+        services: Vec<LocalInstance>,
+    ) -> Vec<LocalInstance> {
+        use std::collections::HashSet;
+
+        let mut seen: HashSet<InstanceName> = HashSet::new();
+        let mut merged: Vec<LocalInstance> = services
+            .into_iter()
+            .filter(|service| seen.insert(service.name.clone()))
+            .map(|service| LocalInstance {
+                // ORACLE_BASE belongs to the home, not to the SID, so any home
+                // key of that home has the right one.
+                base: home_keys
+                    .iter()
+                    .find(|key| super::home_key(&key.home) == super::home_key(&service.home))
+                    .and_then(|key| key.base.clone()),
+                ..service
+            })
+            .collect();
+        merged.extend(
+            home_keys
+                .into_iter()
+                .filter(|key| seen.insert(key.name.clone())),
+        );
+        merged
+    }
+
+    /// Returns the `ORACLE_SID` of every home key. `ORACLE_BASE` is optional.
+    /// Some homes do not have it, and it is not needed to reach an instance.
+    #[cfg(windows)]
+    fn instances_from_home_keys(oracle: &winreg::RegKey) -> Vec<LocalInstance> {
+        oracle
+            .enum_keys()
+            .filter_map(|key| key.ok())
+            .filter_map(|key| oracle.open_subkey(key).ok())
+            .filter_map(|home| {
+                let value = |name: &str| -> String { home.get_value(name).unwrap_or_default() };
+                let (oracle_home, sid) = (value("ORACLE_HOME"), value("ORACLE_SID"));
+                if oracle_home.is_empty() || sid.is_empty() {
+                    return None;
+                }
+                let base = value("ORACLE_BASE");
+                Some(LocalInstance {
+                    name: InstanceName::from(sid.as_str()),
+                    home: PathBuf::from(oracle_home),
+                    base: (!base.is_empty()).then(|| PathBuf::from(base)),
+                })
+            })
+            .collect()
+    }
+
+    /// Returns every SID that has a service. A home key gives only the
+    /// default SID of its home, so this finds the databases created into an
+    /// existing home as well. The legacy `mk_oracle.ps1` reads the same list
+    /// with `Get-Service`.
+    #[cfg(windows)]
+    fn instances_from_services(services: &winreg::RegKey) -> Vec<LocalInstance> {
+        services
+            .enum_keys()
+            .filter_map(|key| key.ok())
+            .filter_map(|service| {
+                let sid = sid_from_service_name(&service)?.to_string();
+                let image_path: String = services
+                    .open_subkey(&service)
+                    .and_then(|key| key.get_value("ImagePath"))
+                    .map_err(|e| log::info!("Cannot read ImagePath of {service}: {e}"))
+                    .ok()?;
+                let Some(home) = home_from_image_path(&image_path) else {
+                    log::info!("Cannot derive ORACLE_HOME of {service} from {image_path:?}");
+                    return None;
+                };
+                Some(LocalInstance {
+                    name: InstanceName::from(sid.as_str()),
+                    home,
+                    // Filled in from the home keys by merge_instances.
+                    base: None,
+                })
+            })
+            .collect()
+    }
+
+    /// Returns the instances Windows knows about: the `ORACLE_SID` of every
+    /// Oracle home key plus every instance service. Both sources are needed. A
+    /// database created into an existing home has no home key of its own, and
+    /// a home key can name a SID whose service is gone. Keeping the home keys
+    /// also means this never reports less than it did before the service scan
+    /// was added.
+    #[cfg(windows)]
+    pub fn get_instances(custom_branch: Option<String>) -> Result<Vec<LocalInstance>> {
+        use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
+
+        let branch = custom_branch.unwrap_or_else(|| ORACLE_BRANCH.to_string());
+        let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+        let homes = instances_from_home_keys(&hklm.open_subkey(branch)?);
+        let services = match hklm.open_subkey(SERVICES_BRANCH) {
+            Ok(key) => instances_from_services(&key),
+            Err(e) => {
+                log::warn!("Cannot enumerate {SERVICES_BRANCH}: {e}");
+                Vec::new()
+            }
+        };
+        Ok(merge_instances(homes, services))
     }
 
     /// Finds the oratab file in standard locations.
@@ -215,6 +353,212 @@ pub mod registry {
             })
             .collect::<Vec<LocalInstance>>();
         Ok(all)
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::{
+            home_from_image_path, merge_instances, sid_from_service_name, InstanceName,
+            LocalInstance,
+        };
+        use std::path::PathBuf;
+
+        /// `From<&str>` upper-cases, as both registry sources do.
+        fn instance(name: &str, home: &str) -> LocalInstance {
+            LocalInstance {
+                name: InstanceName::from(name),
+                home: PathBuf::from(home),
+                base: None,
+            }
+        }
+
+        fn instance_with_base(name: &str, home: &str, base: &str) -> LocalInstance {
+            LocalInstance {
+                base: Some(PathBuf::from(base)),
+                ..instance(name, home)
+            }
+        }
+
+        #[test]
+        fn test_sid_from_service_name() {
+            assert_eq!(sid_from_service_name("OracleServiceORCL"), Some("ORCL"));
+            assert_eq!(sid_from_service_name("OracleASMService+ASM"), Some("+ASM"));
+            // Registry key names are case-insensitive.
+            assert_eq!(sid_from_service_name("ORACLESERVICEorcl"), Some("orcl"));
+        }
+
+        #[test]
+        fn test_sid_from_service_name_skips_services_without_an_instance() {
+            for service in [
+                "OracleOraDB19Home1TNSListener",
+                "OracleJobSchedulerORCL",
+                "OracleVssWriterORCL",
+                "OracleRemExecServiceV2",
+                "OracleService",
+                "OracleASMService",
+                "Dhcp",
+                "",
+            ] {
+                assert_eq!(sid_from_service_name(service), None, "{service}");
+            }
+        }
+
+        #[test]
+        fn test_home_from_image_path() {
+            let home = Some(PathBuf::from(r"C:\app\oracle\product\19.0.0\dbhome_1"));
+            for image_path in [
+                r#""C:\app\oracle\product\19.0.0\dbhome_1\bin\oracle.exe" ORCL"#,
+                r#""C:\app\oracle\product\19.0.0\dbhome_1\bin\oracle.exe""#,
+                r"C:\app\oracle\product\19.0.0\dbhome_1\bin\oracle.exe ORCL",
+                r"C:\app\oracle\product\19.0.0\dbhome_1\bin\oracle.exe",
+                r"  C:\app\oracle\product\19.0.0\dbhome_1\BIN\ORACLE.EXE  ",
+            ] {
+                assert_eq!(home_from_image_path(image_path), home, "{image_path}");
+            }
+        }
+
+        /// An unquoted path with spaces is ambiguous, but the `bin` directory
+        /// still ends the home.
+        #[test]
+        fn test_home_from_image_path_of_a_home_with_spaces() {
+            let home = Some(PathBuf::from(r"C:\Program Files\oracle\dbhome_1"));
+            for image_path in [
+                r#""C:\Program Files\oracle\dbhome_1\bin\oracle.exe" ORCL"#,
+                r"C:\Program Files\oracle\dbhome_1\bin\oracle.exe ORCL", // doubtful example
+            ] {
+                assert_eq!(home_from_image_path(image_path), home, "{image_path}");
+            }
+        }
+
+        #[test]
+        fn test_home_from_image_path_rejects_a_path_outside_bin() {
+            for image_path in [
+                r"C:\app\oracle\dbhome_1\oracle.exe",
+                r"oracle.exe",
+                r#""" ORCL"#,
+                "",
+                "   ",
+            ] {
+                assert_eq!(home_from_image_path(image_path), None, "{image_path:?}");
+            }
+        }
+
+        /// A service that only shares the name prefix must not become an
+        /// instance, and neither must a binary nested below `bin`.
+        #[test]
+        fn test_home_from_image_path_rejects_another_binary() {
+            for image_path in [
+                r"C:\vendor\bin\vendor.exe",
+                r#""C:\vendor\bin\vendor.exe" ORCL"#,
+                r"C:\app\oracle\dbhome_1\bin\tnslsnr.exe LISTENER",
+                r"C:\app\oracle\dbhome_1\bin\subdir\oracle.exe ORCL",
+                r"C:\app\oracle\dbhome_1\bin\",
+            ] {
+                assert_eq!(home_from_image_path(image_path), None, "{image_path:?}");
+            }
+        }
+
+        #[test]
+        fn test_merge_instances_lists_every_sid_once() {
+            let merged = merge_instances(
+                vec![instance("ORCL", r"C:\home_1")],
+                // A second database in the same home has no home key.
+                vec![
+                    instance("orcl", r"C:\home_1"),
+                    instance("PROD", r"C:\home_1"),
+                ],
+            );
+
+            assert_eq!(
+                merged,
+                vec![
+                    instance("ORCL", r"C:\home_1"),
+                    instance("PROD", r"C:\home_1"),
+                ]
+            );
+        }
+
+        /// OracleServiceXE and OracleASMServiceXE would both name the SID XE.
+        #[test]
+        fn test_merge_instances_dedups_services() {
+            let merged = merge_instances(
+                vec![],
+                vec![instance("XE", r"C:\home_1"), instance("xe", r"C:\home_2")],
+            );
+
+            assert_eq!(merged, vec![instance("XE", r"C:\home_1")]);
+        }
+
+        /// An upgrade leaves the old home's ORACLE_SID in place. The service
+        /// says which home the instance runs from now.
+        #[test]
+        fn test_merge_instances_prefers_the_service_home_over_a_stale_home_key() {
+            let merged = merge_instances(
+                vec![
+                    instance_with_base("ORCL", r"C:\home_12c", r"C:\base_12c"),
+                    instance_with_base("ORCL", r"C:\home_19c", r"C:\base_19c"),
+                ],
+                vec![instance("ORCL", r"C:\home_19c")],
+            );
+
+            assert_eq!(
+                merged,
+                vec![instance_with_base("ORCL", r"C:\home_19c", r"C:\base_19c")]
+            );
+        }
+
+        /// If ORACLE_BASE exists for ORACLE_HOME, add it.
+        #[test]
+        fn test_merge_instances_takes_the_base_of_the_home() {
+            let merged = merge_instances(
+                vec![instance_with_base("ORCL", r"C:\home_1", r"C:\base_1")],
+                vec![instance("PROD", r"C:\home_1")],
+            );
+
+            assert_eq!(
+                merged,
+                vec![
+                    instance_with_base("PROD", r"C:\home_1", r"C:\base_1"),
+                    instance_with_base("ORCL", r"C:\home_1", r"C:\base_1"),
+                ]
+            );
+        }
+
+        #[test]
+        fn test_merge_instances_has_no_base_for_an_unknown_home() {
+            let merged = merge_instances(
+                vec![instance_with_base("ORCL", r"C:\home_12c", r"C:\base_12c")],
+                vec![instance("ORCL", r"C:\home_19c")],
+            );
+
+            assert_eq!(merged, vec![instance("ORCL", r"C:\home_19c")]);
+        }
+
+        /// Without a service there is nothing better than the first home key.
+        #[test]
+        fn test_merge_instances_dedups_home_keys() {
+            let merged = merge_instances(
+                vec![
+                    instance("OrCL", r"C:\home_12c"),
+                    instance("oRcl", r"C:\home_19c"),
+                    instance("TEST", r"C:\home_19c"),
+                ],
+                vec![],
+            );
+
+            assert_eq!(
+                merged,
+                vec![
+                    instance("ORCL", r"C:\home_12c"),
+                    instance("TEST", r"C:\home_19c"),
+                ]
+            );
+        }
+
+        #[test]
+        fn test_merge_instances_of_nothing() {
+            assert!(merge_instances(vec![], vec![]).is_empty());
+        }
     }
 }
 
@@ -366,6 +710,17 @@ mod tests {
         } else {
             assert_eq!(homes.len(), 2, "case names two directories on unix");
         }
+    }
+
+    /// The home keys and the services spell the same home differently.
+    #[cfg(windows)]
+    #[test]
+    fn test_home_key_ignores_a_trailing_separator() {
+        assert_eq!(
+            home_key(Path::new(r"C:\app\oracle\dbhome_1\")),
+            home_key(Path::new(r"C:\app\oracle\dbhome_1"))
+        );
+        assert_eq!(home_key(Path::new(r"C:\")), PathBuf::from(r"c:\"));
     }
 
     #[cfg(windows)]

@@ -10,6 +10,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, onBeforeMount } from 'vue'
 
 import CatalogPanelHeader from '@/dashboard/components/Wizard/components/CatalogPanelHeader.vue'
+import { MAX_WIZARD_FORM_WIDTH } from '@/dashboard/components/Wizard/constants'
 import { ElementSelection } from '@/dashboard/components/Wizard/types.ts'
 import { useVisualInfoCollection } from '@/dashboard/composables/api/useVisualInfoCollection'
 import type { ContextFilters } from '@/dashboard/types/filter.ts'
@@ -149,11 +150,13 @@ const emptyContextTitle = computed(() => {
       </template>
       <!-- object-configured-filters is not being recognized as a props -->
       <!-- @vue-ignore -->
-      <DisplayContextFilters
-        :object-configured-filters="objectConfiguredFilters"
-        :context-filters="relevantContextFilters"
-        :empty-filters-title="emptyContextTitle"
-      />
+      <div :style="`max-width: ${MAX_WIZARD_FORM_WIDTH}px`">
+        <DisplayContextFilters
+          :object-configured-filters="objectConfiguredFilters"
+          :context-filters="relevantContextFilters"
+          :empty-filters-title="emptyContextTitle"
+        />
+      </div>
     </CmkCatalogPanel>
   </div>
   <ObjectTypeFilterConfiguration

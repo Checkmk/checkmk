@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.autocompleters import AutocompleterRegistry
+from cmk.gui.dashboard.type_defs import StatsDashletConfig
 
 from ..registry import DashletRegistry
 from .custom_url import URLDashlet
@@ -14,8 +15,9 @@ from .graph import (
     graph_templates_autocompleter,
     TemplateGraphDashlet,
 )
+from .monitoring_table import MonitoringTableDashlet
 from .static_text import StaticTextDashlet, StaticTextDashletConfig
-from .stats import EventStatsDashlet, HostStatsDashlet, ServiceStatsDashlet, StatsDashletConfig
+from .stats import EventStatsDashlet, HostStatsDashlet, ServiceStatsDashlet
 from .user_messages import MessageUsersDashlet
 from .view import (
     copy_view_into_dashlet,
@@ -49,6 +51,7 @@ def register_dashlets(
     dashlet_registry.register(ViewDashlet)
     dashlet_registry.register(EmbeddedViewDashlet)
     dashlet_registry.register(LinkedViewDashlet)
+    dashlet_registry.register(MonitoringTableDashlet)
     autocompleter_registry.register_autocompleter(
         GRAPH_TEMPLATE_CHOICE_AUTOCOMPLETER_ID,
         graph_templates_autocompleter,

@@ -21,7 +21,7 @@ from cmk.gui.form_specs import (
 )
 from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupContext, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, ServiceInterest
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
@@ -31,7 +31,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Widget,
 )
 from cmk.gui.watolib.passwords import load_passwords
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.rulesets.v1.form_specs import Dictionary, FormSpec, Password
 from cmk.utils.ip_lookup import IPStackConfig
 
@@ -182,9 +182,9 @@ def _match_service_interest(
     return None
 
 
-def stage_components(stage: QuickSetupStage) -> Sequence[Widget]:
+def stage_components(stage: QuickSetupStage, ctx: QuickSetupContext) -> Sequence[Widget]:
     return (
-        stage.configure_components()
+        stage.configure_components(ctx)
         if callable(stage.configure_components)
         else stage.configure_components
     )
@@ -201,9 +201,10 @@ def _flatten_formspec_wrappers(components: Sequence[Widget]) -> Iterator[FormSpe
 
 def build_formspec_map_from_stages(
     stages: Sequence[QuickSetupStage],
+    ctx: QuickSetupContext,
 ) -> Mapping[FormSpecId, FormSpec]:
     return {
         widget.id: cast(FormSpec, widget.form_spec)
         for stage in stages
-        for widget in _flatten_formspec_wrappers(stage_components(stage))
+        for widget in _flatten_formspec_wrappers(stage_components(stage, ctx))
     }

@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.graphing_engine import (
     AutoPrecision,
-    ConsolidationFunction,
     Constant,
     Curve,
     CurveAttributes,
@@ -26,7 +27,12 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
+
+_COARSEST_ARCHIVE_STEP = 6 * 60 * 60
+_RRD_RANGE_WITH_EDGE_NEIGHBOURS = (
+    f"{0 - 2 * _COARSEST_ARCHIVE_STEP}:{60 + _COARSEST_ARCHIVE_STEP}:10"
+)
 
 
 def _comprehensive_graph() -> Graph:
@@ -43,37 +49,28 @@ def _comprehensive_graph() -> Graph:
         title="Title %(x)s",
         kind="template",
         vertical_range=FixedRange(
-            lower=0, upper=ScalarOf(metric=rrd, scalar_kind=ScalarKind.MAXIMUM, color="#mx")
+            lower=0, upper=ScalarOf(metric=rrd, scalar_kind=ScalarKind.MAXIMUM)
         ),
         stacks=[
             Stack(
                 members=[
                     Curve(
                         quantity=Sum(
-                            summands=[
+                            summands=(
                                 rrd,
-                                Constant(2, CurveAttributes(title="c", unit=unit, color="#c")),
-                            ]
+                                Constant(2),
+                            )
                         ),
                         attributes=attrs,
                     )
                 ],
                 inverse=True,
-                reference=Curve(
-                    quantity=RRDMetric(
-                        host_name=HostName("h"),
-                        service_name=ServiceName("s"),
-                        metric_name=MetricName("ref"),
-                        consolidation_function=ConsolidationFunction.MAX,
-                    ),
-                    attributes=attrs,
-                ),
             )
         ],
         lines=[
             Line(
                 curve=Curve(
-                    quantity=ScalarOf(metric=rrd, scalar_kind=ScalarKind.WARNING, color="#w"),
+                    quantity=ScalarOf(metric=rrd, scalar_kind=ScalarKind.WARNING),
                     attributes=attrs,
                 ),
                 inverse=False,
@@ -82,7 +79,7 @@ def _comprehensive_graph() -> Graph:
         rules=[
             Rule(
                 curve=Curve(
-                    quantity=ScalarOf(metric=rrd, scalar_kind=ScalarKind.MAXIMUM, color="#mx"),
+                    quantity=ScalarOf(metric=rrd, scalar_kind=ScalarKind.MAXIMUM),
                     attributes=attrs,
                 ),
                 inverse=True,
@@ -103,8 +100,8 @@ def test_fetch_graph_data_comprehensive_graph(
                 "host_name": "h",
                 "description": "s",
                 "check_command": "check_mk-x",
-                "metrics": ["m", "ref"],
-                "perf_data": "m=1;5;10;0;100 ref=2",
+                "metrics": ["m"],
+                "perf_data": "m=1;5;10;0;100",
             }
         ],
     )
@@ -112,7 +109,7 @@ def test_fetch_graph_data_comprehensive_graph(
         "GET services\nColumns: host_name description perf_data check_command\nFilter: host_name = h\nFilter: description = s\nAnd: 2"
     )
     mock_livestatus.expect_query(
-        "GET services\nColumns: host_name description rrddata:m:m.average:0:60:10\nFilter: host_name = h\nFilter: description = s\nAnd: 2"
+        f"GET services\nColumns: host_name description rrddata:m:m.average:{_RRD_RANGE_WITH_EDGE_NEIGHBOURS}\nFilter: host_name = h\nFilter: description = s\nAnd: 2"
     )
     with mock_livestatus():
         resp = clients.Graph.fetch_data(
@@ -120,7 +117,7 @@ def test_fetch_graph_data_comprehensive_graph(
             requested_time_range={"start": 0, "end": 60, "step": 10},
             consolidation_function="avg",
         )
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     unit = {
         "notation": "decimal",
         "symbol": "X",
@@ -144,18 +141,13 @@ def test_fetch_graph_data_comprehensive_graph(
         "time_range": {"start": 0, "end": 60, "step": 10},
         "metrics": [
             {
-                "metadata": _metadata("-rrd_metric(h/s/ref)"),
-                "render": {"stack": "stack-0", "inverse": True, "hidden": True},
-                "data_points": [None, None, None, None, None, None],
-            },
-            {
                 "metadata": _metadata("-sum(rrd_metric(h/s/m),constant(2))"),
-                "render": {"stack": "stack-0", "inverse": True, "hidden": False},
+                "render": {"shape": "area", "stack": "stack-0", "inverse": True, "hidden": False},
                 "data_points": [2.0, 2.0, 2.0, 2.0, 2.0, 2.0],
             },
             {
                 "metadata": _metadata("scalar_of(warning,rrd_metric(h/s/m))"),
-                "render": {"stack": None, "inverse": False, "hidden": False},
+                "render": {"shape": "line", "inverse": False, "hidden": False},
                 "data_points": [5.0, 5.0, 5.0, 5.0, 5.0, 5.0],
             },
         ],

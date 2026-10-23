@@ -148,7 +148,6 @@ class TestValueSpecFloat:
         valuespec: with long lists the request line grows beyond the web server limit."""
         with (
             request_var(
-                mode="edit_configvar",
                 varname="user_icons_and_actions",
                 ve_1_1_p_icon_value="crash",
             ),
@@ -158,7 +157,7 @@ class TestValueSpecFloat:
             rendered = output_funnel.drain()
 
         # both are url encoded within the back parameter
-        assert "mode%3Dedit_configvar" in rendered
+        assert "varname%3Duser_icons_and_actions" in rendered
         assert "%3Dcrash" not in rendered
 
     # TODO: empty_img should be renamed to "default_icon" (?)

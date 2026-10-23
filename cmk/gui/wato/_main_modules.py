@@ -174,7 +174,7 @@ class MainModuleGlobalSettings(ABCMainModule):
     @property
     @override
     def mode_or_url(self) -> str:
-        return "globalvars"
+        return "global_settings.py"
 
     @property
     @override

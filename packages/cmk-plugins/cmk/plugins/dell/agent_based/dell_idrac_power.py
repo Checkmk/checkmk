@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field, InitVar
+from dataclasses import dataclass
 from enum import Enum
 
 from cmk.agent_based.v2 import (
@@ -30,6 +30,10 @@ class RedundancyStateV3(Enum):
     NOT_REDUNDANT = "6"
     REDUNDANCY_OFFLINE = "7"
 
+    @staticmethod
+    def mib() -> str:
+        return "iDRAC9 or older"
+
     @property
     def label(self) -> str:
         return self.name.lower().replace("_", " ")
@@ -52,6 +56,10 @@ class RedundancyStateV4(Enum):
     FULL = "1"
     LOST = "2"
 
+    @staticmethod
+    def mib() -> str:
+        return "iDRAC10 or newer"
+
     @property
     def label(self) -> str:
         return self.name.lower().replace("_", " ")
@@ -68,11 +76,27 @@ class RedundancyStateV4(Enum):
 RedundancyState = RedundancyStateV3 | RedundancyStateV4
 
 
+@dataclass(frozen=True)
+class UndefinedRedundancyState:
+    # A value the detected MIB version does not define. Naming it in the service output makes a
+    # wrong detection visible, instead of letting it fail the whole section.
+    value: str
+    mib: str
+
+    @property
+    def label(self) -> str:
+        return f"undefined value {self.value} (assuming the MIB for {self.mib})"
+
+    @property
+    def state(self) -> State:
+        return State.UNKNOWN
+
+
 @dataclass
 class PowerUnit:
     # Base OID: .1.3.6.1.4.1.674.10892.5.4.600.10.1
     index: str  # .2
-    redundancy_state: RedundancyState | None  # .5
+    redundancy_state: RedundancyState | UndefinedRedundancyState | None  # .5
     required_for_redundancy: int | None  # .6
 
     @property
@@ -142,44 +166,67 @@ Section = tuple[SectionUnit, SectionSupply]
 
 _NOT_REPORTED = "Status: not reported by the device"
 
+# RacTypeEnum gives every iDRAC generation a block of 16 values: iDRAC7 starts at 16, iDRAC8 at
+# 32, iDRAC9 at 48 and continues at 64 and 80 for the 15th and 16th server generation, iDRAC10
+# starts at 96. Below 16 only other(1) and unknown(2) are defined, neither of which names a
+# generation.
+_RAC_TYPE_IDRAC7 = 16
+_RAC_TYPE_IDRAC10 = 96
 
-@dataclass
-class MIBVersion:
-    _FIRMWARE_PATTERN = re.compile(r"(?i)^idrac(\d+)")
-    redundancy_state: type[RedundancyState] = field(init=False)
-    firmware_shortname: InitVar[str | None] = None
+_SHORT_NAME_PATTERN = re.compile(r"(?i)^idrac(\d+)")
 
-    def __post_init__(self, firmware_shortname: str | None) -> None:
-        """
-        Get the version dependent powerUnitRedundancyStatus table.
 
-        With iDRAC10 v4 of the MIB was introduced, all other still supported generations use v3.
-        """
-        if firmware_shortname is None:
-            self.redundancy_state = RedundancyStateV4
-            return
+def _select_redundancy_state_type(rac_type: str, short_name: str) -> type[RedundancyState]:
+    """
+    Get the version-dependent powerUnitRedundancyStatus value scope.
 
-        match = self._FIRMWARE_PATTERN.match(firmware_shortname)
-        if not match:
-            self.redundancy_state = RedundancyStateV4
-            return
+    iDRAC10 introduced v4 of the MIB; all other still-supported generations use v3. racType
+    names the generation even on devices whose racShortName does not, so it is asked first.
+    """
 
-        if int(match.group(1)) < 10:
-            self.redundancy_state = RedundancyStateV3
-            return
+    def _redundancy_state_from_rac_type() -> type[RedundancyState] | None:
+        try:
+            value = int(rac_type)
+        except ValueError:
+            return None
+        if value >= _RAC_TYPE_IDRAC10:
+            return RedundancyStateV4
+        if value >= _RAC_TYPE_IDRAC7:
+            return RedundancyStateV3
+        return None
 
-        self.redundancy_state = RedundancyStateV4
+    def _redundancy_state_from_short_name() -> type[RedundancyState] | None:
+        if (match := _SHORT_NAME_PATTERN.match(short_name)) is None:
+            return None
+        return RedundancyStateV3 if int(match.group(1)) < 10 else RedundancyStateV4
+
+    return (
+        _redundancy_state_from_rac_type()
+        or _redundancy_state_from_short_name()
+        or RedundancyStateV4
+    )
 
 
 def _parse_power_unit(
     row: Sequence[str], redundancy_state: type[RedundancyState]
 ) -> PowerUnit | None:
+    def _parse_redundancy_status(status: str) -> RedundancyState | UndefinedRedundancyState | None:
+        # A column the device does not answer is padded with an empty string. An empty status
+        # therefore means the device reported nothing, which is not the same as reporting a
+        # value the detected MIB does not define.
+        if not status:
+            return None
+        try:
+            return redundancy_state(status)
+        except ValueError:
+            return UndefinedRedundancyState(value=status, mib=redundancy_state.mib())
+
     index, redundancy_status, required_for_redundancy = row
     if not index:
         return None
     return PowerUnit(
         index=index,
-        redundancy_state=redundancy_state(redundancy_status) if redundancy_status else None,
+        redundancy_state=_parse_redundancy_status(redundancy_status),
         required_for_redundancy=int(required_for_redundancy) if required_for_redundancy else None,
     )
 
@@ -197,19 +244,22 @@ def _parse_power_supply(row: Sequence[str]) -> PowerSupply | None:
 
 
 def parse_dell_idrac_power(string_table: Sequence[StringTable]) -> Section:
-    # A column the device does not answer for a row is padded with an empty string, and a row
-    # exists as soon as any column answers. An empty value therefore means the device reported
-    # nothing, which is not the same as reporting a state the MIB does not define.
-    try:
-        firmware_shortname = string_table[2][0][0]
-    except IndexError:
-        firmware_shortname = None
-    mib_version = MIBVersion(firmware_shortname=firmware_shortname)
+    def _rac_info(column: int) -> str:
+        """Read one of the racInfoGroup scalars, which the device may leave unanswered."""
+        try:
+            return string_table[2][0][column]
+        except IndexError:
+            return ""
+
+    redundancy_state = _select_redundancy_state_type(
+        rac_type=_rac_info(1),
+        short_name=_rac_info(0),
+    )
     return (
         {
             unit.item: unit
             for row in string_table[0]
-            if (unit := _parse_power_unit(row, mib_version.redundancy_state)) is not None
+            if (unit := _parse_power_unit(row, redundancy_state)) is not None
         },
         {
             supply.item: supply
@@ -231,7 +281,13 @@ snmp_section_dell_idrac_power = SNMPSection(
             base=".1.3.6.1.4.1.674.10892.5.4.600.12.1",
             oids=["2", "5", "7", "8"],
         ),
-        SNMPTree(base=".1.3.6.1.4.1.674.10892.5.1.1", oids=["2"]),
+        SNMPTree(
+            base=".1.3.6.1.4.1.674.10892.5.1.1",
+            oids=[
+                "2",  # IDRAC-MIB::racShortName
+                "7",  # IDRAC-MIB::racType
+            ],
+        ),
     ],
     parse_function=parse_dell_idrac_power,
 )

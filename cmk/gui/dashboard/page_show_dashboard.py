@@ -22,17 +22,16 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_navigation import MainNavigation
 from cmk.gui.ntop import ntop_connection
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import VisualTypeName
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
-from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.views.drilldown_filters import dropped_filters_warning
 from cmk.gui.visuals import visual_page_breadcrumb
 from cmk.gui.visuals._filter_context import requested_context_from_request
-from cmk.gui.watolib.config_domain_name import config_domain_registry, ConfigDomainRegistry
 from cmk.licensing.registry import get_licensing_user_effect
 from cmk.utils import paths
 from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 from cmk.web.utils.html import HTML
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri_contextless
 
 from .breadcrumb import dashboard_breadcrumb, EvaluatedBreadcrumbItem
@@ -84,29 +83,32 @@ def page_dashboard_app(ctx: PageContext) -> None:
     else:
         permitted_dashboards = get_permitted_dashboards()
         board = load_dashboard(permitted_dashboards, name)
-        requested_context = requested_context_from_request(["host", "service"])
+        request_cache = RequestCache(ctx.config)
+        requested_context = requested_context_from_request(["host", "service"], request_cache)
 
-        board_context = visuals.active_context_from_request(["host", "service"], board["context"])
+        board_context = visuals.active_context_from_request(
+            ["host", "service"], board["context"], request_cache
+        )
         board["context"] = board_context
-        title = visuals.visual_title("dashboard", board, board_context)
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        title = visuals.visual_title("dashboard", board, board_context, request_cache=request_cache)
         # some dashboards have more complicated context requirements when loaded, these are
         # constructed when clicking on a linking dashboard which means that this will (for now
         # with the current architecture) always go through a full page reload rather than a
         # state changing action. Hence, we can rely on the breadcrumb building mechanism here
         # Loading a dashboard on the frontend through other means will only necessitate the
         # simple breadcrumb as it does not have any prior context
-        breadcrumb = dashboard_breadcrumb(name, board, title, board_context, user_permissions)
+        breadcrumb = dashboard_breadcrumb(name, board, title, board_context, ctx.user_permissions)
 
         loaded_dashboard_properties = {
             "metadata": asdict(
-                DashboardMetadataObject.from_dashboard_config(board, user_permissions)
+                DashboardMetadataObject.from_dashboard_config(board, ctx.user_permissions)
             ),
             "filter_context": {
                 "context": requested_context,
                 # determines if the requested filters should overwrite the dashboard filters or
                 # merge them with dashboard filters
                 "application_mode": "overwrite" if ctx.request.has_var("active_") else "merge",
+                "dropped_filters_warning": dropped_filters_warning(ctx.request),
             },
         }
 
@@ -145,16 +147,8 @@ def page_dashboard_app(ctx: PageContext) -> None:
         "available_features": {
             "dashboard_features": dashboard_features,
             "ntop_active": ntop_connection().is_active(),
-            "network_flow_active": _network_flow_active(config_domain_registry),
         },
-        "permissions": {
-            "publish_to_all": user.may("general.publish_dashboards"),
-            "publish_to_contact_groups": user.may("general.publish_dashboards_to_groups"),
-            "publish_to_foreign_contact_groups": user.may(
-                "general.publish_dashboards_to_foreign_groups"
-            ),
-            "publish_to_sites": user.may("general.publish_dashboards_to_sites"),
-        },
+        "permissions": _dashboard_permissions(),
         "logged_in_user": user.id,
         "global_time_picker": asdict(get_global_time_picker_props(ctx.config)),
     }
@@ -170,27 +164,17 @@ def page_dashboard_app(ctx: PageContext) -> None:
     html.footer()
 
 
-def _network_flow_active(registry: ConfigDomainRegistry) -> bool:
-    """Whether network flow monitoring is turned on (Ultimate feature).
-
-    The ``network_flow`` setting lives in its own config domain (written to
-    ``network_flow.d``), not in the GUI's ``active_config``, so it has to be read through
-    the config domain. Kept edition-agnostic on purpose: the domain is only registered by
-    the Ultimate feature, so it is simply absent elsewhere and we treat that as inactive.
-    """
-    domain = registry.get("network_flow")
-    if domain is None:
-        return False
-    settings = {
-        **domain.default_globals(),
-        **domain.load(),
-        **domain.load(site_specific=True),
+def _dashboard_permissions() -> dict[str, bool]:
+    return {
+        "publish_to_all": user.may("general.publish_dashboards"),
+        "publish_to_contact_groups": user.may("general.publish_dashboards_to_groups"),
+        "publish_to_foreign_contact_groups": user.may(
+            "general.publish_dashboards_to_foreign_groups"
+        ),
+        "publish_to_sites": user.may("general.publish_dashboards_to_sites"),
+        # false on community, which does not register the permission
+        "edit_custom_graph": user.may("general.edit_custom_graph"),
     }
-    match settings.get("network_flow"):
-        case ("enabled", _):
-            return True
-        case _:
-            return False
 
 
 def _get_default_dashboard_name() -> str:

@@ -20,7 +20,7 @@ from cmk.gui.main_menu_types import MainMenuItem
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import Visual
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import get_permitted_views
@@ -31,6 +31,7 @@ from ._helpers import (
     footnotelinks,
     is_menu_item_supported_visual,
     make_main_menu,
+    merge_registered_monitor_topics,
     show_main_menu,
     VisualItem,
     VisualMenuItem,
@@ -81,12 +82,7 @@ class Views(SidebarSnapin):
     def show(self, config: Config) -> None:
         show_main_menu(
             treename="views",
-            menu=make_main_menu(
-                view_menu_items(
-                    user_permissions := UserPermissions.from_config(config, permission_registry)
-                ),
-                user_permissions,
-            ),
+            menu=default_view_menu_topics(UserPermissions.from_config(config, all_permissions())),
         )
 
         links = []
@@ -105,9 +101,10 @@ def ajax_export_views(ctx: PageContext) -> None:  # noqa: ARG001
 
 
 def default_view_menu_topics(user_permissions: UserPermissions) -> list[NavItemTopic]:
-    return make_main_menu(
-        view_menu_items(user_permissions),
-        user_permissions,
+    # Feature modules (e.g. Checkmk Maps) contribute their own Monitor topics
+    # through the registry, so this core builder needs no feature-specific imports.
+    return merge_registered_monitor_topics(
+        make_main_menu(view_menu_items(user_permissions), user_permissions), user_permissions
     )
 
 
@@ -120,7 +117,7 @@ def view_menu_items(user_permissions: UserPermissions) -> list[VisualMenuItem]:
         if not issubclass(page_type, pagetypes.PageRenderer):
             continue
 
-        for page in page_type.load(user_permissions).pages(user_permissions):
+        for page in page_type.load().pages(user_permissions):
             if page._show_in_sidebar():  # noqa: SLF001
                 visual = page.to_visual()
                 visual["hidden"] = False  # Is currently not configurable for pagetypes

@@ -11,7 +11,7 @@ Public surface, grouped by module:
   `init_tracing(...)` builds a `TracerProvider` populated with the standard `service.name` / `service.namespace` / `service.instance.id` / `host.name` resource attributes and registers it as the global provider.
   `get_tracer(name)` returns a `Tracer` wrapper.
   `resource_attributes_from_config(omd_root)` reads optional extra attributes from `etc/omd/resource_attributes_from_config.json`.
-- `cmk.trace.export` — `exporter_from_config(level, config)` builds an `OTLPSpanExporter` (gRPC) for the configured target or returns `None` when tracing is disabled. `init_span_processor(provider, exporter)` attaches a `BatchSpanProcessor` to a provider.
+- `cmk.trace.export` — `exporter_from_config(level, config)` builds an `OTLPSpanExporter` (gRPC) for the configured target or returns `None` when tracing is disabled. The exporter and with it `grpc` are only imported when tracing is enabled. `init_span_processor(provider, exporter)` attaches a `BatchSpanProcessor` to a provider.
 - `cmk.trace.logs` — `add_span_log_handler()` installs a root logging handler that attaches log records to the active span as events. Workaround for Jaeger not supporting OTel logs natively.
 
 ## Configuration

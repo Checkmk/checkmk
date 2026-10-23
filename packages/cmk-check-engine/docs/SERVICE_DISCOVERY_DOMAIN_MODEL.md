@@ -305,6 +305,9 @@ unrepresentable:
 The 15-name enum was a flattening of `DiscoveryStatus × origin × excluded ×
 effective_host`. Flattening a product type into names is exactly why the value set
 is both incomplete (no `clustered_changed`) and over-large (208 reachable pairs).
+The missing name is not hypothetical: `_node_service_source` emits `clustered_old`
+for both `changed` and `unchanged`, so CMK-38599's scope gate cannot tell a drifted
+clustered service from an undrifted one and must act on both.
 
 ---
 
@@ -324,6 +327,12 @@ source states (5 non-discovered origins + 3 reachable `clustered_*`), which is 8
 whole rows of the behaviour matrix's §4 grid. The 9 _target_ phases that name those
 same states are eliminated separately, by the rule that a target must be one of the
 three writable states — see the reconciliation in §6.3a.
+
+Gate 0 sees only the rows of the host addressed. Addressing a cluster does not add
+its nodes' rows to the decision: those tables are where the write lands, not further
+rows to gate (§9.1). Today `compute_discovery_transition` iterates them as
+first-class rows via `_get_effective_check_tables`, which is why `_get_table_target`
+cannot tell a cluster-side write from a node-side one.
 
 ### 6.2 The table
 
@@ -563,6 +572,13 @@ rather than discovered at runtime — it is what `need_sync` is for. The model's
 requirement: a `ChangeSet` is applied in an order that never leaves the §4
 invariant violated if the second write fails, and a partial application is
 reported, not swallowed.
+
+A cluster adds a fan-out inside the first layer rather than a third layer: the
+entries live in the **nodes'** autochecks, and `set_autochecks_for_effective_host`
+rewrites only the part of each file whose `effective_host` is the cluster, leaving
+the node's own services alone. One `ChangeSet` addressed to a cluster is therefore
+one write per node, and that fan-out belongs to the write layer — the node tables
+are not rows the caller decides about (§6.1).
 
 (For the record: `need_sync` is currently computed _before_ `add_disabled_rule` is
 narrowed by subtraction, so it can be `True` for an empty rule delta. Harmless

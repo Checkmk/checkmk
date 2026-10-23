@@ -7,10 +7,19 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { computed, nextTick, ref, watch } from 'vue'
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Time picker'), [
+  { combo: ['ArrowUp'], description: _t('Step hours or minutes') },
+  { combo: ['ArrowDown'], description: _t('Step hours or minutes') },
+  { combo: ['ArrowLeft'], description: _t('Switch between hours and minutes') },
+  { combo: ['ArrowRight'], description: _t('Switch between hours and minutes') },
+  { combo: ['Escape'], description: _t('Cancel') },
+  { combo: ['Enter'], description: _t('Confirm') }
+])
 const vClickOutside = useClickOutside()
 
 const model = defineModel<string>({ required: true })

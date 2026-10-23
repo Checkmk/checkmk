@@ -2,31 +2,54 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Iterator
+from collections.abc import Container, Iterator
 from dataclasses import dataclass
 from typing import Annotated, get_args
 
 import pytest
-from pydantic import AfterValidator
+from pydantic import AfterValidator, TypeAdapter, ValidationError
+from pydantic.dataclasses import dataclass as pydantic_dataclass
 from pytest_mock import MockerFixture
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.groups import GroupType
+from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, UserDefaultConfig
 from cmk.gui.openapi.framework.model import ApiOmitted, json_dump_without_omitted
 from cmk.gui.openapi.framework.model.converter import (
+    folder_tree_of_request,
     GroupConverter,
     HostAddressConverter,
     HostConverter,
     TagConverter,
+    TypedPlainValidator,
     UserConverter,
 )
-from cmk.gui.session_context import UserContext
+from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.watolib.hosts_and_folders import FolderTree, Host, make_folder_tree
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
-from tests.testlib.gui.users import create_and_destroy_user
+from tests.testlib.unit.gui.users import create_and_destroy_user
+from tests.testlib.unit.gui.validation_context import make_validation_context
+
+
+def _user_with_permissions(
+    permissions: Container[str],
+    user_id: UserId = UserId("made-up"),
+    users: dict[str, UserSpec] | None = None,
+) -> LoggedInUser:
+    return LoggedInUser(
+        user_id,
+        UserPermissions({}, {}, {}, []),
+        defaults=UserDefaultConfig(
+            users=users if users is not None else {},
+            default_language="en",
+            default_show_mode="default_show_less",
+        ),
+        explicitly_given_permissions=permissions,
+    )
 
 
 def test_validators_dont_run_on_json_dump() -> None:
@@ -39,6 +62,20 @@ def test_validators_dont_run_on_json_dump() -> None:
 
     instance = Model(field="test")
     json_dump_without_omitted(Model, instance)
+
+
+class TestTypedPlainValidator:
+    @pydantic_dataclass(slots=True)
+    class Model:
+        field: Annotated[str, TypedPlainValidator(str, str.upper)]
+
+    def test_runs_the_validator_on_the_declared_input_type(self) -> None:
+        assert self.Model(field="site").field == "SITE"
+
+    def test_reports_a_wrong_input_type_as_a_validation_error(self) -> None:
+        """A TypeError would escape pydantic, leaving the caller with a crash report."""
+        with pytest.raises(ValidationError, match="Expected str, got int"):
+            self.Model(field=5)  # type: ignore[arg-type]
 
 
 class TestHostAddressConverter:
@@ -291,70 +328,105 @@ class TestHostConverter:
 
         return permission_types
 
+    @pytest.fixture(name="tree")
+    def fixture_tree(self) -> FolderTree:
+        return make_folder_tree(Config())
+
     @pytest.mark.parametrize("permission_type", _permission_types())
     @pytest.mark.usefixtures("with_admin_login")
-    def test_exists_fails_not_found(self, permission_type: HostConverter.PermissionType) -> None:
+    def test_exists_fails_not_found(
+        self, permission_type: HostConverter.PermissionType, tree: FolderTree
+    ) -> None:
         with pytest.raises(ValueError, match="Host not found"):
-            HostConverter(permission_type=permission_type).host_name("non_existent_host")
+            HostConverter(permission_type=permission_type).host_name_in_tree(
+                "non_existent_host", tree, _user_with_permissions(frozenset())
+            )
 
-    def test_exists_monitor_without_permissions(self, sample_host: str) -> None:
-        with UserContext(UserId("made-up"), UserPermissions({}, {}, {}, [])):
-            assert sample_host == HostConverter(permission_type="monitor").host_name(sample_host)
+    def test_exists_monitor_without_permissions(self, sample_host: str, tree: FolderTree) -> None:
+        assert sample_host == HostConverter(permission_type="monitor").host_name_in_tree(
+            sample_host, tree, _user_with_permissions(frozenset())
+        )
 
     @pytest.mark.parametrize("permission_type", _permission_types(except_monitor=True))
     def test_exists_fails_no_permission(
-        self, sample_host: str, permission_type: HostConverter.PermissionType
+        self, sample_host: str, permission_type: HostConverter.PermissionType, tree: FolderTree
     ) -> None:
-        with (
-            UserContext(UserId("made-up"), UserPermissions({}, {}, {}, [])),
-            pytest.raises(ValueError, match="Host .* not found"),
-        ):
-            HostConverter(permission_type=permission_type).host_name(sample_host)
-
-    def test_exists_setup_read_all_folders(self, sample_host: str) -> None:
-        with UserContext(
-            UserId("made-up"),
-            UserPermissions({}, {}, {}, []),
-            explicit_permissions={"wato.see_all_folders"},
-        ):
-            assert sample_host == HostConverter(permission_type="setup_read").host_name(sample_host)
-
-    def test_exists_setup_write_all_folders(self, sample_host: str) -> None:
-        # write also requires read permissions, could be changed in the future
-        with UserContext(
-            UserId("made-up"),
-            UserPermissions({}, {}, {}, []),
-            explicit_permissions={"wato.see_all_folders", "wato.all_folders"},
-        ):
-            assert sample_host == HostConverter(permission_type="setup_write").host_name(
-                sample_host
+        with pytest.raises(ValueError, match="Host .* not found"):
+            HostConverter(permission_type=permission_type).host_name_in_tree(
+                sample_host, tree, _user_with_permissions(frozenset())
             )
 
-    def test_exists_setup_write_edit_hosts(self, sample_host: str) -> None:
+    def test_exists_setup_read_all_folders(self, sample_host: str, tree: FolderTree) -> None:
+        assert sample_host == HostConverter(permission_type="setup_read").host_name_in_tree(
+            sample_host, tree, _user_with_permissions({"wato.see_all_folders"})
+        )
+
+    def test_exists_setup_write_all_folders(self, sample_host: str, tree: FolderTree) -> None:
         # write also requires read permissions, could be changed in the future
-        with (
-            create_and_destroy_user(config=active_config) as (user_id, _password),
-            UserContext(
-                user_id,
-                UserPermissions({}, {}, {}, []),
-                explicit_permissions={"wato.see_all_folders", "wato.edit_hosts"},
-            ),
-        ):
-            assert sample_host == HostConverter(permission_type="setup_write").host_name(
-                sample_host
+        assert sample_host == HostConverter(permission_type="setup_write").host_name_in_tree(
+            sample_host, tree, _user_with_permissions({"wato.see_all_folders", "wato.all_folders"})
+        )
+
+    def test_exists_setup_write_edit_hosts(self, sample_host: str, tree: FolderTree) -> None:
+        # write also requires read permissions, could be changed in the future
+        with create_and_destroy_user(config=active_config) as (user_id, _password):
+            acting_user = _user_with_permissions(
+                {"wato.see_all_folders", "wato.edit_hosts"},
+                user_id=user_id,
+                users=dict(active_config.multisite_users),
             )
 
-    def test_host_fails_empty_host(self) -> None:
-        with pytest.raises(ValueError, match="Host name cannot be empty"):
-            HostConverter().host("")
+            assert sample_host == HostConverter(permission_type="setup_write").host_name_in_tree(
+                sample_host, tree, acting_user
+            )
 
-    def test_host_name_fails_empty_host(self) -> None:
+    def test_host_fails_empty_host(self, tree: FolderTree) -> None:
         with pytest.raises(ValueError, match="Host name cannot be empty"):
-            HostConverter().host_name("")
+            HostConverter().host_in_tree("", tree, LoggedInNobody())
 
-    def test_not_exists_fails_empty_host(self) -> None:
+    def test_host_name_fails_empty_host(self, tree: FolderTree) -> None:
         with pytest.raises(ValueError, match="Host name cannot be empty"):
-            HostConverter.not_exists("")
+            HostConverter().host_name_in_tree("", tree, LoggedInNobody())
+
+    def test_not_exists_fails_empty_host(self, tree: FolderTree) -> None:
+        with pytest.raises(ValueError, match="Host name cannot be empty"):
+            HostConverter.not_exists_in_tree("", tree)
+
+    def test_host_is_looked_up_in_the_tree_of_the_request(self, sample_host: str) -> None:
+        adapter: TypeAdapter[Host] = TypeAdapter(  # astrein: disable=pydantic-type-adapter
+            Annotated[Host, TypedPlainValidator(str, HostConverter().host)]
+        )
+        context = make_validation_context(Config(), LoggedInNobody())
+
+        first = adapter.validate_python(sample_host, context=context)
+        other = adapter.validate_python(
+            sample_host, context=make_validation_context(Config(), LoggedInNobody())
+        )
+
+        assert first.folder().tree is not other.folder().tree
+
+    def test_the_handler_gets_the_tree_the_validators_used(self, sample_host: str) -> None:
+        adapter: TypeAdapter[Host] = TypeAdapter(  # astrein: disable=pydantic-type-adapter
+            Annotated[Host, TypedPlainValidator(str, HostConverter().host)]
+        )
+        context = make_validation_context(Config(), LoggedInNobody())
+
+        host = adapter.validate_python(sample_host, context=context)
+
+        assert host.folder().tree is folder_tree_of_request(context.api_context)
+
+    def test_host_permissions_are_checked_against_the_user_of_the_request(
+        self, sample_host: str
+    ) -> None:
+        context = make_validation_context(Config(), _user_with_permissions(frozenset()))
+        adapter: TypeAdapter[Host] = TypeAdapter(  # astrein: disable=pydantic-type-adapter
+            Annotated[
+                Host, TypedPlainValidator(str, HostConverter(permission_type="setup_read").host)
+            ]
+        )
+
+        with pytest.raises(ValidationError, match="not found or access denied"):
+            adapter.validate_python(sample_host, context=context)
 
     @pytest.fixture(name="host_is_not_monitored")
     def fixture_host_is_not_monitored(
@@ -378,37 +450,45 @@ class TestHostConverter:
         self,
         mock_livestatus: MockLiveStatusConnection,
         host_is_monitored: str,
+        tree: FolderTree,
     ) -> None:
         with mock_livestatus:
-            assert host_is_monitored == HostConverter(should_be_monitored=True).host_name(
-                host_is_monitored
+            assert host_is_monitored == HostConverter(should_be_monitored=True).host_name_in_tree(
+                host_is_monitored, tree, _user_with_permissions(frozenset())
             )
 
     def test_should_be_monitored_fails(
         self,
         mock_livestatus: MockLiveStatusConnection,
         host_is_not_monitored: str,
+        tree: FolderTree,
     ) -> None:
         with mock_livestatus, pytest.raises(ValueError, match="should be monitored"):
-            HostConverter(should_be_monitored=True).host_name(host_is_not_monitored)
+            HostConverter(should_be_monitored=True).host_name_in_tree(
+                host_is_not_monitored, tree, _user_with_permissions(frozenset())
+            )
 
     def test_should_not_be_monitored_passes(
         self,
         mock_livestatus: MockLiveStatusConnection,
         host_is_not_monitored: str,
+        tree: FolderTree,
     ) -> None:
         with mock_livestatus:
-            assert host_is_not_monitored == HostConverter(should_be_monitored=False).host_name(
-                host_is_not_monitored
-            )
+            assert host_is_not_monitored == HostConverter(
+                should_be_monitored=False
+            ).host_name_in_tree(host_is_not_monitored, tree, _user_with_permissions(frozenset()))
 
     def test_should_not_be_monitored_fails(
         self,
         mock_livestatus: MockLiveStatusConnection,
         host_is_monitored: str,
+        tree: FolderTree,
     ) -> None:
         with mock_livestatus, pytest.raises(ValueError, match="should not be monitored"):
-            HostConverter(should_be_monitored=False).host_name(host_is_monitored)
+            HostConverter(should_be_monitored=False).host_name_in_tree(
+                host_is_monitored, tree, _user_with_permissions(frozenset())
+            )
 
 
 class TestHostConverterMonitoredHostName:

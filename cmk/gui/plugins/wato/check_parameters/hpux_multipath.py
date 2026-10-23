@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -13,34 +10,31 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
-def _parameter_valuespec_hpux_multipath() -> Migrate[dict[str, Any]]:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "expected",
-                    Tuple(
-                        title=_("Expected path situation"),
-                        help=_(
-                            "This rules sets the expected number of various paths for a multipath LUN "
-                            "on HPUX servers"
-                        ),
-                        elements=[
-                            Integer(title=_("Number of active paths")),
-                            Integer(title=_("Number of standby paths")),
-                            Integer(title=_("Number of failed paths")),
-                            Integer(title=_("Number of unopen paths")),
-                        ],
+def _parameter_valuespec_hpux_multipath() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "expected",
+                Tuple(
+                    title=_("Expected path situation"),
+                    help=_(
+                        "This rules sets the expected number of various paths for a multipath LUN "
+                        "on HPUX servers"
                     ),
-                )
-            ],
-            # This has to be optional, as it can not have a default value.
-            optional_keys=["expected"],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"expected": p},
+                    elements=[
+                        Integer(title=_("Number of active paths")),
+                        Integer(title=_("Number of standby paths")),
+                        Integer(title=_("Number of failed paths")),
+                        Integer(title=_("Number of unopen paths")),
+                    ],
+                ),
+            )
+        ],
+        # This has to be optional, as it can not have a default value.
+        optional_keys=["expected"],
     )
 
 

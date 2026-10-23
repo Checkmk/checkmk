@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import contextlib
+import contextlib  # noqa: I001, RUF100 # needed for docker vs. tests/docker confusion
 import logging
 import os
+import subprocess
+from http import HTTPStatus
 from pathlib import Path
 from random import randint, sample
 
@@ -15,19 +17,19 @@ import requests
 from pytest import LogCaptureFixture
 
 import docker
-from tests.testlib.docker import (
-    build_checkmk,
-    build_path,
-    CheckmkApp,
-    package_name,
-    prepare_package,
-)
-from tests.testlib.version import (
+from tests.testlib.common.version import (
     CMKEdition,
     CMKPackageInfo,
     edition_from_env,
     get_min_version,
     version_from_env,
+)
+from tests.testlib.system.docker import (
+    build_checkmk,
+    build_path,
+    CheckmkApp,
+    package_name,
+    prepare_package,
 )
 
 # Apply the skipif marker to all tests in this file for SaaS edition
@@ -120,9 +122,7 @@ def test_start_execute_custom_command(checkmk: CheckmkApp) -> None:
 
 
 def test_start_with_custom_command(client: docker.DockerClient) -> None:
-    image, _build_logs = build_checkmk(
-        client, CMKPackageInfo(version_from_env(), edition_from_env())
-    )
+    image = build_checkmk(client, CMKPackageInfo(version_from_env(), edition_from_env()))
     output = client.containers.run(
         image=image, detach=False, command=["bash", "-c", "echo 1"]
     ).decode("utf-8")
@@ -158,7 +158,7 @@ def test_build_using_local_deb(
     try:
         os.rename(pkg_path, pkg_path_sav)
         pkg_path.write_bytes(b"")
-        with pytest.raises(docker.errors.BuildError):
+        with pytest.raises(subprocess.CalledProcessError):
             caplog.set_level(logging.CRITICAL)  # avoid error messages in the log
             build_checkmk(client, pkg_info, prepare_pkg=False)
         os.unlink(pkg_path)
@@ -180,7 +180,7 @@ def test_build_using_local_gpg_pubkey(
     try:
         os.rename(key_path, key_path_sav)
         key_path.write_text("")
-        with pytest.raises(docker.errors.BuildError):
+        with pytest.raises(subprocess.CalledProcessError):
             caplog.set_level(logging.CRITICAL)  # avoid error messages in the log
             build_checkmk(client, CMKPackageInfo(version_from_env(), edition_from_env()))
     finally:
@@ -291,7 +291,7 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
     ):
         # Use explicit port
         response = requests.get("http://%s" % address_txt, allow_redirects=False, timeout=10)
-        assert response.status_code == 302
+        assert response.status_code == HTTPStatus.FOUND
         assert response.headers["Location"] == "http://%s/cmk/" % address_txt
 
         # Use explicit port and host header with port
@@ -303,7 +303,7 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
             },
             timeout=10,
         )
-        assert response.status_code == 302
+        assert response.status_code == HTTPStatus.FOUND
         assert response.headers["Location"] == "http://%s/cmk/" % address_txt
 
         # Use explicit port and host header without port
@@ -315,7 +315,7 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
             },
             timeout=10,
         )
-        assert response.status_code == 302
+        assert response.status_code == HTTPStatus.FOUND
         assert response.headers["Location"] == "http://%s/cmk/" % address[0]
 
 
@@ -326,7 +326,7 @@ def test_http_access_login_screen(checkmk: CheckmkApp) -> None:
         timeout=10,
     )
 
-    assert response.status_code == 200, "Invalid HTTP status code!"
+    assert response.status_code == HTTPStatus.OK, "Invalid HTTP status code!"
     assert 'name="_login"' in response.text, "Login field not found!"
 
 

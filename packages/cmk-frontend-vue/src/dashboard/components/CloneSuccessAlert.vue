@@ -4,14 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
 
 const { _t } = usei18n()
 
 interface CloneSuccessAlertProps {
   hasFilters?: boolean
+  clonedAsResponsive?: boolean
 }
 
 interface CloneSuccessAlertEmit {
@@ -23,30 +24,35 @@ const emits = defineEmits<CloneSuccessAlertEmit>()
 
 const open = defineModel<boolean>('open', { required: true })
 
-// Close the alert automatically when hasFilters changes to false
-watch(
-  () => props.hasFilters,
-  (newVal) => {
-    if (!newVal) {
-      open.value = false
-    }
-  }
+const heading = computed(() =>
+  props.clonedAsResponsive ? _t('Dashboard cloned as responsive') : _t('Dashboard cloned.')
 )
+
+const asksForReview = computed(() => props.hasFilters || props.clonedAsResponsive)
+
+watch(asksForReview, (stillAsksForReview) => {
+  if (!stillAsksForReview) {
+    open.value = false
+  }
+})
 </script>
 
 <template>
   <div v-if="open" class="db-clone-success-alert">
-    <CmkAlertBox
+    <CmkAlertBoxDeprecated
       v-model:open="open"
       variant="success"
       :dismissible="true"
-      :auto-dismiss="props?.hasFilters ? false : true"
-      :heading="_t('Dashboard cloned.')"
+      :auto-dismiss="!asksForReview"
+      :heading="heading"
     >
-      <a v-if="props?.hasFilters" href="#" @click.prevent="emits('editFilters')">{{
+      <div v-if="props.clonedAsResponsive">
+        {{ _t('Review the layout and adjust any shifted or resized widgets if needed.') }}
+      </div>
+      <a v-if="props.hasFilters" href="#" @click.prevent="emits('editFilters')">{{
         _t('Review applied filters.')
       }}</a>
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
   </div>
 </template>
 

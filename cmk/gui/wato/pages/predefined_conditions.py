@@ -30,12 +30,11 @@ from cmk.gui.valuespec import (
     Transform,
     ValueSpec,
 )
-from cmk.gui.valuespec.definitions import DropdownChoices
 from cmk.gui.wato.pages.rulesets import VSExplicitConditions
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.groups_io import load_contact_group_information
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionSpec, PredefinedConditionStore
@@ -79,11 +78,9 @@ def dummy_rulespec() -> ServiceRulespec:
     )
 
 
-def vs_conditions(folder_choices: DropdownChoices) -> Transform:
+def vs_conditions(tree: FolderTree) -> Transform:
     return Transform(
-        valuespec=VSExplicitConditions(
-            rulespec=dummy_rulespec(), folder_choices=folder_choices, render="form_part"
-        ),
+        valuespec=VSExplicitConditions(rulespec=dummy_rulespec(), tree=tree, render="form_part"),
         to_valuespec=lambda c: RuleConditions.from_config("", c),
         from_valuespec=lambda c: c.to_config(UseHostFolder.HOST_FOLDER_FOR_UI),
     )
@@ -129,6 +126,7 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
             mode_type=PredefinedConditionModeType(),
             store=PredefinedConditionStore(),
         )
+        self._tree = make_folder_tree(ctx.config)
         self._contact_groups = load_contact_group_information()
 
     @override
@@ -145,7 +143,7 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
     ) -> None:
         if {
             name: ruleset
-            for name, ruleset in AllRulesets.load_all_rulesets(folder_tree()).get_rulesets().items()
+            for name, ruleset in AllRulesets.load_all_rulesets(self._tree).get_rulesets().items()
             if ruleset.matches_search_with_rules({"rule_predefined_condition": ident}, debug=debug)
         }:
             raise MKUserError(
@@ -195,7 +193,7 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
 
     @override
     def _show_entry_cells(self, table: Table, ident: str, entry: PredefinedConditionSpec) -> None:
-        tree = folder_tree()
+        tree = self._tree
 
         table.cell(_("Title"), entry["title"])
 
@@ -209,9 +207,7 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
         )
         html.close_li()
         html.close_ul()
-        html.write_text_permissive(
-            vs_conditions(lambda: tree.folder_choices(user)).value_to_html(entry["conditions"])
-        )
+        html.write_text_permissive(vs_conditions(tree).value_to_html(entry["conditions"]))
 
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:
@@ -259,6 +255,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
             mode_type=PredefinedConditionModeType(),
             store=PredefinedConditionStore(),
         )
+        self._tree = make_folder_tree(ctx.config)
 
     @override
     def _vs_individual_elements(self) -> list[DictionaryEntry]:
@@ -277,7 +274,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
             admin_element = []
 
         return [
-            ("conditions", vs_conditions(lambda: folder_tree().folder_choices(user))),
+            ("conditions", vs_conditions(self._tree)),
             (
                 "owned_by",
                 Alternative(
@@ -365,7 +362,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
         pending_changes: PendingChanges,
     ) -> None:
         """Apply changed folder of predefined condition to rules"""
-        tree = folder_tree()
+        tree = self._tree
         old_folder = tree.folder(old_path)
         old_rulesets = FolderRulesets.load_folder_rulesets(old_folder)
 
@@ -395,7 +392,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
         the changed predefined condition. Since the conditions are only applied to the
         rules while saving them this step is needed.
         """
-        folder = folder_tree().folder(conditions.host_folder)
+        folder = self._tree.folder(conditions.host_folder)
         rulesets = FolderRulesets.load_folder_rulesets(folder)
 
         for ruleset in rulesets.get_rulesets().values():

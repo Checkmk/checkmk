@@ -7,6 +7,7 @@ import ConditionalNotificationDialogWidget from '@/quick-setup/components/quick-
 import ConditionalNotificationECAlertStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationECAlertStageWidget.vue'
 import ConditionalNotificationServiceEventStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationServiceEventStageWidget.vue'
 
+import CodeWidget from './CodeWidget.vue'
 import CollapsibleWidget from './CollapsibleWidget.vue'
 import DialogWidget from './DialogWidget.vue'
 import FormSpecRecapWidget from './FormSpecRecapWidget.vue'
@@ -21,6 +22,7 @@ export const getWidget = (widgetType: string): unknown => {
   //<component :is="getWidget(widgetType)" v-bind="widget_props" @update="update_data" />
   const map: Record<string, unknown> = {
     text: TextWidget,
+    code: CodeWidget,
     note_text: NoteTextWidget,
     dialog: DialogWidget,
     list_of_widgets: ListWidget,

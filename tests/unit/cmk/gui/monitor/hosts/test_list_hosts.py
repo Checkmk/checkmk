@@ -2,23 +2,26 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Iterator
+
+import json
+from http import HTTPStatus
 
 import pytest
 
+import cmk.utils.paths
 from cmk.gui.monitor.hosts._api._list_hosts import _handle_list_hosts
-from cmk.gui.monitor.hosts._models import HostState
+from cmk.gui.monitor.hosts._models import HostOptionalField, HostState
+from cmk.gui.openapi.framework.model import ApiOmitted
+from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.testlib.unit.gui.setup_git_test_helper import (
+    init_setup_git_repo,
+    setup_git_commit_subjects,
+)
+from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
 
-from .testlib import get_fake_host_repository, HostFactory, login_with
+from .testlib import get_fake_host_repository, HostFactory
 
-
-@pytest.fixture(name="may_see_all_hosts")
-def _may_see_all_hosts() -> Iterator[None]:
-    with login_with({"view.allhosts": True}):
-        yield
-
-
-pytestmark = pytest.mark.usefixtures("request_context", "may_see_all_hosts")
+pytestmark = pytest.mark.usefixtures("request_context")
 
 
 def test_handle_list_hosts_limit_handling() -> None:
@@ -59,3 +62,134 @@ def test_handle_list_hosts_pending_state_round_trips() -> None:
 
     state_by_name = {host.name: host.state for host in response.hosts}
     assert state_by_name == {"pending-host": "PENDING", "checked-host": "UP"}
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_list_hosts_does_not_commit_the_setup_git_repo(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+    set_config: SetConfig,
+) -> None:
+    config_dir = cmk.utils.paths.default_config_dir
+    init_setup_git_repo(config_dir)
+    mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
+    mock_livestatus.expect_query(["GET hosts"], match_type="loose")
+
+    with set_config(wato_use_git=True), mock_livestatus:
+        resp = aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/internal/monitor/hosts",
+            params=json.dumps({}),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+        )
+
+    assert resp.status_code == HTTPStatus.OK, resp.text
+    assert setup_git_commit_subjects(config_dir) == ["Initialized GIT for Checkmk"]
+
+
+def test_handle_list_hosts_keeps_a_hidden_service_count_column_independent() -> None:
+    """A count field that wasn't asked for must be omitted without blanking out the others."""
+    hosts = [HostFactory.build(num_services_ok=5, num_services=None)]
+    host_repo = get_fake_host_repository(hosts=hosts)
+
+    response = _handle_list_hosts(
+        host_repo,
+        host_repo.count_total(),
+        fields=frozenset({HostOptionalField.NUM_SERVICES_OK}),
+    )
+
+    host = response.hosts[0]
+    assert host.num_services_ok == 5
+    assert isinstance(host.num_services, ApiOmitted)
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_list_hosts_returns_no_hosts_when_the_filter_excludes_every_site(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
+
+    with mock_livestatus:
+        resp = aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/internal/monitor/hosts",
+            params=json.dumps(
+                {
+                    "filter": {
+                        "type": "not",
+                        "child": {
+                            "type": "condition",
+                            "field": "site_id",
+                            "op": "one_of",
+                            "value": ["NO_SITE"],
+                        },
+                    }
+                }
+            ),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=HTTPStatus.OK,
+        )
+
+    assert resp.json["hosts"] == []
+    assert resp.json["meta"]["matched"] == 0
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_list_hosts_rejects_a_site_condition_inside_or_without_querying_livestatus(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    with mock_livestatus(expect_status_query=False):
+        aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/internal/monitor/hosts",
+            params=json.dumps(
+                {
+                    "filter": {
+                        "type": "or",
+                        "children": [
+                            {
+                                "type": "condition",
+                                "field": "site_id",
+                                "op": "one_of",
+                                "value": ["NO_SITE"],
+                            },
+                            {
+                                "type": "condition",
+                                "field": "name",
+                                "op": "contains",
+                                "value": "web",
+                            },
+                        ],
+                    }
+                }
+            ),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+
+def test_handle_list_hosts_reports_no_timestamps_for_a_pending_host() -> None:
+    hosts = [
+        HostFactory.build(name="pending-host", last_check=0, last_state_change=0),
+        HostFactory.build(name="checked-host", last_check=1752405510, last_state_change=1752405540),
+    ]
+    host_repo = get_fake_host_repository(hosts=hosts)
+
+    response = _handle_list_hosts(
+        host_repo,
+        host_repo.count_total(),
+        fields=frozenset({HostOptionalField.LAST_CHECK, HostOptionalField.LAST_STATE_CHANGE}),
+    )
+
+    timestamps = {host.name: (host.last_check, host.last_state_change) for host in response.hosts}
+    assert timestamps == {
+        "pending-host": (None, None),
+        "checked-host": (1752405510, 1752405540),
+    }
+
+
+def test_handle_list_hosts_omits_timestamps_that_were_not_asked_for() -> None:
+    host_repo = get_fake_host_repository(hosts=[HostFactory.build(last_check=0)])
+
+    response = _handle_list_hosts(host_repo, host_repo.count_total(), fields=frozenset())
+
+    assert isinstance(response.hosts[0].last_check, ApiOmitted)

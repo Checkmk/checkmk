@@ -25,7 +25,7 @@ from cmk.gui.wato.pages.fetch_agent_output import (
     get_fetch_agent_output_file,
     start_fetch_agent_job,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import FolderTree, Host
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.utils.automation_config import LocalAutomationConfig
 from tests.testlib.common.repo import repo_path
@@ -50,12 +50,9 @@ def fixture_icon_dir() -> None:
 
 
 @pytest.fixture(name="host")
-def fixture_host(with_admin_login: UserId, load_config: None) -> Iterator[Host]:
-    tree = folder_tree()
-    tree.invalidate_caches()
-
+def fixture_host(with_admin_login: UserId, load_config: None, tree: FolderTree) -> Iterator[Host]:
     hostname = HostName("host1")
-    root = folder_tree().root_folder()
+    root = tree.root_folder()
     root.create_hosts(
         [(hostname, {"site": SiteId("NO_SITE")}, None)],
         pprint_value=False,
@@ -84,7 +81,7 @@ def test_fetch_agent_job(host: Host, mocker: MockerFixture) -> None:
 
     # THEN
     get_agent_output_mock.assert_called_once_with(
-        LocalAutomationConfig(), "host1", "agent", timeout=10, debug=True
+        LocalAutomationConfig(), "host1", "agent", timeout=10, cached=False, debug=True
     )
     job_status = get_fetch_agent_job_status(request)
     assert job_status.state == "finished", job_status

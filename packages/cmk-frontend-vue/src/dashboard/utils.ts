@@ -30,29 +30,40 @@ import type {
 import { DashboardLayout, DashboardOwnerType } from '@/dashboard/types/dashboard.ts'
 import type { ContextFilter, ContextFilters, FilterOrigin } from '@/dashboard/types/filter.ts'
 import type {
-  ComputedNetworkFlowAutonomousSystemResponse,
-  ComputedNetworkFlowDonutResponse,
-  ComputedNetworkFlowHostResponse,
-  ComputedNetworkFlowKpiStatCardResponse,
-  ComputedNetworkFlowTopTableResponse,
-  ComputedNetworkFlowTrendChartResponse,
-  ComputedSingleMetricResponse,
-  ComputedTimelineCountResponse,
-  ComputedTopListResponse,
+  AlertOverview,
+  AlertOverviewContent,
+  Barplot,
+  BarplotContent,
+  ComputedMonitoringTable,
+  ComputedSingleMetric,
+  ComputedTopList,
+  ComputedWidgetResponse,
   ComputedWidgetSpecResponse,
   EffectiveWidgetFilterContext,
-  NetworkFlowDonutContent,
-  NetworkFlowKpiStatCardContent,
-  NetworkFlowTopTableContent,
-  NetworkFlowTrendChartContent,
+  Gauge,
+  GaugeContent,
+  HostOrServiceState,
+  InventoryAttribute,
+  InventoryContent,
+  MonitoringTableContent,
   ResponsiveGridWidgetLayouts,
   SingleMetricContent,
+  SiteOverview,
+  SiteOverviewContent,
+  StateContent,
+  StateSummary,
+  StateSummaryContent,
+  Stats,
+  StatsContent,
   TimelineContent,
+  TimelineCount,
   TopListContent,
-  VisualContext,
   WidgetAvailableInventory,
-  WidgetContent
+  WidgetContent,
+  WidgetSource,
+  WidgetTimeRange
 } from '@/dashboard/types/widget.ts'
+import type { GraphFetchResponse } from '@/graphing'
 
 import type { ComputeWidgetTitlesRequest, ComputeWidgetTitlesResponse } from './types/api'
 
@@ -292,144 +303,164 @@ export const dashboardAPI = {
       })
     )
   },
-  computeTopListData: async (
-    content: TopListContent,
-    context: VisualContext
-  ): Promise<ComputedTopListResponse> => {
+  computeInventory: async (
+    body: { source: WidgetSource<InventoryContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<InventoryAttribute>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-inventory/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeAlertOverview: async (
+    body: { source: WidgetSource<AlertOverviewContent>; time_range: WidgetTimeRange },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<AlertOverview>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-alert-overview/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeMonitoringTable: async (
+    body: { source: WidgetSource<MonitoringTableContent>; sort: string[] },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<ComputedMonitoringTable>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-monitoring-table/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeSiteOverview: async (
+    body: { source: WidgetSource<SiteOverviewContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<SiteOverview>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-site-overview/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeState: async (
+    body: { source: WidgetSource<StateContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<HostOrServiceState>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-state/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeStateSummary: async (
+    body: { source: WidgetSource<StateSummaryContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<StateSummary>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-state-summary/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeStats: async (
+    body: { source: WidgetSource<StatsContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<Stats>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-stats/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeTopList: async (
+    body: { source: WidgetSource<TopListContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<ComputedTopList>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-top-list/invoke', {
         ...CONTENT_TYPE_HEADER,
-        body: { content, context }
+        headers,
+        body
       })
     )
   },
-  computeSingleMetricData: async (
-    content: SingleMetricContent,
-    context: VisualContext
-  ): Promise<ComputedSingleMetricResponse> => {
+  computeBarplot: async (
+    body: { source: WidgetSource<BarplotContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<Barplot>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-barplot/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeGauge: async (
+    body: { source: WidgetSource<GaugeContent>; time_range: WidgetTimeRange },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<Gauge>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-gauge/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeSingleMetric: async (
+    body: { source: WidgetSource<SingleMetricContent>; time_range: WidgetTimeRange },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<ComputedSingleMetric>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-single-metric/invoke', {
         ...CONTENT_TYPE_HEADER,
-        body: { content, context }
+        headers,
+        body
       })
     )
   },
-  /**
-   * The same data on a shared (token-authenticated) dashboard. The widget configuration is
-   * deliberately not sent: the endpoint re-reads the named widget from the dashboard the token
-   * was issued for, so a token holder cannot reach anything the dashboard does not show.
-   */
-  computeSharedSingleMetricData: async (
-    widgetId: string,
-    cmkToken: string
-  ): Promise<ComputedSingleMetricResponse> => {
+  computeTimeline: async (
+    body: {
+      source: WidgetSource<TimelineContent>
+      time_range: WidgetTimeRange
+      step: number
+    },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<GraphFetchResponse>> => {
     return unwrap(
-      await client.POST('/domain-types/dashboard/actions/compute-shared-single-metric/invoke', {
+      await client.POST('/domain-types/dashboard/actions/compute-timeline/invoke', {
         ...CONTENT_TYPE_HEADER,
-        headers: { Authorization: `CMK-TOKEN ${cmkToken}` },
-        body: { widget_id: widgetId }
+        headers,
+        body
       })
     )
   },
-  computeTimelineCountData: async (
-    content: TimelineContent,
-    context: VisualContext
-  ): Promise<ComputedTimelineCountResponse> => {
+  computeTimelineCount: async (
+    body: { source: WidgetSource<TimelineContent>; time_range: WidgetTimeRange },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<TimelineCount>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-timeline-count/invoke', {
         ...CONTENT_TYPE_HEADER,
-        body: { content, context }
+        headers,
+        body
       })
-    )
-  },
-  /** The same count on a shared (token-authenticated) dashboard, named by widget as above. */
-  computeSharedTimelineCountData: async (
-    widgetId: string,
-    cmkToken: string
-  ): Promise<ComputedTimelineCountResponse> => {
-    return unwrap(
-      await client.POST('/domain-types/dashboard/actions/compute-shared-timeline-count/invoke', {
-        ...CONTENT_TYPE_HEADER,
-        headers: { Authorization: `CMK-TOKEN ${cmkToken}` },
-        body: { widget_id: widgetId }
-      })
-    )
-  },
-  computeNetworkFlowTopTableData: async (
-    content: NetworkFlowTopTableContent,
-    context: VisualContext
-  ): Promise<ComputedNetworkFlowTopTableResponse> => {
-    return unwrap(
-      await client.POST('/domain-types/dashboard/actions/compute-network-flow-top-table/invoke', {
-        ...CONTENT_TYPE_HEADER,
-        body: { content, context }
-      })
-    )
-  },
-  computeNetworkFlowDonutData: async (
-    content: NetworkFlowDonutContent,
-    context: VisualContext
-  ): Promise<ComputedNetworkFlowDonutResponse> => {
-    return unwrap(
-      await client.POST('/domain-types/dashboard/actions/compute-network-flow-donut/invoke', {
-        ...CONTENT_TYPE_HEADER,
-        body: { content, context }
-      })
-    )
-  },
-  computeNetworkFlowKpiStatCardData: async (
-    content: NetworkFlowKpiStatCardContent,
-    context: VisualContext
-  ): Promise<ComputedNetworkFlowKpiStatCardResponse> => {
-    return unwrap(
-      await client.POST(
-        '/domain-types/dashboard/actions/compute-network-flow-kpi-stat-card/invoke',
-        {
-          ...CONTENT_TYPE_HEADER,
-          body: { content, context }
-        }
-      )
-    )
-  },
-  computeNetworkFlowTrendChartData: async (
-    content: NetworkFlowTrendChartContent,
-    context: VisualContext,
-    // Set once the graph was zoomed or panned; without it the time filter decides the window.
-    requestedTimeRange: { start: number; end: number } | null = null
-  ): Promise<ComputedNetworkFlowTrendChartResponse> => {
-    return unwrap(
-      await client.POST('/domain-types/dashboard/actions/compute-network-flow-trend-chart/invoke', {
-        ...CONTENT_TYPE_HEADER,
-        body: {
-          content,
-          context,
-          ...(requestedTimeRange === null ? {} : { requested_time_range: requestedTimeRange })
-        }
-      })
-    )
-  },
-  computeNetworkFlowHostContext: async (ip: string): Promise<ComputedNetworkFlowHostResponse> => {
-    return unwrap(
-      await client.POST(
-        '/domain-types/dashboard/actions/compute-network-flow-host-context/invoke',
-        {
-          ...CONTENT_TYPE_HEADER,
-          body: { ip }
-        }
-      )
-    )
-  },
-  computeNetworkFlowAutonomousSystemContext: async (
-    asn: number
-  ): Promise<ComputedNetworkFlowAutonomousSystemResponse> => {
-    return unwrap(
-      await client.POST(
-        '/domain-types/dashboard/actions/compute-network-flow-autonomous-system-context/invoke',
-        {
-          ...CONTENT_TYPE_HEADER,
-          body: { asn }
-        }
-      )
     )
   }
 }
@@ -507,6 +538,11 @@ export const buildWidgetEffectiveFilterContext = (
 const FILE_DASHBOARD = '/dashboard.py'
 const FILE_SHARED_DASHBOARD = '/shared_dashboard.py'
 
+const CLONE_RESULT_PARAM = 'clone_result'
+const DROPPED_FILTERS_PARAM = '_dropped_filters'
+const CLONE_RESULTS = ['cloned', 'cloned_as_responsive'] as const
+export type CloneResult = (typeof CLONE_RESULTS)[number]
+
 export const urlHandler = {
   /** Construct a dashboard URL with the given name and runtime filters. The current
    * kiosk state is carried over, so navigating between dashboards keeps the main
@@ -571,6 +607,29 @@ export const urlHandler = {
    */
   navigateTo(url: URL): void {
     window.location.assign(url.toString())
+  },
+
+  withCloneResult(url: URL, cloneResult: CloneResult): URL {
+    const markedUrl = new URL(url)
+    markedUrl.searchParams.set(CLONE_RESULT_PARAM, cloneResult)
+    return markedUrl
+  },
+
+  readCloneResult(url: URL): CloneResult | null {
+    const markedValue = url.searchParams.get(CLONE_RESULT_PARAM)
+    return CLONE_RESULTS.find((cloneResult) => cloneResult === markedValue) ?? null
+  },
+
+  withoutCloneResult(url: URL): URL {
+    const cleanUrl = new URL(url)
+    cleanUrl.searchParams.delete(CLONE_RESULT_PARAM)
+    return cleanUrl
+  },
+
+  withoutDroppedFilters(url: URL): URL {
+    const cleanUrl = new URL(url)
+    cleanUrl.searchParams.delete(DROPPED_FILTERS_PARAM)
+    return cleanUrl
   },
 
   /** Generate a shared dashboard link using the provided public token.

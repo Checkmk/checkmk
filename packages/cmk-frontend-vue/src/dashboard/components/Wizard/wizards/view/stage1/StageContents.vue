@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import type { ConfiguredFilters, ConfiguredValues } from 'cmk-ui-library/components/filter'
 import { useFilterDefinitions } from 'cmk-ui-library/components/filter'
@@ -235,9 +235,7 @@ const mergedContextFilters = computed<ContextFilters>(() => {
             }
           ]"
         />
-        <CmkAlertBox v-if="error" variant="error" class="mb-5">
-          {{ error }}
-        </CmkAlertBox>
+        <CmkAlert v-if="error" variant="error" class="mb-5" :text="untranslated(error)" />
         <div v-if="modeSelection === ViewSelectionMode.NEW">
           <NewView
             v-model:selected-datasource="selectedDatasource"

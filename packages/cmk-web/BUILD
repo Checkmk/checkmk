@@ -20,6 +20,7 @@ py_library(
     ],
     imports = ["."],
     visibility = ["//packages/cmk-web:__subpackages__"],
+    deps = ["//packages/cmk-ccc:user"],
 )
 
 py_library(
@@ -90,11 +91,6 @@ build_test(
     targets = [
         ":wheel",
     ],
-)
-
-sh_library(
-    name = "f12",
-    srcs = [".f12"],
 )
 
 package_wheel(

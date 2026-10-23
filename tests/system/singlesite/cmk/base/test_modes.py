@@ -11,7 +11,7 @@ from typing import NamedTuple
 import pytest
 
 from tests.testlib.common.utils2 import get_standard_linux_agent_output
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

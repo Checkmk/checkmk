@@ -25,7 +25,7 @@ def generate_netapp_ontap_command(
 
     args = ["--hostname", host_config.primary_ip_config.address]
     args += ["--username", params.username]
-    args += ["--password", params.password.unsafe()]
+    args += ["--password-id", params.password]
 
     args.append("--fetched-resources")
     args.extend(params.fetched_resources)

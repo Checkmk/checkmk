@@ -12,10 +12,9 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.emc.agent_based.emc_isilon_cpu import (
     check_emc_isilon_cpu_utilization,
-    discover_emc_isilon_cpu_utilization,
     parse_emc_isilon_cpu,
 )
 
@@ -70,12 +69,6 @@ def test_parse_emc_isilon_cpu_multiple_lines(
         ["123", "234", "231", "567"],
         ["200", "100", "150", "300"],
     ]
-
-
-def test_discover_emc_isilon_cpu_utilization(string_table_normal: list[list[str]]) -> None:
-    parsed = parse_emc_isilon_cpu(string_table_normal)
-    assert parsed is not None
-    assert list(discover_emc_isilon_cpu_utilization(parsed)) == [Service()]
 
 
 def test_check_emc_isilon_cpu_utilization_normal(

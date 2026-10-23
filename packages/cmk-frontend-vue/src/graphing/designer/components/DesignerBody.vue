@@ -4,43 +4,54 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { YAxis } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
+import type { AddTo, YAxis } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import type {
   CustomGraphDesignerMode,
   TitleMacroGroup
 } from 'cmk-shared-typing/typescript/custom_graph_designer'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
+import CmkSurfaceNotice from 'cmk-ui-library/components/CmkSurfaceNotice.vue'
 import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTabs'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
 import { useGlobalRefresh } from '../../GlobalTimePicker/globalTimeState'
-import GraphNotice from '../../components/GraphNotice.vue'
 import GraphPanel from '../../components/GraphPanel.vue'
 import {
   clippedToNavigableTime,
   navigableBounds
 } from '../../components/TimeSeriesGraph/interaction/timeBounds'
+import { deriveYAxis } from '../../components/TimeSeriesGraph/yAxis'
 import type { ConsolidationFn } from '../../components/consolidation'
 import GraphLegend from '../../components/legend/GraphLegend.vue'
 import { useBrushSnapshot } from '../../composables/useBrushSnapshot'
-import { type GraphNoticeDescriptor, useGraphNotice } from '../../composables/useGraphNotice'
+import {
+  type GraphNoticeDescriptor,
+  hasPlottableData,
+  useGraphNotice,
+  useNoDataNotice
+} from '../../composables/useGraphNotice'
 import { useRequestedTimeRange } from '../../composables/useRequestedTimeRange'
 import type { PanelKey, RequestedTimeRange, TimeRange, TimeRangeCommitKind } from '../../types'
 import type { CustomGraphMetric, CustomGraphOptions } from '../api'
-import { MetricsCalculationSlideout, type RefVisibility } from '../calculation'
+import {
+  type CalculationPlacement,
+  MetricsCalculationSlideout,
+  MetricsCalculationView,
+  type RefVisibility
+} from '../calculation'
 import { useCustomGraphData } from '../composables/useCustomGraphData'
-import { useDeleteWithDependents } from '../composables/useDeleteWithDependents'
+import { useDeleteConfirmation } from '../composables/useDeleteConfirmation'
 import type { GraphItemsStore } from '../composables/useGraphItems'
 import { useItemValidation } from '../composables/useItemValidation'
 import type { FormulaDraft, ItemId } from '../types'
 import type { RowIssue } from '../validation'
 import { yAxisUnitOf } from '../yAxisUnit'
 import AppearanceTable from './AppearanceTable.vue'
-import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
+import DeleteConfirmationPopup from './DeleteConfirmationPopup.vue'
 import DesignerSettings from './DesignerSettings.vue'
 import MetricsTable from './MetricsTable.vue'
 
@@ -51,7 +62,9 @@ const {
   store,
   graphOptions,
   title,
+  graphName,
   mode,
+  calculationPlacement,
   thresholds,
   telemetryMetricsAvailable,
   createServicesAvailable,
@@ -62,7 +75,9 @@ const {
   store: GraphItemsStore
   graphOptions: CustomGraphOptions
   title: string
+  graphName: string
   mode: CustomGraphDesignerMode
+  calculationPlacement: CalculationPlacement
   thresholds: { warning: string; critical: string }
   telemetryMetricsAvailable: boolean
   createServicesAvailable: boolean
@@ -100,6 +115,7 @@ function onPanelTimeRange(requested: RequestedTimeRange, kind: TimeRangeCommitKi
 const hiddenMetricNames = ref<string[]>([])
 const hiddenLineNames = ref<string[]>([])
 const highlightedMetricNames = ref<string[]>([])
+const valueResolution = ref<number | null>(null)
 
 const graphContainer = ref<HTMLElement | null>(null)
 const figureWidth = ref(DEFAULT_FIGURE_WIDTH)
@@ -165,6 +181,8 @@ const fetchNotice = useGraphNotice({
   warnings: () => data.warnings.value
 })
 
+const noDataNotice = useNoDataNotice()
+
 // A graph nobody has added a source to yet: the preview draws an empty frame, and this says what
 // to do with it.
 const emptyStateNotice = computed<GraphNoticeDescriptor | null>(() =>
@@ -178,8 +196,15 @@ const emptyStateNotice = computed<GraphNoticeDescriptor | null>(() =>
 )
 
 // A failed fetch outranks the empty state. The two barely overlap - with no rows there is no fetch
-// to fail - but which wins should be stated rather than left to that coincidence.
-const previewNotice = computed(() => fetchNotice.value ?? emptyStateNotice.value)
+// to fail - but which wins should be stated rather than left to that coincidence. Emptiness comes
+// last, and reads the fetched series rather than the drawn ones: a source the user switched off is
+// not the backend having nothing to say.
+const previewNotice = computed(
+  () =>
+    fetchNotice.value ??
+    emptyStateNotice.value ??
+    (data.isLoading.value || hasPlottableData(data.metrics.value) ? null : noDataNotice)
+)
 
 const { pauseRefresh } = useGlobalRefresh()
 watch(
@@ -209,8 +234,32 @@ function onTabChange(value: string | number): void {
   }
 }
 
-/** null closes the slideout; `editing` names the calculation to load, or null for a fresh form. */
-const calculationSlideout = ref<{ editing: ItemId | null } | null>(null)
+/** null closes the calculation; `editing` names the calculation to load, or null for a fresh form. */
+const calculation = ref<{ editing: ItemId | null } | null>(null)
+const inlineCalculation = computed(() =>
+  calculationPlacement === 'inline' ? calculation.value : null
+)
+let calculationOpener: HTMLElement | null = null
+const metricsTable = ref<InstanceType<typeof MetricsTable> | null>(null)
+
+function openCalculation(editing: ItemId | null): void {
+  calculationOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null
+  calculation.value = { editing }
+}
+
+function closeCalculation(): void {
+  calculation.value = null
+  const opener = calculationOpener
+  calculationOpener = null
+  void nextTick(() => {
+    if (opener?.isConnected === false) {
+      metricsTable.value?.focusAddCalculation()
+    } else if (calculationPlacement === 'inline') {
+      // The slideout placement restores the focus to the opener itself.
+      opener?.focus()
+    }
+  })
+}
 
 function applyRefVisibility(refVisibility: RefVisibility): void {
   if (refVisibility !== null) {
@@ -228,7 +277,7 @@ function onCalculationUpdate(id: ItemId, draft: FormulaDraft, refVisibility: Ref
   applyRefVisibility(refVisibility)
 }
 
-const calculationDelete = useDeleteWithDependents(store)
+const calculationDelete = useDeleteConfirmation(store, () => data.resolvedTitles.value)
 
 function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
   emit('update-graph-options', newGraphOptions)
@@ -247,6 +296,20 @@ const yAxis = computed<YAxis | null>(() => {
     ...(explicitRange === null ? {} : { explicit_range: explicitRange })
   }
 })
+
+// The same derivation GraphPanel runs on the props below, so the table and the legend print in
+// whatever the preview ends up labelling its axis in.
+const axisUnit = computed(() => deriveYAxis(drawnMetrics.value, yAxis.value)?.unit ?? null)
+
+const addTo = computed<AddTo | null>(() =>
+  data.internal.value === null
+    ? null
+    : {
+        type: 'custom_graph',
+        specification: { graph_type: 'custom', id: graphName },
+        internal: data.internal.value
+      }
+)
 </script>
 
 <template>
@@ -278,22 +341,27 @@ const yAxis = computed<YAxis | null>(() => {
         :show-legend="false"
         :interaction="{
           brush: mode === 'view' ? 'enabled' : 'disabled',
-          burger: 'disabled',
+          burger: mode === 'view' ? 'enabled' : 'disabled',
           hover: 'enabled',
           panning: 'enabled',
           zoom: 'enabled',
           pin: 'enabled'
         }"
         :brush-snapshot="drawnBrushSnapshot"
+        :add-to="addTo"
         @update:requested-time-range="onPanelTimeRange"
+        @update:value-resolution="valueResolution = $event"
         @inspect="pauseRefresh"
-      />
-      <GraphNotice
-        v-if="previewNotice"
-        v-bind="previewNotice"
-        class="graphing-designer-body__notice"
-        @retry="data.refetch()"
-      />
+      >
+        <template #notice>
+          <CmkSurfaceNotice
+            v-if="previewNotice"
+            v-bind="previewNotice"
+            class="graphing-designer-body__notice"
+            @retry="data.refetch()"
+          />
+        </template>
+      </GraphPanel>
     </div>
 
     <slot name="alerts" />
@@ -307,79 +375,98 @@ const yAxis = computed<YAxis | null>(() => {
         :metrics="drawnMetrics"
         :horizontal-lines="data.horizontalLines.value"
         :consolidation-fn="consolidationFn"
+        :value-resolution="valueResolution"
+        :axis-unit="axisUnit"
         @hover-metrics="highlightedMetricNames = $event"
       />
 
-      <CmkTabs
-        v-else
-        class="graphing-designer-body__tabs"
-        :model-value="activeTab"
-        :unmount-on-hide="false"
-        @update:model-value="onTabChange"
-      >
-        <template #tabs>
-          <CmkTab v-for="tab in TABS" :id="tab.id" :key="tab.id">
-            <span class="graphing-designer-body__tab-label">
-              <span
-                v-if="tab.id === 'metrics' && hasBlockingIssues"
-                class="graphing-designer-body__tab-icon"
-              >
-                <CmkIcon name="inline-error" size="large" aria-hidden="true" />
+      <template v-else>
+        <MetricsCalculationView
+          v-if="inlineCalculation !== null"
+          :editing="inlineCalculation.editing"
+          :items="validItems"
+          :next-id="store.nextId.value"
+          :next-color="store.nextColor.value"
+          @add="onCalculationAdd"
+          @update="onCalculationUpdate"
+          @delete="(id) => calculationDelete.request([id])"
+          @close="closeCalculation"
+        />
+
+        <CmkTabs
+          v-show="inlineCalculation === null"
+          class="graphing-designer-body__tabs"
+          :model-value="activeTab"
+          :unmount-on-hide="false"
+          @update:model-value="onTabChange"
+        >
+          <template #tabs>
+            <CmkTab v-for="tab in TABS" :id="tab.id" :key="tab.id">
+              <span class="graphing-designer-body__tab-label">
+                <span
+                  v-if="tab.id === 'metrics' && hasBlockingIssues"
+                  class="graphing-designer-body__tab-icon"
+                >
+                  <CmkIcon name="inline-error" size="large" aria-hidden="true" />
+                </span>
+                <span v-else-if="activeTab === tab.id" class="graphing-designer-body__tab-icon">
+                  <CmkMultitoneIcon name="checkmark" primary-color="font" size="small" />
+                </span>
+                {{ tab.label }}
               </span>
-              <span v-else-if="activeTab === tab.id" class="graphing-designer-body__tab-icon">
-                <CmkMultitoneIcon name="checkmark" primary-color="font" size="small" />
-              </span>
-              {{ tab.label }}
-            </span>
-          </CmkTab>
-        </template>
-        <template #tab-contents>
-          <CmkTabContent id="appearance" class="graphing-designer-body__tab-panel">
-            <AppearanceTable
-              :store="store"
-              :metrics-by-source="data.metricsBySource.value"
-              :resolved-titles="data.resolvedTitles.value"
-              @hover-metrics="highlightedMetricNames = $event"
-            />
-          </CmkTabContent>
-          <CmkTabContent id="metrics" class="graphing-designer-body__tab-panel">
-            <MetricsTable
-              :store="store"
-              :thresholds="thresholds"
-              :telemetry-metrics-available="telemetryMetricsAvailable"
-              :create-services-available="createServicesAvailable"
-              :telemetry-metrics-default-title="telemetryMetricsDefaultTitle"
-              :title-macros="titleMacros"
-              :issues-by-row="issuesByRow"
-              :resolved-titles="data.resolvedTitles.value"
-              :metrics-by-source="data.metricsBySource.value"
-              @add-calculation="calculationSlideout = { editing: null }"
-              @edit-calculation="calculationSlideout = { editing: $event }"
-              @hover-metrics="highlightedMetricNames = $event"
-            />
-          </CmkTabContent>
-        </template>
-      </CmkTabs>
+            </CmkTab>
+          </template>
+          <template #tab-contents>
+            <CmkTabContent id="appearance" class="graphing-designer-body__tab-panel">
+              <AppearanceTable
+                :store="store"
+                :metrics-by-source="data.metricsBySource.value"
+                :resolved-titles="data.resolvedTitles.value"
+                :value-resolution="valueResolution"
+                :axis-unit="axisUnit"
+                @hover-metrics="highlightedMetricNames = $event"
+              />
+            </CmkTabContent>
+            <CmkTabContent id="metrics" class="graphing-designer-body__tab-panel">
+              <MetricsTable
+                ref="metricsTable"
+                :store="store"
+                :thresholds="thresholds"
+                :telemetry-metrics-available="telemetryMetricsAvailable"
+                :create-services-available="createServicesAvailable"
+                :telemetry-metrics-default-title="telemetryMetricsDefaultTitle"
+                :title-macros="titleMacros"
+                :issues-by-row="issuesByRow"
+                :resolved-titles="data.resolvedTitles.value"
+                :metrics-by-source="data.metricsBySource.value"
+                @add-calculation="openCalculation(null)"
+                @edit-calculation="openCalculation($event)"
+                @hover-metrics="highlightedMetricNames = $event"
+              />
+            </CmkTabContent>
+          </template>
+        </CmkTabs>
+      </template>
     </div>
 
     <template v-if="mode === 'edit'">
       <MetricsCalculationSlideout
-        :open="calculationSlideout !== null"
-        :editing="calculationSlideout?.editing ?? null"
+        v-if="calculationPlacement === 'slideout'"
+        :open="calculation !== null"
+        :editing="calculation?.editing ?? null"
         :items="validItems"
         :next-id="store.nextId.value"
         :next-color="store.nextColor.value"
         @add="onCalculationAdd"
         @update="onCalculationUpdate"
         @delete="(id) => calculationDelete.request([id])"
-        @close="calculationSlideout = null"
+        @close="closeCalculation"
       />
 
-      <DeleteWithDependentsPopup
+      <DeleteConfirmationPopup
         v-if="calculationDelete.pending.value !== null"
         open
-        :ids="calculationDelete.pending.value.ids"
-        :dependents="calculationDelete.pending.value.dependents"
+        :pending="calculationDelete.pending.value"
         @confirm="calculationDelete.confirm()"
         @close="calculationDelete.cancel()"
       />
@@ -394,11 +481,9 @@ const yAxis = computed<YAxis | null>(() => {
   flex: 0 1 auto;
   min-height: 0;
   gap: var(--dimension-6);
-  padding: var(--dimension-6);
+  padding: var(--dimension-7);
   background: var(--ux-theme-3);
   border-radius: var(--border-radius);
-
-  --graphing-designer-body-table-overflow: auto;
 }
 
 .graphing-designer-body__preview-container {
@@ -452,8 +537,6 @@ const yAxis = computed<YAxis | null>(() => {
 @media (height < 945px) {
   .graphing-designer-body {
     flex-shrink: 0;
-
-    --graphing-designer-body-table-overflow: visible;
   }
 }
 </style>

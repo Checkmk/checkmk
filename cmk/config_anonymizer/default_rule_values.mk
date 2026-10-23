@@ -393,7 +393,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('ibm_mq', [])
 
 agent_config['ibm_mq'] = [
-{'id': '98706833-7a35-4e58-9a5f-e887d678daf3', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '98706833-7a35-4e58-9a5f-e887d678daf3', 'value': {'deployment': ('sync', None), 'only_qm': [], 'skip_qm': [], 'execute_as_another_user': 'default_user'}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['ibm_mq']
 
 
@@ -528,7 +528,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_docker', [])
 
 agent_config['mk_docker'] = [
-{'id': '593ba77e-3a81-4a15-994f-05426e3a4e45', 'value': {'node': [], 'containers': [], 'container_id': 'short'}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '593ba77e-3a81-4a15-994f-05426e3a4e45', 'value': {'deployment': ('sync', None), 'node': [], 'containers': [], 'container_id': 'short', 'base_url': 'unix://var/run/docker.sock', 'persist_period_node_disk_usage': 90}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_docker']
 
 
@@ -555,7 +555,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_inotify', [])
 
 agent_config['mk_inotify'] = [
-{'id': '17ffd5a3-449a-4e92-839c-12e1016be6a5', 'value': None, 'condition': {}, 'options': {'disabled': False}},
+{'id': '17ffd5a3-449a-4e92-839c-12e1016be6a5', 'value': {'deployment': ('do_not_deploy', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_inotify']
 
 
@@ -564,7 +564,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_inventory', [])
 
 agent_config['mk_inventory'] = [
-{'id': '2859b446-eb7a-46b1-b5ef-738b0b86c75f', 'value': {'interval': 14400, 'reg_paths': ['Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall', 'Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall']}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '2859b446-eb7a-46b1-b5ef-738b0b86c75f', 'value': {'deployment': ('sync', None), 'interval': 14400, 'exe_paths': [], 'reg_paths': ('default', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_inventory']
 
 
@@ -582,7 +582,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_jolokia', [])
 
 agent_config['mk_jolokia'] = [
-{'id': 'f75499fe-2ef3-4d30-a6ec-db4cca00ca71', 'value': {'deployment': 'sync'}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'f75499fe-2ef3-4d30-a6ec-db4cca00ca71', 'value': {'deployment': 'sync', 'main_instance': {}, 'instances': []}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_jolokia']
 
 
@@ -609,7 +609,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_mongodb', [])
 
 agent_config['mk_mongodb'] = [
-{'id': '84a130f8-807a-4cb4-bbf4-bbcf04cb7239', 'value': True, 'condition': {}, 'options': {'disabled': False}},
+{'id': '84a130f8-807a-4cb4-bbf4-bbcf04cb7239', 'value': {'deployment': ('sync', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_mongodb']
 
 
@@ -627,7 +627,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_msoffice', [])
 
 agent_config['mk_msoffice'] = [
-{'id': '9f2c53de-b9fd-4bc4-aeea-7f39a8cea4de', 'value': {'client_id': '00000000-0000-0000-0000-000000000001', 'tenant_id': '00000000-0000-0000-0000-000000000001', 'client_secret': ('password', 'example_secret_value_for_demo')}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '9f2c53de-b9fd-4bc4-aeea-7f39a8cea4de', 'value': {'deployment': ('sync', None), 'client_id': '00000000-0000-0000-0000-000000000001', 'tenant_id': '00000000-0000-0000-0000-000000000001', 'client_secret': ('cmk_postprocessed', 'explicit_password', ('9f2c53de-b9fd-4bc4-aeea-7f39a8cea4de', 'example_secret_value_for_demo'))}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_msoffice']
 
 
@@ -708,7 +708,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_sap_hana', [])
 
 agent_config['mk_sap_hana'] = [
-{'id': '6c5f5be1-afa0-4543-8c74-734da02b32e6', 'value': {'credentials': ('SYSTEM', ('password', 'example_password'))}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '6c5f5be1-afa0-4543-8c74-734da02b32e6', 'value': {'deployment': ('sync', None), 'credentials': ('user_password', {'user': 'SYSTEM', 'password': ('cmk_postprocessed', 'explicit_password', ('6c5f5be1-afa0-4543-8c74-734da02b32e6', 'example_password'))}), 'credentials_sap_connect': ('none', None), 'runas': 'instance'}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_sap_hana']
 
 
@@ -717,7 +717,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_saprouter', [])
 
 agent_config['mk_saprouter'] = [
-{'id': '7370c586-f64e-4660-a3f5-7b21b3c2aea0', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '7370c586-f64e-4660-a3f5-7b21b3c2aea0', 'value': {'deployment': ('sync', None), 'user': '', 'path': ''}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_saprouter']
 
 
@@ -726,7 +726,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_scaleio', [])
 
 agent_config['mk_scaleio'] = [
-{'id': '215f961b-3160-4a84-8a81-7d7c5f566e78', 'value': {'user': '', 'password': ('password', ''), 'interval': 60}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '215f961b-3160-4a84-8a81-7d7c5f566e78', 'value': {'deployment': ('sync', None), 'user': 'example_user', 'password': ('cmk_postprocessed', 'explicit_password', ('215f961b-3160-4a84-8a81-7d7c5f566e78', 'example_password'))}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_scaleio']
 
 
@@ -735,7 +735,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_site_object_counts', [])
 
 agent_config['mk_site_object_counts'] = [
-{'id': '0190f9b7-d98b-4ce9-9ae9-e1ef18d8f64d', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '0190f9b7-d98b-4ce9-9ae9-e1ef18d8f64d', 'value': {'deployment': ('sync', None), 'tags': [], 'service_check_commands': [], 'sites': []}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_site_object_counts']
 
 
@@ -879,7 +879,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('python_plugins', [])
 
 agent_config['python_plugins'] = [
-{'id': 'daadce35-e1a4-486e-ae3d-83793cf7266b', 'value': {'version': 'auto'}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'daadce35-e1a4-486e-ae3d-83793cf7266b', 'value': {'python_version': 'auto', 'command': ''}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['python_plugins']
 
 
@@ -933,7 +933,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('smart', [])
 
 agent_config['smart'] = [
-{'id': '204a08f0-6bc8-4bfb-a07f-8583f1cd05dc', 'value': 'smart_posix', 'condition': {}, 'options': {'disabled': False}},
+{'id': '204a08f0-6bc8-4bfb-a07f-8583f1cd05dc', 'value': {'deployment': ('sync', None), 'use_legacy_plugin': False}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['smart']
 
 
@@ -1014,7 +1014,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('win_agent_disabled_sections', [])
 
 agent_config['win_agent_disabled_sections'] = [
-{'id': '91ca1245-3a49-4d38-955b-79d0ddc1fa7b', 'value': [], 'condition': {}, 'options': {'disabled': False}},
+{'id': '91ca1245-3a49-4d38-955b-79d0ddc1fa7b', 'value': {'sections': []}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['win_agent_disabled_sections']
 
 
@@ -1023,7 +1023,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('win_agent_sections', [])
 
 agent_config['win_agent_sections'] = [
-{'id': 'df88124d-af99-4768-a582-d540757ec8c3', 'value': ['check_mk', 'uptime', 'systemtime', 'w32time_status', 'w32time_peers', 'df', 'mem', 'ps', 'services', 'winperf', 'logwatch', 'logfiles', 'fileinfo', 'plugins', 'local', 'mrpe', 'spool', 'wmi_cpuload', 'msexch', 'wmi_webservices', 'dotnet_clrmemory', 'openhardwaremonitor', 'skype'], 'condition': {}, 'options': {'disabled': False}},
+{'id': 'df88124d-af99-4768-a582-d540757ec8c3', 'value': {'sections': ['check_mk', 'uptime', 'systemtime', 'w32time_status', 'w32time_peers', 'df', 'mem', 'ps', 'services', 'winperf', 'logwatch', 'logfiles', 'fileinfo', 'plugins', 'local', 'mrpe', 'spool', 'wmi_cpuload', 'msexch', 'wmi_webservices', 'dotnet_clrmemory', 'openhardwaremonitor', 'skype']}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['win_agent_sections']
 
 
@@ -1041,7 +1041,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('win_controller', [])
 
 agent_config['win_controller'] = [
-{'id': 'ed6f5d72-7d8f-4785-893f-d8512fc53d8e', 'value': {'check_controller_access': True, 'force_legacy': False}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'ed6f5d72-7d8f-4785-893f-d8512fc53d8e', 'value': {'check_access': True, 'allow_legacy': False, 'agent_channel': ('mailslot', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['win_controller']
 
 
@@ -1077,7 +1077,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('win_exe_suffixes', [])
 
 agent_config['win_exe_suffixes'] = [
-{'id': '9515215d-efd4-41ce-b38d-6742d14824a8', 'value': None, 'condition': {}, 'options': {'disabled': False}},
+{'id': '9515215d-efd4-41ce-b38d-6742d14824a8', 'value': {'mode': ('all_files', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['win_exe_suffixes']
 
 
@@ -1230,7 +1230,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('winperf', [])
 
 agent_config['winperf'] = [
-{'id': '72aac8ba-3f4d-48d9-a5c0-0ce1c5857c60', 'value': [], 'condition': {}, 'options': {'disabled': False}},
+{'id': '72aac8ba-3f4d-48d9-a5c0-0ce1c5857c60', 'value': {'counters': []}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['winperf']
 
 
@@ -3247,11 +3247,11 @@ checkgroup_parameters['drbd'] = [
 
 checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 
-checkgroup_parameters.setdefault('eaton_enviroment', [])
+checkgroup_parameters.setdefault('eaton_environment', [])
 
-checkgroup_parameters['eaton_enviroment'] = [
+checkgroup_parameters['eaton_environment'] = [
 {'id': '304076ff-d4dc-456f-8af1-d3afaddeb0e0', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
-] + checkgroup_parameters['eaton_enviroment']
+] + checkgroup_parameters['eaton_environment']
 
 
 checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
@@ -7588,7 +7588,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('veeam_cdp_jobs', [])
 
 checkgroup_parameters['veeam_cdp_jobs'] = [
-{'id': '3ef4b142-7fa5-4fa3-aafa-fe95927d6ae9', 'value': {'age': (108000, 172800)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '3ef4b142-7fa5-4fa3-aafa-fe95927d6ae9', 'value': {'age': ('fixed', (108000.0, 172800.0))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['veeam_cdp_jobs']
 
 
@@ -7597,7 +7597,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('veeam_tapejobs', [])
 
 checkgroup_parameters['veeam_tapejobs'] = [
-{'id': 'ac73039b-b8c6-455c-a4c6-23d670f139f7', 'value': {'levels_upper': (0, 0)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'ac73039b-b8c6-455c-a4c6-23d670f139f7', 'value': {'levels_upper': ('fixed', (0.0, 0.0))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['veeam_tapejobs']
 
 
@@ -10722,11 +10722,11 @@ static_checks['drbd'] = [
 
 static_checks = locals().setdefault('static_checks', {})
 
-static_checks.setdefault('eaton_enviroment', [])
+static_checks.setdefault('eaton_environment', [])
 
-static_checks['eaton_enviroment'] = [
-{'id': '4d219d25-0f78-4778-aae0-77916029d26e', 'value': ('ups_eaton_enviroment', None, {}), 'condition': {}, 'options': {'disabled': False}},
-] + static_checks['eaton_enviroment']
+static_checks['eaton_environment'] = [
+{'id': '4d219d25-0f78-4778-aae0-77916029d26e', 'value': ('ups_eaton_environment', None, {}), 'condition': {}, 'options': {'disabled': False}},
+] + static_checks['eaton_environment']
 
 
 static_checks = locals().setdefault('static_checks', {})
@@ -14829,7 +14829,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('veeam_cdp_jobs', [])
 
 static_checks['veeam_cdp_jobs'] = [
-{'id': '72498fec-2172-40d9-a43f-d7babd8e0600', 'value': ('veeam_cdp_jobs', 'example', {'age': (108000, 172800)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '72498fec-2172-40d9-a43f-d7babd8e0600', 'value': ('veeam_cdp_jobs', 'example', {'age': ('fixed', (108000.0, 172800.0))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['veeam_cdp_jobs']
 
 
@@ -14838,7 +14838,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('veeam_tapejobs', [])
 
 static_checks['veeam_tapejobs'] = [
-{'id': '2060b07e-8fc4-440f-840c-2ac1bd491d26', 'value': ('veeam_tapejobs', 'example', {'levels_upper': (0, 0)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '2060b07e-8fc4-440f-840c-2ac1bd491d26', 'value': ('veeam_tapejobs', 'example', {'levels_upper': ('fixed', (0.0, 0.0))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['veeam_tapejobs']
 
 

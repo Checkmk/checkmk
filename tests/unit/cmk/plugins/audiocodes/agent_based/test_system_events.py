@@ -114,3 +114,45 @@ def test_check_function(
         list(check_audiocodes_system_events(params, parse_audiocodes_system_events(string_table)))
         == expected
     )
+
+
+@pytest.mark.parametrize(
+    "string_table, expected",
+    [
+        pytest.param(
+            [
+                [["1", "", "", "", "", "Source1", "3"]],
+                [],
+            ],
+            [
+                Result(state=State.OK, summary="Critical alarms: 0, Warnings: 1"),
+                Result(state=State.OK, summary="Archived: 0"),
+                Result(state=State.WARN, summary="Alarm #1: Severity: minor, Source: Source1"),
+            ],
+            id="alarm raised during the read",
+        ),
+        pytest.param(
+            [
+                [["2", "512321", "07 E5 08 02 14 28 38 00 ", "Alarm2", "Desc2", "Source2", ""]],
+                [],
+            ],
+            [
+                Result(state=State.OK, summary="Critical alarms: 0, Warnings: 0"),
+                Result(state=State.OK, summary="Archived: 0"),
+            ],
+            id="alarm cleared during the read",
+        ),
+    ],
+)
+def test_check_function_incomplete_alarm(
+    string_table: Sequence[StringTable],
+    expected: CheckResult,
+) -> None:
+    assert (
+        list(
+            check_audiocodes_system_events(
+                _DEFAULT_PARAMS, parse_audiocodes_system_events(string_table)
+            )
+        )
+        == expected
+    )

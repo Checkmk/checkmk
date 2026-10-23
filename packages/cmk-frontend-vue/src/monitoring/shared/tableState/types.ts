@@ -29,7 +29,7 @@ export interface TableState {
  */
 export interface RawTableState {
   cols: string[] | undefined
-  sort: SortingState
+  sort: SortingState | undefined
   limit: RequestedLimit | undefined
 }
 
@@ -39,6 +39,11 @@ export interface TableStateSchema {
   hideable: string[]
   /** Column ids the API accepts as a sort key. */
   sortable: ReadonlySet<string>
+  /**
+   * Sort a listing starts with and returns to once cleared - the order the API applies when it
+   * is sent none, made explicit so the header can show it. Empty when the API keeps its own order.
+   */
+  defaultSort: SortingState
   /** Visibility a listing starts with before any user or URL choice. */
   defaultVisibility: VisibilityState
   /** Row-count tiers offered to the user, `null` standing for "no limit". First is the default. */

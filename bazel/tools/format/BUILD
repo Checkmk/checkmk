@@ -1,18 +1,30 @@
-load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@npm//bazel/tools:npm-groovy-lint/package_json.bzl", groovy_bin = "bin")
 load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
+load(":format_dispatch.bzl", "format_dispatch")
 
 # Opts the formatter's own PowerShell wrapper into PSScriptAnalyzer so we eat
-# our own dog food. Also satisfies scripts/in_bazel.sh's "every .ps1 in a
-# filegroup" requirement.
+# our own dog food. Also satisfies //packages/cmk-repo-checks:bazel_lint_coverage,
+# which requires every .ps1 in a filegroup with this tag.
 filegroup(
     name = "powershell_scripts",
     srcs = ["pwsh_format.ps1"],
     tags = ["lint-with-psscriptanalyzer"],
 )
 
+# --cache skips the files that are unchanged since prettier last found them
+# formatted. format_dispatch provides a cache directory per target and language:
+# - prettier keys its entries by the resolved options, which include the path of
+#   the import-sorting plugin that prettier.config.cjs require.resolve()s. That
+#   path lies in the runfiles tree of the calling target, so e.g. //:format and
+#   //:format.check would invalidate each other's entries.
+# - prettier loads its cache file at start and rewrites it on exit, so languages
+#   running in parallel would drop each other's entries.
+# The "content" strategy compares only the file size before prettier 3.9.0
+# (https://github.com/prettier/prettier/issues/18913); "metadata" compares size
+# and mtime.
 prettier_bin.prettier_binary(
     name = "prettier",
     data = ["//bazel/tools:prettierrc"],
@@ -21,19 +33,28 @@ prettier_bin.prettier_binary(
         "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath //bazel/tools:prettierrc)",
         "--ignore-path=\"$$BUILD_WORKSPACE_DIRECTORY/.prettierignore\"",
         "--log-level=warn",
+        "--cache",
+        "--cache-location=\"$${FORMAT_CACHE_DIR:-$$BUILD_WORKSPACE_DIRECTORY/.format_cache}/prettier\"",
+        "--cache-strategy=metadata",
     ],
 )
 
-# npm-groovy-lint runs CodeNarc on the JVM and accepts only Java 17 (its
-# java-caller pins minimumJavaVersion == maximumJavaVersion == 17). Without a
-# match on PATH it downloads a Temurin 17 JRE from github.com into ~/.java-caller
-# while the formatter runs. That download bypasses Bazel's downloader, so neither
-# the mirror rewrites in bazel_downloader.cfg nor the repository cache apply, and
-# one dropped connection fails the whole format check.
+# npm-groovy-lint runs CodeNarc on the JVM and accepts only Java 17 to 24 (its
+# lib/codenarc-caller.js passes minimumJavaVersion = 17 and maximumJavaVersion =
+# 24 to java-caller). Without a match on PATH java-caller downloads a Temurin JRE
+# from github.com into ~/.java-caller while the formatter runs. That download
+# bypasses Bazel's downloader, so neither the mirror rewrites in
+# bazel_downloader.cfg nor the repository cache apply, and one dropped connection
+# fails the whole format check.
 #
 # Passing --javaexecutable removes the fallback rather than making it cheaper:
 # java-caller returns from manageJavaInstall() before any version probe or
 # install as soon as the executable is not the literal "java".
+#
+# --noserver runs CodeNarc in the formatter's own JVM. Otherwise npm-groovy-lint
+# starts a CodeNarc server that outlives the run, listens on localhost:7484 and
+# serves any npm-groovy-lint version that connects, e.g. from another worktree.
+# It also gives every request just 120 s and does not retry a timeout.
 groovy_bin.npm_groovy_lint_binary(
     name = "groovy-format",
     data = [
@@ -45,6 +66,7 @@ groovy_bin.npm_groovy_lint_binary(
     fixed_args = [
         "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath //bazel/tools/format:.groovyformatrc.json)",
         "--javaexecutable=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath @remotejdk17_linux//:bin/java)",
+        "--noserver",
     ],
     # A JDK cannot be copied into the output tree by rules_js — it lives in an
     # external repository and must keep its internal layout intact.
@@ -52,6 +74,14 @@ groovy_bin.npm_groovy_lint_binary(
         "@remotejdk17_linux//:bin/java",
         "@remotejdk17_linux//:jdk",
     ],
+)
+
+py_cmk_test(
+    name = "component",
+    size = "small",
+    srcs = ["tests/component/test_groovy_format.py"],
+    data = [":groovy-format"] + glob(["tests/component/groovy/*.groovy"]),
+    env = {"GROOVY_FORMAT": "$(rootpath :groovy-format)"},
 )
 
 py_console_script_binary(
@@ -106,25 +136,27 @@ sh_binary(
     deps = ["@bazel_tools//tools/bash/runfiles"],
 )
 
-format_multirun(
+FORMATTERS = {
+    "c": "@multitool_hub//tools/clang-format",
+    "cc": "@multitool_hub//tools/clang-format",
+    "css": ":prettier",
+    "groovy": ":groovy-format",
+    "html": ":prettier",
+    "html_jinja": ":djlint",
+    "javascript": ":prettier",
+    "markdown": ":prettier",
+    "powershell": ":pwsh-format",
+    "python": "@multitool_hub//tools/ruff",
+    "rust": "@rules_rust//tools/upstream_wrapper:rustfmt",
+    "shell": ":shfmt",
+    "starlark": "@buildifier_prebuilt//:buildifier",
+    "toml": ":taplo_quiet",
+}
+
+format_dispatch(
     name = "format",
-    c = "@multitool_hub//tools/clang-format",
-    cc = "@multitool_hub//tools/clang-format",
-    css = ":prettier",
-    groovy = ":groovy-format",
-    html = ":prettier",
-    html_jinja = ":djlint",
-    javascript = ":prettier",
-    # Must be 0 (not e.g. 4) — any non-zero value means sequential execution.
-    # See https://github.com/keith/rules_multirun/issues/82
-    jobs = 0,
-    markdown = ":prettier",
-    powershell = ":pwsh-format",
-    python = "@multitool_hub//tools/ruff",
-    rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
-    shell = ":shfmt",
-    starlark = "@buildifier_prebuilt//:buildifier",
-    toml = ":taplo_quiet",
+    fix_target = "//:format",
+    languages = FORMATTERS,
     visibility = ["//visibility:public"],
 )
 
@@ -134,28 +166,13 @@ alias(
     visibility = ["//visibility:public"],
 )
 
-_PER_LANGUAGE_FORMATTERS = {
-    "c": "format_C_with_clang-format",
-    "cc": "format_C++_with_clang-format",
-    "css": "format_CSS_with_prettier",
-    "groovy": "format_Groovy_with_groovy-format",
-    "html": "format_HTML_with_prettier",
-    "html_jinja": "format_HTML_Jinja_with_djlint",
-    "javascript": "format_JavaScript_with_prettier",
-    "markdown": "format_Markdown_with_prettier",
-    "powershell": "format_PowerShell_with_ps-format",
-    "python": "format_Python_with_ruff",
-    "rust": "format_Rust_with_rustfmt",
-    "shell": "format_Shell_with_shfmt",
-    "starlark": "format_Starlark_with_buildifier",
-    "toml": "format_TOML_with_taplo",
-}
-
+# One target per language, e.g. `bazel run //bazel/tools/format:python -- <paths>`.
 [
-    alias(
-        name = name,
-        actual = ":" + target,
+    format_dispatch(
+        name = language,
+        fix_target = "//bazel/tools/format:" + language,
+        languages = {language: tool},
         visibility = ["//visibility:public"],
     )
-    for name, target in _PER_LANGUAGE_FORMATTERS.items()
+    for language, tool in FORMATTERS.items()
 ]

@@ -8,20 +8,15 @@ from collections.abc import Mapping
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.palo_alto.lib import DETECT_PALO_ALTO
-
-
-def discover_palo_alto_sessions(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_palo_alto_sessions(
@@ -49,7 +44,15 @@ def check_palo_alto_sessions(
         infotext += f" (warn/crit at {warn}/{crit}%)"
 
     yield Result(state=state, summary=infotext)
-    yield Metric("total_active_sessions", total)
+    if sessions_supported == 0:
+        yield Metric("total_active_sessions", total)
+    else:
+        yield Metric(
+            "total_active_sessions",
+            total,
+            levels=(sessions_supported * warn / 100, sessions_supported * crit / 100),
+            boundaries=(0, sessions_supported),
+        )
     yield Metric("tcp_active_sessions", tcp)
     yield Metric("udp_active_sessions", udp)
     yield Metric("icmp_active_sessions", icmp)
@@ -74,7 +77,7 @@ snmp_section_palo_alto_sessions = SimpleSNMPSection(
 check_plugin_palo_alto_sessions = CheckPlugin(
     name="palo_alto_sessions",
     service_name="Palo Alto Sessions",
-    discovery_function=discover_palo_alto_sessions,
+    discovery_function=discover_one_service,
     check_function=check_palo_alto_sessions,
     check_ruleset_name="palo_alto_sessions",
     check_default_parameters={

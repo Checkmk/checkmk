@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::config::defines::{keys, values};
+use crate::config::section::names as section_names;
 use anyhow::{bail, Context, Result};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -199,6 +200,26 @@ fn yaml_quote(value: &str) -> String {
     }
     out.push('"');
     out
+}
+
+/// The section names of an ASM list, translated to the ones the unified plug-in knows.
+///
+/// Legacy calls the ASM instance section `instance`, the same name it uses for a database:
+/// which query runs is decided by the list the name appears in. The unified plug-in picks the
+/// query by section name and uses the affinity only to select the instances a section runs
+/// against, so the ASM instance section has its own name and its own query. Every other ASM
+/// section is named alike in both.
+fn parse_asm_sections(variables: &HashMap<String, String>, key: &str) -> HashSet<String> {
+    parse_sections(variables, key)
+        .into_iter()
+        .map(|name| {
+            if name == section_names::INSTANCE {
+                section_names::ASM_INSTANCE.to_owned()
+            } else {
+                name
+            }
+        })
+        .collect()
 }
 
 fn parse_sections(variables: &HashMap<String, String>, key: &str) -> HashSet<String> {
@@ -681,9 +702,13 @@ pub fn convert(
         .ok_or_else(|| anyhow::anyhow!("DBUSER not defined in legacy config, cannot generate"))?;
     let dbuser = parse_dbuser("DBUSER", dbuser_raw)?;
 
+    // sorted, so the generated instance list does not depend on HashMap order
+    let mut sorted_variables: Vec<(&String, &String)> = variables.iter().collect();
+    sorted_variables.sort_unstable();
+
     let mut dbuser_extras: Vec<LegacyDbUser> = Vec::new();
     let mut invalid_remotes: Vec<(&str, &str)> = Vec::new();
-    for (name, value) in variables {
+    for &(name, value) in &sorted_variables {
         if name.starts_with("DBUSER_") {
             dbuser_extras.push(parse_dbuser(name, value)?);
         } else if !cfg!(windows) && name.starts_with("REMOTE_INSTANCE_") {
@@ -702,7 +727,7 @@ pub fn convert(
     ));
 
     out.push_str("# --- Known environment variables defined in legacy config ---\n");
-    for (name, value) in variables {
+    for &(name, value) in &sorted_variables {
         if name == "DBUSER"
             || name == "ASMUSER"
             || name.starts_with("DBUSER_")
@@ -748,20 +773,28 @@ pub fn convert(
     out.push_str("# --- Unified Config ---\n---\noracle:\n  main:\n");
 
     // connection
-    let host = if dbuser.hostname.is_empty() {
-        "localhost"
-    } else {
-        &dbuser.hostname
-    };
-    out.push_str(&format!("    connection:\n      hostname: {host}\n"));
+    //
+    // An empty DBUSER hostname does not mean localhost: with none configured the plug-in
+    // resolves the Grid Infrastructure node name and falls back to localhost only off GI,
+    // which is what the legacy plug-in does as well. Writing localhost out would pin it and
+    // break Grid Infrastructure, so the block is emitted only for what the legacy config
+    // actually names.
+    let mut connection = String::new();
+    if !dbuser.hostname.is_empty() {
+        connection.push_str(&format!("      hostname: {}\n", dbuser.hostname));
+    }
     if let Some(port) = &dbuser.port {
-        out.push_str(&format!("      port: {port}\n"));
+        connection.push_str(&format!("      port: {port}\n"));
     }
     if let Some(tns_admin) = variables.get("TNS_ADMIN") {
-        out.push_str(&format!("      tns_admin: {tns_admin}\n"));
+        connection.push_str(&format!("      tns_admin: {tns_admin}\n"));
     }
     if let Some(olrloc) = variables.get("OLRLOC") {
-        out.push_str(&format!("      oracle_local_registry: {olrloc}\n"));
+        connection.push_str(&format!("      oracle_local_registry: {olrloc}\n"));
+    }
+    if !connection.is_empty() {
+        out.push_str("    connection:\n");
+        out.push_str(&connection);
     }
 
     // authentication
@@ -807,8 +840,8 @@ pub fn convert(
 
     let sync_normal = parse_sections(variables, "SYNC_SECTIONS");
     let async_normal = parse_sections(variables, "ASYNC_SECTIONS");
-    let sync_asm = parse_sections(variables, "SYNC_ASM_SECTIONS");
-    let async_asm = parse_sections(variables, "ASYNC_ASM_SECTIONS");
+    let sync_asm = parse_asm_sections(variables, "SYNC_ASM_SECTIONS");
+    let async_asm = parse_asm_sections(variables, "ASYNC_ASM_SECTIONS");
 
     fn as_str(s: &HashSet<String>) -> HashSet<&str> {
         s.iter().map(|s| s.as_str()).collect()
@@ -913,6 +946,18 @@ fn format_instances(
         }
 
         let sid_written = if let Some(sid) = &sid {
+            // DBUSER_<SID> and REMOTE_INSTANCE_<SID> may name the same SID, and two hosts may
+            // run instances of the same name. Both entries are kept - merging them would drop
+            // a database - but the duplicate is reported: without a piggyback host the two
+            // report as one instance. And it is normal to have same names for monitoring
+            if known_sids.contains(sid) {
+                warnings.push(format!(
+                    "SID '{sid}' is declared by more than one legacy variable; every entry is \
+                     migrated, so the instance is queried once per entry. Remove the redundant \
+                     entry, or give the instances a piggyback host if they are different \
+                     databases"
+                ));
+            }
             known_sids.push(sid.clone());
             lines.push(format!("      - sid: {sid}\n"));
             true
@@ -1531,6 +1576,45 @@ mod tests {
         );
     }
 
+    #[cfg(not(windows))]
+    #[test]
+    fn test_convert_orders_instances_by_variable_name() {
+        // eight entries: a HashMap-ordered output matches the sorted one by chance
+        // only once in 8! runs
+        let mut vars = HashMap::from([("DBUSER".into(), "checkmk:secret::::".into())]);
+        for sid in ["A1", "A2", "A3", "A4"] {
+            vars.insert(format!("DBUSER_{sid}"), "user:pwd::host:1521:".into());
+            vars.insert(
+                format!("REMOTE_INSTANCE_{sid}"),
+                format!("user:pwd::rhost:1521::{sid}:19.0:"),
+            );
+        }
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        let unified = result
+            .split_once("# --- Unified Config ---")
+            .expect("unified section present")
+            .1;
+        let hosts: Vec<&str> = unified
+            .lines()
+            .filter_map(|l| l.trim().strip_prefix("hostname: "))
+            .filter(|h| *h != "localhost")
+            .collect();
+        assert_eq!(
+            hosts,
+            ["host", "host", "host", "host", "rhost", "rhost", "rhost", "rhost"],
+            "got: {result}"
+        );
+        let sids: Vec<&str> = unified
+            .lines()
+            .filter_map(|l| l.trim().strip_prefix("- sid: "))
+            .collect();
+        assert_eq!(
+            sids,
+            ["A1", "A2", "A3", "A4", "A1", "A2", "A3", "A4"],
+            "got: {result}"
+        );
+    }
+
     #[test]
     fn test_convert_remote_oracle_home_is_dropped_with_warning() {
         let vars = HashMap::from([
@@ -1548,6 +1632,27 @@ mod tests {
         assert!(!unified.to_lowercase().contains("oracle_home"));
         assert!(!unified.contains("/opt/oracle/remote"));
         super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+    }
+
+    #[test]
+    fn test_convert_omits_the_connection_block_without_a_configured_host() {
+        let vars = HashMap::from([("DBUSER".into(), "checkmk:secret::::".into())]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        // No hostname configured: the plug-in resolves the Grid Infrastructure node name and
+        // falls back to localhost itself, so writing one out would pin it.
+        assert!(!result.contains("    connection:\n"), "got: {result}");
+        super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+    }
+
+    #[test]
+    fn test_convert_keeps_an_explicitly_configured_host() {
+        let vars = HashMap::from([("DBUSER".into(), "checkmk:secret::localhost:1521:".into())]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        // An explicit localhost is the user's choice and must survive.
+        assert!(
+            result.contains("    connection:\n      hostname: localhost\n      port: 1521\n"),
+            "got: {result}"
+        );
     }
 
     #[test]
@@ -2977,9 +3082,16 @@ sec3 () {
         assert!(result.contains(
             "      - asm_diskgroup:\n          is_async: true\n          affinity: \"asm\"\n"
         ));
-        // instance: sync normal + sync asm → is_async: false, affinity: all
+        // instance: the legacy ASM list names it `instance` too, but that is the ASM
+        // instance section, which the unified plug-in calls `asm_instance` and queries
+        // differently. So the database `instance` stays normal-only, without affinity ...
+        assert!(result.contains("      - instance:\n          is_async: false\n"));
+        assert!(
+            !result.contains("      - instance:\n          is_async: false\n          affinity:")
+        );
+        // ... and the ASM one appears under its own name, asm-only and sync.
         assert!(result.contains(
-            "      - instance:\n          is_async: false\n          affinity: \"all\"\n"
+            "      - asm_instance:\n          is_async: false\n          affinity: \"asm\"\n"
         ));
         // processes: asm-only (not in normal), sync
         assert!(result.contains(

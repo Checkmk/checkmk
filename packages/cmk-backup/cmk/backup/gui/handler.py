@@ -21,6 +21,8 @@ import subprocess
 import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from datetime import datetime
+from http import HTTPStatus
 from io import TextIOWrapper
 from pathlib import Path
 from typing import assert_never, cast, Final, override
@@ -29,6 +31,7 @@ import cmk.ccc.version as cmk_version
 from cmk.backup.gui.formspec_adapter import FormspecAdapter
 from cmk.backup.utils.config import Config as RawConfig
 from cmk.backup.utils.job import JobConfig, JobState, ScheduleConfig
+from cmk.backup.utils.schedule import next_schedule
 from cmk.backup.utils.targets import TargetId
 from cmk.backup.utils.targets.aws_s3_bucket import S3Bucket, S3Params, S3Target
 from cmk.backup.utils.targets.azure_blob_storage import (
@@ -45,7 +48,8 @@ from cmk.backup.utils.targets.remote_interface import (
     RemoteTargetParams,
 )
 from cmk.backup.utils.type_defs import SiteBackupInfo
-from cmk.backup.utils.utils import BACKUP_INFO_FILENAME
+from cmk.backup.utils.utils import BACKUP_INFO_FILENAME, save_job_state
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
@@ -90,9 +94,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import AbsoluteDirname, ID, SchedulePeriod
 from cmk.gui.watolib.mode import WatoMode
@@ -123,8 +125,8 @@ from cmk.utils import keypair_store, render
 from cmk.utils.certs import CertManagementEvent
 from cmk.utils.keypair_store import Key, KeyId, KeypairMap
 from cmk.utils.paths import omd_root
-from cmk.utils.schedule import next_scheduled_time
 from cmk.web.utils.confirm_links import make_confirm_delete_link, make_confirm_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
@@ -227,6 +229,7 @@ class BackupConfig:
         self._config.site.jobs[job.ident] = job.config
         self._config.save()
         self._save_cronjobs()
+        job.update_next_schedule()
 
     def delete_job(self, job_id: str) -> None:
         del self._config.site.jobs[job_id]
@@ -410,6 +413,15 @@ class Job(MKBackupJob):
     def schedule(self) -> ScheduleConfig | None:
         return self.config["schedule"]
 
+    def update_next_schedule(self) -> None:
+        state_path = self.state_file_path()
+        if not state_path.exists():
+            return
+        with store.locked(state_path):
+            state = JobState.model_validate_json(state_path.read_text())
+            next_run = next_schedule(self.schedule(), after=datetime.now())
+            save_job_state(state_path, state.model_copy(update={"next_schedule": next_run}))
+
     def cron_config(self) -> list[str]:
         if not (schedule := self.config["schedule"]) or schedule["disabled"]:
             return []
@@ -535,7 +547,7 @@ class ModeBackup(WatoMode[object]):
 
         action = request.var("_action")
 
-        if not transactions.check_transaction(request):
+        if not self._ctx.transactions.check_transaction(request):
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
         if action == "delete":
@@ -591,7 +603,7 @@ class ModeBackup(WatoMode[object]):
                             "type": "redirect",
                             "url": makeactionuri_contextless(
                                 request,
-                                transactions.get(),
+                                self._ctx.transactions.get(),
                                 [
                                     ("mode", "backup"),
                                     ("_action", "refresh"),
@@ -619,7 +631,7 @@ class ModeBackup(WatoMode[object]):
                     i18n=_,
                     url=makeactionuri_contextless(
                         request,
-                        transactions.get(),
+                        self._ctx.transactions.get(),
                         [
                             ("mode", "backup"),
                             ("_action", "delete"),
@@ -657,7 +669,7 @@ class ModeBackup(WatoMode[object]):
                 if not job.is_running():
                     start_url = makeactionuri_contextless(
                         request,
-                        transactions.get(),
+                        self._ctx.transactions.get(),
                         [
                             ("mode", "backup"),
                             ("_action", "start"),
@@ -673,7 +685,7 @@ class ModeBackup(WatoMode[object]):
                 else:
                     stop_url = makeactionuri_contextless(
                         request,
-                        transactions.get(),
+                        self._ctx.transactions.get(),
                         [
                             ("mode", "backup"),
                             ("_action", "stop"),
@@ -732,22 +744,15 @@ class ModeBackup(WatoMode[object]):
                     )
 
                 table.cell(_("Next run"))
-                schedule = job.schedule()
-                if not schedule:
-                    html.write_text_permissive(_("Only execute manually"))
-
-                elif schedule["disabled"]:
-                    html.write_text_permissive(_("Disabled"))
-
-                elif schedule["timeofday"]:
-                    # find the next time of all configured times
-                    times = []
-                    for timespec in schedule["timeofday"]:
-                        times.append(next_scheduled_time(schedule["period"], timespec))
-
-                    html.write_text_permissive(
-                        time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times)))
-                    )
+                match next_schedule(job.schedule(), after=datetime.now()):
+                    case None:
+                        html.write_text_permissive(_("Only execute manually"))
+                    case "disabled":
+                        html.write_text_permissive(_("Disabled"))
+                    case float() as next_run:
+                        html.write_text_permissive(
+                            time.strftime("%Y-%m-%d %H:%M", time.localtime(next_run))
+                        )
 
 
 class ModeEditBackupJob(WatoMode[object]):
@@ -1004,7 +1009,7 @@ class ModeEditBackupJob(WatoMode[object]):
         return [
             SingleChoiceElementExtended(
                 name=ident,
-                title=Title(title),  # astrein: disable=localization-checker
+                title=Title(title),  # astrein: disable=localization
             )
             for ident, title in self.key_store.choices()
         ]
@@ -1016,7 +1021,7 @@ class ModeEditBackupJob(WatoMode[object]):
         return [
             SingleChoiceElementExtended(
                 name=target.ident,
-                title=Title(target.title),  # astrein: disable=localization-checker
+                title=Title(target.title),  # astrein: disable=localization
             )
             for target in sorted(
                 backup_config.all_targets.values(),
@@ -1026,9 +1031,9 @@ class ModeEditBackupJob(WatoMode[object]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(self._ctx.session, self._ctx.request, i18n=_)
 
-        if not transactions.check_transaction(request):
+        if not self._ctx.transactions.check_transaction(request):
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
         backup_config = BackupConfig.load()
@@ -1080,8 +1085,9 @@ def job_page(job: MKBackupJob, ident: str) -> None:
     show_job_details(job)
     html.close_div()
     update_url = f"ajax_backup_job_state.py?job={ident}"
-    html.javascript(
-        "cmk.backup.refresh_job_details('{}', '{}', {})".format(update_url, ident, "true")
+    html.call_ts_function(
+        function_name="refresh_backup_job_details",
+        arguments={"url": update_url, "ident": ident, "is_site": True},
     )
 
 
@@ -1747,16 +1753,26 @@ class Target:
         return self._target_type().title()
 
 
-def _show_site_and_system_targets(backup_config: BackupConfig, *, table_row_limit: int) -> None:
-    _show_target_list(backup_config.site_targets.values(), False, table_row_limit=table_row_limit)
+def _show_site_and_system_targets(
+    backup_config: BackupConfig, *, table_row_limit: int, transid: str
+) -> None:
+    _show_target_list(
+        backup_config.site_targets.values(),
+        False,
+        table_row_limit=table_row_limit,
+        transid=transid,
+    )
     if cmk_version.is_cma():
         _show_target_list(
-            backup_config.cma_system_targets.values(), True, table_row_limit=table_row_limit
+            backup_config.cma_system_targets.values(),
+            True,
+            table_row_limit=table_row_limit,
+            transid=transid,
         )
 
 
 def _show_target_list(
-    targets: Iterable[Target], targets_are_cma: bool, *, table_row_limit: int
+    targets: Iterable[Target], targets_are_cma: bool, *, table_row_limit: int, transid: str
 ) -> None:
     html.h2(_("System global targets") if targets_are_cma else _("Targets"))
     if targets_are_cma:
@@ -1790,7 +1806,7 @@ def _show_target_list(
                     i18n=_,
                     url=makeactionuri_contextless(
                         request,
-                        transactions.get(),
+                        transid,
                         [("mode", "backup_targets"), ("target", target.ident)],
                     ),
                     title=_("Delete target #%(nr)d") % {"nr": nr},
@@ -1851,7 +1867,7 @@ class ModeBackupTargets(WatoMode[object]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        if not transactions.check_transaction(request):
+        if not self._ctx.transactions.check_transaction(request):
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
         if not (ident := request.var("target")):
@@ -1882,7 +1898,11 @@ class ModeBackupTargets(WatoMode[object]):
 
     @override
     def page(self, config: Config) -> None:
-        _show_site_and_system_targets(BackupConfig.load(), table_row_limit=config.table_row_limit)
+        _show_site_and_system_targets(
+            BackupConfig.load(),
+            table_row_limit=config.table_row_limit,
+            transid=self._ctx.transactions.get(),
+        )
 
 
 class ModeEditBackupTarget(WatoMode[object]):
@@ -1971,7 +1991,7 @@ class ModeEditBackupTarget(WatoMode[object]):
                         elements=[
                             CascadingSingleChoiceElement(
                                 name=target_type.ident(),
-                                title=Title(  # astrein: disable=localization-checker
+                                title=Title(  # astrein: disable=localization
                                     target_type.title()
                                 ),
                                 parameter_form=target_type.form_spec(),
@@ -1991,9 +2011,9 @@ class ModeEditBackupTarget(WatoMode[object]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(self._ctx.session, self._ctx.request, i18n=_)
 
-        if not transactions.check_transaction(request):
+        if not self._ctx.transactions.check_transaction(request):
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
         backup_config = BackupConfig.load()
@@ -2291,7 +2311,7 @@ class ModeBackupRestore(WatoMode[object]):
                                             i18n=_,
                                             url=makeactionuri(
                                                 request,
-                                                transactions.get(),
+                                                self._ctx.transactions.get(),
                                                 [("_action", "stop")],
                                             ),
                                             title=_("Stop restore of backup"),
@@ -2312,7 +2332,7 @@ class ModeBackupRestore(WatoMode[object]):
                                     item=make_simple_link(
                                         makeactionuri(
                                             request,
-                                            transactions.get(),
+                                            self._ctx.transactions.get(),
                                             [("_action", "complete")],
                                         )
                                     ),
@@ -2336,7 +2356,7 @@ class ModeBackupRestore(WatoMode[object]):
         if action is None:
             return None  # Only choosen the target
 
-        if not transactions.check_transaction(request):
+        if not self._ctx.transactions.check_transaction(request):
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_restore")]))
 
         if action == "delete":
@@ -2426,7 +2446,7 @@ class ModeBackupRestore(WatoMode[object]):
                     except PEMDecodingError, ValueError:
                         raise MKUserError("_key_p_passphrase", _("Invalid passphrase"))
 
-                    transactions.check_transaction(request)  # invalidate transid
+                    self._ctx.transactions.check_transaction(request)  # invalidate transid
                     RestoreJob(self._target_ident, backup_ident, passphrase).start()
                     flash(_("The restore has been started."))
                     return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_restore")]))
@@ -2470,7 +2490,7 @@ class ModeBackupRestore(WatoMode[object]):
             html.button("upload", _("Start restore"))
             html.hidden_fields()
         html.footer()
-        return FinalizeRequest(code=200)
+        return FinalizeRequest(code=HTTPStatus.OK)
 
     def _fs_key(self) -> Dictionary:
         return Dictionary(
@@ -2507,7 +2527,11 @@ class ModeBackupRestore(WatoMode[object]):
 
     def _show_target_list(self, *, table_row_limit: int) -> None:
         html.p(_("Please choose a target to perform the restore from."))
-        _show_site_and_system_targets(BackupConfig.load(), table_row_limit=table_row_limit)
+        _show_site_and_system_targets(
+            BackupConfig.load(),
+            table_row_limit=table_row_limit,
+            transid=self._ctx.transactions.get(),
+        )
 
     def _show_backup_list(self, *, table_row_limit: int) -> None:
         assert self._target is not None
@@ -2530,7 +2554,7 @@ class ModeBackupRestore(WatoMode[object]):
                     i18n=_,
                     url=makeactionuri(
                         request,
-                        transactions.get(),
+                        self._ctx.transactions.get(),
                         [("_action", "delete"), ("_backup", backup_ident)],
                     ),
                     title=_("Delete backup"),
@@ -2544,7 +2568,7 @@ class ModeBackupRestore(WatoMode[object]):
                     i18n=_,
                     url=makeactionuri(
                         request,
-                        transactions.get(),
+                        self._ctx.transactions.get(),
                         [("_action", "start"), ("_backup", backup_ident)],
                     ),
                     title=_("Start restore of backup"),

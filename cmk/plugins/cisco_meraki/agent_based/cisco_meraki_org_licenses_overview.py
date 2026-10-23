@@ -51,9 +51,11 @@ type LicenseCountsByDeviceType = defaultdict[
 class LicensesOverview(BaseModel, frozen=True):
     organisation_id: str
     organisation_name: str
-    status: str
+    status: str | None = None
     raw_expiration_date: str | None = Field(default=None, alias="expirationDate")
-    licensed_device_counts: dict[str, int] = Field(alias="licensedDeviceCounts")
+    licensed_device_counts: dict[str, int] = Field(
+        default_factory=dict, alias="licensedDeviceCounts"
+    )
 
     # Pydantic requires the property to be under computed_field to work, but mypy has problems with
     # that, see https://github.com/python/mypy/issues/14461.
@@ -138,6 +140,13 @@ def check_licenses_overview(item: str, params: CheckParams, section: Section) ->
     yield Result(state=State.OK, notice=f"Organization ID: {overview.organisation_id}")
     yield Result(state=State.OK, notice=f"Organization name: {overview.organisation_name}")
 
+    if overview.status is None:
+        yield Result(
+            state=State.UNKNOWN,
+            summary="Status: not reported by the Meraki API (per-device licensing is not supported)",
+        )
+        return
+
     yield Result(
         state=State.OK if overview.status == "OK" else State(params["state_license_not_ok"]),
         summary=f"Status: {overview.status}",
@@ -199,6 +208,8 @@ check_plugin_cisco_meraki_org_licenses_overview = CheckPlugin(
 def inventorize_licenses_overview(section: Section) -> InventoryResult:
     path = ["software", "applications", "cisco_meraki", "licenses"]
     for overview in section.values():
+        if overview.status is None:
+            continue
         yield TableRow(
             path=path,
             key_columns={

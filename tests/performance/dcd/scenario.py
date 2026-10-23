@@ -16,7 +16,7 @@ import subprocess
 from tests.performance.perftest import PerformanceTest
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils import wait_until
-from tests.testlib.dcd import execute_dcd_cycle
+from tests.testlib.system.dcd import execute_dcd_cycle
 
 logger = logging.getLogger(__name__)
 

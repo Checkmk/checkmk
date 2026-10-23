@@ -14,6 +14,7 @@ import pytest
 
 import cmk.utils.paths
 from cmk.gui import i18n
+from cmk.gui.i18n import _u
 from cmk.gui.wsgi.app import application_and_request_context
 from tests.testlib.common.repo import repo_path
 
@@ -100,7 +101,7 @@ def test_underscore_without_localization(flask_app: flask.Flask) -> None:
 @pytest.mark.usefixtures("local_translation")
 def test_underscore_localization() -> None:
     with application_and_request_context():
-        i18n.localize("de")
+        i18n.localize("de", {})
         assert i18n.get_current_language() == "de"
         assert i18n._("Age") == "Alter"
         assert i18n._("") == ""
@@ -118,7 +119,7 @@ def test_lazy_localization() -> None:
         assert lazy_str == "Age"
 
     with application_and_request_context():
-        i18n.localize("de")
+        i18n.localize("de", {})
         assert lazy_str == "Alter"
 
     with application_and_request_context():
@@ -133,12 +134,26 @@ def test_lazy_with_args() -> None:
         assert lazy_str == "Edit foreign zeugs"
 
     with application_and_request_context():
-        i18n.localize("de")
+        i18n.localize("de", {})
         assert lazy_str == "Fremde(n) zeugs editieren"
 
     with application_and_request_context():
         i18n._unlocalize()  # noqa: SLF001
         assert lazy_str == "Edit foreign zeugs"
+
+
+@pytest.mark.usefixtures("local_translation")
+def test_user_localization_of_current_language() -> None:
+    with application_and_request_context():
+        i18n.localize("de", {"My text": {"de": "Mein Text"}})
+        assert _u("My text") == "Mein Text"
+
+
+@pytest.mark.usefixtures("local_translation")
+def test_user_localization_not_used_for_english() -> None:
+    with application_and_request_context():
+        i18n.localize("en", {"My text": {"en": "Other text"}})
+        assert _u("My text") == "My text"
 
 
 def test_init_language_not_existing() -> None:

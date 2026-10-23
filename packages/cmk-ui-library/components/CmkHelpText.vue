@@ -32,7 +32,7 @@ const side = ref<'top' | 'bottom'>('top')
 const triggerRef = ref<InstanceType<typeof CmkIconButton> | null>(null)
 
 const SCROLL_MAX_HEIGHT_PX = 160
-const TOOLTIP_MAX_HEIGHT = SCROLL_MAX_HEIGHT_PX + 16 * 2
+const TOOLTIP_MAX_HEIGHT = SCROLL_MAX_HEIGHT_PX + 8 * 2
 
 const checkClosing = (e: MouseEvent) => {
   e.preventDefault()
@@ -83,20 +83,15 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
         />
       </CmkTooltipTrigger>
       <CmkTooltipContent
+        variant="content"
         :side="side"
         align="start"
-        as-child
         avoid-collisions
         :use-portal="props.usePortal"
-        class="cmk-help-text__popup"
         @pointer-down-outside="(e: Event) => checkClosing(e as MouseEvent)"
         @escape-key-down="closeHelp"
       >
-        <CmkScrollContainer
-          :max-height="`${SCROLL_MAX_HEIGHT_PX}px`"
-          role="tooltip"
-          class="cmk-help-text__scroll"
-        >
+        <CmkScrollContainer :max-height="`${SCROLL_MAX_HEIGHT_PX}px`" role="tooltip">
           <div class="cmk-help-text__content">
             <CmkHtml :html="props.help" />
           </div>
@@ -130,26 +125,11 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
   outline: revert;
 }
 
-.cmk-help-text__scroll {
-  background-color: var(--default-tooltip-background-color);
-  border-radius: var(--border-radius);
-  box-shadow:
-    0 4px 6px rgb(0 0 0 / 10%),
-    0 2px 4px rgb(0 0 0 / 6%);
-}
-
 .cmk-help-text__content {
   min-width: 200px;
   max-width: 600px;
-  color: var(--default-tooltip-text-color);
-  font-weight: var(--font-weight-default);
   text-align: left;
   white-space: normal;
-  padding: 16px;
-}
-
-.cmk-help-text__popup {
-  z-index: var(--z-index-tooltip-offset);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

@@ -38,6 +38,7 @@ from cmk.gui.userdb import (
     UserSpec,
 )
 from cmk.gui.utils.htpasswd import Htpasswd
+from cmk.gui.watolib.config_domain_name import ActivationContext
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
@@ -52,7 +53,7 @@ from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
-from cmk.inventory.config import (
+from cmk.inventory.cleanup import (
     InvCleanupParams,
     InvCleanupParamsDefaultCombined,
 )
@@ -90,7 +91,7 @@ def init_wato_datastructures(tree: FolderTree, with_wato_lock: bool = False) -> 
 
     def init() -> None:
         if not os.path.exists(ConfigDomainCACertificates.trusted_cas_file):
-            ConfigDomainCACertificates().activate()
+            ConfigDomainCACertificates().activate(ctx=ActivationContext())
         _create_sample_config(tree)
 
     if with_wato_lock:
@@ -194,7 +195,7 @@ class SampleConfigGeneratorGroups(SampleConfigGeneratorABCGroups):
 class SampleConfigGeneratorInlineSNMPBackend(SampleConfigGenerator):
     """Make the inline SNMP backend the default in the editions shipping it
 
-    The shipped default in `cmk.base.default_config` must be a backend that is
+    The shipped default in `BaseConfig` must be a backend that is
     available in every edition, so the editions shipping the inline backend
     configure it here.
     """
@@ -239,6 +240,10 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
     @override
     def generate(self, tree: FolderTree) -> None:
         save_global_settings_raw(self._initial_global_settings(), skip_cse_edition_check=True)
+        # Explicitly update the trust stores to initialise ca-certificates.crt, as
+        # save_global_settings_raw skips the settings_change() hook.
+        ca_domain = ConfigDomainCACertificates()
+        ca_domain.update_trust_stores(ca_domain.load()["trusted_certificate_authorities"])
 
         self._initialize_tag_config()
 

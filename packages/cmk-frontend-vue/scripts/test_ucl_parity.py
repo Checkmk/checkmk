@@ -120,10 +120,6 @@ def test_ucl_parity() -> None:
     assert len(components) > 55
     assert len(ucl) > 55
 
-    # we don't talk about this:
-    components.remove("RnbwApp")
-    components.remove("RnbwCursor")
-
     # this is a implementation detail of CmkDropdown
     # and should probably be moved into CmkDropdown?
     components.remove("CmkSuggestions")
@@ -131,6 +127,9 @@ def test_ucl_parity() -> None:
     # form-domain widget housed in cmk-ui-library because the shared filter
     # components depend on it; not (yet) showcased in the UCL
     components.remove("FormAutocompleter")
+
+    # deprecated in favour of CmkAlert, so deliberately not showcased in the UCL
+    components.remove("CmkAlertBoxDeprecated")
 
     # those components do not follow the usual path pattern,
     # but are stored inside CmkIcon

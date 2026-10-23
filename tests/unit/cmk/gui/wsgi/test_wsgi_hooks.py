@@ -2,12 +2,14 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from http import HTTPStatus
 from unittest.mock import MagicMock
 
 import pytest
 
 from cmk.gui import hooks
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 
 @pytest.mark.usefixtures("mock_livestatus", "patch_theme")
@@ -17,7 +19,7 @@ def test_hooks(logged_in_wsgi_app: WebTestAppForCMK) -> None:
     hooks.register("request-start", start_func)
     hooks.register("request-end", end_func)
     # Site root resolves to index.py, which now redirects to the user's start URL.
-    logged_in_wsgi_app.get("/NO_SITE/check_mk/", status=302)
+    logged_in_wsgi_app.get("/NO_SITE/check_mk/", status=HTTPStatus.FOUND)
 
     start_func.assert_called_once()
     end_func.assert_called_once()

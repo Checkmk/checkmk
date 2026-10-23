@@ -7,11 +7,10 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.agent_based.v2 import Result, State, StringTable
 from cmk.plugins.palo_alto.agent_based.palo_alto_state import (
     _STATE_MAPPING_DEFAULT,
     check,
-    discover,
     parse,
     SectionPaloAlto,
 )
@@ -40,15 +39,17 @@ _Section4 = SectionPaloAlto(
     ha_peer_state="initial",
     ha_mode="active-passive",
 )
+_SectionUnmappedState = SectionPaloAlto(
+    firmware_version="5.0.6",
+    ha_local_state="future_state",
+    ha_peer_state="future_state",
+    ha_mode="active-passive",
+)
 
 
 def test_parse() -> None:
     info: StringTable = [["5.0.6", "suspended", "unknown", "active-active"]]
     assert parse(info) == _Section
-
-
-def test_discover() -> None:
-    assert list(discover(_Section)) == [Service()]
 
 
 @pytest.mark.parametrize(
@@ -98,3 +99,23 @@ def test_discover() -> None:
 )
 def test_check(section: SectionPaloAlto, expected_result: Sequence[Result]) -> None:
     assert list(check(_STATE_MAPPING_DEFAULT, section)) == expected_result
+
+
+def test_check_unmapped_state_is_unknown() -> None:
+    """Sometimes a PAN-OS update ships a previously unknown state we have no mapping for.
+    Insted of generating a crash report we should map unknown states to State.UNKNOWN.
+
+    This avoid future crash reports and makes unknown state visible to users.
+    """
+    assert list(check(_STATE_MAPPING_DEFAULT, _SectionUnmappedState)) == [
+        Result(state=State.OK, summary="Firmware Version: 5.0.6"),
+        Result(state=State.OK, summary="HA mode: active-passive"),
+        Result(
+            state=State.UNKNOWN,
+            summary="HA local state: future_state (no monitoring state defined for this value)",
+        ),
+        Result(
+            state=State.UNKNOWN,
+            notice="HA peer state: future_state (no monitoring state defined for this value)",
+        ),
+    ]

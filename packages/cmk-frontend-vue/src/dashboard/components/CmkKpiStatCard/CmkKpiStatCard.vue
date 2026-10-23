@@ -9,6 +9,8 @@ import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import StateTag, { type StateTone } from 'cmk-ui-library/components/StateTag.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
+import { renderDateAndTime, renderTimeOfDay } from 'cmk-ui-library/lib/renderTime'
 import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -27,7 +29,7 @@ const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
   unit: undefined,
   series: () => [],
   delta: () => ({}),
-  formatValue: (value: number) => value.toFixed(1),
+  formatValue: undefined,
   state: undefined,
   stale: undefined,
   rangeLimits: undefined,
@@ -37,6 +39,22 @@ const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
 })
 
 const { _t } = usei18n()
+useWidgetKeys(_t('KPI card'), [
+  { combo: ['ArrowLeft'], description: _t('Select previous value') },
+  { combo: ['ArrowRight'], description: _t('Select next value') },
+  { combo: ['PageUp'], description: _t('Jump 10 values') },
+  { combo: ['PageDown'], description: _t('Jump 10 values') },
+  { combo: ['Home'], description: _t('Select first value') },
+  { combo: ['End'], description: _t('Select last value') },
+  { combo: ['ArrowUp'], description: _t('Select highest value') },
+  { combo: ['ArrowDown'], description: _t('Select lowest value') },
+  { combo: ['Escape'], description: _t('Clear selection') }
+])
+
+function renderValue(value: number): string {
+  return props.formatValue ? props.formatValue(value) : value.toFixed(1)
+}
+
 const showDelta = computed(() => props.delta.show ?? true)
 const comparisonBasis = computed(() => props.delta.comparisonBasis ?? 'average')
 
@@ -79,8 +97,7 @@ function computeBasisValue(basis: ComparisonBasis, values: number[]): number {
 // The basis excludes the current sample itself - it is a comparison, not a
 // self-inclusive average. Hidden below two real samples: one alone has
 // nothing to compare against, and a zero basis has no meaningful ratio.
-// Superseded by `delta.override` when given - see the `delta` computed below.
-const seriesDelta = computed<KpiDelta | undefined>(() => {
+const delta = computed<KpiDelta | undefined>(() => {
   if (!showDelta.value) {
     return undefined
   }
@@ -105,11 +122,11 @@ const seriesDelta = computed<KpiDelta | undefined>(() => {
   const comparisonText =
     comparisonBasis.value === 'last'
       ? _t('vs. %{basisValue} %{basisLabel}', {
-          basisValue: props.formatValue(basisValue),
+          basisValue: renderValue(basisValue),
           basisLabel: BASIS_LABEL[comparisonBasis.value]()
         })
       : _t('vs. %{basisValue} %{basisLabel} (%{window})', {
-          basisValue: props.formatValue(basisValue),
+          basisValue: renderValue(basisValue),
           basisLabel: BASIS_LABEL[comparisonBasis.value](),
           window: durationFormatter.render(currentSample.timestamp - basisSamples[0]!.timestamp)
         })
@@ -118,16 +135,6 @@ const seriesDelta = computed<KpiDelta | undefined>(() => {
     up: ratio >= 0,
     comparisonText
   }
-})
-
-// A caller-supplied delta takes priority over series-derived one; fromCaller uses
-// delta.override exclusively so a per-render undefined stays empty, not a wrong fallback.
-const delta = computed<KpiDelta | undefined>(() => {
-  if (!showDelta.value) {
-    return undefined
-  }
-  const override = props.delta.override
-  return props.delta.fromCaller ? override : (override ?? seriesDelta.value)
 })
 
 const STATE_TAG_TONE: Record<KpiStateSeverity, StateTone> = {
@@ -144,7 +151,7 @@ const STATE_CSS_COLOR: Record<KpiStateSeverity, string> = {
   warn: 'var(--color-warning)',
   crit: 'var(--color-danger)',
   unknown: 'var(--color-unknown)',
-  pending: 'var(--color-midnight-grey-50)'
+  pending: 'var(--status-color-pending)'
 }
 
 const stateLabel = computed<TranslatedString | undefined>(() => {
@@ -191,9 +198,7 @@ const lastSampleTimeLabel = computed<string | undefined>(() => {
   if (!sample) {
     return undefined
   }
-  return new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(
-    sample.timestamp * 1000
-  )
+  return renderTimeOfDay(sample.timestamp)
 })
 
 // Below this, a plotted curve is too cramped to read - the card falls back to
@@ -229,33 +234,43 @@ function onSparkLineFocus(
   hoveredXPercent.value = xPercent
 }
 
-// formatValue's output may embed its own unit (e.g. "414.49 Mbps"), so split it like
-// the headline value/unit or a hovered sample's unit doubles up with the static one.
+// A caller's formatValue embeds the sample's own unit ("414.49 Mbps", "42.0%"), so split
+// it like the headline value/unit. Its prefix may differ from the headline's, so a sample
+// rendered without one ("500" against "1.50 K") must not borrow the static unit - only
+// the built-in formatter, which never renders a unit, falls back to it.
 const hoveredFormatted = computed<{ value: string; unit: string | undefined } | undefined>(() => {
   const sample = hoveredSample.value
   if (!sample) {
     return undefined
   }
-  const rendered = props.formatValue(sample.value!)
+  const rendered = renderValue(sample.value!)
   const spaceIndex = rendered.indexOf(' ')
-  return spaceIndex === -1
-    ? { value: rendered, unit: undefined }
-    : { value: rendered.slice(0, spaceIndex), unit: rendered.slice(spaceIndex + 1) }
+  if (spaceIndex !== -1) {
+    return { value: rendered.slice(0, spaceIndex), unit: rendered.slice(spaceIndex + 1) }
+  }
+  if (rendered.endsWith('%')) {
+    return { value: rendered.slice(0, -1), unit: '%' }
+  }
+  return { value: rendered, unit: props.formatValue ? undefined : props.unit }
 })
 
 const hoveredValueText = computed<string | undefined>(() => hoveredFormatted.value?.value)
+
+const displayedValue = computed(() => hoveredValueText.value ?? (hasData.value ? props.value : '—'))
+const displayedUnit = computed(() =>
+  hoveredFormatted.value ? hoveredFormatted.value.unit : props.unit
+)
+// The value, unit and comparison ellipsize in a narrow card; a tooltip recovers the full text.
+const valueTooltip = computed(() =>
+  displayedUnit.value ? `${displayedValue.value} ${displayedUnit.value}` : displayedValue.value
+)
 
 const hoveredTimeLabel = computed<string | undefined>(() => {
   const sample = hoveredSample.value
   if (!sample) {
     return undefined
   }
-  return new Intl.DateTimeFormat(undefined, {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(sample.timestamp * 1000)
+  return renderDateAndTime(sample.timestamp)
 })
 
 const realSampleCount = computed(
@@ -270,7 +285,7 @@ const scrubValueText = computed<string | undefined>(() => {
     return `${hoveredTimeLabel.value}: ${hoveredValueText.value}`
   }
   const sample = lastRealSample.value
-  return sample ? `${lastSampleTimeLabel.value}: ${props.formatValue(sample.value!)}` : undefined
+  return sample ? `${lastSampleTimeLabel.value}: ${renderValue(sample.value!)}` : undefined
 })
 
 // A freshly polled value dips in opacity rather than counting up - rolling digits would
@@ -403,8 +418,8 @@ const windowRangeLabel = computed<string | undefined>(() => {
     return undefined
   }
   return _t('%{minimum} to %{maximum}', {
-    minimum: props.formatValue(Math.min(...realValues)),
-    maximum: props.formatValue(Math.max(...realValues))
+    minimum: renderValue(Math.min(...realValues)),
+    maximum: renderValue(Math.max(...realValues))
   })
 })
 
@@ -473,18 +488,20 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
       class="db-cmk-kpi-stat-card__value-row"
       :aria-hidden="hasSparkLine ? 'true' : undefined"
     >
-      <component :is="href ? 'a' : 'span'" :href="href" class="db-cmk-kpi-stat-card__value-link">
+      <component
+        :is="href ? 'a' : 'span'"
+        :href="href"
+        :title="valueTooltip"
+        class="db-cmk-kpi-stat-card__value-link"
+      >
         <span
           class="db-cmk-kpi-stat-card__value"
           :class="{ 'db-cmk-kpi-stat-card__value--refreshing': isRefreshing && !hoveredValueText }"
         >
-          {{ hoveredValueText ?? (hasData ? value : '—') }}
+          {{ displayedValue }}
         </span>
-        <span
-          v-if="hoveredFormatted ? (hoveredFormatted.unit ?? unit) : unit"
-          class="db-cmk-kpi-stat-card__unit"
-        >
-          {{ hoveredFormatted ? (hoveredFormatted.unit ?? unit) : unit }}
+        <span v-if="displayedUnit" class="db-cmk-kpi-stat-card__unit">
+          {{ displayedUnit }}
         </span>
       </component>
       <div
@@ -507,7 +524,9 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
             <path d="m0 6 4-6 4 6z" fill="currentColor" />
           </svg>
           <span class="db-cmk-kpi-stat-card__delta-percent">{{ delta.percent }}</span>
-          <span class="db-cmk-kpi-stat-card__delta-comparison">{{ delta.comparisonText }}</span>
+          <span class="db-cmk-kpi-stat-card__delta-comparison" :title="delta.comparisonText">{{
+            delta.comparisonText
+          }}</span>
         </span>
       </div>
     </div>
@@ -633,7 +652,9 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
   flex-direction: column;
   align-items: flex-start;
   gap: clamp(2px, 1cqh, 6px);
+  box-sizing: border-box;
   min-width: 0;
+  max-width: 100%;
 
   /* The card itself is full-bleed, so that a tinted background and the spark
      line reach the edges of whatever box it was given; the inset lives here. */
@@ -642,9 +663,11 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
 
 .db-cmk-kpi-stat-card__value-link {
   display: inline-flex;
-  flex-shrink: 0;
   gap: clamp(4px, 1.5cqw, 10px);
   align-items: baseline;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
   text-decoration: none;
 
   &:hover {
@@ -654,8 +677,15 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
 
 .db-cmk-kpi-stat-card__value {
   font-size: clamp(18px, min(40cqh, 16cqw), 52px);
+  flex-shrink: 0;
+  max-width: 100%;
+
+  /* Horizontal only: line-height 1 leaves the hover underline outside the box. */
+  overflow-x: clip;
   font-weight: var(--font-weight-medium);
   line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 
   /* Neutral: the accent/data color belongs to the curve, not the number. */
   color: var(--font-color);
@@ -686,10 +716,15 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
   }
 }
 
+/* Truncated before the value: the number matters more than its unit. */
 .db-cmk-kpi-stat-card__unit {
+  min-width: 0;
+  overflow-x: clip;
   font-size: clamp(10px, 16cqh, 22px);
   font-weight: var(--font-weight-bold);
-  color: var(--color-mid-grey-50);
+  color: var(--font-color-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* With no plot to leave room for, the value has the whole card: centered, and
@@ -727,7 +762,6 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
    reads in the same dimmed color as the stale note it swaps places with. */
 .db-cmk-kpi-stat-card__delta {
   display: inline-flex;
-  flex-shrink: 0;
   gap: clamp(2px, 1cqw, 5px);
   align-items: center;
   min-width: 0;
@@ -875,6 +909,7 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
 
 .db-cmk-kpi-stat-card__range--maximum {
   top: var(--spacing);
+  z-index: 2;
 }
 
 .db-cmk-kpi-stat-card__range--minimum {

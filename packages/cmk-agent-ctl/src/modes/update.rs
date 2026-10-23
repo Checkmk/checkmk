@@ -47,7 +47,8 @@ pub fn check(
 ///
 /// `signature` carries `--skip-signatures` through. The install step checks
 /// the signature again regardless, so a package nobody vouched for is spooled
-/// here and refused there.
+/// here and refused there. On Windows nothing checks
+/// it again, so such a package is not handed over at all.
 ///
 /// A package handed over in an earlier run is settled first: the installed
 /// hash says whether its installation took effect.
@@ -120,6 +121,39 @@ fn run_cycle(
         }
 
         println!("{}", report_install(outcome?, path));
+    }
+    // Nothing on Windows checks the signature again, so an unverified package stays put.
+    #[cfg(windows)]
+    if let FetchOutcome::Spooled {
+        path,
+        hash,
+        signature: SignatureCheck::Required,
+        ..
+    } = &fetched
+    {
+        updater.store_pending_hash(hash)?;
+        let handed_over = updater.hand_over_msi(path);
+        if handed_over.is_err() {
+            if let Err(error) = updater.clear_pending_hash() {
+                log::warn!("Could not clear the pending installation: {error:#}");
+            }
+        }
+        println!(
+            "The Windows agent service installs it from {}",
+            handed_over?.display()
+        );
+    }
+    #[cfg(windows)]
+    if let FetchOutcome::Spooled {
+        path,
+        signature: SignatureCheck::Skip,
+        ..
+    } = &fetched
+    {
+        println!(
+            "Unverified packages are not installed on Windows, {} stays where it is",
+            path.display()
+        );
     }
     Ok(())
 }

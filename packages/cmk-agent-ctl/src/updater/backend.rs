@@ -54,6 +54,11 @@ const PACKAGE_FILE_MODE: u32 = 0o640;
 /// hold a longer one - the site only quotes it back in its deployment views.
 const LAST_ERROR_MAX_LEN: usize = 512;
 
+/// The file the Windows agent service installs from its update directory
+/// (`kDefaultMsiFileName` in `agents/wnx`).
+#[cfg(windows)]
+const WINDOWS_UPDATE_FILE: &str = "check_mk_agent.msi";
+
 fn default_activated() -> bool {
     true
 }
@@ -1168,6 +1173,30 @@ impl Updater {
         Ok(InstallOutcome::HandedOver)
     }
 
+    /// Hand a spooled package to the update mechanism of the Windows agent.
+    ///
+    /// The agent service watches its update directory, which is the download
+    /// directory, for [`WINDOWS_UPDATE_FILE`] and installs it with msiexec
+    /// (`CheckForUpdateFile` in `agents/wnx`). The rename stays within one
+    /// directory and is atomic, so the service never sees a partial file.
+    ///
+    /// # Returns
+    ///
+    /// Where the package now waits for the agent service.
+    ///
+    /// # Errors
+    ///
+    /// If the package cannot be renamed, for example while the service still
+    /// holds an earlier one.
+    #[cfg(windows)]
+    pub fn hand_over_msi(&self, package: &Path) -> AnyhowResult<PathBuf> {
+        let target = self.package_dir.join(WINDOWS_UPDATE_FILE);
+        fs::rename(package, &target)
+            .context(format!("Failed to move {package:?} to {target:?}"))?;
+        log::info!("Handed {package:?} to the Windows agent service as {target:?}");
+        Ok(target)
+    }
+
     /// The connection to run an update over, if the updater may run at all.
     ///
     /// The updater reuses the controller's registration. It picks one of the
@@ -2263,6 +2292,29 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         drop(updater);
 
         assert!(File::open(&lock_path).unwrap().try_lock().is_ok());
+    }
+
+    /// The contract with `CheckForUpdateFile` in `agents/wnx`: the agent service
+    /// installs whatever `check_mk_agent.msi` it finds in the update directory.
+    #[cfg(windows)]
+    #[test]
+    fn test_hand_over_msi_leaves_the_package_as_check_mk_agent_msi() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let updater = updater_spooling_into(&dir);
+        fs::create_dir_all(&updater.package_dir).unwrap();
+        let package = updater.package_dir.join("fedcba9876543210.msi");
+        fs::write(&package, PACKAGE).unwrap();
+        fs::write(
+            updater.package_dir.join("check_mk_agent.msi"),
+            b"an older one",
+        )
+        .unwrap();
+
+        let handed_over = updater.hand_over_msi(&package).unwrap();
+
+        assert_eq!(handed_over, updater.package_dir.join("check_mk_agent.msi"));
+        assert_eq!(fs::read(&handed_over).unwrap(), PACKAGE);
+        assert!(!package.exists());
     }
 
     #[test]

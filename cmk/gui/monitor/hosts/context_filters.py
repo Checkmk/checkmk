@@ -31,19 +31,26 @@ type _HostField = (
 
 _PAGE = PageFilterModel(tree=TypeAdapter(FilterNode), check=scope_filter_by_site)
 
-_FIELDS: Mapping[FilterName, _HostField] = {
+_FIELDS: Mapping[FilterName, _HostField | Mapping[str, _HostField]] = {
     "sites": "site_id",
     "site": "site_id",
     "siteopt": "site_id",
     "host": "name",
     "hostregex": "name",
     "hostalias": "alias",
+    "hostnameoralias": {"name": "name", "alias": "alias"},
     "host_address": "address",
     "opthostgroup": "groups",
     "host_ctc": "contacts",
     "host_ctc_regex": "contacts",
     "opthost_contactgroup": "contact_groups",
     "hoststate": "state",
+    "hosts_having_service_problems": {
+        "warn": "num_services_warn",
+        "crit": "num_services_crit",
+        "pending": "num_services_pending",
+        "unknown": "num_services_unknown",
+    },
     "host_staleness": "stale",
     "host_acknowledged": "acknowledged",
     "host_notifications_enabled": "notifications_enabled",

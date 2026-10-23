@@ -12,9 +12,12 @@ from cmk.gui.type_defs import FilterName
 
 from ._filters import (
     address,
+    any_count_above_zero,
+    any_text,
     exact_text,
     flag,
     LegacyFilter,
+    MultiFieldFilter,
     name_list,
     number_range,
     site,
@@ -32,11 +35,12 @@ SITE_FILTERS: Mapping[FilterName, SiteIds] = {
     "siteopt": site_ids("site"),
 }
 
-LEGACY_FILTERS: Mapping[FilterName, LegacyFilter] = {
+LEGACY_FILTERS: Mapping[FilterName, LegacyFilter | MultiFieldFilter] = {
     **{name: site(ids) for name, ids in SITE_FILTERS.items()},
     "host": exact_text("host"),
     "hostregex": text("host_regex"),
     "hostalias": text("hostalias"),
+    "hostnameoralias": any_text("hostnameoralias", roles=("name", "alias")),
     "host_address": address("host_address"),
     "opthostgroup": name_list("opthost_group"),
     "host_ctc": name_list("host_ctc", separator=None),
@@ -44,6 +48,14 @@ LEGACY_FILTERS: Mapping[FilterName, LegacyFilter] = {
     "opthost_contactgroup": name_list("opthost_contact_group"),
     "hoststate": state_choice(
         {"hst0": "UP", "hst1": "DOWN", "hst2": "UNREACHABLE", "hstp": "PENDING"}
+    ),
+    "hosts_having_service_problems": any_count_above_zero(
+        {
+            "hosts_having_services_warn": "warn",
+            "hosts_having_services_crit": "crit",
+            "hosts_having_services_pending": "pending",
+            "hosts_having_services_unknown": "unknown",
+        }
     ),
     "host_staleness": flag("is_host_staleness"),
     "host_acknowledged": flag("is_host_acknowledged"),

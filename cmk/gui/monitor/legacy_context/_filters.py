@@ -12,6 +12,7 @@ a legacy filter.
 
 import re
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 
 from cmk.gui.type_defs import FilterHTTPVariables
 
@@ -27,6 +28,10 @@ class UntranslatableFilterError(Exception):
     pass
 
 
+# The page field a legacy filter targets. A filter that spans several fields, e.g. a host's name
+# and alias, names a role for each of them, which the page maps to its field for it.
+type PageField = str | Mapping[str, str]
+
 # The condition on a page field that the variables of a legacy filter mean, None if they restrict
 # nothing. Raises UntranslatableFilterError if a page cannot express it.
 type LegacyFilter = Callable[[FilterHTTPVariables, str], FilterJSON | None]
@@ -34,6 +39,15 @@ type LegacyFilter = Callable[[FilterHTTPVariables, str], FilterJSON | None]
 # The site IDs the variables of a legacy site filter name, none if they restrict nothing. Raises
 # UntranslatableFilterError for an ID no page can take.
 type SiteIds = Callable[[FilterHTTPVariables], list[str]]
+
+
+@dataclass(frozen=True)
+class MultiFieldFilter:
+    """A legacy filter that spans several page fields, e.g. a host's name and alias. It names a
+    role for each of them, and ``translate`` gets the field the page maps each role to."""
+
+    roles: frozenset[str]
+    translate: Callable[[FilterHTTPVariables, Mapping[str, str]], FilterJSON | None]
 
 
 def text(var: str, *, negatable: bool = True) -> LegacyFilter:
@@ -167,10 +181,47 @@ def number_range(ident: str) -> LegacyFilter:
     return translate_number_range
 
 
+def any_text(var: str, *, roles: Sequence[str]) -> MultiFieldFilter:
+    """A legacy regular expression filter that matches if the text is in any of the fields of the
+    ``roles``, e.g. a host's name or alias. It cannot be negated."""
+    in_one_field = text(var, negatable=False)
+
+    def translate_any_text(
+        value: FilterHTTPVariables, fields: Mapping[str, str]
+    ) -> FilterJSON | None:
+        return any_of(
+            [node for role in roles if (node := in_one_field(value, fields[role])) is not None]
+        )
+
+    return MultiFieldFilter(frozenset(roles), translate_any_text)
+
+
+def any_count_above_zero(counts: Mapping[str, str]) -> MultiFieldFilter:
+    """Legacy checkboxes for kinds of objects to count, one variable per kind, of which at least
+    one has to be there. None or all of them checked means no filter. ``counts`` maps each variable
+    to the role of the field that counts the objects of its kind."""
+
+    def translate_any_count_above_zero(
+        value: FilterHTTPVariables, fields: Mapping[str, str]
+    ) -> FilterJSON | None:
+        picked = [fields[role] for var, role in counts.items() if value.get(var)]
+        if not picked or len(picked) == len(counts):
+            return None
+        return any_of([_condition(picked_field, "gt", 0) for picked_field in picked])
+
+    return MultiFieldFilter(frozenset(counts.values()), translate_any_count_above_zero)
+
+
 def all_of(nodes: Sequence[FilterJSON]) -> FilterJSON | None:
     if len(nodes) < 2:
         return nodes[0] if nodes else None
     return {"type": "and", "children": list(nodes)}
+
+
+def any_of(nodes: Sequence[FilterJSON]) -> FilterJSON | None:
+    if len(nodes) < 2:
+        return nodes[0] if nodes else None
+    return {"type": "or", "children": list(nodes)}
 
 
 def _bound(number: str) -> int | None:

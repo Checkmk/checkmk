@@ -20,19 +20,28 @@ type _JSON = dict[str, object]
 # A page that accepts any tree, so that these tests see the translation unchanged.
 _ANY_PAGE = PageFilterModel(tree=TypeAdapter(dict[str, object]), check=lambda tree: tree)
 
-_FIELDS: dict[FilterName, str] = {
+type _Fields = dict[FilterName, str | Mapping[str, str]]
+
+_FIELDS: _Fields = {
     "sites": "site_id",
     "site": "site_id",
     "siteopt": "site_id",
     "host": "name",
     "hostregex": "name",
     "hostalias": "alias",
+    "hostnameoralias": {"name": "name", "alias": "alias"},
     "host_address": "address",
     "opthostgroup": "groups",
     "host_ctc": "contacts",
     "host_ctc_regex": "contacts",
     "opthost_contactgroup": "contact_groups",
     "hoststate": "state",
+    "hosts_having_service_problems": {
+        "warn": "num_services_warn",
+        "crit": "num_services_crit",
+        "pending": "num_services_pending",
+        "unknown": "num_services_unknown",
+    },
     "host_acknowledged": "acknowledged",
     "host_num_services": "num_services",
 }
@@ -76,6 +85,18 @@ def _translate(context: VisualContext) -> ContextFilterTranslation[_JSON]:
             {"host": "web-01"},
             _condition("name", "matches", r"^web\-01$"),
             id="exact text",
+        ),
+        pytest.param(
+            "hostnameoralias",
+            {"hostnameoralias": "web"},
+            {
+                "type": "or",
+                "children": [
+                    _condition("name", "contains", "web"),
+                    _condition("alias", "contains", "web"),
+                ],
+            },
+            id="text in either of two fields",
         ),
         pytest.param(
             "host_address",
@@ -168,6 +189,24 @@ def _translate(context: VisualContext) -> ContextFilterTranslation[_JSON]:
             id="state choice",
         ),
         pytest.param(
+            "hosts_having_service_problems",
+            {"hosts_having_services_warn": "on", "hosts_having_services_crit": "on"},
+            {
+                "type": "or",
+                "children": [
+                    _condition("num_services_warn", "gt", 0),
+                    _condition("num_services_crit", "gt", 0),
+                ],
+            },
+            id="service problems to count",
+        ),
+        pytest.param(
+            "hosts_having_service_problems",
+            {"hosts_having_services_unknown": "on"},
+            _condition("num_services_unknown", "gt", 0),
+            id="one service problem to count",
+        ),
+        pytest.param(
             "host_num_services",
             {"host_num_services_from": "1", "host_num_services_until": "9"},
             {
@@ -213,6 +252,22 @@ def test_legacy_filter_translates_to_condition_on_its_field(
         pytest.param(
             {"host_ctc_regex": {"neg_host_ctc_regex": "on"}}, id="negation without a pattern"
         ),
+        pytest.param({"hostnameoralias": {"hostnameoralias": ""}}, id="no text in either field"),
+        pytest.param(
+            {"hosts_having_service_problems": {"hosts_having_services_warn": ""}},
+            id="no service problem to count",
+        ),
+        pytest.param(
+            {
+                "hosts_having_service_problems": {
+                    "hosts_having_services_warn": "on",
+                    "hosts_having_services_crit": "on",
+                    "hosts_having_services_pending": "on",
+                    "hosts_having_services_unknown": "on",
+                }
+            },
+            id="every service problem to count",
+        ),
         pytest.param({"host_acknowledged": {"is_host_acknowledged": "-1"}}, id="ignored flag"),
         pytest.param(
             {"host_staleness": {"is_host_staleness": "-1"}},
@@ -255,6 +310,9 @@ def test_inactive_context_translates_to_no_filter(context: VisualContext) -> Non
             id="contact groups naming no group",
         ),
         pytest.param(
+            {"hostnameoralias": {"hostnameoralias": "web["}}, id="invalid name or alias regex"
+        ),
+        pytest.param(
             {"host_num_services": {"host_num_services_from": "1.5"}}, id="bound not a number"
         ),
         pytest.param({"wato_folder": {"wato_folder": "linux"}}, id="filter the page does not map"),
@@ -266,24 +324,53 @@ def test_filter_without_equivalent_is_reported(context: VisualContext) -> None:
 
 
 @pytest.mark.parametrize(
-    "value, expected_unapplied",
+    "name, value, restricts",
     [
-        pytest.param({"host_regex": "-1"}, ["hostregex"], id="reads like an ignored flag"),
-        pytest.param({"host_regex": "web["}, ["hostregex"], id="untranslatable"),
-        pytest.param({"neg_host_regex": "on"}, [], id="restricts nothing"),
+        pytest.param("hostregex", {"host_regex": "-1"}, True, id="reads like an ignored flag"),
+        pytest.param("hostregex", {"host_regex": "web["}, True, id="untranslatable"),
+        pytest.param("hostregex", {"neg_host_regex": "on"}, False, id="restricts nothing"),
+        pytest.param("hostnameoralias", {"hostnameoralias": "web"}, True, id="text in two fields"),
+        pytest.param("hostnameoralias", {}, False, id="no text in two fields"),
+        pytest.param(
+            "hosts_having_service_problems",
+            {"hosts_having_services_warn": "on"},
+            True,
+            id="service problem to count",
+        ),
+        pytest.param("hosts_having_service_problems", {}, False, id="no service problem"),
     ],
 )
-def test_filter_the_page_does_not_map_is_reported_if_it_restricts_anything(
-    value: FilterHTTPVariables, expected_unapplied: list[FilterName]
+def test_filter_the_page_does_not_map_is_reported_only_if_it_restricts_anything(
+    name: FilterName, value: FilterHTTPVariables, restricts: bool
 ) -> None:
-    translation = translate_context({"hostregex": value}, _fields_without("hostregex"), _ANY_PAGE)
+    translation = translate_context({name: value}, _fields_without(name), _ANY_PAGE)
 
-    assert translation == ContextFilterTranslation(filter=None, unapplied=expected_unapplied)
+    assert translation == ContextFilterTranslation(
+        filter=None, unapplied=[name] if restricts else []
+    )
 
 
 def test_page_mapping_a_filter_outside_the_catalog_is_rejected() -> None:
     with pytest.raises(ValueError, match="hostgroups"):
         translate_context({}, {"hostgroups": "groups"}, _ANY_PAGE)
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        pytest.param({"hostnameoralias": "name"}, id="single field for a filter with roles"),
+        pytest.param({"hostnameoralias": {"name": "name"}}, id="missing role"),
+        pytest.param(
+            {"hostnameoralias": {"name": "name", "alias": "alias", "address": "address"}},
+            id="unknown role",
+        ),
+        pytest.param({"hostregex": {"name": "name"}}, id="roles for a filter with a single field"),
+        pytest.param({"siteopt": {"name": "name"}}, id="roles for a site filter that is not set"),
+    ],
+)
+def test_page_mapping_a_filter_to_fields_that_do_not_fit_it_is_rejected(fields: _Fields) -> None:
+    with pytest.raises(ValueError, match="Expected"):
+        translate_context({}, fields, _ANY_PAGE)
 
 
 def test_unapplied_filters_are_reported_in_context_order() -> None:
@@ -300,7 +387,7 @@ def test_unapplied_filters_are_reported_in_context_order() -> None:
     )
 
 
-def _fields_without(name: FilterName) -> dict[FilterName, str]:
+def _fields_without(name: FilterName) -> _Fields:
     return {other: field for other, field in _FIELDS.items() if other != name}
 
 
@@ -367,7 +454,7 @@ def _fields_without(name: FilterName) -> dict[FilterName, str]:
 )
 def test_only_the_first_site_filter_applies_and_the_others_are_reported_if_they_narrow_the_sites(
     context: VisualContext,
-    fields: Mapping[FilterName, str],
+    fields: _Fields,
     expected_sites: list[str],
     expected_unapplied: list[FilterName],
 ) -> None:
@@ -397,7 +484,7 @@ def test_only_the_first_site_filter_applies_and_the_others_are_reported_if_they_
     ],
 )
 def test_first_site_filter_that_cannot_apply_is_reported_and_keeps_the_others_from_applying(
-    context: VisualContext, fields: Mapping[FilterName, str]
+    context: VisualContext, fields: _Fields
 ) -> None:
     assert translate_context(context, fields, _ANY_PAGE) == ContextFilterTranslation(
         filter=None, unapplied=list(context)

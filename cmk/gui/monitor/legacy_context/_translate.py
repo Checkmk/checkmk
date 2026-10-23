@@ -23,7 +23,15 @@ from pydantic import TypeAdapter
 from cmk.gui.type_defs import FilterHTTPVariables, FilterName, VisualContext
 
 from ._catalog import LEGACY_FILTERS, SITE_FILTERS
-from ._filters import all_of, FilterJSON, IGNORED_TRISTATE, UntranslatableFilterError
+from ._filters import (
+    all_of,
+    FilterJSON,
+    IGNORED_TRISTATE,
+    LegacyFilter,
+    MultiFieldFilter,
+    PageField,
+    UntranslatableFilterError,
+)
 
 
 @dataclass(frozen=True)
@@ -51,14 +59,20 @@ class PageFilterModel[N, F]:
 
 def translate_context[N, F](
     context: VisualContext,
-    fields: Mapping[FilterName, str],
+    fields: Mapping[FilterName, PageField],
     page: PageFilterModel[N, F],
 ) -> ContextFilterTranslation[F]:
     """Translate the legacy filters in ``fields`` to conditions on the page field each is mapped
     to, in the order of ``fields``: where the page cannot take two filters together, the one
-    listed first is applied. Raises a ``ValueError`` for a filter missing from the catalog."""
+    listed first is applied. A filter that spans several fields is mapped to the field of each of
+    its roles. Raises a ``ValueError`` for a filter missing from the catalog, or mapped to fields
+    that do not fit it."""
     if unknown := fields.keys() - LEGACY_FILTERS.keys():
         raise ValueError(f"Not in the catalog of legacy filters: {sorted(unknown)}")
+    for name, field in fields.items():
+        # Fields that do not fit their filter raise, whether or not the context sets it. A filter
+        # that is not set restricts nothing, so this does not translate anything.
+        _translate_filter(LEGACY_FILTERS[name], {}, field)
     nodes: list[FilterJSON] = []
     page_filter: F | None = None
     # Like the legacy views, only the first site filter that restricts the sites applies. If the
@@ -77,7 +91,8 @@ def translate_context[N, F](
         if name in SITE_FILTERS and name != applied_site_filter:
             continue
         try:
-            if (node := LEGACY_FILTERS[name](context.get(name, {}), field)) is None:
+            node = _translate_filter(LEGACY_FILTERS[name], context.get(name, {}), field)
+            if node is None:
                 continue
             candidate = [*nodes, node]
             tree = all_of(candidate)
@@ -123,13 +138,32 @@ def _site_filters(context: VisualContext) -> dict[FilterName, frozenset[str] | N
     return site_filters
 
 
+def _translate_filter(
+    legacy_filter: LegacyFilter | MultiFieldFilter, value: FilterHTTPVariables, field: PageField
+) -> FilterJSON | None:
+    """The condition the variables of a legacy filter mean on the field of the page, or the field
+    of each of its roles. Raises a ``ValueError`` for fields that do not fit the filter."""
+    if isinstance(legacy_filter, MultiFieldFilter):
+        if isinstance(field, str) or field.keys() != legacy_filter.roles:
+            raise ValueError(
+                f"Expected the page fields of the roles {sorted(legacy_filter.roles)}, got {field!r}"
+            )
+        return legacy_filter.translate(value, field)
+    if not isinstance(field, str):
+        raise ValueError(f"Expected a single page field, got {field!r}")
+    return legacy_filter(value, field)
+
+
 def _restricts(name: FilterName, value: FilterHTTPVariables) -> bool:
     """Whether a filter the page does not map restricts anything, i.e. has to be reported."""
     if (legacy_filter := LEGACY_FILTERS.get(name)) is None:
         # Its kind is unknown, so "-1" is taken for an ignored tri-state flag.
         return any(text and text != IGNORED_TRISTATE for text in value.values())
     try:
-        # Whether it restricts anything does not depend on the field it would be mapped to.
+        # Whether it restricts anything does not depend on the fields it would be mapped to.
+        if isinstance(legacy_filter, MultiFieldFilter):
+            no_fields = dict.fromkeys(legacy_filter.roles, "")
+            return legacy_filter.translate(value, no_fields) is not None
         return legacy_filter(value, "") is not None
     except UntranslatableFilterError:
         return True

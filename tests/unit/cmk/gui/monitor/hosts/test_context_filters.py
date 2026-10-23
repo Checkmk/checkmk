@@ -13,6 +13,7 @@ from cmk.gui.monitor.hosts._api._filters import (
     NameChoiceCondition,
     NotNode,
     NumericCondition,
+    OrNode,
     SiteScopedFilter,
     StateChoiceCondition,
     StringCondition,
@@ -56,6 +57,14 @@ from cmk.gui.type_defs import VisualContext
             id="host alias",
         ),
         pytest.param(
+            {"hostnameoralias": {"hostnameoralias": "web"}},
+            OrNode(type="or", children=[
+                StringCondition(type="condition", field="name", op="contains", value="web"),
+                StringCondition(type="condition", field="alias", op="contains", value="web"),
+            ]),
+            id="host name or alias",
+        ),
+        pytest.param(
             {"host_address": {"host_address": "10.0.", "host_address_prefix": "yes"}},
             StringCondition(type="condition", field="address", op="matches", value="^10\\.0\\."),
             id="address prefix",
@@ -64,6 +73,14 @@ from cmk.gui.type_defs import VisualContext
             {"hoststate": {"hst0": "", "hst1": "on", "hst2": "on", "hstp": ""}},
             StateChoiceCondition(type="condition", field="state", op="one_of", value=["DOWN", "UNREACHABLE"]),
             id="host states",
+        ),
+        pytest.param(
+            {"hosts_having_service_problems": {"hosts_having_services_warn": "on", "hosts_having_services_crit": "on"}},
+            OrNode(type="or", children=[
+                NumericCondition(type="condition", field="num_services_warn", op="gt", value=0),
+                NumericCondition(type="condition", field="num_services_crit", op="gt", value=0),
+            ]),
+            id="hosts having service problems",
         ),
         pytest.param(
             {"host_acknowledged": {"is_host_acknowledged": "1"}},
@@ -135,6 +152,39 @@ def test_a_dashboard_filter_becomes_its_monitoring_page_condition(
     context: VisualContext, expected: FilterNode
 ) -> None:
     translation = translate_filters(context)
+
+    assert translation.filter == SiteScopedFilter(node=expected, sites=None, exclude_sites=False)
+
+
+@pytest.mark.parametrize(
+    "variable, expected",
+    [
+        pytest.param(
+            "hosts_having_services_warn",
+            NumericCondition(type="condition", field="num_services_warn", op="gt", value=0),
+            id="warn",
+        ),
+        pytest.param(
+            "hosts_having_services_crit",
+            NumericCondition(type="condition", field="num_services_crit", op="gt", value=0),
+            id="crit",
+        ),
+        pytest.param(
+            "hosts_having_services_pending",
+            NumericCondition(type="condition", field="num_services_pending", op="gt", value=0),
+            id="pending",
+        ),
+        pytest.param(
+            "hosts_having_services_unknown",
+            NumericCondition(type="condition", field="num_services_unknown", op="gt", value=0),
+            id="unknown",
+        ),
+    ],
+)
+def test_a_dashboard_service_problem_filter_counts_the_services_in_that_state(
+    variable: str, expected: FilterNode
+) -> None:
+    translation = translate_filters({"hosts_having_service_problems": {variable: "on"}})
 
     assert translation.filter == SiteScopedFilter(node=expected, sites=None, exclude_sites=False)
 

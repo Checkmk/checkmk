@@ -1101,21 +1101,22 @@ class EventServer(ECServerThread):
 
                 # First look for case 1: rule that already have at least one hit
                 # and this events in the state "counting" exist.
-                events_to_delete: list[tuple[Event, HistoryWhat]] = []
-                events = self._event_status.events()
-                for event in events:
+                for event in self._event_status.events():
                     if (
                         self._event_status.creating_rule_id(event) == rule["id"]
                         and event["phase"] == "counting"
                     ):
                         # time has elapsed. Now lets see if we have reached
                         # the necessary count:
-                        # Either way, the counting event is no longer needed.
+                        # Either way, the counting event is no longer needed. Removing it right
+                        # away is fine, as the loop ends here anyway.
                         if event["count"] < expect["count"]:  # no -> trigger alarm
-                            events_to_delete.append((event, "AUTODELETE"))
+                            # Remove it before opening the event about the missing messages, so the
+                            # limits neither count it nor delete it to make room for that event.
+                            self._event_status.remove_event(event, "AUTODELETE")
                             self._handle_absent_event(rule, expect, event["count"], interval_start)
                         else:  # yes -> everything is fine.
-                            events_to_delete.append((event, "COUNTREACHED"))
+                            self._event_status.remove_event(event, "COUNTREACHED")
                             self._event_status.clear_interval_start(rule["id"])
                             self._logger.info(
                                 "Rule %(pack)s/%(rule_id)s has reached %(count)d occurrences (%(required)d required). "
@@ -1135,9 +1136,6 @@ class EventServer(ECServerThread):
 
                 # Do not forget to switch to next interval
                 self._event_status.start_next_interval(rule["id"], interval)
-
-                for event, reason in events_to_delete:
-                    self._event_status.remove_event(event, reason)
 
     def _handle_absent_event(
         self, rule: Rule, expect: Expect, event_count: int, interval_start: float
@@ -1213,7 +1211,9 @@ class EventServer(ECServerThread):
             )
             self._add_rule_contact_groups_to_event(rule, event)
             self.rewrite_event(rule, event, MatchGroups())
-            self._event_status.new_event(event)
+            # Like the event counting the expected messages, no limit drops it, but the limits still
+            # act on it. It has no host in the core.
+            self._new_event_respecting_limits(event, None, droppable=False)
             self._history.add(event, "COUNTFAILED")
             event_has_opened(
                 self._history,
@@ -1709,49 +1709,58 @@ class EventServer(ECServerThread):
             >= self._config["event_limit"]["overall"]["limit"]
         )
 
+    def new_event_respecting_limits(self, event: Event, *, droppable: bool = True) -> bool:
+        """Adds the event, unless a limit drops it, returning whether it was added
+
+        A limit never drops an event which isn't droppable, but the event still counts towards the
+        limits, they make room for it, and they act on it reaching them.
+        """
+        core_host = event["core_host"]
+        host_config = self.host_config.get_config_for_host(core_host) if core_host else None
+        with self._event_status.lock:
+            return self._new_event_respecting_limits(event, host_config, droppable=droppable)
+
     # protected by self._event_status.lock
-    def new_event_respecting_limits(self, event: Event) -> bool:
+    def _new_event_respecting_limits(
+        self, event: Event, host_config: HostInfo | None, *, droppable: bool
+    ) -> bool:
         self._logger.log(
             VERBOSE,
             "Checking limit for message from %(host)s (rule '%(rule_id)s')",
             {"host": event["host"], "rule_id": event["rule_id"]},
         )
-
-        core_host = event["core_host"]
-        host_config = self.host_config.get_config_for_host(core_host) if core_host else None
-        with self._event_status.lock:
-            limits: list[tuple[LimitKind, int, str]] = []
-            for ty in _LIMIT_KINDS:
-                limit, action = self._get_event_limit(ty, event, host_config)
-                if self._drops_event(ty, event, limit, action):
-                    return False
-                limits.append((ty, limit, action))
-            # Only now that no limit drops the event, make room for it and act on the limits which
-            # it reaches. Otherwise, a limit would delete events for an event which is dropped
-            # anyway, and while a further limit drops the events, each of them would reach the
-            # limit again. Make room for all limits first, as deleting events for one limit can
-            # keep the event from reaching another one.
-            for ty, limit, action in limits:
-                if action == "delete_oldest":
-                    self._delete_oldest_events(ty, event, limit)
-            reached_limits = [
-                (ty, limit, action)
-                for ty, limit, action in limits
-                if self._reaches_limit(ty, event, limit, action)
-            ]
-            num_open_before = {
-                ty: self._event_status.get_num_existing_events_by(ty, event) for ty in _LIMIT_KINDS
-            }
-            for ty, limit, action in reached_limits:
-                self._act_on_reached_limit(ty, event, limit, action)
-            # Overflow events created meanwhile count towards the limits, too, so the limits
-            # deleting the oldest events make room once more, but only by deleting the events open
-            # before: Deleting an overflow event right away would hide that its limit is reached.
-            for ty, limit, action in limits:
-                if action == "delete_oldest":
-                    self._delete_oldest_events(ty, event, limit, at_most=num_open_before[ty])
-            self._event_status.new_event(event)
-            return True
+        limits: list[tuple[LimitKind, int, str]] = []
+        for ty in _LIMIT_KINDS:
+            limit, action = self._get_event_limit(ty, event, host_config)
+            if droppable and self._drops_event(ty, event, limit, action):
+                return False
+            limits.append((ty, limit, action))
+        # Only now that no limit drops the event, make room for it and act on the limits which
+        # it reaches. Otherwise, a limit would delete events for an event which is dropped
+        # anyway, and while a further limit drops the events, each of them would reach the
+        # limit again. Make room for all limits first, as deleting events for one limit can
+        # keep the event from reaching another one.
+        for ty, limit, action in limits:
+            if action == "delete_oldest":
+                self._delete_oldest_events(ty, event, limit)
+        reached_limits = [
+            (ty, limit, action)
+            for ty, limit, action in limits
+            if self._reaches_limit(ty, event, limit, action)
+        ]
+        num_open_before = {
+            ty: self._event_status.get_num_existing_events_by(ty, event) for ty in _LIMIT_KINDS
+        }
+        for ty, limit, action in reached_limits:
+            self._act_on_reached_limit(ty, event, limit, action)
+        # Overflow events created meanwhile count towards the limits, too, so the limits
+        # deleting the oldest events make room once more, but only by deleting the events open
+        # before: Deleting an overflow event right away would hide that its limit is reached.
+        for ty, limit, action in limits:
+            if action == "delete_oldest":
+                self._delete_oldest_events(ty, event, limit, at_most=num_open_before[ty])
+        self._event_status.new_event(event)
+        return True
 
     # The following actions can be configured:
     # stop                 Stop creating new events
@@ -3325,10 +3334,11 @@ class EventStatus:
                     self.count_event_up(ev, event)
                     return
 
-        # None found, create one
+        # None found, create one. No event limit drops it: The expected message would count as
+        # missing otherwise, and as there is only one such event per rule, it can't flood the EC.
         event["count"] = 1
         event["phase"] = "counting"
-        event_server.new_event_respecting_limits(event)
+        event_server.new_event_respecting_limits(event, droppable=False)
 
     def count_event(self, event_server: EventServer, event: Event, count: Count) -> Event | None:
         """

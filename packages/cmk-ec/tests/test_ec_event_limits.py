@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Limits for the number of open events"""
 
+import logging
+import time
+
 import pytest
 import time_machine
 
@@ -16,6 +19,7 @@ from cmk.ec.main import EventServer, EventStatus, StatusServer
 from .helpers import (
     FakeConnection,
     HOUR,
+    INTERVAL_START,
     new_count,
     new_event,
     new_host,
@@ -541,3 +545,110 @@ def test_host_limit_counts_a_merged_event_about_missing_messages_for_its_rewritt
         event_server.do_housekeeping()
 
     assert _status(event_server)["status_event_limit_active_hosts"] == ["backup-host"]
+
+
+def test_expected_message_counts_although_the_limit_of_its_rule_is_reached(
+    event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
+) -> None:
+    rule = new_rule(
+        {
+            "expect": ec.Expect(interval=HOUR, count=1, merge="open"),
+            "event_limit": ec.EventLimit(action="stop", limit=1),
+        }
+    )
+    _configure(event_server, config, history, _NO_LIMITS, rule)
+    with time_machine.travel(START, tick=False) as traveller:
+        event_server.do_housekeeping()
+        traveller.shift(HOUR)
+        # The event about the missing message reaches the limit of the rule.
+        event_server.do_housekeeping()
+        _process_messages(event_server, "backup done")
+        traveller.shift(HOUR)
+
+        event_server.do_housekeeping()
+
+    assert [event["count"] for event in event_status.events()] == [1]
+
+
+def test_counting_event_of_an_expecting_rule_reaching_a_limit_creates_an_overflow_event(
+    event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
+) -> None:
+    rule = new_rule({"expect": ec.Expect(interval=HOUR, count=2, merge="open")})
+    event_limits = _only_limit("overall", ec.EventLimit(action="stop_overflow", limit=1))
+    _configure(event_server, config, history, event_limits, rule)
+
+    _process_messages(event_server, "backup done")
+
+    assert _texts_of_events(event_status) == ["<overflow>", "backup done"]
+
+
+def test_event_about_a_missing_message_reaching_a_limit_creates_an_overflow_event(
+    event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
+) -> None:
+    rule = new_rule({"expect": ec.Expect(interval=HOUR, count=1, merge="open")})
+    event_limits = _only_limit("overall", ec.EventLimit(action="stop_overflow", limit=1))
+    _configure(event_server, config, history, event_limits, rule)
+    with time_machine.travel(START, tick=False) as traveller:
+        event_server.do_housekeeping()
+        traveller.shift(HOUR)
+
+        event_server.do_housekeeping()
+
+    interval_start = time.strftime("%F %T", time.localtime(INTERVAL_START))
+    assert _texts_of_events(event_status) == [
+        "<overflow>",
+        f"Expected message did not arrive since {interval_start}",
+    ]
+
+
+def test_failed_expectation_logs_no_errors_with_a_limit_deleting_the_oldest_events(
+    event_server: EventServer,
+    config: Config,
+    history: RecordingHistory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    # The rule keeps only its newest event.
+    rule = new_rule(
+        {
+            "expect": ec.Expect(interval=HOUR, count=2, merge="open"),
+            "event_limit": ec.EventLimit(action="delete_oldest", limit=1),
+        }
+    )
+    _configure(event_server, config, history, _NO_LIMITS, rule)
+    with time_machine.travel(START, tick=False) as traveller:
+        event_server.do_housekeeping()
+        _process_messages(event_server, "backup done")
+        traveller.shift(HOUR)
+
+        event_server.do_housekeeping()
+
+    assert [r.getMessage() for r in caplog.records if r.levelno >= logging.ERROR] == []
+
+
+def test_counting_event_of_a_failed_expectation_takes_up_no_room_within_the_limits(
+    event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
+) -> None:
+    # The rule keeps its two newest events, and it opens a new one for each failed expectation.
+    rule = new_rule(
+        {
+            "expect": ec.Expect(interval=HOUR, count=2, merge="never"),
+            "event_limit": ec.EventLimit(action="delete_oldest", limit=2),
+        }
+    )
+    _configure(event_server, config, history, _NO_LIMITS, rule)
+    with time_machine.travel(START, tick=False) as traveller:
+        event_server.do_housekeeping()
+        traveller.shift(HOUR)
+        # No expected message arrives in the first interval, one in the second one.
+        event_server.do_housekeeping()
+        _process_messages(event_server, "backup done")
+        traveller.shift(HOUR)
+
+        event_server.do_housekeeping()
+
+    first_interval_start = time.strftime("%F %T", time.localtime(INTERVAL_START))
+    second_interval_start = time.strftime("%F %T", time.localtime(INTERVAL_START + HOUR))
+    assert _texts_of_events(event_status) == [
+        f"Expected message did not arrive since {first_interval_start}",
+        f"Expected message arrived only 1 out of 2 times since {second_interval_start}",
+    ]

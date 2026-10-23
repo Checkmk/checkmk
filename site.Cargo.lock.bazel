@@ -1,5 +1,5 @@
 {
-  "checksum": "b002b3cd96d65fa976343b305f01fa044140c63d986258e2fef49ad7070f3ccd",
+  "checksum": "1bc346af24f50c14874d595720d3200f01249e6bfedee6a82b6ab7a49def6a7c",
   "conditions": {
     "aarch64-linux-android": [],
     "aarch64-pc-windows-gnullvm": [],
@@ -6759,7 +6759,7 @@
             "target": "tower_service"
           },
           {
-            "id": "webpki-roots 1.0.6",
+            "id": "webpki-roots 1.0.11",
             "target": "webpki_roots"
           }
         ],
@@ -13918,7 +13918,7 @@
               "target": "url"
             },
             {
-              "id": "webpki-roots 1.0.6",
+              "id": "webpki-roots 1.0.11",
               "target": "webpki_roots"
             }
           ],
@@ -19432,7 +19432,7 @@
       ],
       "version": "1.1.0"
     },
-    "webpki-roots 1.0.6": {
+    "webpki-roots 1.0.11": {
       "common_attrs": {
         "deps": [
           {
@@ -19453,8 +19453,8 @@
       "package_url": "https://github.com/rustls/webpki-roots",
       "repository": {
         "Http": {
-          "sha256": "22cfaf3c063993ff62e73cb4311efde4db1efb31ab78a3e5c457939ad5cc0bed",
-          "url": "https://static.crates.io/crates/webpki-roots/1.0.6/download"
+          "sha256": "f5f280bbb2b287bc8e7de7e3852945a0ff50d1bbcb5ed42b6c7a568c546df171",
+          "url": "https://static.crates.io/crates/webpki-roots/1.0.11/download"
         }
       },
       "targets": [
@@ -19465,7 +19465,7 @@
           }
         }
       ],
-      "version": "1.0.6"
+      "version": "1.0.11"
     },
     "widestring 1.2.0": {
       "common_attrs": {

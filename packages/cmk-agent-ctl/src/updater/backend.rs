@@ -2161,7 +2161,8 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             base_url: &reqwest::Url,
             connection: &TrustedConnection,
             body: &agent_receiver_api::UpdateStatusBody<'_>,
-        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse> {
+        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse, agent_receiver_api::ApiError>
+        {
             *self.request.borrow_mut() = Some(RecordedRequest {
                 url: base_url.to_string(),
                 uuid: connection.uuid.to_string(),
@@ -2177,7 +2178,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             base_url: &reqwest::Url,
             connection: &TrustedConnection,
             body: &agent_receiver_api::AgentDownloadBody<'_>,
-        ) -> AnyhowResult<Vec<u8>> {
+        ) -> AnyhowResult<Vec<u8>, agent_receiver_api::ApiError> {
             *self.download.borrow_mut() = Some(RecordedDownload {
                 url: base_url.to_string(),
                 uuid: connection.uuid.to_string(),
@@ -2197,8 +2198,11 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             _base_url: &reqwest::Url,
             _connection: &TrustedConnection,
             _body: &agent_receiver_api::UpdateStatusBody<'_>,
-        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse> {
-            Err(Error::msg("connection refused"))
+        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse, agent_receiver_api::ApiError>
+        {
+            Err(agent_receiver_api::ApiError::Other(Error::msg(
+                "connection refused",
+            )))
         }
 
         fn download_agent(
@@ -2206,8 +2210,10 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             _base_url: &reqwest::Url,
             _connection: &TrustedConnection,
             _body: &agent_receiver_api::AgentDownloadBody<'_>,
-        ) -> AnyhowResult<Vec<u8>> {
-            Err(Error::msg("connection refused"))
+        ) -> AnyhowResult<Vec<u8>, agent_receiver_api::ApiError> {
+            Err(agent_receiver_api::ApiError::Other(Error::msg(
+                "connection refused",
+            )))
         }
     }
 

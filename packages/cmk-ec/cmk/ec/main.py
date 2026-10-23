@@ -23,6 +23,7 @@ import json
 import logging
 import os
 import pprint
+import re
 import select
 import signal
 import socket
@@ -150,6 +151,11 @@ Response = Iterable[Sequence[object]] | Mapping[str, object] | None
 
 # The order in which the event limits are checked
 _LIMIT_KINDS: tuple[LimitKind, ...] = ("overall", "by_host", "by_rule")
+
+# The text of an overflow event, which older versions didn't mark otherwise
+_OVERFLOW_EVENT_TEXT = re.compile(
+    r"The (overall|host|rule) event limit of \d+ open events has been reached"
+)
 
 
 # .
@@ -882,7 +888,7 @@ class EventServer(ECServerThread):
         events = self._event_status.events()
         now = time.time()
         for event in events:
-            rule = self._rule_by_id.get(event["rule_id"])
+            rule = self._rule_by_id.get(self._event_status.creating_rule_id(event))
 
             if event["phase"] == "counting":
                 # Event belongs to a rule that does not longer exist? It
@@ -1046,7 +1052,10 @@ class EventServer(ECServerThread):
                 events_to_delete: list[tuple[Event, HistoryWhat]] = []
                 events = self._event_status.events()
                 for event in events:
-                    if event["rule_id"] == rule["id"] and event["phase"] == "counting":
+                    if (
+                        self._event_status.creating_rule_id(event) == rule["id"]
+                        and event["phase"] == "counting"
+                    ):
                         # time has elapsed. Now lets see if we have reached
                         # the necessary count:
                         if event["count"] < expect["count"]:  # no -> trigger alarm
@@ -1104,7 +1113,7 @@ class EventServer(ECServerThread):
 
         if merge != "never":
             for event in self._event_status.events():
-                if event["rule_id"] == rule["id"] and (
+                if self._event_status.creating_rule_id(event) == rule["id"] and (
                     event["phase"] == "open" or (event["phase"] == "ack" and merge == "acked")
                 ):
                     merge_event = event
@@ -2992,6 +3001,22 @@ class EventStatus:
             return None
         return ty, cls._limit_key(ty, event)
 
+    @staticmethod
+    def is_overflow_event(event: Event) -> bool:
+        """Whether the event is about reaching an event limit, also if an older version created it"""
+        return "overflowed_limit" in event or (
+            event.get("application") == "Event Console"
+            and _OVERFLOW_EVENT_TEXT.match(event.get("text", "")) is not None
+        )
+
+    @classmethod
+    def creating_rule_id(cls, event: Event) -> str | None:
+        """Returns the ID of the rule which created the event, None for an overflow event
+
+        The overflow event about a rule limit has the rule's ID only to count towards that limit.
+        """
+        return None if cls.is_overflow_event(event) else event["rule_id"]
+
     @classmethod
     def _limit_key(cls, ty: LimitKind, event: Event) -> _LimitKey:
         """Returns what all events counting towards the same limit of the given kind share"""
@@ -3208,7 +3233,7 @@ class EventStatus:
 
     def count_expected_event(self, event_server: EventServer, event: Event) -> None:
         for ev in self._events:
-            if ev["rule_id"] == event["rule_id"] and ev["phase"] == "counting":
+            if self.creating_rule_id(ev) == event["rule_id"] and ev["phase"] == "counting":
                 self.count_event_up(ev, event)
                 return
 
@@ -3226,7 +3251,7 @@ class EventStatus:
         low in the specified period of time.
         """
         for ev in self._events:
-            if ev["rule_id"] == event["rule_id"]:
+            if self.creating_rule_id(ev) == event["rule_id"]:
                 if ev["phase"] == "ack" and not count["count_ack"]:
                     continue  # skip acknowledged events
 
@@ -3271,7 +3296,7 @@ class EventStatus:
                 if user:
                     event["owner"] = user
                 self.remove_event(event, "DELETE", user)
-                rule_id = event["rule_id"]
+                rule_id = self.creating_rule_id(event)
                 if event["id"] + 1 == self._next_event_id and rule_id in self._interval_starts:
                     event_rule = get_rule(rule_id)
                     if event_rule is not None and "expect" in event_rule:

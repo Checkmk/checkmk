@@ -12,7 +12,7 @@ from collections.abc import Iterable, Sequence
 from typing import Any, override
 
 from cmk.ccc.hostaddress import HostName
-from cmk.ec.config import Rule, ServiceLevel
+from cmk.ec.config import Count, Rule, ServiceLevel
 from cmk.ec.core_queries import HostInfo
 from cmk.ec.event import Event
 from cmk.ec.history import History, HistoryWhat
@@ -121,6 +121,20 @@ def new_rule(attrs: Rule) -> Rule:
     )
     rule.update(attrs)
     return rule
+
+
+def new_count(count: int, period: int) -> Count:
+    """Returns how many messages within a period open an event, counting all messages together"""
+    return Count(
+        count=count,
+        period=period,
+        algorithm="interval",
+        count_duration=None,
+        count_ack=False,
+        separate_host=False,
+        separate_application=False,
+        separate_match_groups=False,
+    )
 
 
 class FakeConnection:

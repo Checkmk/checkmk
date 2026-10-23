@@ -5,13 +5,14 @@
 """Limits for the number of open events"""
 
 import pytest
+import time_machine
 
 import cmk.ec.export as ec
 from cmk.ec.config import Config
 from cmk.ec.event import LimitKind
 from cmk.ec.main import EventServer, EventStatus
 
-from .helpers import new_event, new_rule, process_message, RecordingHistory
+from .helpers import new_count, new_event, new_rule, process_message, RecordingHistory
 
 
 @pytest.fixture(name="history")
@@ -272,6 +273,81 @@ def test_message_cannot_pose_as_an_open_overflow_event(
     _process_messages(event_server, "2nd")
 
     assert _texts_of_events(event_status) == ["1st", "<overflow>", "2nd"]
+
+
+def test_messages_are_not_counted_into_the_overflow_event_of_their_rule(
+    event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
+) -> None:
+    # All messages count up the same event, which the second one opens.
+    event_server.reload_configuration(
+        config
+        | {
+            "event_limit": _only_limit("by_rule", ec.EventLimit(action="stop_overflow", limit=1)),
+            "rule_packs": [ec.default_rule_pack([new_rule({"count": new_count(2, period=60)})])],
+        },
+        history,
+    )
+    _process_messages(event_server, "1st")
+
+    _process_messages(event_server, "2nd")
+
+    assert [(event["phase"], event["count"]) for event in event_status.events()] == [
+        ("open", 1),
+        ("open", 2),
+    ]
+
+
+def test_missing_expected_messages_are_not_merged_into_the_overflow_event_of_their_rule(
+    event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
+) -> None:
+    event_limits = _only_limit("by_rule", ec.EventLimit(action="stop_overflow", limit=1))
+    _configure(event_server, config, history, event_limits)
+    _process_messages(event_server, "1st")
+    [event] = [event for event in event_status.events() if "overflowed_limit" not in event]
+    event_status.remove_event(event, "DELETE")
+    # The rule expects messages now, so an event about a missing one is merged into an open one.
+    expecting_rule = new_rule({"expect": ec.Expect(interval=3600, count=1, merge="open")})
+    event_server.reload_configuration(
+        config
+        | {"event_limit": event_limits, "rule_packs": [ec.default_rule_pack([expecting_rule])]},
+        history,
+    )
+    with time_machine.travel(1_700_000_000.0, tick=False) as traveller:
+        event_server.do_housekeeping()
+        traveller.shift(3600)
+
+        event_server.do_housekeeping()
+
+    assert [event["count"] for event in event_status.events()] == [1, 1]
+
+
+def test_messages_are_not_counted_into_an_overflow_event_of_an_older_version(
+    event_server: EventServer, event_status: EventStatus, config: Config, history: RecordingHistory
+) -> None:
+    # Older versions didn't mark overflow events.
+    event_status.new_event(
+        new_event(
+            ec.Event(
+                rule_id="rule",
+                application="Event Console",
+                text='The rule event limit of 1 open events has been reached for rule "rule". '
+                "Not opening any additional event for this rule until open events have been "
+                "archived.",
+            )
+        )
+    )
+    # All messages count up the same event, which the second one opens.
+    rule = new_rule({"count": new_count(2, period=60)})
+    event_server.reload_configuration(
+        config | {"rule_packs": [ec.default_rule_pack([rule])]}, history
+    )
+
+    _process_messages(event_server, "1st", "2nd")
+
+    assert [(event["phase"], event["count"]) for event in event_status.events()] == [
+        ("open", 1),
+        ("open", 2),
+    ]
 
 
 def test_limit_does_not_act_on_an_event_which_a_further_limit_drops(

@@ -221,18 +221,6 @@ function getSnapinTargetPos() {
  * misc sidebar stuff
  *************************************************/
 
-const g_scrolling = true
-
-export function scroll_window(speed: number) {
-  const c = document.getElementById('side_content')
-
-  if (g_scrolling) {
-    c!.scrollTop += speed
-    /* eslint-disable-next-line no-implied-eval -- Highlight existing violations CMK-17846 */
-    setTimeout('cmk.sidebar.scroll_window(' + speed + ')', 10)
-  }
-}
-
 export function toggle_sidebar() {
   const sidebar = document.getElementById('check_mk_sidebar')
   if (sidebar) {

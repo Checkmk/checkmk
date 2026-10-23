@@ -135,8 +135,9 @@ def bootstrap(site_name: str) -> None:
     carrying the manual setup instructions.
 
     Raises:
-        SudoersError: No TTY, install failed, or (after declining) the
-            user's own sudo rights cannot run commands as the site user.
+        SudoersError: No TTY, sudo authentication or install failed, or
+            (after declining) the user's own sudo rights cannot run
+            commands as the site user.
     """
     rule = rule_content(site_name)
     path = drop_in_path(site_name)
@@ -185,8 +186,8 @@ def ensure_site_access(site_name: str) -> None:
     one-off sudo session, as when declining it in :func:`bootstrap`.
 
     Raises:
-        SudoersError: No rule and no TTY, or the user's own sudo rights
-            cannot run commands as the site user.
+        SudoersError: No rule and no TTY, sudo authentication failed, or
+            the user's own sudo rights cannot run commands as the site user.
     """
     if probe(site_name):
         return
@@ -242,21 +243,22 @@ def ensure_dev_versions_dir() -> None:
     this may prompt for the sudo password — once per machine, ever.
 
     Raises:
-        SudoersError: If the directory cannot be created.
+        SudoersError: If sudo authentication fails or the directory
+            cannot be created.
     """
     if os.access(DEV_VERSIONS_DIR, os.W_OK):
         return
     user = get_real_user()
+    recovery = (
+        f"Ask an administrator to run:\n    sudo install -d -m 0755 -o {user} {DEV_VERSIONS_DIR}"
+    )
     output.info(f"Creating {DEV_VERSIONS_DIR} (owned by {user}) requires sudo")
-    _authenticate_sudo()
+    _authenticate_sudo(recovery=recovery)
     result = _run_root(["install", "-d", "-m", "0755", "-o", user, str(DEV_VERSIONS_DIR)])
     if result.returncode != 0:
         raise SudoersError(
             f"Failed to prepare {DEV_VERSIONS_DIR}: {result.stderr.strip()}",
-            recovery=(
-                "Ask an administrator to run:\n"
-                f"    sudo install -d -m 0755 -o {user} {DEV_VERSIONS_DIR}"
-            ),
+            recovery=recovery,
         )
 
 
@@ -273,7 +275,8 @@ def remove_setup(site_name: str) -> None:
     """Remove the per-site sudoers drop-in (``--remove-setup``).
 
     Raises:
-        SudoersError: If the drop-in cannot be removed.
+        SudoersError: If sudo authentication fails or the drop-in cannot
+            be removed.
     """
     path = drop_in_path(site_name)
     if not path.exists():
@@ -298,14 +301,26 @@ def remove_setup(site_name: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _authenticate_sudo() -> None:
-    """Refresh the sudo timestamp, prompting on the terminal if needed."""
+def _authenticate_sudo(*, recovery: str | None = None) -> None:
+    """Refresh the sudo timestamp, prompting on the terminal if needed.
+
+    The exit code cannot tell a wrong password from missing sudo rights,
+    so the error defers to sudo's own message on the terminal.  Usually
+    the password was mistyped and running again is the fix, so only
+    callers that can run without a terminal, where sudo cannot prompt at
+    all, pass a *recovery*.
+
+    Raises:
+        SudoersError: If sudo rejects the user.
+    """
     env = {k: v for k, v in os.environ.items() if k != "SUDO_ASKPASS"}
-    subprocess.run(
+    result = subprocess.run(
         ["sudo", "-v", "-p", "[cmk-dev-deploy] sudo password for %u: "],
         check=False,
         env=env,
     )
+    if result.returncode != 0:
+        raise SudoersError("sudo failed -- see its message on the terminal.", recovery=recovery)
 
 
 def _run_root(cmd: list[str]) -> subprocess.CompletedProcess[str]:

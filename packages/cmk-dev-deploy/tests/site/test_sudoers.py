@@ -35,6 +35,13 @@ done
 exec "$@"
 """
 
+# Fake sudo that rejects everything, including authentication (-v).
+_REJECTING_SUDO = """\
+#!/bin/sh
+printf '%s\\n' "$*" >> "$SUDO_LOG"
+exit 1
+"""
+
 # Fake install: ``-d`` creates directories, otherwise copies <src> <dst>.
 # Mode/owner options are ignored (applying them would need root).
 _FAKE_INSTALL = """\
@@ -204,6 +211,12 @@ class TestBootstrap:
         log = "\n".join(_sudo_log(tmp_path))
         assert "visudo -cf" in log
 
+    def test_rejected_authentication_raises(self, shim_bin: Path) -> None:
+        _write_shim(shim_bin, "sudo", _REJECTING_SUDO)
+        tty, consent = _interactive("y")
+        with tty, consent, pytest.raises(SudoersError, match="see its message on the terminal"):
+            sudoers.bootstrap("v260")
+
     def test_visudo_failure_aborts_install(
         self, shim_bin: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -267,7 +280,7 @@ class TestEnsureSiteAccess:
         assert log[-1] == "-n -u v260 -- true"
 
     def test_missing_rule_without_tty_raises(self, shim_bin: Path, tmp_path: Path) -> None:
-        _write_shim(shim_bin, "sudo", '#!/bin/sh\nprintf \'%s\\n\' "$*" >> "$SUDO_LOG"\nexit 1\n')
+        _write_shim(shim_bin, "sudo", _REJECTING_SUDO)
         with (
             _tty(False),
             pytest.raises(SudoersError, match="no interactive terminal") as excinfo,
@@ -284,6 +297,11 @@ class TestEnsureSiteAccess:
             '#!/bin/sh\ncase "$*" in *" -u "*) exit 1 ;; esac\nexit 0\n',
         )
         with _tty(True), pytest.raises(SudoersError, match="Your sudo rights"):
+            sudoers.ensure_site_access("v260")
+
+    def test_rejected_authentication_raises(self, shim_bin: Path) -> None:
+        _write_shim(shim_bin, "sudo", _REJECTING_SUDO)
+        with _tty(True), pytest.raises(SudoersError, match="see its message on the terminal"):
             sudoers.ensure_site_access("v260")
 
 
@@ -321,6 +339,16 @@ class TestEnsureDevVersionsDir:
         with pytest.raises(SudoersError, match="Failed to prepare"):
             sudoers.ensure_dev_versions_dir()
 
+    def test_rejected_authentication_raises(
+        self, shim_bin: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _write_shim(shim_bin, "sudo", _REJECTING_SUDO)
+        monkeypatch.setattr(sudoers, "DEV_VERSIONS_DIR", tmp_path / "dev-versions")
+        with pytest.raises(SudoersError, match="see its message on the terminal") as excinfo:
+            sudoers.ensure_dev_versions_dir()
+        # Without a terminal sudo cannot prompt, so re-running would not help.
+        assert "sudo install -d -m 0755" in str(excinfo.value)
+
 
 # ---------------------------------------------------------------------------
 # remove_setup
@@ -354,3 +382,16 @@ class TestRemoveSetup:
         monkeypatch.setattr(sudoers, "SUDOERS_DIR", sudoers_dir)
         sudoers.remove_setup("v260")
         assert not drop_in.exists()
+
+    def test_rejected_authentication_raises(
+        self, shim_bin: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _write_shim(shim_bin, "sudo", _REJECTING_SUDO)
+        sudoers_dir = tmp_path / "sudoers.d"
+        sudoers_dir.mkdir()
+        (sudoers_dir / "cmk-dev-deploy-testuser-v260").write_text(
+            "testuser ALL=(v260) NOPASSWD: ALL\n"
+        )
+        monkeypatch.setattr(sudoers, "SUDOERS_DIR", sudoers_dir)
+        with pytest.raises(SudoersError, match="see its message on the terminal"):
+            sudoers.remove_setup("v260")

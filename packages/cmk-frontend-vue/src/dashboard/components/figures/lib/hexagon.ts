@@ -206,3 +206,30 @@ export function hostIndexAt(grid: HexagonGrid, x: number, y: number): number | n
 function round(value: number): number {
   return Math.round(value * 1000) / 1000
 }
+
+/**
+ * The cell a navigation key moves to from `index`: the next or previous cell, one row up or down,
+ * or the first or last cell. Down into a shorter last row lands on its last cell; any other move
+ * off the grid stays put. Null for any other key.
+ */
+export function neighbourIndex(grid: HexagonGrid, index: number, key: string): number | null {
+  const last = grid.centers.length - 1
+  switch (key) {
+    case 'ArrowRight':
+      return Math.min(index + 1, last)
+    case 'ArrowLeft':
+      return Math.max(index - 1, 0)
+    case 'ArrowDown':
+      return Math.floor(index / grid.columns) < Math.floor(last / grid.columns)
+        ? Math.min(index + grid.columns, last)
+        : index
+    case 'ArrowUp':
+      return index - grid.columns >= 0 ? index - grid.columns : index
+    case 'Home':
+      return 0
+    case 'End':
+      return last
+    default:
+      return null
+  }
+}

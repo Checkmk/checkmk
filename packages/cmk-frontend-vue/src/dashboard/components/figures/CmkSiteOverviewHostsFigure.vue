@@ -17,6 +17,7 @@ import type {
 
 import FigureTooltip, { type FigureTooltipContent } from './lib/FigureTooltip.vue'
 import HexagonGridFigure, { type HexagonCell } from './lib/HexagonGridFigure.vue'
+import { describeFigureTooltip } from './lib/describeFigureTooltip'
 import { HEXAGON_MAX_BOX_WIDTH, type HexagonStyle } from './lib/hexagon'
 
 const props = defineProps<{
@@ -97,8 +98,9 @@ function innerScale(host: SiteOverviewHost): number {
 }
 
 const cells = computed<HexagonCell[]>(() =>
-  props.value.hosts.map((host) => ({
+  props.value.hosts.map((host, index) => ({
     label: host.host_name,
+    description: describeFigureTooltip(tooltip(index)),
     outer: { style: HOST_HEXAGON[outerState(host)].style, scale: 1 },
     inner: hasHostProblem(host) ? null : { style: INNER_STYLE, scale: innerScale(host) },
     links: props.value.links,

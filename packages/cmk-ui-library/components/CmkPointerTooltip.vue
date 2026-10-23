@@ -80,7 +80,7 @@ onScopeDispose(() => {
   <!-- On the body: a dashboard widget frame is a stacking context, so no z-index inside it could
        keep the tooltip above a neighbouring widget. -->
   <Teleport to="body">
-    <!-- Pointer-only, so hidden from assistive technology; keyboard users cannot open it. -->
+    <!-- Hidden from assistive technology: a caller that wants it read puts it into a name. -->
     <div
       v-if="pointer"
       ref="tooltip"

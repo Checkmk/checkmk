@@ -10,6 +10,8 @@ import { describe, expect, it } from 'vitest'
 import CmkSiteOverviewSitesFigure from '@/dashboard/components/figures/CmkSiteOverviewSitesFigure.vue'
 import type { SiteOverviewSites } from '@/dashboard/types/widget'
 
+import { emulateFocusVisible } from './emulateFocusVisible'
+
 const SITES: SiteOverviewSites = {
   mode: 'sites',
   links: [
@@ -67,7 +69,7 @@ function renderFigure(value: SiteOverviewSites = SITES) {
 }
 
 async function openSiteMenu(): Promise<HTMLElement> {
-  const site = screen.getByRole('button', { name: 'Local site' })
+  const site = screen.getByRole('button', { name: /^Local site,/ })
   await fireEvent.pointerMove(site)
   site.focus()
   await userEvent.keyboard('{Enter}')
@@ -77,6 +79,8 @@ async function openSiteMenu(): Promise<HTMLElement> {
 }
 
 describe('CmkSiteOverviewSitesFigure', () => {
+  emulateFocusVisible()
+
   it('renders an anchor for every online site and none for a site that is down', () => {
     renderFigure()
 
@@ -117,6 +121,32 @@ describe('CmkSiteOverviewSitesFigure', () => {
     await rerender({ value: SITES })
 
     expect(screen.queryByText('hosts in total')).toBeNull()
+  })
+
+  it('shows the tooltip of an offline site keyboard focus is on', async () => {
+    renderFigure()
+
+    screen.getByRole('img', { name: /^Remote site,/ }).focus()
+
+    expect(await screen.findByText('This site is currently down.')).toBeInTheDocument()
+  })
+
+  it('hides the tooltip of the focused site on Escape', async () => {
+    renderFigure()
+    screen.getByRole('img', { name: /^Remote site,/ }).focus()
+    await screen.findByText('This site is currently down.')
+
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.queryByText('This site is currently down.')).toBeNull()
+  })
+
+  it('names a site by its state for screen readers', () => {
+    renderFigure()
+
+    expect(
+      screen.getByRole('img', { name: 'Remote site, This site is currently down.' })
+    ).toBeInTheDocument()
   })
 
   it('shows the missing icon for a site with an unknown status', () => {

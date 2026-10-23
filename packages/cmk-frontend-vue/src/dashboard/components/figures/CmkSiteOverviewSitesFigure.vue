@@ -23,6 +23,8 @@ import type {
 
 import FigureTooltip, { type FigureTooltipContent } from './lib/FigureTooltip.vue'
 import StateRingsHexagon from './lib/StateRingsHexagon.vue'
+import { byKeyboard } from './lib/byKeyboard'
+import { describeFigureTooltip } from './lib/describeFigureTooltip'
 import { HEXAGON_MAX_BOX_WIDTH, STATE_HEXAGON_STYLE, hexagonGrid, hexagonPath } from './lib/hexagon'
 
 const props = defineProps<{
@@ -154,6 +156,21 @@ function leave(): void {
   }
 }
 
+function focusSite(site: SiteElement, event: FocusEvent): void {
+  if (
+    menuOpenFor.value !== null ||
+    !byKeyboard(event) ||
+    !(event.currentTarget instanceof Element)
+  ) {
+    return
+  }
+  const bounds = event.currentTarget.getBoundingClientRect()
+  hovered.value = {
+    site,
+    pointer: { clientX: bounds.left + bounds.width / 2, clientY: bounds.top + bounds.height / 2 }
+  }
+}
+
 function opensMenu(site: SiteElement | undefined): boolean {
   return (
     site?.status === 'online' && contextualLinkCount(props.value.links, site.link_properties) > 1
@@ -172,11 +189,7 @@ watch(
   }
 )
 
-const tooltip = computed<FigureTooltipContent | null>(() => {
-  const site = hovered.value?.site
-  if (site === undefined) {
-    return null
-  }
+function tooltipOf(site: SiteElement): FigureTooltipContent {
   if (site.status !== 'online') {
     return { title: site.alias, state: OFFLINE_SITE[site.status].text, rows: [] }
   }
@@ -199,7 +212,13 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
       }
     ]
   }
-})
+}
+
+const tooltip = computed(() => (hovered.value ? tooltipOf(hovered.value.site) : null))
+
+function siteName(site: SiteElement): string {
+  return `${site.alias}, ${describeFigureTooltip(tooltipOf(site))}`
+}
 </script>
 
 <template>
@@ -218,6 +237,9 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
       :transform="shape.transform"
       @pointermove="hover(shape.site, $event)"
       @pointerleave="leave"
+      @focusin="focusSite(shape.site, $event)"
+      @focusout="leave"
+      @keydown.escape="leave"
     >
       <ContextualLinkTrigger
         v-if="shape.site.status === 'online'"
@@ -228,7 +250,7 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
         :reference="tooltipElement?.element ?? null"
         @update:open="(open: boolean) => (menuOpenFor = open ? shape.site.site_id : null)"
       >
-        <g :aria-label="shape.site.alias">
+        <g :aria-label="siteName(shape.site)">
           <path :d="shape.hitPath" fill="transparent" />
           <StateRingsHexagon
             v-if="shape.rings"
@@ -238,7 +260,7 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
           />
         </g>
       </ContextualLinkTrigger>
-      <g v-else :aria-label="shape.site.alias">
+      <g v-else :aria-label="siteName(shape.site)" role="img" tabindex="0">
         <path :d="shape.hitPath" fill="transparent" />
         <path :d="shape.iconPath ?? ''" class="db-cmk-site-overview-sites-figure__offline" />
         <image

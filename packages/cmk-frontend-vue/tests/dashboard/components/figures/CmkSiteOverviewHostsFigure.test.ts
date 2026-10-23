@@ -4,11 +4,13 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
 import CmkSiteOverviewHostsFigure from '@/dashboard/components/figures/CmkSiteOverviewHostsFigure.vue'
 import type { SiteOverviewHost, SiteOverviewHosts } from '@/dashboard/types/widget'
+
+import { emulateFocusVisible } from './emulateFocusVisible'
 
 function host(hostName: string, overrides: Partial<SiteOverviewHost> = {}): SiteOverviewHost {
   return {
@@ -75,7 +77,7 @@ async function hoverFirstHost(): Promise<void> {
 
 async function openFirstHostMenu(): Promise<void> {
   await hoverFirstHost()
-  screen.getByRole('button', { name: 'alpha' }).focus()
+  screen.getByRole('button', { name: /^alpha,/ }).focus()
   await userEvent.keyboard('{Enter}')
   await screen.findByRole('menu')
   await screen.findByText('Host is up')
@@ -86,6 +88,8 @@ function highlights(): Element[] {
 }
 
 describe('CmkSiteOverviewHostsFigure', () => {
+  emulateFocusVisible()
+
   it('highlights the hovered host only', async () => {
     renderFigure()
 
@@ -128,17 +132,74 @@ describe('CmkSiteOverviewHostsFigure', () => {
 
     await rerender({ value: { ...TWO_LINKS, hosts: [...TWO_LINKS.hosts].reverse() } })
 
-    expect(screen.queryByRole('menu')).toBeNull()
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
   })
 
-  it('closes the menu and the tooltip of a host on Escape', async () => {
+  it('shows no tooltip again once a click away closes the menu of a host', async () => {
+    renderFigure(TWO_LINKS)
+    await openFirstHostMenu()
+
+    await userEvent.setup({ pointerEventsCheck: 0 }).click(document.body)
+
+    await waitFor(() => expect(document.activeElement).toHaveAccessibleName(/^alpha,/))
+    expect(screen.queryByRole('menu')).toBeNull()
+    expect(screen.queryByText('Host is up')).toBeNull()
+  })
+
+  it('closes the menu of a host on Escape', async () => {
     renderFigure(TWO_LINKS)
     await openFirstHostMenu()
 
     await userEvent.keyboard('{Escape}')
 
     expect(screen.queryByRole('menu')).toBeNull()
+    expect(await screen.findByText('Host is up')).toBeInTheDocument()
+  })
+
+  it('shows the tooltip of the host keyboard focus is on', async () => {
+    renderFigure()
+
+    await userEvent.tab()
+
+    expect(await screen.findByText('Host is up')).toBeInTheDocument()
+  })
+
+  it('hides the tooltip of the focused host on Escape', async () => {
+    renderFigure()
+    await userEvent.tab()
+    await screen.findByText('Host is up')
+
+    await userEvent.keyboard('{Escape}')
+
     expect(screen.queryByText('Host is up')).toBeNull()
+  })
+
+  it('moves keyboard focus to the next host on ArrowRight', async () => {
+    renderFigure()
+    await userEvent.tab()
+    const alpha = document.activeElement
+
+    await userEvent.keyboard('{ArrowRight}')
+
+    expect(document.activeElement).not.toBe(alpha)
+    expect(document.activeElement).toHaveAccessibleName(/^beta,/)
+  })
+
+  it('keeps one link, with keyboard focus, on the host the pointer moves to', async () => {
+    renderFigure(TWO_LINKS)
+    screen.getByRole('button', { name: /^alpha,/ }).focus()
+    await userEvent.keyboard('{ArrowRight}')
+
+    await hoverFirstHost()
+
+    expect(screen.getAllByRole('button')).toHaveLength(1)
+    expect(document.activeElement).toHaveAccessibleName(/^alpha,/)
+  })
+
+  it('names a host by its state for screen readers', () => {
+    renderFigure()
+
+    expect(screen.getByRole('link', { name: /^alpha, Host is up/ })).toBeInTheDocument()
   })
 
   it('marks the tooltip of a host with several links with the menu arrow', async () => {
@@ -164,7 +225,7 @@ describe('CmkSiteOverviewHostsFigure', () => {
 
     await hoverFirstHost()
 
-    expect(screen.getByRole('link', { name: 'alpha' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /^alpha,/ })).toHaveAttribute(
       'href',
       expect.stringContaining('host=alpha')
     )

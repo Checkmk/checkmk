@@ -11,6 +11,7 @@ import type { AlertOverview, AlertOverviewElement, VisualContext } from '@/dashb
 
 import FigureTooltip, { type FigureTooltipContent } from './lib/FigureTooltip.vue'
 import HexagonGridFigure, { type HexagonCell } from './lib/HexagonGridFigure.vue'
+import { describeFigureTooltip } from './lib/describeFigureTooltip'
 import { HEXAGON_MAX_BOX_WIDTH, type HexagonStyle } from './lib/hexagon'
 
 const props = defineProps<{
@@ -43,8 +44,9 @@ const upperBound = computed(() =>
 )
 
 const cells = computed<HexagonCell[]>(() =>
-  props.value.elements.map((element) => ({
+  props.value.elements.map((element, index) => ({
     label: title(element),
+    description: describeFigureTooltip(tooltip(index)),
     outer: {
       style:
         STEP_STYLES[Math.round((element.num_problems / upperBound.value) * (COLOR_STEPS - 1))]!,

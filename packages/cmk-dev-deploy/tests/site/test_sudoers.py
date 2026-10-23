@@ -2,8 +2,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Unit tests for cmk.dev_deploy.site.sudoers.
 
 The module shells out to ``sudo``/``visudo``; the tests run it against
@@ -14,7 +12,6 @@ stubbed by the conftest to return ``"testuser"``.
 import os
 from contextlib import AbstractContextManager
 from pathlib import Path
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -76,14 +73,18 @@ def _sudo_log(tmp_path: Path) -> list[str]:
     return log.read_text().splitlines() if log.is_file() else []
 
 
-def _interactive(answer: str) -> tuple[AbstractContextManager[Any], AbstractContextManager[Any]]:
-    """Patches for a TTY stdin and a canned consent answer."""
+def _tty(is_tty: bool) -> AbstractContextManager[object]:
+    """Patch for a stdin that is (or is not) a terminal."""
     stdin = MagicMock()
-    stdin.isatty.return_value = True
-    return (
-        patch("sys.stdin", stdin),
-        patch("builtins.input", return_value=answer),
-    )
+    stdin.isatty.return_value = is_tty
+    return patch("sys.stdin", stdin)
+
+
+def _interactive(
+    answer: str,
+) -> tuple[AbstractContextManager[object], AbstractContextManager[object]]:
+    """Patches for a TTY stdin and a canned consent answer."""
+    return _tty(True), patch("builtins.input", return_value=answer)
 
 
 # ---------------------------------------------------------------------------
@@ -154,9 +155,7 @@ class TestRunAsSiteUser:
 
 class TestBootstrap:
     def test_no_tty_raises_with_admin_instructions(self) -> None:
-        stdin = MagicMock()
-        stdin.isatty.return_value = False
-        with patch("sys.stdin", stdin), pytest.raises(SudoersError) as excinfo:
+        with _tty(False), pytest.raises(SudoersError) as excinfo:
             sudoers.bootstrap("v260")
         assert "testuser ALL=(v260) NOPASSWD: ALL" in str(excinfo.value)
 
@@ -239,6 +238,53 @@ class TestBootstrap:
         tty, consent = _interactive("y")
         with tty, consent, pytest.raises(SudoersError, match="still fails"):
             sudoers.bootstrap("v260")
+
+
+# ---------------------------------------------------------------------------
+# ensure_site_access
+# ---------------------------------------------------------------------------
+
+
+class TestEnsureSiteAccess:
+    @pytest.mark.usefixtures("shim_bin")
+    def test_working_rule_does_not_authenticate(self, tmp_path: Path) -> None:
+        sudoers.ensure_site_access("v260")
+        assert _sudo_log(tmp_path) == ["-n -u v260 -- true"]
+
+    def test_missing_rule_uses_one_off_session(self, shim_bin: Path, tmp_path: Path) -> None:
+        # sudo shim whose probe succeeds only after authentication (-v)
+        _write_shim(
+            shim_bin,
+            "sudo",
+            f'#!/bin/sh\nprintf \'%s\\n\' "$*" >> "$SUDO_LOG"\n'
+            f'[ "$1" = -v ] && touch {tmp_path}/authenticated\n'
+            f"[ -e {tmp_path}/authenticated ]\n",
+        )
+        with _tty(True):
+            sudoers.ensure_site_access("v260")
+        log = _sudo_log(tmp_path)
+        assert any(line.startswith("-v") for line in log)
+        assert log[-1] == "-n -u v260 -- true"
+
+    def test_missing_rule_without_tty_raises(self, shim_bin: Path, tmp_path: Path) -> None:
+        _write_shim(shim_bin, "sudo", '#!/bin/sh\nprintf \'%s\\n\' "$*" >> "$SUDO_LOG"\nexit 1\n')
+        with (
+            _tty(False),
+            pytest.raises(SudoersError, match="no interactive terminal") as excinfo,
+        ):
+            sudoers.ensure_site_access("v260")
+        assert "visudo -cf" in str(excinfo.value)  # admin instructions
+        assert _sudo_log(tmp_path) == ["-n -u v260 -- true"]  # no authentication attempt
+
+    def test_insufficient_sudo_rights_raise(self, shim_bin: Path) -> None:
+        # sudo shim that authenticates (-v) but refuses to run as the site user
+        _write_shim(
+            shim_bin,
+            "sudo",
+            '#!/bin/sh\ncase "$*" in *" -u "*) exit 1 ;; esac\nexit 0\n',
+        )
+        with _tty(True), pytest.raises(SudoersError, match="Your sudo rights"):
+            sudoers.ensure_site_access("v260")
 
 
 # ---------------------------------------------------------------------------

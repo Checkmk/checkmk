@@ -202,6 +202,7 @@ def teardown_clone(site_root: Path) -> None:
     clone data.
 
     Raises:
+        SudoersError: If commands cannot run as the site user.
         CloneError: If the symlink cannot be repointed.
     """
     site_name = site_root.name
@@ -217,6 +218,7 @@ def teardown_clone(site_root: Path) -> None:
                 f"Pristine version {version} no longer exists; "
                 "the site will not start until it is reinstalled"
             )
+        sudoers.ensure_site_access(site_name)
         output.info(f"Stopping site {site_name} to revert to the pristine version...")
         stop_elapsed = _run_omd(site_name, "stop")
         _repoint(site_root, f"../../versions/{version}")

@@ -19,7 +19,9 @@ for a password again.
 Declining the rule still deploys: the run then authenticates sudo
 interactively once, and the cached timestamp carries the run's
 ``sudo -n`` calls.  Nothing persistent is installed, so the consent
-prompt returns on the next run.  There is deliberately no SSH path —
+prompt returns on the next run.  Without the rule, ``--purge`` uses the
+same one-off session, but does not offer the rule
+(:func:`ensure_site_access`).  There is deliberately no SSH path —
 the sudoers rule is the single channel to the site user.
 """
 
@@ -153,13 +155,11 @@ def bootstrap(site_name: str) -> None:
     answer = input("Install this rule now? [y/N] ")
     if answer.strip().lower() not in ("y", "yes"):
         output.info("Rule not installed -- using a one-off sudo session for this run.")
-        _authenticate_sudo()
-        if not probe(site_name):
-            raise SudoersError(
-                "Sudoers rule declined, and your own sudo rights cannot run "
-                f"commands as site user '{site_name}'.",
-                recovery=_admin_recovery(site_name),
-            )
+        _start_one_off_session(
+            site_name,
+            failure="Sudoers rule declined, and your own sudo rights cannot run "
+            f"commands as site user '{site_name}'.",
+        )
         return
 
     _install_rule(rule, path, site_name)
@@ -175,6 +175,39 @@ def bootstrap(site_name: str) -> None:
             ),
         )
     output.success(f"Sudoers rule installed: {path}")
+
+
+def ensure_site_access(site_name: str) -> None:
+    """Make sure commands can run as the site user, without offering the rule.
+
+    For ``--purge``, which reverts the site and so should not install
+    new system configuration on the way.  A missing rule falls back to a
+    one-off sudo session, as when declining it in :func:`bootstrap`.
+
+    Raises:
+        SudoersError: No rule and no TTY, or the user's own sudo rights
+            cannot run commands as the site user.
+    """
+    if probe(site_name):
+        return
+    if not sys.stdin.isatty():
+        raise SudoersError(
+            f"No sudoers rule allows running commands as site user '{site_name}', "
+            "and there is no interactive terminal to ask for your sudo password.",
+            recovery=_admin_recovery(site_name),
+        )
+    output.info(f"No sudoers rule for site user '{site_name}' -- using a one-off sudo session.")
+    _start_one_off_session(
+        site_name,
+        failure=f"Your sudo rights cannot run commands as site user '{site_name}'.",
+    )
+
+
+def _start_one_off_session(site_name: str, *, failure: str) -> None:
+    """Cache the sudo timestamp, which carries this run's ``sudo -n`` calls."""
+    _authenticate_sudo()
+    if not probe(site_name):
+        raise SudoersError(failure, recovery=_admin_recovery(site_name))
 
 
 def _install_rule(rule: str, path: Path, site_name: str) -> None:

@@ -141,7 +141,9 @@ drop-in. After bootstrap, no deploy, restart, reboot, `--full`, or `--purge`
 ever needs sudo again. Declining the rule still deploys: the run then asks
 for your sudo password directly (cached for the sudo timestamp duration, so
 service restarts late in a long watch session may fail), and the consent
-prompt returns on the next run.
+prompt returns on the next run. Without the rule, `--purge` of an active
+clone likewise asks for your sudo password, but does not offer to install
+the rule.
 
 | Event              | What happens                                                                      |
 | ------------------ | --------------------------------------------------------------------------------- |

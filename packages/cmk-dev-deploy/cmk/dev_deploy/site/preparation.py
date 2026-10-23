@@ -46,7 +46,11 @@ class SitePreparation(Protocol):
         """Prepare the site for deploys (idempotent)."""
 
     def teardown(self, site_root: Path) -> None:
-        """Revert the site to its pristine state, leaving it stopped."""
+        """Revert the site to its pristine state, leaving it stopped.
+
+        Acquires the credentials it needs itself if :meth:`prepare_privileges`
+        did not run (``--purge``).
+        """
 
 
 @dataclasses.dataclass(frozen=True)

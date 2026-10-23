@@ -29,7 +29,7 @@ export type ValidationResult =
   | { isValid: true; graphOptions: CustomGraphOptions }
   | { isValid: false; errors: DataFieldErrors }
 
-interface UseCustomGraphOptions {
+export interface UseCustomGraphOptions {
   unitType: Ref<'first_entry_with_unit' | 'custom'>
   notation: Ref<CustomGraphUnitNotationTypes | 'time' | null>
   symbol: Ref<string>

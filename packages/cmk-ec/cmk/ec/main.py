@@ -42,7 +42,6 @@ from setproctitle import setthreadtitle
 import cmk.ccc.daemon
 import cmk.ccc.profile
 import cmk.ccc.store
-from cmk.ccc.exceptions import MKException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import omd_site, SiteId
@@ -376,9 +375,15 @@ def replace_groups(text: str, origtext: str, match_groups: MatchGroups) -> str:
     return text
 
 
-class MKSignalException(MKException):
+class MKSignalException(BaseException):
+    """Tells the main thread about a signal, see SignalHandler
+
+    Like KeyboardInterrupt, it isn't an Exception, so no handler for errors swallows it, e.g. while
+    the main thread runs an action or waits for the master of a replication slave.
+    """
+
     def __init__(self, signum: int) -> None:
-        MKException.__init__(self, f"Got signal {signum}")
+        super().__init__(f"Got signal {signum}")
         self.signum = signum
 
 
@@ -936,10 +941,10 @@ class EventServer(ECServerThread):
         2. Automatically delete all events that are in state "open"
            and whose lifetime is elapsed.
         """
-        events_to_delete: list[tuple[Event, HistoryWhat]] = []
-        events = self._event_status.events()
         now = time.time()
-        for event in events:
+        # Remove each event right when closing it, so a signal interrupting the actions of a later
+        # event leaves no closed event behind. Hence iterate over a copy of the events.
+        for event in self._event_status.events()[:]:
             rule = self._rule_by_id.get(self._event_status.creating_rule_id(event))
 
             if event["phase"] == "counting":
@@ -951,7 +956,7 @@ class EventServer(ECServerThread):
                         {"event_id": event["id"], "rule_id": event["rule_id"]},
                     )
                     event["phase"] = "closed"
-                    events_to_delete.append((event, "ORPHANED"))
+                    self._event_status.remove_event(event, "ORPHANED")
 
                 elif "count" not in rule and not rule.get("expect"):
                     self._logger.info(
@@ -960,7 +965,7 @@ class EventServer(ECServerThread):
                         {"event_id": event["id"], "rule_id": event["rule_id"]},
                     )
                     event["phase"] = "closed"
-                    events_to_delete.append((event, "NOCOUNT"))
+                    self._event_status.remove_event(event, "NOCOUNT")
 
                 # handle counting
                 elif "count" in rule:
@@ -1000,7 +1005,7 @@ class EventServer(ECServerThread):
                                     },
                                 )
                                 event["phase"] = "closed"
-                                events_to_delete.append((event, "COUNTFAILED"))
+                                self._event_status.remove_event(event, "COUNTFAILED")
 
                     elif event["first"] + count["period"] <= now:  # End of period reached
                         self._logger.info(
@@ -1015,7 +1020,7 @@ class EventServer(ECServerThread):
                             },
                         )
                         event["phase"] = "closed"
-                        events_to_delete.append((event, "COUNTFAILED"))
+                        self._event_status.remove_event(event, "COUNTFAILED")
 
             # Handle delayed actions
             elif event["phase"] == "delayed":
@@ -1028,21 +1033,7 @@ class EventServer(ECServerThread):
                     event["phase"] = "open"
                     self._history.add(event, "DELAYOVER")
                     if rule:
-                        event_has_opened(
-                            self._history,
-                            self.settings,
-                            self._config,
-                            self._logger,
-                            self._connection,
-                            self.host_config,
-                            self._event_columns,
-                            rule,
-                            event,
-                        )
-                        if rule.get("autodelete"):
-                            event["phase"] = "closed"
-                            events_to_delete.append((event, "AUTODELETE"))
-
+                        self._open_event(rule, event, holding_lock=True)
                     else:
                         self._logger.info(
                             "Cannot do rule action: rule %(rule_id)s not present anymore.",
@@ -1054,14 +1045,11 @@ class EventServer(ECServerThread):
                 allowed_phases = event.get("live_until_phases", ["open"])
                 if event["phase"] in allowed_phases:
                     event["phase"] = "closed"
-                    events_to_delete.append((event, "EXPIRED"))
+                    self._event_status.remove_event(event, "EXPIRED")
                     self._logger.info(
                         "Lifetime of event %(event_id)d (rule %(rule_id)s) exceeded. Deleting event.",
                         {"event_id": event["id"], "rule_id": event["rule_id"]},
                     )
-
-        for event, reason in events_to_delete:
-            self._event_status.remove_event(event, reason)
 
     def hk_check_expected_messages(self) -> None:
         """
@@ -1099,43 +1087,50 @@ class EventServer(ECServerThread):
                 # Interval has been elapsed. Now comes the truth: do we have enough
                 # rule matches?
 
-                # First look for case 1: rule that already have at least one hit
-                # and this events in the state "counting" exist.
-                for event in self._event_status.events():
-                    if (
-                        self._event_status.creating_rule_id(event) == rule["id"]
-                        and event["phase"] == "counting"
-                    ):
-                        # time has elapsed. Now lets see if we have reached
-                        # the necessary count:
-                        # Either way, the counting event is no longer needed. Removing it right
-                        # away is fine, as the loop ends here anyway.
-                        if event["count"] < expect["count"]:  # no -> trigger alarm
-                            # Remove it before opening the event about the missing messages, so the
-                            # limits neither count it nor delete it to make room for that event.
-                            self._event_status.remove_event(event, "AUTODELETE")
-                            self._handle_absent_event(rule, expect, event["count"], interval_start)
-                        else:  # yes -> everything is fine.
-                            self._event_status.remove_event(event, "COUNTREACHED")
-                            self._event_status.clear_interval_start(rule["id"])
-                            self._logger.info(
-                                "Rule %(pack)s/%(rule_id)s has reached %(count)d occurrences (%(required)d required). "
-                                "Starting next period.",
-                                {
-                                    "pack": rule["pack"],
-                                    "rule_id": rule["id"],
-                                    "count": event["count"],
-                                    "required": expect["count"],
-                                },
-                            )
-                        break
+                try:
+                    # First look for case 1: rule that already have at least one hit
+                    # and this events in the state "counting" exist.
+                    for event in self._event_status.events():
+                        if (
+                            self._event_status.creating_rule_id(event) == rule["id"]
+                            and event["phase"] == "counting"
+                        ):
+                            # time has elapsed. Now lets see if we have reached
+                            # the necessary count:
+                            # Either way, the counting event is no longer needed. Removing it right
+                            # away is fine, as the loop ends here anyway.
+                            if event["count"] < expect["count"]:  # no -> trigger alarm
+                                # Remove it before opening the event about the missing messages, so
+                                # the limits neither count it nor delete it to make room for that
+                                # event.
+                                self._event_status.remove_event(event, "AUTODELETE")
+                                self._handle_absent_event(
+                                    rule, expect, event["count"], interval_start
+                                )
+                            else:  # yes -> everything is fine.
+                                self._event_status.remove_event(event, "COUNTREACHED")
+                                self._event_status.clear_interval_start(rule["id"])
+                                self._logger.info(
+                                    "Rule %(pack)s/%(rule_id)s has reached %(count)d occurrences (%(required)d required). "
+                                    "Starting next period.",
+                                    {
+                                        "pack": rule["pack"],
+                                        "rule_id": rule["id"],
+                                        "count": event["count"],
+                                        "required": expect["count"],
+                                    },
+                                )
+                            break
 
-                # Ou ou, no event found at all.
-                else:
-                    self._handle_absent_event(rule, expect, 0, interval_start)
+                    # Ou ou, no event found at all.
+                    else:
+                        self._handle_absent_event(rule, expect, 0, interval_start)
 
-                # Do not forget to switch to next interval
-                self._event_status.start_next_interval(rule["id"], interval)
+                finally:
+                    # Do not forget to switch to next interval, even if a signal interrupts the
+                    # actions of the event about the missing messages: Checking the same interval
+                    # again would open another such event.
+                    self._event_status.start_next_interval(rule["id"], interval)
 
     def _handle_absent_event(
         self, rule: Rule, expect: Expect, event_count: int, interval_start: float
@@ -1217,20 +1212,7 @@ class EventServer(ECServerThread):
             # act on it. It has no host in the core.
             self._new_event_respecting_limits(event, None, droppable=False)
             self._history.add(event, "COUNTFAILED")
-            event_has_opened(
-                self._history,
-                self.settings,
-                self._config,
-                self._logger,
-                self._connection,
-                self.host_config,
-                self._event_columns,
-                rule,
-                event,
-            )
-            if rule.get("autodelete"):
-                event["phase"] = "closed"
-                self._event_status.remove_event(event, "AUTODELETE")
+            self._open_event(rule, event, holding_lock=True)
 
     def reload_configuration(self, config: Config, history: History) -> None:
         # Prepare everything which can fail before changing anything, so a failed reload keeps the
@@ -1504,25 +1486,10 @@ class EventServer(ECServerThread):
                                 )
                             existing_event["delay_until"] = time.time() + rule["delay"]
                             existing_event["phase"] = "delayed"
+                            self._history.add(existing_event, "COUNTREACHED")
                         else:
-                            event_has_opened(
-                                self._history,
-                                self.settings,
-                                self._config,
-                                self._logger,
-                                self._connection,
-                                self.host_config,
-                                self._event_columns,
-                                rule,
-                                existing_event,
-                            )
-
-                        self._history.add(existing_event, "COUNTREACHED")
-
-                        if "delay" not in rule and rule.get("autodelete"):
-                            existing_event["phase"] = "closed"
-                            with self._event_status.lock:
-                                self._event_status.remove_event(existing_event, "AUTODELETE")
+                            self._history.add(existing_event, "COUNTREACHED")
+                            self._open_event(rule, existing_event, holding_lock=False)
                 elif rule.get("expect"):
                     self._event_status.count_expected_event(self, event)
                 else:
@@ -1538,26 +1505,36 @@ class EventServer(ECServerThread):
                         event["phase"] = "open"
 
                     if self.new_event_respecting_limits(event) and event["phase"] == "open":
-                        event_has_opened(
-                            self._history,
-                            self.settings,
-                            self._config,
-                            self._logger,
-                            self._connection,
-                            self.host_config,
-                            self._event_columns,
-                            rule,
-                            event,
-                        )
-                        if rule.get("autodelete"):
-                            event["phase"] = "closed"
-                            with self._event_status.lock:
-                                self._event_status.remove_event(event, "AUTODELETE")
+                        self._open_event(rule, event, holding_lock=False)
                 return
 
         # End of loop over rules.
         if self._config["archive_orphans"]:
             self._event_status.archive_event(event)
+
+    def _open_event(self, rule: Rule, event: Event, *, holding_lock: bool) -> None:
+        """Executes the actions of the rule for the event it has just opened
+
+        If the rule deletes its events automatically, the event gets deleted afterwards, even if a
+        signal interrupts the actions.
+        """
+        try:
+            event_has_opened(
+                self._history,
+                self.settings,
+                self._config,
+                self._logger,
+                self._connection,
+                self.host_config,
+                self._event_columns,
+                rule,
+                event,
+            )
+        finally:
+            if rule.get("autodelete"):
+                event["phase"] = "closed"
+                with contextlib.nullcontext() if holding_lock else self._event_status.lock:
+                    self._event_status.remove_event(event, "AUTODELETE")
 
     def _add_rule_contact_groups_to_event(self, rule: Rule, event: Event) -> None:
         if rule.get("contact_groups") is None:
@@ -2752,8 +2729,6 @@ def run_eventd(
                         logger,
                         fetch_master_state=fetch_master_state,
                     )
-            except MKSignalException as e:
-                raise e
             except Exception:
                 logger.exception("Exception in main thread")
                 if settings.options.debug:

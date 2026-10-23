@@ -9,8 +9,11 @@
 import logging
 import os
 import shlex
+import signal
+import socket
 from collections.abc import Callable, Sequence
 from pathlib import Path
+from types import FrameType
 from typing import Any, Literal
 from unittest.mock import Mock
 
@@ -26,8 +29,10 @@ from cmk.ec.main import (
     default_slave_status_sync,
     EventServer,
     EventStatus,
+    get_state_from_master,
     load_configuration,
     load_master_config,
+    MKSignalException,
     PackedEventStatus,
     reload_configuration,
     replication_pull,
@@ -498,6 +503,34 @@ def test_failed_sync_is_recorded(slave_status: SlaveStatus, config: Config, pull
     pull(replication_slave_config(config), _unreachable_master)
 
     assert (slave_status["success"], slave_status["last_master_down"]) == (False, _NOW)
+
+
+def test_signal_while_syncing_is_passed_on(config: Config, pull: _Pull) -> None:
+    def fetch_master_state(_config: Config, _slave_status: SlaveStatus) -> dict[str, object]:
+        raise MKSignalException(signal.SIGTERM)
+
+    with pytest.raises(MKSignalException):
+        pull(replication_slave_config(config), fetch_master_state)
+
+
+def test_signal_while_waiting_for_the_master_is_passed_on(
+    config: Config, slave_status: SlaveStatus
+) -> None:
+    def signal_handler(signum: int, _stack_frame: FrameType | None) -> None:
+        raise MKSignalException(signum)
+
+    with socket.socket() as master:  # accepts connections, but never answers
+        master.bind(("127.0.0.1", 0))
+        master.listen()
+        replication = ec.Replication(connect_timeout=10, interval=60, master=master.getsockname())
+        previous_handler = signal.signal(signal.SIGALRM, signal_handler)
+        signal.setitimer(signal.ITIMER_REAL, 0.1)
+        try:
+            with pytest.raises(MKSignalException):
+                get_state_from_master(config | {"replication": replication}, slave_status)
+        finally:
+            signal.setitimer(signal.ITIMER_REAL, 0)
+            signal.signal(signal.SIGALRM, previous_handler)
 
 
 def test_replication_status_survives_a_restart(

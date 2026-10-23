@@ -105,6 +105,18 @@ describe('UnifiedSearchHeader Enter-to-filter', () => {
     expect(assignedHref).toBe('')
   })
 
+  test.each(['   ', '\t', '/', '/  '])(
+    'does not navigate when Enter is pressed with the blank query %j',
+    async (query) => {
+      const input = renderHeader('monitoring')
+
+      await fireEvent.update(input, query)
+      await fireEvent.keyDown(input, { key: 'Enter' })
+
+      expect(assignedHref).toBe('')
+    }
+  )
+
   test('does not navigate when Enter is pressed outside monitoring search', async () => {
     const input = renderHeader('setup')
 

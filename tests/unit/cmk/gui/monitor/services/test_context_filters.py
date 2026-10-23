@@ -6,6 +6,7 @@
 import pytest
 
 from cmk.gui.monitor.services._api._filters import (
+    SERVICE_FILTER_NODE,
     ServiceAndNode,
     ServiceBooleanCondition,
     ServiceFilterNode,
@@ -16,6 +17,10 @@ from cmk.gui.monitor.services._api._filters import (
 )
 from cmk.gui.monitor.services.context_filters import translate_filters
 from cmk.gui.type_defs import VisualContext
+
+
+def _host_node(child: object) -> ServiceFilterNode:
+    return SERVICE_FILTER_NODE.validate_python({"type": "host", "child": child})
 
 
 # fmt: off
@@ -127,6 +132,79 @@ from cmk.gui.type_defs import VisualContext
             ServiceNotNode(type="not", child=ServiceNameChoiceCondition(type="condition", field="groups", op="one_of", value=["web"])),
             id="negated service groups",
         ),
+        pytest.param(
+            {"host": {"host": "web-01"}},
+            _host_node({"type": "condition", "field": "name", "op": "matches", "value": "^web\\-01$"}),
+            id="exact host name",
+        ),
+        pytest.param(
+            {"hostregex": {"host_regex": "web", "neg_host_regex": "on"}},
+            _host_node({"type": "not", "child": {"type": "condition", "field": "name", "op": "contains", "value": "web"}}),
+            id="negated host name regex",
+        ),
+        pytest.param(
+            {"hostalias": {"hostalias": "Web"}},
+            _host_node({"type": "condition", "field": "alias", "op": "contains", "value": "Web"}),
+            id="host alias",
+        ),
+        pytest.param(
+            {"host_address": {"host_address": "10.0.", "host_address_prefix": "yes"}},
+            _host_node({"type": "condition", "field": "address", "op": "matches", "value": "^10\\.0\\."}),
+            id="host address prefix",
+        ),
+        pytest.param(
+            {"host_ctc": {"host_ctc": "admin"}},
+            _host_node({"type": "condition", "field": "contacts", "op": "one_of", "value": ["admin"]}),
+            id="host contact",
+        ),
+        pytest.param(
+            {"opthost_contactgroup": {"opthost_contact_group": "all|admins"}},
+            _host_node({"type": "condition", "field": "contact_groups", "op": "one_of", "value": ["all", "admins"]}),
+            id="host contact groups",
+        ),
+        pytest.param(
+            {"hoststate": {"hst0": "", "hst1": "on", "hst2": "", "hstp": ""}},
+            _host_node({"type": "condition", "field": "state", "op": "one_of", "value": ["DOWN"]}),
+            id="host states",
+        ),
+        pytest.param(
+            {"host_staleness": {"is_host_staleness": "1"}},
+            _host_node({"type": "condition", "field": "stale", "op": "eq", "value": True}),
+            id="host stale",
+        ),
+        pytest.param(
+            {"host_acknowledged": {"is_host_acknowledged": "0"}},
+            _host_node({"type": "condition", "field": "acknowledged", "op": "eq", "value": False}),
+            id="host not acknowledged",
+        ),
+        pytest.param(
+            {"host_notifications_enabled": {"is_host_notifications_enabled": "1"}},
+            _host_node({"type": "condition", "field": "notifications_enabled", "op": "eq", "value": True}),
+            id="host notifications enabled",
+        ),
+        pytest.param(
+            {"host_in_notification_period": {"is_host_in_notification_period": "1"}},
+            _host_node({"type": "condition", "field": "in_notification_period", "op": "eq", "value": True}),
+            id="host in notification period",
+        ),
+        pytest.param(
+            {"host_in_service_period": {"is_host_in_service_period": "1"}},
+            _host_node({"type": "condition", "field": "in_service_period", "op": "eq", "value": True}),
+            id="host in service period",
+        ),
+        pytest.param(
+            {"host_scheduled_downtime_depth": {"is_host_scheduled_downtime_depth": "1"}},
+            _host_node({"type": "condition", "field": "in_downtime", "op": "eq", "value": True}),
+            id="host in downtime",
+        ),
+        pytest.param(
+            {"host_num_services": {"host_num_services_from": "1", "host_num_services_until": "9"}},
+            _host_node({"type": "and", "children": [
+                {"type": "condition", "field": "num_services", "op": "gte", "value": 1},
+                {"type": "condition", "field": "num_services", "op": "lte", "value": 9},
+            ]}),
+            id="host service count range",
+        ),
     ],
 )
 # fmt: on
@@ -182,11 +260,30 @@ def test_several_dashboard_filters_must_all_match() -> None:
     )
 
 
+def test_service_and_host_filters_must_all_match() -> None:
+    translation = translate_filters(
+        {
+            "hoststate": {"hst0": "", "hst1": "on", "hst2": "", "hstp": ""},
+            "svcstate": {"st0": "", "st1": "", "st2": "on", "st3": "", "stp": ""},
+        }
+    )
+
+    assert translation.filter == ServiceAndNode(
+        type="and",
+        children=[
+            ServiceStateChoiceCondition(type="condition", field="state", op="one_of", value=["CRIT"]),
+            _host_node({"type": "condition", "field": "state", "op": "one_of", "value": ["DOWN"]}),
+        ],
+    )
+
+
 @pytest.mark.parametrize(
     "context",
     [
         pytest.param({"service_display_name": {"service_display_name": "CPU"}}, id="no equivalent"),
         pytest.param({"siteopt": {"site": "NO_SITE"}}, id="site"),
+        pytest.param({"host_ctc": {"host_ctc": "adm*"}}, id="host contact pattern"),
+        pytest.param({"hostregex": {"host_regex": "web["}}, id="invalid host regex"),
         pytest.param({"servicegroups": {"servicegroups": "web*"}}, id="group pattern"),
         pytest.param({"servicegroups": {"servicegroups": "|"}}, id="no group named"),
         pytest.param({"service_ctc": {"service_ctc": "adm*"}}, id="contact pattern"),

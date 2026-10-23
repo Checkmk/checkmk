@@ -167,6 +167,7 @@ def test_deleting_without_a_user_is_refused(status_server: StatusServer, command
         pytest.param("UPDATE;1;harry;1;my comment;my contact", id="UPDATE"),
         pytest.param("CHANGESTATE;1;harry;2", id="CHANGESTATE"),
         pytest.param("ACTION;1;harry;@NOTIFY", id="ACTION"),
+        pytest.param("DELETE_EVENTS_OF_HOST;fileserver;harry", id="DELETE_EVENTS_OF_HOST"),
     ],
 )
 def test_syncing_replication_slave_refuses_to_change_events(
@@ -181,6 +182,23 @@ def test_syncing_replication_slave_refuses_to_change_events(
 
     with pytest.raises(MKClientError, match="not allowed on a replication slave"):
         _command(status_server, command)
+
+
+def test_syncing_replication_slave_resets_its_rule_hits(
+    config: Config,
+    history: History,
+    event_status: EventStatus,
+    slave_status: SlaveStatus,
+    status_server: StatusServer,
+) -> None:
+    # The GUI resets the rule hits on all sites, and the next sync replaces them anyway.
+    _become_replication_slave(status_server, config, history)
+    slave_status["mode"] = "sync"
+    event_status.count_rule_match("disk")
+
+    _command(status_server, "RESETCOUNTERS")
+
+    assert list(event_status.get_rule_stats()) == []
 
 
 def test_commands_are_refused_where_disallowed(status_server: StatusServer) -> None:

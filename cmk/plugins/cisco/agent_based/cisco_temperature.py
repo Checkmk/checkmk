@@ -441,7 +441,7 @@ def _map_admin_states_container(
     if_oid_admin_states: Mapping[str, Sequence[str]],
     sensor_if_map: Sequence[Sequence[str]],
     container: Mapping[str, set[str]],
-) -> Mapping[str, str | None]:
+) -> Mapping[str, list[str | None]]:
     admin_states_dict = {}
 
     sensor_oid_admin_status_map = {
@@ -660,12 +660,15 @@ def discover_cisco_temperature_dom(params: Mapping[str, Any], section: Section) 
     } | {None}
     oper_states_to_discover = {
         _CISCO_TEMPERATURE_OPER_STATE_MAP[oper_state]
-        for oper_state in params.get("operational_states")
+        for oper_state in params.get("operational_states", [])
     } | {None}
     for item, attrs in parsed_dom.items():
         try:
             dev_state = attrs.get("raw_dev_state")
-            adm_state, oper_state = attrs.get("admin_state")
+            admin_state = attrs.get("admin_state")
+            if admin_state is None:
+                continue
+            adm_state, oper_state = admin_state
             if (
                 dev_state == "1"
                 and adm_state in admin_states_to_discover

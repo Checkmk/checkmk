@@ -14,17 +14,33 @@ use anyhow::Result as AnyhowResult;
 #[cfg(unix)]
 use std::path::Path;
 
-/// Fetch the agent package the site has for this host, or only report it.
+/// Ask the site which agent package it has for this host, and report it.
 ///
-/// Without `check_only` the package is downloaded and, once `signature` is
-/// satisfied, spooled for the installer and handed to it. The install step
-/// runs as root in a unit of its own, so this run ends when that unit does,
-/// and the line it prints says what reached it rather than what it installed.
+/// # Errors
 ///
-/// `signature` carries `--skip-signatures` through. It only reaches a fetch:
-/// a check downloads nothing, so there is nothing for it to vouch for. The
-/// install step checks the signature again regardless, so a package nobody
-/// vouched for is spooled here and refused there.
+/// If the site cannot be asked.
+pub fn check(
+    updater: &Updater,
+    registry: &Registry,
+    client_config: &ClientConfig,
+) -> AnyhowResult<()> {
+    let api = agent_receiver_api::Api {
+        use_proxy: client_config.use_proxy,
+    };
+    println!("{}", report(updater.check(registry, &api)?));
+    Ok(())
+}
+
+/// Fetch the agent package the site has for this host and hand it over.
+///
+/// The package is downloaded and, once `signature` is satisfied, spooled for
+/// the installer and handed to it. The install step runs as root in a unit of
+/// its own, so this run ends when that unit does, and the line it prints says
+/// what reached it rather than what it installed.
+///
+/// `signature` carries `--skip-signatures` through. The install step checks
+/// the signature again regardless, so a package nobody vouched for is spooled
+/// here and refused there.
 ///
 /// # Errors
 ///
@@ -35,16 +51,11 @@ pub fn update(
     updater: &Updater,
     registry: &Registry,
     client_config: &ClientConfig,
-    check_only: bool,
     signature: SignatureCheck,
 ) -> AnyhowResult<()> {
     let api = agent_receiver_api::Api {
         use_proxy: client_config.use_proxy,
     };
-    if check_only {
-        println!("{}", report(updater.check(registry, &api)?));
-        return Ok(());
-    }
     let fetched = updater.fetch_update(registry, &api, signature)?;
     println!("{}", report_fetch(&fetched));
     #[cfg(unix)]

@@ -278,6 +278,18 @@ def _item_spec_aws_limits_generic() -> String:
     )
 
 
+def _match_aws_limit_levels(value: object) -> int:
+    return 1 if value == (None, None, None) else 0
+
+
+def _match_aws_limit(value: object) -> int:
+    if value is None:
+        return 0
+    if isinstance(value, int) and not isinstance(value, bool):
+        return 1
+    return -1
+
+
 def fs_aws_limits(
     resource: Title,
     default_limit: int,
@@ -316,6 +328,7 @@ def fs_aws_limits(
         )
 
     return enable_deprecated_alternative(
+        match_function=_match_aws_limit_levels,
         wrapped_form_spec=CascadingSingleChoice(
             title=resource,
             elements=[
@@ -326,6 +339,7 @@ def fs_aws_limits(
                         layout="vertical",
                         elements=[
                             enable_deprecated_alternative(
+                                match_function=_match_aws_limit,
                                 wrapped_form_spec=CascadingSingleChoiceExtended(
                                     layout=CascadingSingleChoiceLayout.horizontal,
                                     elements=[
@@ -342,7 +356,7 @@ def fs_aws_limits(
                                             parameter_form=fs_limit,
                                         ),
                                     ],
-                                )
+                                ),
                             ),
                             Percentage(title=Title("Warning at"), prefill=DefaultValue(80.0)),
                             Percentage(title=Title("Critical at"), prefill=DefaultValue(90.0)),
@@ -362,7 +376,7 @@ def fs_aws_limits(
                     ),
                 ),
             ],
-        )
+        ),
     )
 
 

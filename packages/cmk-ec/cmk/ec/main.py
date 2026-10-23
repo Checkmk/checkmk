@@ -350,29 +350,38 @@ def drain_pipe(pipe: FileDescr) -> None:
             break  # No data available
 
 
+# A reference to the matched message in a text which a rule rewrites: \0 for the whole message,
+# \1, \2, ... for its match groups, or e.g. $MATCH_GROUPS_MESSAGE_1$ for a match group by name
+_GROUP_REFERENCE = re.compile(r"\\(\d+)|\$([A-Z_]+)_(\d+)\$")
+
+
 def replace_groups(text: str, origtext: str, match_groups: MatchGroups) -> str:
-    # replace \0 with text itself. This allows to add information
-    # in front or and the end of a message
-    text = text.replace("\\0", origtext)
+    r"""Replaces the references to the matched message in the text all at once
 
-    # Generic replacement with \1, \2, ...
-    match_groups_message = match_groups.get("match_groups_message", False)
-    if match_groups_message is not False:
-        for nr, g in enumerate(match_groups_message):
-            text = text.replace(f"\\{nr + 1}", g)
+    So a replacement is never replaced again, e.g. a reference within the message inserted by \0.
+    For \10 and up, the longest number referring to a match group wins, so with fewer groups,
+    \10 is still the first group followed by a 0. A reference to a missing group stays as it is.
+    """
+    message_groups = match_groups.get("match_groups_message", False)
+    groups = () if message_groups is False else message_groups
+    named_groups = {
+        name.upper(): values for name, values in match_groups.items() if isinstance(values, tuple)
+    }
 
-    # Replacement with keyword
-    # Right now we have
-    # $MATCH_GROUPS_MESSAGE_x$
-    # $MATCH_GROUPS_SYSLOG_APPLICATION_x$
-    for key_prefix, values in match_groups.items():
-        if not isinstance(values, tuple):
-            continue
+    def replacement(reference: re.Match[str]) -> str:
+        if (digits := reference.group(1)) is not None:
+            for end in range(len(digits), 0, -1):
+                number, rest = digits[:end], digits[end:]
+                if number == "0":
+                    return origtext + rest
+                if not number.startswith("0") and int(number) <= len(groups):
+                    return groups[int(number) - 1] + rest
+            return reference.group(0)
+        values = named_groups.get(reference.group(2), ())
+        index = int(reference.group(3))
+        return values[index - 1] if 1 <= index <= len(values) else reference.group(0)
 
-        for idx, match_value in enumerate(values):
-            text = text.replace(f"${key_prefix.upper()}_{idx + 1}$", match_value)
-
-    return text
+    return _GROUP_REFERENCE.sub(replacement, text)
 
 
 class MKSignalException(BaseException):

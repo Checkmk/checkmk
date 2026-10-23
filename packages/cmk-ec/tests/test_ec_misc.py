@@ -224,6 +224,39 @@ def test_references_to_the_matched_message_are_replaced(template: str, expected:
     assert replace_groups(template, "disk sda at 98%", match_groups) == expected
 
 
+@pytest.mark.parametrize(
+    "number_of_groups, expected",
+    [
+        pytest.param(10, "j", id="tenth group"),
+        pytest.param(2, "a0", id="first group followed by a 0, as there is no tenth one"),
+    ],
+)
+def test_two_digit_reference_refers_to_the_longest_matching_group_number(
+    number_of_groups: int, expected: str
+) -> None:
+    match_groups = MatchGroups(match_groups_message=tuple("abcdefghij"[:number_of_groups]))
+
+    assert replace_groups(r"\10", "", match_groups) == expected
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "template, origtext, message_groups, expected",
+    [
+        pytest.param(r"[\0]", r"C:\1tmp", ("sda",), r"[C:\1tmp]", id="reference in the message"),
+        pytest.param(r"\1 \2", "", (r"\2", "98"), r"\2 98", id="reference in a group"),
+        pytest.param("$MATCH_GROUPS_MESSAGE_1$ $MATCH_GROUPS_MESSAGE_2$", "", ("$MATCH_GROUPS_MESSAGE_2$", "98"), "$MATCH_GROUPS_MESSAGE_2$ 98", id="named reference in a group"),
+    ],
+)
+# fmt: on
+def test_inserted_texts_are_not_replaced_again(
+    template: str, origtext: str, message_groups: tuple[str, ...], expected: str
+) -> None:
+    match_groups = MatchGroups(match_groups_message=message_groups)
+
+    assert replace_groups(template, origtext, match_groups) == expected
+
+
 def test_ipv4_mapped_remote_address_is_unmapped() -> None:
     assert parse_address("syslog", ("::ffff:192.0.2.1", 514)) == ("192.0.2.1", 514)
 

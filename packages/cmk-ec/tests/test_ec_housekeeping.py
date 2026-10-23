@@ -324,3 +324,18 @@ def test_event_created_in_downtime_is_removed_when_the_downtime_ends(
     core_connection.hosts_in_downtime = set()
     event_server.do_housekeeping()
     assert history.whats == ["NEW", "AUTODELETE"]
+
+
+def test_all_events_created_in_downtime_are_removed_when_the_downtime_ends(
+    event_server: EventServer, event_status: EventStatus, core_connection: FakeConnection
+) -> None:
+    core_connection.hosts = [new_host("test-host")]
+    core_connection.hosts_in_downtime = {HostName("test-host")}
+    use_rules(event_server, new_rule({}))
+    for _ in range(3):
+        process_message(event_server)
+    core_connection.hosts_in_downtime = set()
+
+    event_server.do_housekeeping()
+
+    assert event_status.events() == []

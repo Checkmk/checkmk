@@ -910,7 +910,7 @@ class EventServer(ECServerThread):
         archive the events that have been created in a downtime.
         """
         host_downtimes: dict[str, bool] = {}
-        for event in self._event_status.events():
+        for event in self._event_status.events()[:]:  # a copy, as removing events changes the list
             if not event["host_in_downtime"]:
                 continue  # only care about events created in downtime
             host_name = HostName("") if event["core_host"] is None else event["core_host"]

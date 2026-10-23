@@ -38,7 +38,9 @@ LEGACY_FILTERS: Mapping[FilterName, LegacyFilter] = {
     "hostregex": text("host_regex"),
     "hostalias": text("hostalias"),
     "host_address": address("host_address"),
+    "opthostgroup": name_list("opthost_group"),
     "host_ctc": name_list("host_ctc", separator=None),
+    "host_ctc_regex": text("host_ctc_regex", negatable=False),
     "opthost_contactgroup": name_list("opthost_contact_group"),
     "hoststate": state_choice(
         {"hst0": "UP", "hst1": "DOWN", "hst2": "UNREACHABLE", "hstp": "PENDING"}

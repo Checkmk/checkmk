@@ -101,6 +101,16 @@ from cmk.gui.type_defs import VisualContext
             id="contact",
         ),
         pytest.param(
+            {"host_ctc_regex": {"host_ctc_regex": "adm.*"}},
+            StringCondition(type="condition", field="contacts", op="contains", value="adm.*"),
+            id="contact regex",
+        ),
+        pytest.param(
+            {"opthostgroup": {"opthost_group": "linux|windows"}},
+            NameChoiceCondition(type="condition", field="groups", op="one_of", value=["linux", "windows"]),
+            id="host groups",
+        ),
+        pytest.param(
             {"opthost_contactgroup": {"opthost_contact_group": "all|admins"}},
             NameChoiceCondition(type="condition", field="contact_groups", op="one_of", value=["all", "admins"]),
             id="contact groups",

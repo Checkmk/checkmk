@@ -28,7 +28,9 @@ _FIELDS: dict[FilterName, str] = {
     "hostregex": "name",
     "hostalias": "alias",
     "host_address": "address",
+    "opthostgroup": "groups",
     "host_ctc": "contacts",
+    "host_ctc_regex": "contacts",
     "opthost_contactgroup": "contact_groups",
     "hoststate": "state",
     "host_acknowledged": "acknowledged",
@@ -118,10 +120,40 @@ def _translate(context: VisualContext) -> ContextFilterTranslation[_JSON]:
             id="negated name list",
         ),
         pytest.param(
+            "opthostgroup",
+            {"opthost_group": "linux|windows"},
+            _condition("groups", "one_of", ["linux", "windows"]),
+            id="host groups",
+        ),
+        pytest.param(
+            "opthostgroup",
+            {"opthost_group": "linux", "neg_opthost_group": "on"},
+            _not(_condition("groups", "one_of", ["linux"])),
+            id="negated host groups",
+        ),
+        pytest.param(
+            "opthostgroup",
+            {"opthost_group": "linux|windows", "neg_opthost_group": "on"},
+            _not(_condition("groups", "one_of", ["linux", "windows"])),
+            id="negated host groups of several names",
+        ),
+        pytest.param(
             "host_ctc",
             {"host_ctc": "admin|ops"},
             _condition("contacts", "one_of", ["admin|ops"]),
             id="single name",
+        ),
+        pytest.param(
+            "host_ctc_regex",
+            {"host_ctc_regex": "adm.*"},
+            _condition("contacts", "contains", "adm.*"),
+            id="text of a filter that cannot be negated",
+        ),
+        pytest.param(
+            "host_ctc_regex",
+            {"host_ctc_regex": "adm", "neg_host_ctc_regex": "on"},
+            _condition("contacts", "contains", "adm"),
+            id="negation variable of a filter that cannot be negated is ignored",
         ),
         pytest.param(
             "host_acknowledged",
@@ -174,6 +206,13 @@ def test_legacy_filter_translates_to_condition_on_its_field(
         pytest.param({"siteopt": {}, "hostregex": {}}, id="defaults of a view"),
         pytest.param({"hostregex": {"host_regex": "", "neg_host_regex": ""}}, id="empty vars"),
         pytest.param({"sites": {"sites": "|"}}, id="no site"),
+        pytest.param(
+            {"opthostgroup": {"opthost_group": "|", "neg_opthost_group": "on"}},
+            id="negated host groups naming no group",
+        ),
+        pytest.param(
+            {"host_ctc_regex": {"neg_host_ctc_regex": "on"}}, id="negation without a pattern"
+        ),
         pytest.param({"host_acknowledged": {"is_host_acknowledged": "-1"}}, id="ignored flag"),
         pytest.param(
             {"host_staleness": {"is_host_staleness": "-1"}},
@@ -204,6 +243,16 @@ def test_inactive_context_translates_to_no_filter(context: VisualContext) -> Non
         pytest.param(
             {"opthost_contactgroup": {"opthost_contact_group": "adm*"}},
             id="name the page would read as a prefix",
+        ),
+        pytest.param(
+            {"opthostgroup": {"opthost_group": "linux|win*"}},
+            id="host group the page would read as a prefix",
+        ),
+        pytest.param({"host_ctc_regex": {"host_ctc_regex": "adm["}}, id="invalid contact regex"),
+        pytest.param({"opthostgroup": {"opthost_group": "|"}}, id="host groups naming no group"),
+        pytest.param(
+            {"opthost_contactgroup": {"opthost_contact_group": "||"}},
+            id="contact groups naming no group",
         ),
         pytest.param(
             {"host_num_services": {"host_num_services_from": "1.5"}}, id="bound not a number"

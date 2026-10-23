@@ -36,9 +36,10 @@ type LegacyFilter = Callable[[FilterHTTPVariables, str], FilterJSON | None]
 type SiteIds = Callable[[FilterHTTPVariables], list[str]]
 
 
-def text(var: str) -> LegacyFilter:
-    """A legacy regular expression filter ("~~"), negated by a "neg_" variable. The pages'
-    "contains" is the same case-insensitive match."""
+def text(var: str, *, negatable: bool = True) -> LegacyFilter:
+    """A legacy regular expression filter ("~~"), negated by a "neg_" variable unless the legacy
+    filter has none, in which case that variable is ignored. The pages' "contains" is the same
+    case-insensitive match."""
 
     def translate_text(value: FilterHTTPVariables, field: str) -> FilterJSON | None:
         if not (pattern := value.get(var, "")):
@@ -49,7 +50,9 @@ def text(var: str) -> LegacyFilter:
             re.compile(pattern)
         except re.error as exc:
             raise UntranslatableFilterError from exc
-        return _negate_if(_condition(field, "contains", pattern), _negated(var, value))
+        return _negate_if(
+            _condition(field, "contains", pattern), negatable and _negated(var, value)
+        )
 
     return translate_text
 
@@ -112,7 +115,12 @@ def name_list(var: str, *, separator: str | None = "|") -> LegacyFilter:
     joined by "And" mean."""
 
     def translate_name_list(value: FilterHTTPVariables, field: str) -> FilterJSON | None:
-        if not (names := _names(value.get(var, ""), separator)):
+        raw = value.get(var, "")
+        if not (names := _names(raw, separator)):
+            # Nothing but separators names nothing: the legacy filter matches no object with it,
+            # or, negated, every object, which is no filter.
+            if raw.strip() and not _negated(var, value):
+                raise UntranslatableFilterError
             return None
         node = _condition(field, "one_of", _literal(names))
         return _negate_if(node, _negated(var, value))

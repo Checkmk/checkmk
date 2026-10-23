@@ -1,5 +1,5 @@
 {
-  "checksum": "4bab5d5638d1a16e786d73e55925fb53c13f58716ee89bdaf63e2fa1717d005c",
+  "checksum": "b4844dc4e5aa402e9e36e18ac642310704b6830210010a2a4374e7ad81136c0a",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -5489,7 +5489,7 @@
               "target": "tower_service"
             },
             {
-              "id": "webpki-roots 0.26.8",
+              "id": "webpki-roots 0.26.11",
               "target": "webpki_roots"
             }
           ],
@@ -10115,7 +10115,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -10170,7 +10170,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -10225,7 +10225,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -10280,7 +10280,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -10335,7 +10335,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -10390,7 +10390,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -10445,7 +10445,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -10500,7 +10500,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -10555,7 +10555,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -10610,7 +10610,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -10665,7 +10665,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -10720,7 +10720,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -10853,7 +10853,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -10908,7 +10908,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -10963,7 +10963,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11018,7 +11018,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11073,7 +11073,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11128,7 +11128,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11183,7 +11183,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11238,7 +11238,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11293,7 +11293,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11348,7 +11348,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11403,7 +11403,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11462,7 +11462,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11517,7 +11517,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11572,7 +11572,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11627,7 +11627,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11682,7 +11682,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11737,7 +11737,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11792,7 +11792,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11847,7 +11847,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ],
@@ -11902,7 +11902,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.26.8",
+                "id": "webpki-roots 0.26.11",
                 "target": "webpki_roots"
               }
             ]
@@ -18809,14 +18809,62 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "webpki-roots 0.26.8": {
+    "webpki-roots 0.26.11": {
       "name": "webpki-roots",
-      "version": "0.26.8",
+      "version": "0.26.11",
       "package_url": "https://github.com/rustls/webpki-roots",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/webpki-roots/0.26.8/download",
-          "sha256": "2210b291f7ea53617fbafcc4939f10914214ec15aace5ba62293a668f322c5c9"
+          "url": "https://static.crates.io/crates/webpki-roots/0.26.11/download",
+          "sha256": "521bc38abb08001b01866da9f51eb7c5d647a19260e00054a8c7fd5f9e57f7a9"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "webpki_roots",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "webpki_roots",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "webpki-roots 1.0.11",
+              "target": "webpki_roots",
+              "alias": "parent"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.26.11"
+      },
+      "license": "CDLA-Permissive-2.0",
+      "license_ids": [
+        "CDLA-Permissive-2.0"
+      ],
+      "license_file": "LICENSE"
+    },
+    "webpki-roots 1.0.11": {
+      "name": "webpki-roots",
+      "version": "1.0.11",
+      "package_url": "https://github.com/rustls/webpki-roots",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/webpki-roots/1.0.11/download",
+          "sha256": "f5f280bbb2b287bc8e7de7e3852945a0ff50d1bbcb5ed42b6c7a568c546df171"
         }
       },
       "targets": [
@@ -18848,12 +18896,12 @@
           ],
           "selects": {}
         },
-        "edition": "2018",
-        "version": "0.26.8"
+        "edition": "2021",
+        "version": "1.0.11"
       },
-      "license": "MPL-2.0",
+      "license": "CDLA-Permissive-2.0",
       "license_ids": [
-        "MPL-2.0"
+        "CDLA-Permissive-2.0"
       ],
       "license_file": "LICENSE"
     },

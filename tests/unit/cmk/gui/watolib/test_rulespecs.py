@@ -12,6 +12,7 @@ import pytest
 from pytest import MonkeyPatch
 
 import cmk.gui.watolib.rulespecs
+from cmk.gui import hooks
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.unstable.legacy_converter import (
@@ -557,6 +558,55 @@ def test_manual_check_parameter_rulespec_does_not_build_form_spec_on_creation() 
     )
 
     assert factory.calls == 0
+
+
+def _recorded_check_parameter_rulespec(
+    factory: _RecordingFormSpecFactory,
+) -> CheckParameterRulespecWithoutItem:
+    return CheckParameterRulespecWithoutItem(
+        check_group_name="some_check_group",
+        group=_CheckParametersGroup,
+        parameter_valuespec=TextInput,
+        create_manual_check=False,
+        form_spec_definition=FormSpecDefinition(factory, None),
+    )
+
+
+def test_rulespec_builds_form_spec_once_per_request() -> None:
+    factory = _RecordingFormSpecFactory()
+    rulespec = _recorded_check_parameter_rulespec(factory)
+
+    _ = rulespec.form_spec
+    _ = rulespec.form_spec
+
+    assert factory.calls == 1
+
+
+def test_rulespec_help_does_not_rebuild_form_spec_in_the_next_request() -> None:
+    factory = _RecordingFormSpecFactory()
+    rulespec = _recorded_check_parameter_rulespec(factory)
+
+    _ = rulespec.help
+    hooks.call("request-end")
+    _ = rulespec.help
+    _ = rulespec.form_spec
+
+    assert factory.calls == 2
+
+
+def test_rulespec_help_follows_a_language_switch(monkeypatch: MonkeyPatch) -> None:
+    language = "en"
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "get_current_language", lambda: language)
+    rulespec = HostRulespec(
+        name="some_host_rulespec",
+        group=_CheckParametersGroup,
+        valuespec=TextInput,
+        help_func=lambda: f"Help {language}",
+    )
+
+    assert rulespec.help == "Help en"
+    language = "de"
+    assert rulespec.help == "Help de"
 
 
 def _unconvertible_form_spec() -> FormSpec[object]:

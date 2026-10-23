@@ -346,8 +346,6 @@ class FormSpecDefinition[ModelT, ModelU]:
     ) -> None:
         self._value_factory: Final = value
         self._item_factory: Final = item
-        self._value: FormSpec[ModelT] | None = None
-        self._item: FormSpec[ModelU] | None = None
 
     @property
     def value(self) -> Callable[[], FormSpec[ModelT]]:
@@ -359,16 +357,14 @@ class FormSpecDefinition[ModelT, ModelU]:
             return None
         return self._get_item
 
+    @request_memoize(maxsize=None)
     def _get_value(self) -> FormSpec[ModelT]:
-        if self._value is None:
-            self._value = self._value_factory()
-        return self._value
+        return self._value_factory()
 
+    @request_memoize(maxsize=None)
     def _get_item(self) -> FormSpec[ModelU]:
         assert self._item_factory is not None
-        if self._item is None:
-            self._item = self._item_factory()
-        return self._item
+        return self._item_factory()
 
 
 class FormSpecNotImplementedError(Exception):
@@ -446,6 +442,7 @@ class Rulespec:
         self._help = help_func
         self._doc_references = doc_references
         self._form_spec_definition = form_spec_definition
+        self._help_by_language: dict[str, None | str | HTML] = {}
 
     @property
     def name(self) -> str:
@@ -522,6 +519,12 @@ class Rulespec:
 
     @property
     def help(self) -> None | str | HTML:
+        language = get_current_language()
+        if language not in self._help_by_language:
+            self._help_by_language[language] = self._compute_help()
+        return self._help_by_language[language]
+
+    def _compute_help(self) -> None | str | HTML:
         if self._help:
             return self._help()
 

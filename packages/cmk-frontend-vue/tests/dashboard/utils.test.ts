@@ -93,6 +93,22 @@ describe('urlHandler', () => {
     })
   })
 
+  describe('withRuntimeFilters', () => {
+    it('keeps the dashboard and the way back a drill-down offered', () => {
+      const input =
+        'https://example.com/dashboard.py?name=foo&owner=bar&_drilled_from=Main&host=old'
+
+      const url = urlHandler.withRuntimeFilters(input, { host: 'new' })
+
+      expect(Object.fromEntries(url.searchParams)).toEqual({
+        name: 'foo',
+        owner: 'bar',
+        _drilled_from: 'Main',
+        host: 'new'
+      })
+    })
+  })
+
   describe('updateCurrentUrl', () => {
     it('updates the current URL in the browser', () => {
       defineLocation(window, 'https://example.com/site/check_mk/dashboard.py?name=foo')

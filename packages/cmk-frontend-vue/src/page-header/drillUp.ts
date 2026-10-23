@@ -4,6 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+/** Names the page a drill-down left; the leading underscore keeps it out of further GET pages. */
+export const DRILLED_FROM_PARAM = '_drilled_from'
+
 /** Where a drill-up leads: back in the tab's history, to the referring page, or nowhere. */
 export type DrillUpTarget = 'history' | URL | null
 

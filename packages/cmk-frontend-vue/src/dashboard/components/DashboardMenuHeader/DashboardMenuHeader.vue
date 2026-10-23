@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import axios from 'axios'
+import type { DrillUpButton as DrillUp } from 'cmk-shared-typing/typescript/drill_up_button'
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker.ts'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types.ts'
@@ -22,6 +23,7 @@ import {
 } from '@/dashboard/types/dashboard.ts'
 import { copyToClipboard, urlHandler } from '@/dashboard/utils.ts'
 import GlobalTimePicker from '@/graphing/GlobalTimePicker/GlobalTimePicker.vue'
+import DrillUpButton from '@/page-header/DrillUpButton.vue'
 
 import DashboardSelector from './DashboardSelector.vue'
 import DropdownMenu from './DropdownMenu.vue'
@@ -40,6 +42,7 @@ interface Props {
   isDashboardLoading: boolean
   runtimeFilters: Record<string, string>
   globalTimePicker: GlobalTimePickerProps
+  drillUp?: DrillUp | null
 }
 
 const { _t } = usei18n()
@@ -145,7 +148,10 @@ const copyInternalDashboardLink = async (): Promise<void> => {
 <template>
   <div class="db-menu-header" role="toolbar" :aria-label="_t('Dashboard menu')">
     <div class="db-menu-header__left">
-      <CmkHeading>{{ _t('Dashboard') }}</CmkHeading>
+      <div class="db-menu-header__title">
+        <DrillUpButton v-if="props.drillUp" v-bind="props.drillUp" />
+        <CmkHeading>{{ _t('Dashboard') }}</CmkHeading>
+      </div>
       <DashboardSelector
         :selected-dashboard="props.selectedDashboard"
         :disabled="props.isDashboardLoading || props.isEditMode"
@@ -301,6 +307,12 @@ const copyInternalDashboardLink = async (): Promise<void> => {
   align-items: stretch;
   gap: var(--dimension-10);
   background-color: transparent;
+}
+
+.db-menu-header__title {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-2);
 }
 
 .db-menu-header__left {

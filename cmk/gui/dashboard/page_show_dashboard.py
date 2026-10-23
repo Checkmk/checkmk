@@ -22,6 +22,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_navigation import MainNavigation
 from cmk.gui.ntop import ntop_connection
 from cmk.gui.pages import PageContext
+from cmk.gui.top_heading import requested_drill_up
 from cmk.gui.type_defs import VisualTypeName
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.views.drilldown_filters import dropped_filters_warning
@@ -125,6 +126,7 @@ def page_dashboard_app(ctx: PageContext) -> None:
         available_layouts = ["relative_grid", "responsive_grid"]
         dashboard_features = "unrestricted"
 
+    drill_up = requested_drill_up(ctx.request)
     page_properties = {
         "initial_breadcrumb": [
             asdict(EvaluatedBreadcrumbItem.from_breadcrumb_item(item)) for item in breadcrumb
@@ -151,6 +153,7 @@ def page_dashboard_app(ctx: PageContext) -> None:
         "permissions": _dashboard_permissions(),
         "logged_in_user": user.id,
         "global_time_picker": asdict(get_global_time_picker_props(ctx.config)),
+        "drill_up": None if drill_up is None else asdict(drill_up),
     }
 
     html.vue_component("cmk-dashboard", data=page_properties)

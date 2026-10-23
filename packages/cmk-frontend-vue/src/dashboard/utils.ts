@@ -64,6 +64,7 @@ import type {
   WidgetTimeRange
 } from '@/dashboard/types/widget.ts'
 import type { GraphFetchResponse } from '@/graphing'
+import { DRILLED_FROM_PARAM } from '@/page-header/drillUp'
 
 import type { ComputeWidgetTitlesRequest, ComputeWidgetTitlesResponse } from './types/api'
 
@@ -589,6 +590,18 @@ export const urlHandler = {
     }
 
     return url
+  },
+
+  /**
+   * The dashboard's URL with new runtime filters. It keeps the dashboard and the way back a
+   * drill-down offered, and drops every other variable.
+   */
+  withRuntimeFilters(input: string, runtimeFilters: Record<string, string>): URL {
+    return urlHandler.updateWithPreserve(
+      input,
+      ['name', 'owner', DRILLED_FROM_PARAM],
+      runtimeFilters
+    )
   },
 
   /** Update the current URL in the browser's address bar.

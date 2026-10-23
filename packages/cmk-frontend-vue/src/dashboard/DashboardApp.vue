@@ -109,6 +109,8 @@ const selectedDashboardBreadcrumb = ref<BreadcrumbItem[] | null>(null)
 const showCloneSuccessAlert = ref(false)
 const clonedAsResponsive = ref(false)
 const droppedFiltersWarning = ref<string | null>(null)
+// Another dashboard picked here was not drilled to, so it offers no way back.
+const drillUp = ref(props.drill_up)
 
 watch([showCloneSuccessAlert, droppedFiltersWarning], async () => {
   await nextTick()
@@ -251,6 +253,7 @@ const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
   isDashboardEditingMode.value = false
   showCloneSuccessAlert.value = false
   droppedFiltersWarning.value = null
+  drillUp.value = null
 
   const key: DashboardKey = {
     name: dashboard.name,
@@ -597,9 +600,8 @@ const handleApplyRuntimeFilters = (filters: ConfiguredFilters, mode: RuntimeFilt
   dashboardFilters.handleApplyRuntimeFilters(filters)
   dashboardFilters.setRuntimeFiltersMode(mode)
 
-  const updatedDashboardUrl = urlHandler.updateWithPreserve(
+  const updatedDashboardUrl = urlHandler.withRuntimeFilters(
     window.location.href,
-    ['name', 'owner'],
     dashboardFilters.runtimeFiltersSearchParams.value
   )
   urlHandler.updateCurrentUrl(updatedDashboardUrl)
@@ -706,6 +708,7 @@ const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(
             :is-empty-dashboard="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
             :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
             :global-time-picker="global_time_picker"
+            :drill-up="drillUp"
             @open-runtime-filter="openRuntimeFilters"
             @open-filter-settings="openFilterSettings"
             @open-settings="openDashboardSettings = true"

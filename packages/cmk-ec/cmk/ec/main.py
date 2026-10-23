@@ -3278,7 +3278,8 @@ class EventStatus:
         else:
             event["count"] = 1
             event["phase"] = "counting"
-            event_server.new_event_respecting_limits(event)
+            if not event_server.new_event_respecting_limits(event):
+                return None  # dropped because of an event limit, so don't open it
             found = event
 
         # Did we just count the event that was just one too much?

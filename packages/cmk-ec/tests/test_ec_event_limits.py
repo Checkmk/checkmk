@@ -78,6 +78,26 @@ def test_reached_limit_stops_creating_events(
     assert _texts_of_events(event_status) == ["1st", "2nd"]
 
 
+def test_counting_rule_does_not_open_an_event_dropped_by_a_reached_limit(
+    event_server: EventServer, config: Config, history: RecordingHistory
+) -> None:
+    # Each disk gets an event of its own, which its first message opens.
+    count = new_count(1, period=60) | {"separate_match_groups": True}
+    rule = new_rule({"match": r"disk (\S+) failed", "count": count})
+    event_server.reload_configuration(
+        config
+        | {
+            "event_limit": _only_limit("by_rule", ec.EventLimit(action="stop", limit=1)),
+            "rule_packs": [ec.default_rule_pack([rule])],
+        },
+        history,
+    )
+
+    _process_messages(event_server, "disk sda failed", "disk sdb failed")
+
+    assert history.whats == ["NEW", "COUNTREACHED"]
+
+
 @pytest.mark.parametrize("kind", _LIMIT_KINDS)
 def test_reached_limit_deletes_the_oldest_events(
     event_server: EventServer,
